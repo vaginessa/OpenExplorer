@@ -1,4 +1,4 @@
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -101,53 +101,53 @@ public class MultiSelectHandler {
 	
 	private void setImage(String extension, ImageView image) {
 		if(extension.equalsIgnoreCase("dir")) {
-			image.setImageResource(R.drawable.folder_md);
+			image.setImageResource(R.drawable.folder);
 		
 		} else if(extension.equalsIgnoreCase("doc") || 
 				  extension.equalsIgnoreCase("docx")) {
-			image.setImageResource(R.drawable.doc_md);
+			image.setImageResource(R.drawable.doc);
 			
 		} else if(extension.equalsIgnoreCase("xls")  || 
 				  extension.equalsIgnoreCase("xlsx") ||
 				  extension.equalsIgnoreCase("xlsm")) {
-			image.setImageResource(R.drawable.excel_md);
+			image.setImageResource(R.drawable.excel);
 			
 		} else if(extension.equalsIgnoreCase("ppt") || 
 				  extension.equalsIgnoreCase("pptx")) {
-			image.setImageResource(R.drawable.powerpoint_md);
+			image.setImageResource(R.drawable.powerpoint);
 			
 		} else if(extension.equalsIgnoreCase("zip") || 
 				  extension.equalsIgnoreCase("gzip")) {
-			image.setImageResource(R.drawable.zip_md);
+			image.setImageResource(R.drawable.zip);
 			
 		} else if(extension.equalsIgnoreCase("rar")) {
-			image.setImageResource(R.drawable.rar_md);
+			image.setImageResource(R.drawable.rar);
 			
 		} else if(extension.equalsIgnoreCase("apk")) {
-			image.setImageResource(R.drawable.apk_md);
+			image.setImageResource(R.drawable.apk);
 			
 		} else if(extension.equalsIgnoreCase("pdf")) {
-			image.setImageResource(R.drawable.pdf_md);
+			image.setImageResource(R.drawable.pdf);
 			
 		} else if(extension.equalsIgnoreCase("xml") || 
 				  extension.equalsIgnoreCase("html")) {
-			image.setImageResource(R.drawable.xml_html_md);
+			image.setImageResource(R.drawable.xml_html);
 			
 		} else if(extension.equalsIgnoreCase("mp4") || extension.equalsIgnoreCase("3gp") ||
 				extension.equalsIgnoreCase("webm")  || extension.equalsIgnoreCase("m4v")) {
-			image.setImageResource(R.drawable.movie_md);
+			image.setImageResource(R.drawable.movie);
 			
 		} else if(extension.equalsIgnoreCase("mp3") || extension.equalsIgnoreCase("wav") ||
 				extension.equalsIgnoreCase("wma")   || extension.equalsIgnoreCase("m4p") ||
 				extension.equalsIgnoreCase("m4a")   || extension.equalsIgnoreCase("ogg")) {
-			image.setImageResource(R.drawable.music_md);
+			image.setImageResource(R.drawable.music);
 			
 		} else if(extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") ||
 				extension.equalsIgnoreCase("jpg")    || extension.equalsIgnoreCase("gif")) {
-			image.setImageResource(R.drawable.photo_md);
+			image.setImageResource(R.drawable.photo);
 			
 		} else {
-			image.setImageResource(R.drawable.unknown_md);
+			image.setImageResource(R.drawable.unknown);
 		}
 	}
 }

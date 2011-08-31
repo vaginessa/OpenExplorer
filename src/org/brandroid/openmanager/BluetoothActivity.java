@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -168,7 +168,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			AlertDialog.Builder b = new AlertDialog.Builder(this);
 			b.setTitle("Bluetooth error")
 			 .setMessage("This device does not support bluetooth")
-			 .setIcon(R.drawable.download_md)
+			 .setIcon(R.drawable.download)
 			 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				
 				@Override

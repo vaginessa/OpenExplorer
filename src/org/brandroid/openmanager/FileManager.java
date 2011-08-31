@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +56,7 @@ public class FileManager {
 	private static final int SORT_ALPHA = 	0x01;
 	private static final int SORT_TYPE = 	0x02;
 	private static final int SORT_SIZE = 	0x03;
+	private static final int SORT_SIZE_DESC = 0x04;
 	
 	private boolean mShowHiddenFiles = false;
 	private int mSortType = SORT_ALPHA;
@@ -482,6 +483,18 @@ public class FileManager {
 		}
 	};
 	
+	private final Comparator size_d = new Comparator<String>() {
+		@Override
+		public int compare(String arg0, String arg1) {
+			String dir = mPathStack.peek();
+			Long first = new File(dir + "/" + arg0).length();
+			Long second = new File(dir + "/" + arg1).length();
+			
+			Log.e("FILE MANAGER", "first: " + first + "\nsecond: " + second);
+			return second.compareTo(second);
+		}
+	};
+	
 	private final Comparator type = new Comparator<String>() {
 		@Override
 		public int compare(String arg0, String arg1) {
@@ -565,6 +578,22 @@ public class FileManager {
 					for (Object a : size_ar) {
 						if(new File(dir + "/" + (String)a).isDirectory())
 							mDirContent.add(index++, (String)a);
+						else
+							mDirContent.add((String)a);
+					}
+					break;
+					
+				case SORT_SIZE_DESC:
+					int indexd = 0;
+					Object[] size_ard = mDirContent.toArray();
+					String dird = mPathStack.peek();
+					
+					Arrays.sort(size_ard, size_d);
+					
+					mDirContent.clear();
+					for (Object a : size_ard) {
+						if(new File(dird + "/" + (String)a).isDirectory())
+							mDirContent.add(indexd++, (String)a);
 						else
 							mDirContent.add((String)a);
 					}

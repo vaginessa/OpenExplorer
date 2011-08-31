@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import android.app.DialogFragment;
 import android.net.Uri;
@@ -371,7 +371,7 @@ public class DialogHandler extends DialogFragment {
 		((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
 		
 		if (file.isDirectory())
-			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.folder_md);
+			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.folder);
 		else
 			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(getFileIcon(file.getName(), false));
 	}
@@ -388,48 +388,48 @@ public class DialogHandler extends DialogFragment {
 		}
 		
 		if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-			res = largeSize ? R.drawable.doc : R.drawable.doc_md;
+			res = largeSize ? R.drawable.doc : R.drawable.doc;
 			
 		} else if(ext.equalsIgnoreCase("xls")  || 
 				  ext.equalsIgnoreCase("xlsx") ||
 				  ext.equalsIgnoreCase("xlsm")) {
-			res = largeSize ? R.drawable.excel : R.drawable.excel_md;
+			res = largeSize ? R.drawable.excel : R.drawable.excel;
 			
 		} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-			res = largeSize ? R.drawable.powerpoint : R.drawable.powerpoint_md;
+			res = largeSize ? R.drawable.powerpoint : R.drawable.powerpoint;
 			
 		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-			res = largeSize ? R.drawable.zip : R.drawable.zip_md;
+			res = largeSize ? R.drawable.zip : R.drawable.zip;
 			
 		} else if(ext.equalsIgnoreCase("rar")) {
-			res = largeSize ? R.drawable.rar : R.drawable.rar_md;
+			res = largeSize ? R.drawable.rar : R.drawable.rar;
 			
 		} else if(ext.equalsIgnoreCase("apk")) {
-			res = largeSize ? R.drawable.apk : R.drawable.apk_md;
+			res = largeSize ? R.drawable.apk : R.drawable.apk;
 			
 		} else if(ext.equalsIgnoreCase("pdf")) {
-			res = largeSize ? R.drawable.pdf : R.drawable.pdf_md;
+			res = largeSize ? R.drawable.pdf : R.drawable.pdf;
 			
 		} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-			res = largeSize ? R.drawable.xml_html : R.drawable.xml_html_md;
+			res = largeSize ? R.drawable.xml_html : R.drawable.xml_html;
 			
 		} else if(ext.equalsIgnoreCase("mp4") || 
 				  ext.equalsIgnoreCase("3gp") ||
 				  ext.equalsIgnoreCase("webm") || 
 				  ext.equalsIgnoreCase("m4v")) {
-			res = largeSize ? R.drawable.movie : R.drawable.movie_md;
+			res = largeSize ? R.drawable.movie : R.drawable.movie;
 			
 		} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-			res = largeSize ? R.drawable.music : R.drawable.music_md;
+			res = largeSize ? R.drawable.music : R.drawable.music;
 			
 		} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
 				  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
-			res = largeSize ? R.drawable.photo : R.drawable.photo_md;
+			res = largeSize ? R.drawable.photo : R.drawable.photo;
 			
 		} else {
-			res = largeSize ? R.drawable.unknown : R.drawable.unknown_md;
+			res = largeSize ? R.drawable.unknown : R.drawable.unknown;
 		}
 		
 		return res;
@@ -476,48 +476,48 @@ public class DialogHandler extends DialogFragment {
 			mHolder.mMainText.setText(name);
 			
 			if(ext.equalsIgnoreCase("dir")) {	
-				mHolder.mIcon.setImageResource(R.drawable.folder_md);
+				mHolder.mIcon.setImageResource(R.drawable.folder);
 				
 			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-				mHolder.mIcon.setImageResource(R.drawable.doc_md);
+				mHolder.mIcon.setImageResource(R.drawable.doc);
 				
 			} else if(ext.equalsIgnoreCase("xls")  || 
 					  ext.equalsIgnoreCase("xlsx") ||
 					  ext.equalsIgnoreCase("xlsm")) {
-				mHolder.mIcon.setImageResource(R.drawable.excel_md);
+				mHolder.mIcon.setImageResource(R.drawable.excel);
 				
 			} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-				mHolder.mIcon.setImageResource(R.drawable.powerpoint_md);
+				mHolder.mIcon.setImageResource(R.drawable.powerpoint);
 				
 			} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-				mHolder.mIcon.setImageResource(R.drawable.zip_md);
+				mHolder.mIcon.setImageResource(R.drawable.zip);
 				
 			} else if(ext.equalsIgnoreCase("apk")) {
-				mHolder.mIcon.setImageResource(R.drawable.apk_md);
+				mHolder.mIcon.setImageResource(R.drawable.apk);
 				
 			} else if(ext.equalsIgnoreCase("pdf")) {
-				mHolder.mIcon.setImageResource(R.drawable.pdf_md);
+				mHolder.mIcon.setImageResource(R.drawable.pdf);
 				
 			} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-				mHolder.mIcon.setImageResource(R.drawable.xml_html_md);
+				mHolder.mIcon.setImageResource(R.drawable.xml_html);
 				
 			} else if(ext.equalsIgnoreCase("mp4") || 
 					  ext.equalsIgnoreCase("3gp") ||
 					  ext.equalsIgnoreCase("webm") || 
 					  ext.equalsIgnoreCase("m4v")) {
-				mHolder.mIcon.setImageResource(R.drawable.movie_md);
+				mHolder.mIcon.setImageResource(R.drawable.movie);
 				
 			} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-				mHolder.mIcon.setImageResource(R.drawable.music_md);
+				mHolder.mIcon.setImageResource(R.drawable.music);
 				
 			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
 					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
-				mHolder.mIcon.setImageResource(R.drawable.photo_md);
+				mHolder.mIcon.setImageResource(R.drawable.photo);
 				
 			} else {
-				mHolder.mIcon.setImageResource(R.drawable.unknown_md);
+				mHolder.mIcon.setImageResource(R.drawable.unknown);
 			}
 			
 			return view;

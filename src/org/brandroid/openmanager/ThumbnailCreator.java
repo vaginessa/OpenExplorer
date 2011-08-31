@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

@@ -16,11 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentManager.OnBackStackChangedListener;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -34,7 +37,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 
-public class MainActivity extends Activity {	
+public class MainActivity extends Activity implements OnBackStackChangedListener {	
 	//menu IDs
 	private static final int MENU_DIR = 		0x0;
 	private static final int MENU_SEARCH = 		0x1;
@@ -52,6 +55,7 @@ public class MainActivity extends Activity {
 	private EventHandler mEvHandler;
 	private FileManager mFileManger;
 	
+	private FragmentManager fragmentManager;
 	
 	private ActionMode.Callback mMultiSelectAction = new ActionMode.Callback() {
 		MultiSelectHandler handler;
@@ -140,7 +144,7 @@ public class MainActivity extends Activity {
 				ArrayList<Uri> uris = new ArrayList<Uri>();
 				Intent mail = new Intent();
 				mail.setType("application/mail");
-				
+
 				if(mHeldFiles.size() == 1) {
 					mail.setAction(android.content.Intent.ACTION_SEND);
 					mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(mHeldFiles.get(0))));
@@ -180,6 +184,9 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_fragments);
+        
+        fragmentManager = getFragmentManager();
+        fragmentManager.addOnBackStackChangedListener(this);
                 
         mEvHandler = ((DirContentActivity)getFragmentManager()
         					.findFragmentById(R.id.content_frag)).getEventHandlerInst();
@@ -207,7 +214,7 @@ public class MainActivity extends Activity {
         /* read and display the users preferences */
         mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
 		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
-		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "grid"));
+		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
 		mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
     
@@ -255,7 +262,12 @@ public class MainActivity extends Activity {
     		return true;
     		
     	case MENU_SETTINGS:
-    		startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
+    		FragmentTransaction trans = fragmentManager.beginTransaction();
+    		SettingsActivity frag = new SettingsActivity();
+    		trans.add(R.id.content_frag, frag);
+    		trans.addToBackStack("Settings");
+    		trans.commit();
+    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
     		return true;
     		
     	case MENU_SEARCH:
@@ -304,7 +316,7 @@ public class MainActivity extends Activity {
     		//this could be done better.
     		mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
     		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, false));
-    		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "grid"));
+    		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
     		mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
     	}
     }
@@ -332,6 +344,11 @@ public class MainActivity extends Activity {
     		e.commit();
     	}
     }
+
+	@Override
+	public void onBackStackChanged() {
+		//fragmentManager.
+	}
 }
 
 

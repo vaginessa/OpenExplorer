@@ -16,12 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
-import com.nexes.manager.tablet.DirListActivity.OnChangeLocationListener;
-import com.nexes.manager.tablet.EventHandler.OnWorkerThreadFinishedListener;
-import com.nexes.manager.tablet.MainActivity.OnSetingsChangeListener;
-import com.nexes.manager.tablet.DialogHandler.OnSearchFileSelected; 
+import org.brandroid.openmanager.DirListActivity.OnChangeLocationListener;
+import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
+import org.brandroid.openmanager.MainActivity.OnSetingsChangeListener;
+import org.brandroid.openmanager.DialogHandler.OnSearchFileSelected; 
 
 import java.io.File;
 import java.util.ArrayList;
@@ -343,7 +343,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mActionModeSelected = false;
 		mShowGrid = "grid".equals((PreferenceManager
 									.getDefaultSharedPreferences(mContext))
-										.getString("pref_view", "grid"));
+										.getString("pref_view", "list"));
 		
 		mShowThumbnails = PreferenceManager.getDefaultSharedPreferences(mContext)
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, false);
@@ -518,6 +518,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	    			item_ext.equalsIgnoreCase(".3gp") ||
 	    			item_ext.equalsIgnoreCase(".wmv") || 
 	    			item_ext.equalsIgnoreCase(".mp4") || 
+	    			item_ext.equalsIgnoreCase(".avi") || 
 	    			item_ext.equalsIgnoreCase(".ogg") ||
 	    			item_ext.equalsIgnoreCase(".wav")) {
 	    		
@@ -630,6 +631,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mThumbnail.setCancelThumbnails(true);
 			mThumbnail = null;
 		}
+		
+		getFragmentManager().popBackStackImmediate("Settings", 0);
 		
 		mData = mFileMang.setHomeDir(name);
 		mDelegate.notifyDataSetChanged();
@@ -926,8 +929,10 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mHolder.mIcon = (ImageView)view.findViewById(R.id.content_icon);
 				mHolder.mMainText = (TextView)view.findViewById(R.id.content_text);
 				
-				if(!mShowGrid) 
-					mHolder.mSubText = (TextView)view.findViewById(R.id.content_subtext);
+				if(!mShowGrid) { 
+					mHolder.mInfo = (TextView)view.findViewById(R.id.content_info);
+					mHolder.mPath = (TextView)view.findViewById(R.id.content_fullpath);
+				}
 				
 				view.setTag(mHolder);
 				
@@ -935,8 +940,10 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mHolder = (DataViewHolder)view.getTag();
 			}
 			
-			if(!mShowGrid) 
-				mHolder.mSubText.setText(getFileDetails());
+			if(!mShowGrid) {
+				mHolder.mInfo.setText(getFileDetails());
+				mHolder.mPath.setText(getFilePath());
+			}
 			
 			mHolder.mMainText.setText(mName);
 			
@@ -1021,9 +1028,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			return view;
 		}
 		
+		private String getFilePath() {
+			File file = new File(mFileMang.getCurrentDir() + "/" + mName);
+			return file.getPath();
+		}
 		private String getFileDetails() {
 			File file = new File(mFileMang.getCurrentDir() + "/" + mName);
-			String t = file.getPath() + "\t\t";
+			String t = ""; //file.getPath() + "\t\t";
 			double bytes;
 			String size = "";
 			String atrs = " | - ";

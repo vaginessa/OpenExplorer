@@ -18,9 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.nexes.manager.tablet"
-      android:versionCode="110"
-      android:versionName="1.10">
+      package="org.brandroid.openmanager"
+      android:versionName="1.11" android:versionCode="111">
       
     <uses-sdk android:minSdkVersion="11" />
     

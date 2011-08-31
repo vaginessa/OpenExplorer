@@ -28,8 +28,8 @@
 	
 	<ImageView
 		android:id="@+id/list_icon"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content" 
+		android:layout_width="32dp"
+		android:layout_height="32dp"
 		android:layout_weight="0"/>
 	<TextView
 		android:id="@+id/list_name"
@@ -41,8 +41,8 @@
 		android:textAppearance="?android:attr/textAppearanceLarge"/>
 	<ImageView
 		android:id="@+id/list_arrow"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
+		android:layout_width="32dp"
+		android:layout_height="32dp"
 		android:visibility="gone"
 		android:src="@drawable/indicate"/>
 	

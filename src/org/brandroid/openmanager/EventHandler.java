@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
 import android.os.AsyncTask;
 import android.app.AlertDialog;
@@ -88,7 +88,7 @@ public class EventHandler {
 		b.setTitle("Deleting " + name)
 		 .setMessage("Deleting " + name + " cannot be undone.\nAre you sure" +
 					 " you want to continue?")
-		 .setIcon(R.drawable.download_md)
+		 .setIcon(R.drawable.download)
 		 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -143,7 +143,7 @@ public class EventHandler {
 		.setView(view)
 		.setTitle("Rename " + name)
 		.setCancelable(false)
-		.setIcon(R.drawable.download_md).create().show();
+		.setIcon(R.drawable.download).create().show();
 	}
 
 	/**
@@ -182,7 +182,7 @@ public class EventHandler {
 		.setView(view)
 		.setTitle("Create a new Folder")
 		.setCancelable(false)
-		.setIcon(R.drawable.folder_md).create().show();
+		.setIcon(R.drawable.folder).create().show();
 	}
 	
 	public void sendFile(final ArrayList<String> path) {
@@ -199,7 +199,7 @@ public class EventHandler {
 				
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle("Sending " + name)
-		 .setIcon(R.drawable.download_md)
+		 .setIcon(R.drawable.download)
 		 .setItems(list, new DialogInterface.OnClickListener() {
 			
 			@Override
@@ -270,7 +270,7 @@ public class EventHandler {
 		b.setTitle("Unzip file " + zipFile)
 		 .setMessage("Would you like to unzip " + zipFile +
 				 	 " here or some other folder?")
-		 .setIcon(R.drawable.zip_md)
+		 .setIcon(R.drawable.zip)
 		 .setPositiveButton("Unzip here", new DialogInterface.OnClickListener() {
 			
 			@Override

@@ -16,9 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
-import com.nexes.manager.tablet.DirContentActivity.OnBookMarkAddListener;
+import org.brandroid.openmanager.DirContentActivity.OnBookMarkAddListener;
 
 import android.os.Bundle;
 import android.os.Environment;
@@ -44,7 +44,7 @@ import java.io.File;
 
 public class DirListActivity extends ListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
-	private static final int BOOKMARK_POS = 6;
+	private static int BOOKMARK_POS = 6;
 	
 	private static OnChangeLocationListener mChangeLocList;
 	private ArrayList<String> mDirList;
@@ -54,7 +54,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 	private DirListAdapter mDelegate;
 	private String mDirListString;
 	private String mBookmarkString;
-	
+	private Boolean mHasExternal = false;
 
 	public interface OnChangeLocationListener {
 		void onChangeLocation(String name);
@@ -84,10 +84,29 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			mDirList.add("/");
 			mDirList.add(storage);
 			mDirList.add(storage + "/" + "Download");
-			mDirList.add(storage + "/" + "Music");
+			if(new File(storage + "/Music").isDirectory())
+				mDirList.add(storage + "/" + "Music");
+			else
+				BOOKMARK_POS--;
 			mDirList.add(storage + "/" + "Movies");
-			mDirList.add(storage + "/" + "Pictures");
-			mDirList.add("Bookmarks");			
+			if(new File(storage + "/DCIM").isDirectory())
+				mDirList.add(storage + "/DCIM");
+			else if(new File(storage + "/Pictures").isDirectory())
+				mDirList.add(storage + "/Pictures");
+			else
+				BOOKMARK_POS--;
+			if(new File("/mnt/usbdrive").isDirectory())
+			{
+				mDirList.add("/mnt/usbdrive");
+				BOOKMARK_POS++;
+			}
+			if(new File("/mnt/external_sd").isDirectory())
+			{
+				mHasExternal = true;
+				mDirList.add("/mnt/external_sd");
+				BOOKMARK_POS++;
+			}
+			mDirList.add("Bookmarks");
 		}
 		
 		if (mBookmarkString.length() > 0) {
@@ -131,6 +150,8 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 		v.setVisibility(View.VISIBLE);
 		mLastIndicater = v;
 		
+		getFragmentManager().popBackStackImmediate("Settings", 0);
+		
 		if(mChangeLocList != null)
 			mChangeLocList.onChangeLocation(mDirList.get(pos));
 	}
@@ -158,10 +179,11 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			builder.setView(v);
 			
 			switch(pos) {
-			case 2:	builder.setIcon(R.drawable.download_md);break;
-			case 3: builder.setIcon(R.drawable.music_md); 	break;
-			case 4:	builder.setIcon(R.drawable.movie_md);	break;
-			case 5:	builder.setIcon(R.drawable.photo_md); 	break;
+			case 2:	builder.setIcon(R.drawable.download);break;
+			case 3: builder.setIcon(R.drawable.music); 	break;
+			case 4:	builder.setIcon(R.drawable.movie);	break;
+			case 5:	builder.setIcon(R.drawable.photo); 	break;
+			case 6: builder.setIcon(R.drawable.usb); break;
 			}
 			
 			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -203,7 +225,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			String bookmark = mBookmarkNames.get(p - (BOOKMARK_POS + 1));
 			
 			builder.setTitle("Manage bookmark: " + bookmark);
-			builder.setIcon(R.drawable.folder_md);
+			builder.setIcon(R.drawable.folder);
 			builder.setView(v);
 			
 			((TextView)v.findViewById(R.id.dialog_message))
@@ -319,41 +341,52 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 				}
 			}
 
-			switch(position) {
-			case 0:
+			if(position == 0)
+			{
 				mHolder.mMainText.setText("/");
 				mHolder.mIcon.setImageResource(R.drawable.drive);
-				break;
-			case 1:
-				mHolder.mMainText.setText("sdcard");
-				mHolder.mIcon.setImageResource(R.drawable.sdcard);
-				break;
-			case 2:
+			} else if(position == 1) {
+				if(mHasExternal)
+				{
+					mHolder.mMainText.setText("Internal Storage");
+					mHolder.mIcon.setImageResource(R.drawable.drive);
+				} else {
+					mHolder.mMainText.setText("sdcard");
+					mHolder.mIcon.setImageResource(R.drawable.sdcard);
+				}
+			} else if(position == 2) {
 				mHolder.mMainText.setText("Downloads");
-				mHolder.mIcon.setImageResource(R.drawable.download_md);
-				break;
-			case 3:
+				if(mHasExternal)
+					mHolder.mMainText.setText("Downloads (Internal)");
+				mHolder.mIcon.setImageResource(R.drawable.download);
+			} else if(position == 3) {
 				mHolder.mMainText.setText("Music");
-				mHolder.mIcon.setImageResource(R.drawable.music_md);
-				break;
-			case 4:
+				if(mHasExternal)
+					mHolder.mMainText.setText("Music (Internal)");
+				mHolder.mIcon.setImageResource(R.drawable.music);
+			} else if(position == 4) {
 				mHolder.mMainText.setText("Movies");
-				mHolder.mIcon.setImageResource(R.drawable.movie_md);
-				break;
-			case 5:
+				if(mHasExternal)
+					mHolder.mMainText.setText("Movies (Internal)");
+				mHolder.mIcon.setImageResource(R.drawable.movie);
+			} else if(position == 5) {
 				mHolder.mMainText.setText("Photos");
-				mHolder.mIcon.setImageResource(R.drawable.photo_md);
-				break;
-			case 6:
+				if(mHasExternal)
+					mHolder.mMainText.setText("Photos (Internal)");
+				mHolder.mIcon.setImageResource(R.drawable.photo);
+			} else if(BOOKMARK_POS > 6 && position == 6) {
+				mHolder.mMainText.setText("USB");
+				mHolder.mIcon.setImageResource(R.drawable.usb);
+			} else if(mHasExternal && position == 7) {
+				mHolder.mMainText.setText("External SD");
+				mHolder.mIcon.setImageResource(R.drawable.sdcard);
+			} else if(position == BOOKMARK_POS) {
 				mHolder.mMainText.setText("Bookmarks");
 				mHolder.mIcon.setImageResource(R.drawable.favorites);
-				view.setBackgroundColor(R.color.black);
-				break;
-				
-			default:
+				//view.setBackgroundColor(R.color.black);
+			} else {
 				mHolder.mMainText.setText(mBookmarkNames.get(position - (BOOKMARK_POS + 1)));
-				mHolder.mIcon.setImageResource(R.drawable.folder_md);
-				break;
+				mHolder.mIcon.setImageResource(R.drawable.folder);
 			}
 			
 			return view;

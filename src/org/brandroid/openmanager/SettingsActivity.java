@@ -16,14 +16,25 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.nexes.manager.tablet;
+package org.brandroid.openmanager;
 
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 
-public class DataViewHolder {
-	ImageView mIcon;
-	ImageView mIndicate;
-	TextView mMainText;
-	TextView mSubText;
+public class SettingsActivity extends PreferenceFragment {
+	//keys used for preference file
+	public static final String PREF_LIST_KEY =		"pref_dirlist";
+	public static final String PREF_BOOKNAME_KEY = 	"pref_bookmarks";
+	public static final String PREF_HIDDEN_KEY = 	"pref_hiddenFiles";
+	public static final String PREF_THUMB_KEY	=	"pref_thumbnail";
+	public static final String PREF_VIEW_KEY =		"pref_view";
+	public static final String PREF_SORT_KEY = 		"pref_sorting";
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		addPreferencesFromResource(R.xml.preferences);
+	}
 }
