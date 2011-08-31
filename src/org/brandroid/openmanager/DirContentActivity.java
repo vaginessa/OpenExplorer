@@ -954,7 +954,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				if(file.canRead() && lists != null && lists.length > 0)
 					mHolder.mIcon.setImageResource(R.drawable.folder_large_full);
 				else
-					mHolder.mIcon.setImageResource(R.drawable.folder_large);
+					mHolder.mIcon.setImageResource(R.drawable.folder);
 				
 			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
 				mHolder.mIcon.setImageResource(R.drawable.doc);
@@ -983,7 +983,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mHolder.mIcon.setImageResource(R.drawable.xml_html);
 				
 			} else if(ext.equalsIgnoreCase("mp4") || 
-					  ext.equalsIgnoreCase("3gp") ||
+					  ext.equalsIgnoreCase("3gp") || 
+					  ext.equalsIgnoreCase("avi") ||
 					  ext.equalsIgnoreCase("webm") || 
 					  ext.equalsIgnoreCase("m4v")) {
 				mHolder.mIcon.setImageResource(R.drawable.movie);
