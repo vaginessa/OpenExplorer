@@ -21,6 +21,7 @@ package org.brandroid.openmanager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentManager.OnBackStackChangedListener;
 import android.app.FragmentTransaction;
@@ -43,6 +44,8 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 	private static final int MENU_SEARCH = 		0x1;
 	private static final int MENU_MULTI =		0x2;
 	private static final int MENU_SETTINGS = 	0x3;
+	private static final int MENU_MODE	=		0x4;
+	private static final int MENU_SORT = 		0x5;
 	private static final int PREF_CODE =		0x6;
 	
 	private static OnSetingsChangeListener mSettingsListener;
@@ -187,6 +190,13 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
         
         fragmentManager = getFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
+        
+        FragmentTransaction trans = fragmentManager.beginTransaction();
+        trans.add(R.id.content_frag, new DirContentActivity());
+        trans.addToBackStack("content");
+        trans.commit();
+        //getFragmentManager().findFragmentById(R.id.content_frag);
+        
                 
         mEvHandler = ((DirContentActivity)getFragmentManager()
         					.findFragmentById(R.id.content_frag)).getEventHandlerInst();
@@ -230,6 +240,12 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     	menu.add(0, MENU_MULTI, 2, "Multi-Select").setIcon(R.drawable.multiselect)
     						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
     	
+    	menu.add(0, MENU_SORT, 3, "Sorting").setIcon(android.R.drawable.ic_menu_sort_alphabetically)
+		.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
+    	menu.add(0, MENU_MODE, 4, "View Mode").setIcon(android.R.drawable.ic_menu_gallery)
+    						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+    	
     	menu.add(0, MENU_SETTINGS, 5, "Settings").setIcon(R.drawable.settings_actbar)
     						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
     	
@@ -243,10 +259,15 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     	switch(item.getItemId()) {
     	case android.R.id.home:
     		if (mHeldFiles != null) {
+    			//DialogFragment df = 
     			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.HOLDINGFILE_DIALOG, this);
     			dialog.setHoldingFileList(mHeldFiles);
     			
-    			dialog.show(getFragmentManager(), "dialog");
+    			FragmentTransaction trans = fragmentManager.beginTransaction();
+    			trans.add(dialog, "dialog");
+    			//dialog.show(getFragmentManager(), "dialog");
+    			trans.addToBackStack("dialog");
+    			trans.commit();
     		}
     		return true;
     		
@@ -259,6 +280,10 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     			return false;
     		
     		mActionMode = startActionMode(mMultiSelectAction);
+    		return true;
+    		
+    	case MENU_SORT:
+    		
     		return true;
     		
     	case MENU_SETTINGS:
