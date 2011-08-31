@@ -21,7 +21,7 @@
       package="org.brandroid.openmanager"
       android:versionName="1.11" android:versionCode="111">
       
-    <uses-sdk android:minSdkVersion="11" />
+    <uses-sdk android:minSdkVersion="12" />
     
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />

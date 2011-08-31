@@ -90,14 +90,14 @@ public class EventHandler {
 					 " you want to continue?")
 		 .setIcon(R.drawable.download)
 		 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				
 				new BackgroundWork(DELETE_TYPE).execute(files);
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
@@ -122,7 +122,7 @@ public class EventHandler {
 		
 		new AlertDialog.Builder(mContext)
 		.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
 				
@@ -135,7 +135,7 @@ public class EventHandler {
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
@@ -161,7 +161,7 @@ public class EventHandler {
 		
 		new AlertDialog.Builder(mContext)
 		.setPositiveButton("Create", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
 				
@@ -174,7 +174,7 @@ public class EventHandler {
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
@@ -202,7 +202,7 @@ public class EventHandler {
 		 .setIcon(R.drawable.download)
 		 .setItems(list, new DialogInterface.OnClickListener() {
 			
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				switch(which) {
 					case 0:
@@ -273,14 +273,14 @@ public class EventHandler {
 		 .setIcon(R.drawable.zip)
 		 .setPositiveButton("Unzip here", new DialogInterface.OnClickListener() {
 			
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				new BackgroundWork(UNZIP_TYPE).execute(zipFile, zipPath);
 			}
 		})
 		 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
 			
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				ArrayList<String> l = new ArrayList<String>();
 				l.add(oPath);
@@ -321,7 +321,7 @@ public class EventHandler {
 			mType = type;
 		}
 		
-		@Override
+		
 		protected void onPreExecute() {
 			switch(mType) {
 			case DELETE_TYPE:
@@ -356,7 +356,7 @@ public class EventHandler {
 			}
 		}
 		
-		@Override
+		
 		protected ArrayList<String> doInBackground(String... params) {
 			ArrayList<String> results = null;
 			int len = params.length;
@@ -423,7 +423,7 @@ public class EventHandler {
 			return null;
 		}
 		
-		@Override
+		
 		protected void onPostExecute(ArrayList<String> result) {
 			switch(mType) {
 			

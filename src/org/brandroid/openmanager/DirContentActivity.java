@@ -106,18 +106,18 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	
 	private ActionMode.Callback mFolderOptActionMode = new ActionMode.Callback() {
 		
-		@Override
+		
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			return false;
 		}
 		
-		@Override
+		
 		public void onDestroyActionMode(ActionMode mode) {
 			mActionMode = null;
 			mActionModeSelected = false;
 		}
 		
-		@Override
+		
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			menu.add(0, D_MENU_BOOK, 0, "Bookmark");
 			menu.add(0, D_MENU_INFO, 0, "Info");
@@ -134,7 +134,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
         	return true;
 		}
 		
-		@Override
+		
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 			ArrayList<String> files = new ArrayList<String>();
 			String name = "/" + mode.getTitle().toString();
@@ -225,18 +225,18 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	};	
 
 	private ActionMode.Callback mFileOptActionMode = new ActionMode.Callback() {
-		@Override
+		
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			return false;
 		}
 		
-		@Override
+		
 		public void onDestroyActionMode(ActionMode mode) {
 			mActionMode = null;
 			mActionModeSelected = false;
 		}
 		
-		@Override
+		
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			menu.add(0, F_MENU_INFO, 0, "Info");
 			menu.add(0, F_MENU_DELETE, 0, "Delete");
@@ -249,7 +249,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			return true;
 		}
 
-		@Override
+		
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 			ArrayList<String> files = new ArrayList<String>();
 			String path = null;
@@ -323,7 +323,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	};
 	
 	
-	@Override
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -352,14 +352,14 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		DirListActivity.setOnChangeLocationListener(this);
 	}
 	
-	 @Override
+	 
 	    public void onSaveInstanceState(Bundle outState) {
 	    	super.onSaveInstanceState(outState);
 	    	
 	    	outState.putString("location", mFileMang.getCurrentDir());
 	    }
 	
-	@Override
+	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.main_layout, container, false);
 		v.setBackgroundResource(R.color.lightgray);
@@ -384,7 +384,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mGrid.setAdapter(mDelegate);
 			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 				
-				@Override
+				
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -413,7 +413,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mList.setOnItemClickListener(this);
 			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
 
-				@Override
+				
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -439,7 +439,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		return v;
 	}
 	
-	@Override
+	
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		String item_ext = "";
 		final String name;
@@ -460,7 +460,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				return;
 			
 			v.setOnClickListener(new View.OnClickListener() {
-				@Override
+				
 				public void onClick(View v) {					
 					int ret = mMultiSelect.clearFileEntry(file.getPath());
 					mMultiSelectView.removeViewAt(ret);
@@ -621,7 +621,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * This will update the contents of the dir on the right
 	 * from the path give in the variable name.
 	 */
-	@Override
+	
 	public void onChangeLocation(String name) {
 		
 		if(mActionModeSelected || mMultiSelectOn)
@@ -646,7 +646,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * this will update the data shown to the user after a change to
 	 * the file system has been made from our background thread or EventHandler.
 	 */
-	@Override
+	
 	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
 		
 		if(type == EventHandler.SEARCH_TYPE) {
@@ -659,7 +659,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			dialog.setHoldingFileList(results);
 			dialog.setOnSearchFileSelected(new OnSearchFileSelected() {
 				
-				@Override
+				
 				public void onFileSelected(String fileName) {
 					File f = new File(fileName);
 					String name;
@@ -695,7 +695,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 	}
 	
-	@Override
+	
 	public void onHiddenFilesChanged(boolean state) {
 		mFileMang.setShowHiddenFiles(state);
 		
@@ -703,13 +703,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mDelegate.notifyDataSetChanged();
 	}
 
-	@Override
+	
 	public void onThumbnailChanged(boolean state) {
 		mShowThumbnails = state;
 		mDelegate.notifyDataSetChanged();
 	}
 	
-	@Override
+	
 	public void onSortingChanged(String state) {		
 		if (state.equals("none"))
 			mFileMang.setSortType(0);
@@ -724,7 +724,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mDelegate.notifyDataSetChanged();
 	}
 
-	@Override
+	
 	public void onViewChanged(String state) {
 		//think of a better way.
 		if(state.equals("list") && mShowGrid) {						
@@ -733,7 +733,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mList.setAdapter(mDelegate);
 			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
 
-				@Override
+				
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -763,7 +763,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mGrid.setAdapter(mDelegate);
 			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 				
-				@Override
+				
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -848,7 +848,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mData = mFileMang.getNextDir(name, false);
 		
 		button.setOnClickListener(new View.OnClickListener() {
-			@Override
+			
 			public void onClick(View v) {
 				int index = (Integer)v.getTag();
 				String path = mFileMang.getCurrentDir();
@@ -899,7 +899,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			super(context, layout, data);			
 		}
 		
-		@Override
+		
 		public View getView(int position, View view, ViewGroup parent) {
 			String ext;
 			File file = null;

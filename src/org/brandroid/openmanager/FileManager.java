@@ -464,15 +464,14 @@ public class FileManager {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	private final Comparator alpha = new Comparator<String>() {
-		@Override
 		public int compare(String arg0, String arg1) {
 			return arg0.toLowerCase().compareTo(arg1.toLowerCase());
 		}
 	};
 	
 	private final Comparator size = new Comparator<String>() {
-		@Override
 		public int compare(String arg0, String arg1) {
 			String dir = mPathStack.peek();
 			Long first = new File(dir + "/" + arg0).length();
@@ -484,7 +483,6 @@ public class FileManager {
 	};
 	
 	private final Comparator size_d = new Comparator<String>() {
-		@Override
 		public int compare(String arg0, String arg1) {
 			String dir = mPathStack.peek();
 			Long first = new File(dir + "/" + arg0).length();
@@ -496,7 +494,6 @@ public class FileManager {
 	};
 	
 	private final Comparator type = new Comparator<String>() {
-		@Override
 		public int compare(String arg0, String arg1) {
 			String ext = null;
 			String ext2 = null;

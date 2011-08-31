@@ -66,7 +66,7 @@ public class ThumbnailCreator extends Thread {
 		mStop = stop;
 	}
 
-	@Override
+	
 	public void run() {
 		int len = mFiles.size();
 		
@@ -82,7 +82,7 @@ public class ThumbnailCreator extends Thread {
 			//we already loaded this thumbnail, just return it.
 			if (mCacheMap.containsKey(file.getPath())) {
 				mHandler.post(new Runnable() {
-					@Override
+					
 					public void run() {
 						Message msg = mHandler.obtainMessage();
 						msg.obj = mCacheMap.get(file.getPath());
@@ -124,7 +124,7 @@ public class ThumbnailCreator extends Thread {
 					mCacheMap.put(file.getPath(), d);
 					
 					mHandler.post(new Runnable() {
-						@Override
+						
 						public void run() {
 							Message msg = mHandler.obtainMessage();
 							msg.obj = (BitmapDrawable)d;

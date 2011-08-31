@@ -85,7 +85,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 	
 	private Handler handle = new Handler() {
 		
-		@Override
+		
 		public void handleMessage(Message msg) {
 			int progress = msg.arg1;
 			int size = msg.arg2;
@@ -125,7 +125,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 	 */
 	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 		
-		@Override
+		
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			String name;
@@ -153,7 +153,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 	};
 
 	
-	@Override
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setTheme(android.R.style.Theme_Holo_Dialog_MinWidth);
@@ -171,7 +171,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			 .setIcon(R.drawable.download)
 			 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					finish();
 				}
@@ -204,7 +204,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 		}
 	}
 
-	@Override
+	
 	public void onClick(View v) {
 		int id = v.getId();
 		
@@ -240,7 +240,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 		}
 	}
 	
-	@Override
+	
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		final String name = mDeviceData.get(pos);
 		String deviceName;
@@ -264,7 +264,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			.setIcon(R.drawable.bluetooth)
 			.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					mProgress.show();
 					new ClientSocketThread(name, handle).start();
@@ -272,7 +272,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			})
 			.setNegativeButton("No", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
@@ -280,7 +280,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			}).create().show();
 	}
 	
-	@Override
+	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if(requestCode == REQUEST_ENABLE && resultCode == Activity.RESULT_OK) {
 			mMessageView.setText("Bluetooth is turned on.");
@@ -295,7 +295,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 		}
 	}
 	
-	@Override
+	
 	protected void onDestroy() {
 		super.onDestroy();
 		
@@ -359,7 +359,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			}
 		}
 		
-		@Override
+		
 		public void run() {
 			//make sure we are not discovering
 			if(mBluetoothAdapter.isDiscovering())
@@ -452,7 +452,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			
 		}
 		
-		@Override
+		
 		public void run() {
 			
 		}
@@ -470,7 +470,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			super(context, res, data);
 		}
 		
-		@Override
+		
 		public View getView(int position, View view, ViewGroup parent) {
 			String name;
 			int classType;

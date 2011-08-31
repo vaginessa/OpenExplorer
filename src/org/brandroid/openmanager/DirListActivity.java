@@ -61,7 +61,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 	}
 	
 	
-	@Override
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		String storage = "/" + Environment.getExternalStorageDirectory().getName();
@@ -117,7 +117,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 		}
 	}
 	
-	@Override
+	
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		
@@ -136,7 +136,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 		
 	}
 	
-	@Override
+	
 	public void onListItemClick(ListView list, View view, int pos, long id) {
 		ImageView v;
 		
@@ -156,7 +156,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			mChangeLocList.onChangeLocation(mDirList.get(pos));
 	}
 	
-	@Override
+	
 	public boolean onItemLongClick(AdapterView<?> list, View view, int pos, long id) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -188,7 +188,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			
 			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
@@ -196,7 +196,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			
 			builder.setPositiveButton("Change", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					String location = text.getText().toString();
 					File file = new File(location);
@@ -234,7 +234,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			text.setText(bookmark);
 			builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					mDirList.remove(p);
 					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
@@ -245,7 +245,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			});
 			builder.setNegativeButton("Rename", new DialogInterface.OnClickListener() {
 				
-				@Override
+				
 				public void onClick(DialogInterface dialog, int which) {
 					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
 					mBookmarkNames.add(p - (BOOKMARK_POS + 1), text.getText().toString());
@@ -262,7 +262,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 		return false;
 	}
 
-	@Override
+	
 	public void onBookMarkAdd(String path) {
 		mDirList.add(path);
 		mBookmarkNames.add(path.substring(path.lastIndexOf("/") + 1));
@@ -316,7 +316,7 @@ public class DirListActivity extends ListFragment implements OnBookMarkAddListen
 			super(context, layout, data);		
 		}
 		
-		@Override
+		
 		public View getView(int position, View view, ViewGroup parent) {			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext.

@@ -31,7 +31,7 @@ public class SettingsActivity extends PreferenceFragment {
 	public static final String PREF_VIEW_KEY =		"pref_view";
 	public static final String PREF_SORT_KEY = 		"pref_sorting";
 	
-	@Override
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		

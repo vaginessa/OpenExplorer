@@ -60,12 +60,12 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 	private ActionMode.Callback mMultiSelectAction = new ActionMode.Callback() {
 		MultiSelectHandler handler;
 		
-		@Override
+		
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			return false;
 		}
 		
-		@Override
+		
 		public void onDestroyActionMode(ActionMode mode) {			
 			((DirContentActivity)getFragmentManager()
 					.findFragmentById(R.id.content_frag))
@@ -75,7 +75,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 			handler = null;
 		}
 		
-		@Override
+		
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			handler = MultiSelectHandler.getInstance(MainActivity.this);
 			mode.setTitle("Multi-select Options");
@@ -92,7 +92,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 			return true;
 		}
 		
-		@Override
+		
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 			ArrayList<String>files = handler.getSelectedFiles();
 			
@@ -180,7 +180,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 		public void onSortingChanged(String state);
 	}
 	
-    @Override
+    
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_fragments);
@@ -197,7 +197,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
         mSearchView = new SearchView(this);
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
         
-			@Override
+			
 			public boolean onQueryTextSubmit(String query) {
 				mSearchView.clearFocus();
 				mEvHandler.searchFile(mFileManger.getCurrentDir(), query);
@@ -205,7 +205,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 				return true;
 			}
 			
-			@Override
+			
 			public boolean onQueryTextChange(String newText) {
 				return false;
 			}
@@ -218,7 +218,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 		mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
     
-    @Override
+    
     public boolean onCreateOptionsMenu(Menu menu) {
     	menu.add(0, MENU_SEARCH, 0, "Search").setIcon(R.drawable.search)
 							.setActionView(mSearchView)
@@ -237,7 +237,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     }
 
 
-    @Override
+    
     public boolean onOptionsItemSelected(MenuItem item) {
     	
     	switch(item.getItemId()) {
@@ -277,7 +277,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     	return super.onOptionsItemSelected(item);
     }
     
-    @Override
+    
     public boolean onKeyUp(int keyCode, KeyEvent event) {
     	if (keyCode == KeyEvent.KEYCODE_BACK) {
     		if (mBackQuit) {
@@ -310,7 +310,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     	getActionBar().setTitle(title);
     }
     
-    @Override
+    
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if(requestCode == PREF_CODE) {
     		//this could be done better.
@@ -321,7 +321,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     	}
     }
     
-    @Override
+    
     protected void onPause() {
     	super.onPause();
     	String list = ((DirListActivity)getFragmentManager()
@@ -345,7 +345,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     	}
     }
 
-	@Override
+	
 	public void onBackStackChanged() {
 		//fragmentManager.
 	}
