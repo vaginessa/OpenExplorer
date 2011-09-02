@@ -35,8 +35,14 @@ import android.view.MenuItem;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.zip.Inflater;
+
+import org.brandroid.openmanager.FileManager.SortType;
 
 public class MainActivity extends Activity implements OnBackStackChangedListener {	
 	//menu IDs
@@ -180,7 +186,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 		public void onHiddenFilesChanged(boolean state);
 		public void onThumbnailChanged(boolean state);
 		public void onViewChanged(String state);
-		public void onSortingChanged(String state);
+		public void onSortingChanged(FileManager.SortType type);
 	}
 	
     
@@ -191,10 +197,12 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
         fragmentManager = getFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
         
+        /*
         FragmentTransaction trans = fragmentManager.beginTransaction();
         trans.add(R.id.content_frag, new DirContentActivity());
-        trans.addToBackStack("content");
+        trans.addToBackStack(null);
         trans.commit();
+        */
         //getFragmentManager().findFragmentById(R.id.content_frag);
         
                 
@@ -225,83 +233,95 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
         mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
 		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
 		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
-		mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
     
     
     public boolean onCreateOptionsMenu(Menu menu) {
-    	menu.add(0, MENU_SEARCH, 0, "Search").setIcon(R.drawable.search)
-							.setActionView(mSearchView)
-							.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-    	
-    	menu.add(0, MENU_DIR, 1, "New Folder").setIcon(R.drawable.newfolder)
-    						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-    	
-    	menu.add(0, MENU_MULTI, 2, "Multi-Select").setIcon(R.drawable.multiselect)
-    						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-    	
-    	menu.add(0, MENU_SORT, 3, "Sorting").setIcon(android.R.drawable.ic_menu_sort_alphabetically)
-		.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-    	menu.add(0, MENU_MODE, 4, "View Mode").setIcon(android.R.drawable.ic_menu_gallery)
-    						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-    	
-    	menu.add(0, MENU_SETTINGS, 5, "Settings").setIcon(R.drawable.settings_actbar)
-    						.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-    	
+    	getMenuInflater().inflate(R.menu.actbar, menu);
     	return true;
     }
 
 
     
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+    	if(item.isCheckable())
+    		item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
     	
-    	switch(item.getItemId()) {
-    	case android.R.id.home:
-    		if (mHeldFiles != null) {
-    			//DialogFragment df = 
-    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.HOLDINGFILE_DIALOG, this);
-    			dialog.setHoldingFileList(mHeldFiles);
-    			
-    			FragmentTransaction trans = fragmentManager.beginTransaction();
-    			trans.add(dialog, "dialog");
-    			//dialog.show(getFragmentManager(), "dialog");
-    			trans.addToBackStack("dialog");
-    			trans.commit();
-    		}
-    		return true;
-    		
-    	case MENU_DIR:
-    		mEvHandler.createNewFolder(mFileManger.getCurrentDir());
-    		return true;
-    		
-    	case MENU_MULTI:
-    		if(mActionMode != null)
-    			return false;
-    		
-    		mActionMode = startActionMode(mMultiSelectAction);
-    		return true;
-    		
-    	case MENU_SORT:
-    		
-    		return true;
-    		
-    	case MENU_SETTINGS:
-    		FragmentTransaction trans = fragmentManager.beginTransaction();
-    		SettingsActivity frag = new SettingsActivity();
-    		trans.add(R.id.content_frag, frag);
-    		trans.addToBackStack("Settings");
-    		trans.commit();
-    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
-    		return true;
-    		
-    	case MENU_SEARCH:
-    		return true;
+    	switch(item.getItemId())
+    	{
+	    	case android.R.id.home:
+	    		if (mHeldFiles != null) {
+	    			//DialogFragment df = 
+	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.HOLDINGFILE_DIALOG, this);
+	    			dialog.setHoldingFileList(mHeldFiles);
+	    			
+	    			FragmentTransaction trans = fragmentManager.beginTransaction();
+	    			trans.add(dialog, "dialog");
+	    			//dialog.show(getFragmentManager(), "dialog");
+	    			trans.addToBackStack("dialog");
+	    			trans.commit();
+	    		}
+	    		return true;
+	    	
+	    	case R.id.menu_new_folder:
+	    	case MENU_DIR:
+	    		mEvHandler.createNewFolder(mFileManger.getCurrentDir());
+	    		return true;
+	    		
+	    	case R.id.menu_multi:
+	    	case MENU_MULTI:
+	    		if(mActionMode != null)
+	    			return false;
+	    		
+	    		mActionMode = startActionMode(mMultiSelectAction);
+	    		return true;
+	    		
+	    	case MENU_SORT:
+	    		return true;
+	    	
+	    	case R.id.menu_sort_name_asc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
+	    	case R.id.menu_sort_name_desc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
+	    	case R.id.menu_sort_date_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
+	    	case R.id.menu_sort_date_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
+	    	case R.id.menu_sort_size_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE); return true; 
+	    	case R.id.menu_sort_size_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
+	    	case R.id.menu_sort_type: 		mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
+	    	
+	    	case R.id.menu_view_grid: mSettingsListener.onViewChanged("grid"); return true;
+	    	case R.id.menu_view_list: mSettingsListener.onViewChanged("list"); return true;
+	    	case R.id.menu_view_hidden: mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
+	    	case R.id.menu_view_thumbs: mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
+	    	
+	    	case R.id.menu_root:
+	    		if(!item.isCheckable() || item.isChecked())
+	    		{
+	    			if(ExecuteAsRootBase.canRunRootCommands())
+	    				item.setTitle("ROOT!");
+	    			else
+	    				item.setEnabled(false).setChecked(false);
+	    		}
+	    		return true;
+	    	
+	    	case R.id.menu_settings:
+	    	case MENU_SETTINGS:
+	    		FragmentTransaction trans = fragmentManager.beginTransaction();
+	    		SettingsActivity frag = new SettingsActivity();
+	    		trans.add(R.id.content_frag, frag);
+	    		trans.addToBackStack("Settings");
+	    		trans.commit();
+	    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
+	    		return true;
+	    		
+	    	case R.id.menu_search:
+	    	case MENU_SEARCH:
+	    		item.setActionView(mSearchView);
+	    		return true;
     	}
     	
     	return super.onOptionsItemSelected(item);
     }
-    
     
     public boolean onKeyUp(int keyCode, KeyEvent event) {
     	if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -342,7 +362,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
     		mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
     		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, false));
     		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
-    		mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
+    		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
     	}
     }
     

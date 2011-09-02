@@ -52,17 +52,23 @@ import android.util.Log;
  */
 public class FileManager {
 	private static final int BUFFER = 		2048;
-	private static final int SORT_NONE = 	0x00;
-	private static final int SORT_ALPHA = 	0x01;
-	private static final int SORT_TYPE = 	0x02;
-	private static final int SORT_SIZE = 	0x03;
-	private static final int SORT_SIZE_DESC = 0x04;
 	
 	private boolean mShowHiddenFiles = false;
-	private int mSortType = SORT_ALPHA;
+	private SortType mSorting = SortType.ALPHA;
 	private long mDirSize = 0;
 	private Stack<String> mPathStack;
 	private ArrayList<String> mDirContent;
+	
+	public static enum SortType {
+		NONE,
+		ALPHA,
+		TYPE,
+		SIZE,
+		SIZE_DESC,
+		DATE,
+		DATE_DESC,
+		ALPHA_DESC
+	}
 	
 	/**
 	 * Constructs an object of the class
@@ -107,13 +113,13 @@ public class FileManager {
 		mShowHiddenFiles = choice;
 	}
 	
-	/**
-	 * 
-	 * @param type
-	 */
-	public void setSortType(int type) {
-		mSortType = type;
+	
+	public void setSorting(SortType type)
+	{
+		mSorting = type;
 	}
+	
+	public SortType getSorting() { return mSorting; }
 	
 	/**
 	 * This will return a string that represents the path of the previous path
@@ -465,35 +471,73 @@ public class FileManager {
 	
 	
 	@SuppressWarnings("rawtypes")
-	private final Comparator alpha = new Comparator<String>() {
-		public int compare(String arg0, String arg1) {
-			return arg0.toLowerCase().compareTo(arg1.toLowerCase());
+	private final Comparator comp_alpha = new Comparator<String>() {
+		public int compare(String a, String b) {
+			return b.toLowerCase().compareTo(a.toLowerCase());
 		}
 	};
 	
-	private final Comparator size = new Comparator<String>() {
-		public int compare(String arg0, String arg1) {
+	private final Comparator comp_alpha_d = new Comparator<String>() {
+		public int compare(String a, String b) {
+			return a.toLowerCase().compareTo(b.toLowerCase());
+		}
+	};
+
+	private final Comparator comp_size = new Comparator<String>() {
+		public int compare(String a, String b) {
 			String dir = mPathStack.peek();
-			Long first = new File(dir + "/" + arg0).length();
-			Long second = new File(dir + "/" + arg1).length();
+			File f1 = new File(dir + "/" + a);
+			File f2 = new File(dir + "/" + b);
+			if(f1.isDirectory() && f2.isDirectory()) return a.compareTo(b);
+			if(f1.isDirectory()) return 1;
+			if(f2.isDirectory()) return 0;
 			
-			Log.e("FILE MANAGER", "first: " + first + "\nsecond: " + second);
-			return first.compareTo(second);
+			Long x = f1.length();
+			Long y = f2.length();
+			
+			return x.compareTo(y);
 		}
 	};
-	
-	private final Comparator size_d = new Comparator<String>() {
-		public int compare(String arg0, String arg1) {
+
+	private final Comparator comp_size_d = new Comparator<String>() {
+		public int compare(String a, String b) {
 			String dir = mPathStack.peek();
-			Long first = new File(dir + "/" + arg0).length();
-			Long second = new File(dir + "/" + arg1).length();
+			File f1 = new File(dir + "/" + a);
+			File f2 = new File(dir + "/" + b);
+			if(f1.isDirectory() && f2.isDirectory()) return a.compareTo(b);
+			if(f1.isDirectory()) return 1;
+			if(f2.isDirectory()) return 0;
 			
-			Log.e("FILE MANAGER", "first: " + first + "\nsecond: " + second);
-			return second.compareTo(second);
+			Long x = f1.length();
+			Long y = f2.length();
+			
+			return y.compareTo(x);
 		}
 	};
 	
-	private final Comparator type = new Comparator<String>() {
+	private final Comparator comp_date = new Comparator<String>() {
+		public int compare(String a, String b) {
+			String dir = mPathStack.peek();
+			Long x = new File(dir + "/" + a).lastModified();
+			Long y = new File(dir + "/" + b).lastModified();
+			
+			Log.e("FILE MANAGER", "first: " + x + "\nsecond: " + y);
+			return x.compareTo(y);
+		}
+	};
+	
+	private final Comparator comp_date_d = new Comparator<String>() {
+		public int compare(String a, String b) {
+			String dir = mPathStack.peek();
+			Long x = new File(dir + "/" + a).lastModified();
+			Long y = new File(dir + "/" + b).lastModified();
+			
+			Log.e("FILE MANAGER", "first: " + x + "\nsecond: " + y);
+			return y.compareTo(x);
+		}
+	};
+	
+	private final Comparator comp_type = new Comparator<String>() {
 		public int compare(String arg0, String arg1) {
 			String ext = null;
 			String ext2 = null;
@@ -546,75 +590,38 @@ public class FileManager {
 				}
 			}
 			
+			@SuppressWarnings("rawtypes")
+			Comparator comp = null;
+			Boolean bFoldersFirst = true;
+			
 			/* sort the arraylist that was made from above for loop */
-			switch(mSortType) {
-				case SORT_NONE:
-					//no sorting needed
-					break;
-					
-				case SORT_ALPHA:
-					int i = 0;
-					Object[] alpha_ar = mDirContent.toArray();
-					mDirContent.clear();
-					
-					Arrays.sort(alpha_ar, alpha);
-					
-					for (Object a : alpha_ar)
-						mDirContent.add((String)a);
-					
-					break;
-					
-				case SORT_SIZE:
-					int index = 0;
-					Object[] size_ar = mDirContent.toArray();
-					String dir = mPathStack.peek();
-					
-					Arrays.sort(size_ar, size);
-					
-					mDirContent.clear();
-					for (Object a : size_ar) {
-						if(new File(dir + "/" + (String)a).isDirectory())
-							mDirContent.add(index++, (String)a);
-						else
-							mDirContent.add((String)a);
-					}
-					break;
-					
-				case SORT_SIZE_DESC:
-					int indexd = 0;
-					Object[] size_ard = mDirContent.toArray();
-					String dird = mPathStack.peek();
-					
-					Arrays.sort(size_ard, size_d);
-					
-					mDirContent.clear();
-					for (Object a : size_ard) {
-						if(new File(dird + "/" + (String)a).isDirectory())
-							mDirContent.add(indexd++, (String)a);
-						else
-							mDirContent.add((String)a);
-					}
-					break;
-					
-				case SORT_TYPE:
-					int dirindex = 0;
-					Object[] type_ar = mDirContent.toArray();
-					String current = mPathStack.peek();
-					
-					Arrays.sort(type_ar, type);
-					mDirContent.clear();
-					
-					for (Object a : type_ar) {
-						if(new File(current + "/" + (String)a).isDirectory())
-							mDirContent.add(dirindex++, (String)a);
-						else
-							mDirContent.add((String)a);
-					}
-					break;
+			switch(mSorting) {
+				case NONE: break;
+				case ALPHA_DESC:comp = comp_alpha; break;
+				case ALPHA: 	comp = comp_alpha_d; break;
+				case DATE:		comp = comp_date; break;
+				case DATE_DESC:	comp = comp_date_d; break;
+				case SIZE:		comp = comp_size; break;
+				case SIZE_DESC:	comp = comp_size_d; break;
+				case TYPE:		comp = comp_type; break;
 			}
 			
+			Object[] arr = mDirContent.toArray();
+			String dir = mPathStack.peek();
+			
+			if(comp != null)
+				Arrays.sort(arr, comp);
+			
+			mDirContent.clear();
+			int folder_index = 0;
+			for(Object a : arr)
+				if(bFoldersFirst && new File(dir + "/" + (String)a).isDirectory())
+					mDirContent.add(folder_index++, (String)a);
+				else
+					mDirContent.add((String)a);
+			
 		} else {
-			mDirContent.add("Emtpy");
+			mDirContent.add("Empty");
 		}
 		
 		return mDirContent;

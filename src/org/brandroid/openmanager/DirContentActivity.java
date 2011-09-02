@@ -710,15 +710,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	}
 	
 	
-	public void onSortingChanged(String state) {		
-		if (state.equals("none"))
-			mFileMang.setSortType(0);
-		else if (state.equals("alpha"))
-			mFileMang.setSortType(1);
-		else if (state.equals("type"))
-			mFileMang.setSortType(2);
-		else if (state.equals("size"))
-			mFileMang.setSortType(3);
+	public void onSortingChanged(FileManager.SortType type) {		
+		mFileMang.setSorting(type);
 		
 		mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
 		mDelegate.notifyDataSetChanged();
