@@ -258,7 +258,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 	    			dialog.setHoldingFileList(mHeldFiles);
 	    			
 	    			FragmentTransaction trans = fragmentManager.beginTransaction();
-	    			trans.add(dialog, "dialog");
+	    			trans.replace(R.id.content_frag, dialog, "dialog");
 	    			//dialog.show(getFragmentManager(), "dialog");
 	    			trans.addToBackStack("dialog");
 	    			trans.commit();
@@ -308,7 +308,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 	    	case MENU_SETTINGS:
 	    		FragmentTransaction trans = fragmentManager.beginTransaction();
 	    		SettingsActivity frag = new SettingsActivity();
-	    		trans.add(R.id.content_frag, frag);
+	    		trans.replace(R.id.content_frag, frag);
 	    		trans.addToBackStack("Settings");
 	    		trans.commit();
 	    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
