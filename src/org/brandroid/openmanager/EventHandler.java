@@ -43,6 +43,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.brandroid.utils.Logger;
+
 
 public class EventHandler {
 	public static final int SEARCH_TYPE =		0x00;
@@ -556,13 +558,19 @@ public class EventHandler {
 				size = total = values[1];
 			if(values.length > 2)
 				total = values[2];
+			
+			int progA = (int)(((float)current / (float)size) * 1000f);
+			int progB = (int)(((float)current / (float)total) * 1000f);
+			
+			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-(" + progA + "," + progB + ")");
 
 			if(values.length == 0)
 				mPDialog.setIndeterminate(true);
 			else {
 				mPDialog.setIndeterminate(false);
-				mPDialog.setProgress((current / size) * 100);
-				mPDialog.setSecondaryProgress((current / total) * 100);
+				mPDialog.setMax(1000);
+				mPDialog.setProgress(progA);
+				mPDialog.setSecondaryProgress(progB);
 			}
 		}
 
