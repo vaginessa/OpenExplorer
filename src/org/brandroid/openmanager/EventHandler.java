@@ -21,6 +21,7 @@ package org.brandroid.openmanager;
 import android.os.AsyncTask;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.util.Log;
 import android.view.View;
 import android.view.LayoutInflater;
 import android.content.DialogInterface;
@@ -32,7 +33,17 @@ import android.widget.TextView;
 import android.net.Uri;
 
 import java.util.ArrayList;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.brandroid.utils.Logger;
 
 
 public class EventHandler {
@@ -90,14 +101,14 @@ public class EventHandler {
 					 " you want to continue?")
 		 .setIcon(R.drawable.download)
 		 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				
 				new BackgroundWork(DELETE_TYPE).execute(files);
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
@@ -122,7 +133,7 @@ public class EventHandler {
 		
 		new AlertDialog.Builder(mContext)
 		.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
 				
@@ -135,7 +146,7 @@ public class EventHandler {
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
@@ -161,7 +172,7 @@ public class EventHandler {
 		
 		new AlertDialog.Builder(mContext)
 		.setPositiveButton("Create", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
 				
@@ -174,7 +185,7 @@ public class EventHandler {
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
@@ -202,7 +213,7 @@ public class EventHandler {
 		 .setIcon(R.drawable.download)
 		 .setItems(list, new DialogInterface.OnClickListener() {
 			
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				switch(which) {
 					case 0:
@@ -273,14 +284,14 @@ public class EventHandler {
 		 .setIcon(R.drawable.zip)
 		 .setPositiveButton("Unzip here", new DialogInterface.OnClickListener() {
 			
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				new BackgroundWork(UNZIP_TYPE).execute(zipFile, zipPath);
 			}
 		})
 		 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
 			
-			@Override
+			
 			public void onClick(DialogInterface dialog, int which) {
 				ArrayList<String> l = new ArrayList<String>();
 				l.add(oPath);
@@ -313,7 +324,7 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	private class BackgroundWork extends AsyncTask<String, Void, ArrayList<String>> {
+	private class BackgroundWork extends AsyncTask<String, Integer, ArrayList<String>> {
 		private int mType;
 		private ProgressDialog mPDialog;
 		
@@ -321,7 +332,7 @@ public class EventHandler {
 			mType = type;
 		}
 		
-		@Override
+		
 		protected void onPreExecute() {
 			switch(mType) {
 			case DELETE_TYPE:
@@ -341,6 +352,7 @@ public class EventHandler {
 				else
 					mPDialog = ProgressDialog.show(mContext, "Moving", 
 					   							   "Please Wait...");
+				mPDialog.setMax(0);
 				break;
 				
 			case UNZIP_TYPE:
@@ -356,7 +368,7 @@ public class EventHandler {
 			}
 		}
 		
-		@Override
+		
 		protected ArrayList<String> doInBackground(String... params) {
 			ArrayList<String> results = null;
 			int len = params.length;
@@ -388,7 +400,7 @@ public class EventHandler {
 					 results = new ArrayList<String>();
 				
 				for(int i = 1; i < len; i++) {
-					ret = mFileMang.copyToDirectory(params[i], dir);
+					ret = copyToDirectory(params[i], dir, 0);
 					results.add(ret + "");
 					
 					if(mDeleteFile) {
@@ -404,7 +416,7 @@ public class EventHandler {
 				String file = params[0];
 				String folder = params[1];
 				
-				mFileMang.extractZipFiles(file, folder);
+				extractZipFiles(file, folder);
 				return null;
 				
 			case UNZIPTO_TYPE:
@@ -423,7 +435,146 @@ public class EventHandler {
 			return null;
 		}
 		
+		private Integer copyToDirectory(String old, String newDir, int total)
+		{
+			File old_file = new File(old);
+			File new_dir = new File(newDir);
+			byte[] data = new byte[FileManager.BUFFER];
+			int read = 0;
+			
+			if(old_file.isDirectory() && new_dir.isDirectory() && new_dir.canWrite()) {
+				String files[] = old_file.list();
+				String dir = newDir + old.substring(old.lastIndexOf("/"), old.length());
+				
+				if(!new File(dir).mkdir())
+					return -1;
+				
+				for(String file : files)
+					total += (int)file.length();
+				
+				for(int i = 0; i < files.length; i++)
+					if(copyToDirectory(files[i], dir, total) == -1)
+						return -1;
+				
+			} else if(old_file.isFile() && new_dir.isDirectory() && new_dir.canWrite()){
+				String file_name = old.substring(old.lastIndexOf("/"), old.length());
+				File cp_file = new File(newDir + file_name);
+				int size = (int)old_file.length();
+				int pos = 0;
+
+				try {
+					BufferedOutputStream o_stream = new BufferedOutputStream(
+													new FileOutputStream(cp_file));
+					BufferedInputStream i_stream = new BufferedInputStream(
+												   new FileInputStream(old_file));
+					
+					while((read = i_stream.read(data, 0, FileManager.BUFFER)) != -1)
+					{
+						o_stream.write(data, 0, read);
+						pos += FileManager.BUFFER;
+						publishProgress(pos, size);
+					}
+					
+					o_stream.flush();
+					i_stream.close();
+					o_stream.close();
+					
+				} catch (FileNotFoundException e) {
+					Log.e("FileNotFoundException", e.getMessage());
+					return -1;
+					
+				} catch (IOException e) {
+					Log.e("IOException", e.getMessage());
+					return -1;
+				}
+				
+			} else if(!new_dir.canWrite())
+				return -1;
+			
+			return 0;
+		}
+		
+		public void extractZipFiles(String zip_file, String directory) {
+			byte[] data = new byte[FileManager.BUFFER];
+			String name, path, zipDir;
+			ZipEntry entry;
+			ZipInputStream zipstream;
+			
+			if(zip_file.contains("/")) {
+				path = zip_file;
+				name = path.substring(path.lastIndexOf("/") + 1, 
+									  path.length() - 4);
+				zipDir = directory + name + "/";
+				
+			} else {
+				path = directory + zip_file;
+				name = path.substring(path.lastIndexOf("/") + 1, 
+			 			  			  path.length() - 4);
+				zipDir = directory + name + "/";
+			}
+
+			new File(zipDir).mkdir();
+			
+			try {
+				zipstream = new ZipInputStream(new FileInputStream(path));
+				
+				while((entry = zipstream.getNextEntry()) != null) {
+					String buildDir = zipDir;
+					String[] dirs = entry.getName().split("/");
+					
+					if(dirs != null && dirs.length > 0) {
+						for(int i = 0; i < dirs.length - 1; i++) {
+							buildDir += dirs[i] + "/";
+							new File(buildDir).mkdir();
+						}
+					}
+					
+					int read = 0;
+					FileOutputStream out = new FileOutputStream(
+											zipDir + entry.getName());
+					while((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
+						out.write(data, 0, read);
+					
+					zipstream.closeEntry();
+					out.close();
+				}
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		@Override
+		protected void onProgressUpdate(Integer... values) {
+			int current = 0,
+				size	= 0,
+				total	= 0;
+			if(values.length > 0)
+				current = size = total = values[0];
+			if(values.length > 1)
+				size = total = values[1];
+			if(values.length > 2)
+				total = values[2];
+			
+			int progA = (int)(((float)current / (float)size) * 1000f);
+			int progB = (int)(((float)current / (float)total) * 1000f);
+			
+			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-(" + progA + "," + progB + ")");
+
+			if(values.length == 0)
+				mPDialog.setIndeterminate(true);
+			else {
+				mPDialog.setIndeterminate(false);
+				mPDialog.setMax(1000);
+				mPDialog.setProgress(progA);
+				mPDialog.setSecondaryProgress(progB);
+			}
+		}
+
+		
 		protected void onPostExecute(ArrayList<String> result) {
 			switch(mType) {
 			

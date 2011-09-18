@@ -1069,4 +1069,3 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 }
 
 
-

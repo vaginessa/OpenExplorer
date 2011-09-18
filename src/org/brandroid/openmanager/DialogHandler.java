@@ -67,7 +67,7 @@ public class DialogHandler extends DialogFragment {
 		return instance;
 	}
 		
-	@Override
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 			
@@ -88,7 +88,7 @@ public class DialogHandler extends DialogFragment {
 		}
 	}
 	
-	@Override
+	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		switch(mDialogType) {
 		case HOLDINGFILE_DIALOG:  	return createHoldingFileDialog();
@@ -134,7 +134,7 @@ public class DialogHandler extends DialogFragment {
 		list.setBackgroundColor(0xcc000000);
 		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			
-			@Override
+			
 			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
 				final File selected = new File(mFiles.get(position));
 				
@@ -143,7 +143,7 @@ public class DialogHandler extends DialogFragment {
 				
 				goto_button.setOnClickListener(new View.OnClickListener() {
 					
-					@Override
+					
 					public void onClick(View v) {
 						mSearchListener.onFileSelected(selected.getPath());
 						dismiss();
@@ -154,7 +154,7 @@ public class DialogHandler extends DialogFragment {
 					launch_button.setVisibility(View.VISIBLE);
 					launch_button.setOnClickListener(new View.OnClickListener() {
 						
-						@Override
+						
 						public void onClick(View v) {
 							String item_ext = "";
 															
@@ -446,7 +446,7 @@ public class DialogHandler extends DialogFragment {
 			
 		}
 		
-		@Override
+		
 		public View getView(int position, View view, ViewGroup parent) {
 			String ext;
 			String file = mFiles.get(position);
