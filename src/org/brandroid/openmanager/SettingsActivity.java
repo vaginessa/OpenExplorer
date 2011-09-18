@@ -1,6 +1,6 @@
 /*
-    Open Manager For Tablets, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+    Open Explorer, an open source file explorer & text editor
+    Copyright (C) 2011 Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

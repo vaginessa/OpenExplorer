@@ -1,6 +1,6 @@
 /*
-    Open Manager For Tablets, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+    Open Explorer, an open source file explorer & text editor
+    Copyright (C) 2011 Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,7 +29,15 @@ import android.view.Gravity;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.brandroid.utils.Logger;
 
 public class ThumbnailCreator extends Thread {
 	private int mWidth;
@@ -92,6 +100,53 @@ public class ThumbnailCreator extends Thread {
 			
 			//we havn't loaded it yet, lets make it. 
 			} else {
+				if (isAPKFile(file.getName()))
+				{
+					JarFile apk = null;
+					InputStream in = null;
+					try {
+						apk = new JarFile(file);
+						Boolean valid = false;
+						for(String s : new String[]{"drawable-mdpi","drawable","drawable-hdpi","drawable-ldpi"})
+						{
+							JarEntry icon = apk.getJarEntry("res/" + s + "/icon.png");
+							if(icon != null && icon.getSize() > 0)
+							{
+								in = apk.getInputStream(icon);
+								Bitmap pic = BitmapFactory.decodeStream(in);
+								in.close();
+								in = null;
+								if(pic == null)
+									continue;
+								mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(pic, mWidth, mHeight, false));
+								sendThumbBack(mThumb, file.getPath());
+								valid = true;
+								break;
+							}
+						}
+						if(!valid)
+						{
+							mThumb = new SoftReference<Bitmap>(BitmapFactory.decodeResource(mContext.getResources(), R.drawable.apk));
+							sendThumbBack(mThumb, file.getPath());
+						}
+					} catch(IOException ix) {
+						Logger.LogError("Invalid APK: " + file.getPath(), ix);
+					}
+					finally {
+						try {
+							if(apk != null)
+								apk.close();
+						} catch(IOException nix) {
+							Logger.LogError("Error closing APK while handling invalid APK exception.", nix);
+						}
+						try {
+							if(in != null)
+								in.close();
+						} catch(IOException nix) {
+							Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
+						}
+					}
+				}
 				if (isImageFile(file.getName())) {
 					long len_kb = file.length() / 1024;
 					
@@ -119,21 +174,26 @@ public class ThumbnailCreator extends Thread {
 						mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(b, mWidth, mHeight, false));
 					}
 
-					final BitmapDrawable d = new BitmapDrawable(mThumb.get());					
-					d.setGravity(Gravity.CENTER);
-					mCacheMap.put(file.getPath(), d);
-					
-					mHandler.post(new Runnable() {
-						
-						public void run() {
-							Message msg = mHandler.obtainMessage();
-							msg.obj = (BitmapDrawable)d;
-							msg.sendToTarget();
-						}
-					});
+					sendThumbBack(mThumb, file.getPath());
 				}
 			}
 		}
+	}
+	
+	private void sendThumbBack(SoftReference<Bitmap> mThumb, String path)
+	{
+		final BitmapDrawable d = new BitmapDrawable(mThumb.get());					
+		d.setGravity(Gravity.CENTER);
+		mCacheMap.put(path, d);
+		
+		mHandler.post(new Runnable() {
+			
+			public void run() {
+				Message msg = mHandler.obtainMessage();
+				msg.obj = (BitmapDrawable)d;
+				msg.sendToTarget();
+			}
+		});
 	}
 	
 	private boolean isImageFile(String file) {
@@ -142,6 +202,15 @@ public class ThumbnailCreator extends Thread {
 		if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg") ||
 			ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("gif") ||
 			ext.equalsIgnoreCase("tiff")|| ext.equalsIgnoreCase("tif"))
+			return true;
+		
+		return false;
+	}
+	
+	private boolean isAPKFile(String file) {
+		String ext = file.substring(file.lastIndexOf(".") + 1);
+		
+		if (ext.equalsIgnoreCase("apk"))
 			return true;
 		
 		return false;

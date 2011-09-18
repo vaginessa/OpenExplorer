@@ -1,6 +1,6 @@
 /*
-    Open Manager For Tablets, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+    Open Explorer, an open source file explorer & text editor
+    Copyright (C) 2011 Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,8 +20,10 @@ package org.brandroid.openmanager;
 
 import org.brandroid.openmanager.DirListActivity.OnChangeLocationListener;
 import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
-import org.brandroid.openmanager.MainActivity.OnSetingsChangeListener;
+import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.OpenExplorer.OnSetingsChangeListener;
 import org.brandroid.openmanager.DialogHandler.OnSearchFileSelected; 
+import org.brandroid.utils.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -106,18 +108,18 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	
 	private ActionMode.Callback mFolderOptActionMode = new ActionMode.Callback() {
 		
-		@Override
+		//@Override
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			return false;
 		}
 		
-		@Override
+		//@Override
 		public void onDestroyActionMode(ActionMode mode) {
 			mActionMode = null;
 			mActionModeSelected = false;
 		}
 		
-		@Override
+		//@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			menu.add(0, D_MENU_BOOK, 0, "Bookmark");
 			menu.add(0, D_MENU_INFO, 0, "Info");
@@ -134,7 +136,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
         	return true;
 		}
 		
-		@Override
+		//@Override
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 			ArrayList<String> files = new ArrayList<String>();
 			String name = "/" + mode.getTitle().toString();
@@ -167,7 +169,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mHoldingFileList.add(path);
 					mHoldingFile = true;
 					mCutFile = false;
-					((MainActivity)getActivity()).changeActionBarTitle("Holding " + name);
+					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
 					mode.finish();
 					return true;
 					
@@ -179,7 +181,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mHoldingFileList.add(path);
 					mHoldingFile = true;
 					mCutFile = true;
-					((MainActivity)getActivity()).changeActionBarTitle("Holding " + name);
+					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
 					mode.finish();
 					return true;
 					
@@ -194,7 +196,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mCutFile = false;
 					mHoldingFileList.clear();
 					mHoldingFileList = null;
-					((MainActivity)getActivity()).changeActionBarTitle("Open Manager");
+					((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
 					mode.finish();
 					return true;
 					
@@ -209,7 +211,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mHoldingZip = false;
 					mHoldingZipList.clear();
 					mHoldingZipList = null;
-					((MainActivity)getActivity()).changeActionBarTitle("Open Manager");
+					((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
 					mode.finish();
 					return true;
 				
@@ -225,18 +227,18 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	};	
 
 	private ActionMode.Callback mFileOptActionMode = new ActionMode.Callback() {
-		@Override
+		//@Override
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			return false;
 		}
 		
-		@Override
+		//@Override
 		public void onDestroyActionMode(ActionMode mode) {
 			mActionMode = null;
 			mActionModeSelected = false;
 		}
 		
-		@Override
+		//@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			menu.add(0, F_MENU_INFO, 0, "Info");
 			menu.add(0, F_MENU_DELETE, 0, "Delete");
@@ -249,7 +251,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			return true;
 		}
 
-		@Override
+		//@Override
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 			ArrayList<String> files = new ArrayList<String>();
 			String path = null;
@@ -277,7 +279,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mHoldingFileList.add(path);
 					mHoldingFile = true;
 					mCutFile = false;
-					((MainActivity)getActivity()).changeActionBarTitle("Holding " + name);				
+					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);				
 					mode.finish();
 					return true;
 					
@@ -289,7 +291,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mHoldingFileList.add(path);
 					mHoldingFile = true;
 					mCutFile = true;
-					((MainActivity)getActivity()).changeActionBarTitle("Holding " + name);		
+					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);		
 					mode.finish();
 					return true;
 					
@@ -323,7 +325,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	};
 	
 	
-	@Override
+	//@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -348,18 +350,18 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mShowThumbnails = PreferenceManager.getDefaultSharedPreferences(mContext)
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, false);
 		
-		MainActivity.setOnSetingsChangeListener(this);
+		OpenExplorer.setOnSetingsChangeListener(this);
 		DirListActivity.setOnChangeLocationListener(this);
 	}
 	
-	 @Override
+	 //@Override
 	    public void onSaveInstanceState(Bundle outState) {
 	    	super.onSaveInstanceState(outState);
 	    	
 	    	outState.putString("location", mFileMang.getCurrentDir());
 	    }
 	
-	@Override
+	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.main_layout, container, false);
 		v.setBackgroundResource(R.color.lightgray);
@@ -384,7 +386,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mGrid.setAdapter(mDelegate);
 			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 				
-				@Override
+				//@Override
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -413,7 +415,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mList.setOnItemClickListener(this);
 			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
 
-				@Override
+				//@Override
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -439,7 +441,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		return v;
 	}
 	
-	@Override
+	//@Override
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		String item_ext = "";
 		final String name;
@@ -460,7 +462,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				return;
 			
 			v.setOnClickListener(new View.OnClickListener() {
-				@Override
+				//@Override
 				public void onClick(View v) {					
 					int ret = mMultiSelect.clearFileEntry(file.getPath());
 					mMultiSelectView.removeViewAt(ret);
@@ -621,7 +623,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * This will update the contents of the dir on the right
 	 * from the path give in the variable name.
 	 */
-	@Override
+	//@Override
 	public void onChangeLocation(String name) {
 		
 		if(mActionModeSelected || mMultiSelectOn)
@@ -646,7 +648,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * this will update the data shown to the user after a change to
 	 * the file system has been made from our background thread or EventHandler.
 	 */
-	@Override
+	//@Override
 	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
 		
 		if(type == EventHandler.SEARCH_TYPE) {
@@ -659,7 +661,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			dialog.setHoldingFileList(results);
 			dialog.setOnSearchFileSelected(new OnSearchFileSelected() {
 				
-				@Override
+				//@Override
 				public void onFileSelected(String fileName) {
 					File f = new File(fileName);
 					String name;
@@ -687,7 +689,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			
 			mHoldingZipList.add(results.get(0));
 			mHoldingZip = true;
-			((MainActivity)getActivity()).changeActionBarTitle("Holding " + name);
+			((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
 			
 		} else {
 			mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
@@ -695,7 +697,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 	}
 	
-	@Override
+	//@Override
 	public void onHiddenFilesChanged(boolean state) {
 		mFileMang.setShowHiddenFiles(state);
 		
@@ -703,28 +705,34 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mDelegate.notifyDataSetChanged();
 	}
 
-	@Override
+	//@Override
 	public void onThumbnailChanged(boolean state) {
 		mShowThumbnails = state;
 		mDelegate.notifyDataSetChanged();
 	}
 	
-	@Override
-	public void onSortingChanged(String state) {		
+	//@Override
+	public void onSortingChanged(SortType type) {
+		mFileMang.setSorting(type);
+		mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
+		mDelegate.notifyDataSetChanged();
+	}
+	
+	public void onSortingChanged(String state) {
 		if (state.equals("none"))
-			mFileMang.setSortType(0);
+			mFileMang.setSorting(SortType.NONE);
 		else if (state.equals("alpha"))
-			mFileMang.setSortType(1);
+			mFileMang.setSorting(SortType.ALPHA);
 		else if (state.equals("type"))
-			mFileMang.setSortType(2);
+			mFileMang.setSorting(SortType.TYPE);
 		else if (state.equals("size"))
-			mFileMang.setSortType(3);
-		
+			mFileMang.setSorting(SortType.SIZE);
+
 		mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
 		mDelegate.notifyDataSetChanged();
 	}
 
-	@Override
+	//@Override
 	public void onViewChanged(String state) {
 		//think of a better way.
 		if(state.equals("list") && mShowGrid) {						
@@ -733,7 +741,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mList.setAdapter(mDelegate);
 			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
 
-				@Override
+				////@Override
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -763,7 +771,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mGrid.setAdapter(mDelegate);
 			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 				
-				@Override
+				////@Override
 				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 					String name = mData.get(pos);
 					
@@ -848,7 +856,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mData = mFileMang.getNextDir(name, false);
 		
 		button.setOnClickListener(new View.OnClickListener() {
-			@Override
+			////@Override
 			public void onClick(View v) {
 				int index = (Integer)v.getTag();
 				String path = mFileMang.getCurrentDir();
@@ -899,7 +907,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			super(context, layout, data);			
 		}
 		
-		@Override
+		////@Override
 		public View getView(int position, View view, ViewGroup parent) {
 			String ext;
 			File file = null;
@@ -973,8 +981,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			} else if (ext.equalsIgnoreCase("rar")) {
 				mHolder.mIcon.setImageResource(R.drawable.rar);
 				
-			} else if(ext.equalsIgnoreCase("apk")) {
-				mHolder.mIcon.setImageResource(R.drawable.apk);
+			//} else if(ext.equalsIgnoreCase("apk")) {
+			//	mHolder.mIcon.setImageResource(R.drawable.apk);
 				
 			} else if(ext.equalsIgnoreCase("pdf")) {
 				mHolder.mIcon.setImageResource(R.drawable.pdf);
@@ -995,6 +1003,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mHolder.mIcon.setImageResource(R.drawable.music);
 				
 			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
+					  ext.equalsIgnoreCase("apk")  ||
 					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
 
 				if(file.length() > 0 && mShowThumbnails) {
@@ -1011,8 +1020,12 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 										
 						mThumbnail.createNewThumbnail(mData, mFileMang.getCurrentDir(), handle);
 						
+						try {
 						if (!mThumbnail.isAlive()) 
 							mThumbnail.start();
+						} catch(IllegalThreadStateException itse) {
+							Logger.LogError("Unable to start thumbnail cache thread.", itse);
+						}
 						
 					} else {
 						mHolder.mIcon.setImageDrawable(thumb);
@@ -1066,6 +1079,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			return t + size + atrs;
 		}
 	}
+
 }
 
 

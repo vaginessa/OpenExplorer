@@ -1,6 +1,6 @@
 /*
-    Open Manager For Tablets, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+    Open Explorer, an open source file explorer & text editor
+    Copyright (C) 2011 Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ import java.util.zip.Inflater;
 
 import org.brandroid.openmanager.FileManager.SortType;
 
-public class MainActivity extends Activity implements OnBackStackChangedListener {	
+public class OpenExplorer extends Activity implements OnBackStackChangedListener {	
 	//menu IDs
 	private static final int MENU_DIR = 		0x0;
 	private static final int MENU_SEARCH = 		0x1;
@@ -86,7 +86,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 		
 		
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			handler = MultiSelectHandler.getInstance(MainActivity.this);
+			handler = MultiSelectHandler.getInstance(OpenExplorer.this);
 			mode.setTitle("Multi-select Options");
 			
 			menu.add(0, 12, 0, "Delete");
@@ -131,7 +131,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 						.findFragmentById(R.id.content_frag))
 							.setCopiedFiles(mHeldFiles, false);
 				
-				Toast.makeText(MainActivity.this, 
+				Toast.makeText(OpenExplorer.this, 
 							   "Tap the upper left corner to see your held files",
 							   Toast.LENGTH_LONG).show();
 				mode.finish();
@@ -143,7 +143,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
 						.findFragmentById(R.id.content_frag))
 							.setCopiedFiles(mHeldFiles, true);
 				
-				Toast.makeText(MainActivity.this, 
+				Toast.makeText(OpenExplorer.this, 
 						   "Tap the upper left corner to see your held files",
 						   Toast.LENGTH_LONG).show();
 				mode.finish();
@@ -348,7 +348,7 @@ public class MainActivity extends Activity implements OnBackStackChangedListener
      * @param title the title to be displayed
      */
     public void changeActionBarTitle(String title) {
-    	if (title.equals("Open Manager") && mHeldFiles != null) {
+    	if (title.equals(getResources().getString(R.string.app_name)) && mHeldFiles != null) {
 	    	mHeldFiles.clear();
 	    	mHeldFiles = null;
     	}
