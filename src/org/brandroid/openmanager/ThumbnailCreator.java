@@ -25,18 +25,18 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Gravity;
+import brut.androlib.ApkDecoder;
 
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.brandroid.utils.Decoder;
 import org.brandroid.utils.Logger;
 
 public class ThumbnailCreator extends Thread {
@@ -106,22 +106,39 @@ public class ThumbnailCreator extends Thread {
 					InputStream in = null;
 					try {
 						apk = new JarFile(file);
+						JarEntry icon = apk.getJarEntry("res/drawable-hdpi/icon.apk");
 						Boolean valid = false;
-						for(String s : new String[]{"drawable-mdpi","drawable","drawable-hdpi","drawable-ldpi"})
-						{
-							JarEntry icon = apk.getJarEntry("res/" + s + "/icon.png");
-							if(icon != null && icon.getSize() > 0)
+						if(icon != null && icon.getSize() > 0) {
+							in = apk.getInputStream(icon);
+							Bitmap pic = BitmapFactory.decodeStream(in);
+							in.close();
+							in = null;
+							if(pic == null)
+								continue;
+							mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(pic, mWidth, mHeight, false));
+							sendThumbBack(mThumb, file.getPath());
+							valid = true;
+						}
+						if(!valid) {
+							String iconName = getIconName(apk, file);
+							if(iconName.indexOf(" ") > -1)
+								iconName = "icon";
+							for(String s : new String[]{"drawable-mdpi","drawable","drawable-hdpi","drawable-ldpi"})
 							{
-								in = apk.getInputStream(icon);
-								Bitmap pic = BitmapFactory.decodeStream(in);
-								in.close();
-								in = null;
-								if(pic == null)
-									continue;
-								mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(pic, mWidth, mHeight, false));
-								sendThumbBack(mThumb, file.getPath());
-								valid = true;
-								break;
+								icon = apk.getJarEntry("res/" + s + "/" + iconName + ".png");
+								if(icon != null && icon.getSize() > 0)
+								{
+									in = apk.getInputStream(icon);
+									Bitmap pic = BitmapFactory.decodeStream(in);
+									in.close();
+									in = null;
+									if(pic == null)
+										continue;
+									mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(pic, mWidth, mHeight, false));
+									sendThumbBack(mThumb, file.getPath());
+									valid = true;
+									break;
+								}
 							}
 						}
 						if(!valid)
@@ -178,6 +195,44 @@ public class ThumbnailCreator extends Thread {
 				}
 			}
 		}
+	}
+	
+	public static String getIconName(JarFile apk, File file)
+	{
+		String ret = "icon.png";
+		InputStream in = null;
+		try {
+			in = apk.getInputStream(apk.getEntry("AndroidManifest.xml"));
+			byte[] xml = new byte[in.available()];
+			in.read(xml);
+			int iIcon = Decoder.getAttributeResource(xml, "icon");
+			//String manifest = Decoder.decompressXML(xml);
+			if(iIcon > -1)
+			{
+				try {
+					ApkDecoder decoder = new ApkDecoder(file);
+					decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_NONE);
+					decoder.setDecodeResources(ApkDecoder.DECODE_RESOURCES_NONE);
+					ret = decoder.getResTable().getResSpec(iIcon).getName();
+				} catch (Error r) { 
+					Logger.LogError("Error getting icon resource name", r);
+				} catch (Exception e) {
+					Logger.LogError("Couldn't get icon resource name", e);
+				}
+			}
+		} catch(IOException ix) {
+			Logger.LogError("Couldn't read AndroidManifest.xml", ix);
+		}
+		finally {
+			if(in != null)
+				try {
+					in.close();
+				} catch (IOException e) {
+					Logger.LogError("Couldn't close AndroidManifest InputStream.", e);
+				}
+		}
+		
+		return ret;
 	}
 	
 	private void sendThumbBack(SoftReference<Bitmap> mThumb, String path)

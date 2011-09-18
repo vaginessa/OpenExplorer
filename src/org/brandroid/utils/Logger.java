@@ -39,6 +39,16 @@ public class Logger
 				ret++;
 		return ret;
 	}
+	private static StackTraceElement[] getMyStackTrace(Error e)
+	{
+		StackTraceElement[] elArray = e.getStackTrace();
+		StackTraceElement[] ret = new StackTraceElement[getMyStackTraceCount(elArray)];
+		int j = 0;
+		for(int i = 0; i < elArray.length; i++)
+			if(elArray[i].getClassName().contains("com.brandroid"))
+				ret[j++] = elArray[i];
+		return ret;
+	}
 	private static StackTraceElement[] getMyStackTrace(Exception e)
 	{
 		StackTraceElement[] elArray = e.getStackTrace();
@@ -64,6 +74,13 @@ public class Logger
 		LogToDB(Log.ERROR, msg, "");
 		Log.e(LOG_KEY, msg);
 	}
+	public static void LogError(String msg, Error ex)
+	{
+		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return;
+		ex.setStackTrace(getMyStackTrace(ex));
+		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
+		Log.e(LOG_KEY, msg, ex);
+	}
 	public static void LogError(String msg, Exception ex)
 	{
 		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return;
@@ -77,7 +94,7 @@ public class Logger
 		LogToDB(Log.WARN, msg, "");
 		Log.w(LOG_KEY, msg);
 	}
-	public static void LogWarning(String msg, Exception w)
+	public static void LogWarning(String msg, Error w)
 	{
 		if(CheckLastLog(w.getMessage(), Log.WARN)) return;
 		w.setStackTrace(getMyStackTrace(w));
