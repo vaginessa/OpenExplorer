@@ -18,20 +18,36 @@
  -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+	android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     
-    <fragment class="org.brandroid.openmanager.DirListActivity"
-    	android:id="@+id/list_frag"
-    	android:layout_height="match_parent"
-    	android:layout_width="match_parent" 
-    	android:layout_weight="3"/>
-    	
-    <fragment class="org.brandroid.openmanager.DirContentActivity"
-    	android:id="@+id/content_frag"
-    	android:layout_height="match_parent"
-    	android:layout_width="match_parent"
-    	android:layout_weight="1"/>
-    
+	<LinearLayout android:id="@+id/title_bar" android:orientation="horizontal"
+	    android:layout_width="match_parent" android:layout_height="wrap_content">
+		<ImageButton android:src="@drawable/icon" android:id="@+id/homeIcon"
+			android:layout_height="wrap_content" android:layout_width="wrap_content" />
+		<TextView android:text="@string/app_name"
+			android:gravity="left|center_vertical"
+			android:textAppearance="?android:attr/textAppearanceLarge"
+			android:layout_height="match_parent" android:layout_width="wrap_content" />
+	    
+	</LinearLayout>
+	<LinearLayout
+	    android:orientation="horizontal"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent">
+	    
+	    <fragment class="org.brandroid.openmanager.DirListActivity"
+	    	android:id="@+id/list_frag"
+	    	android:layout_height="match_parent"
+	    	android:layout_width="match_parent" 
+	    	android:layout_weight="3"/>
+	    	
+	    <fragment class="org.brandroid.openmanager.DirContentActivity"
+	    	android:id="@+id/content_frag"
+	    	android:layout_height="match_parent"
+	    	android:layout_width="match_parent"
+	    	android:layout_weight="1"/>
+	    
+	</LinearLayout>
 </LinearLayout>

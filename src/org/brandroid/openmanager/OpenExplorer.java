@@ -20,6 +20,7 @@ package org.brandroid.openmanager;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
@@ -28,6 +29,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.zip.Inflater;
 
 import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.utils.Logger;
 
 public class OpenExplorer extends Activity implements OnBackStackChangedListener {	
 	//menu IDs
@@ -66,6 +69,161 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 	
 	private FragmentManager fragmentManager;
 	
+    
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.main_fragments);
+
+        if(isGTV())
+		{
+			showToast("Welcome, GoogleTV user!");
+    		getActionBar().hide();
+		}
+        
+        fragmentManager = getFragmentManager();
+        fragmentManager.addOnBackStackChangedListener(this);
+        
+        /*
+        FragmentTransaction trans = fragmentManager.beginTransaction();
+        trans.add(R.id.content_frag, new DirContentActivity());
+        trans.addToBackStack(null);
+        trans.commit();
+        */
+        //getFragmentManager().findFragmentById(R.id.content_frag);
+        
+                
+        mEvHandler = ((DirContentActivity)getFragmentManager()
+        					.findFragmentById(R.id.content_frag)).getEventHandlerInst();
+        mFileManger = ((DirContentActivity)getFragmentManager()
+							.findFragmentById(R.id.content_frag)).getFileManagerInst();
+        
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mSearchView = new SearchView(this);
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        
+			
+			public boolean onQueryTextSubmit(String query) {
+				mSearchView.clearFocus();
+				mEvHandler.searchFile(mFileManger.getCurrentDir(), query);
+				
+				return true;
+			}
+			
+			
+			public boolean onQueryTextChange(String newText) {
+				return false;
+			}
+		});
+        
+        /* read and display the users preferences */
+        mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
+		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
+		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
+		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+    }
+    
+
+    
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	getMenuInflater().inflate(R.menu.actbar, menu);
+    	return true;
+    }
+
+
+    
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+    	if(item.isCheckable())
+    		item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
+    	
+    	switch(item.getItemId())
+    	{
+	    	case android.R.id.home:
+	    		if (mHeldFiles != null) {
+	    			//DialogFragment df = 
+	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.HOLDINGFILE_DIALOG, this);
+	    			dialog.setHoldingFileList(mHeldFiles);
+	    			
+	    			FragmentTransaction trans = fragmentManager.beginTransaction();
+	    			trans.replace(R.id.content_frag, dialog, "dialog");
+	    			//dialog.show(getFragmentManager(), "dialog");
+	    			trans.addToBackStack("dialog");
+	    			trans.commit();
+	    		}
+	    		return true;
+	    	
+	    	case R.id.menu_new_folder:
+	    	case MENU_DIR:
+	    		mEvHandler.createNewFolder(mFileManger.getCurrentDir());
+	    		return true;
+	    		
+	    	case R.id.menu_multi:
+	    	case MENU_MULTI:
+	    		if(mActionMode != null)
+	    			return false;
+	    		
+	    		mActionMode = startActionMode(mMultiSelectAction);
+	    		return true;
+	    		
+	    	case MENU_SORT:
+	    		return true;
+	    	
+	    	case R.id.menu_sort_name_asc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
+	    	case R.id.menu_sort_name_desc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
+	    	case R.id.menu_sort_date_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
+	    	case R.id.menu_sort_date_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
+	    	case R.id.menu_sort_size_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE); return true; 
+	    	case R.id.menu_sort_size_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
+	    	case R.id.menu_sort_type: 		mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
+	    	
+	    	case R.id.menu_view_grid: mSettingsListener.onViewChanged("grid"); return true;
+	    	case R.id.menu_view_list: mSettingsListener.onViewChanged("list"); return true;
+	    	case R.id.menu_view_hidden: mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
+	    	case R.id.menu_view_thumbs: mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
+	    	
+	    	case R.id.menu_root:
+	    		if(!item.isCheckable() || item.isChecked())
+	    		{
+	    			if(ExecuteAsRootBase.canRunRootCommands())
+	    				item.setTitle("ROOT!");
+	    			else
+	    				item.setEnabled(false).setChecked(false);
+	    		}
+	    		return true;
+	    	
+	    	case R.id.menu_settings:
+	    	case MENU_SETTINGS:
+	    		FragmentTransaction trans = fragmentManager.beginTransaction();
+	    		SettingsActivity frag = new SettingsActivity();
+	    		trans.replace(R.id.content_frag, frag);
+	    		trans.addToBackStack("Settings");
+	    		trans.commit();
+	    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
+	    		return true;
+	    		
+	    	case R.id.menu_search:
+	    	case MENU_SEARCH:
+	    		item.setActionView(mSearchView);
+	    		return true;
+    	}
+    	
+    	return super.onOptionsItemSelected(item);
+    }
+    
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+    	if (keyCode == KeyEvent.KEYCODE_BACK) {
+    		if (mBackQuit) {
+    			return super.onKeyUp(keyCode, event);
+    		} else {
+    			Toast.makeText(this, "Press back again to quit", Toast.LENGTH_SHORT).show();
+    			mBackQuit = true;
+    			return true;
+    		}    	
+    	}
+    	return super.onKeyUp(keyCode, event);
+    }
+    
 	private ActionMode.Callback mMultiSelectAction = new ActionMode.Callback() {
 		MultiSelectHandler handler;
 		
@@ -180,163 +338,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 		}
 	};
 	
-	
-	public interface OnSetingsChangeListener {
-		
-		public void onHiddenFilesChanged(boolean state);
-		public void onThumbnailChanged(boolean state);
-		public void onViewChanged(String state);
-		public void onSortingChanged(FileManager.SortType type);
-	}
-	
-    
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main_fragments);
-        
-        fragmentManager = getFragmentManager();
-        fragmentManager.addOnBackStackChangedListener(this);
-        
-        /*
-        FragmentTransaction trans = fragmentManager.beginTransaction();
-        trans.add(R.id.content_frag, new DirContentActivity());
-        trans.addToBackStack(null);
-        trans.commit();
-        */
-        //getFragmentManager().findFragmentById(R.id.content_frag);
-        
-                
-        mEvHandler = ((DirContentActivity)getFragmentManager()
-        					.findFragmentById(R.id.content_frag)).getEventHandlerInst();
-        mFileManger = ((DirContentActivity)getFragmentManager()
-							.findFragmentById(R.id.content_frag)).getFileManagerInst();
-        
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mSearchView = new SearchView(this);
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-        
-			
-			public boolean onQueryTextSubmit(String query) {
-				mSearchView.clearFocus();
-				mEvHandler.searchFile(mFileManger.getCurrentDir(), query);
-				
-				return true;
-			}
-			
-			
-			public boolean onQueryTextChange(String newText) {
-				return false;
-			}
-		});
-        
-        /* read and display the users preferences */
-        mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
-		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
-		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
-		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
-    }
-    
-    
-    public boolean onCreateOptionsMenu(Menu menu) {
-    	getMenuInflater().inflate(R.menu.actbar, menu);
-    	return true;
-    }
-
-
-    
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-    	if(item.isCheckable())
-    		item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
-    	
-    	switch(item.getItemId())
-    	{
-	    	case android.R.id.home:
-	    		if (mHeldFiles != null) {
-	    			//DialogFragment df = 
-	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.HOLDINGFILE_DIALOG, this);
-	    			dialog.setHoldingFileList(mHeldFiles);
-	    			
-	    			FragmentTransaction trans = fragmentManager.beginTransaction();
-	    			trans.replace(R.id.content_frag, dialog, "dialog");
-	    			//dialog.show(getFragmentManager(), "dialog");
-	    			trans.addToBackStack("dialog");
-	    			trans.commit();
-	    		}
-	    		return true;
-	    	
-	    	case R.id.menu_new_folder:
-	    	case MENU_DIR:
-	    		mEvHandler.createNewFolder(mFileManger.getCurrentDir());
-	    		return true;
-	    		
-	    	case R.id.menu_multi:
-	    	case MENU_MULTI:
-	    		if(mActionMode != null)
-	    			return false;
-	    		
-	    		mActionMode = startActionMode(mMultiSelectAction);
-	    		return true;
-	    		
-	    	case MENU_SORT:
-	    		return true;
-	    	
-	    	case R.id.menu_sort_name_asc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
-	    	case R.id.menu_sort_name_desc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
-	    	case R.id.menu_sort_date_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
-	    	case R.id.menu_sort_date_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
-	    	case R.id.menu_sort_size_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE); return true; 
-	    	case R.id.menu_sort_size_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
-	    	case R.id.menu_sort_type: 		mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
-	    	
-	    	case R.id.menu_view_grid: mSettingsListener.onViewChanged("grid"); return true;
-	    	case R.id.menu_view_list: mSettingsListener.onViewChanged("list"); return true;
-	    	case R.id.menu_view_hidden: mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
-	    	case R.id.menu_view_thumbs: mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
-	    	
-	    	case R.id.menu_root:
-	    		if(!item.isCheckable() || item.isChecked())
-	    		{
-	    			if(ExecuteAsRootBase.canRunRootCommands())
-	    				item.setTitle("ROOT!");
-	    			else
-	    				item.setEnabled(false).setChecked(false);
-	    		}
-	    		return true;
-	    	
-	    	case R.id.menu_settings:
-	    	case MENU_SETTINGS:
-	    		FragmentTransaction trans = fragmentManager.beginTransaction();
-	    		SettingsActivity frag = new SettingsActivity();
-	    		trans.replace(R.id.content_frag, frag);
-	    		trans.addToBackStack("Settings");
-	    		trans.commit();
-	    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
-	    		return true;
-	    		
-	    	case R.id.menu_search:
-	    	case MENU_SEARCH:
-	    		item.setActionView(mSearchView);
-	    		return true;
-    	}
-    	
-    	return super.onOptionsItemSelected(item);
-    }
-    
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-    	if (keyCode == KeyEvent.KEYCODE_BACK) {
-    		if (mBackQuit) {
-    			return super.onKeyUp(keyCode, event);
-    		} else {
-    			Toast.makeText(this, "Press back again to quit", Toast.LENGTH_SHORT).show();
-    			mBackQuit = true;
-    			return true;
-    		}    	
-    	}
-    	return super.onKeyUp(keyCode, event);
-    }
-    
-    public static void setOnSetingsChangeListener(OnSetingsChangeListener e) {
+	public static void setOnSetingsChangeListener(OnSetingsChangeListener e) {
     	mSettingsListener = e;
     }
     
@@ -394,5 +396,29 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 	public void onBackStackChanged() {
 		//fragmentManager.
 	}
+	
+	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
+	public void showToast(final String message)  {
+		Logger.LogInfo("Made toast: " + message);
+        showToast(message, Toast.LENGTH_SHORT);
+    }
+	public void showToast(final int iStringResource) { showToast(getResources().getString(iStringResource)); }
+	public void showToast(final String message, final int toastLength)  {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(getBaseContext(), message, toastLength).show();
+            }
+        });
+    }
+
+	
+	public interface OnSetingsChangeListener {
+		
+		public void onHiddenFilesChanged(boolean state);
+		public void onThumbnailChanged(boolean state);
+		public void onViewChanged(String state);
+		public void onSortingChanged(FileManager.SortType type);
+	}
+	
 }
 

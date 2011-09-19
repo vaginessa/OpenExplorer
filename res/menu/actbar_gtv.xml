@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+	<item
+		android:id="@+id/menu_search"
+		android:icon="@drawable/search"
+		android:showAsAction="always"
+		android:title="Search" />
+	<item
+		android:id="@+id/menu_sort"
+		android:icon="@android:drawable/ic_menu_sort_alphabetically"
+		android:showAsAction="always|withText"
+		android:title="Sort">
+		<menu>
+			<group android:checkableBehavior="single">
+				<item
+					android:id="@+id/menu_sort_name_asc"
+					android:checked="true"
+					android:title="Sort by Name (A-Z)"
+					android:showAsAction="withText" />
+				<item
+					android:id="@+id/menu_sort_name_desc"
+					android:title="Sort by Name (Z-A)"
+					android:showAsAction="withText" />
+				<item
+					android:id="@+id/menu_sort_date_asc"
+					android:title="Sort by Newest"
+					android:showAsAction="withText" />
+				<item
+					android:id="@+id/menu_sort_date_desc"
+					android:title="Sort by Oldest"
+					android:showAsAction="withText" />
+				<item
+					android:id="@+id/menu_sort_size_asc"
+					android:title="Sort by Smallest"
+					android:showAsAction="withText" />
+				<item
+					android:id="@+id/menu_sort_size_desc"
+					android:title="Sort by Largest"
+					android:showAsAction="withText" />
+				<item
+					android:id="@+id/menu_sort_type"
+					android:title="Sort by Filetype"
+					android:showAsAction="withText" />
+			</group>
+		</menu>
+	</item>
+	<item
+		android:id="@+id/menu_view"
+		android:icon="@android:drawable/picture_frame"
+		android:showAsAction="always|withText"
+		android:title="View">
+		<menu>
+			<item
+				android:id="@+id/menu_multi"
+				android:icon="@drawable/multiselect"
+				android:showAsAction="ifRoom"
+				android:title="Multi-Select" />
+			<group android:checkableBehavior="single">
+				<item
+					android:id="@+id/menu_view_grid"
+					android:title="Grid View" />
+				<item
+					android:id="@+id/menu_view_list"
+					android:checked="true"
+					android:title="List View" />
+			</group>
+			<item
+				android:id="@+id/menu_view_hidden"
+				android:checkable="true"
+				android:title="Show Hidden Files" />
+			<item
+				android:id="@+id/menu_view_thumbs"
+				android:checkable="true"
+				android:checked="true"
+				android:title="Show Image Thumbnails" />
+			<item
+				android:id="@+id/menu_root"
+				android:checkable="true"
+				android:title="Root" />
+		</menu>
+	</item>
+	<item
+		android:id="@+id/menu_new_folder"
+		android:icon="@drawable/newfolder"
+		android:showAsAction="always|withText"
+		android:title="New Folder" />
+	<item
+		android:id="@+id/menu_settings"
+		android:icon="@drawable/settings_actbar"
+		android:showAsAction="always|withText"
+		android:title="Settings" />
+</menu>

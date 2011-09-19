@@ -26,6 +26,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.Gravity;
 import brut.androlib.ApkDecoder;
+import brut.androlib.res.AndrolibResources;
+import brut.androlib.res.util.ExtFile;
 
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
@@ -210,10 +212,10 @@ public class ThumbnailCreator extends Thread {
 			if(iIcon > -1)
 			{
 				try {
-					ApkDecoder decoder = new ApkDecoder(file);
-					decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_NONE);
-					decoder.setDecodeResources(ApkDecoder.DECODE_RESOURCES_NONE);
-					ret = decoder.getResTable().getResSpec(iIcon).getName();
+					ret = new AndrolibResources()
+							.getResTable(new ExtFile(file))
+							.getResSpec(iIcon)
+							.getName();
 				} catch (Error r) { 
 					Logger.LogError("Error getting icon resource name", r);
 				} catch (Exception e) {
