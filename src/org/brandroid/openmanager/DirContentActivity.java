@@ -18,7 +18,7 @@
 
 package org.brandroid.openmanager;
 
-import org.brandroid.openmanager.DirListActivity.OnChangeLocationListener;
+import org.brandroid.openmanager.BookmarkFragment.OnChangeLocationListener;
 import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.openmanager.OpenExplorer.OnSetingsChangeListener;
@@ -93,7 +93,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	private ArrayList<String> mHoldingFileList; //holding files waiting to be pasted(moved)
 	private ArrayList<String> mHoldingZipList; //holding zip files waiting to be unzipped.
 	private Context mContext;
-	private DataAdapter mDelegate;
+	private DataAdapter mContentAdapter;
 	private ActionMode mActionMode;
 	private boolean mActionModeSelected;
 	private boolean mHoldingFile;
@@ -351,7 +351,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, false);
 		
 		OpenExplorer.setOnSetingsChangeListener(this);
-		DirListActivity.setOnChangeLocationListener(this);
+		BookmarkFragment.setOnChangeLocationListener(this);
 	}
 	
 	 //@Override
@@ -380,10 +380,10 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 		
 		if(mShowGrid) {
-			mDelegate = new DataAdapter(mContext, R.layout.grid_content_layout, mData);
+			mContentAdapter = new DataAdapter(mContext, R.layout.grid_content_layout, mData);
 			mGrid.setVisibility(View.VISIBLE);	
 			mGrid.setOnItemClickListener(this);
-			mGrid.setAdapter(mDelegate);
+			mGrid.setAdapter(mContentAdapter);
 			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 				
 				//@Override
@@ -409,9 +409,9 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			});
 			
 		} else if(!mShowGrid) {
-			mDelegate = new DataAdapter(mContext, R.layout.list_content_layout, mData);
+			mContentAdapter = new DataAdapter(mContext, R.layout.list_content_layout, mData);
 			mList.setVisibility(View.VISIBLE);	
-			mList.setAdapter(mDelegate);
+			mList.setAdapter(mContentAdapter);
 			mList.setOnItemClickListener(this);
 			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
 
@@ -637,7 +637,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		getFragmentManager().popBackStackImmediate("Settings", 0);
 		
 		mData = mFileMang.setHomeDir(name);
-		mDelegate.notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 		
 		mPathView.removeAllViews();
 		mBackPathIndex = 0;
@@ -668,12 +668,12 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					
 					if (f.isDirectory()) {
 						mData = mFileMang.getNextDir(f.getPath(), true);
-						mDelegate.notifyDataSetChanged();
+						mContentAdapter.notifyDataSetChanged();
 						
 					} else {
 						name = f.getPath().substring(0, f.getPath().lastIndexOf("/"));
 						mData = mFileMang.getNextDir(name, true);
-						mDelegate.notifyDataSetChanged();
+						mContentAdapter.notifyDataSetChanged();
 					}						
 				}
 			});
@@ -693,7 +693,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			
 		} else {
 			mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
-			mDelegate.notifyDataSetChanged();
+			mContentAdapter.notifyDataSetChanged();
 		}
 	}
 	
@@ -702,20 +702,20 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mFileMang.setShowHiddenFiles(state);
 		
 		mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
-		mDelegate.notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 	}
 
 	//@Override
 	public void onThumbnailChanged(boolean state) {
 		mShowThumbnails = state;
-		mDelegate.notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 	}
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
 		mFileMang.setSorting(type);
 		mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
-		mDelegate.notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 	}
 	
 	public void onSortingChanged(String state) {
@@ -729,7 +729,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mFileMang.setSorting(SortType.SIZE);
 
 		mData = mFileMang.getNextDir(mFileMang.getCurrentDir(), true);
-		mDelegate.notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 	}
 
 	//@Override
@@ -738,7 +738,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		if(state.equals("list") && mShowGrid) {						
 			mList.setVisibility(View.VISIBLE);	
 			mList.setOnItemClickListener(this);
-			mList.setAdapter(mDelegate);
+			mList.setAdapter(mContentAdapter);
 			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
 
 				////@Override
@@ -768,7 +768,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		} else if (state.equals("grid") && !mShowGrid) {
 			mGrid.setVisibility(View.VISIBLE);	
 			mGrid.setOnItemClickListener(this);
-			mGrid.setAdapter(mDelegate);
+			mGrid.setAdapter(mContentAdapter);
 			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 				
 				////@Override
@@ -878,7 +878,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					
 					subPath = path.substring(0, path.lastIndexOf(bname));					
 					mData = mFileMang.getNextDir(subPath + bname, true);
-					mDelegate.notifyDataSetChanged();
+					mContentAdapter.notifyDataSetChanged();
 				}
 			}
 		});
@@ -888,7 +888,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mPathView.addView(button);
 		
 		if (refreshList)
-			mDelegate.notifyDataSetChanged();
+			mContentAdapter.notifyDataSetChanged();
 	}
 	
 	

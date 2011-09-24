@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+    <TextView android:id="@+id/lblApk"
+    	android:layout_alignParentLeft="true" android:layout_alignParentTop="true"
+    	android:textAppearance="?android:attr/textAppearanceLarge" android:layout_height="wrap_content" android:layout_width="wrap_content"
+    	android:text="Decompiling APK: " />
+    <TextView android:id="@+id/txtApk" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_toRightOf="@+id/lblApk"
+    	android:text="/mnt/sdcard/" android:textAppearance="?android:attr/textAppearanceLarge"
+    	/>
+    <ProgressBar android:layout_height="wrap_content" android:layout_width="wrap_content"
+    	android:minWidth="200dp" android:minHeight="20dp"
+    	android:indeterminate="true"
+    	style="?android:attr/progressBarStyleHorizontal"
+		android:id="@+id/progress"
+		android:layout_below="@+id/lblApk" android:layout_alignParentLeft="true"></ProgressBar>
+    <TextView android:id="@+id/txtStats"
+    	android:textAppearance="?android:attr/textAppearanceMedium"
+    	android:layout_alignParentLeft="true" android:layout_below="@+id/progress"
+    	android:layout_height="wrap_content" android:layout_width="wrap_content"
+    	android:text="File Size: 0b"
+    	/>
+</RelativeLayout>

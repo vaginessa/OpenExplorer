@@ -34,6 +34,7 @@ import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -57,10 +58,15 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 	private static final int MENU_SORT = 		0x5;
 	private static final int PREF_CODE =		0x6;
 	
+	private static final int MENU_ID_DELETE = 12;
+	private static final int MENU_ID_COPY = 13;
+	private static final int MENU_ID_CUT = 14;
+	private static final int MENU_ID_SEND = 15;
+	
 	private static OnSetingsChangeListener mSettingsListener;
 	private SharedPreferences mPreferences;
-	private ActionMode mActionMode;
 	private SearchView mSearchView;
+	private ActionMode mActionMode;
 	private ArrayList<String> mHeldFiles;
 	private boolean mBackQuit = false;
 	
@@ -79,7 +85,8 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 		{
 			showToast("Welcome, GoogleTV user!");
     		getActionBar().hide();
-		}
+		} else
+			findViewById(R.id.title_bar).setVisibility(View.GONE);
         
         fragmentManager = getFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
@@ -181,7 +188,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 	    	case R.id.menu_view_list: mSettingsListener.onViewChanged("list"); return true;
 	    	case R.id.menu_view_hidden: mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
 	    	case R.id.menu_view_thumbs: mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
-	    	
+	    	    	
 	    	case R.id.menu_root:
 	    		if(!item.isCheckable() || item.isChecked())
 	    		{
@@ -247,10 +254,10 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 			handler = MultiSelectHandler.getInstance(OpenExplorer.this);
 			mode.setTitle("Multi-select Options");
 			
-			menu.add(0, 12, 0, "Delete");
-			menu.add(0, 13, 0, "Copy");
-			menu.add(0, 14, 0, "Cut");
-			menu.add(0, 15, 0, "Send");
+			menu.add(0, MENU_ID_DELETE, 0, "Delete");
+			menu.add(0, MENU_ID_COPY, 0, "Copy");
+			menu.add(0, MENU_ID_CUT, 0, "Cut");
+			menu.add(0, MENU_ID_SEND, 0, "Send");
 			
 			((DirContentActivity)getFragmentManager()
 					.findFragmentById(R.id.content_frag))
@@ -371,9 +378,9 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
     
     protected void onPause() {
     	super.onPause();
-    	String list = ((DirListActivity)getFragmentManager()
+    	String list = ((BookmarkFragment)getFragmentManager()
     					.findFragmentById(R.id.list_frag)).getDirListString();
-    	String bookmark = ((DirListActivity)getFragmentManager()
+    	String bookmark = ((BookmarkFragment)getFragmentManager()
     					.findFragmentById(R.id.list_frag)).getBookMarkNameString();
     	
     	String saved = mPreferences.getString(SettingsActivity.PREF_LIST_KEY, "");

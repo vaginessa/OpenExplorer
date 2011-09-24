@@ -42,7 +42,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.io.File;
 
-public class DirListActivity extends ListFragment implements OnBookMarkAddListener,
+public class BookmarkFragment extends ListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
 	private static int BOOKMARK_POS = 6;
 	
