@@ -31,6 +31,8 @@ public class APKDecompiler extends Activity
 		mIntent = getIntent();
 		//Logger.LogInfo("APKDecompiler Intent: " + mIntent.toString());
 		// Starting: Intent { act=android.intent.action.VIEW dat=file:///sdcard/Download/asphault6.apk typ=application/vnd.android.package-archive cmp=com.android.packageinstaller/.PackageInstallerActivity } from pid 16980
+		if(!ExecuteAsRootBase.canRunRootCommands())
+			finish();
 		File apkFile = new File(mIntent.getDataString().replace("file://", ""));
 		Logger.LogInfo("Decompiling " + apkFile.getAbsolutePath());
 		mTxtAPK = (TextView)findViewById(R.id.txtApk);
@@ -70,9 +72,9 @@ public class APKDecompiler extends Activity
 					ApkDecoder decoder = new ApkDecoder(new Androlib());
 					decoder.setApkFile(apk);
 					decoder.setOutDir(out);
-					decoder.setDecodeResources(ApkDecoder.DECODE_RESOURCES_FULL);
+					decoder.setDecodeResources(ApkDecoder.DECODE_RESOURCES_NONE);
 					decoder.setKeepBrokenResources(true);
-					decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_NONE);
+					decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_JAVA);
 					decoder.setDebugMode(true);
 					decoder.decode();
 					publishProgress(++i);

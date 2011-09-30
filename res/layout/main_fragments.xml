@@ -30,6 +30,14 @@
 			android:gravity="left|center_vertical"
 			android:textAppearance="?android:attr/textAppearanceLarge"
 			android:layout_height="match_parent" android:layout_width="wrap_content" />
+
+		<ToggleButton
+		    android:id="@+id/btnFavorites"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:textOn="Favorites"
+		    android:textOff="Tree"
+		    android:text="Favorites" />
 	    
 	</LinearLayout>
 	<LinearLayout
@@ -37,7 +45,7 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent">
 	    
-	    <fragment class="org.brandroid.openmanager.BookmarkFragment"
+	    <FrameLayout
 	    	android:id="@+id/list_frag"
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent" 

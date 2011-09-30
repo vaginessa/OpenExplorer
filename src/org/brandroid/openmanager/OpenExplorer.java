@@ -18,25 +18,32 @@
 
 package org.brandroid.openmanager;
 
+import android.inputmethodservice.Keyboard.Key;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.DialogFragment;
-import android.app.FragmentManager;
-import android.app.FragmentManager.OnBackStackChangedListener;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ListFragment;
+import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.SearchView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -48,7 +55,7 @@ import java.util.zip.Inflater;
 import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
-public class OpenExplorer extends Activity implements OnBackStackChangedListener {	
+public class OpenExplorer extends FragmentActivity implements OnBackStackChangedListener {	
 	//menu IDs
 	private static final int MENU_DIR = 		0x0;
 	private static final int MENU_SEARCH = 		0x1;
@@ -66,9 +73,12 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 	private static OnSetingsChangeListener mSettingsListener;
 	private SharedPreferences mPreferences;
 	private SearchView mSearchView;
+	private ToggleButton mBtnFavorites;
 	private ActionMode mActionMode;
 	private ArrayList<String> mHeldFiles;
 	private boolean mBackQuit = false;
+	
+	private Fragment mFavoritesFragment, mTreeFragment;
 	
 	private EventHandler mEvHandler;
 	private FileManager mFileManger;
@@ -88,8 +98,15 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 		} else
 			findViewById(R.id.title_bar).setVisibility(View.GONE);
         
-        fragmentManager = getFragmentManager();
+        fragmentManager = getSupportFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
+        
+        mTreeFragment = new DirListFragment();
+        mFavoritesFragment = new BookmarkFragment();
+        
+        FragmentTransaction ft = fragmentManager.beginTransaction();
+        ft.add(R.id.list_frag, mTreeFragment);
+        ft.commit();
         
         /*
         FragmentTransaction trans = fragmentManager.beginTransaction();
@@ -99,10 +116,21 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
         */
         //getFragmentManager().findFragmentById(R.id.content_frag);
         
+        mBtnFavorites = (ToggleButton)findViewById(R.id.btnFavorites);
+        mBtnFavorites.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				FragmentTransaction ft = fragmentManager.beginTransaction();
+				if(isChecked) // Favorites
+					ft.replace(R.id.list_frag, mFavoritesFragment);
+				else // Tree
+					ft.replace(R.id.list_frag, mTreeFragment);
+				ft.commit();
+			}
+		});
                 
-        mEvHandler = ((DirContentActivity)getFragmentManager()
+        mEvHandler = ((DirContentActivity)getSupportFragmentManager()
         					.findFragmentById(R.id.content_frag)).getEventHandlerInst();
-        mFileManger = ((DirContentActivity)getFragmentManager()
+        mFileManger = ((DirContentActivity)getSupportFragmentManager()
 							.findFragmentById(R.id.content_frag)).getFileManagerInst();
         
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -137,6 +165,19 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
     	return true;
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	switch(keyCode)
+    	{
+	    	case KeyEvent.KEYCODE_DPAD_RIGHT:
+	    		//fragmentManager.findFragmentById(R.id.content_frag).getView().requestFocus();
+	    		break;
+	    	case KeyEvent.KEYCODE_DPAD_LEFT:
+	        	fragmentManager.findFragmentById(R.id.list_frag).getView().requestFocus();
+	        	break;
+    	}
+    	return super.onKeyDown(keyCode, event);
+    }
 
     
     public boolean onOptionsItemSelected(MenuItem item)
@@ -193,20 +234,19 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 	    		if(!item.isCheckable() || item.isChecked())
 	    		{
 	    			if(ExecuteAsRootBase.canRunRootCommands())
+	    			{
+	    				showToast("Root enabled");
 	    				item.setTitle("ROOT!");
-	    			else
+	    			} else {
 	    				item.setEnabled(false).setChecked(false);
+	    				showToast("Unable to achieve root.");
+	    			}
 	    		}
 	    		return true;
 	    	
 	    	case R.id.menu_settings:
 	    	case MENU_SETTINGS:
-	    		FragmentTransaction trans = fragmentManager.beginTransaction();
-	    		SettingsActivity frag = new SettingsActivity();
-	    		trans.replace(R.id.content_frag, frag);
-	    		trans.addToBackStack("Settings");
-	    		trans.commit();
-	    		//startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
+	    		startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
 	    		return true;
 	    		
 	    	case R.id.menu_search:
@@ -219,6 +259,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
     }
     
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+    	/*
     	if (keyCode == KeyEvent.KEYCODE_BACK) {
     		if (mBackQuit) {
     			return super.onKeyUp(keyCode, event);
@@ -227,7 +268,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
     			mBackQuit = true;
     			return true;
     		}    	
-    	}
+    	}*/
     	return super.onKeyUp(keyCode, event);
     }
     
@@ -241,7 +282,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 		
 		
 		public void onDestroyActionMode(ActionMode mode) {			
-			((DirContentActivity)getFragmentManager()
+			((DirContentActivity)getSupportFragmentManager()
 					.findFragmentById(R.id.content_frag))
 						.changeMultiSelectState(false, handler);
 			
@@ -259,7 +300,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 			menu.add(0, MENU_ID_CUT, 0, "Cut");
 			menu.add(0, MENU_ID_SEND, 0, "Send");
 			
-			((DirContentActivity)getFragmentManager()
+			((DirContentActivity)getSupportFragmentManager()
 					.findFragmentById(R.id.content_frag))
 						.changeMultiSelectState(true, handler);
 			
@@ -292,7 +333,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 			
 			case 13: /* copy */
 				getActionBar().setTitle("Holding " + files.size() + " File");
-				((DirContentActivity)getFragmentManager()
+				((DirContentActivity)getSupportFragmentManager()
 						.findFragmentById(R.id.content_frag))
 							.setCopiedFiles(mHeldFiles, false);
 				
@@ -304,7 +345,7 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
 				
 			case 14: /* cut */
 				getActionBar().setTitle("Holding " + files.size() + " File");
-				((DirContentActivity)getFragmentManager()
+				((DirContentActivity)getSupportFragmentManager()
 						.findFragmentById(R.id.content_frag))
 							.setCopiedFiles(mHeldFiles, true);
 				
@@ -378,10 +419,13 @@ public class OpenExplorer extends Activity implements OnBackStackChangedListener
     
     protected void onPause() {
     	super.onPause();
-    	String list = ((BookmarkFragment)getFragmentManager()
-    					.findFragmentById(R.id.list_frag)).getDirListString();
-    	String bookmark = ((BookmarkFragment)getFragmentManager()
-    					.findFragmentById(R.id.list_frag)).getBookMarkNameString();
+    	Fragment fragList = fragmentManager.findFragmentById(R.id.list_frag);
+    	String list = "", bookmark = "";
+    	if(fragList.getClass().equals(BookmarkFragment.class))
+    	{
+    		list = ((BookmarkFragment)fragList).getDirListString();
+    		bookmark = ((BookmarkFragment)fragList).getBookMarkNameString();
+    	}
     	
     	String saved = mPreferences.getString(SettingsActivity.PREF_LIST_KEY, "");
     	String saved_book = mPreferences.getString(SettingsActivity.PREF_BOOKNAME_KEY, "");

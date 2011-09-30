@@ -28,7 +28,6 @@ import org.brandroid.utils.Logger;
 import java.io.File;
 import java.util.ArrayList;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -36,6 +35,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ActivityNotFoundException;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.ActionMode;
 import android.view.LayoutInflater;

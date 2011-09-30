@@ -20,9 +20,11 @@ package org.brandroid.openmanager;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.view.Menu;
 
-public class SettingsActivity extends PreferenceFragment {
+public class SettingsActivity extends PreferenceActivity {
 	//keys used for preference file
 	public static final String PREF_LIST_KEY =		"pref_dirlist";
 	public static final String PREF_BOOKNAME_KEY = 	"pref_bookmarks";
@@ -36,5 +38,11 @@ public class SettingsActivity extends PreferenceFragment {
 		super.onCreate(savedInstanceState);
 		
 		addPreferencesFromResource(R.xml.preferences);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.actbar, menu);
+		return true;
 	}
 }
