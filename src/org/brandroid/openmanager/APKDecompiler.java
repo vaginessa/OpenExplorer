@@ -6,9 +6,9 @@ import java.util.ArrayList;
 
 import org.brandroid.utils.Logger;
 
-import brut.androlib.Androlib;
-import brut.androlib.AndrolibException;
-import brut.androlib.ApkDecoder;
+//import brut.androlib.Androlib;
+//import brut.androlib.AndrolibException;
+//import brut.androlib.ApkDecoder;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -68,6 +68,7 @@ public class APKDecompiler extends Activity
 				while(out.exists())
 					out = new File("/mnt/sdcard/download/" + apk.getName().replace(".apk", "") + "-" + (++iDir) + "/");
 				try {
+					/*
 					Androlib al = new Androlib();
 					ApkDecoder decoder = new ApkDecoder(new Androlib());
 					decoder.setApkFile(apk);
@@ -77,6 +78,7 @@ public class APKDecompiler extends Activity
 					decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_JAVA);
 					decoder.setDebugMode(true);
 					decoder.decode();
+					*/
 					publishProgress(++i);
 				} catch (Exception e) {
 					Logger.LogError("Couldn't decode APK - " + out.getAbsolutePath() + " - " + e.getMessage(), e);

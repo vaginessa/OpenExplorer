@@ -4,31 +4,32 @@ import java.io.File;
 
 import org.brandroid.openmanager.adapters.RecursiveDirectoryAdapter;
 
-import android.app.ExpandableListActivity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ExpandableListAdapter;
-import android.widget.ExpandableListView;
+import android.widget.ListView;
 
 public class DirListFragment extends Fragment
 {
-	ExpandableListView mList;
+	ListView mList;
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.directory_tree_list, null);
-		mList = (ExpandableListView)view.findViewById(R.id.list_tree);
-		return view;
+		View ret = inflater.inflate(R.layout.directory_tree_list, null);
+		mList = (ListView)ret.findViewById(R.id.list);
+		return ret;
 	}
 	
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
-		super.onViewCreated(view, savedInstanceState);
+		if(mList == null)
+			mList = (ListView)view.findViewById(R.id.list);
 		RecursiveDirectoryAdapter adapter = new RecursiveDirectoryAdapter(new File("/"), getActivity());
 		mList.setAdapter(adapter);
+		super.onViewCreated(view, savedInstanceState);
 	}
 }

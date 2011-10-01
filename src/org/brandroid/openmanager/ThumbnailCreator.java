@@ -21,13 +21,16 @@ package org.brandroid.openmanager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Gravity;
-import brut.androlib.ApkDecoder;
-import brut.androlib.res.AndrolibResources;
-import brut.androlib.res.util.ExtFile;
 
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
@@ -122,7 +125,26 @@ public class ThumbnailCreator extends Thread {
 							valid = true;
 						}
 						if(!valid) {
-							String iconName = getIconName(apk, file);
+							PackageManager man = mContext.getPackageManager();
+							PackageInfo pinfo = man.getPackageArchiveInfo(file.getAbsolutePath(), PackageManager.GET_ACTIVITIES);
+							ApplicationInfo ainfo = pinfo.applicationInfo;
+							if(Build.VERSION.SDK_INT >= 8)
+								ainfo.publicSourceDir = ainfo.sourceDir = file.getPath();
+							Drawable mIcon = ainfo.loadIcon(man);
+							if(mIcon != null)
+							{
+								Bitmap pic = ((BitmapDrawable)mIcon).getBitmap();
+								if(pic != null)
+								{
+									mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(pic, mWidth, mHeight, false));
+									sendThumbBack(mThumb, file.getAbsolutePath());
+									valid = true;
+								}
+							}
+						}
+						if(!valid) {
+							Logger.LogWarning("Couldn't get icon for " + file.getAbsolutePath());
+							String iconName = "icon"; //getIconName(apk, file);
 							if(iconName.indexOf(" ") > -1)
 								iconName = "icon";
 							for(String s : new String[]{"drawable-mdpi","drawable","drawable-hdpi","drawable-ldpi"})
@@ -199,43 +221,6 @@ public class ThumbnailCreator extends Thread {
 		}
 	}
 	
-	public static String getIconName(JarFile apk, File file)
-	{
-		String ret = "icon.png";
-		InputStream in = null;
-		try {
-			in = apk.getInputStream(apk.getEntry("AndroidManifest.xml"));
-			byte[] xml = new byte[in.available()];
-			in.read(xml);
-			int iIcon = Decoder.getAttributeResource(xml, "icon");
-			//String manifest = Decoder.decompressXML(xml);
-			if(iIcon > -1)
-			{
-				try {
-					ret = new AndrolibResources()
-							.getResTable(new ExtFile(file))
-							.getResSpec(iIcon)
-							.getName();
-				} catch (Error r) { 
-					Logger.LogError("Error getting icon resource name", r);
-				} catch (Exception e) {
-					Logger.LogError("Couldn't get icon resource name", e);
-				}
-			}
-		} catch(IOException ix) {
-			Logger.LogError("Couldn't read AndroidManifest.xml", ix);
-		}
-		finally {
-			if(in != null)
-				try {
-					in.close();
-				} catch (IOException e) {
-					Logger.LogError("Couldn't close AndroidManifest InputStream.", e);
-				}
-		}
-		
-		return ret;
-	}
 	
 	private void sendThumbBack(SoftReference<Bitmap> mThumb, String path)
 	{

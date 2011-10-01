@@ -3,8 +3,20 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical"
 	android:layout_width="match_parent"
-	android:layout_height="wrap_content">
-    <ExpandableListView android:layout_height="match_parent" android:layout_width="match_parent"
-    	android:id="@+id/list_tree">
-    </ExpandableListView>
+	android:layout_height="match_parent">
+<LinearLayout
+	android:id="@+id/title_layout"
+	android:orientation="horizontal"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:gravity="center|left"
+	>
+	<ImageButton android:id="@+id/btn_toggle" android:layout_width="50dp" android:layout_height="wrap_content" android:src="@drawable/expander" />
+	<TextView android:id="@+id/title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="File" android:textSize="30dp" />
+</LinearLayout>
+	<ListView
+    	android:layout_height="match_parent"
+    	android:layout_width="match_parent"
+    	android:id="@+id/list">
+    </ListView>
 </LinearLayout>

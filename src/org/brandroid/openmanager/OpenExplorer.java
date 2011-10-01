@@ -94,9 +94,9 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         if(isGTV())
 		{
 			showToast("Welcome, GoogleTV user!");
-    		getActionBar().hide();
-		} else
-			findViewById(R.id.title_bar).setVisibility(View.GONE);
+			//getActionBar().hide();
+		} // else
+		findViewById(R.id.title_bar).setVisibility(View.GONE);
         
         fragmentManager = getSupportFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
@@ -105,7 +105,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         mFavoritesFragment = new BookmarkFragment();
         
         FragmentTransaction ft = fragmentManager.beginTransaction();
-        ft.add(R.id.list_frag, mTreeFragment);
+        ft.add(R.id.list_frag, mFavoritesFragment);
         ft.commit();
         
         /*
@@ -117,14 +117,10 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         //getFragmentManager().findFragmentById(R.id.content_frag);
         
         mBtnFavorites = (ToggleButton)findViewById(R.id.btnFavorites);
+        mBtnFavorites.setChecked(true);
         mBtnFavorites.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				FragmentTransaction ft = fragmentManager.beginTransaction();
-				if(isChecked) // Favorites
-					ft.replace(R.id.list_frag, mFavoritesFragment);
-				else // Tree
-					ft.replace(R.id.list_frag, mTreeFragment);
-				ft.commit();
+				toggleListView(isChecked);
 			}
 		});
                 
@@ -158,7 +154,21 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
     
+    public void toggleListView()
+    {
+    	Boolean bFavorites = !fragmentManager.findFragmentById(R.id.list_frag).getClass().equals(BookmarkFragment.class);
+    	toggleListView(bFavorites);
+    }
 
+    public void toggleListView(Boolean bFavorites)
+    {
+    	FragmentTransaction ft = fragmentManager.beginTransaction();
+		if(bFavorites) // Favorites
+			ft.replace(R.id.list_frag, mFavoritesFragment);
+		else // Tree
+			ft.replace(R.id.list_frag, mTreeFragment);
+		ft.commit();
+    }
     
     public boolean onCreateOptionsMenu(Menu menu) {
     	getMenuInflater().inflate(R.menu.actbar, menu);
@@ -178,7 +188,6 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     	}
     	return super.onKeyDown(keyCode, event);
     }
-
     
     public boolean onOptionsItemSelected(MenuItem item)
     {
@@ -198,6 +207,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    			//dialog.show(getFragmentManager(), "dialog");
 	    			trans.addToBackStack("dialog");
 	    			trans.commit();
+	    		} else {
+	    			toggleListView();
 	    		}
 	    		return true;
 	    	

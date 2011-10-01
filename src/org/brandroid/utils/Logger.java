@@ -101,6 +101,13 @@ public class Logger
 		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
 		Log.w(LOG_KEY, msg, w);
 	}
+	public static void LogWarning(String msg, Exception w)
+	{
+		if(CheckLastLog(w.getMessage(), Log.WARN)) return;
+		w.setStackTrace(getMyStackTrace(w));
+		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
+		Log.w(LOG_KEY, msg, w);
+	}
 	public static void LogInfo(String msg)
 	{
 		if(CheckLastLog(msg, Log.INFO)) return;
