@@ -147,7 +147,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			mLastIndicater.setVisibility(View.GONE);
 			
 		v = (ImageView)view.findViewById(R.id.list_arrow);
-		v.setVisibility(View.VISIBLE);
+		//v.setVisibility(View.VISIBLE);
 		mLastIndicater = v;
 		
 		getFragmentManager().popBackStackImmediate("Settings", 0);
@@ -336,7 +336,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			
 			if(mLastIndicater == null) {
 				if(position == 1) {
-					mHolder.mIndicate.setVisibility(View.VISIBLE);
+					//mHolder.mIndicate.setVisibility(View.VISIBLE);
 					mLastIndicater = mHolder.mIndicate;
 				}
 			}

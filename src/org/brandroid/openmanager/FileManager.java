@@ -88,7 +88,9 @@ public class FileManager {
 	 * @return the current directory
 	 */
 	public String getCurrentDir() {
-		return mPathStack.peek();
+		String ret = mPathStack.peek();
+		if(ret.startsWith("//")) ret = ret.substring(1);
+		return ret;
 	}
 	
 	/**

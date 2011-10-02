@@ -17,16 +17,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
 
-public class RecursiveDirectoryAdapter extends BaseAdapter
+public class RecursiveDirectoryAdapter extends BaseAdapter implements OnItemClickListener
 {
 	private File[] mDirectories;
 	private Context mContext;
@@ -39,10 +42,22 @@ public class RecursiveDirectoryAdapter extends BaseAdapter
 		Logger.LogDebug("Recursing " + parent.getAbsolutePath() + " (" + (mDirectories != null ? mDirectories.length : "-1") + " directories)...");
 		mContext = context;
 	}
+
+	public void onItemClick(AdapterView<?> adapter, View view, int position, long id)
+	{
+		if(view == null)
+			return;
+		View list = view.findViewById(R.id.list);
+		if(list == null) return;
+		if(list.getVisibility() == View.GONE)
+			list.setVisibility(View.VISIBLE);
+		else
+			list.setVisibility(View.GONE);
+	}
 	
 	public static File[] getSubDirectories(File parent)
 	{
-		Logger.LogDebug("Getting subdirs for " + parent.getAbsolutePath());
+		//Logger.LogDebug("Getting subdirs for " + parent.getAbsolutePath());
 		if(DirectoryCache.containsKey(parent))
 			return DirectoryCache.get(parent);
 		ArrayList<File> dirs = new ArrayList<File>();
@@ -70,10 +85,6 @@ public class RecursiveDirectoryAdapter extends BaseAdapter
 		return ret;
 	}
 
-	public Object getChild(int groupPosition, int childPosition) {
-		return getSubDirectories(mDirectories[groupPosition])[childPosition];
-	}
-
 	public long getItemId(int position) {
 		// TODO Auto-generated method stub
 		return 0;
@@ -92,15 +103,10 @@ public class RecursiveDirectoryAdapter extends BaseAdapter
 				final ListView mList = (ListView)view.findViewById(R.id.list);
 				TextView mTitle = (TextView)view.findViewById(R.id.title);
 				mList.setVisibility(View.GONE);
-				ImageButton mPlus = (ImageButton)view.findViewById(R.id.btn_toggle);
-				mPlus.setOnClickListener(new OnClickListener() {
-					public void onClick(View v) {
-						mList.setVisibility(mList.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
-					}
-				});
 				mTitle.setText(selFile.getName());
 				RecursiveDirectoryAdapter adapter = new RecursiveDirectoryAdapter(selFile, mContext);
 				mList.setAdapter(adapter);
+				mList.setOnItemClickListener(adapter);
 			} else {
 				TextView tv = new TextView(mContext);
 				tv.setText(selFile.getName());

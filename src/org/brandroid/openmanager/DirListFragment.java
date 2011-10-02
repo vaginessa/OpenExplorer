@@ -30,6 +30,7 @@ public class DirListFragment extends Fragment
 			mList = (ListView)view.findViewById(R.id.list);
 		RecursiveDirectoryAdapter adapter = new RecursiveDirectoryAdapter(new File("/"), getActivity());
 		mList.setAdapter(adapter);
+		mList.setOnItemClickListener(adapter);
 		super.onViewCreated(view, savedInstanceState);
 	}
 }

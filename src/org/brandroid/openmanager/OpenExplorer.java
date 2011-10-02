@@ -31,6 +31,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
+import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.util.Log;
 import android.view.ActionMode;
@@ -70,13 +71,14 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private static final int MENU_ID_CUT = 14;
 	private static final int MENU_ID_SEND = 15;
 	
-	private static OnSetingsChangeListener mSettingsListener;
+	private static OnSettingsChangeListener mSettingsListener;
 	private SharedPreferences mPreferences;
 	private SearchView mSearchView;
 	private ToggleButton mBtnFavorites;
 	private ActionMode mActionMode;
 	private ArrayList<String> mHeldFiles;
 	private boolean mBackQuit = false;
+	private int mLastBackIndex = -1;
 	
 	private Fragment mFavoritesFragment, mTreeFragment;
 	
@@ -107,6 +109,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         FragmentTransaction ft = fragmentManager.beginTransaction();
         ft.add(R.id.list_frag, mFavoritesFragment);
         ft.commit();
+        
+        ((DirContentActivity)fragmentManager.findFragmentById(R.id.content_frag)).getView().requestFocus();
         
         /*
         FragmentTransaction trans = fragmentManager.beginTransaction();
@@ -154,6 +158,11 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
     
+    public void updateTitle(String s)
+    {
+    	setTitle(getResources().getString(R.string.app_name) + " - " + s);
+    }
+    
     public void toggleListView()
     {
     	Boolean bFavorites = !fragmentManager.findFragmentById(R.id.list_frag).getClass().equals(BookmarkFragment.class);
@@ -185,6 +194,9 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    	case KeyEvent.KEYCODE_DPAD_LEFT:
 	        	fragmentManager.findFragmentById(R.id.list_frag).getView().requestFocus();
 	        	break;
+	    	case KeyEvent.KEYCODE_BACK:
+	    		Logger.LogInfo("User hit 'Back'.");
+	    		break;
     	}
     	return super.onKeyDown(keyCode, event);
     }
@@ -397,7 +409,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		}
 	};
 	
-	public static void setOnSetingsChangeListener(OnSetingsChangeListener e) {
+	public static void setOnSettingsChangeListener(OnSettingsChangeListener e) {
     	mSettingsListener = e;
     }
     
@@ -456,7 +468,12 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 
 	
 	public void onBackStackChanged() {
-		//fragmentManager.
+		int i = fragmentManager.getBackStackEntryCount();
+		if(i < mLastBackIndex)
+			((DirContentActivity)getSupportFragmentManager()
+				.findFragmentById(R.id.content_frag))
+				.goBack();
+		mLastBackIndex = i;
 	}
 	
 	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
@@ -474,7 +491,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     }
 
 	
-	public interface OnSetingsChangeListener {
+	public interface OnSettingsChangeListener {
 		
 		public void onHiddenFilesChanged(boolean state);
 		public void onThumbnailChanged(boolean state);

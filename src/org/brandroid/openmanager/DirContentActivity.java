@@ -21,7 +21,7 @@ package org.brandroid.openmanager;
 import org.brandroid.openmanager.BookmarkFragment.OnChangeLocationListener;
 import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.FileManager.SortType;
-import org.brandroid.openmanager.OpenExplorer.OnSetingsChangeListener;
+import org.brandroid.openmanager.OpenExplorer.OnSettingsChangeListener;
 import org.brandroid.openmanager.DialogHandler.OnSearchFileSelected; 
 import org.brandroid.utils.Logger;
 
@@ -36,6 +36,7 @@ import android.content.Intent;
 import android.content.ActivityNotFoundException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -57,7 +58,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.net.Uri;
 
 public class DirContentActivity extends Fragment implements OnItemClickListener,
-															OnSetingsChangeListener,
+															OnSettingsChangeListener,
 															OnChangeLocationListener,
 															OnWorkerThreadFinishedListener{
 	private static final int D_MENU_DELETE 	= 0x00;
@@ -93,7 +94,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	private ArrayList<String> mHoldingFileList; //holding files waiting to be pasted(moved)
 	private ArrayList<String> mHoldingZipList; //holding zip files waiting to be unzipped.
 	private Context mContext;
-	private DataAdapter mContentAdapter;
+	private FileSystemAdapter mContentAdapter;
 	private ActionMode mActionMode;
 	private boolean mActionModeSelected;
 	private boolean mHoldingFile;
@@ -350,7 +351,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mShowThumbnails = PreferenceManager.getDefaultSharedPreferences(mContext)
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, false);
 		
-		OpenExplorer.setOnSetingsChangeListener(this);
+		OpenExplorer.setOnSettingsChangeListener(this);
 		BookmarkFragment.setOnChangeLocationListener(this);
 	}
 	
@@ -380,7 +381,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 		
 		if(mShowGrid) {
-			mContentAdapter = new DataAdapter(mContext, R.layout.grid_content_layout, mData);
+			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData);
 			mGrid.setVisibility(View.VISIBLE);	
 			mGrid.setOnItemClickListener(this);
 			mGrid.setAdapter(mContentAdapter);
@@ -409,7 +410,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			});
 			
 		} else if(!mShowGrid) {
-			mContentAdapter = new DataAdapter(mContext, R.layout.list_content_layout, mData);
+			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData);
 			mList.setVisibility(View.VISIBLE);	
 			mList.setAdapter(mContentAdapter);
 			mList.setOnItemClickListener(this);
@@ -634,13 +635,40 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mThumbnail = null;
 		}
 		
-		getFragmentManager().popBackStackImmediate("Settings", 0);
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		ft.setBreadCrumbTitle(mFileMang.getCurrentDir());
+		ft.addToBackStack("path");
+		ft.commit();
 		
-		mData = mFileMang.setHomeDir(name);
+		//getFragmentManager().popBackStackImmediate("Settings", 0);
+		
+		mData = mFileMang.getNextDir(name, true);
 		mContentAdapter.notifyDataSetChanged();
 		
 		mPathView.removeAllViews();
 		mBackPathIndex = 0;
+	}
+	
+	public void setLocation2(String path, Boolean ignoreBackStack)
+	{
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		if(!ignoreBackStack)
+			ft.setBreadCrumbTitle(mFileMang.getCurrentDir());
+		
+		mData = mFileMang.getNextDir(path, true);
+		mContentAdapter.notifyDataSetChanged();
+		
+		if(!ignoreBackStack)
+		{
+			ft.addToBackStack("path");
+			ft.commit();
+		}
+	}
+	
+	public void goBack()
+	{
+		mData = mFileMang.getPreviousDir();
+		mContentAdapter.notifyDataSetChanged();
 	}
 	
 	/*
@@ -852,6 +880,9 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		final String bname = name;
 		Button button = new Button(mContext);
 		
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		ft.setBreadCrumbTitle(mFileMang.getCurrentDir());
+
 		if (refreshList)
 			mData = mFileMang.getNextDir(name, false);
 		
@@ -889,13 +920,16 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		
 		if (refreshList)
 			mContentAdapter.notifyDataSetChanged();
+		
+		ft.addToBackStack("path");
+		ft.commit();
 	}
 	
 	
 	/**
 	 * 
 	 */
-	private class DataAdapter extends ArrayAdapter<String> {
+	private class FileSystemAdapter extends ArrayAdapter<String> {
 		private final int KB = 1024;
     	private final int MG = KB * KB;
     	private final int GB = MG * KB;
@@ -903,8 +937,15 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		private DataViewHolder mHolder;
 		private String mName;
 		
-		public DataAdapter(Context context, int layout, ArrayList<String> data) {
-			super(context, layout, data);			
+		public FileSystemAdapter(Context context, int layout, ArrayList<String> data) {
+			super(context, layout, data);
+		}
+		
+		@Override
+		public void notifyDataSetChanged() {
+			//Logger.LogDebug("Data set changed.");
+			((OpenExplorer)getActivity()).updateTitle(mFileMang.getCurrentDir());
+			super.notifyDataSetChanged();
 		}
 		
 		////@Override
