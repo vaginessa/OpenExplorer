@@ -19,11 +19,13 @@
 package org.brandroid.openmanager;
 
 import org.brandroid.openmanager.DirContentActivity.OnBookMarkAddListener;
+import org.brandroid.utils.Logger;
 
 import android.os.Bundle;
 import android.os.Environment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.app.AlertDialog;
@@ -51,7 +53,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private ArrayList<String> mBookmarkNames;
 	private Context mContext;
 	private ImageView mLastIndicater = null;
-	private DirListAdapter mDelegate;
+	private DirListAdapter mDirListAdapter;
 	private String mDirListString;
 	private String mBookmarkString;
 	private Boolean mHasExternal = false;
@@ -75,46 +77,75 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 											.getString(SettingsActivity.PREF_BOOKNAME_KEY, "");
 		
 		if (mDirListString.length() > 0) {
-			String[] l = mDirListString.split(":");
+			String[] l = mDirListString.replace(":", ";").replace(";//","://").split(";");
 			
-			for(String string : l)
-				mDirList.add(string);
+			for(String s : l)
+			{
+				if(s.indexOf("external") > -1 || s.indexOf("-ext") > -1)
+					mHasExternal = true;
+				mDirList.add(s);
+			}
 		
 		} else {
 			mDirList.add("/");
 			mDirList.add(storage);
-			mDirList.add(storage + "/" + "Download");
-			if(new File(storage + "/Music").isDirectory())
-				mDirList.add(storage + "/" + "Music");
+			
+			if(checkDir(storage + "/Download"))
+				mDirList.add(storage + "/Download");
 			else
 				BOOKMARK_POS--;
-			mDirList.add(storage + "/" + "Movies");
-			if(new File(storage + "/DCIM").isDirectory())
+			
+			if(checkDir(storage + "/Music"))
+				mDirList.add(storage + "/Music");
+			else
+				BOOKMARK_POS--;
+			
+			if(checkDir(storage + "/Movies"))
+				mDirList.add(storage + "/Movies");
+			else
+				BOOKMARK_POS--;
+			if(checkDir(storage + "/DCIM"))
 				mDirList.add(storage + "/DCIM");
-			else if(new File(storage + "/Pictures").isDirectory())
+			else if(checkDir(storage + "/Pictures"))
 				mDirList.add(storage + "/Pictures");
 			else
 				BOOKMARK_POS--;
-			if(new File("/mnt/usbdrive").isDirectory())
+			
+			if(checkDir("/mnt/usbdrive"))
 			{
 				mDirList.add("/mnt/usbdrive");
 				BOOKMARK_POS++;
 			}
-			if(new File("/mnt/external_sd").isDirectory())
+			if(checkDir("/mnt/external_sd"))
 			{
 				mHasExternal = true;
 				mDirList.add("/mnt/external_sd");
+				BOOKMARK_POS++;
+			} else if(checkDir("/mnt/sdcart-ext"))
+			{
+				mHasExternal = true;
+				mDirList.add("/mnt/sdcart-ext");
 				BOOKMARK_POS++;
 			}
 			mDirList.add("Bookmarks");
 		}
 		
 		if (mBookmarkString.length() > 0) {
-			String[] l = mBookmarkString.split(":");
+			String[] l = mBookmarkString.split(";");
 			
 			for(String string : l)
 				mBookmarkNames.add(string);
 		}
+		
+		mDirList.add("ftp://brandroid.org");
+	}
+	
+	private static boolean checkDir(String sPath)
+	{
+		File fTest = new File(sPath);
+		if(fTest.exists() && fTest.isDirectory() && fTest.list() != null && fTest.list().length > 0)
+			return true;
+		else return false;
 	}
 	
 	
@@ -128,9 +159,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		lv.setOnItemLongClickListener(this);
 		lv.setBackgroundResource(R.drawable.listgradback);
 		
-		mDelegate = new DirListAdapter(mContext, R.layout.dir_list_layout, mDirList);
+		mDirListAdapter = new DirListAdapter(mContext, R.layout.dir_list_layout, mDirList);
 		registerForContextMenu(lv);
-		setListAdapter(mDelegate);
+		setListAdapter(mDirListAdapter);
 		
 		DirContentActivity.setOnBookMarkAddListener(this);
 		
@@ -240,7 +271,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
 					
 					buildDirString();
-					mDelegate.notifyDataSetChanged();
+					mDirListAdapter.notifyDataSetChanged();
 				}
 			});
 			builder.setNegativeButton("Rename", new DialogInterface.OnClickListener() {
@@ -251,7 +282,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 					mBookmarkNames.add(p - (BOOKMARK_POS + 1), text.getText().toString());
 					
 					buildDirString();
-					mDelegate.notifyDataSetChanged();
+					mDirListAdapter.notifyDataSetChanged();
 				}
 			});
 			
@@ -268,7 +299,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		mBookmarkNames.add(path.substring(path.lastIndexOf("/") + 1));
 		
 		buildDirString();
-		mDelegate.notifyDataSetChanged();
+		mDirListAdapter.notifyDataSetChanged();
 	}
 	
 	public static void setOnChangeLocationListener(OnChangeLocationListener l) {
@@ -297,10 +328,10 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		}
 		
 		for (int i = 0; i <len; i++) {
-			mDirListString += mDirList.get(i) + ":";
+			mDirListString += mDirList.get(i) + ";";
 			
 			if (i > BOOKMARK_POS && mBookmarkNames.size() > 0)
-				mBookmarkString += mBookmarkNames.get(i - (BOOKMARK_POS + 1)) + ":";
+				mBookmarkString += mBookmarkNames.get(i - (BOOKMARK_POS + 1)) + ";";
 		}
 	}
 	
@@ -341,11 +372,12 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				}
 			}
 
+			String sPath = super.getItem(position).toLowerCase();
 			if(position == 0)
 			{
 				mHolder.mMainText.setText("/");
 				mHolder.mIcon.setImageResource(R.drawable.drive);
-			} else if(position == 1) {
+			} else if(sPath.endsWith("sdcard")) {
 				if(mHasExternal)
 				{
 					mHolder.mMainText.setText("Internal Storage");
@@ -354,38 +386,49 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 					mHolder.mMainText.setText("sdcard");
 					mHolder.mIcon.setImageResource(R.drawable.sdcard);
 				}
-			} else if(position == 2) {
+			} else if(sPath.indexOf("download") > -1) {
 				mHolder.mMainText.setText("Downloads");
 				if(mHasExternal)
 					mHolder.mMainText.setText("Downloads (Internal)");
 				mHolder.mIcon.setImageResource(R.drawable.download);
-			} else if(position == 3) {
+			} else if(sPath.indexOf("music") > -1) {
 				mHolder.mMainText.setText("Music");
 				if(mHasExternal)
 					mHolder.mMainText.setText("Music (Internal)");
 				mHolder.mIcon.setImageResource(R.drawable.music);
-			} else if(position == 4) {
+			} else if(sPath.indexOf("movie") > -1) {
 				mHolder.mMainText.setText("Movies");
 				if(mHasExternal)
 					mHolder.mMainText.setText("Movies (Internal)");
 				mHolder.mIcon.setImageResource(R.drawable.movie);
-			} else if(position == 5) {
+			} else if(sPath.indexOf("photo") > -1 || sPath.indexOf("dcim") > -1 || sPath.indexOf("camera") > -1) {
 				mHolder.mMainText.setText("Photos");
 				if(mHasExternal)
 					mHolder.mMainText.setText("Photos (Internal)");
 				mHolder.mIcon.setImageResource(R.drawable.photo);
-			} else if(BOOKMARK_POS > 6 && position == 6) {
+			} else if(sPath.indexOf("usb") > -1) {
 				mHolder.mMainText.setText("USB");
 				mHolder.mIcon.setImageResource(R.drawable.usb);
-			} else if(mHasExternal && position == 7) {
+			} else if(sPath.indexOf("sdcard-ext") > -1 || sPath.indexOf("external") > -1) {
 				mHolder.mMainText.setText("External SD");
 				mHolder.mIcon.setImageResource(R.drawable.sdcard);
-			} else if(position == BOOKMARK_POS) {
+			} else if(sPath.equals("bookmarks")) {
+				view.setBackgroundColor(Color.BLACK);
+				view.setFocusable(false);
+				view.setEnabled(false);
+				view.setClickable(false);
+				view.setPadding(0, 0, 0, 0);
 				mHolder.mMainText.setText("Bookmarks");
-				mHolder.mIcon.setImageResource(R.drawable.favorites);
+				mHolder.mMainText.setTextSize(18);
+				mHolder.mIcon.setVisibility(View.GONE);
+				//mHolder.mIcon.setImageResource(R.drawable.favorites);
+				BOOKMARK_POS = position;
 				//view.setBackgroundColor(R.color.black);
+			} else if(sPath.startsWith("ftp://")) {
+				mHolder.mMainText.setText(super.getItem(position).replace("ftp://",""));
+				mHolder.mIcon.setImageResource(R.drawable.ftp);
 			} else {
-				mHolder.mMainText.setText(mBookmarkNames.get(position - (BOOKMARK_POS + 1)));
+				mHolder.mMainText.setText(super.getItem(position));
 				mHolder.mIcon.setImageResource(R.drawable.folder);
 			}
 			

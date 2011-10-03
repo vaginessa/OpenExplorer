@@ -33,6 +33,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.brandroid.openmanager.ftp.FTPManager;
+
 import android.util.Log;
 
 /**
@@ -570,63 +572,76 @@ public class FileManager {
 	 * 
 	 * @return
 	 */
-	private ArrayList<String> populate_list() {
-		
-		if(!mDirContent.isEmpty())
-			mDirContent.clear();
-		
-		File file = new File(mPathStack.peek());
+	private ArrayList<String> populate_list()
+	{
+				
+		String path = mPathStack.peek();
+		File file = new File(path);
 		
 		if(file.exists() && file.canRead()) {
-			String[] list = file.list();
-			int len = list.length;
+			return populate_list(file.list());
 			
-			/* add files/folder to arraylist depending on hidden status */
-			for (int i = 0; i < len; i++) {
-				if(!mShowHiddenFiles) {
-					if(list[i].toString().charAt(0) != '.')
-						mDirContent.add(list[i]);
-					
-				} else {
-					mDirContent.add(list[i]);
-				}
+		} else if (path.indexOf("ftp://") > -1) {
+			FTPManager ftp = FTPManager.getInstance(path);
+			if(ftp == null)
+			{
+				ftp = new FTPManager();
+				FTPManager.setInstance(path, ftp);
+				ftp.setHost(path.substring(path.indexOf("//") + 2));
 			}
-			
-			@SuppressWarnings("rawtypes")
-			Comparator comp = null;
-			Boolean bFoldersFirst = true;
-			
-			/* sort the arraylist that was made from above for loop */
-			switch(mSorting) {
-				case NONE: break;
-				case ALPHA_DESC:comp = comp_alpha; break;
-				case ALPHA: 	comp = comp_alpha_d; break;
-				case DATE:		comp = comp_date; break;
-				case DATE_DESC:	comp = comp_date_d; break;
-				case SIZE:		comp = comp_size; break;
-				case SIZE_DESC:	comp = comp_size_d; break;
-				case TYPE:		comp = comp_type; break;
-			}
-			
-			Object[] arr = mDirContent.toArray();
-			String dir = mPathStack.peek();
-			
-			if(comp != null)
-				Arrays.sort(arr, comp);
-			
-			mDirContent.clear();
-			int folder_index = 0;
-			for(Object a : arr)
-				if(bFoldersFirst && new File(dir + "/" + (String)a).isDirectory())
-					mDirContent.add(folder_index++, (String)a);
-				else
-					mDirContent.add((String)a);
-			
+			return populate_list(ftp.list());
 		} else {
-			mDirContent.add("Empty");
+			//mDirContent.add("Empty");
 		}
 		
 		return mDirContent;
+	}
+	
+	private ArrayList<String> populate_list(String[] list)
+	{
+		if(!mDirContent.isEmpty())
+			mDirContent.clear();
+
+		/* add files/folder to arraylist depending on hidden status */
+		for (int i = 0; i < len; i++) {
+			if(!mShowHiddenFiles) {
+				if(list[i].toString().charAt(0) != '.')
+					mDirContent.add(list[i]);
+				
+			} else {
+				mDirContent.add(list[i]);
+			}
+		}
+		
+		@SuppressWarnings("rawtypes")
+		Comparator comp = null;
+		Boolean bFoldersFirst = true;
+		
+		/* sort the arraylist that was made from above for loop */
+		switch(mSorting) {
+			case NONE: break;
+			case ALPHA_DESC:comp = comp_alpha; break;
+			case ALPHA: 	comp = comp_alpha_d; break;
+			case DATE:		comp = comp_date; break;
+			case DATE_DESC:	comp = comp_date_d; break;
+			case SIZE:		comp = comp_size; break;
+			case SIZE_DESC:	comp = comp_size_d; break;
+			case TYPE:		comp = comp_type; break;
+		}
+		
+		Object[] arr = mDirContent.toArray();
+		String dir = mPathStack.peek();
+		
+		if(comp != null)
+			Arrays.sort(arr, comp);
+		
+		mDirContent.clear();
+		int folder_index = 0;
+		for(Object a : arr)
+			if(bFoldersFirst && new File(dir + "/" + (String)a).isDirectory())
+				mDirContent.add(folder_index++, (String)a);
+			else
+				mDirContent.add((String)a);
 	}
 	
 	/*

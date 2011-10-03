@@ -56,7 +56,7 @@ import java.util.*;
  * @author Julian Robichaux
  * @version 1.01
  */
-public class FTPConnection extends Object {
+public class FTPConnection {
 
     /**
      * If this flag is on, we print out debugging information to stdout during
@@ -99,6 +99,9 @@ public class FTPConnection extends Object {
      */
     private static int BLOCK_SIZE = 4096;
     
+    
+    private String host;
+    
 
     /**
      * Added by Julian: After you create an FTPConnection object, you will call the
@@ -118,6 +121,11 @@ public class FTPConnection extends Object {
     public FTPConnection (boolean debugOut)
     {
     	PRINT_DEBUG_INFO = debugOut;
+    }
+    
+    public FTPConnection (String host)
+    {
+    	this.host = host;
     }
     
 
@@ -146,6 +154,7 @@ public class FTPConnection extends Object {
     public boolean connect(String host, int port)
         throws UnknownHostException, IOException
     {
+    	this.host = host;
         connectionSocket = new Socket(host, port);
         outputStream = new PrintStream(connectionSocket.getOutputStream());
         inputStream = new BufferedReader(new
@@ -930,5 +939,11 @@ public class FTPConnection extends Object {
         if (response.length() < 5) return response;
         return response.substring(4);
     }
+
+
+	@Override
+	public void connect() throws IOException {
+		connect(host);
+	}
 
 }
