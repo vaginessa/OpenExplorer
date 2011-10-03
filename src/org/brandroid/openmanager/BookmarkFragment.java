@@ -137,7 +137,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				mBookmarkNames.add(string);
 		}
 		
-		mDirList.add("ftp://brandroid.org");
+		mDirList.add("ftp://Brandon:Brandon@psusadev2.celebros.com");
 	}
 	
 	private static boolean checkDir(String sPath)
@@ -425,7 +425,10 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				BOOKMARK_POS = position;
 				//view.setBackgroundColor(R.color.black);
 			} else if(sPath.startsWith("ftp://")) {
-				mHolder.mMainText.setText(super.getItem(position).replace("ftp://",""));
+				String item = super.getItem(position).replace("ftp://","");
+				if(item.indexOf("@") > -1)
+					item = item.substring(item.indexOf("@") + 1);
+				mHolder.mMainText.setText(item);
 				mHolder.mIcon.setImageResource(R.drawable.ftp);
 			} else {
 				mHolder.mMainText.setText(super.getItem(position));

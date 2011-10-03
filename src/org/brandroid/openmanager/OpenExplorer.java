@@ -95,7 +95,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 
         if(isGTV())
 		{
-			showToast("Welcome, GoogleTV user!");
+			//showToast("Welcome, GoogleTV user!");
 			//getActionBar().hide();
 		} // else
 		findViewById(R.id.title_bar).setVisibility(View.GONE);

@@ -1,19 +1,40 @@
 package org.brandroid.openmanager.ftp;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Hashtable;
 
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPFileFilter;
+import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 public class FTPManager {
 	public static Hashtable<String, FTPManager> instances = new Hashtable<String, FTPManager>();
+	private static Hashtable<String, FTPFile> fileCache = new Hashtable<String, FTPFile>();
 	
+	private int mPort = 21;
 	private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
-	private FTPConnection mConnection = null;
-	
+	private FTPClient client;
+		
 	public FTPManager() { }
+	public FTPManager(String sFTPPath) throws MalformedURLException
+	{
+		URL url = new URL(sFTPPath);
+		mUser = url.getUserInfo();
+		if(mUser.indexOf(":") > -1)
+		{
+			mPassword = mUser.substring(mUser.indexOf(":")+1);
+			mUser = mUser.substring(0,mUser.indexOf(":"));
+		}
+		mHost = url.getHost();
+		mBasePath = url.getPath();
+	}
 	public FTPManager(String host, String user, String password, String basePath)
 	{
 		mHost = host;
@@ -21,6 +42,8 @@ public class FTPManager {
 		mPassword = password;
 		mBasePath = basePath;
 	}
+	
+	public static FTPFile getFTPFile(String name) { return fileCache.get(name); }
 	
 	public static FTPManager getInstance(String instanceName)
 	{
@@ -38,19 +61,56 @@ public class FTPManager {
 	public void setPassword(String password) { mPassword = password; }
 	public void setBasePath(String path) { mBasePath = path; }
 	
-	public String[] list()
+	public Boolean connect() throws IOException
 	{
-		return getConnection().listFiles().split("\n");
+		if(client == null)
+			client = new FTPClient();
+		if(!client.isConnected())
+		{
+			client.connect(mHost);
+			client.login(mUser, mPassword);
+			client.cwd(mBasePath);
+		}
+		
+		if(client.isConnected()) return true;
+		return false;
 	}
 	
-	public String getFTPPath()
+	public FTPFile[] listAll() throws IOException
 	{
-		return "ftp://" + (mUser != "" ? mUser + (mPassword != "" ? ":" + mPassword : "") + "@" : "") + mHost + "/" + mBasePath;
+		FTPFile[] files = listFiles();
+		ArrayList<FTPFile> ret = new ArrayList<FTPFile>();
+		for(FTPFile f : files)
+			if(f.isDirectory())
+				ret.add(f);
+		for(FTPFile f : files)
+			if(!f.isDirectory())
+				ret.add(f);
+		
+		FTPFile[] retf = new FTPFile[ret.size()];
+		ret.toArray(retf);
+		return retf;
 	}
-	public FTPConnection getConnection()
+	
+	public FTPFile[] listDirectories() throws IOException
 	{
-		if(mConnection == null)
-			mConnection = new FTPConnection(getFTPPath());
-		return mConnection;
+		if(connect())
+		{
+			FTPFile[] ret = client.listDirectories();
+			for(FTPFile f : ret)
+				fileCache.put(f.getName(), f);
+			return ret;
+		}
+		else return null;
+	}
+	public FTPFile[] listFiles() throws IOException
+	{
+		if(connect())
+		{
+			FTPFile[] ret = client.listFiles();
+			for(FTPFile f : ret)
+				fileCache.put(f.getName(), f);
+			return ret;
+		} else return null;
 	}
 }

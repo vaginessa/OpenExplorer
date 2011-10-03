@@ -18,16 +18,19 @@
 
 package org.brandroid.openmanager;
 
+import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.BookmarkFragment.OnChangeLocationListener;
 import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.openmanager.OpenExplorer.OnSettingsChangeListener;
+import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.DialogHandler.OnSearchFileSelected; 
 import org.brandroid.utils.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -44,6 +47,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -380,66 +384,47 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				addBackButton(parts[i], false);
 		}
 		
-		if(mShowGrid) {
-			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData);
-			mGrid.setVisibility(View.VISIBLE);	
-			mGrid.setOnItemClickListener(this);
-			mGrid.setAdapter(mContentAdapter);
-			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
-				
-				//@Override
-				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-					String name = mData.get(pos);
-					
-					if(!mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFileOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					if(mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFolderOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					return false;
-				}
-			});
-			
-		} else if(!mShowGrid) {
-			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData);
-			mList.setVisibility(View.VISIBLE);	
-			mList.setAdapter(mContentAdapter);
-			mList.setOnItemClickListener(this);
-			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
-
-				//@Override
-				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-					String name = mData.get(pos);
-					
-					if(!mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFileOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					if(mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFolderOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					return false;
-				}
-			});
-		}
+		updateChosenMode(mShowGrid ? mGrid : mList);
+		
 
 		return v;
+	}
+	
+	public void updateChosenMode(AbsListView mChosenMode)
+	{
+		if(mShowGrid) {
+			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData);
+			mGrid.setVisibility(View.VISIBLE);
+			mList.setVisibility(View.GONE);
+		} else {
+			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData);
+			mList.setVisibility(View.VISIBLE);
+			mGrid.setVisibility(View.GONE);
+		}
+		mChosenMode.setOnItemClickListener(this);
+		mChosenMode.setAdapter(mContentAdapter);
+		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
+			//@Override
+			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
+				String name = mData.get(pos);
+				
+				if(!mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
+					mActionMode = getActivity().startActionMode(mFileOptActionMode);
+					mActionMode.setTitle(mData.get(pos));
+					
+					return true;
+				}
+				
+				if(mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
+					mActionMode = getActivity().startActionMode(mFolderOptActionMode);
+					mActionMode.setTitle(mData.get(pos));
+					
+					return true;
+				}
+				
+				return false;
+			}
+		});
 	}
 	
 	//@Override
@@ -642,26 +627,16 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		
 		//getFragmentManager().popBackStackImmediate("Settings", 0);
 		
-		mData = mFileMang.getNextDir(name, true);
-		mContentAdapter.notifyDataSetChanged();
-		
-		mPathView.removeAllViews();
-		mBackPathIndex = 0;
-	}
-	
-	public void setLocation2(String path, Boolean ignoreBackStack)
-	{
-		FragmentTransaction ft = getFragmentManager().beginTransaction();
-		if(!ignoreBackStack)
-			ft.setBreadCrumbTitle(mFileMang.getCurrentDir());
-		
-		mData = mFileMang.getNextDir(path, true);
-		mContentAdapter.notifyDataSetChanged();
-		
-		if(!ignoreBackStack)
+		if(name.indexOf("://") > -1)
+			new FileIOTask().execute(
+					new FileIOCommand(FileIOCommandType.ALL, name));
+		else
 		{
-			ft.addToBackStack("path");
-			ft.commit();
+			mData = mFileMang.getNextDir(name, true);
+			mContentAdapter.notifyDataSetChanged();
+			
+			mPathView.removeAllViews();
+			mBackPathIndex = 0;	
 		}
 	}
 	
@@ -762,67 +737,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 
 	//@Override
 	public void onViewChanged(String state) {
-		//think of a better way.
-		if(state.equals("list") && mShowGrid) {						
-			mList.setVisibility(View.VISIBLE);	
-			mList.setOnItemClickListener(this);
-			mList.setAdapter(mContentAdapter);
-			mList.setOnItemLongClickListener(new OnItemLongClickListener() {
-
-				////@Override
-				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-					String name = mData.get(pos);
-					
-					if(!mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFileOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					if(mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFolderOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					return false;
-				}
-			});	
-			mGrid.setVisibility(View.GONE);
+		if(state.equals("list") && mShowGrid)					
 			mShowGrid = false;
-			
-		} else if (state.equals("grid") && !mShowGrid) {
-			mGrid.setVisibility(View.VISIBLE);	
-			mGrid.setOnItemClickListener(this);
-			mGrid.setAdapter(mContentAdapter);
-			mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
-				
-				////@Override
-				public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-					String name = mData.get(pos);
-					
-					if(!mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFileOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					if(mFileMang.isDirectory(name) && mActionMode == null && !mMultiSelectOn) {
-						mActionMode = getActivity().startActionMode(mFolderOptActionMode);
-						mActionMode.setTitle(mData.get(pos));
-						
-						return true;
-					}
-					
-					return false;
-				}
-			});
-			mList.setVisibility(View.GONE);
+		else if (state.equals("grid") && !mShowGrid)
 			mShowGrid = true;
-		}
+		updateChosenMode(mShowGrid ? mGrid : mList);
 	}
 			
 	public void changeMultiSelectState(boolean state, MultiSelectHandler handler) {
@@ -959,7 +878,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 
 			mName = mData.get(position);
 			file = new File(current + "/" + mName);
-									
+
 			try {
 				ext = mName.substring(mName.lastIndexOf('.') + 1, mName.length());
 				
@@ -1004,7 +923,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mHolder.mIcon.setImageResource(R.drawable.folder_large_full);
 				else
 					mHolder.mIcon.setImageResource(R.drawable.folder);
-				
 			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
 				mHolder.mIcon.setImageResource(R.drawable.doc);
 				
@@ -1076,7 +994,16 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				}
 				
 			} else {
-				mHolder.mIcon.setImageResource(R.drawable.unknown);
+				
+				FTPFile f = FTPManager.getFTPFile(mName);
+				if(f != null)
+				{
+					if(f.isDirectory())
+						mHolder.mIcon.setImageResource(R.drawable.folder_large_full);
+					else
+						mHolder.mIcon.setImageResource(R.drawable.unknown);
+				} else
+					mHolder.mIcon.setImageResource(R.drawable.unknown);
 			}
 			
 			return view;
@@ -1120,6 +1047,62 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 	}
 
+	public enum FileIOCommandType
+	{
+		ALL,
+		NEXT
+	}
+	public class FileIOCommand
+	{
+		public FileIOCommandType Type;
+		public String Path;
+		
+		public FileIOCommand(FileIOCommandType type, String path)
+		{
+			Type = type;
+			Path = path;
+		}
+	}
+	
+	public class FileIOTask extends AsyncTask<FileIOCommand, Integer, ArrayList<String>>
+	{
+		@Override
+		protected ArrayList<String> doInBackground(FileIOCommand... params) {
+			ArrayList<String> ret = new ArrayList<String>();
+			for(FileIOCommand cmd : params)
+			{
+				switch(cmd.Type)
+				{
+					case ALL:
+						ret.addAll(mFileMang.getNextDir(cmd.Path, true));
+						break;
+					case NEXT:
+						ret.addAll(mFileMang.getNextDir(cmd.Path, false));
+						break;
+				}
+			}
+			return ret;
+		}
+		
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+			mData.clear();
+		}
+		
+		@Override
+		protected void onPostExecute(ArrayList<String> result)
+		{
+			mData.clear();
+			mData.addAll(result);
+			mContentAdapter.notifyDataSetChanged();
+			
+			mPathView.removeAllViews();
+			mBackPathIndex = 0;
+		}
+		
+	}
 }
 
 

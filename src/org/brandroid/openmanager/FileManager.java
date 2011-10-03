@@ -29,12 +29,17 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.openmanager.ftp.FTPFileComparer;
+import org.brandroid.utils.Logger;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 /**
@@ -574,6 +579,8 @@ public class FileManager {
 	 */
 	private ArrayList<String> populate_list()
 	{
+		//if(!mDirContent.isEmpty())
+			//mDirContent.clear();
 				
 		String path = mPathStack.peek();
 		File file = new File(path);
@@ -585,11 +592,21 @@ public class FileManager {
 			FTPManager ftp = FTPManager.getInstance(path);
 			if(ftp == null)
 			{
-				ftp = new FTPManager();
-				FTPManager.setInstance(path, ftp);
-				ftp.setHost(path.substring(path.indexOf("//") + 2));
+				try {
+					ftp = new FTPManager(path);
+					FTPManager.setInstance(path, ftp);
+				} catch(MalformedURLException mal) {
+					Logger.LogError("Bad FTP URL: " + path, mal);
+					return mDirContent;
+				}
 			}
-			return populate_list(ftp.list());
+			try {
+				FTPFile[] files = ftp.listAll();
+				if(files != null)
+					return populate_list(files);
+			} catch (IOException e) {
+				Logger.LogError("Couldn't get FTP files for " + path, e);
+			}
 		} else {
 			//mDirContent.add("Empty");
 		}
@@ -603,7 +620,7 @@ public class FileManager {
 			mDirContent.clear();
 
 		/* add files/folder to arraylist depending on hidden status */
-		for (int i = 0; i < len; i++) {
+		for (int i = 0; i < list.length; i++) {
 			if(!mShowHiddenFiles) {
 				if(list[i].toString().charAt(0) != '.')
 					mDirContent.add(list[i]);
@@ -642,6 +659,25 @@ public class FileManager {
 				mDirContent.add(folder_index++, (String)a);
 			else
 				mDirContent.add((String)a);
+		
+		return mDirContent;
+	}
+	
+	private ArrayList<String> populate_list(FTPFile[] list)
+	{
+		if(!mDirContent.isEmpty())
+			mDirContent.clear();
+		
+		Boolean bFoldersFirst = true;
+		FTPFileComparer comp = new FTPFileComparer(mSorting, bFoldersFirst);
+		
+		if(comp != null)
+			Arrays.sort(list, comp);
+
+		for(int i = 0; i < list.length; i++)
+			mDirContent.add(list[i].getName());
+		
+		return mDirContent;
 	}
 	
 	/*
@@ -739,4 +775,16 @@ public class FileManager {
 			}
 		}
 	}
+	
+	public class NetworkActivityTask extends AsyncTask<String, Integer, String[]>
+	{
+
+		@Override
+		protected String[] doInBackground(String... params) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	}
 }
+
