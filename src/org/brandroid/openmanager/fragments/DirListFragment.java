@@ -1,7 +1,10 @@
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.fragments;
 
 import java.io.File;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.R.id;
+import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.adapters.RecursiveDirectoryAdapter;
 
 import android.os.Bundle;

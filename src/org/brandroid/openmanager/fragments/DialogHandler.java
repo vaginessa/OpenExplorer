@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.fragments;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -40,6 +40,12 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Date;
 import java.io.File;
+
+import org.brandroid.openmanager.DataViewHolder;
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.R.drawable;
+import org.brandroid.openmanager.R.id;
+import org.brandroid.openmanager.R.layout;
 
 public class DialogHandler extends DialogFragment {
 	public static final int HOLDINGFILE_DIALOG = 	0X01;

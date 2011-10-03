@@ -54,6 +54,11 @@ import java.util.ArrayList;
 import java.util.zip.Inflater;
 
 import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.fragments.BookmarkFragment;
+import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.fragments.DirContentActivity;
+import org.brandroid.openmanager.fragments.DirListFragment;
+import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 
 public class OpenExplorer extends FragmentActivity implements OnBackStackChangedListener {	
@@ -108,9 +113,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         
         FragmentTransaction ft = fragmentManager.beginTransaction();
         ft.add(R.id.list_frag, mFavoritesFragment);
+        ft.add(R.id.content_frag, new DirContentActivity());
         ft.commit();
-        
-        ((DirContentActivity)fragmentManager.findFragmentById(R.id.content_frag)).getView().requestFocus();
         
         /*
         FragmentTransaction trans = fragmentManager.beginTransaction();
@@ -128,10 +132,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			}
 		});
                 
-        mEvHandler = ((DirContentActivity)getSupportFragmentManager()
-        					.findFragmentById(R.id.content_frag)).getEventHandlerInst();
-        mFileManger = ((DirContentActivity)getSupportFragmentManager()
-							.findFragmentById(R.id.content_frag)).getFileManagerInst();
+        mEvHandler = getDirContentFragment().getEventHandlerInst();
+        mFileManger = getDirContentFragment().getFileManagerInst();
         
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mSearchView = new SearchView(this);
@@ -152,15 +154,41 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		});
         
         /* read and display the users preferences */
-        mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
-		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
-		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
+        if(mSettingsListener != null)
+        {
+	        mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
+			mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
+			mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
+        }
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+    }
+    
+    public DirContentActivity getDirContentFragment()
+    {
+    	Fragment frag = fragmentManager.findFragmentById(R.id.content_frag);
+    	if(frag != null && frag.getClass().equals(DirContentActivity.class))
+    		return (DirContentActivity)fragmentManager.findFragmentById(R.id.content_frag);
+    	else {
+    		frag = new DirContentActivity();
+    		FragmentTransaction ft = fragmentManager.beginTransaction();
+    		ft.replace(R.id.content_frag, frag);
+    		ft.commit();
+    		return (DirContentActivity)frag;
+    	}
     }
     
     public void updateTitle(String s)
     {
     	setTitle(getResources().getString(R.string.app_name) + " - " + s);
+    }
+    
+    public void editFile(String path)
+    {
+    	TextEditorFragment editor = new TextEditorFragment(path);
+    	FragmentTransaction ft = fragmentManager.beginTransaction();
+    	ft.replace(R.id.content_frag, editor);
+    	ft.addToBackStack("edit");
+    	ft.commit();
     }
     
     public void toggleListView()
@@ -305,9 +333,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		
 		
 		public void onDestroyActionMode(ActionMode mode) {			
-			((DirContentActivity)getSupportFragmentManager()
-					.findFragmentById(R.id.content_frag))
-						.changeMultiSelectState(false, handler);
+			getDirContentFragment().changeMultiSelectState(false, handler);
 			
 			mActionMode = null;
 			handler = null;
@@ -323,9 +349,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			menu.add(0, MENU_ID_CUT, 0, "Cut");
 			menu.add(0, MENU_ID_SEND, 0, "Send");
 			
-			((DirContentActivity)getSupportFragmentManager()
-					.findFragmentById(R.id.content_frag))
-						.changeMultiSelectState(true, handler);
+			getDirContentFragment().changeMultiSelectState(true, handler);
 			
 			return true;
 		}
@@ -356,9 +380,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			
 			case 13: /* copy */
 				getActionBar().setTitle("Holding " + files.size() + " File");
-				((DirContentActivity)getSupportFragmentManager()
-						.findFragmentById(R.id.content_frag))
-							.setCopiedFiles(mHeldFiles, false);
+				getDirContentFragment().setCopiedFiles(mHeldFiles, false);
 				
 				Toast.makeText(OpenExplorer.this, 
 							   "Tap the upper left corner to see your held files",
@@ -368,9 +390,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 				
 			case 14: /* cut */
 				getActionBar().setTitle("Holding " + files.size() + " File");
-				((DirContentActivity)getSupportFragmentManager()
-						.findFragmentById(R.id.content_frag))
-							.setCopiedFiles(mHeldFiles, true);
+				getDirContentFragment().setCopiedFiles(mHeldFiles, true);
 				
 				Toast.makeText(OpenExplorer.this, 
 						   "Tap the upper left corner to see your held files",
@@ -470,9 +490,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	public void onBackStackChanged() {
 		int i = fragmentManager.getBackStackEntryCount();
 		if(i < mLastBackIndex)
-			((DirContentActivity)getSupportFragmentManager()
-				.findFragmentById(R.id.content_frag))
-				.goBack();
+			getDirContentFragment().goBack();
 		mLastBackIndex = i;
 	}
 	

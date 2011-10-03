@@ -51,11 +51,12 @@
 	    	android:layout_width="match_parent" 
 	    	android:layout_weight="3"/>
 	    	
-	    <fragment class="org.brandroid.openmanager.DirContentActivity"
+	    <FrameLayout
 	    	android:id="@+id/content_frag"
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent"
-	    	android:layout_weight="1"/>
+	    	android:layout_weight="1">
+	    </FrameLayout>
 	    
 	</LinearLayout>
 </LinearLayout>

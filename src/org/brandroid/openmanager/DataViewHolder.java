@@ -22,9 +22,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class DataViewHolder {
-	ImageView mIcon;
-	ImageView mIndicate;
-	TextView mMainText;
-	TextView mInfo;
-	TextView mPath;
+	public ImageView mIcon;
+	public ImageView mIndicate;
+	public TextView mMainText;
+	public TextView mInfo;
+	public TextView mPath;
 }

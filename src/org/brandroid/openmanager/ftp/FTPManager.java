@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.ftp;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
@@ -34,6 +36,19 @@ public class FTPManager {
 		}
 		mHost = url.getHost();
 		mBasePath = url.getPath();
+		instances.put("ftp://" + url.getUserInfo() + ":" + url.getHost(), this);
+	}
+	public FTPManager(URL url)
+	{
+		mUser = url.getUserInfo();
+		if(mUser.indexOf(":") > -1)
+		{
+			mPassword = mUser.substring(mUser.indexOf(":")+1);
+			mUser = mUser.substring(0,mUser.indexOf(":"));
+		}
+		mHost = url.getHost();
+		mBasePath = url.getPath();
+		instances.put("ftp://" + url.getUserInfo() + ":" + url.getHost(), this);
 	}
 	public FTPManager(String host, String user, String password, String basePath)
 	{
@@ -43,6 +58,12 @@ public class FTPManager {
 		mBasePath = basePath;
 	}
 	
+	@Override
+	protected void finalize() throws Throwable {
+		if(client.isConnected())
+			client.disconnect();
+	}
+	
 	public static FTPFile getFTPFile(String name) { return fileCache.get(name); }
 	
 	public static FTPManager getInstance(String instanceName)
@@ -50,6 +71,13 @@ public class FTPManager {
 		if(instances.containsKey(instanceName))
 			return instances.get(instanceName);
 		else return null;
+	}
+	public static FTPManager getInstance(URL url) throws MalformedURLException
+	{
+		FTPManager ret = getInstance("ftp://" + url.getUserInfo() + ":" + url.getHost());
+		if(ret == null)
+			ret = new FTPManager(url.toString());
+		return ret;
 	}
 	public static void setInstance(String instanceName, FTPManager manager)
 	{
@@ -112,5 +140,11 @@ public class FTPManager {
 				fileCache.put(f.getName(), f);
 			return ret;
 		} else return null;
+	}
+	public InputStream getInputStream(String path) throws IOException
+	{
+		if(connect())
+			return client.retrieveFileStream(path);
+		else return null;
 	}
 }
