@@ -35,11 +35,15 @@ import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.app.AlertDialog;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -63,6 +67,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private String mDirListString;
 	private String mBookmarkString;
 	private Boolean mHasExternal = false;
+	private Boolean mShowTitles = true;
 
 	public interface OnChangeLocationListener {
 		void onChangeLocation(String name);
@@ -144,6 +149,18 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		}
 		
 		mDirList.add("ftp://Brandon:Brandon@psusadev2.celebros.com");
+	}
+	
+	public void hideTitles()
+	{
+		mShowTitles = false;
+		mDirListAdapter.notifyDataSetChanged();
+	}
+	
+	public void showTitles()
+	{
+		mShowTitles = true;
+		mDirListAdapter.notifyDataSetChanged();
 	}
 	
 	private static boolean checkDir(String sPath)
@@ -376,6 +393,15 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 					//mHolder.mIndicate.setVisibility(View.VISIBLE);
 					mLastIndicater = mHolder.mIndicate;
 				}
+			}
+			
+			if(!mShowTitles)
+			{
+				mHolder.mMainText.setVisibility(View.GONE);
+				((LinearLayout)mHolder.mMainText.getParent()).setGravity(Gravity.CENTER);
+			} else {
+				((LinearLayout)mHolder.mMainText.getParent()).setGravity(Gravity.LEFT);
+				mHolder.mMainText.setVisibility(View.VISIBLE);
 			}
 
 			String sPath = super.getItem(position).toLowerCase();

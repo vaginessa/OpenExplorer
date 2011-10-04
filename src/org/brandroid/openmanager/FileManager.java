@@ -37,6 +37,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.data.OpenComparer;
+import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFace;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.ftp.FTPManager;
@@ -158,7 +159,8 @@ public class FileManager {
 	 * @return
 	 */
 	public ArrayList<OpenFace> getNextDir(OpenFace file, boolean isFullPath) {
-		mPathStack.push(file.getPath());
+		if(file != null)
+			mPathStack.push(file.getPath());
 		return populate_list(file);
 	}
 
@@ -433,10 +435,30 @@ public class FileManager {
 		return names;
 	}
 	
-	public static OpenFace getOpenCache(String path)
+	public static OpenFace getOpenCache(String path) { return getOpenCache(path, false); }
+	
+	public static OpenFace getOpenCache(String path, Boolean bGetNetworkedFiles)
 	{
-		Logger.LogDebug("Checking cache for " + path);
+		//Logger.LogDebug("Checking cache for " + path);
 		OpenFace ret = mOpenCache.get(path);
+		if(ret == null)
+		{
+			if(path.indexOf("ftp:/") > -1)
+			{
+				FTPManager man;
+				try {
+					man = new FTPManager(path);
+					ret = new OpenFTP(null, man);
+					if(bGetNetworkedFiles)
+					{
+						FTPFile[] ff = FTPManager.getFTPFiles(path);
+						ret = new OpenFTP(path, ff, man);
+					}
+				} catch (MalformedURLException e) {
+					Logger.LogWarning("Bad URL in File Manager - " + path, e);
+				}
+			}
+		}
 		if(ret == null)
 			ret = setOpenCache(path, new OpenFile(path));
 		return ret;
@@ -477,18 +499,23 @@ public class FileManager {
 		if(!mDirContent.isEmpty())
 			mDirContent.clear();
 
-		/// TODO: Add Hidden File Logic Back
+		if(!mShowHiddenFiles)
+		{
+			ArrayList<OpenFace> arr = new ArrayList<OpenFace>();
+			for(int i = 0; i < list.length; i++)
+				if(!list[i].isHidden())
+					arr.add(list[i]);
+			list = new OpenFace[arr.size()];
+			arr.toArray(list);
+		}
 		
-		Boolean bFoldersFirst = true;
-		OpenComparer comp = new OpenComparer(mSorting, bFoldersFirst);
-		
-		if(comp != null)
-			Arrays.sort(list, comp);
+		OpenFace.Sorting = mSorting;
+		Arrays.sort(list);
 		
 		mDirContent.clear();
 		int folder_index = 0;
 		for(OpenFace file : list)
-			if(bFoldersFirst && file.isDirectory())
+			if(file.isDirectory())
 				mDirContent.add(folder_index++, file);
 			else
 				mDirContent.add(file);

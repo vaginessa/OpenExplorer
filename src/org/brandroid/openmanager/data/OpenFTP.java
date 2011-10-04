@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.ftp.FTPManager;
@@ -15,11 +16,23 @@ import android.net.Uri;
 
 public class OpenFTP extends OpenFace
 {
-	private FTPFile mFile;
+	private FTPFile mFile = new FTPFile();
+	private FTPManager mManager;
+	private ArrayList<OpenFTP> mChildren = null; 
 	
-	public OpenFTP(FTPFile file) { mFile = file; }
+	public OpenFTP(String path, FTPFile[] children, FTPManager man)
+	{
+		mManager = man;
+		mFile = new FTPFile();
+		mFile.setName(path);
+		mChildren = new ArrayList<OpenFTP>();
+		for(FTPFile f : children)
+			mChildren.add(new OpenFTP(f, man));
+	}
+	public OpenFTP(FTPFile file, FTPManager man) { mFile = file; mManager = man; }
 	
 	public FTPFile getFile() { return mFile; }
+	public FTPManager getManager() { return mManager; }
 
 	@Override
 	public String getName() {
@@ -28,7 +41,8 @@ public class OpenFTP extends OpenFace
 
 	@Override
 	public String getPath() {
-		return mFile.getRawListing();
+		return mManager.getPath();
+		//return mFile.getRawListing();
 	}
 
 	@Override
@@ -44,18 +58,20 @@ public class OpenFTP extends OpenFace
 
 	@Override
 	public OpenFace[] listFiles() throws IOException {
-		FTPFile[] arr = FTPManager.getInstance(getUri().toString()).listFiles();
+		FTPFile[] arr = mManager.listFiles();
 		if(arr == null)
 			return null;
 			
 		OpenFTP[] ret = new OpenFTP[arr.length];
 		for(int i = 0; i < arr.length; i++)
-			ret[i] = new OpenFTP(arr[i]);
+			ret[i] = new OpenFTP(arr[i], mManager);
 		return ret;
 	}
 
 	@Override
 	public Boolean isDirectory() {
+		if(mChildren != null)
+			return true;
 		return mFile.isDirectory();
 	}
 
@@ -90,12 +106,18 @@ public class OpenFTP extends OpenFace
 	}
 	@Override
 	public OpenFace[] list() throws IOException {
+		if(mChildren != null)
+		{
+			OpenFace[] ret = new OpenFace[mChildren.size()];
+			mChildren.toArray(ret);
+			return ret;
+		}
 		return listFiles();
 	}
 	
 	@Override
 	public Boolean requiresThread() {
-		return false;
+		return true;
 	}
 	@Override
 	public String getAbsolutePath() {
@@ -128,6 +150,11 @@ public class OpenFTP extends OpenFace
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		return null; //new FileOutputStream(mFile);
+	}
+
+	@Override
+	public Boolean isHidden() {
+		return mFile.getName().startsWith(".");
 	}
 
 }

@@ -34,6 +34,7 @@ import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.DataViewHolder;
+import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFace;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.fragments.BookmarkFragment.OnChangeLocationListener;
@@ -447,6 +448,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		final OpenFace file = mData.get(pos);
 		final String name = file.getName();
 		
+		//((OpenExplorer)getActivity()).hideBookmarkTitles();
+		
 		if(mMultiSelectOn) {
 			View v;
 			
@@ -627,7 +630,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * from the path give in the variable name.
 	 */
 	//@Override
-	public void onChangeLocation(String s)
+	public void onChangeLocation(final String s)
 	{
 		if(mActionModeSelected || mMultiSelectOn)
 			return;
@@ -635,6 +638,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		OpenFace path = FileManager.getOpenCache(s);
 		if(path == null)
 		{
+			Logger.LogWarning("Cache was null still.");
 			path = FileManager.setOpenCache(s, new OpenFile(s));
 		}
 		if(path == null)
@@ -658,10 +662,12 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			
 			//getFragmentManager().popBackStackImmediate("Settings", 0);
 			
-			if(path.exists())
+			if(path.requiresThread())
 				new FileIOTask().execute(
 						new FileIOCommand(FileIOCommandType.ALL, path));
-			else
+			else if(!path.requiresThread())
+				updateData(mFileMang.getNextDir(path, true));
+			else if(!path.exists())
 			{
 				mData = mFileMang.getNextDir(path, true);
 				mContentAdapter.notifyDataSetChanged();
@@ -672,10 +678,16 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 	}
 	
+	private void updateData(ArrayList<OpenFace> nextDir) {
+		mData.clear();
+		for(OpenFace f : nextDir)
+			mData.add(f);
+		mContentAdapter.notifyDataSetChanged();
+	}
+
 	public void goBack()
 	{
-		mData = mFileMang.getPreviousDir();
-		mContentAdapter.notifyDataSetChanged();
+		updateData(mFileMang.getPreviousDir());
 	}
 	
 	/*
@@ -701,12 +713,9 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					OpenFace file = FileManager.getOpenCache(fileName);
 					
 					if (file.isDirectory()) {
-						mData = mFileMang.getNextDir(file, true);
-						mContentAdapter.notifyDataSetChanged();
-						
+						updateData(mFileMang.getNextDir(file, true));
 					} else {
-						mData = mFileMang.getNextDir(file.getParent(), true);
-						mContentAdapter.notifyDataSetChanged();
+						updateData(mFileMang.getNextDir(file.getParent(), true));
 					}						
 				}
 			});
@@ -733,8 +742,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	public void onHiddenFilesChanged(boolean state) {
 		mFileMang.setShowHiddenFiles(state);
 		
-		mData = mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true);
-		mContentAdapter.notifyDataSetChanged();
+		updateData(mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true));
 	}
 
 	//@Override
@@ -746,8 +754,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	//@Override
 	public void onSortingChanged(SortType type) {
 		mFileMang.setSorting(type);
-		mData = mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true);
-		mContentAdapter.notifyDataSetChanged();
+		updateData(mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true));
 	}
 	
 	public void onSortingChanged(String state) {
@@ -760,8 +767,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		else if (state.equals("size"))
 			mFileMang.setSorting(SortType.SIZE);
 
-		mData = mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true);
-		mContentAdapter.notifyDataSetChanged();
+		updateData(mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true));
 	}
 
 	//@Override
@@ -852,8 +858,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					mBackPathIndex = index + 1;
 					
 					subPath = path.substring(0, path.lastIndexOf(bname));					
-					mData = mFileMang.getNextDir(FileManager.getOpenCache(subPath + bname), true);
-					mContentAdapter.notifyDataSetChanged();
+					updateData(mFileMang.getNextDir(FileManager.getOpenCache(subPath + bname), true));
 				}
 			}
 		});
@@ -1023,7 +1028,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				
 			} else {
 				
-				FTPFile f = FTPManager.getFTPFile(mName);
+				OpenFTP f = FTPManager.getFTPFile(mName);
 				if(f != null)
 				{
 					if(f.isDirectory())
@@ -1099,13 +1104,25 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			ArrayList<OpenFace> ret = new ArrayList<OpenFace>();
 			for(FileIOCommand cmd : params)
 			{
+				if(cmd.Path.requiresThread())
+				{
+					OpenFace file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getPath(), true);
+					try {
+						OpenFace[] list = file.list();
+						if(list != null)
+							for(OpenFace f : list)
+								ret.add(f);
+					} catch (IOException e) {
+						Logger.LogError("Unable to list children for " + cmd.Path);
+					}
+				} else
 				switch(cmd.Type)
 				{
-					case ALL:
-						ret.addAll(mFileMang.getNextDir(cmd.Path, true));
-						break;
 					case NEXT:
 						ret.addAll(mFileMang.getNextDir(cmd.Path, false));
+						break;
+					default:
+						ret.addAll(mFileMang.getNextDir(cmd.Path, true));
 						break;
 				}
 			}
@@ -1123,12 +1140,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		@Override
 		protected void onPostExecute(ArrayList<OpenFace> result)
 		{
-			mData.clear();
-			mData.addAll(result);
-			mContentAdapter.notifyDataSetChanged();
-			
-			mPathView.removeAllViews();
-			mBackPathIndex = 0;
+			updateData(result);
 		}
 		
 	}

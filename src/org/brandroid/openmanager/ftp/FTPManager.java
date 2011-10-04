@@ -14,11 +14,14 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.utils.Logger;
+
+import android.net.Uri;
 
 public class FTPManager {
 	public static Hashtable<String, FTPManager> instances = new Hashtable<String, FTPManager>();
-	private static Hashtable<String, FTPFile> fileCache = new Hashtable<String, FTPFile>();
+	private static Hashtable<String, OpenFTP> fileCache = new Hashtable<String, OpenFTP>();
 	
 	private int mPort = 21;
 	private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
@@ -29,14 +32,15 @@ public class FTPManager {
 	{
 		URL url = new URL(sFTPPath);
 		mUser = url.getUserInfo();
-		if(mUser.indexOf(":") > -1)
+		if(mUser == null) mUser = "";
+		else if(mUser.indexOf(":") > -1)
 		{
 			mPassword = mUser.substring(mUser.indexOf(":")+1);
 			mUser = mUser.substring(0,mUser.indexOf(":"));
 		}
 		mHost = url.getHost();
 		mBasePath = url.getPath();
-		instances.put("ftp://" + url.getUserInfo() + ":" + url.getHost(), this);
+		instances.put("ftp://" + (url.getUserInfo() != "" ? url.getUserInfo() + "@" : "") + url.getHost(), this);
 	}
 	public FTPManager(URL url)
 	{
@@ -64,7 +68,37 @@ public class FTPManager {
 			client.disconnect();
 	}
 	
-	public static FTPFile getFTPFile(String name) { return fileCache.get(name); }
+	public static OpenFTP getFTPFile(String name)
+	{
+		if(!fileCache.containsKey(name))
+		{
+			try {
+				URL u = new URL(name);
+				FTPFile[] files = new FTPManager(u).listAll();
+				Logger.LogDebug("Found " + files.length + " ftp children.");
+			} catch (MalformedURLException e) {
+				Logger.LogWarning("Invalid FTP URL - " + name, e);
+			} catch (IOException e) {
+				Logger.LogError("FTP Exception - " + name, e);
+			}
+		}
+		return fileCache.get(name);
+	}
+	
+	public static FTPFile[] getFTPFiles(String name)
+	{
+		FTPFile[] ret = new FTPFile[0]; 
+		try {
+			URL u = new URL(name);
+			ret = new FTPManager(u).listAll();
+			Logger.LogDebug("Found " + ret.length + " ftp children.");
+		} catch (MalformedURLException e) {
+			Logger.LogWarning("Invalid FTP URL - " + name, e);
+		} catch (IOException e) {
+			Logger.LogError("FTP Exception - " + name, e);
+		}
+		return ret;
+	}
 	
 	public static FTPManager getInstance(String instanceName)
 	{
@@ -106,6 +140,10 @@ public class FTPManager {
 	
 	public FTPFile[] listAll() throws IOException
 	{
+		if(1 == 2 - 1)
+		{
+			return listFiles();
+		}
 		FTPFile[] files = listFiles();
 		ArrayList<FTPFile> ret = new ArrayList<FTPFile>();
 		for(FTPFile f : files)
@@ -126,7 +164,8 @@ public class FTPManager {
 		{
 			FTPFile[] ret = client.listDirectories();
 			for(FTPFile f : ret)
-				fileCache.put(f.getName(), f);
+				fileCache.put(f.getName(), new OpenFTP(f, this));
+			fileCache.put(getPath(), new OpenFTP(getPath(), ret, this));
 			return ret;
 		}
 		else return null;
@@ -137,7 +176,7 @@ public class FTPManager {
 		{
 			FTPFile[] ret = client.listFiles();
 			for(FTPFile f : ret)
-				fileCache.put(f.getName(), f);
+				fileCache.put(f.getName(), new OpenFTP(f, this));
 			return ret;
 		} else return null;
 	}
@@ -146,5 +185,25 @@ public class FTPManager {
 		if(connect())
 			return client.retrieveFileStream(path);
 		else return null;
+	}
+	
+	public String getPath() {
+		String ret = "ftp://";
+		if(mUser != "")
+		{
+			ret += mUser;
+			if(mPassword != "")
+				ret += ":" + mPassword;
+			ret += "@";
+		}
+		ret += mHost;
+		if(mPort != 21)
+			ret += ":" + mPort;
+		ret += "/";
+		if(mBasePath.startsWith("/"))
+			ret += mBasePath.substring(1);
+		else
+			ret += mBasePath;
+		return ret;
 	}
 }

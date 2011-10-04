@@ -132,5 +132,9 @@ public class OpenFile extends OpenFace
 				return null;
 		return new FileOutputStream(mFile);
 	}
+	@Override
+	public Boolean isHidden() {
+		return mFile.isHidden() || mFile.getName().startsWith(".");
+	}
 
 }

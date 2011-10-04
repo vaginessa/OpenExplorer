@@ -33,7 +33,9 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -49,6 +51,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.DirContentActivity;
 import org.brandroid.openmanager.fragments.DirListFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
 public class OpenExplorer extends FragmentActivity implements OnBackStackChangedListener {	
@@ -69,13 +72,12 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private static OnSettingsChangeListener mSettingsListener;
 	private SharedPreferences mPreferences;
 	private SearchView mSearchView;
-	private ToggleButton mBtnFavorites;
 	private ActionMode mActionMode;
 	private ArrayList<OpenFace> mHeldFiles;
 	private boolean mBackQuit = false;
 	private int mLastBackIndex = -1;
 	
-	private Fragment mFavoritesFragment, mTreeFragment;
+	private Fragment mFavoritesFragment;
 	
 	private EventHandler mEvHandler;
 	private FileManager mFileManger;
@@ -98,7 +100,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         fragmentManager = getSupportFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
         
-        mTreeFragment = new DirListFragment();
+        //mTreeFragment = new DirListFragment();
         mFavoritesFragment = new BookmarkFragment();
         
         FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -113,15 +115,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         trans.commit();
         */
         //getFragmentManager().findFragmentById(R.id.content_frag);
-        
-        mBtnFavorites = (ToggleButton)findViewById(R.id.btnFavorites);
-        mBtnFavorites.setChecked(true);
-        mBtnFavorites.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				toggleListView(isChecked);
-			}
-		});
-                
+                        
         mEvHandler = getDirContentFragment().getEventHandlerInst();
         mFileManger = getDirContentFragment().getFileManagerInst();
         
@@ -181,22 +175,6 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     	ft.commit();
     }
     
-    public void toggleListView()
-    {
-    	Boolean bFavorites = !fragmentManager.findFragmentById(R.id.list_frag).getClass().equals(BookmarkFragment.class);
-    	toggleListView(bFavorites);
-    }
-
-    public void toggleListView(Boolean bFavorites)
-    {
-    	FragmentTransaction ft = fragmentManager.beginTransaction();
-		if(bFavorites) // Favorites
-			ft.replace(R.id.list_frag, mFavoritesFragment);
-		else // Tree
-			ft.replace(R.id.list_frag, mTreeFragment);
-		ft.commit();
-    }
-    
     public boolean onCreateOptionsMenu(Menu menu) {
     	getMenuInflater().inflate(R.menu.actbar, menu);
     	return true;
@@ -238,7 +216,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    			trans.addToBackStack("dialog");
 	    			trans.commit();
 	    		} else {
-	    			toggleListView();
+	    			//toggleListView();
 	    		}
 	    		return true;
 	    	
@@ -505,6 +483,17 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		public void onThumbnailChanged(boolean state);
 		public void onViewChanged(String state);
 		public void onSortingChanged(FileManager.SortType type);
+	}
+
+
+	public void hideBookmarkTitles() {
+		BookmarkFragment bf = ((BookmarkFragment)fragmentManager.findFragmentById(R.id.list_frag));
+		bf.hideTitles();
+	}
+
+	public void showBookmarkTitles() {
+		BookmarkFragment bf = ((BookmarkFragment)fragmentManager.findFragmentById(R.id.list_frag));
+		bf.showTitles();
 	}
 	
 }

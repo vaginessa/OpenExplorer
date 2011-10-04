@@ -26,6 +26,12 @@ public class OpenComparer implements Comparator<OpenFace>
 	}
 	
 	public int compare(OpenFace fa, OpenFace fb) {
+		if(fa == null && fb != null)
+			return 1;
+		if(fb == null && fa != null)
+			return 0;
+		if(fb == null || fa == null)
+			return 0;
 		if(FoldersFirst)
 		{
 			if(fa.isDirectory() && !fb.isDirectory())

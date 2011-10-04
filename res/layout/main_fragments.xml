@@ -23,40 +23,46 @@
     android:layout_height="match_parent">
     
 	<LinearLayout android:id="@+id/title_bar" android:orientation="horizontal"
-		android:layout_width="match_parent" android:layout_height="wrap_content">
+		android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone">
 		<ImageButton android:src="@drawable/icon" android:id="@+id/homeIcon"
 			android:layout_height="wrap_content" android:layout_width="wrap_content" />
 		<TextView android:text="@string/app_name"
 			android:gravity="left|center_vertical"
 			android:textAppearance="?android:attr/textAppearanceLarge"
 			android:layout_height="match_parent" android:layout_width="wrap_content" />
-
-		<ToggleButton
-		    android:id="@+id/btnFavorites"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:textOn="Favorites"
-		    android:textOff="Tree"
-		    android:text="Favorites" />
 	    
 	</LinearLayout>
 	<LinearLayout
+		android:id="@+id/frag_holder"
 	    android:orientation="horizontal"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent">
 	    
-	    <FrameLayout
-	    	android:id="@+id/list_frag"
-	    	android:layout_height="match_parent"
-	    	android:layout_width="match_parent" 
-	    	android:layout_weight="3"/>
+	    <LinearLayout
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:layout_weight="3">
+		    <FrameLayout
+		    	android:id="@+id/list_frag"
+		    	android:layout_height="match_parent"
+		    	android:layout_width="match_parent" 
+		    	android:layout_weight="3"/>
+		    	
+		    <LinearLayout
+		    	android:id="@+id/mid_frag"
+		    	android:layout_height="match_parent"
+		    	android:layout_width="match_parent"
+		    	android:layout_weight="1"
+		    	android:visibility="gone"
+		    	/>
+	    </LinearLayout>
 	    	
 	    <FrameLayout
 	    	android:id="@+id/content_frag"
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent"
-	    	android:layout_weight="1">
-	    </FrameLayout>
+	    	android:layout_weight="1"
+	    	/>
 	    
 	</LinearLayout>
 </LinearLayout>
