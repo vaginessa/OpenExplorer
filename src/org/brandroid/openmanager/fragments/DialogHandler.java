@@ -40,12 +40,16 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Date;
 import java.io.File;
+import java.io.IOException;
 
-import org.brandroid.openmanager.DataViewHolder;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
+import org.brandroid.openmanager.data.DataViewHolder;
+import org.brandroid.openmanager.data.OpenFace;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.utils.Logger;
 
 public class DialogHandler extends DialogFragment {
 	public static final int HOLDINGFILE_DIALOG = 	0X01;
@@ -57,7 +61,7 @@ public class DialogHandler extends DialogFragment {
 	private static Context mContext;
 	
 	private OnSearchFileSelected mSearchListener;
-	private ArrayList<String> mFiles;
+	private ArrayList<OpenFace> mFiles;
 	private String mPath;
 	
 	
@@ -105,7 +109,7 @@ public class DialogHandler extends DialogFragment {
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}
 	
-	public void setHoldingFileList(ArrayList<String> list) {
+	public void setHoldingFileList(ArrayList<OpenFace> list) {
 		mFiles = list;
 	}
 	
@@ -142,7 +146,7 @@ public class DialogHandler extends DialogFragment {
 			
 			
 			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-				final File selected = new File(mFiles.get(position));
+				final OpenFace selected = mFiles.get(position);
 				
 				if (layout.getVisibility() == View.GONE)
 					layout.setVisibility(View.VISIBLE);
@@ -177,7 +181,7 @@ public class DialogHandler extends DialogFragment {
 					    		
 					    		Intent i = new Intent();
 				   				i.setAction(android.content.Intent.ACTION_VIEW);
-				   				i.setDataAndType(Uri.fromFile(selected), "audio/*");
+				   				i.setDataAndType(selected.getUri(), "audio/*");
 				   				startActivity(i);
 							}
 							
@@ -190,7 +194,7 @@ public class DialogHandler extends DialogFragment {
 
 								Intent picIntent = new Intent();
 						    		picIntent.setAction(android.content.Intent.ACTION_VIEW);
-						    		picIntent.setDataAndType(Uri.fromFile(selected), "image/*");
+						    		picIntent.setDataAndType(selected.getUri(), "image/*");
 						    		startActivity(picIntent);
 					    	}
 							
@@ -205,7 +209,7 @@ public class DialogHandler extends DialogFragment {
 					    		
 				    				Intent movieIntent = new Intent();
 						    		movieIntent.setAction(android.content.Intent.ACTION_VIEW);
-						    		movieIntent.setDataAndType(Uri.fromFile(selected), "video/*");
+						    		movieIntent.setDataAndType(selected.getUri(), "video/*");
 						    		startActivity(movieIntent);	
 					    	}
 							
@@ -215,7 +219,7 @@ public class DialogHandler extends DialogFragment {
 					    		if(selected.exists()) {
 						    		Intent pdfIntent = new Intent();
 						    		pdfIntent.setAction(android.content.Intent.ACTION_VIEW);
-						    		pdfIntent.setDataAndType(Uri.fromFile(selected), "application/pdf");
+						    		pdfIntent.setDataAndType(selected.getUri(), "application/pdf");
 							    		
 						    		try {
 						    			startActivity(pdfIntent);
@@ -232,7 +236,7 @@ public class DialogHandler extends DialogFragment {
 					    		if(selected.exists()) {
 					    			Intent apkIntent = new Intent();
 					    			apkIntent.setAction(android.content.Intent.ACTION_VIEW);
-					    			apkIntent.setDataAndType(Uri.fromFile(selected), 
+					    			apkIntent.setDataAndType(selected.getUri(), 
 					    									 "application/vnd.android.package-archive");
 					    			startActivity(apkIntent);
 					    		}
@@ -245,7 +249,7 @@ public class DialogHandler extends DialogFragment {
 					    		if(selected.exists()) {
 					    			Intent htmlIntent = new Intent();
 					    			htmlIntent.setAction(android.content.Intent.ACTION_VIEW);
-					    			htmlIntent.setDataAndType(Uri.fromFile(selected), "text/html");
+					    			htmlIntent.setDataAndType(selected.getUri(), "text/html");
 					    			
 					    			try {
 					    				startActivity(htmlIntent);
@@ -261,7 +265,7 @@ public class DialogHandler extends DialogFragment {
 					    	else if(item_ext.equalsIgnoreCase(".txt")) {
 				    			Intent txtIntent = new Intent();
 				    			txtIntent.setAction(android.content.Intent.ACTION_VIEW);
-				    			txtIntent.setDataAndType(Uri.fromFile(selected), "text/plain");
+				    			txtIntent.setDataAndType(selected.getUri(), "text/plain");
 				    			
 				    			try {
 				    				startActivity(txtIntent);
@@ -276,7 +280,7 @@ public class DialogHandler extends DialogFragment {
 					    		if(selected.exists()) {
 						    		Intent generic = new Intent();
 						    		generic.setAction(android.content.Intent.ACTION_VIEW);
-						    		generic.setDataAndType(Uri.fromFile(selected), "application/*");
+						    		generic.setDataAndType(selected.getUri(), "application/*");
 						    		
 						    		try {
 						    			startActivity(generic);
@@ -296,7 +300,11 @@ public class DialogHandler extends DialogFragment {
 					launch_button.setVisibility(View.INVISIBLE);
 				}
 				
-				populateFileInfoViews(v, selected);
+				try {
+					populateFileInfoViews(v, selected);
+				} catch (IOException e) {
+					Logger.LogError("Couldn't populate.", e);
+				}
 			}
 		});
 		list.setAdapter(new DialogListAdapter(mContext, R.layout.dir_list_layout, mFiles));
@@ -305,11 +313,15 @@ public class DialogHandler extends DialogFragment {
 	}
 	
 	private View createFileInfoDialog(LayoutInflater inflater) {
-		File file = new File(mPath);
+		OpenFile file = new OpenFile(mPath);
 		View v = inflater.inflate(R.layout.info_layout, null);
 		v.setBackgroundColor(0xcc000000);
 		
-		populateFileInfoViews(v, file);
+		try {
+			populateFileInfoViews(v, file);
+		} catch (IOException e) {
+			Logger.LogError("Couldn't create info dialog", e);
+		}
 		
 		return v;
 	}
@@ -332,11 +344,11 @@ public class DialogHandler extends DialogFragment {
 		return ssize;
 	}
 	
-	private void populateFileInfoViews(View v, File file) {
+	private void populateFileInfoViews(View v, OpenFace file) throws IOException {
 		int dirCount = 0;
 		int fileCount = 0;
 		String apath = file.getPath();
-		File files[] = file.listFiles();
+		OpenFace files[] = file.listFiles();
 		Date date = new Date(file.lastModified());
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
@@ -346,7 +358,7 @@ public class DialogHandler extends DialogFragment {
 			files = file.listFiles();
 			
 			if (files != null) {
-				for(File f : files)
+				for(OpenFace f : files)
 					if (f.isDirectory())
 						dirCount++;
 					else
@@ -444,10 +456,10 @@ public class DialogHandler extends DialogFragment {
 	/*
 	 * 
 	 */
-	private class DialogListAdapter extends ArrayAdapter<String> {
+	private class DialogListAdapter extends ArrayAdapter<OpenFace> {
 		private DataViewHolder mHolder;
 		
-		public DialogListAdapter(Context context, int layout, ArrayList<String> data) {
+		public DialogListAdapter(Context context, int layout, ArrayList<OpenFace> data) {
 			super(context, layout, data);
 			
 		}
@@ -455,8 +467,9 @@ public class DialogHandler extends DialogFragment {
 		
 		public View getView(int position, View view, ViewGroup parent) {
 			String ext;
-			String file = mFiles.get(position);
-			String name = file.substring(file.lastIndexOf("/") + 1, file.length());
+			OpenFace file = mFiles.get(position);
+			//String file.getName();
+			String name = file.getName(); // file.substring(file.lastIndexOf("/") + 1, file.length());
 			
 			
 			if (view == null) {
@@ -474,10 +487,10 @@ public class DialogHandler extends DialogFragment {
 				mHolder = (DataViewHolder)view.getTag();
 			}
 			
-			if (new File(file).isDirectory())
+			if (file.isDirectory())
 				ext = "dir";
 			else
-				ext = file.substring(file.lastIndexOf(".") + 1);
+				ext = name.substring(name.lastIndexOf(".") + 1);
 			
 			mHolder.mMainText.setText(name);
 			

@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.brandroid.openmanager.data.OpenFace;
 import org.brandroid.utils.Decoder;
 import org.brandroid.utils.Logger;
 
@@ -49,7 +50,7 @@ public class ThumbnailCreator extends Thread {
 	private int mHeight;
 	private SoftReference<Bitmap> mThumb;
 	private static HashMap<String, BitmapDrawable> mCacheMap = null;	
-	private ArrayList<String> mFiles;
+	private ArrayList<OpenFace> mFiles;
 	
 	private Context mContext;
 	private String mDir;
@@ -69,7 +70,7 @@ public class ThumbnailCreator extends Thread {
 		return mCacheMap.get(name);
 	}
 	
-	public void createNewThumbnail(ArrayList<String> files,  String dir,  Handler handler) {
+	public void createNewThumbnail(ArrayList<OpenFace> files,  String dir,  Handler handler) {
 		this.mFiles = files;
 		this.mDir = dir;
 		this.mHandler = handler;		

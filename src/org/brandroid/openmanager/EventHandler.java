@@ -43,6 +43,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.brandroid.openmanager.data.OpenFace;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Logger;
 
 
@@ -70,7 +72,7 @@ public class EventHandler {
 		 * 			   you may pass null if you do not want to report the results.
 		 * @param results the results of the work
 		 */
-		public void onWorkerThreadComplete(int type, ArrayList<String> results);
+		public void onWorkerThreadComplete(int type, ArrayList<OpenFace> results);
 	}
 	
 	
@@ -83,37 +85,30 @@ public class EventHandler {
 		mThreadListener = e;
 	}
 	
-	public void deleteFile(final ArrayList<String> path) {
-		final String[] files;
+	public void deleteFile(final ArrayList<OpenFace> path) {
+		final OpenFace[] files = new OpenFace[path.size()];
+		path.toArray(files);
 		String name;
 		
 		if(path.size() == 1)
-			name = path.get(0).substring(path.get(0).lastIndexOf("/") + 1,
-										 path.get(0).length());
+			name = path.get(0).getName();
 		else
 			name = path.size() + " files";
 		
-		files =  buildStringArray(path);
-		
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle("Deleting " + name)
-		 .setMessage("Deleting " + name + " cannot be undone.\nAre you sure" +
-					 " you want to continue?")
-		 .setIcon(R.drawable.download)
-		 .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				
-				new BackgroundWork(DELETE_TYPE).execute(files);
-			}
-		})
-		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-			
-		}).create().show();
+			.setMessage("Deleting " + name + " cannot be undone.\nAre you sure you want to continue?")
+			.setIcon(R.drawable.download)
+			.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					new BackgroundWork(DELETE_TYPE).execute(files);
+				}})
+			.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}})
+			.create()
+			.show();
 	}
 	
 	public void renameFile(final String path, boolean isFolder) {
@@ -196,15 +191,15 @@ public class EventHandler {
 		.setIcon(R.drawable.folder).create().show();
 	}
 	
-	public void sendFile(final ArrayList<String> path) {
+	public void sendFile(final ArrayList<OpenFace> path) {
 		String name;
 		CharSequence[] list = {"Bluetooth", "Email"};
-		final String[] files = buildStringArray(path);
+		final OpenFace[] files = new OpenFace[path.size()];
+		path.toArray(files);
 		final int num = path.size();
 		
 		if(num == 1)
-			name = path.get(0).substring(path.get(0).lastIndexOf("/") + 1,
-										 path.get(0).length());
+			name = path.get(0).getName();
 		else
 			name = path.size() + " files.";
 				
@@ -230,13 +225,13 @@ public class EventHandler {
 						
 						if(num == 1) {
 							mail.setAction(android.content.Intent.ACTION_SEND);
-							mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(files[0])));
+							mail.putExtra(Intent.EXTRA_STREAM, files[0].getUri());
 							mContext.startActivity(mail);
 							break;
 						}
 						
 						for(int i = 0; i < num; i++)
-							uris.add(Uri.fromFile(new File(files[i])));
+							uris.add(files[i].getUri());
 						
 						mail.setAction(android.content.Intent.ACTION_SEND_MULTIPLE);
 						mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
@@ -247,76 +242,51 @@ public class EventHandler {
 		}).create().show();
 	}
 	
-	public void copyFile(ArrayList<String> files, String newPath) {
-		int len = files.size() + 1;
-		String[] array = new String[len];
-		
-		array[0] = newPath;		//a convenient way to pass the dest dir to our background thread
-		for(int i = 1; i < len; i++)
-			array[i] = files.get(i - 1);
+	public void copyFile(ArrayList<OpenFace> files, String newPath) {
+		OpenFace[] array = new OpenFace[files.size()];
+		files.toArray(array);
 		
 		new BackgroundWork(COPY_TYPE).execute(array);
 	}
 	
-	public void cutFile(ArrayList<String> files, String newPath) {
+	public void cutFile(ArrayList<OpenFace> files, String newPath) {
 		mDeleteFile = true;
 		
 		copyFile(files, newPath);
 	}
 	
 	public void searchFile(String dir, String query) {
-		new BackgroundWork(SEARCH_TYPE).execute(dir, query);
+		//new BackgroundWork(SEARCH_TYPE).execute(dir, query);
 	}
 	
 	public void zipFile(String path) {
-		new BackgroundWork(ZIP_TYPE).execute(path);
+		//new BackgroundWork(ZIP_TYPE).execute(path);
 	}
 	
-	public void unzipFile(String path) {
-		final String oPath = path;
-		final String zipFile = path.substring(path.lastIndexOf("/") + 1, path.length());
-		final String zipPath = path.substring(0, path.lastIndexOf(zipFile));
-		
+	public void unzipFile(final OpenFace file) {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-		b.setTitle("Unzip file " + zipFile)
-		 .setMessage("Would you like to unzip " + zipFile +
-				 	 " here or some other folder?")
-		 .setIcon(R.drawable.zip)
-		 .setPositiveButton("Unzip here", new DialogInterface.OnClickListener() {
-			
-			
-			public void onClick(DialogInterface dialog, int which) {
-				new BackgroundWork(UNZIP_TYPE).execute(zipFile, zipPath);
-			}
-		})
-		 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
-			
-			
-			public void onClick(DialogInterface dialog, int which) {
-				ArrayList<String> l = new ArrayList<String>();
-				l.add(oPath);
-				mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
-			}
-			
-		}).create().show();
+		b.setTitle("Unzip file " + file.getName())
+			 .setMessage("Would you like to unzip " + file.getName() +
+					 	 " here or some other folder?")
+			 .setIcon(R.drawable.zip)
+			 .setPositiveButton("Unzip here", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						new BackgroundWork(UNZIP_TYPE).execute(file);
+					}
+				})
+			 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						ArrayList<OpenFace> l = new ArrayList<OpenFace>();
+						l.add(file);
+						mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
+					}
+			 	})
+			.create()
+			.show();
 	}
 	
-	public void unZipFileTo(String zipFile, String toDir) {
-		String name = zipFile.substring(zipFile.lastIndexOf("/") + 1, 
-										zipFile.length());
-		String orgDir = zipFile.substring(0, zipFile.lastIndexOf("/"));
-		
-		new BackgroundWork(UNZIPTO_TYPE).execute(name, toDir, orgDir);
-	}
-	
-	private String[] buildStringArray(ArrayList<String> array) {
-		int len = array.size();
-		String[] a = new String[len];
-				
-		for(int i = 0; i < len; i++)
-			a[i] = array.get(i);
-		
-		return a;
+	public void unZipFileTo(OpenFace zipFile, OpenFace toDir) {
+		new BackgroundWork(UNZIPTO_TYPE).execute(zipFile, toDir);
 	}
 		
 	
@@ -324,7 +294,7 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	private class BackgroundWork extends AsyncTask<String, Integer, ArrayList<String>> {
+	private class BackgroundWork extends AsyncTask<OpenFace, Integer, ArrayList<OpenFace>> {
 		private int mType;
 		private ProgressDialog mPDialog;
 		
@@ -369,104 +339,90 @@ public class EventHandler {
 		}
 		
 		
-		protected ArrayList<String> doInBackground(String... params) {
-			ArrayList<String> results = null;
+		protected ArrayList<OpenFace> doInBackground(OpenFace... params) {
+			ArrayList<OpenFace> results = null;
 			int len = params.length;
 			
+			try {
 			switch(mType) {
 			
 			case DELETE_TYPE:
 				if(results == null)
-					 results = new ArrayList<String>();
+					 results = new ArrayList<OpenFace>();
 				
-				for(int i = 0; i < len; i++) {
-					int ret = mFileMang.deleteTarget(params[i]);
-					results.add(ret + "");
-				}
+				for(int i = 0; i < len; i++)
+					mFileMang.deleteTarget(params[i]);
 				
 				return results;
 				
 			case SEARCH_TYPE:
-				results = mFileMang.searchInDirectory(params[0], params[1]);
+				//results = mFileMang.searchInDirectory(params[0], params[1]);
 				
 				return results;
 				
 			case COPY_TYPE:
 				//the first index is our dest path.
-				String dir = params[0];
-				int ret = 0;
 				
 				if(results == null)
-					 results = new ArrayList<String>();
+					 results = new ArrayList<OpenFace>();
 				
 				for(int i = 1; i < len; i++) {
-					ret = copyToDirectory(params[i], dir, 0);
-					results.add(ret + "");
+					copyToDirectory(params[i], params[0], 0);
 					
 					if(mDeleteFile) {
 						mFileMang.deleteTarget(params[i]);
-						results.add(ret + "");
 					}
 					
 				}
-					
-				return results;
 				
 			case UNZIP_TYPE:
-				String file = params[0];
-				String folder = params[1];
-				
-				extractZipFiles(file, folder);
+				extractZipFiles(params[0], params[1]);
 				return null;
 				
 			case UNZIPTO_TYPE:
-				String name = params[0];
-				String toDir = params[1];
-				String fromDir = params[2];
-				
-				mFileMang.extractZipFilesFromDir(name, toDir, fromDir);
+				mFileMang.extractZipFilesFromDir(params[0], params[1]);
 				return null;
 				
 			case ZIP_TYPE:				
-				mFileMang.createZipFile(params[0]);
+				mFileMang.createZipFile(params[0].getPath());
 				return null;
+			}
+			} catch(IOException e) {
+				Logger.LogError("Error performing task.", e);
 			}
 			
 			return null;
 		}
 		
-		private Integer copyToDirectory(String old, String newDir, int total)
+		private Integer copyToDirectory(OpenFace old, OpenFace newDir, int total) throws IOException
 		{
-			File old_file = new File(old);
-			File new_dir = new File(newDir);
 			byte[] data = new byte[FileManager.BUFFER];
 			int read = 0;
 			
-			if(old_file.isDirectory() && new_dir.isDirectory() && new_dir.canWrite()) {
-				String files[] = old_file.list();
-				String dir = newDir + old.substring(old.lastIndexOf("/"), old.length());
+			if(old.isDirectory() && newDir.isDirectory() && newDir.canWrite()) {
+				OpenFace[] files = old.list();
+				OpenFace newFile = newDir.getChild(old.getName());
 				
-				if(!new File(dir).mkdir())
+				if(!newFile.mkdir())
 					return -1;
 				
-				for(String file : files)
+				for(OpenFace file : files)
 					total += (int)file.length();
 				
 				for(int i = 0; i < files.length; i++)
-					if(copyToDirectory(files[i], dir, total) == -1)
+					if(copyToDirectory(files[i], newFile.getParent(), total) == -1)
 						return -1;
 				
-			} else if(old_file.isFile() && new_dir.isDirectory() && new_dir.canWrite()){
-				String file_name = old.substring(old.lastIndexOf("/"), old.length());
-				File cp_file = new File(newDir + file_name);
-				int size = (int)old_file.length();
+			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite()){
+				OpenFace newFile = newDir.getChild(old.getName());
+				int size = (int)old.length();
 				int pos = 0;
 
 				try {
 					BufferedOutputStream o_stream = new BufferedOutputStream(
-													new FileOutputStream(cp_file));
+													newFile.getOutputStream());
 					BufferedInputStream i_stream = new BufferedInputStream(
-												   new FileInputStream(old_file));
+												   old.getInputStream());
 					
 					while((read = i_stream.read(data, 0, FileManager.BUFFER)) != -1)
 					{
@@ -488,50 +444,30 @@ public class EventHandler {
 					return -1;
 				}
 				
-			} else if(!new_dir.canWrite())
+			} else if(!newDir.canWrite())
 				return -1;
 			
 			return 0;
 		}
 		
-		public void extractZipFiles(String zip_file, String directory) {
+		public void extractZipFiles(OpenFace zip, OpenFace directory) {
 			byte[] data = new byte[FileManager.BUFFER];
 			String name, path, zipDir;
 			ZipEntry entry;
 			ZipInputStream zipstream;
-			
-			if(zip_file.contains("/")) {
-				path = zip_file;
-				name = path.substring(path.lastIndexOf("/") + 1, 
-									  path.length() - 4);
-				zipDir = directory + name + "/";
-				
-			} else {
-				path = directory + zip_file;
-				name = path.substring(path.lastIndexOf("/") + 1, 
-			 			  			  path.length() - 4);
-				zipDir = directory + name + "/";
-			}
 
-			new File(zipDir).mkdir();
+			if(!directory.mkdir())
+				return;
 			
 			try {
-				zipstream = new ZipInputStream(new FileInputStream(path));
+				zipstream = new ZipInputStream(zip.getInputStream());
 				
 				while((entry = zipstream.getNextEntry()) != null) {
-					String buildDir = zipDir;
-					String[] dirs = entry.getName().split("/");
-					
-					if(dirs != null && dirs.length > 0) {
-						for(int i = 0; i < dirs.length - 1; i++) {
-							buildDir += dirs[i] + "/";
-							new File(buildDir).mkdir();
-						}
-					}
+					OpenFace newFile = directory.getChild(entry.getName());
+					if(!newFile.mkdir()) continue;
 					
 					int read = 0;
-					FileOutputStream out = new FileOutputStream(
-											zipDir + entry.getName());
+					FileOutputStream out = (FileOutputStream)newFile.getOutputStream();
 					while((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
 						out.write(data, 0, read);
 					
@@ -575,7 +511,7 @@ public class EventHandler {
 		}
 
 		
-		protected void onPostExecute(ArrayList<String> result) {
+		protected void onPostExecute(ArrayList<OpenFace> result) {
 			switch(mType) {
 			
 			case DELETE_TYPE:				

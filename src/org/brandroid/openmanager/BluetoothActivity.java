@@ -60,6 +60,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.brandroid.openmanager.data.DataViewHolder;
+
 
 
 public class BluetoothActivity extends Activity implements OnClickListener,

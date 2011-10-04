@@ -18,12 +18,12 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.DataViewHolder;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
+import org.brandroid.openmanager.data.DataViewHolder;
 import org.brandroid.openmanager.fragments.DirContentActivity.OnBookMarkAddListener;
 import org.brandroid.utils.Logger;
 

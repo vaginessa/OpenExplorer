@@ -21,6 +21,7 @@ package org.brandroid.openmanager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Hashtable;
 import java.util.Stack;
 import java.io.File;
 import java.io.BufferedInputStream;
@@ -35,6 +36,9 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.brandroid.openmanager.data.OpenComparer;
+import org.brandroid.openmanager.data.OpenFace;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.ftp.FTPFileComparer;
 import org.brandroid.utils.Logger;
@@ -64,7 +68,8 @@ public class FileManager {
 	private SortType mSorting = SortType.ALPHA;
 	private long mDirSize = 0;
 	private Stack<String> mPathStack;
-	private ArrayList<String> mDirContent;
+	private ArrayList<OpenFace> mDirContent;
+	private static Hashtable<String, OpenFace> mOpenCache = new Hashtable<String, OpenFace>();
 	
 	public static enum SortType {
 		NONE,
@@ -83,7 +88,7 @@ public class FileManager {
 	 * this class uses a stack to handle the navigation of directories.
 	 */
 	public FileManager() {
-		mDirContent = new ArrayList<String>();
+		mDirContent = new ArrayList<OpenFace>();
 		mPathStack = new Stack<String>();
 		
 		mPathStack.push("/");
@@ -104,13 +109,13 @@ public class FileManager {
 	 * This will return a string of the current home path.
 	 * @return	the home directory
 	 */
-	public ArrayList<String> setHomeDir(String name) {
+	public ArrayList<OpenFace> setHomeDir(String name) {
 		//This will eventually be placed as a settings item
 		mPathStack.clear();
 		mPathStack.push("/");
 		mPathStack.push(name);
 		
-		return populate_list();
+		return populate_list(getLastPath());
 	}
 	
 	/**
@@ -134,7 +139,7 @@ public class FileManager {
 	 * This will return a string that represents the path of the previous path
 	 * @return	returns the previous path
 	 */
-	public ArrayList<String> getPreviousDir() {
+	public ArrayList<OpenFace> getPreviousDir() {
 		int size = mPathStack.size();
 		
 		if (size >= 2)
@@ -143,30 +148,18 @@ public class FileManager {
 		else if(size == 0)
 			mPathStack.push("/");
 		
-		return populate_list();
+		return populate_list(getLastPath());
 	}
 	
 	/**
 	 * 
-	 * @param path
+	 * @param file
 	 * @param isFullPath
 	 * @return
 	 */
-	public ArrayList<String> getNextDir(String path, boolean isFullPath) {
-		int size = mPathStack.size();
-		
-		if(!path.equals(mPathStack.peek()) && !isFullPath) {
-			if(size == 1)
-				mPathStack.push("/" + path);
-			else
-				mPathStack.push(mPathStack.peek() + "/" + path);
-		}
-		
-		else if(!path.equals(mPathStack.peek()) && isFullPath) {
-			mPathStack.push(path);
-		}
-		
-		return populate_list();
+	public ArrayList<OpenFace> getNextDir(OpenFace file, boolean isFullPath) {
+		mPathStack.push(file.getPath());
+		return populate_list(file);
 	}
 
 	/**
@@ -230,15 +223,9 @@ public class FileManager {
 	 * @param toDir
 	 * @param fromDir
 	 */
-	public void extractZipFilesFromDir(String zipName, String toDir, String fromDir) {
-		if(!(toDir.charAt(toDir.length() - 1) == '/'))
-			toDir += "/";
-		if(!(fromDir.charAt(fromDir.length() - 1) == '/'))
-			fromDir += "/";
-		
-		String org_path = fromDir + zipName;		
-		
-		extractZipFiles(org_path, toDir);
+	public void extractZipFilesFromDir(OpenFace zip, OpenFace directory) {
+		if(!directory.mkdir() && directory.isDirectory()) return;
+		extractZipFiles(zip, directory);
 	}
 	
 	/**
@@ -246,56 +233,40 @@ public class FileManager {
 	 * @param zip_file
 	 * @param directory
 	 */
-	public void extractZipFiles(String zip_file, String directory) {
+	public void extractZipFiles(OpenFace zip, OpenFace directory) {
 		byte[] data = new byte[BUFFER];
-		String name, path, zipDir;
 		ZipEntry entry;
 		ZipInputStream zipstream;
 		
-		if(zip_file.contains("/")) {
-			path = zip_file;
-			name = path.substring(path.lastIndexOf("/") + 1, 
-								  path.length() - 4);
-			zipDir = directory + name + "/";
-			
-		} else {
-			path = directory + zip_file;
-			name = path.substring(path.lastIndexOf("/") + 1, 
-		 			  			  path.length() - 4);
-			zipDir = directory + name + "/";
-		}
-
-		new File(zipDir).mkdir();
+		directory.mkdir();
 		
 		try {
-			zipstream = new ZipInputStream(new FileInputStream(path));
+			zipstream = new ZipInputStream(zip.getInputStream());
 			
 			while((entry = zipstream.getNextEntry()) != null) {
-				String buildDir = zipDir;
-				String[] dirs = entry.getName().split("/");
-				
-				if(dirs != null && dirs.length > 0) {
-					for(int i = 0; i < dirs.length - 1; i++) {
-						buildDir += dirs[i] + "/";
-						new File(buildDir).mkdir();
-					}
-				}
+				OpenFace newFile = directory.getChild(entry.getName());
+				if(!newFile.mkdir())
+					continue;
 				
 				int read = 0;
-				FileOutputStream out = new FileOutputStream(
-										zipDir + entry.getName());
-				while((read = zipstream.read(data, 0, BUFFER)) != -1)
-					out.write(data, 0, read);
-				
-				zipstream.closeEntry();
-				out.close();
+				FileOutputStream out = null;
+				try {
+					out = (FileOutputStream)newFile.getOutputStream();
+					while((read = zipstream.read(data, 0, BUFFER)) != -1)
+						out.write(data, 0, read);
+				} catch(Exception e) { Logger.LogError("Error unzipping " + zip.getAbsolutePath(), e); }
+				finally {
+					zipstream.closeEntry();
+					if(out != null)
+						out.close();
+				}
 			}
 
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			Logger.LogError("Couldn't find file.", e);
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.LogError("Couldn't extract zip.", e);
 		}
 	}
 	
@@ -391,8 +362,7 @@ public class FileManager {
 	 * @param path name
 	 * @return
 	 */
-	public int deleteTarget(String path) {
-		File target = new File(path);
+	public int deleteTarget(OpenFace target) {
 		
 		if(target.exists() && target.isFile() && target.canWrite()) {
 			target.delete();
@@ -400,7 +370,12 @@ public class FileManager {
 		}
 		
 		else if(target.exists() && target.isDirectory() && target.canRead()) {
-			String[] file_list = target.list();
+			OpenFace[] file_list = null;
+			try {
+				file_list = target.list();
+			} catch (IOException e) {
+				Logger.LogError("Couldn't list files when deleting.", e);
+			}
 			
 			if(file_list != null && file_list.length == 0) {
 				target.delete();
@@ -408,13 +383,13 @@ public class FileManager {
 				
 			} else if(file_list != null && file_list.length > 0) {
 				
-				for(int i = 0; i < file_list.length; i++) {
-					File temp_f = new File(target.getAbsolutePath() + "/" + file_list[i]);
-
-					if(temp_f.isDirectory())
-						deleteTarget(temp_f.getAbsolutePath());
-					else if(temp_f.isFile())
-						temp_f.delete();
+				for(int i = 0; i < file_list.length; i++)
+				{
+					OpenFace f = file_list[i];
+					if(f.isDirectory())
+						deleteTarget(f);
+					else if(f.isFile())
+						f.delete();
 				}
 			}
 			if(target.exists())
@@ -422,15 +397,6 @@ public class FileManager {
 					return 0;
 		}	
 		return -1;
-	}
-	
-	/**
-	 * 
-	 * @param name
-	 * @return
-	 */
-	public boolean isDirectory(String name) {
-		return new File(mPathStack.peek() + "/" + name).isDirectory();
 	}
 		
 	/**
@@ -467,215 +433,65 @@ public class FileManager {
 		return names;
 	}
 	
-	/**
-	 * 
-	 * @param path
-	 * @return
-	 */
-	public long getDirSize(String path) {
-		get_dir_size(new File(path));
-
-		return mDirSize;
+	public static OpenFace getOpenCache(String path)
+	{
+		Logger.LogDebug("Checking cache for " + path);
+		OpenFace ret = mOpenCache.get(path);
+		if(ret == null)
+			ret = setOpenCache(path, new OpenFile(path));
+		return ret;
 	}
 	
-	
-	@SuppressWarnings("rawtypes")
-	private final Comparator comp_alpha = new Comparator<String>() {
-		public int compare(String a, String b) {
-			return b.toLowerCase().compareTo(a.toLowerCase());
-		}
-	};
-	
-	private final Comparator comp_alpha_d = new Comparator<String>() {
-		public int compare(String a, String b) {
-			return a.toLowerCase().compareTo(b.toLowerCase());
-		}
-	};
-
-	private final Comparator comp_size = new Comparator<String>() {
-		public int compare(String a, String b) {
-			String dir = mPathStack.peek();
-			File f1 = new File(dir + "/" + a);
-			File f2 = new File(dir + "/" + b);
-			if(f1.isDirectory() && f2.isDirectory()) return a.compareTo(b);
-			if(f1.isDirectory()) return 1;
-			if(f2.isDirectory()) return 0;
-			
-			Long x = f1.length();
-			Long y = f2.length();
-			
-			return x.compareTo(y);
-		}
-	};
-
-	private final Comparator comp_size_d = new Comparator<String>() {
-		public int compare(String a, String b) {
-			String dir = mPathStack.peek();
-			File f1 = new File(dir + "/" + a);
-			File f2 = new File(dir + "/" + b);
-			if(f1.isDirectory() && f2.isDirectory()) return a.compareTo(b);
-			if(f1.isDirectory()) return 1;
-			if(f2.isDirectory()) return 0;
-			
-			Long x = f1.length();
-			Long y = f2.length();
-			
-			return y.compareTo(x);
-		}
-	};
-	
-	private final Comparator comp_date = new Comparator<String>() {
-		public int compare(String a, String b) {
-			String dir = mPathStack.peek();
-			Long x = new File(dir + "/" + a).lastModified();
-			Long y = new File(dir + "/" + b).lastModified();
-			
-			Log.e("FILE MANAGER", "first: " + x + "\nsecond: " + y);
-			return x.compareTo(y);
-		}
-	};
-	
-	private final Comparator comp_date_d = new Comparator<String>() {
-		public int compare(String a, String b) {
-			String dir = mPathStack.peek();
-			Long x = new File(dir + "/" + a).lastModified();
-			Long y = new File(dir + "/" + b).lastModified();
-			
-			Log.e("FILE MANAGER", "first: " + x + "\nsecond: " + y);
-			return y.compareTo(x);
-		}
-	};
-	
-	private final Comparator comp_type = new Comparator<String>() {
-		public int compare(String arg0, String arg1) {
-			String ext = null;
-			String ext2 = null;
-			int ret;
-			
-			try {
-				ext = arg0.substring(arg0.lastIndexOf(".") + 1, arg0.length()).toLowerCase();
-				ext2 = arg1.substring(arg1.lastIndexOf(".") + 1, arg1.length()).toLowerCase();
-				
-			} catch (IndexOutOfBoundsException e) {
-				return 0;
-			}
-			ret = ext.compareTo(ext2);
-			
-			if (ret == 0)
-					return arg0.toLowerCase().compareTo(arg1.toLowerCase());
-			
-			return ret;
-		}
-	};
-	
-	/* (non-Javadoc)
-	 * this function will take the string from the top of the directory stack
-	 * and list all files/folders that are in it and return that list so 
-	 * it can be displayed. Since this function is called every time we need
-	 * to update the the list of files to be shown to the user, this is where 
-	 * we do our sorting (by type, alphabetical, etc).
-	 * 
-	 * @return
-	 */
-	private ArrayList<String> populate_list()
+	public static OpenFace setOpenCache(String path, OpenFace file)
 	{
-		//if(!mDirContent.isEmpty())
-			//mDirContent.clear();
-				
-		String path = mPathStack.peek();
-		File file = new File(path);
-		
-		if(file.exists() && file.canRead()) {
-			return populate_list(file.list());
-			
-		} else if (path.indexOf("ftp://") > -1) {
-			FTPManager ftp = FTPManager.getInstance(path);
-			if(ftp == null)
-			{
-				try {
-					ftp = new FTPManager(path);
-					FTPManager.setInstance(path, ftp);
-				} catch(MalformedURLException mal) {
-					Logger.LogError("Bad FTP URL: " + path, mal);
-					return mDirContent;
-				}
-			}
-			try {
-				FTPFile[] files = ftp.listAll();
-				if(files != null)
-					return populate_list(files);
-			} catch (IOException e) {
-				Logger.LogError("Couldn't get FTP files for " + path, e);
-			}
-		} else {
-			//mDirContent.add("Empty");
-		}
-		
-		return mDirContent;
+		return mOpenCache.put(path, file);
 	}
 	
-	private ArrayList<String> populate_list(String[] list)
+	public OpenFace getLastPath()
 	{
-		if(!mDirContent.isEmpty())
-			mDirContent.clear();
-
-		/* add files/folder to arraylist depending on hidden status */
-		for (int i = 0; i < list.length; i++) {
-			if(!mShowHiddenFiles) {
-				if(list[i].toString().charAt(0) != '.')
-					mDirContent.add(list[i]);
-				
-			} else {
-				mDirContent.add(list[i]);
-			}
-		}
-		
-		@SuppressWarnings("rawtypes")
-		Comparator comp = null;
-		Boolean bFoldersFirst = true;
-		
-		/* sort the arraylist that was made from above for loop */
-		switch(mSorting) {
-			case NONE: break;
-			case ALPHA_DESC:comp = comp_alpha; break;
-			case ALPHA: 	comp = comp_alpha_d; break;
-			case DATE:		comp = comp_date; break;
-			case DATE_DESC:	comp = comp_date_d; break;
-			case SIZE:		comp = comp_size; break;
-			case SIZE_DESC:	comp = comp_size_d; break;
-			case TYPE:		comp = comp_type; break;
-		}
-		
-		Object[] arr = mDirContent.toArray();
-		String dir = mPathStack.peek();
-		
-		if(comp != null)
-			Arrays.sort(arr, comp);
-		
+		return getOpenCache(mPathStack.peek());
+	}
+	
+	private ArrayList<OpenFace> populate_list(OpenFace directory)
+	{
 		mDirContent.clear();
-		int folder_index = 0;
-		for(Object a : arr)
-			if(bFoldersFirst && new File(dir + "/" + (String)a).isDirectory())
-				mDirContent.add(folder_index++, (String)a);
-			else
-				mDirContent.add((String)a);
+		
+		if(directory == null) return mDirContent;
+		
+		if(directory.exists())
+		{
+			OpenFace[] list;
+			try {
+				list = directory.list();
+				return populate_list(list);
+			} catch (IOException e) {
+				Logger.LogError("Unable to populate list.", e);
+			}
+		}
 		
 		return mDirContent;
 	}
 	
-	private ArrayList<String> populate_list(FTPFile[] list)
+	private ArrayList<OpenFace> populate_list(OpenFace[] list)
 	{
 		if(!mDirContent.isEmpty())
 			mDirContent.clear();
+
+		/// TODO: Add Hidden File Logic Back
 		
 		Boolean bFoldersFirst = true;
-		FTPFileComparer comp = new FTPFileComparer(mSorting, bFoldersFirst);
+		OpenComparer comp = new OpenComparer(mSorting, bFoldersFirst);
 		
 		if(comp != null)
 			Arrays.sort(list, comp);
-
-		for(int i = 0; i < list.length; i++)
-			mDirContent.add(list[i].getName());
+		
+		mDirContent.clear();
+		int folder_index = 0;
+		for(OpenFace file : list)
+			if(bFoldersFirst && file.isDirectory())
+				mDirContent.add(folder_index++, file);
+			else
+				mDirContent.add(file);
 		
 		return mDirContent;
 	}

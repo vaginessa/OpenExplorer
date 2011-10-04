@@ -18,11 +18,8 @@
 
 package org.brandroid.openmanager;
 
-import android.inputmethodservice.Keyboard.Key;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -30,30 +27,23 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.ListFragment;
-import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.FrameLayout;
 import android.widget.SearchView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.zip.Inflater;
 
-import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenFace;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.DirContentActivity;
@@ -81,7 +71,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private SearchView mSearchView;
 	private ToggleButton mBtnFavorites;
 	private ActionMode mActionMode;
-	private ArrayList<String> mHeldFiles;
+	private ArrayList<OpenFace> mHeldFiles;
 	private boolean mBackQuit = false;
 	private int mLastBackIndex = -1;
 	
@@ -365,12 +355,12 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			}
 			
 			if(mHeldFiles == null)
-				mHeldFiles = new ArrayList<String>();
+				mHeldFiles = new ArrayList<OpenFace>();
 			
 			mHeldFiles.clear();
 			
 			for(String s : files)
-				mHeldFiles.add(s);
+				mHeldFiles.add(FileManager.getOpenCache(s));
 			
 			switch(item.getItemId()) {
 			case 12: /* delete */
@@ -405,7 +395,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 
 				if(mHeldFiles.size() == 1) {
 					mail.setAction(android.content.Intent.ACTION_SEND);
-					mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(mHeldFiles.get(0))));
+					mail.putExtra(Intent.EXTRA_STREAM, mHeldFiles.get(0).getUri());
 					startActivity(mail);
 					
 					mode.finish();
@@ -413,7 +403,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 				}
 				
 				for(int i = 0; i < mHeldFiles.size(); i++)
-					uris.add(Uri.fromFile(new File(mHeldFiles.get(i))));
+					uris.add(mHeldFiles.get(i).getUri());
 				
 				mail.setAction(android.content.Intent.ACTION_SEND_MULTIPLE);
 				mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
