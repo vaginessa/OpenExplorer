@@ -122,6 +122,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	private boolean mCutFile;
 	private boolean mShowThumbnails;
 	private int mBackPathIndex;
+	private boolean mReadyToUpdate = true;
 	
 	public interface OnBookMarkAddListener {
 		public void onBookMarkAdd(String path);
@@ -630,6 +631,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * from the path give in the variable name.
 	 */
 	//@Override
+	@SuppressWarnings("unused")
 	public void onChangeLocation(final String s)
 	{
 		if(mActionModeSelected || mMultiSelectOn)
@@ -638,16 +640,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		OpenFace path = FileManager.getOpenCache(s);
 		if(path == null)
 		{
-			Logger.LogWarning("Cache was null still.");
+			Logger.LogWarning("Cache was null still for " + s);
 			path = FileManager.setOpenCache(s, new OpenFile(s));
 		}
 		if(path == null)
 		{
 			Logger.LogWarning("Invalid path specified - " + s);
-			mData.clear();
-			mContentAdapter.notifyDataSetChanged();
-			mPathView.removeAllViews();
-			mBackPathIndex = 0;
+			updateData(new ArrayList<OpenFace>());
 		} else {
 
 			if (mThumbnail != null) {
@@ -662,12 +661,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			
 			//getFragmentManager().popBackStackImmediate("Settings", 0);
 			
-			if(path.requiresThread())
+			//if(path.requiresThread())
 				new FileIOTask().execute(
 						new FileIOCommand(FileIOCommandType.ALL, path));
-			else if(!path.requiresThread())
-				updateData(mFileMang.getNextDir(path, true));
-			else if(!path.exists())
+			//else if(!path.requiresThread())
+			//	updateData(mFileMang.getNextDir(path, true));
+			/*
+			if(!path.exists())
 			{
 				mData = mFileMang.getNextDir(path, true);
 				mContentAdapter.notifyDataSetChanged();
@@ -675,14 +675,26 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mPathView.removeAllViews();
 				mBackPathIndex = 0;	
 			}
+			*/
 		}
 	}
 	
-	private void updateData(ArrayList<OpenFace> nextDir) {
-		mData.clear();
-		for(OpenFace f : nextDir)
-			mData.add(f);
-		mContentAdapter.notifyDataSetChanged();
+	private void updateData(final ArrayList<OpenFace> nextDir) {
+		if(!mReadyToUpdate) return;
+		mReadyToUpdate = false;
+		getActivity().runOnUiThread(new Runnable() {
+			public void run() {
+				mData.clear();
+				int folder_index = 0;
+				for(OpenFace f : nextDir)
+					if(f.isDirectory())
+						mData.add(folder_index++, f);
+					else
+						mData.add(f);
+				mContentAdapter.notifyDataSetChanged();
+				mReadyToUpdate = true;
+			}
+		});
 	}
 
 	public void goBack()
@@ -733,8 +745,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
 			
 		} else {
-			mData = mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true);
-			mContentAdapter.notifyDataSetChanged();
+			updateData(mFileMang.getNextDir(FileManager.getOpenCache(mFileMang.getCurrentDir()), true));
 		}
 	}
 	
@@ -828,14 +839,21 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	
 	private void addBackButton(OpenFace file, boolean refreshList) {//, int pos) {
 		final String bname = file.getName();
-		Button button = new Button(mContext);
 		
 		FragmentTransaction ft = getFragmentManager().beginTransaction();
 		ft.setBreadCrumbTitle(file.getPath());
 
 		if (refreshList)
-			mData = mFileMang.getNextDir(file, false);
+		{
+			if(file.requiresThread())
+			{
+				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.NEXT, file.getChild(bname)));
+			} else
+				updateData(mFileMang.getNextDir(file, false));
+		}
 		
+		/*
+		Button button = new Button(mContext);
 		button.setOnClickListener(new View.OnClickListener() {
 			////@Override
 			public void onClick(View v) {
@@ -866,7 +884,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		button.setText(file.getName());
 		button.setTag(mBackPathIndex++);
 		mPathView.addView(button);
-		
+		*/
 		if (refreshList)
 			mContentAdapter.notifyDataSetChanged();
 		
@@ -893,8 +911,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		@Override
 		public void notifyDataSetChanged() {
 			//Logger.LogDebug("Data set changed.");
-			((OpenExplorer)getActivity()).updateTitle(mFileMang.getCurrentDir());
-			super.notifyDataSetChanged();
+			try {
+				if(mFileMang != null)
+					((OpenExplorer)getActivity()).updateTitle(mFileMang.getCurrentDir());
+				super.notifyDataSetChanged();
+			} catch(NullPointerException npe) {
+				Logger.LogError("Null found while notifying data change.", npe);
+			}
 		}
 		
 		////@Override
@@ -947,7 +970,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			if(file.isDirectory()) {
 				OpenFace[] lists = null;
 				try {
-					lists = file.list();
+					if(!file.requiresThread())
+						lists = file.list();
 				} catch (IOException e) {
 					Logger.LogError("Error getting lists.", e);
 				}
@@ -1115,15 +1139,16 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					} catch (IOException e) {
 						Logger.LogError("Unable to list children for " + cmd.Path);
 					}
-				} else
-				switch(cmd.Type)
-				{
-					case NEXT:
-						ret.addAll(mFileMang.getNextDir(cmd.Path, false));
-						break;
-					default:
-						ret.addAll(mFileMang.getNextDir(cmd.Path, true));
-						break;
+				} else {
+					switch(cmd.Type)
+					{
+						case NEXT:
+							ret.addAll(mFileMang.getNextDir(cmd.Path, false));
+							break;
+						default:
+							ret.addAll(mFileMang.getNextDir(cmd.Path, true));
+							break;
+					}
 				}
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");
@@ -1134,12 +1159,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		protected void onPreExecute() {
 			// TODO Auto-generated method stub
 			super.onPreExecute();
-			mData.clear();
+			//mData.clear();
 		}
 		
 		@Override
 		protected void onPostExecute(ArrayList<OpenFace> result)
 		{
+			mData.clear();
 			updateData(result);
 		}
 		

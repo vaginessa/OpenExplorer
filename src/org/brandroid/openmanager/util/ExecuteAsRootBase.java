@@ -88,15 +88,14 @@ public abstract class ExecuteAsRootBase
 	{
 		return execute(getCommandsToExecute());
 	}
-	
-	public static boolean execute(ArrayList<String> commands)
+	public static boolean execute(String... commands)
 	{
 		boolean retval = false;
 		
 		try
 		{
 			//ArrayList<String> commands = getCommandsToExecute();
-			if (null != commands && commands.size() > 0)
+			if (null != commands && commands.length > 0)
 			{
 				Process suProcess = Runtime.getRuntime().exec("su");
 
@@ -148,5 +147,5 @@ public abstract class ExecuteAsRootBase
 		return retval;
 	}
 	
-	protected abstract ArrayList<String> getCommandsToExecute();
+	protected abstract String[] getCommandsToExecute();
 }

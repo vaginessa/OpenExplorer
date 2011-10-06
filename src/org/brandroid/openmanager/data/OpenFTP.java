@@ -6,11 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.utils.Logger;
 
 import android.net.Uri;
 
@@ -26,8 +28,9 @@ public class OpenFTP extends OpenFace
 		mFile = new FTPFile();
 		mFile.setName(path);
 		mChildren = new ArrayList<OpenFTP>();
-		for(FTPFile f : children)
-			mChildren.add(new OpenFTP(f, man));
+		if(children != null)
+			for(FTPFile f : children)
+				mChildren.add(new OpenFTP(f, man));
 	}
 	public OpenFTP(FTPFile file, FTPManager man) { mFile = file; mManager = man; }
 	
@@ -129,6 +132,14 @@ public class OpenFTP extends OpenFace
 		FTPFile base = mFile;
 		if(!base.isDirectory())
 			base = getParent().getFile();
+		String path = getPath();
+		if(!path.endsWith(name))
+			path += (path.endsWith("/") ? "" : "/") + name;
+		try {
+			return new OpenFTP(path, null, new FTPManager(path));
+		} catch(MalformedURLException e) {
+			Logger.LogError("Error getting FTP child for " + path + " - " + name, e);
+		}
 		return null; //new OpenFile(new FTPFile(base, name));
 	}
 	@Override

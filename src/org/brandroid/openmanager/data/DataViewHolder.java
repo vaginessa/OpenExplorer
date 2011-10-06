@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 public class DataViewHolder {
 	public ImageView mIcon;
+	public ImageView mEject;
 	public ImageView mIndicate;
 	public TextView mMainText;
 	public TextView mInfo;

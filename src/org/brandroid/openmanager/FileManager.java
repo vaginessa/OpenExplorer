@@ -102,7 +102,7 @@ public class FileManager {
 	 */
 	public String getCurrentDir() {
 		String ret = mPathStack.peek();
-		if(ret.startsWith("//")) ret = ret.substring(1);
+		//if(ret.startsWith("//")) ret = ret.substring(1);
 		return ret;
 	}
 	
@@ -466,7 +466,8 @@ public class FileManager {
 	
 	public static OpenFace setOpenCache(String path, OpenFace file)
 	{
-		return mOpenCache.put(path, file);
+		mOpenCache.put(path, file);
+		return file;
 	}
 	
 	public OpenFace getLastPath()

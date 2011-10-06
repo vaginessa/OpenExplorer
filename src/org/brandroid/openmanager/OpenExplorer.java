@@ -20,7 +20,10 @@ package org.brandroid.openmanager;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -137,6 +140,27 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			}
 		});
         
+
+        
+        BroadcastReceiver externalReceiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				showToast(action);
+				if(action.equals(Intent.ACTION_MEDIA_MOUNTED) || action.equals(Intent.ACTION_MEDIA_UNMOUNTED))
+				{
+					refreshBookmarks();
+				}
+			}
+		};
+		
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+		filter.addAction(Intent.ACTION_MEDIA_EJECT);
+		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+		filter.addDataScheme("file");
+		registerReceiver(externalReceiver, filter);
+        
         /* read and display the users preferences */
         if(mSettingsListener != null)
         {
@@ -145,6 +169,14 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
         }
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+    }
+    
+    public void refreshBookmarks()
+    {
+		mFavoritesFragment = new BookmarkFragment();
+		FragmentTransaction ft = fragmentManager.beginTransaction();
+		ft.replace(R.id.list_frag, mFavoritesFragment);
+		ft.commit();
     }
     
     public DirContentActivity getDirContentFragment()

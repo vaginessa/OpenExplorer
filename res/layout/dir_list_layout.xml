@@ -16,34 +16,55 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
-			  
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="horizontal"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
-	android:paddingLeft="8dp"
-	android:paddingTop="8dp"
-	android:paddingBottom="8dp"
-	android:background="#00000000">
-	
+	android:gravity="center"
+	android:id="@+id/layout"
+	>
 	<ImageView
-		android:id="@+id/list_icon"
 		android:layout_width="32dp"
 		android:layout_height="32dp"
-		android:layout_weight="0"/>
+		android:layout_marginTop="8dp"
+		android:layout_marginBottom="8dp"
+		android:layout_marginLeft="4dp"
+		android:layout_centerVertical="true"
+		android:id="@+id/list_icon"
+		android:src="@drawable/icon"
+		/>
 	<TextView
 		android:id="@+id/list_name"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:paddingLeft="10dp"
-		android:layout_weight="1"
-		android:textColor="@color/white" 
-		android:textAppearance="?android:attr/textAppearanceLarge"/>
+		android:layout_alignWithParentIfMissing="true"
+		android:layout_toRightOf="@+id/list_icon"
+		android:layout_toLeftOf="@+id/eject"
+		android:layout_centerVertical="true"
+		android:text="filename"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		/>
+	<ImageView
+		android:id="@+id/eject"
+		android:src="@drawable/eject"
+		android:layout_width="32dp"
+		android:layout_height="32dp"
+		android:layout_alignParentTop="true"
+		android:layout_alignWithParentIfMissing="true"
+		android:layout_centerVertical="true"
+		android:layout_toLeftOf="@+id/list_arrow"
+		/>
 	<ImageView
 		android:id="@+id/list_arrow"
 		android:layout_width="32dp"
 		android:layout_height="32dp"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentRight="true"
+		android:layout_centerVertical="true"
 		android:visibility="gone"
-		android:src="@drawable/indicate"/>
+		android:src="@drawable/indicate"
+		/>
 	
-</LinearLayout>
+</RelativeLayout>
