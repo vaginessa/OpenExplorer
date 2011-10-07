@@ -99,7 +99,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			//showToast("Welcome, GoogleTV user!");
 			//getActionBar().hide();
 		} // else
-		findViewById(R.id.title_bar).setVisibility(View.GONE);
+        if(findViewById(R.id.title_bar) != null)
+        	findViewById(R.id.title_bar).setVisibility(View.GONE);
         
         fragmentManager = getSupportFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
@@ -227,11 +228,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    		//fragmentManager.findFragmentById(R.id.content_frag).getView().requestFocus();
 	    		break;
 	    	case KeyEvent.KEYCODE_DPAD_LEFT:
-	        	fragmentManager.findFragmentById(R.id.list_frag).getView().requestFocus();
+	        	//fragmentManager.findFragmentById(R.id.list_frag).getView().requestFocus();
 	        	break;
-	    	case KeyEvent.KEYCODE_BACK:
-	    		Logger.LogInfo("User hit 'Back'.");
-	    		break;
     	}
     	return super.onKeyDown(keyCode, event);
     }

@@ -667,39 +667,35 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 						new FileIOCommand(FileIOCommandType.ALL, path));
 			//else if(!path.requiresThread())
 			//	updateData(mFileMang.getNextDir(path, true));
-			/*
-			if(!path.exists())
-			{
-				mData = mFileMang.getNextDir(path, true);
-				mContentAdapter.notifyDataSetChanged();
-				
-				mPathView.removeAllViews();
-				mBackPathIndex = 0;	
-			}
-			*/
 		}
 	}
 	
 	private void updateData(final ArrayList<OpenFace> nextDir) {
 		if(!mReadyToUpdate) return;
 		mReadyToUpdate = false;
-		getActivity().runOnUiThread(new Runnable() {
-			public void run() {
-				mData.clear();
-				int folder_index = 0;
-				for(OpenFace f : nextDir)
-					if(f.isDirectory())
-						mData.add(folder_index++, f);
-					else
-						mData.add(f);
-				mContentAdapter.notifyDataSetChanged();
-				mReadyToUpdate = true;
-			}
-		});
+		Logger.LogDebug("Updating with " + nextDir.size() + " dirs.");
+		OpenFace[] items = new OpenFace[nextDir.size()];
+		nextDir.toArray(items);
+		mData.clear();
+		int folder_index = 0;
+		for(OpenFace f : items)
+			if(f.isDirectory())
+				mData.add(folder_index++, f);
+			else
+				mData.add(f);
+		Logger.LogDebug("mData has " + mData.size());
+		mContentAdapter.notifyDataSetChanged();
+		mReadyToUpdate = true;
+		/*
+		mPathView.removeAllViews();
+		mBackPathIndex = 0;	
+		 */
 	}
 
 	public void goBack()
 	{
+		Logger.LogDebug("Going back to " + mFileMang.getLastPath().getPath());
+		//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.PREV, mFileMang.getLastPath()));
 		updateData(mFileMang.getPreviousDir());
 	}
 	
@@ -947,11 +943,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				
 				mHolder = new BookmarkHolder(mName, mName, view);
 				
-				if(!mShowGrid) { 
-					mHolder.mInfo = (TextView)view.findViewById(R.id.content_info);
-					mHolder.mPath = (TextView)view.findViewById(R.id.content_fullpath);
-				}
-				
 				view.setTag(mHolder);
 				
 			} else {
@@ -959,11 +950,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			}
 			
 			if(!mShowGrid) {
-				mHolder.mInfo.setText(getFileDetails());
-				mHolder.mPath.setText(getFilePath());
+				mHolder.setInfo(getFileDetails());
+				mHolder.setPath(getFilePath());
 			}
 			
-			mHolder.mMainText.setText(mName);
+			mHolder.setText(mName);
 			
 			/* assign custom icons based on file type */
 			if(file.isDirectory()) {
@@ -976,46 +967,46 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				}
 				
 				if(file.canRead() && lists != null && lists.length > 0)
-					mHolder.mIcon.setImageResource(R.drawable.folder_large_full);
+					mHolder.setIconResource(R.drawable.folder_large_full);
 				else
-					mHolder.mIcon.setImageResource(R.drawable.folder);
+					mHolder.setIconResource(R.drawable.folder);
 			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-				mHolder.mIcon.setImageResource(R.drawable.doc);
+				mHolder.setIconResource(R.drawable.doc);
 				
 			} else if(ext.equalsIgnoreCase("xls")  || 
 					  ext.equalsIgnoreCase("xlsx") ||
 					  ext.equalsIgnoreCase("xlsm")) {
-				mHolder.mIcon.setImageResource(R.drawable.excel);
+				mHolder.setIconResource(R.drawable.excel);
 				
 			} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-				mHolder.mIcon.setImageResource(R.drawable.powerpoint);
+				mHolder.setIconResource(R.drawable.powerpoint);
 				
 			} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-				mHolder.mIcon.setImageResource(R.drawable.zip);
+				mHolder.setIconResource(R.drawable.zip);
 				
 			} else if (ext.equalsIgnoreCase("rar")) {
-				mHolder.mIcon.setImageResource(R.drawable.rar);
+				mHolder.setIconResource(R.drawable.rar);
 				
 			//} else if(ext.equalsIgnoreCase("apk")) {
-			//	mHolder.mIcon.setImageResource(R.drawable.apk);
+			//	mHolder.setIconResource(R.drawable.apk);
 				
 			} else if(ext.equalsIgnoreCase("pdf")) {
-				mHolder.mIcon.setImageResource(R.drawable.pdf);
+				mHolder.setIconResource(R.drawable.pdf);
 				
 			} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-				mHolder.mIcon.setImageResource(R.drawable.xml_html);
+				mHolder.setIconResource(R.drawable.xml_html);
 				
 			} else if(ext.equalsIgnoreCase("mp4") || 
 					  ext.equalsIgnoreCase("3gp") || 
 					  ext.equalsIgnoreCase("avi") ||
 					  ext.equalsIgnoreCase("webm") || 
 					  ext.equalsIgnoreCase("m4v")) {
-				mHolder.mIcon.setImageResource(R.drawable.movie);
+				mHolder.setIconResource(R.drawable.movie);
 				
 			} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-				mHolder.mIcon.setImageResource(R.drawable.music);
+				mHolder.setIconResource(R.drawable.music);
 			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
 					  ext.equalsIgnoreCase("apk")  ||
 					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
@@ -1042,11 +1033,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 						}
 						
 					} else {
-						mHolder.mIcon.setImageDrawable(thumb);
+						mHolder.setIconDrawable(thumb);
 					}
 					
 				} else {
-					mHolder.mIcon.setImageResource(R.drawable.photo);
+					mHolder.setIconResource(R.drawable.photo);
 				}
 				
 			} else {
@@ -1055,11 +1046,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				if(f != null)
 				{
 					if(f.isDirectory())
-						mHolder.mIcon.setImageResource(R.drawable.folder_large_full);
+						mHolder.setIconResource(R.drawable.folder_large_full);
 					else
-						mHolder.mIcon.setImageResource(R.drawable.unknown);
+						mHolder.setIconResource(R.drawable.unknown);
 				} else
-					mHolder.mIcon.setImageResource(R.drawable.unknown);
+					mHolder.setIconResource(R.drawable.unknown);
 			}
 			
 			return view;
@@ -1106,7 +1097,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	public enum FileIOCommandType
 	{
 		ALL,
-		NEXT
+		NEXT,
+		PREV
 	}
 	public class FileIOCommand
 	{
@@ -1144,6 +1136,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 						case NEXT:
 							ret.addAll(mFileMang.getNextDir(cmd.Path, false));
 							break;
+						case PREV:
+							ret.addAll(mFileMang.getPreviousDir());
 						default:
 							ret.addAll(mFileMang.getNextDir(cmd.Path, true));
 							break;

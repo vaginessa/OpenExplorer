@@ -20,17 +20,19 @@ package org.brandroid.openmanager.data;
 
 import org.brandroid.openmanager.R;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class BookmarkHolder {
-	public ImageView mIcon;
-	public ImageView mEject;
-	public ImageView mIndicate;
-	public TextView mMainText;
-	public TextView mInfo;
-	public TextView mPath;
+	private ImageView mIcon;
+	private ImageView mEject;
+	private ImageView mIndicate;
+	private TextView mMainText;
+	private TextView mInfo;
+	private TextView mPath;
+	private View mParentView;
 	private String sTitle;
 	private String sPath;
 	private OpenFace mFile;
@@ -38,21 +40,72 @@ public class BookmarkHolder {
 	public BookmarkHolder(String path, View view) {
 		this(path, getTitleFromPath(path), view);
 	}
-	public BookmarkHolder(String path, String title, View view)
+	public BookmarkHolder(String path, String title, final View view)
 	{
-		mIcon = (ImageView)view.findViewById(R.id.content_icon);
-		mMainText = (TextView)view.findViewById(R.id.content_text);
+		mParentView = view;
+		ensureViews();
+		//mIndicate = (ImageView)view.findViewById(R.id.)
 		sPath = path;
 		setTitle(title);
 	}
 	
+	private void ensureViews()
+	{
+		if(mIcon == null)
+			mIcon = (ImageView)mParentView.findViewById(R.id.content_icon);
+		if(mMainText == null)
+			mMainText = (TextView)mParentView.findViewById(R.id.content_text);
+		if(mIndicate == null)
+			mIndicate = (ImageView)mParentView.findViewById(R.id.list_arrow);
+		if(mEject == null)
+			mEject = (ImageView)mParentView.findViewById(R.id.eject);
+		if(mInfo == null)
+			mInfo = (TextView)mParentView.findViewById(R.id.content_info);
+		if(mPath == null)
+			mPath = (TextView)mParentView.findViewById(R.id.content_fullpath);
+	}
+	
+	public ImageView getIconView() { ensureViews(); return mIcon; }
+	public void setIconResource(int res) { ensureViews(); if(mIcon != null) mIcon.setImageResource(res); }
+	public void setIconDrawable(Drawable d) { ensureViews(); if(mIcon != null) mIcon.setImageDrawable(d); }
+	
+	public void setEjectClickListener(View.OnClickListener listener)
+	{
+		if(mEject != null)
+			mEject.setOnClickListener(listener);
+	}
+	public void setEjectable(Boolean eject) {
+		if(mEject != null)
+			mEject.setVisibility(eject ? View.VISIBLE : View.GONE);
+	}
+	public Boolean isEjectable() { return mEject != null && mEject.getVisibility() == View.VISIBLE; }
+	
+	public void setSelected(Boolean sel)
+	{
+		if(mIndicate != null)
+			mIndicate.setVisibility(sel ? View.VISIBLE : View.GONE);
+	}
+	
 	public String getPath() { return sPath; }
+	public void setPath(String path)
+	{
+		sPath = path;
+		if(mPath != null)
+			mPath.setText(path);
+	}
 	public String getTitle() { return sTitle; }
 	public void setTitle(String title) {
 		if(mMainText != null)
 			mMainText.setText(title);
 		sTitle = title;
 	}
+	public void hideTitle() { if(mMainText != null) mMainText.setVisibility(View.GONE); }
+	public void showTitle() { if(mMainText != null) mMainText.setVisibility(View.VISIBLE); }
+	public String getText() { return mMainText != null ? mMainText.getText().toString() : null; }
+	public void setText(String text) { if(mMainText != null) mMainText.setText(text); }
+	public View getView() { return mParentView; }
+	public String getInfo() { return mInfo != null ? mInfo.getText().toString() : null; }
+	public void setInfo(String info) { if(mInfo != null) mInfo.setText(info); }
 	
 	private static String getTitleFromPath(String path)
 	{

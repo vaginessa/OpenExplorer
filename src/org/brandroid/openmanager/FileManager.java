@@ -69,7 +69,6 @@ public class FileManager {
 	private SortType mSorting = SortType.ALPHA;
 	private long mDirSize = 0;
 	private Stack<String> mPathStack;
-	private ArrayList<OpenFace> mDirContent;
 	private static Hashtable<String, OpenFace> mOpenCache = new Hashtable<String, OpenFace>();
 	
 	public static enum SortType {
@@ -143,9 +142,8 @@ public class FileManager {
 	public ArrayList<OpenFace> getPreviousDir() {
 		int size = mPathStack.size();
 		
-		if (size >= 2)
+		if (size > 0)
 			mPathStack.pop();
-		
 		else if(size == 0)
 			mPathStack.push("/");
 		
@@ -477,7 +475,7 @@ public class FileManager {
 	
 	private ArrayList<OpenFace> populate_list(OpenFace directory)
 	{
-		mDirContent.clear();
+		//mDirContent.clear();
 		
 		if(directory == null) return mDirContent;
 		
@@ -490,7 +488,7 @@ public class FileManager {
 			} catch (IOException e) {
 				Logger.LogError("Unable to populate list.", e);
 			}
-		}
+		} else mDirContent.clear();
 		
 		return mDirContent;
 	}

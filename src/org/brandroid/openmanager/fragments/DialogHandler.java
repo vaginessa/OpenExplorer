@@ -488,51 +488,51 @@ public class DialogHandler extends DialogFragment {
 			else
 				ext = name.substring(name.lastIndexOf(".") + 1);
 			
-			mHolder.mMainText.setText(name);
+			mHolder.setText(name);
 			
 			if(ext.equalsIgnoreCase("dir")) {	
-				mHolder.mIcon.setImageResource(R.drawable.folder);
+				mHolder.setIconResource(R.drawable.folder);
 				
 			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-				mHolder.mIcon.setImageResource(R.drawable.doc);
+				mHolder.setIconResource(R.drawable.doc);
 				
 			} else if(ext.equalsIgnoreCase("xls")  || 
 					  ext.equalsIgnoreCase("xlsx") ||
 					  ext.equalsIgnoreCase("xlsm")) {
-				mHolder.mIcon.setImageResource(R.drawable.excel);
+				mHolder.setIconResource(R.drawable.excel);
 				
 			} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-				mHolder.mIcon.setImageResource(R.drawable.powerpoint);
+				mHolder.setIconResource(R.drawable.powerpoint);
 				
 			} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-				mHolder.mIcon.setImageResource(R.drawable.zip);
+				mHolder.setIconResource(R.drawable.zip);
 				
 			} else if(ext.equalsIgnoreCase("apk")) {
-				mHolder.mIcon.setImageResource(R.drawable.apk);
+				mHolder.setIconResource(R.drawable.apk);
 				
 			} else if(ext.equalsIgnoreCase("pdf")) {
-				mHolder.mIcon.setImageResource(R.drawable.pdf);
+				mHolder.setIconResource(R.drawable.pdf);
 				
 			} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-				mHolder.mIcon.setImageResource(R.drawable.xml_html);
+				mHolder.setIconResource(R.drawable.xml_html);
 				
 			} else if(ext.equalsIgnoreCase("mp4") || 
 					  ext.equalsIgnoreCase("3gp") ||
 					  ext.equalsIgnoreCase("webm") || 
 					  ext.equalsIgnoreCase("m4v")) {
-				mHolder.mIcon.setImageResource(R.drawable.movie);
+				mHolder.setIconResource(R.drawable.movie);
 				
 			} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-				mHolder.mIcon.setImageResource(R.drawable.music);
+				mHolder.setIconResource(R.drawable.music);
 				
 			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
 					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
-				mHolder.mIcon.setImageResource(R.drawable.photo);
+				mHolder.setIconResource(R.drawable.photo);
 				
 			} else {
-				mHolder.mIcon.setImageResource(R.drawable.unknown);
+				mHolder.setIconResource(R.drawable.unknown);
 			}
 			
 			return view;

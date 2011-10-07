@@ -72,8 +72,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private ArrayList<String> mDirList;
 	private ArrayList<String> mBookmarkNames;
 	private Context mContext;
-	private ImageView mLastIndicater = null;
-	private DirListAdapter mDirListAdapter;
+	//private ImageView mLastIndicater = null;
+	private BookmarkAdapter mBookmarkAdapter;
 	private String mDirListString;
 	private String mBookmarkString;
 	private Boolean mHasExternal = false;
@@ -169,13 +169,13 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	public void hideTitles()
 	{
 		mShowTitles = false;
-		mDirListAdapter.notifyDataSetChanged();
+		mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
 	public void showTitles()
 	{
 		mShowTitles = true;
-		mDirListAdapter.notifyDataSetChanged();
+		mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
 	private static boolean checkDir(String sPath)
@@ -197,9 +197,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		lv.setOnItemLongClickListener(this);
 		lv.setBackgroundResource(R.drawable.listgradback);
 		
-		mDirListAdapter = new DirListAdapter(mContext, R.layout.dir_list_layout, mDirList);
+		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.dir_list_layout, mDirList);
 		registerForContextMenu(lv);
-		setListAdapter(mDirListAdapter);
+		setListAdapter(mBookmarkAdapter);
 		
 		DirContentActivity.setOnBookMarkAddListener(this);
 		
@@ -212,12 +212,13 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		if(pos == BOOKMARK_POS)
 			return;
 		
-		if(mLastIndicater != null)
-			mLastIndicater.setVisibility(View.GONE);
+		//if(mLastIndicater != null)
+		//	mLastIndicater.setVisibility(View.GONE);
 			
-		v = (ImageView)view.findViewById(R.id.list_arrow);
 		//v.setVisibility(View.VISIBLE);
-		mLastIndicater = v;
+		//mLastIndicater = v;
+		
+		
 		
 		//getFragmentManager().popBackStackImmediate("Settings", 0);
 		
@@ -248,15 +249,15 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 							.setText("Change the title of your bookmark.");
 			v.findViewById(R.id.dialog_layout_top).setVisibility(View.VISIBLE);
 			
-			mTextTop.setText(mHolder.mMainText.getText());
+			mTextTop.setText(mHolder.getText());
 						
 			mText.setText(mDirList.get(pos));
 			builder.setTitle("Bookmark Location");
 			builder.setView(v);
 			
-			builder.setIcon(mHolder.mIcon.getDrawable());
+			builder.setIcon(mHolder.getIconView().getDrawable());
 			
-			if(mHolder.mEject.getVisibility() == View.VISIBLE)
+			if(mHolder.isEjectable())
 			{
 				v.findViewById(R.id.dialog_message).setVisibility(View.GONE);
 				((View)mText.getParent()).setVisibility(View.GONE);
@@ -305,7 +306,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		} else if (pos > BOOKMARK_POS) {
 			final int p = pos;
 
-			String bookmark = mHolder.mPath.getText().toString(); // mBookmarkNames.get(p - (BOOKMARK_POS + 1));
+			String bookmark = mHolder.getPath(); // mBookmarkNames.get(p - (BOOKMARK_POS + 1));
 			
 			
 			builder.setTitle("Manage bookmark: " + bookmark);
@@ -324,7 +325,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
 					
 					buildDirString();
-					mDirListAdapter.notifyDataSetChanged();
+					mBookmarkAdapter.notifyDataSetChanged();
 				}
 			});
 			builder.setNegativeButton("Rename", new DialogInterface.OnClickListener() {
@@ -335,7 +336,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 					mBookmarkNames.add(p - (BOOKMARK_POS + 1), mText.getText().toString());
 					
 					buildDirString();
-					mDirListAdapter.notifyDataSetChanged();
+					mBookmarkAdapter.notifyDataSetChanged();
 				}
 			});
 			
@@ -348,7 +349,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 
 	
 	protected void tryEject(String sPath, BookmarkHolder mHolder) {
-		final View viewf = (View)mHolder.mMainText.getParent();
+		final View viewf = mHolder.getView();
 		if(ExecuteAsRootBase.execute("umount " + sPath))
 		{
 			((OpenExplorer)getActivity()).showToast("You may now safely remove the drive.");
@@ -369,7 +370,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		mBookmarkNames.add(path.substring(path.lastIndexOf("/") + 1));
 		
 		buildDirString();
-		mDirListAdapter.notifyDataSetChanged();
+		mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
 	public static void setOnChangeLocationListener(OnChangeLocationListener l) {
@@ -410,26 +411,23 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	/*
 	 * 
 	 */
-	private class DirListAdapter extends ArrayAdapter<String> {
+	private class BookmarkAdapter extends ArrayAdapter<String> {
 		private BookmarkHolder mHolder;
 		
-		DirListAdapter(Context context, int layout, ArrayList<String> data) {
+		BookmarkAdapter(Context context, int layout, ArrayList<String> data) {
 			super(context, layout, data);		
 		}
 		
 		
 		public View getView(int position, View view, ViewGroup parent) {			
 			final String sPath = super.getItem(position);
-			if(view == null) {
-				LayoutInflater in = (LayoutInflater)mContext.
-									getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				final View viewf = view = in.inflate(R.layout.dir_list_layout, parent, false);
+			if(view == null || view.getTag() == null || !view.getTag().getClass().equals(BookmarkHolder.class) || !!((BookmarkHolder)view.getTag()).getPath().equalsIgnoreCase(sPath)) {
+				LayoutInflater in = (LayoutInflater)
+					mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				view = in.inflate(R.layout.dir_list_layout, parent, false);
 				mHolder = new BookmarkHolder(sPath, sPath, view);
 				
-				mHolder.mIndicate = (ImageView)view.findViewById(R.id.list_arrow);
-				mHolder.mEject = (ImageView)view.findViewById(R.id.eject);
-				
-				mHolder.mEject.setOnClickListener(new OnClickListener() {
+				mHolder.setEjectClickListener(new OnClickListener() {
 					public void onClick(View v) {
 						getActivity().runOnUiThread(new Runnable() {
 							public void run() {
@@ -438,95 +436,102 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 						});
 					}
 				});
-				mHolder.mEject.setVisibility(View.GONE);
-				mHolder.mIndicate.setVisibility(View.GONE);
 				
 				view.setTag(mHolder);
 				
 			} else {
 				mHolder = (BookmarkHolder)view.getTag();
+				if(mHolder == null)
+					Logger.LogWarning("preView Bookmark Holder is null");
+				if(mHolder.getView() == null)
+					Logger.LogWarning("preView Bookmark Holder View is null");
 			}
 			
+			/*
 			if(mLastIndicater == null) {
 				if(position == 1) {
 					//mHolder.mIndicate.setVisibility(View.VISIBLE);
 					mLastIndicater = mHolder.mIndicate;
 				}
 			}
+			*/
 			
 			if(!mShowTitles)
 			{
-				mHolder.mMainText.setVisibility(View.GONE);
-				((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.CENTER);
+				mHolder.hideTitle();
+				//((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.CENTER);
 			} else {
-				((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.LEFT);
-				mHolder.mMainText.setVisibility(View.VISIBLE);
+				//((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.LEFT);
+				mHolder.showTitle();
 			}
 
 			String sPath2 = sPath.toLowerCase();
 			if(position == 0)
 			{
-				mHolder.mMainText.setText("/");
-				mHolder.mIcon.setImageResource(R.drawable.drive);
+				mHolder.setText("/");
+				mHolder.setIconResource(R.drawable.drive);
 			} else if(sPath2.endsWith("sdcard")) {
 				if(mHasExternal)
 				{
-					mHolder.mMainText.setText("Internal Storage");
-					mHolder.mIcon.setImageResource(R.drawable.drive);
+					mHolder.setText("Internal Storage");
+					mHolder.setIconResource(R.drawable.drive);
 				} else {
-					mHolder.mMainText.setText("sdcard");
-					mHolder.mIcon.setImageResource(R.drawable.sdcard);
+					mHolder.setText("sdcard");
+					mHolder.setIconResource(R.drawable.sdcard);
 				}
 			} else if(sPath2.indexOf("download") > -1) {
-				mHolder.mMainText.setText("Downloads");
+				mHolder.setText("Downloads");
 				if(mHasExternal)
-					mHolder.mMainText.setText("Downloads (Internal)");
-				mHolder.mIcon.setImageResource(R.drawable.download);
+					mHolder.setText("Downloads (Internal)");
+				mHolder.setIconResource(R.drawable.download);
 			} else if(sPath2.indexOf("music") > -1) {
-				mHolder.mMainText.setText("Music");
+				mHolder.setText("Music");
 				if(mHasExternal)
-					mHolder.mMainText.setText("Music (Internal)");
-				mHolder.mIcon.setImageResource(R.drawable.music);
+					mHolder.setText("Music (Internal)");
+				mHolder.setIconResource(R.drawable.music);
 			} else if(sPath2.indexOf("movie") > -1) {
-				mHolder.mMainText.setText("Movies");
+				mHolder.setText("Movies");
 				if(mHasExternal)
-					mHolder.mMainText.setText("Movies (Internal)");
-				mHolder.mIcon.setImageResource(R.drawable.movie);
+					mHolder.setText("Movies (Internal)");
+				mHolder.setIconResource(R.drawable.movie);
 			} else if(sPath2.indexOf("photo") > -1 || sPath2.indexOf("dcim") > -1 || sPath2.indexOf("camera") > -1) {
-				mHolder.mMainText.setText("Photos");
+				mHolder.setText("Photos");
 				if(mHasExternal)
-					mHolder.mMainText.setText("Photos (Internal)");
-				mHolder.mIcon.setImageResource(R.drawable.photo);
+					mHolder.setText("Photos (Internal)");
+				mHolder.setIconResource(R.drawable.photo);
 			} else if(sPath2.indexOf("usb") > -1) {
-				mHolder.mMainText.setText("USB");
-				mHolder.mEject.setVisibility(View.VISIBLE);
-				mHolder.mIcon.setImageResource(R.drawable.usb);
+				mHolder.setText("USB");
+				mHolder.setEjectable(true);
+				mHolder.setIconResource(R.drawable.usb);
 			} else if(sPath2.indexOf("sdcard-ext") > -1 || sPath2.indexOf("external") > -1) {
-				mHolder.mMainText.setText("External SD");
-				mHolder.mEject.setVisibility(View.VISIBLE);
-				mHolder.mIcon.setImageResource(R.drawable.sdcard);
+				mHolder.setText("External SD");
+				mHolder.setEjectable(true);
+				mHolder.setIconResource(R.drawable.sdcard);
 			} else if(sPath2.equals("bookmarks")) {
 				view.setBackgroundColor(Color.BLACK);
 				view.setFocusable(false);
 				view.setEnabled(false);
 				view.setClickable(false);
 				view.setPadding(0, 0, 0, 0);
-				mHolder.mMainText.setText("Bookmarks");
-				mHolder.mMainText.setTextSize(18);
-				mHolder.mIcon.setVisibility(View.GONE);
-				mHolder.mIcon.setImageResource(R.drawable.favorites);
-				mHolder.mIcon.setMaxHeight(24);
+				mHolder.setText("Bookmarks");
+				//mHolder.setTextSize(18);
+				if(mHolder.getIconView() != null)
+				{
+					mHolder.getIconView().setVisibility(View.GONE);
+					mHolder.setIconResource(R.drawable.favorites);
+					mHolder.getIconView().setMaxHeight(24);
+				}
 				BOOKMARK_POS = position;
 				//view.setBackgroundColor(R.color.black);
 			} else if(sPath2.startsWith("ftp://")) {
 				String item = super.getItem(position).replace("ftp://","");
 				if(item.indexOf("@") > -1)
 					item = item.substring(item.indexOf("@") + 1);
-				mHolder.mMainText.setText(item);
-				mHolder.mIcon.setImageResource(R.drawable.ftp);
+				mHolder.setText(item);
+				mHolder.setIconResource(R.drawable.ftp);
 			} else {
-				mHolder.mMainText.setText(super.getItem(position));
-				mHolder.mIcon.setImageResource(R.drawable.folder);
+				mHolder.setText(super.getItem(position));
+				mHolder.setIconResource(R.drawable.folder);
 			}
 			
 			return view;
