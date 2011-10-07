@@ -46,7 +46,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
-import org.brandroid.openmanager.data.DataViewHolder;
+import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFace;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Logger;
@@ -457,7 +457,7 @@ public class DialogHandler extends DialogFragment {
 	 * 
 	 */
 	private class DialogListAdapter extends ArrayAdapter<OpenFace> {
-		private DataViewHolder mHolder;
+		private BookmarkHolder mHolder;
 		
 		public DialogListAdapter(Context context, int layout, ArrayList<OpenFace> data) {
 			super(context, layout, data);
@@ -476,15 +476,11 @@ public class DialogHandler extends DialogFragment {
 				LayoutInflater inflater = (LayoutInflater)mContext
 											.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				mHolder = new DataViewHolder();				
-				view = inflater.inflate(R.layout.dir_list_layout, parent, false);
-				mHolder.mIcon = (ImageView)view.findViewById(R.id.list_icon);
-				mHolder.mMainText = (TextView)view.findViewById(R.id.list_name);
-				
+				mHolder = new BookmarkHolder(name, name, inflater.inflate(R.layout.dir_list_layout, parent, false));				
 				view.setTag(mHolder);
 				
 			} else {
-				mHolder = (DataViewHolder)view.getTag();
+				mHolder = (BookmarkHolder)view.getTag();
 			}
 			
 			if (file.isDirectory())

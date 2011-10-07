@@ -79,6 +79,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private ArrayList<OpenFace> mHeldFiles;
 	private boolean mBackQuit = false;
 	private int mLastBackIndex = -1;
+	private BroadcastReceiver storageReceiver;
 	
 	private Fragment mFavoritesFragment;
 	
@@ -142,7 +143,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         
 
         
-        BroadcastReceiver externalReceiver = new BroadcastReceiver() {
+        storageReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
@@ -159,7 +160,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		filter.addAction(Intent.ACTION_MEDIA_EJECT);
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
 		filter.addDataScheme("file");
-		registerReceiver(externalReceiver, filter);
+		registerReceiver(storageReceiver, filter);
         
         /* read and display the users preferences */
         if(mSettingsListener != null)
@@ -169,6 +170,12 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
         }
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+    }
+    
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+    	unregisterReceiver(storageReceiver);
     }
     
     public void refreshBookmarks()

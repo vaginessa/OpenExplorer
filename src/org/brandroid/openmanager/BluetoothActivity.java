@@ -60,7 +60,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import org.brandroid.openmanager.data.DataViewHolder;
+import org.brandroid.openmanager.data.BookmarkHolder;
 
 
 
@@ -466,7 +466,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 	 *
 	 */
 	private class BluetoothDeviceAdapter extends ArrayAdapter<String> {
-		DataViewHolder mHolder;
+		BookmarkHolder mHolder;
 				
 		public BluetoothDeviceAdapter(Context context, int res, ArrayList<String> data) {
 			super(context, res, data);
@@ -474,7 +474,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 		
 		
 		public View getView(int position, View view, ViewGroup parent) {
-			String name;
+			String name = mDeviceData.get(position);
 			int classType;
 			
 			if(view == null) {
@@ -483,17 +483,13 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 				
 				view = in.inflate(R.layout.grid_content_layout, parent, false);
 				
-				mHolder = new DataViewHolder();
-				mHolder.mIcon = (ImageView)view.findViewById(R.id.content_icon);
-				mHolder.mMainText = (TextView)view.findViewById(R.id.content_text);
+				mHolder = new BookmarkHolder(name, view);
 				
 				view.setTag(mHolder);
 				
 			} else {
-				mHolder = (DataViewHolder)view.getTag();
+				mHolder = (BookmarkHolder)view.getTag();
 			}
-			
-			name = mDeviceData.get(position);
 			
 			if(!name.equals("No Devices")) {
 				classType = Integer.valueOf(name.substring(name.lastIndexOf(":") + 1,

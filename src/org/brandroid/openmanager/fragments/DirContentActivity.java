@@ -33,7 +33,7 @@ import org.brandroid.openmanager.R.color;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
-import org.brandroid.openmanager.data.DataViewHolder;
+import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFace;
 import org.brandroid.openmanager.data.OpenFile;
@@ -637,6 +637,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		if(mActionModeSelected || mMultiSelectOn)
 			return;
 		
+		Logger.LogDebug("Location changed to " + s);
 		OpenFace path = FileManager.getOpenCache(s);
 		if(path == null)
 		{
@@ -849,7 +850,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			{
 				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.NEXT, file.getChild(bname)));
 			} else
-				updateData(mFileMang.getNextDir(file, false));
+				updateData(mFileMang.getNextDir(file, true));
 		}
 		
 		/*
@@ -901,7 +902,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
     	private final int MG = KB * KB;
     	private final int GB = MG * KB;
     	
-		private DataViewHolder mHolder;
+		private BookmarkHolder mHolder;
 		private String mName;
 		
 		public FileSystemAdapter(Context context, int layout, ArrayList<OpenFace> data) {
@@ -944,9 +945,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				else
 					view = in.inflate(R.layout.list_content_layout, parent, false);
 				
-				mHolder = new DataViewHolder();
-				mHolder.mIcon = (ImageView)view.findViewById(R.id.content_icon);
-				mHolder.mMainText = (TextView)view.findViewById(R.id.content_text);
+				mHolder = new BookmarkHolder(mName, mName, view);
 				
 				if(!mShowGrid) { 
 					mHolder.mInfo = (TextView)view.findViewById(R.id.content_info);
@@ -956,7 +955,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				view.setTag(mHolder);
 				
 			} else {
-				mHolder = (DataViewHolder)view.getTag();
+				mHolder = (BookmarkHolder)view.getTag();
 			}
 			
 			if(!mShowGrid) {

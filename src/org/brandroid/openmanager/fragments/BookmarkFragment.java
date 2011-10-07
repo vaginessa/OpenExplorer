@@ -24,7 +24,7 @@ import org.brandroid.openmanager.SettingsActivity;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
-import org.brandroid.openmanager.data.DataViewHolder;
+import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.fragments.DirContentActivity.OnBookMarkAddListener;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
@@ -233,7 +233,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		View v = inflater.inflate(R.layout.input_dialog_layout, null);
 		final EditText mText = (EditText)v.findViewById(R.id.dialog_input);
 		final EditText mTextTop = (EditText)v.findViewById(R.id.dialog_input_top);
-		final DataViewHolder mHolder = (DataViewHolder)view.getTag();
+		final BookmarkHolder mHolder = (BookmarkHolder)view.getTag();
 		
 		/* the first two items in our dir list is / and sdcard.
 		 * the user should not be able to change the location
@@ -305,7 +305,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		} else if (pos > BOOKMARK_POS) {
 			final int p = pos;
 
-			String bookmark = mBookmarkNames.get(p - (BOOKMARK_POS + 1));
+			String bookmark = mHolder.mPath.getText().toString(); // mBookmarkNames.get(p - (BOOKMARK_POS + 1));
+			
 			
 			builder.setTitle("Manage bookmark: " + bookmark);
 			builder.setIcon(R.drawable.folder);
@@ -346,7 +347,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	}
 
 	
-	protected void tryEject(String sPath, DataViewHolder mHolder) {
+	protected void tryEject(String sPath, BookmarkHolder mHolder) {
 		final View viewf = (View)mHolder.mMainText.getParent();
 		if(ExecuteAsRootBase.execute("umount " + sPath))
 		{
@@ -410,7 +411,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	 * 
 	 */
 	private class DirListAdapter extends ArrayAdapter<String> {
-		private DataViewHolder mHolder;
+		private BookmarkHolder mHolder;
 		
 		DirListAdapter(Context context, int layout, ArrayList<String> data) {
 			super(context, layout, data);		
@@ -423,10 +424,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				LayoutInflater in = (LayoutInflater)mContext.
 									getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				final View viewf = view = in.inflate(R.layout.dir_list_layout, parent, false);
-				mHolder = new DataViewHolder();
+				mHolder = new BookmarkHolder(sPath, sPath, view);
 				
-				mHolder.mIcon = (ImageView)view.findViewById(R.id.list_icon);
-				mHolder.mMainText = (TextView)view.findViewById(R.id.list_name);
 				mHolder.mIndicate = (ImageView)view.findViewById(R.id.list_arrow);
 				mHolder.mEject = (ImageView)view.findViewById(R.id.eject);
 				
@@ -445,7 +444,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				view.setTag(mHolder);
 				
 			} else {
-				mHolder = (DataViewHolder)view.getTag();
+				mHolder = (BookmarkHolder)view.getTag();
 			}
 			
 			if(mLastIndicater == null) {

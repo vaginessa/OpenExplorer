@@ -18,14 +18,50 @@
 
 package org.brandroid.openmanager.data;
 
+import org.brandroid.openmanager.R;
+
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class DataViewHolder {
+public class BookmarkHolder {
 	public ImageView mIcon;
 	public ImageView mEject;
 	public ImageView mIndicate;
 	public TextView mMainText;
 	public TextView mInfo;
 	public TextView mPath;
+	private String sTitle;
+	private String sPath;
+	private OpenFace mFile;
+	
+	public BookmarkHolder(String path, View view) {
+		this(path, getTitleFromPath(path), view);
+	}
+	public BookmarkHolder(String path, String title, View view)
+	{
+		mIcon = (ImageView)view.findViewById(R.id.content_icon);
+		mMainText = (TextView)view.findViewById(R.id.content_text);
+		sPath = path;
+		setTitle(title);
+	}
+	
+	public String getPath() { return sPath; }
+	public String getTitle() { return sTitle; }
+	public void setTitle(String title) {
+		if(mMainText != null)
+			mMainText.setText(title);
+		sTitle = title;
+	}
+	
+	private static String getTitleFromPath(String path)
+	{
+		if(path != "/")
+		{
+			if(path.endsWith("/"))
+				path = path.substring(0, path.length() - 1);
+			path = path.substring(path.lastIndexOf("/") + 1);
+		}
+		return path;
+	}
 }
