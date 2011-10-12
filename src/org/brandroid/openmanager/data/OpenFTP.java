@@ -11,12 +11,13 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
 
-public class OpenFTP extends OpenFace
+public class OpenFTP extends OpenPath
 {
 	private FTPFile mFile = new FTPFile();
 	private FTPManager mManager;
@@ -43,8 +44,9 @@ public class OpenFTP extends OpenFace
 	}
 
 	@Override
-	public String getPath() {
-		return mManager.getPath();
+	public String getPath() { return getPath(true); }
+	public String getPath(boolean bIncludeUser) {
+		return mManager.getPath(bIncludeUser);
 		//return mFile.getRawListing();
 	}
 
@@ -60,7 +62,7 @@ public class OpenFTP extends OpenFace
 	}
 
 	@Override
-	public OpenFace[] listFiles() throws IOException {
+	public OpenPath[] listFiles() {
 		FTPFile[] arr = mManager.listFiles();
 		if(arr == null)
 			return null;
@@ -108,10 +110,10 @@ public class OpenFTP extends OpenFace
 		return mFile != null;
 	}
 	@Override
-	public OpenFace[] list() throws IOException {
+	public OpenPath[] list() {
 		if(mChildren != null)
 		{
-			OpenFace[] ret = new OpenFace[mChildren.size()];
+			OpenPath[] ret = new OpenPath[mChildren.size()];
 			mChildren.toArray(ret);
 			return ret;
 		}
@@ -127,11 +129,14 @@ public class OpenFTP extends OpenFace
 		return mFile.getRawListing();
 	}
 	@Override
-	public OpenFace getChild(String name)
+	public OpenPath getChild(String name)
 	{
 		FTPFile base = mFile;
-		if(!base.isDirectory())
-			base = getParent().getFile();
+		if(base != null && !base.isDirectory())
+		{
+			if(getParent() != null)
+				base = getParent().getFile();
+		}
 		String path = getPath();
 		if(!path.endsWith(name))
 			path += (path.endsWith("/") ? "" : "/") + name;

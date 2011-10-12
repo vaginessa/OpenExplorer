@@ -48,7 +48,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenFace;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.DirContentActivity;
@@ -76,7 +76,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private SharedPreferences mPreferences;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
-	private ArrayList<OpenFace> mHeldFiles;
+	private ArrayList<OpenPath> mHeldFiles;
 	private boolean mBackQuit = false;
 	private int mLastBackIndex = -1;
 	private BroadcastReceiver storageReceiver;
@@ -131,7 +131,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			
 			public boolean onQueryTextSubmit(String query) {
 				mSearchView.clearFocus();
-				mEvHandler.searchFile(mFileManger.getCurrentDir(), query);
+				mEvHandler.searchFile(mFileManger.peekStack().getPath(), query);
 				
 				return true;
 			}
@@ -259,7 +259,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    	
 	    	case R.id.menu_new_folder:
 	    	case MENU_DIR:
-	    		mEvHandler.createNewFolder(mFileManger.getCurrentDir());
+	    		mEvHandler.createNewFolder(mFileManger.peekStack().getPath());
 	    		return true;
 	    		
 	    	case R.id.menu_multi:
@@ -370,7 +370,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			}
 			
 			if(mHeldFiles == null)
-				mHeldFiles = new ArrayList<OpenFace>();
+				mHeldFiles = new ArrayList<OpenPath>();
 			
 			mHeldFiles.clear();
 			

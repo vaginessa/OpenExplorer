@@ -43,7 +43,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.brandroid.openmanager.data.OpenFace;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Logger;
 
@@ -72,7 +72,7 @@ public class EventHandler {
 		 * 			   you may pass null if you do not want to report the results.
 		 * @param results the results of the work
 		 */
-		public void onWorkerThreadComplete(int type, ArrayList<OpenFace> results);
+		public void onWorkerThreadComplete(int type, ArrayList<OpenPath> results);
 	}
 	
 	
@@ -85,8 +85,8 @@ public class EventHandler {
 		mThreadListener = e;
 	}
 	
-	public void deleteFile(final ArrayList<OpenFace> path) {
-		final OpenFace[] files = new OpenFace[path.size()];
+	public void deleteFile(final ArrayList<OpenPath> path) {
+		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		String name;
 		
@@ -191,10 +191,10 @@ public class EventHandler {
 		.setIcon(R.drawable.folder).create().show();
 	}
 	
-	public void sendFile(final ArrayList<OpenFace> path) {
+	public void sendFile(final ArrayList<OpenPath> path) {
 		String name;
 		CharSequence[] list = {"Bluetooth", "Email"};
-		final OpenFace[] files = new OpenFace[path.size()];
+		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		final int num = path.size();
 		
@@ -242,14 +242,14 @@ public class EventHandler {
 		}).create().show();
 	}
 	
-	public void copyFile(ArrayList<OpenFace> files, String newPath) {
-		OpenFace[] array = new OpenFace[files.size()];
+	public void copyFile(ArrayList<OpenPath> files, String newPath) {
+		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 		
 		new BackgroundWork(COPY_TYPE).execute(array);
 	}
 	
-	public void cutFile(ArrayList<OpenFace> files, String newPath) {
+	public void cutFile(ArrayList<OpenPath> files, String newPath) {
 		mDeleteFile = true;
 		
 		copyFile(files, newPath);
@@ -263,7 +263,7 @@ public class EventHandler {
 		//new BackgroundWork(ZIP_TYPE).execute(path);
 	}
 	
-	public void unzipFile(final OpenFace file) {
+	public void unzipFile(final OpenPath file) {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle("Unzip file " + file.getName())
 			 .setMessage("Would you like to unzip " + file.getName() +
@@ -276,7 +276,7 @@ public class EventHandler {
 				})
 			 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						ArrayList<OpenFace> l = new ArrayList<OpenFace>();
+						ArrayList<OpenPath> l = new ArrayList<OpenPath>();
 						l.add(file);
 						mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
 					}
@@ -285,7 +285,7 @@ public class EventHandler {
 			.show();
 	}
 	
-	public void unZipFileTo(OpenFace zipFile, OpenFace toDir) {
+	public void unZipFileTo(OpenPath zipFile, OpenPath toDir) {
 		new BackgroundWork(UNZIPTO_TYPE).execute(zipFile, toDir);
 	}
 		
@@ -294,7 +294,7 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	private class BackgroundWork extends AsyncTask<OpenFace, Integer, ArrayList<OpenFace>> {
+	private class BackgroundWork extends AsyncTask<OpenPath, Integer, ArrayList<OpenPath>> {
 		private int mType;
 		private ProgressDialog mPDialog;
 		
@@ -339,8 +339,8 @@ public class EventHandler {
 		}
 		
 		
-		protected ArrayList<OpenFace> doInBackground(OpenFace... params) {
-			ArrayList<OpenFace> results = null;
+		protected ArrayList<OpenPath> doInBackground(OpenPath... params) {
+			ArrayList<OpenPath> results = null;
 			int len = params.length;
 			
 			try {
@@ -348,7 +348,7 @@ public class EventHandler {
 			
 			case DELETE_TYPE:
 				if(results == null)
-					 results = new ArrayList<OpenFace>();
+					 results = new ArrayList<OpenPath>();
 				
 				for(int i = 0; i < len; i++)
 					mFileMang.deleteTarget(params[i]);
@@ -364,7 +364,7 @@ public class EventHandler {
 				//the first index is our dest path.
 				
 				if(results == null)
-					 results = new ArrayList<OpenFace>();
+					 results = new ArrayList<OpenPath>();
 				
 				for(int i = 1; i < len; i++) {
 					copyToDirectory(params[i], params[0], 0);
@@ -394,19 +394,19 @@ public class EventHandler {
 			return null;
 		}
 		
-		private Integer copyToDirectory(OpenFace old, OpenFace newDir, int total) throws IOException
+		private Integer copyToDirectory(OpenPath old, OpenPath newDir, int total) throws IOException
 		{
 			byte[] data = new byte[FileManager.BUFFER];
 			int read = 0;
 			
 			if(old.isDirectory() && newDir.isDirectory() && newDir.canWrite()) {
-				OpenFace[] files = old.list();
-				OpenFace newFile = newDir.getChild(old.getName());
+				OpenPath[] files = old.list();
+				OpenPath newFile = newDir.getChild(old.getName());
 				
 				if(!newFile.mkdir())
 					return -1;
 				
-				for(OpenFace file : files)
+				for(OpenPath file : files)
 					total += (int)file.length();
 				
 				for(int i = 0; i < files.length; i++)
@@ -414,7 +414,7 @@ public class EventHandler {
 						return -1;
 				
 			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite()){
-				OpenFace newFile = newDir.getChild(old.getName());
+				OpenPath newFile = newDir.getChild(old.getName());
 				int size = (int)old.length();
 				int pos = 0;
 
@@ -450,7 +450,7 @@ public class EventHandler {
 			return 0;
 		}
 		
-		public void extractZipFiles(OpenFace zip, OpenFace directory) {
+		public void extractZipFiles(OpenPath zip, OpenPath directory) {
 			byte[] data = new byte[FileManager.BUFFER];
 			String name, path, zipDir;
 			ZipEntry entry;
@@ -463,7 +463,7 @@ public class EventHandler {
 				zipstream = new ZipInputStream(zip.getInputStream());
 				
 				while((entry = zipstream.getNextEntry()) != null) {
-					OpenFace newFile = directory.getChild(entry.getName());
+					OpenPath newFile = directory.getChild(entry.getName());
 					if(!newFile.mkdir()) continue;
 					
 					int read = 0;
@@ -511,7 +511,7 @@ public class EventHandler {
 		}
 
 		
-		protected void onPostExecute(ArrayList<OpenFace> result) {
+		protected void onPostExecute(ArrayList<OpenPath> result) {
 			switch(mType) {
 			
 			case DELETE_TYPE:				

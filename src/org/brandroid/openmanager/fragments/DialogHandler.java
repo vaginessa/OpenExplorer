@@ -47,7 +47,7 @@ import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
-import org.brandroid.openmanager.data.OpenFace;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Logger;
 
@@ -61,7 +61,7 @@ public class DialogHandler extends DialogFragment {
 	private static Context mContext;
 	
 	private OnSearchFileSelected mSearchListener;
-	private ArrayList<OpenFace> mFiles;
+	private ArrayList<OpenPath> mFiles;
 	private String mPath;
 	
 	
@@ -109,7 +109,7 @@ public class DialogHandler extends DialogFragment {
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}
 	
-	public void setHoldingFileList(ArrayList<OpenFace> list) {
+	public void setHoldingFileList(ArrayList<OpenPath> list) {
 		mFiles = list;
 	}
 	
@@ -146,7 +146,7 @@ public class DialogHandler extends DialogFragment {
 			
 			
 			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-				final OpenFace selected = mFiles.get(position);
+				final OpenPath selected = mFiles.get(position);
 				
 				if (layout.getVisibility() == View.GONE)
 					layout.setVisibility(View.VISIBLE);
@@ -344,11 +344,11 @@ public class DialogHandler extends DialogFragment {
 		return ssize;
 	}
 	
-	private void populateFileInfoViews(View v, OpenFace file) throws IOException {
+	private void populateFileInfoViews(View v, OpenPath file) throws IOException {
 		int dirCount = 0;
 		int fileCount = 0;
 		String apath = file.getPath();
-		OpenFace files[] = file.listFiles();
+		OpenPath files[] = file.listFiles();
 		Date date = new Date(file.lastModified());
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
@@ -358,7 +358,7 @@ public class DialogHandler extends DialogFragment {
 			files = file.listFiles();
 			
 			if (files != null) {
-				for(OpenFace f : files)
+				for(OpenPath f : files)
 					if (f.isDirectory())
 						dirCount++;
 					else
@@ -456,10 +456,10 @@ public class DialogHandler extends DialogFragment {
 	/*
 	 * 
 	 */
-	private class DialogListAdapter extends ArrayAdapter<OpenFace> {
+	private class DialogListAdapter extends ArrayAdapter<OpenPath> {
 		private BookmarkHolder mHolder;
 		
-		public DialogListAdapter(Context context, int layout, ArrayList<OpenFace> data) {
+		public DialogListAdapter(Context context, int layout, ArrayList<OpenPath> data) {
 			super(context, layout, data);
 			
 		}
@@ -467,7 +467,7 @@ public class DialogHandler extends DialogFragment {
 		
 		public View getView(int position, View view, ViewGroup parent) {
 			String ext;
-			OpenFace file = mFiles.get(position);
+			OpenPath file = mFiles.get(position);
 			//String file.getName();
 			String name = file.getName(); // file.substring(file.lastIndexOf("/") + 1, file.length());
 			

@@ -35,7 +35,7 @@ public class BookmarkHolder {
 	private View mParentView;
 	private String sTitle;
 	private String sPath;
-	private OpenFace mFile;
+	private OpenPath mFile;
 	
 	public BookmarkHolder(String path, View view) {
 		this(path, getTitleFromPath(path), view);

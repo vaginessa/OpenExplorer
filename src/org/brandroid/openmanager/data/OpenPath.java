@@ -12,7 +12,7 @@ import org.brandroid.utils.Logger;
 
 import android.net.Uri;
 
-public abstract class OpenFace implements Serializable, Comparable<OpenFace>
+public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 {
 	public static SortType Sorting = SortType.ALPHA;
 	
@@ -21,10 +21,10 @@ public abstract class OpenFace implements Serializable, Comparable<OpenFace>
 	public abstract String getPath();
 	public abstract String getAbsolutePath();
 	public abstract long length();
-	public abstract OpenFace getParent();
-	public abstract OpenFace getChild(String name);
-	public abstract OpenFace[] list() throws IOException;
-	public abstract OpenFace[] listFiles() throws IOException;
+	public abstract OpenPath getParent();
+	public abstract OpenPath getChild(String name);
+	public abstract OpenPath[] list();
+	public abstract OpenPath[] listFiles();
 	public abstract Boolean isDirectory();
 	public abstract Boolean isFile();
 	public abstract Boolean isHidden();
@@ -39,11 +39,11 @@ public abstract class OpenFace implements Serializable, Comparable<OpenFace>
 	public abstract Boolean mkdir();
 	public abstract InputStream getInputStream() throws IOException;
 	public abstract OutputStream getOutputStream() throws IOException;
-	public int compareTo(OpenFace other)
+	public int compareTo(OpenPath other)
 	{
 		return compare(this, other);
 	}
-	public static int compare(OpenFace fa, OpenFace fb)
+	public static int compare(OpenPath fa, OpenPath fb)
 	{
 		if(fa == null && fb != null)
 			return 1;

@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import org.brandroid.openmanager.FileManager.SortType;
 
-public class OpenComparer implements Comparator<OpenFace>
+public class OpenComparer implements Comparator<OpenPath>
 {
 	public Boolean FoldersFirst = true;
 	private SortType SortType;
@@ -25,7 +25,7 @@ public class OpenComparer implements Comparator<OpenFace>
 		FoldersFirst = foldersFirst;
 	}
 	
-	public int compare(OpenFace fa, OpenFace fb) {
+	public int compare(OpenPath fa, OpenPath fb) {
 		if(fa == null && fb != null)
 			return 1;
 		if(fb == null && fa != null)

@@ -170,15 +170,20 @@ public class FTPManager {
 		}
 		else return null;
 	}
-	public FTPFile[] listFiles() throws IOException
+	public FTPFile[] listFiles()
 	{
-		if(connect())
-		{
-			FTPFile[] ret = client.listFiles();
-			for(FTPFile f : ret)
-				fileCache.put(f.getName(), new OpenFTP(f, this));
-			return ret;
-		} else return null;
+		try {
+			if(connect())
+			{
+				FTPFile[] ret = client.listFiles();
+				for(FTPFile f : ret)
+					fileCache.put(f.getName(), new OpenFTP(f, this));
+				return ret;
+			} else return null;
+		} catch (IOException e) {
+			Logger.LogError("Error listing FTP.", e);
+			return null;
+		}
 	}
 	public InputStream getInputStream(String path) throws IOException
 	{
@@ -187,9 +192,10 @@ public class FTPManager {
 		else return null;
 	}
 	
-	public String getPath() {
+	public String getPath() { return getPath(true); }
+	public String getPath(boolean bIncludeUser) {
 		String ret = "ftp://";
-		if(mUser != "")
+		if(bIncludeUser && mUser != "")
 		{
 			ret += mUser;
 			if(mPassword != "")

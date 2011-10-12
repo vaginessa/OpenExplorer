@@ -10,7 +10,7 @@ import java.io.OutputStream;
 
 import android.net.Uri;
 
-public class OpenFile extends OpenFace
+public class OpenFile extends OpenPath
 {
 	private File mFile;
 	
@@ -35,12 +35,12 @@ public class OpenFile extends OpenFace
 	}
 
 	@Override
-	public OpenFace getParent() {
+	public OpenPath getParent() {
 		return new OpenFile(mFile.getParent());
 	}
 
 	@Override
-	public OpenFace[] listFiles() {
+	public OpenPath[] listFiles() {
 		File[] arr = mFile.listFiles();
 		if((arr == null || arr.length == 0) && !isDirectory())
 			arr = mFile.getParentFile().listFiles();
@@ -89,7 +89,7 @@ public class OpenFile extends OpenFace
 		return mFile.exists();
 	}
 	@Override
-	public OpenFace[] list() {
+	public OpenPath[] list() {
 		return listFiles();
 	}
 	
@@ -102,7 +102,7 @@ public class OpenFile extends OpenFace
 		return mFile.getAbsolutePath();
 	}
 	@Override
-	public OpenFace getChild(String name)
+	public OpenPath getChild(String name)
 	{
 		File base = getFile();
 		if(!base.isDirectory())
