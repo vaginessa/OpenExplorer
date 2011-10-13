@@ -22,25 +22,23 @@
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
 	android:gravity="center"
-	android:paddingTop="8dp"
-	android:paddingBottom="8dp"
 	android:paddingLeft="4dp"
 	android:id="@+id/layout"
 	>
 	<ImageView
-		android:layout_width="32dp"
-		android:layout_height="32dp"
+		style="@style/icon.small"
+		android:layout_marginRight="10dp"
 		android:layout_centerVertical="true"
 		android:id="@+id/content_icon"
 		android:src="@drawable/icon"
 		/>
 	<TextView
 		android:id="@+id/content_text"
-		android:paddingLeft="10dp"
 		android:layout_alignWithParentIfMissing="true"
 		android:layout_toRightOf="@+id/content_icon"
 		android:layout_toLeftOf="@+id/eject"
-		android:layout_centerVertical="true"
+		android:layout_alignTop="@+id/icon"
+		android:layout_marginTop="10dp"
 		android:text="filename"
 		style="@style/Large"
 		/>
@@ -64,6 +62,14 @@
 		android:layout_centerVertical="true"
 		android:visibility="gone"
 		android:src="@drawable/indicate"
+		/>
+	<ProgressBar
+		style="?android:attr/progressBarStyleHorizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/size_bar"
+		android:layout_below="@+id/content_text"
+		android:layout_alignLeft="@+id/content_text"
 		/>
 	
 </RelativeLayout>

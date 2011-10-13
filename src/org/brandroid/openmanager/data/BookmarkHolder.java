@@ -23,6 +23,7 @@ import org.brandroid.openmanager.R;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class BookmarkHolder {
@@ -43,9 +44,10 @@ public class BookmarkHolder {
 	public BookmarkHolder(String path, String title, final View view)
 	{
 		mParentView = view;
+		sPath = path;
+		mFile = new OpenFile(path);
 		ensureViews();
 		//mIndicate = (ImageView)view.findViewById(R.id.)
-		sPath = path;
 		setTitle(title);
 	}
 	
@@ -63,6 +65,22 @@ public class BookmarkHolder {
 			mInfo = (TextView)mParentView.findViewById(R.id.content_info);
 		if(mPath == null)
 			mPath = (TextView)mParentView.findViewById(R.id.content_fullpath);
+		updateSizeIndicator();
+	}
+	
+	public void updateSizeIndicator()
+	{
+		ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
+		if(bar == null) return;
+		if(mFile != null && mFile.getClass().equals(OpenFile.class))
+		{
+			OpenFile f = (OpenFile)mFile;
+			if(f.getTotalSpace() > 0 && f.getFreeSpace() > 0)
+			{
+				bar.setMax((int)f.getTotalSpace());
+				bar.setProgress((int)(f.getTotalSpace() - f.getFreeSpace()));
+			} else bar.setVisibility(View.GONE);
+		} else bar.setVisibility(View.GONE);
 	}
 	
 	public ImageView getIconView() { ensureViews(); return mIcon; }

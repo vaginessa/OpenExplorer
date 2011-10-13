@@ -25,6 +25,9 @@ import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DirContentActivity.OnBookMarkAddListener;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
@@ -69,8 +72,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private static int BOOKMARK_POS = 6;
 	
 	private static OnChangeLocationListener mChangeLocList;
-	private ArrayList<String> mDirList;
-	private ArrayList<String> mBookmarkNames;
+	private ArrayList<OpenPath> mBookmarks;
 	private Context mContext;
 	//private ImageView mLastIndicater = null;
 	private BookmarkAdapter mBookmarkAdapter;
@@ -87,10 +89,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		String storage = "/" + Environment.getExternalStorageDirectory().getName();
 		mContext = getActivity();
-		mDirList = new ArrayList<String>();
-		mBookmarkNames = new ArrayList<String>();
+		mBookmarks = new ArrayList<OpenPath>();
 		mDirListString = (PreferenceManager.getDefaultSharedPreferences(mContext))
 										    .getString(SettingsActivity.PREF_LIST_KEY, "");
 		
@@ -104,66 +104,42 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			{
 				if(s.indexOf("external") > -1 || s.indexOf("-ext") > -1)
 					mHasExternal = true;
-				mDirList.add(s);
+				checkAndAdd(new OpenFile(s));
 			}
 		
 		} else {
-			mDirList.add("/");
-			mDirList.add(storage);
-			
-			if(checkDir(storage + "/Download"))
-				mDirList.add(storage + "/Download");
-			else
-				BOOKMARK_POS--;
-			
-			if(checkDir(storage + "/Music"))
-				mDirList.add(storage + "/Music");
-			else
-				BOOKMARK_POS--;
-			
-			if(checkDir(storage + "/Movies"))
-				mDirList.add(storage + "/Movies");
-			else
-				BOOKMARK_POS--;
-			if(checkDir(storage + "/DCIM"))
-				mDirList.add(storage + "/DCIM");
-			else if(checkDir(storage + "/Pictures"))
-				mDirList.add(storage + "/Pictures");
-			else
-				BOOKMARK_POS--;
-			
-			if(checkDir("/mnt/external_sd"))
-			{
+			OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
+			mBookmarks.add(new OpenFile(Environment.getRootDirectory()));
+			mBookmarks.add(storage);
+			checkAndAdd(storage.getChild("Download"));
+			checkAndAdd(storage.getChild("Music"));
+			checkAndAdd(storage.getChild("Movies"));
+			checkAndAdd(storage.getChild("DCIM"));
+			if(checkAndAdd(new OpenFile("/mnt/external_sd")))
 				mHasExternal = true;
-				mDirList.add("/mnt/external_sd");
-				BOOKMARK_POS++;
-			} else if(checkDir("/mnt/sdcart-ext"))
-			{
+			if(checkAndAdd(new OpenFile("/mnt/sdcard-ext")))
 				mHasExternal = true;
-				mDirList.add("/mnt/sdcart-ext");
-				BOOKMARK_POS++;
-			}
-			if(checkDir("/mnt/usbdrive"))
-			{
-				mDirList.add("/mnt/usbdrive");
-				BOOKMARK_POS++;
-			}
-			if(checkDir("/mnt/usb_storage"))
-			{
-				mDirList.add("/mnt/usb_storage");
-				BOOKMARK_POS++;
-			}
-			mDirList.add("Bookmarks");
+			checkAndAdd(new OpenFile("/mnt/usbdrive"));
+			checkAndAdd(new OpenFile("/mnt/usbstorage"));
 		}
 		
 		if (mBookmarkString.length() > 0) {
 			String[] l = mBookmarkString.split(";");
 			
-			for(String string : l)
-				mBookmarkNames.add(string);
+			for(String s : l)
+				checkAndAdd(new OpenFile(s));
 		}
 		
-		mDirList.add("ftp://Brandon:Brandon@psusadev2.celebros.com");
+		mBookmarks.add(new OpenFile("ftp://Brandon:Brandon@psusadev2.celebros.com"));
+	}
+	
+	private boolean checkAndAdd(OpenPath path)
+	{
+		if(checkDir(path.getPath()))
+		{
+			mBookmarks.add(path);
+			return true;
+		} else return false;
 	}
 	
 	public void hideTitles()
@@ -197,7 +173,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		lv.setOnItemLongClickListener(this);
 		//lv.setBackgroundResource(R.drawable.listgradback);
 		
-		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.dir_list_layout, mDirList);
+		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarks);
 		registerForContextMenu(lv);
 		setListAdapter(mBookmarkAdapter);
 		
@@ -208,9 +184,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	public void onListItemClick(ListView list, View view, int pos, long id) {
 		ImageView v;
-		
-		if(pos == BOOKMARK_POS)
-			return;
 		
 		//if(mLastIndicater != null)
 		//	mLastIndicater.setVisibility(View.GONE);
@@ -223,7 +196,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		//getFragmentManager().popBackStackImmediate("Settings", 0);
 		
 		if(mChangeLocList != null)
-			mChangeLocList.onChangeLocation(mDirList.get(pos));
+			mChangeLocList.onChangeLocation(mBookmarks.get(pos).getPath());
 	}
 	
 	
@@ -240,7 +213,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		 * the user should not be able to change the location
 		 * of these two entries. Everything else is fair game */
 		if (pos > 1 && pos < BOOKMARK_POS) {
-			final int position = pos;
 						
 			((TextView)v.findViewById(R.id.dialog_message))
 							.setText("Change the location of this directory.");
@@ -251,7 +223,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			
 			mTextTop.setText(mHolder.getText());
 						
-			mText.setText(mDirList.get(pos));
+			mText.setText(mBookmarks.get(pos).getName());
 			builder.setTitle("Bookmark Location");
 			builder.setView(v);
 			
@@ -265,7 +237,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				builder.setNeutralButton("Eject", new DialogInterface.OnClickListener() {
 					
 					public void onClick(DialogInterface dialog, int which) {
-						tryEject(mDirList.get(pos), mHolder);
+						tryEject(mBookmarks.get(pos).getPath(), mHolder);
 					}
 				});
 			}
@@ -292,9 +264,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 						dialog.dismiss();
 					
 					} else {
-						mDirList.remove(position);
-						mDirList.add(position, location);
+						mBookmarks.set(pos, new OpenFile(file));
 						buildDirString();
+						mBookmarkAdapter.notifyDataSetChanged();
 					}
 				}
 			});
@@ -304,8 +276,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		
 		/*manage the users bookmarks, delete or rename*/
 		} else if (pos > BOOKMARK_POS) {
-			final int p = pos;
-
+			
 			String bookmark = mHolder.getPath(); // mBookmarkNames.get(p - (BOOKMARK_POS + 1));
 			
 			
@@ -321,19 +292,18 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				
 				
 				public void onClick(DialogInterface dialog, int which) {
-					mDirList.remove(p);
-					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
-					
+					mBookmarks.remove(pos);
 					buildDirString();
 					mBookmarkAdapter.notifyDataSetChanged();
 				}
 			});
 			builder.setNegativeButton("Rename", new DialogInterface.OnClickListener() {
-				
-				
 				public void onClick(DialogInterface dialog, int which) {
+					/*
 					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
 					mBookmarkNames.add(p - (BOOKMARK_POS + 1), mText.getText().toString());
+					*/
+					/// TODO: Add ability to rename OpenPath
 					
 					buildDirString();
 					mBookmarkAdapter.notifyDataSetChanged();
@@ -366,8 +336,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	}
 
 	public void onBookMarkAdd(String path) {
-		mDirList.add(path);
-		mBookmarkNames.add(path.substring(path.lastIndexOf("/") + 1));
+		mBookmarks.add(new OpenFile(path));
 		
 		buildDirString();
 		mBookmarkAdapter.notifyDataSetChanged();
@@ -391,19 +360,16 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	 * from preferences. 
 	 */
 	private void buildDirString() {
-		int len = mDirList.size();
+		int len = mBookmarks.size();
+		String mDirListString = "";
 		
 		if(mDirListString != null && mDirListString.length() > 0) {
 			mDirListString = "";
 			mBookmarkString = "";
 		}
 		
-		for (int i = 0; i <len; i++) {
-			mDirListString += mDirList.get(i) + ";";
-			
-			if (i > BOOKMARK_POS && mBookmarkNames.size() > 0)
-				mBookmarkString += mBookmarkNames.get(i - (BOOKMARK_POS + 1)) + ";";
-		}
+		for (int i = 0; i <len; i++)
+			mDirListString += mBookmarks.get(i).getPath() + ";";
 	}
 	
 	
@@ -411,20 +377,21 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	/*
 	 * 
 	 */
-	private class BookmarkAdapter extends ArrayAdapter<String> {
+	private class BookmarkAdapter extends ArrayAdapter<OpenPath> {
 		private BookmarkHolder mHolder;
 		
-		BookmarkAdapter(Context context, int layout, ArrayList<String> data) {
+		BookmarkAdapter(Context context, int layout, ArrayList<OpenPath> data) {
 			super(context, layout, data);		
 		}
 		
 		
 		public View getView(int position, View view, ViewGroup parent) {			
-			final String sPath = super.getItem(position);
+			final OpenPath path = super.getItem(position);
+			final String sPath = path.getPath();
 			if(view == null || view.getTag() == null || !view.getTag().getClass().equals(BookmarkHolder.class) || !!((BookmarkHolder)view.getTag()).getPath().equalsIgnoreCase(sPath)) {
 				LayoutInflater in = (LayoutInflater)
 					mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				view = in.inflate(R.layout.dir_list_layout, parent, false);
+				view = in.inflate(R.layout.bookmark_layout, parent, false);
 				mHolder = new BookmarkHolder(sPath, sPath, view);
 				
 				mHolder.setEjectClickListener(new OnClickListener() {
@@ -523,14 +490,14 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				}
 				BOOKMARK_POS = position;
 				//view.setBackgroundColor(R.color.black);
-			} else if(sPath2.startsWith("ftp://")) {
-				String item = super.getItem(position).replace("ftp://","");
+			} else if(sPath2.startsWith("ftp:/")) {
+				String item = sPath.replace("ftp:/","");
 				if(item.indexOf("@") > -1)
 					item = item.substring(item.indexOf("@") + 1);
 				mHolder.setText(item);
 				mHolder.setIconResource(R.drawable.ftp);
 			} else {
-				mHolder.setText(super.getItem(position));
+				mHolder.setText(super.getItem(position).getName());
 				mHolder.setIconResource(R.drawable.folder);
 			}
 			

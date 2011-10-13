@@ -667,7 +667,9 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	//@Override
 	public void onSortingChanged(SortType type) {
 		mFileMang.setSorting(type);
-		updateData(mFileMang.peekStack().list());
+		OpenPath path = mFileMang.peekStack();
+		if(path != null)
+			updateData(path.list());
 	}
 	
 	public void onSortingChanged(String state) {
@@ -800,13 +802,16 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			final String mName = file.getName();
 			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
+			int mWidth = 36, mHeight = 36;
+			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				if(mShowGrid)
+				if(mShowGrid) {
 					view = in.inflate(R.layout.grid_content_layout, parent, false);
-				else
+					mWidth = mHeight = 72;
+				} else
 					view = in.inflate(R.layout.list_content_layout, parent, false);
 				
 				mHolder = new BookmarkHolder(mName, mName, view);
@@ -818,7 +823,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			}
 			
 			if (mThumbnail == null)
-				mThumbnail = new ThumbnailCreator(mContext, mHolder.getIconView().getWidth(), mHolder.getIconView().getHeight());
+				mThumbnail = new ThumbnailCreator(mContext, mWidth, mHeight);
 
 			if(!mShowGrid) {
 				mHolder.setInfo(getFileDetails(file));

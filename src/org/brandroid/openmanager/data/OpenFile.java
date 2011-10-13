@@ -33,6 +33,10 @@ public class OpenFile extends OpenPath
 	public long length() {
 		return mFile.length();
 	}
+	
+	public long getFreeSpace() { return mFile.getFreeSpace(); }
+	public long getUsableSpace() { return mFile.getUsableSpace(); }
+	public long getTotalSpace() { return mFile.getTotalSpace(); }
 
 	@Override
 	public OpenPath getParent() {

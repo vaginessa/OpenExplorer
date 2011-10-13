@@ -126,7 +126,7 @@ public class DialogHandler extends DialogFragment {
 		getDialog().setTitle("Holding " + mFiles.size() + " files");
 		
 		ListView list = new ListView(mContext);
-		list.setAdapter(new DialogListAdapter(mContext, R.layout.dir_list_layout, mFiles));
+		list.setAdapter(new DialogListAdapter(mContext, R.layout.bookmark_layout, mFiles));
 
 		return list;
 	}
@@ -307,7 +307,7 @@ public class DialogHandler extends DialogFragment {
 				}
 			}
 		});
-		list.setAdapter(new DialogListAdapter(mContext, R.layout.dir_list_layout, mFiles));
+		list.setAdapter(new DialogListAdapter(mContext, R.layout.bookmark_layout, mFiles));
 		
 		return v;
 	}
@@ -476,7 +476,7 @@ public class DialogHandler extends DialogFragment {
 				LayoutInflater inflater = (LayoutInflater)mContext
 											.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				mHolder = new BookmarkHolder(name, name, inflater.inflate(R.layout.dir_list_layout, parent, false));				
+				mHolder = new BookmarkHolder(name, name, inflater.inflate(R.layout.bookmark_layout, parent, false));				
 				view.setTag(mHolder);
 				
 			} else {
