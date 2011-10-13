@@ -123,8 +123,11 @@ public class FileManager {
 	 * @param choice	true if user is veiwing hidden files, false otherwise
 	 */
 	public void setShowHiddenFiles(boolean choice) {
+		Logger.LogInfo("Show hidden = " + choice);
 		mShowHiddenFiles = choice;
 	}
+	
+	public boolean getShowHiddenFiles() { return mShowHiddenFiles; }
 	
 	
 	public void setSorting(SortType type)
@@ -443,46 +446,11 @@ public class FileManager {
 		return mPathStack.peek();
 	}
 	
-	public ArrayList<OpenPath> getChildren(OpenPath directory)
+	public OpenPath[] getChildren(OpenPath directory)
 	{
 		//mDirContent.clear();
-		
-		if(directory == null) return mDirContent;
-		
-		if(directory.exists())
-			return populate_list(directory.list());
-		else mDirContent.clear();
-		
-		return mDirContent;
-	}
-	
-	private ArrayList<OpenPath> populate_list(OpenPath[] list)
-	{
-		if(!mDirContent.isEmpty())
-			mDirContent.clear();
-
-		if(!mShowHiddenFiles)
-		{
-			ArrayList<OpenPath> arr = new ArrayList<OpenPath>();
-			for(int i = 0; i < list.length; i++)
-				if(!list[i].isHidden())
-					arr.add(list[i]);
-			list = new OpenPath[arr.size()];
-			arr.toArray(list);
-		}
-		
-		OpenPath.Sorting = mSorting;
-		Arrays.sort(list);
-		
-		mDirContent.clear();
-		int folder_index = 0;
-		for(OpenPath file : list)
-			if(file.isDirectory())
-				mDirContent.add(folder_index++, file);
-			else
-				mDirContent.add(file);
-		
-		return mDirContent;
+		if(directory == null) return new OpenPath[0];
+		return directory.list();
 	}
 	
 	/*

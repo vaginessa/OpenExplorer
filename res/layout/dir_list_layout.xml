@@ -22,9 +22,9 @@
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
 	android:gravity="center"
-		android:paddingTop="8dp"
-		android:paddingBottom="8dp"
-		android:paddingLeft="4dp"
+	android:paddingTop="8dp"
+	android:paddingBottom="8dp"
+	android:paddingLeft="4dp"
 	android:id="@+id/layout"
 	>
 	<ImageView
@@ -36,15 +36,13 @@
 		/>
 	<TextView
 		android:id="@+id/content_text"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
 		android:paddingLeft="10dp"
 		android:layout_alignWithParentIfMissing="true"
 		android:layout_toRightOf="@+id/content_icon"
 		android:layout_toLeftOf="@+id/eject"
 		android:layout_centerVertical="true"
 		android:text="filename"
-		android:textAppearance="?android:attr/textAppearanceLarge"
+		style="@style/Large"
 		/>
 	<ImageView
 		android:id="@+id/eject"

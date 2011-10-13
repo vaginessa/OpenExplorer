@@ -40,7 +40,9 @@ public class OpenFTP extends OpenPath
 
 	@Override
 	public String getName() {
-		return mFile.getName();
+		if(mFile != null)
+			return mFile.getName();
+		else return null;
 	}
 
 	@Override

@@ -30,6 +30,8 @@ public class OpenStack extends Stack<OpenPath>
 	
 	public OpenPath peek()
 	{
-		return mStack.peek();
+		if(mStack.size() > 0)
+			return mStack.peek();
+		else return null;
 	}
 }

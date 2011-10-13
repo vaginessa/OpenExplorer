@@ -23,8 +23,7 @@
 	android:paddingLeft="10dip"
 	android:paddingRight="10dip"
 	android:paddingTop="2dip"
-	android:paddingBottom="2dip"
-	android:background="@color/lightgray">
+	android:paddingBottom="2dip">
 	<ImageView
 		android:layout_width="40dp"
 		android:layout_height="40dp"
@@ -42,30 +41,21 @@
 	<TextView
 		android:id="@+id/content_text"
 		android:text="Filename"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
 		android:layout_toRightOf="@+id/content_icon"
-		android:textAppearance="?android:attr/textAppearanceLarge"
-		android:textColor="@color/white"/>
+		style="@style/Large" />
 	<TextView
 		android:id="@+id/content_fullpath"
 		android:text="/fullpath"
 		android:visibility="gone"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
 		android:layout_toRightOf="@+id/content_info"
 		android:gravity="right"
-		android:textAppearance="?android:attr/textAppearanceSmall"
-		android:textColor="@color/offWhite" />
+		style="@style/Small" />
 	<TextView
 		android:id="@+id/content_info"
 		android:text="1 item | - drw"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
 		android:layout_alignParentRight="true"
 		android:layout_alignParentBottom="true"
 		android:gravity="right"
-		android:textAppearance="?android:attr/textAppearanceSmall"
-		android:textColor="@color/offWhite"/>
+		style="@style/Small" />
 </RelativeLayout>

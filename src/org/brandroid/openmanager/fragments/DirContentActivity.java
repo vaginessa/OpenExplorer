@@ -47,18 +47,23 @@ import org.brandroid.utils.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ActivityNotFoundException;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -113,7 +118,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	private ListView mList = null;
 	private boolean mShowGrid;
 	
-	private ArrayList<OpenPath> mData; 
+	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2; //the data that is bound to our array adapter.
 	private ArrayList<OpenPath> mHoldingFileList; //holding files waiting to be pasted(moved)
 	private ArrayList<OpenPath> mHoldingZipList; //holding zip files waiting to be unzipped.
@@ -377,10 +382,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 										.getString("pref_view", "list"));
 		
 		mShowThumbnails = PreferenceManager.getDefaultSharedPreferences(mContext)
-							.getBoolean(SettingsActivity.PREF_THUMB_KEY, false);
+							.getBoolean(SettingsActivity.PREF_THUMB_KEY, true);
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
 		BookmarkFragment.setOnChangeLocationListener(this);
+		
 		updateData(mData);
 	}
 	
@@ -394,7 +400,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.main_layout, container, false);
-		v.setBackgroundResource(R.color.lightgray);
+		//v.setBackgroundResource(R.color.lightgray);
 		
 		mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
@@ -515,7 +521,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * from the path give in the variable name.
 	 */
 	//@Override
-	@SuppressWarnings("unused")
 	public void onChangeLocation(final String s)
 	{
 		if(mActionModeSelected || mMultiSelectOn)
@@ -531,7 +536,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		if(path == null)
 		{
 			Logger.LogWarning("Invalid path specified - " + s);
-			updateData(new ArrayList<OpenPath>());
+			updateData(new OpenPath[0]);
 		} else {
 
 			if (mThumbnail != null) {
@@ -551,41 +556,30 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				new FileIOTask().execute(
 						new FileIOCommand(FileIOCommandType.ALL, path));
 			} else if(!path.requiresThread()) {
-				OpenPath[] kids = path.list();
-				updateData(kids);
+				setContentPath(path, true);
 			}
 		}
 	}
 
-	private void updateData(final ArrayList<OpenPath> nextDir) {
-		if(!mReadyToUpdate) return;
-		mReadyToUpdate = false;
-		Logger.LogDebug("Updating with " + nextDir.size() + " dirs.");
-		OpenPath[] items = new OpenPath[nextDir.size()];
-		nextDir.toArray(items);
-		mData2.clear();
-		int folder_index = 0;
-		for(OpenPath f : items)
-			if(f.isDirectory())
-				mData2.add(folder_index++, f);
-			else
-				mData2.add(f);
-		Logger.LogDebug("mData has " + mData2.size());
-		if(mContentAdapter != null)
-			mContentAdapter.notifyDataSetChanged();
-		mReadyToUpdate = true;
-	}
 	private void updateData(final OpenPath[] items) {
 		if(!mReadyToUpdate) return;
 		mReadyToUpdate = false;
+		
+		OpenPath.Sorting = mFileMang.getSorting();
+		Arrays.sort(items);
+		
 		mData2.clear();
 		int folder_index = 0;
 		for(OpenPath f : items)
+		{
+			if(f.isHidden() && !mFileMang.getShowHiddenFiles())
+				continue;
 			if(f.isDirectory())
 				mData2.add(folder_index++, f);
 			else
 				mData2.add(f);
-		Logger.LogDebug("mData has " + mData2.size());
+		}
+		//Logger.LogDebug("mData has " + mData2.size());
 		if(mContentAdapter != null)
 			mContentAdapter.notifyDataSetChanged();
 		mReadyToUpdate = true;
@@ -599,6 +593,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	{
 		//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.PREV, mFileMang.getLastPath()));
 		OpenPath last = mFileMang.getLastPath();
+		if(last == null) return;
 		Logger.LogDebug("Going back to " + last.getPath());
 		if(last.requiresThread())
 		{
@@ -660,14 +655,13 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	//@Override
 	public void onHiddenFilesChanged(boolean state) {
 		mFileMang.setShowHiddenFiles(state);
-		
 		updateData(mFileMang.peekStack().list());
 	}
 
 	//@Override
 	public void onThumbnailChanged(boolean state) {
 		mShowThumbnails = state;
-		mContentAdapter.notifyDataSetChanged();
+		updateData(mFileMang.peekStack().list());
 	}
 	
 	//@Override
@@ -800,18 +794,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		}
 		
 		////@Override
-		public View getView(int position, View view, ViewGroup parent) {
-			String ext;
-			OpenPath file = mData2.get(position);
-			mName = file.getName();
-			
-			if (mThumbnail == null)
-				mThumbnail = new ThumbnailCreator(mContext, 72, 72);
-
-			try {
-				ext = mName.substring(mName.lastIndexOf('.') + 1, mName.length());
-				
-			} catch (StringIndexOutOfBoundsException e) { ext = ""; }
+		public View getView(int position, View view, ViewGroup parent)
+		{
+			final OpenPath file = mData2.get(position);
+			final String mName = file.getName();
+			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
@@ -830,9 +817,12 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mHolder = (BookmarkHolder)view.getTag();
 			}
 			
+			if (mThumbnail == null)
+				mThumbnail = new ThumbnailCreator(mContext, mHolder.getIconView().getWidth(), mHolder.getIconView().getHeight());
+
 			if(!mShowGrid) {
-				mHolder.setInfo(getFileDetails(mName));
-				mHolder.setPath(getFilePath(mName));
+				mHolder.setInfo(getFileDetails(file));
+				mHolder.setPath(file.getPath());
 			}
 			
 			mHolder.setText(mName);
@@ -873,34 +863,44 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
 				mHolder.setIconResource(R.drawable.xml_html);
 				
-			} else if(ext.equalsIgnoreCase("mp4") || 
-					  ext.equalsIgnoreCase("3gp") || 
-					  ext.equalsIgnoreCase("avi") ||
-					  ext.equalsIgnoreCase("webm") || 
-					  ext.equalsIgnoreCase("m4v")) {
-				mHolder.setIconResource(R.drawable.movie);
-				
 			} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
 				mHolder.setIconResource(R.drawable.music);
 			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
 					  ext.equalsIgnoreCase("apk")  ||
-					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
+					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif") ||
+					  ext.equalsIgnoreCase("mp4") || 
+					  ext.equalsIgnoreCase("3gp") || 
+					  ext.equalsIgnoreCase("avi") ||
+					  ext.equalsIgnoreCase("webm") || 
+					  ext.equalsIgnoreCase("m4v"))
+			{
 
-				if(file.length() > 0 && mShowThumbnails) {
+				if(mShowThumbnails) {
+					if(ext.equalsIgnoreCase("mp4") || 
+						  ext.equalsIgnoreCase("3gp") || 
+						  ext.equalsIgnoreCase("avi") ||
+						  ext.equalsIgnoreCase("webm") || 
+						  ext.equalsIgnoreCase("m4v")) {
+						mHolder.setIconResource(R.drawable.movie);
+					} else if(ext.equals("apk")) {
+						mHolder.setIconResource(R.drawable.apk);
+					} else {
+						mHolder.setIconResource(R.drawable.photo);
+					}
+					
 					BitmapDrawable thumb = mThumbnail.isBitmapCached(file.getPath());
 
 					if (thumb == null) {
 						final Handler handle = new Handler(new Handler.Callback() {
 							public boolean handleMessage(Message msg) {
 								notifyDataSetChanged();
-								
 								return true;
 							}
 						});
 										
-						mThumbnail.createNewThumbnail(mData2, mFileMang.peekStack().getPath(), handle);
+						mThumbnail.createNewThumbnail(mData2, file.getParent().getPath(), handle);
 						
 						try {
 						if (!mThumbnail.isAlive()) 
@@ -912,23 +912,32 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 					} else {
 						mHolder.setIconDrawable(thumb);
 					}
-					
+				
+				} else if(ext.equalsIgnoreCase("mp4") || 
+					  ext.equalsIgnoreCase("3gp") || 
+					  ext.equalsIgnoreCase("avi") ||
+					  ext.equalsIgnoreCase("webm") || 
+					  ext.equalsIgnoreCase("m4v")) {
+					mHolder.setIconResource(R.drawable.movie);
+				} else if(ext.equals("apk")) {
+					mHolder.setIconResource(R.drawable.apk);
 				} else {
 					mHolder.setIconResource(R.drawable.photo);
 				}
 				
-			} else {
+			} else if(file.getPath() != null && file.getPath().indexOf("ftp:/") > -1) {
 				
 				OpenFTP f = FTPManager.getFTPFile(mName);
 				if(f != null)
 				{
 					if(f.isDirectory())
-						mHolder.setIconResource(R.drawable.folder_large_full);
+						mHolder.setIconResource(R.drawable.folder);
 					else
 						mHolder.setIconResource(R.drawable.unknown);
 				} else
 					mHolder.setIconResource(R.drawable.unknown);
-			}
+			} else
+				mHolder.setIconResource(R.drawable.unknown);
 			
 			return view;
 		}
@@ -936,8 +945,8 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		private String getFilePath(String name) {
 			return mFileMang.peekStack().getChild(name).getPath();
 		}
-		private String getFileDetails(String name) {
-			OpenPath file = mFileMang.peekStack().getChild(name); 
+		private String getFileDetails(OpenPath file) {
+			//OpenPath file = mFileMang.peekStack().getChild(name); 
 			String t = ""; //file.getPath() + "\t\t";
 			double bytes;
 			String size = "";
@@ -1014,7 +1023,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		
 		@Override
 		protected void onPreExecute() {
-			// TODO Auto-generated method stub
 			super.onPreExecute();
 			//mData.clear();
 		}

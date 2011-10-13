@@ -20,16 +20,20 @@ package org.brandroid.openmanager;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.view.Gravity;
 
 import java.lang.ref.SoftReference;
@@ -41,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.utils.Decoder;
 import org.brandroid.utils.Logger;
@@ -49,12 +54,13 @@ public class ThumbnailCreator extends Thread {
 	private int mWidth;
 	private int mHeight;
 	private SoftReference<Bitmap> mThumb;
-	private static HashMap<String, BitmapDrawable> mCacheMap = null;	
+	private static HashMap<String, BitmapDrawable> mCacheMap = null;
 	private ArrayList<OpenPath> mFiles;
 	
 	private Context mContext;
 	private String mDir;
 	private Handler mHandler;
+	private Cursor mVideoCursor;
 	private boolean mStop = false;
 
 	public ThumbnailCreator(Context context, int width, int height) {
@@ -79,7 +85,13 @@ public class ThumbnailCreator extends Thread {
 	public void setCancelThumbnails(boolean stop) {
 		mStop = stop;
 	}
-
+	
+	@Override
+	public void destroy() {
+		if(mVideoCursor != null && !mVideoCursor.isClosed())
+			mVideoCursor.close();
+		super.destroy();
+	}
 	
 	public void run() {
 		int len = mFiles.size();
@@ -91,7 +103,7 @@ public class ThumbnailCreator extends Thread {
 				return;
 			}
 			
-			final File file = new File(mDir + "/" + mFiles.get(i));
+			final OpenFile file = (OpenFile)mFiles.get(i);
 			
 			//we already loaded this thumbnail, just return it.
 			if (mCacheMap.containsKey(file.getPath())) {
@@ -108,10 +120,11 @@ public class ThumbnailCreator extends Thread {
 			} else {
 				if (isAPKFile(file.getName()))
 				{
+					Logger.LogInfo("Getting apk icon for " + file.getName());
 					JarFile apk = null;
 					InputStream in = null;
 					try {
-						apk = new JarFile(file);
+						apk = new JarFile(file.getFile());
 						JarEntry icon = apk.getJarEntry("res/drawable-hdpi/icon.apk");
 						Boolean valid = false;
 						if(icon != null && icon.getSize() > 0) {
@@ -188,8 +201,7 @@ public class ThumbnailCreator extends Thread {
 							Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
 						}
 					}
-				}
-				if (isImageFile(file.getName())) {
+				} else if (isImageFile(file.getName())) {
 					long len_kb = file.length() / 1024;
 					
 					BitmapFactory.Options options = new BitmapFactory.Options();
@@ -216,6 +228,36 @@ public class ThumbnailCreator extends Thread {
 						mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(b, mWidth, mHeight, false));
 					}
 
+					sendThumbBack(mThumb, file.getPath());
+				} else if (isVideoFile(file.getName()))
+				{
+					ContentResolver cr = mContext.getContentResolver();
+					BitmapFactory.Options opts = new BitmapFactory.Options();
+					opts.inSampleSize = 1;
+					String[] cols = {MediaStore.Video.Media._ID, MediaStore.Video.Media.DISPLAY_NAME};
+					int id = -1;
+					try {
+						if(mVideoCursor == null)
+						{
+							mVideoCursor = MediaStore.Video.query(cr, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, cols);
+							Logger.LogDebug("Video cursor returned " + mVideoCursor.getCount());
+							mVideoCursor.moveToFirst();
+						}
+						for(int vi = 0; vi < mVideoCursor.getCount(); vi++)
+						{
+							mVideoCursor.moveToPosition(vi);
+							id = mVideoCursor.getInt(mVideoCursor.getColumnIndex(MediaStore.Video.Media._ID));
+							String name = mVideoCursor.getString(mVideoCursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME));
+							if(name.equalsIgnoreCase(file.getName()))
+								break;
+						}
+					} catch(Exception e) {
+						Logger.LogError("Exception querying video thumbnail for " + file.getPath(), e);
+					}
+					if(id > -1)
+						mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(MediaStore.Video.Thumbnails.getThumbnail(cr, id, MediaStore.Video.Thumbnails.MICRO_KIND, opts), mWidth, mHeight, false));
+					else
+						mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(BitmapFactory.decodeResource(mContext.getResources(), R.drawable.movie), mWidth, mHeight, false));
 					sendThumbBack(mThumb, file.getPath());
 				}
 			}
@@ -256,6 +298,18 @@ public class ThumbnailCreator extends Thread {
 		if (ext.equalsIgnoreCase("apk"))
 			return true;
 		
+		return false;
+	}
+	
+	private boolean isVideoFile(String path)
+	{
+		String ext = path.substring(path.lastIndexOf(".") + 1);
+		if(ext.equalsIgnoreCase("mp4") || 
+			  ext.equalsIgnoreCase("3gp") || 
+			  ext.equalsIgnoreCase("avi") ||
+			  ext.equalsIgnoreCase("webm") || 
+			  ext.equalsIgnoreCase("m4v"))
+			return true;
 		return false;
 	}
 }

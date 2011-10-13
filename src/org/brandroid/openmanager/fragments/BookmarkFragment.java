@@ -195,7 +195,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		lv.setCacheColorHint(0x00000000);
 		lv.setDrawSelectorOnTop(true);
 		lv.setOnItemLongClickListener(this);
-		lv.setBackgroundResource(R.drawable.listgradback);
+		//lv.setBackgroundResource(R.drawable.listgradback);
 		
 		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.dir_list_layout, mDirList);
 		registerForContextMenu(lv);

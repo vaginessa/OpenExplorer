@@ -25,15 +25,9 @@
 	android:padding="2dip">
 	<ImageView
 		android:id="@+id/content_icon"
-		android:maxWidth="72dip"
-		android:maxHeight="72dip"
-		android:layout_height="wrap_content"
-		android:layout_width="wrap_content"/>
+		style="@style/icon.big" />
 	<TextView
 		android:id="@+id/content_text"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
 		android:lines="2"
-		android:textColor="@color/white"
-		android:textAppearance="?android:attr/textAppearanceMedium"/>
+		style="@style/Mid" />
 </LinearLayout>
