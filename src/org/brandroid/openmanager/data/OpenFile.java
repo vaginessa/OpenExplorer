@@ -1,5 +1,7 @@
 package org.brandroid.openmanager.data;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,8 +9,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Hashtable;
+
+import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.os.Environment;
 
 public class OpenFile extends OpenPath
 {
@@ -34,9 +40,21 @@ public class OpenFile extends OpenPath
 		return mFile.length();
 	}
 	
-	public long getFreeSpace() { return mFile.getFreeSpace(); }
-	public long getUsableSpace() { return mFile.getUsableSpace(); }
-	public long getTotalSpace() { return mFile.getTotalSpace(); }
+	public long getFreeSpace() {
+		if(DFInfo.LoadDF().containsKey(getPath()))
+			return (long)DFInfo.LoadDF().get(getPath()).getFree();
+		return mFile.getFreeSpace();
+	}
+	public long getUsableSpace() {
+		if(DFInfo.LoadDF().containsKey(getPath()))
+			return (long)(DFInfo.LoadDF().get(getPath()).getSize() - DFInfo.LoadDF().get(getPath()).getFree());
+		return mFile.getUsableSpace();
+	}
+	public long getTotalSpace() {
+		if(DFInfo.LoadDF().containsKey(getPath()))
+			return (long)DFInfo.LoadDF().get(getPath()).getSize();
+		return mFile.getTotalSpace();
+	}
 
 	@Override
 	public OpenPath getParent() {
@@ -140,5 +158,4 @@ public class OpenFile extends OpenPath
 	public Boolean isHidden() {
 		return mFile.isHidden() || mFile.getName().startsWith(".");
 	}
-
 }

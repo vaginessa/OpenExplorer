@@ -19,6 +19,7 @@
 package org.brandroid.openmanager.data;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.utils.Logger;
 
 import android.graphics.drawable.Drawable;
 import android.view.View;
@@ -75,10 +76,14 @@ public class BookmarkHolder {
 		if(mFile != null && mFile.getClass().equals(OpenFile.class))
 		{
 			OpenFile f = (OpenFile)mFile;
-			if(f.getTotalSpace() > 0 && f.getFreeSpace() > 0)
+			if(f.getTotalSpace() > 0 && f.getFreeSpace() < f.getTotalSpace())
 			{
 				bar.setMax((int)f.getTotalSpace());
 				bar.setProgress((int)(f.getTotalSpace() - f.getFreeSpace()));
+				if(bar.getProgress() == 0)
+					bar.setVisibility(View.GONE);
+				else
+					Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
 			} else bar.setVisibility(View.GONE);
 		} else bar.setVisibility(View.GONE);
 	}

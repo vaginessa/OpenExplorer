@@ -25,6 +25,7 @@ import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.DFInfo;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
@@ -65,7 +66,13 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class BookmarkFragment extends ListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
@@ -97,6 +104,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		mBookmarkString = (PreferenceManager.getDefaultSharedPreferences(mContext))
 											.getString(SettingsActivity.PREF_BOOKNAME_KEY, "");
 		
+		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
+		
 		if (mDirListString.length() > 0) {
 			String[] l = mDirListString.replace(":", ";").replace(";//","://").split(";");
 			
@@ -108,8 +117,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			}
 		
 		} else {
+			
 			OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
-			mBookmarks.add(new OpenFile(Environment.getRootDirectory()));
+			mBookmarks.add(new OpenFile("/"));
 			mBookmarks.add(storage);
 			checkAndAdd(storage.getChild("Download"));
 			checkAndAdd(storage.getChild("Music"));
@@ -119,8 +129,15 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				mHasExternal = true;
 			if(checkAndAdd(new OpenFile("/mnt/sdcard-ext")))
 				mHasExternal = true;
-			checkAndAdd(new OpenFile("/mnt/usbdrive"));
-			checkAndAdd(new OpenFile("/mnt/usbstorage"));
+		}
+		
+		for(String sItem : df.keySet())
+		{
+			if(sItem.toLowerCase().startsWith("/system")) continue;
+			if(sItem.toLowerCase().startsWith("/cache")) continue;
+			if(sItem.toLowerCase().startsWith("/dev")) continue;
+			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
+			checkAndAdd(new OpenFile(sItem));
 		}
 		
 		if (mBookmarkString.length() > 0) {
@@ -133,8 +150,17 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		mBookmarks.add(new OpenFile("ftp://Brandon:Brandon@psusadev2.celebros.com"));
 	}
 	
+	private boolean hasBookmark(OpenPath path)
+	{
+		for(OpenPath p : mBookmarks)
+			if(p.getPath().replaceAll("/", "").equals(path.getPath().replaceAll("/", "")))
+				return true;
+		return false;
+	}
+	
 	private boolean checkAndAdd(OpenPath path)
 	{
+		if(hasBookmark(path)) return false;
 		if(checkDir(path.getPath()))
 		{
 			mBookmarks.add(path);
@@ -448,23 +474,15 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				}
 			} else if(sPath2.indexOf("download") > -1) {
 				mHolder.setText("Downloads");
-				if(mHasExternal)
-					mHolder.setText("Downloads (Internal)");
 				mHolder.setIconResource(R.drawable.download);
 			} else if(sPath2.indexOf("music") > -1) {
 				mHolder.setText("Music");
-				if(mHasExternal)
-					mHolder.setText("Music (Internal)");
 				mHolder.setIconResource(R.drawable.music);
 			} else if(sPath2.indexOf("movie") > -1) {
 				mHolder.setText("Movies");
-				if(mHasExternal)
-					mHolder.setText("Movies (Internal)");
 				mHolder.setIconResource(R.drawable.movie);
 			} else if(sPath2.indexOf("photo") > -1 || sPath2.indexOf("dcim") > -1 || sPath2.indexOf("camera") > -1) {
 				mHolder.setText("Photos");
-				if(mHasExternal)
-					mHolder.setText("Photos (Internal)");
 				mHolder.setIconResource(R.drawable.photo);
 			} else if(sPath2.indexOf("usb") > -1) {
 				mHolder.setText("USB");
