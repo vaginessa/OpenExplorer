@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -111,7 +112,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	private ArrayList<OpenPath> mHoldingZipList; //holding zip files waiting to be unzipped.
 	private Context mContext;
 	private FileSystemAdapter mContentAdapter;
-	private ActionMode mActionMode;
+	private ActionMode mActionMode = null;
 	private boolean mActionModeSelected;
 	private boolean mHoldingFile;
 	private boolean mHoldingZip;
@@ -123,224 +124,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	public interface OnBookMarkAddListener {
 		public void onBookMarkAdd(String path);
 	}
-	
-	private ActionMode.Callback mFolderOptActionMode = new ActionMode.Callback() {
-		
-		//@Override
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return false;
-		}
-		
-		//@Override
-		public void onDestroyActionMode(ActionMode mode) {
-			mActionMode = null;
-			mActionModeSelected = false;
-		}
-		
-		//@Override
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			menu.add(0, D_MENU_BOOK, 0, "Bookmark");
-			menu.add(0, D_MENU_INFO, 0, "Info");
-			menu.add(0, D_MENU_DELETE, 0, "Delete");
-			menu.add(0, D_MENU_RENAME, 0, "Rename");
-        	menu.add(0, D_MENU_COPY, 0, "Copy");
-        	menu.add(0, D_MENU_MOVE, 0, "Cut");
-        	menu.add(0, D_MENU_ZIP, 0, "Zip");
-        	menu.add(0, D_MENU_PASTE, 0, "Paste into folder").setEnabled(mHoldingFile);
-        	menu.add(0, D_MENU_UNZIP, 0, "Unzip here").setEnabled(mHoldingZip);
-        	
-        	mActionModeSelected = true;
-			
-        	return true;
-		}
-		
-		//@Override
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-			OpenPath file = mFileMang.peekStack().getChild(mode.getTitle().toString());
-			String path = file.getPath();
-			String name = file.getName();
-			
-			switch(item.getItemId()) {
-				case D_MENU_BOOK:
-					mBookmarkList.onBookMarkAdd(path);
-					mode.finish();
-					return true;
-					
-				case D_MENU_DELETE:
-					files.add(file);
-					mHandler.deleteFile(files);
-					mode.finish();
-					return true;
-					
-				case D_MENU_RENAME:
-					mHandler.renameFile(path, true);
-					mode.finish();
-					return true;
-					
-				case D_MENU_COPY:
-					if(mHoldingFileList == null)
-						mHoldingFileList = new ArrayList<OpenPath>();
-					
-					mHoldingFileList.clear();
-					mHoldingFileList.add(file);
-					mHoldingFile = true;
-					mCutFile = false;
-					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
-					mode.finish();
-					return true;
-					
-				case D_MENU_MOVE:
-					if(mHoldingFileList == null)
-						mHoldingFileList = new ArrayList<OpenPath>();
-					
-					mHoldingFileList.clear();
-					mHoldingFileList.add(file);
-					mHoldingFile = true;
-					mCutFile = true;
-					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
-					mode.finish();
-					return true;
-					
-				case D_MENU_PASTE:
-					if(mHoldingFile && mHoldingFileList.size() > 0)
-						if(mCutFile)
-							mHandler.cutFile(mHoldingFileList, path);
-						else
-							mHandler.copyFile(mHoldingFileList, path);
-					
-					mHoldingFile = false;
-					mCutFile = false;
-					mHoldingFileList.clear();
-					mHoldingFileList = null;
-					((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
-					mode.finish();
-					return true;
-					
-				case D_MENU_ZIP:
-					mHandler.zipFile(path);
-					mode.finish();
-					return true;
-					
-				case D_MENU_UNZIP:
-					mHandler.unZipFileTo(mHoldingZipList.get(0), file);
-					
-					mHoldingZip = false;
-					mHoldingZipList.clear();
-					mHoldingZipList = null;
-					((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
-					mode.finish();
-					return true;
-				
-				case D_MENU_INFO:
-					DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
-					dialog.setFilePath(path);
-					dialog.show(getFragmentManager(), "info");
-					mode.finish();
-					return true;
-			}			
-			return false;
-		}
-	};	
-
-	private ActionMode.Callback mFileOptActionMode = new ActionMode.Callback() {
-		//@Override
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return false;
-		}
-		
-		//@Override
-		public void onDestroyActionMode(ActionMode mode) {
-			mActionMode = null;
-			mActionModeSelected = false;
-		}
-		
-		//@Override
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			menu.add(0, F_MENU_INFO, 0, "Info");
-			menu.add(0, F_MENU_DELETE, 0, "Delete");
-    		menu.add(0, F_MENU_RENAME, 0, "Rename");
-    		menu.add(0, F_MENU_COPY, 0, "Copy");
-    		menu.add(0, F_MENU_MOVE, 0, "Cut");
-    		menu.add(0, F_MENU_SEND, 0, "Send");
-    		
-    		mActionModeSelected = true;
-			return true;
-		}
-
-		//@Override
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-			
-			OpenPath file = mFileMang.peekStack().getChild(mode.getTitle().toString());
-			String path = file.getPath();
-			String name = file.getName();
-			
-			switch(item.getItemId()) {
-				case F_MENU_DELETE:
-					files.add(file);
-					mHandler.deleteFile(files);
-					mode.finish();
-					return true;
-					
-				case F_MENU_RENAME:
-					mHandler.renameFile(path, false);
-					mode.finish();
-					return true;
-					
-				case F_MENU_COPY:
-					if(mHoldingFileList == null)
-						mHoldingFileList = new ArrayList<OpenPath>();
-					
-					mHoldingFileList.clear();
-					mHoldingFileList.add(file);
-					mHoldingFile = true;
-					mCutFile = false;
-					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);				
-					mode.finish();
-					return true;
-					
-				case F_MENU_MOVE:
-					if(mHoldingFileList == null)
-						mHoldingFileList = new ArrayList<OpenPath>();
-					
-					mHoldingFileList.clear();
-					mHoldingFileList.add(file);
-					mHoldingFile = true;
-					mCutFile = true;
-					((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);		
-					mode.finish();
-					return true;
-					
-				case F_MENU_SEND:
-					Intent mail = new Intent();
-					mail.setType("application/mail");
-					
-					mail.setAction(android.content.Intent.ACTION_SEND);
-					mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
-					startActivity(mail);
-					
-					mode.finish();
-					return true;
-
-//					this is for bluetooth
-//					files.add(path);
-//					mHandler.sendFile(files);
-//					mode.finish();
-//					return true;
-					
-				case F_MENU_INFO:
-					DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
-					dialog.setFilePath(path);
-					dialog.show(getFragmentManager(), "info");
-					mode.finish();
-					return true;
-			}
-			mActionModeSelected = false;
-			return false;
-		}
-	};
-	
 	
 	//@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -417,30 +200,246 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		if(mGrid != null && (mShowGrid || mList == null)) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
 			mGrid.setVisibility(View.VISIBLE);
+			mGrid.setAdapter(mContentAdapter);
 			if(mList != null)
 				mList.setVisibility(View.GONE);
 		} else if(mList != null) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
 			mList.setVisibility(View.VISIBLE);
+			mList.setAdapter(mContentAdapter);
 			if(mGrid != null)
 				mGrid.setVisibility(View.GONE);
 		}
 		mChosenMode.setOnItemClickListener(this);
-		mChosenMode.setAdapter(mContentAdapter);
 		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 				OpenPath file = mData2.get(pos);
 				
 				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					mActionMode = getActivity().startActionMode(mFileOptActionMode);
+					if(Build.VERSION.SDK_INT >= 11)
+					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
+						//@Override
+						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+							return false;
+						}
+						
+						//@Override
+						public void onDestroyActionMode(ActionMode mode) {
+							mActionMode = null;
+							mActionModeSelected = false;
+						}
+						
+						//@Override
+						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+							menu.add(0, F_MENU_INFO, 0, "Info");
+							menu.add(0, F_MENU_DELETE, 0, "Delete");
+				    		menu.add(0, F_MENU_RENAME, 0, "Rename");
+				    		menu.add(0, F_MENU_COPY, 0, "Copy");
+				    		menu.add(0, F_MENU_MOVE, 0, "Cut");
+				    		menu.add(0, F_MENU_SEND, 0, "Send");
+				    		
+				    		mActionModeSelected = true;
+							return true;
+						}
+
+						//@Override
+						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+							ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+							
+							OpenPath file = mFileMang.peekStack().getChild(mode.getTitle().toString());
+							String path = file.getPath();
+							String name = file.getName();
+							
+							switch(item.getItemId()) {
+								case F_MENU_DELETE:
+									files.add(file);
+									mHandler.deleteFile(files);
+									mode.finish();
+									return true;
+									
+								case F_MENU_RENAME:
+									mHandler.renameFile(path, false);
+									mode.finish();
+									return true;
+									
+								case F_MENU_COPY:
+									if(mHoldingFileList == null)
+										mHoldingFileList = new ArrayList<OpenPath>();
+									
+									mHoldingFileList.clear();
+									mHoldingFileList.add(file);
+									mHoldingFile = true;
+									mCutFile = false;
+									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);				
+									mode.finish();
+									return true;
+									
+								case F_MENU_MOVE:
+									if(mHoldingFileList == null)
+										mHoldingFileList = new ArrayList<OpenPath>();
+									
+									mHoldingFileList.clear();
+									mHoldingFileList.add(file);
+									mHoldingFile = true;
+									mCutFile = true;
+									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);		
+									mode.finish();
+									return true;
+									
+								case F_MENU_SEND:
+									Intent mail = new Intent();
+									mail.setType("application/mail");
+									
+									mail.setAction(android.content.Intent.ACTION_SEND);
+									mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
+									startActivity(mail);
+									
+									mode.finish();
+									return true;
+
+//									this is for bluetooth
+//									files.add(path);
+//									mHandler.sendFile(files);
+//									mode.finish();
+//									return true;
+									
+								case F_MENU_INFO:
+									DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
+									dialog.setFilePath(path);
+									dialog.show(getFragmentManager(), "info");
+									mode.finish();
+									return true;
+							}
+							mActionModeSelected = false;
+							return false;
+						}
+					});
 					mActionMode.setTitle(file.getName());
 					
 					return true;
 				}
 				
 				if(file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					mActionMode = getActivity().startActionMode(mFolderOptActionMode);
+					if(Build.VERSION.SDK_INT >= 11)
+					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
+						
+						//@Override
+						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+							return false;
+						}
+						
+						//@Override
+						public void onDestroyActionMode(ActionMode mode) {
+							mActionMode = null;
+							mActionModeSelected = false;
+						}
+						
+						//@Override
+						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+							menu.add(0, D_MENU_BOOK, 0, "Bookmark");
+							menu.add(0, D_MENU_INFO, 0, "Info");
+							menu.add(0, D_MENU_DELETE, 0, "Delete");
+							menu.add(0, D_MENU_RENAME, 0, "Rename");
+				        	menu.add(0, D_MENU_COPY, 0, "Copy");
+				        	menu.add(0, D_MENU_MOVE, 0, "Cut");
+				        	menu.add(0, D_MENU_ZIP, 0, "Zip");
+				        	menu.add(0, D_MENU_PASTE, 0, "Paste into folder").setEnabled(mHoldingFile);
+				        	menu.add(0, D_MENU_UNZIP, 0, "Unzip here").setEnabled(mHoldingZip);
+				        	
+				        	mActionModeSelected = true;
+							
+				        	return true;
+						}
+						
+						//@Override
+						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+							ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+							OpenPath file = mFileMang.peekStack().getChild(mode.getTitle().toString());
+							String path = file.getPath();
+							String name = file.getName();
+							
+							switch(item.getItemId()) {
+								case D_MENU_BOOK:
+									mBookmarkList.onBookMarkAdd(path);
+									mode.finish();
+									return true;
+									
+								case D_MENU_DELETE:
+									files.add(file);
+									mHandler.deleteFile(files);
+									mode.finish();
+									return true;
+									
+								case D_MENU_RENAME:
+									mHandler.renameFile(path, true);
+									mode.finish();
+									return true;
+									
+								case D_MENU_COPY:
+									if(mHoldingFileList == null)
+										mHoldingFileList = new ArrayList<OpenPath>();
+									
+									mHoldingFileList.clear();
+									mHoldingFileList.add(file);
+									mHoldingFile = true;
+									mCutFile = false;
+									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
+									mode.finish();
+									return true;
+									
+								case D_MENU_MOVE:
+									if(mHoldingFileList == null)
+										mHoldingFileList = new ArrayList<OpenPath>();
+									
+									mHoldingFileList.clear();
+									mHoldingFileList.add(file);
+									mHoldingFile = true;
+									mCutFile = true;
+									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
+									mode.finish();
+									return true;
+									
+								case D_MENU_PASTE:
+									if(mHoldingFile && mHoldingFileList.size() > 0)
+										if(mCutFile)
+											mHandler.cutFile(mHoldingFileList, path);
+										else
+											mHandler.copyFile(mHoldingFileList, path);
+									
+									mHoldingFile = false;
+									mCutFile = false;
+									mHoldingFileList.clear();
+									mHoldingFileList = null;
+									((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
+									mode.finish();
+									return true;
+									
+								case D_MENU_ZIP:
+									mHandler.zipFile(path);
+									mode.finish();
+									return true;
+									
+								case D_MENU_UNZIP:
+									mHandler.unZipFileTo(mHoldingZipList.get(0), file);
+									
+									mHoldingZip = false;
+									mHoldingZipList.clear();
+									mHoldingZipList = null;
+									((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
+									mode.finish();
+									return true;
+								
+								case D_MENU_INFO:
+									DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
+									dialog.setFilePath(path);
+									dialog.show(getFragmentManager(), "info");
+									mode.finish();
+									return true;
+							}			
+							return false;
+						}
+					});
 					mActionMode.setTitle(file.getName());
 					
 					return true;

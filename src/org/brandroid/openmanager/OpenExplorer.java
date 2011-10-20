@@ -19,6 +19,7 @@
 package org.brandroid.openmanager;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -130,22 +131,25 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         mFileManger = getDirContentFragment().getFileManagerInst();
         
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mSearchView = new SearchView(this);
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-        
-			
-			public boolean onQueryTextSubmit(String query) {
-				mSearchView.clearFocus();
-				mEvHandler.searchFile(mFileManger.peekStack().getPath(), query);
+        if(Build.VERSION.SDK_INT >= 11)
+        {
+	        mSearchView = new SearchView(this);
+	        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+	        
 				
-				return true;
-			}
-			
-			
-			public boolean onQueryTextChange(String newText) {
-				return false;
-			}
-		});
+				public boolean onQueryTextSubmit(String query) {
+					mSearchView.clearFocus();
+					mEvHandler.searchFile(mFileManger.peekStack().getPath(), query);
+					
+					return true;
+				}
+				
+				
+				public boolean onQueryTextChange(String newText) {
+					return false;
+				}
+			});
+        }
         
         
         storageReceiver = new BroadcastReceiver() {
@@ -298,7 +302,111 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    		if(mActionMode != null)
 	    			return false;
 	    		
-	    		mActionMode = startActionMode(mMultiSelectAction);
+	    		mActionMode = startActionMode(new ActionMode.Callback() {
+	    			MultiSelectHandler handler;
+	    			
+	    			
+	    			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+	    				return false;
+	    			}
+	    			
+	    			
+	    			public void onDestroyActionMode(ActionMode mode) {			
+	    				getDirContentFragment().changeMultiSelectState(false, handler);
+	    				
+	    				mActionMode = null;
+	    				handler = null;
+	    			}
+	    			
+	    			
+	    			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+	    				handler = MultiSelectHandler.getInstance(OpenExplorer.this);
+	    				mode.setTitle("Multi-select Options");
+	    				
+	    				menu.add(0, MENU_ID_DELETE, 0, "Delete");
+	    				menu.add(0, MENU_ID_COPY, 0, "Copy");
+	    				menu.add(0, MENU_ID_CUT, 0, "Cut");
+	    				menu.add(0, MENU_ID_SEND, 0, "Send");
+	    				
+	    				getDirContentFragment().changeMultiSelectState(true, handler);
+	    				
+	    				return true;
+	    			}
+	    			
+	    			
+	    			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+	    				ArrayList<String>files = handler.getSelectedFiles();
+	    				
+	    				//nothing was selected
+	    				if(files.size() < 1) {
+	    					mode.finish();
+	    					return true;
+	    				}
+	    				
+	    				if(mHeldFiles == null)
+	    					mHeldFiles = new ArrayList<OpenPath>();
+	    				
+	    				mHeldFiles.clear();
+	    				
+	    				for(String s : files)
+	    					mHeldFiles.add(FileManager.getOpenCache(s));
+	    				
+	    				switch(item.getItemId()) {
+	    				case 12: /* delete */
+	    					mEvHandler.deleteFile(mHeldFiles);
+	    					mode.finish();
+	    					return true;
+	    				
+	    				case 13: /* copy */
+	    					getActionBar().setTitle("Holding " + files.size() + " File");
+	    					getDirContentFragment().setCopiedFiles(mHeldFiles, false);
+	    					
+	    					Toast.makeText(OpenExplorer.this, 
+	    								   "Tap the upper left corner to see your held files",
+	    								   Toast.LENGTH_LONG).show();
+	    					mode.finish();
+	    					return true;
+	    					
+	    				case 14: /* cut */
+	    					getActionBar().setTitle("Holding " + files.size() + " File");
+	    					getDirContentFragment().setCopiedFiles(mHeldFiles, true);
+	    					
+	    					Toast.makeText(OpenExplorer.this, 
+	    							   "Tap the upper left corner to see your held files",
+	    							   Toast.LENGTH_LONG).show();
+	    					mode.finish();
+	    					return true;
+	    					
+	    				case 15: /* send */
+	    					ArrayList<Uri> uris = new ArrayList<Uri>();
+	    					Intent mail = new Intent();
+	    					mail.setType("application/mail");
+
+	    					if(mHeldFiles.size() == 1) {
+	    						mail.setAction(android.content.Intent.ACTION_SEND);
+	    						mail.putExtra(Intent.EXTRA_STREAM, mHeldFiles.get(0).getUri());
+	    						startActivity(mail);
+	    						
+	    						mode.finish();
+	    						return true;
+	    					}
+	    					
+	    					for(int i = 0; i < mHeldFiles.size(); i++)
+	    						uris.add(mHeldFiles.get(i).getUri());
+	    					
+	    					mail.setAction(android.content.Intent.ACTION_SEND_MULTIPLE);
+	    					mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+	    					startActivity(mail);
+
+//	    					this is for bluetooth
+//	    					mEvHandler.sendFile(mHeldFiles);
+	    					mode.finish();
+	    					return true;
+	    				}
+	    				
+	    				return false;
+	    			}
+	    		});
 	    		return true;
 	    		
 	    	case MENU_SORT:
@@ -359,111 +467,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     	return super.onKeyUp(keyCode, event);
     }
     
-	private ActionMode.Callback mMultiSelectAction = new ActionMode.Callback() {
-		MultiSelectHandler handler;
-		
-		
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return false;
-		}
-		
-		
-		public void onDestroyActionMode(ActionMode mode) {			
-			getDirContentFragment().changeMultiSelectState(false, handler);
-			
-			mActionMode = null;
-			handler = null;
-		}
-		
-		
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			handler = MultiSelectHandler.getInstance(OpenExplorer.this);
-			mode.setTitle("Multi-select Options");
-			
-			menu.add(0, MENU_ID_DELETE, 0, "Delete");
-			menu.add(0, MENU_ID_COPY, 0, "Copy");
-			menu.add(0, MENU_ID_CUT, 0, "Cut");
-			menu.add(0, MENU_ID_SEND, 0, "Send");
-			
-			getDirContentFragment().changeMultiSelectState(true, handler);
-			
-			return true;
-		}
-		
-		
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			ArrayList<String>files = handler.getSelectedFiles();
-			
-			//nothing was selected
-			if(files.size() < 1) {
-				mode.finish();
-				return true;
-			}
-			
-			if(mHeldFiles == null)
-				mHeldFiles = new ArrayList<OpenPath>();
-			
-			mHeldFiles.clear();
-			
-			for(String s : files)
-				mHeldFiles.add(FileManager.getOpenCache(s));
-			
-			switch(item.getItemId()) {
-			case 12: /* delete */
-				mEvHandler.deleteFile(mHeldFiles);
-				mode.finish();
-				return true;
-			
-			case 13: /* copy */
-				getActionBar().setTitle("Holding " + files.size() + " File");
-				getDirContentFragment().setCopiedFiles(mHeldFiles, false);
-				
-				Toast.makeText(OpenExplorer.this, 
-							   "Tap the upper left corner to see your held files",
-							   Toast.LENGTH_LONG).show();
-				mode.finish();
-				return true;
-				
-			case 14: /* cut */
-				getActionBar().setTitle("Holding " + files.size() + " File");
-				getDirContentFragment().setCopiedFiles(mHeldFiles, true);
-				
-				Toast.makeText(OpenExplorer.this, 
-						   "Tap the upper left corner to see your held files",
-						   Toast.LENGTH_LONG).show();
-				mode.finish();
-				return true;
-				
-			case 15: /* send */
-				ArrayList<Uri> uris = new ArrayList<Uri>();
-				Intent mail = new Intent();
-				mail.setType("application/mail");
-
-				if(mHeldFiles.size() == 1) {
-					mail.setAction(android.content.Intent.ACTION_SEND);
-					mail.putExtra(Intent.EXTRA_STREAM, mHeldFiles.get(0).getUri());
-					startActivity(mail);
-					
-					mode.finish();
-					return true;
-				}
-				
-				for(int i = 0; i < mHeldFiles.size(); i++)
-					uris.add(mHeldFiles.get(i).getUri());
-				
-				mail.setAction(android.content.Intent.ACTION_SEND_MULTIPLE);
-				mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-				startActivity(mail);
-
-//				this is for bluetooth
-//				mEvHandler.sendFile(mHeldFiles);
-				mode.finish();
-				return true;
-			}
-			
-			return false;
-		}
-	};
+	
 	
 	public static void setOnSettingsChangeListener(OnSettingsChangeListener e) {
     	mSettingsListener = e;
