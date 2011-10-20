@@ -64,7 +64,7 @@ public class OpenFile extends OpenPath
 	@Override
 	public OpenPath[] listFiles() {
 		File[] arr = mFile.listFiles();
-		if((arr == null || arr.length == 0) && !isDirectory())
+		if((arr == null || arr.length == 0) && !isDirectory() && mFile.getParentFile() != null)
 			arr = mFile.getParentFile().listFiles();
 		
 		if(arr == null)

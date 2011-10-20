@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.utils.Decoder;
 import org.brandroid.utils.Logger;
@@ -103,7 +104,7 @@ public class ThumbnailCreator extends Thread {
 				return;
 			}
 			
-			final OpenFile file = (OpenFile)mFiles.get(i);
+			final OpenPath file = mFiles.get(i);
 			
 			//we already loaded this thumbnail, just return it.
 			if (mCacheMap.containsKey(file.getPath())) {
@@ -118,15 +119,37 @@ public class ThumbnailCreator extends Thread {
 			
 			//we havn't loaded it yet, lets make it. 
 			} else {
-				if (isAPKFile(file.getName()))
+				Boolean valid = false;
+				if (file.getClass().equals(OpenMediaStore.class))
+				{
+					OpenMediaStore om = (OpenMediaStore)file;
+					BitmapFactory.Options opts = new BitmapFactory.Options();
+					opts.inSampleSize = 1;
+					Bitmap bmp = null;
+					if(om.getParent().getName().equals("Photos"))
+						bmp = MediaStore.Images.Thumbnails.getThumbnail(
+									mContext.getContentResolver(),
+									om.getMediaID(), MediaStore.Images.Thumbnails.MINI_KIND, opts
+								);
+					else if(om.getParent().getName().equals("Videos"))
+						bmp = MediaStore.Video.Thumbnails.getThumbnail(
+									mContext.getContentResolver(),
+									om.getMediaID(), MediaStore.Video.Thumbnails.MINI_KIND, opts
+								);
+					if(bmp != null) {
+						mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false));
+						valid = true;
+						sendThumbBack(mThumb, om.getPath());
+					}
+				}
+				if (!valid && isAPKFile(file.getName()))
 				{
 					Logger.LogInfo("Getting apk icon for " + file.getName());
 					JarFile apk = null;
 					InputStream in = null;
 					try {
-						apk = new JarFile(file.getFile());
+						apk = new JarFile(((OpenFile)file).getFile());
 						JarEntry icon = apk.getJarEntry("res/drawable-hdpi/icon.apk");
-						Boolean valid = false;
 						if(icon != null && icon.getSize() > 0) {
 							in = apk.getInputStream(icon);
 							Bitmap pic = BitmapFactory.decodeStream(in);

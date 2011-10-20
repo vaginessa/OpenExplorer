@@ -20,6 +20,7 @@ package org.brandroid.openmanager.data;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.utils.Logger;
+//import org.brandroid.utils.Logger;
 
 import android.graphics.drawable.Drawable;
 import android.view.View;
@@ -40,13 +41,13 @@ public class BookmarkHolder {
 	private OpenPath mFile;
 	
 	public BookmarkHolder(String path, View view) {
-		this(path, getTitleFromPath(path), view);
+		this(new OpenFile(path), getTitleFromPath(path), view);
 	}
-	public BookmarkHolder(String path, String title, final View view)
+	public BookmarkHolder(OpenPath path, String title, final View view)
 	{
 		mParentView = view;
-		sPath = path;
-		mFile = new OpenFile(path);
+		sPath = path.getPath();
+		mFile = path;
 		ensureViews();
 		//mIndicate = (ImageView)view.findViewById(R.id.)
 		setTitle(title);
@@ -82,8 +83,7 @@ public class BookmarkHolder {
 				bar.setProgress((int)(f.getTotalSpace() - f.getFreeSpace()));
 				if(bar.getProgress() == 0)
 					bar.setVisibility(View.GONE);
-				else
-					Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
+				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
 			} else bar.setVisibility(View.GONE);
 		} else bar.setVisibility(View.GONE);
 	}
@@ -114,7 +114,7 @@ public class BookmarkHolder {
 	{
 		sPath = path;
 		if(mPath != null)
-			mPath.setText(path);
+			mPath.setText(path.substring(0, path.lastIndexOf("/")));
 	}
 	public String getTitle() { return sTitle; }
 	public void setTitle(String title) {
@@ -139,5 +139,9 @@ public class BookmarkHolder {
 			path = path.substring(path.lastIndexOf("/") + 1);
 		}
 		return path;
+	}
+	public void showPath(Boolean visible) {
+		if(mPath != null)
+			mPath.setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 }

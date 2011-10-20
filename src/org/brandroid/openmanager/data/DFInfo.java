@@ -62,13 +62,13 @@ public class DFInfo
 			while((sl = is.readLine()) != null)
 			{
 				sl = sl.replaceAll("  *", " ");
-				Logger.LogInfo("DF: " + sl);
+				//Logger.LogInfo("DF: " + sl);
 				if(!sl.startsWith("/"))
 					continue;
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					//Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
 					mDefault.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 			}

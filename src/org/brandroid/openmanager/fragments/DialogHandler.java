@@ -476,7 +476,7 @@ public class DialogHandler extends DialogFragment {
 				LayoutInflater inflater = (LayoutInflater)mContext
 											.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				mHolder = new BookmarkHolder(name, name, inflater.inflate(R.layout.bookmark_layout, parent, false));				
+				mHolder = new BookmarkHolder(file, name, inflater.inflate(R.layout.bookmark_layout, parent, false));				
 				view.setTag(mHolder);
 				
 			} else {

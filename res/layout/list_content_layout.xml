@@ -46,9 +46,8 @@
 	<TextView
 		android:id="@+id/content_fullpath"
 		android:text="/fullpath"
-		android:visibility="gone"
-		android:layout_alignParentBottom="true"
-		android:layout_toRightOf="@+id/content_info"
+		android:layout_below="@+id/content_text"
+		android:layout_alignLeft="@+id/content_text"
 		android:gravity="right"
 		style="@style/Small" />
 	<TextView

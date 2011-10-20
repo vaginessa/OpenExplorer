@@ -21,11 +21,15 @@ package org.brandroid.openmanager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
+import android.provider.MediaStore.Images.Media;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -88,6 +92,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	
 	private FragmentManager fragmentManager;
 	
+	private Cursor mPhotoCursor, mVideoCursor;
     
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -142,7 +147,6 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			}
 		});
         
-
         
         storageReceiver = new BroadcastReceiver() {
 			@Override
@@ -171,7 +175,11 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 			mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
         }
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+        refreshCursors();
     }
+    
+    public Cursor getPhotoCursor() { return mPhotoCursor; }
+    public Cursor getVideoCursor() { return mVideoCursor; }
     
     @Override
     protected void onDestroy() {
@@ -179,12 +187,35 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     	unregisterReceiver(storageReceiver);
     }
     
+    public void refreshCursors()
+    {
+        if(mPhotoCursor == null)
+        	mPhotoCursor = managedQuery(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        		new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+				MediaStore.Images.Media.SIZE + " > 0", null,
+				MediaStore.Images.Media.DATE_ADDED + " DESC");
+        else mPhotoCursor.requery();
+        if(mVideoCursor == null)
+        	mVideoCursor = managedQuery(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+        		new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+				MediaStore.Video.Media.SIZE + " > 0", null,
+				MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
+				MediaStore.Video.Media.DATE_MODIFIED + " DESC");
+        else mVideoCursor.requery();
+    }
+    
     public void refreshBookmarks()
     {
-		mFavoritesFragment = new BookmarkFragment();
-		FragmentTransaction ft = fragmentManager.beginTransaction();
-		ft.replace(R.id.list_frag, mFavoritesFragment);
-		ft.commit();
+    	refreshCursors();
+    	if(mFavoritesFragment == null)
+    	{
+			mFavoritesFragment = new BookmarkFragment();
+			FragmentTransaction ft = fragmentManager.beginTransaction();
+			ft.replace(R.id.list_frag, mFavoritesFragment);
+			ft.commit();
+    	} else {
+    		((BookmarkFragment)mFavoritesFragment).scanBookmarks();
+    	}
     }
     
     public DirContentActivity getDirContentFragment()

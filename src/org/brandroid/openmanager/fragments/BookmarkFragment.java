@@ -26,8 +26,10 @@ import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.DFInfo;
+import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DirContentActivity.OnBookMarkAddListener;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
@@ -37,6 +39,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
@@ -89,7 +92,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private Boolean mShowTitles = true;
 
 	public interface OnChangeLocationListener {
-		void onChangeLocation(String name);
+		void onChangeLocation(OpenPath path);
 	}
 	
 	
@@ -104,50 +107,44 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		mBookmarkString = (PreferenceManager.getDefaultSharedPreferences(mContext))
 											.getString(SettingsActivity.PREF_BOOKNAME_KEY, "");
 		
+		scanBookmarks();
+	}
+	
+	public void scanBookmarks()
+	{
+		OpenCursor mPhotoCursor = new OpenCursor(((OpenExplorer)getActivity()).getPhotoCursor(), "Photos");
+		OpenCursor mVideoCursor = new OpenCursor(((OpenExplorer)getActivity()).getVideoCursor(), "Videos");
+		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
+		mBookmarks.clear();
+		mBookmarks.add(new OpenFile("/"));
+		mBookmarks.add(storage);
+		if(mVideoCursor.length() > 0)
+			mBookmarks.add(mVideoCursor);
+		if(mPhotoCursor.length() > 0)
+			mBookmarks.add(mPhotoCursor);
+		checkAndAdd(storage.getChild("Music"));
+		checkAndAdd(storage.getChild("Download"));
+		if(checkAndAdd(new OpenFile("/mnt/external_sd")))
+			mHasExternal = true;
+		if(checkAndAdd(new OpenFile("/mnt/sdcard-ext")))
+			mHasExternal = true;
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
-		
-		if (mDirListString.length() > 0) {
-			String[] l = mDirListString.replace(":", ";").replace(";//","://").split(";");
-			
-			for(String s : l)
-			{
-				if(s.indexOf("external") > -1 || s.indexOf("-ext") > -1)
-					mHasExternal = true;
-				checkAndAdd(new OpenFile(s));
-			}
-		
-		} else {
-			
-			OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
-			mBookmarks.add(new OpenFile("/"));
-			mBookmarks.add(storage);
-			checkAndAdd(storage.getChild("Download"));
-			checkAndAdd(storage.getChild("Music"));
-			checkAndAdd(storage.getChild("Movies"));
-			checkAndAdd(storage.getChild("DCIM"));
-			if(checkAndAdd(new OpenFile("/mnt/external_sd")))
-				mHasExternal = true;
-			if(checkAndAdd(new OpenFile("/mnt/sdcard-ext")))
-				mHasExternal = true;
-		}
-		
 		for(String sItem : df.keySet())
 		{
-			if(sItem.toLowerCase().startsWith("/system")) continue;
-			if(sItem.toLowerCase().startsWith("/cache")) continue;
-			if(sItem.toLowerCase().startsWith("/dev")) continue;
+			OpenFile file = new OpenFile(sItem);
+			if(file.isHidden()) continue;
+			if(!file.getFile().canWrite()) continue;
 			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
-			checkAndAdd(new OpenFile(sItem));
+			checkAndAdd(file);
 		}
-		
 		if (mBookmarkString.length() > 0) {
 			String[] l = mBookmarkString.split(";");
 			
 			for(String s : l)
 				checkAndAdd(new OpenFile(s));
 		}
-		
-		mBookmarks.add(new OpenFile("ftp://Brandon:Brandon@psusadev2.celebros.com"));
+		if(mBookmarkAdapter != null)
+			mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
 	private boolean hasBookmark(OpenPath path)
@@ -222,7 +219,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		//getFragmentManager().popBackStackImmediate("Settings", 0);
 		
 		if(mChangeLocList != null)
-			mChangeLocList.onChangeLocation(mBookmarks.get(pos).getPath());
+			mChangeLocList.onChangeLocation(mBookmarks.get(pos));
 	}
 	
 	
@@ -418,7 +415,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				LayoutInflater in = (LayoutInflater)
 					mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				view = in.inflate(R.layout.bookmark_layout, parent, false);
-				mHolder = new BookmarkHolder(sPath, sPath, view);
+				mHolder = new BookmarkHolder(path, sPath, view);
 				
 				mHolder.setEjectClickListener(new OnClickListener() {
 					public void onClick(View v) {
@@ -478,8 +475,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			} else if(sPath2.indexOf("music") > -1) {
 				mHolder.setText("Music");
 				mHolder.setIconResource(R.drawable.music);
-			} else if(sPath2.indexOf("movie") > -1) {
-				mHolder.setText("Movies");
+			} else if(sPath2.indexOf("movie") > -1 || sPath2.indexOf("videos") > -1) {
+				mHolder.setText("Videos");
 				mHolder.setIconResource(R.drawable.movie);
 			} else if(sPath2.indexOf("photo") > -1 || sPath2.indexOf("dcim") > -1 || sPath2.indexOf("camera") > -1) {
 				mHolder.setText("Photos");
@@ -517,6 +514,11 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			} else {
 				mHolder.setText(super.getItem(position).getName());
 				mHolder.setIconResource(R.drawable.folder);
+			}
+			
+			if(path.getClass().equals(OpenCursor.class))
+			{
+				mHolder.setText(mHolder.getText() + " (" + ((OpenCursor)path).length() + ")");
 			}
 			
 			return view;

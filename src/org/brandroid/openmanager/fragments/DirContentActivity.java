@@ -18,8 +18,6 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.http.MethodNotSupportedException;
 import org.brandroid.openmanager.EventHandler;
 import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.IntentManager;
@@ -31,12 +29,10 @@ import org.brandroid.openmanager.ThumbnailCreator;
 import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.openmanager.OpenExplorer.OnSettingsChangeListener;
-import org.brandroid.openmanager.R.color;
-import org.brandroid.openmanager.R.drawable;
-import org.brandroid.openmanager.R.id;
-import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.fragments.BookmarkFragment.OnChangeLocationListener;
@@ -45,7 +41,6 @@ import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.utils.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -54,16 +49,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ActivityNotFoundException;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -75,11 +65,8 @@ import android.widget.AbsListView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.GridView;
 import android.widget.ListView;
-import android.widget.ImageView;
-import android.widget.Button;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -402,11 +389,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		View v = inflater.inflate(R.layout.main_layout, container, false);
 		//v.setBackgroundResource(R.color.lightgray);
 		
-		mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
-		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
-		mList = (ListView)v.findViewById(R.id.list_listview);
-		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
-		
 		if (savedInstanceState != null) {
 			String location = savedInstanceState.getString("location");
 			String[] parts = location.split("/");
@@ -414,23 +396,34 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			for(int i = 2; i < parts.length; i++)
 				setContentPath(new OpenFile(parts[i]), false);
 		}
-		
-		updateChosenMode(mShowGrid ? mGrid : mList);
-		
 
 		return v;
 	}
 	
+	@Override
+	public void onViewCreated(View v, Bundle savedInstanceState) {
+		super.onViewCreated(v, savedInstanceState);
+		
+		mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
+		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
+		mList = (ListView)v.findViewById(R.id.list_listview);
+		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
+
+		updateChosenMode(mShowGrid ? mGrid : mList);
+	}
+	
 	public void updateChosenMode(AbsListView mChosenMode)
 	{
-		if(mShowGrid) {
+		if(mGrid != null && (mShowGrid || mList == null)) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
 			mGrid.setVisibility(View.VISIBLE);
-			mList.setVisibility(View.GONE);
-		} else {
+			if(mList != null)
+				mList.setVisibility(View.GONE);
+		} else if(mList != null) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
 			mList.setVisibility(View.VISIBLE);
-			mGrid.setVisibility(View.GONE);
+			if(mGrid != null)
+				mGrid.setVisibility(View.GONE);
 		}
 		mChosenMode.setOnItemClickListener(this);
 		mChosenMode.setAdapter(mContentAdapter);
@@ -521,44 +514,40 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	 * from the path give in the variable name.
 	 */
 	//@Override
-	public void onChangeLocation(final String s)
+	public void onChangeLocation(OpenPath path)
 	{
 		if(mActionModeSelected || mMultiSelectOn)
 			return;
 		
+		if(path == null)
+		{
+			Logger.LogWarning("Path was null while changing location");
+		}
+		
+		String s = path.getPath();
 		Logger.LogDebug("Location changed to " + s);
-		OpenPath path = FileManager.getOpenCache(s);
-		if(path == null)
-		{
-			Logger.LogWarning("Cache was null still for " + s);
-			path = FileManager.setOpenCache(s, new OpenFile(s));
+		//OpenPath path = FileManager.getOpenCache(s);
+		
+		if (mThumbnail != null) {
+			mThumbnail.setCancelThumbnails(true);
+			mThumbnail = null;
 		}
-		if(path == null)
+		
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		ft.setBreadCrumbTitle(path.getPath());
+		ft.addToBackStack("path");
+		ft.commit();
+		
+		//getFragmentManager().popBackStackImmediate("Settings", 0);
+		
+		if(path.requiresThread())
 		{
-			Logger.LogWarning("Invalid path specified - " + s);
-			updateData(new OpenPath[0]);
-		} else {
+			new FileIOTask().execute(
+					new FileIOCommand(FileIOCommandType.ALL, path));
+		} else if(!path.requiresThread()) {
+			setContentPath(path, true);
+		}
 
-			if (mThumbnail != null) {
-				mThumbnail.setCancelThumbnails(true);
-				mThumbnail = null;
-			}
-			
-			FragmentTransaction ft = getFragmentManager().beginTransaction();
-			ft.setBreadCrumbTitle(path.getPath());
-			ft.addToBackStack("path");
-			ft.commit();
-			
-			//getFragmentManager().popBackStackImmediate("Settings", 0);
-			
-			if(path.requiresThread())
-			{
-				new FileIOTask().execute(
-						new FileIOCommand(FileIOCommandType.ALL, path));
-			} else if(!path.requiresThread()) {
-				setContentPath(path, true);
-			}
-		}
 	}
 
 	private void updateData(final OpenPath[] items) {
@@ -798,7 +787,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		////@Override
 		public View getView(int position, View view, ViewGroup parent)
 		{
-			final OpenPath file = mData2.get(position);
+			final OpenPath file = super.getItem(position);
 			final String mName = file.getName();
 			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
@@ -814,7 +803,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				} else
 					view = in.inflate(R.layout.list_content_layout, parent, false);
 				
-				mHolder = new BookmarkHolder(mName, mName, view);
+				mHolder = new BookmarkHolder(file, mName, view);
 				
 				view.setTag(mHolder);
 				
@@ -829,6 +818,11 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				mHolder.setInfo(getFileDetails(file));
 				mHolder.setPath(file.getPath());
 			}
+			
+			if(file.getClass().equals(OpenMediaStore.class))
+				mHolder.showPath(true);
+			else
+				mHolder.showPath(false);
 			
 			mHolder.setText(mName);
 			
