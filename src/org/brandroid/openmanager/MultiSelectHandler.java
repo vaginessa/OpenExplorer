@@ -82,7 +82,7 @@ public class MultiSelectHandler {
 				ext.equalsIgnoreCase("jpg") ||
 				ext.equalsIgnoreCase("jpeg")|| 
 				ext.equalsIgnoreCase("gif")) {
-				Bitmap b = Bitmap.createScaledBitmap(mThumbnail.isBitmapCached(file).getBitmap(), 
+				Bitmap b = Bitmap.createScaledBitmap(mThumbnail.isBitmapCached(file), 
 													 58,
 													 58,
 													 false);

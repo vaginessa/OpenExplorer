@@ -10,7 +10,7 @@ public class Logger
 	private static String[] sLastMessage = new String[] {"", "", "", "", ""};
 	private static Integer[] iLastCount = new Integer[] {0,0,0,0,0};
 	public static Boolean LoggingEnabled = true;
-	public static final Integer MIN_DB_LEVEL = Log.DEBUG;
+	public static final Integer MIN_DB_LEVEL = Log.ERROR;
 	private static final String LOG_KEY = "OpenExplorer";
 	private static LoggerDbAdapter dbLog;
 
@@ -35,7 +35,7 @@ public class Logger
 	{
 		int ret = 0;
 		for(int i = 0; i < els.length; i++)
-			if(els[i].getClassName().contains("com.brandroid"))
+			if(els[i].getClassName().contains("brandroid"))
 				ret++;
 		return ret;
 	}
@@ -45,7 +45,7 @@ public class Logger
 		StackTraceElement[] ret = new StackTraceElement[getMyStackTraceCount(elArray)];
 		int j = 0;
 		for(int i = 0; i < elArray.length; i++)
-			if(elArray[i].getClassName().contains("com.brandroid"))
+			if(elArray[i].getClassName().contains("brandroid"))
 				ret[j++] = elArray[i];
 		return ret;
 	}
@@ -55,7 +55,7 @@ public class Logger
 		StackTraceElement[] ret = new StackTraceElement[getMyStackTraceCount(elArray)];
 		int j = 0;
 		for(int i = 0; i < elArray.length; i++)
-			if(elArray[i].getClassName().contains("com.brandroid"))
+			if(elArray[i].getClassName().contains("brandroid"))
 				ret[j++] = elArray[i];
 		return ret;
 	}
@@ -126,6 +126,22 @@ public class Logger
 		LogToDB(Log.DEBUG, msg, stack);
 		Log.d(LOG_KEY, msg);
 	}
+	public static void LogInfo(String msg, Error e)
+	{
+		if(CheckLastLog(e.getMessage(), Log.INFO)) return;
+		StackTraceElement[] trace = getMyStackTrace(e);
+		e.setStackTrace(trace);
+		LogToDB(Log.INFO, msg, Log.getStackTraceString(e));
+		Log.i(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+	}
+	public static void LogInfo(String msg, Exception e)
+	{
+		if(CheckLastLog(e.getMessage(), Log.INFO)) return;
+		StackTraceElement[] trace = getMyStackTrace(e);
+		e.setStackTrace(trace);
+		LogToDB(Log.INFO, msg, Log.getStackTraceString(e));
+		Log.i(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+	}
 	public static void LogDebug(String msg)
 	{
 		//if(CheckLastLog(msg, Log.DEBUG)) return;
@@ -138,6 +154,23 @@ public class Logger
 		LogToDB(Log.DEBUG, msg, stack);
 		Log.d(LOG_KEY, msg);
 	}
+	public static void LogDebug(String msg, Error e)
+	{
+		if(CheckLastLog(e.getMessage(), Log.DEBUG)) return;
+		StackTraceElement[] trace = getMyStackTrace(e);
+		e.setStackTrace(trace);
+		LogToDB(Log.DEBUG, msg, Log.getStackTraceString(e));
+		Log.d(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+	}
+	public static void LogDebug(String msg, Exception e)
+	{
+		if(CheckLastLog(e.getMessage(), Log.DEBUG)) return;
+		StackTraceElement[] trace = getMyStackTrace(e);
+		e.setStackTrace(trace);
+		LogToDB(Log.DEBUG, msg, Log.getStackTraceString(e));
+		Log.d(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+	}
+	
 	public static void LogVerbose(String msg)
 	{
 		//if(CheckLastLog(msg, Log.VERBOSE)) return;

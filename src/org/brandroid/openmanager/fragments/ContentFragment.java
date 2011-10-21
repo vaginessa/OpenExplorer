@@ -40,6 +40,7 @@ import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.utils.Logger;
 
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -54,8 +55,10 @@ import android.content.Intent;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.ActionMode;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -98,7 +101,6 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private FileManager mFileManager;
 	private EventHandler mHandler;
 	private MultiSelectHandler mMultiSelect;
-	private ThumbnailCreator mThumbnail;
 	private static OnBookMarkAddListener mBookmarkList;
 	
 	private LinearLayout mPathView, mMultiSelectView;
@@ -119,7 +121,6 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private boolean mHoldingZip;
 	private boolean mCutFile;
 	private boolean mShowThumbnails;
-	private int mBackPathIndex;
 	private boolean mReadyToUpdate = true;
 	
 	public interface OnBookMarkAddListener {
@@ -128,7 +129,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	public ContentFragment()
 	{
-		
+		Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 	}
 	public ContentFragment(OpenPath path)
 	{
@@ -140,6 +141,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		super.onCreate(savedInstanceState);
 		
 		mContext = getActivity();
+		
 		OpenExplorer explorer = ((OpenExplorer)getActivity());
 		mFileManager = explorer.getFileManager();
 		if(mFileManager == null)
@@ -162,50 +164,63 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		
 		OpenPath path = mPath;
 		if(path == null)
-			path = new OpenFile(Environment.getExternalStorageDirectory());
-		if (savedInstanceState != null)
-			path = new OpenFile(savedInstanceState.getString("location"));
-		else
-			mFileManager.setHomeDir(path);
+		{
+			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
+				path = new OpenFile(savedInstanceState.getString("last"));
+			else
+				path = new OpenFile(Environment.getExternalStorageDirectory());
+		}
 		mData = mFileManager.getChildren(path);
 		
-		mBackPathIndex = 0;
 		mHoldingFile = false;
 		mHoldingZip = false;
 		mActionModeSelected = false;
 		mShowGrid = "grid".equals((PreferenceManager
 									.getDefaultSharedPreferences(mContext))
 										.getString("pref_view", "list"));
-		
 		mShowThumbnails = PreferenceManager.getDefaultSharedPreferences(mContext)
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, true);
+
+		if(path.getClass().equals(OpenCursor.class))
+			mShowGrid = mShowThumbnails = true;
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
 		
 		updateData(mData);
 	}
-	
-	 //@Override
-	    public void onSaveInstanceState(Bundle outState) {
-	    	super.onSaveInstanceState(outState);
-	    	
-	    	outState.putString("location", mFileManager.peekStack().getPath());
-	    }
-	
+
 	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
 		//v.setBackgroundResource(R.color.lightgray);
 		
-		if (savedInstanceState != null) {
+		/*
+		if (savedInstanceState != null && savedInstanceState.containsKey("location")) {
 			String location = savedInstanceState.getString("location");
-			
-			OpenPath path = new OpenFile(location);
+			if(location != null && !location.equals("") && location.startsWith("/"))
+			{
+				Logger.LogDebug("Content location restoring to " + location);
+				mPath = new OpenFile(location);
+				mData = mFileManager.getChildren(mPath);
+				updateData(mData);
+			}
 			//setContentPath(path, false);
-			((OpenExplorer)getActivity()).onChangeLocation(path);
 		}
+		*/
 
 		return v;
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		/*
+		if(mPath != null && mPath.getPath() != null)
+		{
+			Logger.LogDebug("Content location saving to " + mPath.getPath());
+			outState.putString("location", mPath.getPath());
+		}
+		*/
 	}
 	
 	@Override
@@ -487,10 +502,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		if(mMultiSelectOn) {
 			View v;
 			
-			if (mThumbnail == null)
+			//if (mThumbnail == null)
 				v = mMultiSelect.addFile(file.getPath());
-			else
-				v = mMultiSelect.addFile(file.getPath(), mThumbnail);
+			//else
+			//	v = mMultiSelect.addFile(file.getPath(), mThumbnail);
 			
 			if(v == null)
 				return;
@@ -508,10 +523,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		}
 		
 		if(file.isDirectory() && !mActionModeSelected ) {
-			if (mThumbnail != null) {
+			/* if (mThumbnail != null) {
 				mThumbnail.setCancelThumbnails(true);
 				mThumbnail = null;
-			}
+			} */
 			
 			
 			//setContentPath(file, true);
@@ -729,17 +744,21 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	/**
 	 * 
 	 */
-	private class FileSystemAdapter extends ArrayAdapter<OpenPath> {
+	public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 		private final int KB = 1024;
     	private final int MG = KB * KB;
     	private final int GB = MG * KB;
     	
 		private BookmarkHolder mHolder;
 		private String mName;
+		private ThumbnailCreator mThumbnail;
 		
 		public FileSystemAdapter(Context context, int layout, ArrayList<OpenPath> data) {
 			super(context, layout, data);
+			mThumbnail = new ThumbnailCreator(mContext, handler);
 		}
+		
+		@Override protected void finalize() throws Throwable { mThumbnail.setCancelThumbnails(true); };
 		
 		@Override
 		public void notifyDataSetChanged() {
@@ -753,6 +772,13 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			}
 		}
 		
+		private final Handler handler = new Handler(new Handler.Callback() {
+			public boolean handleMessage(Message msg) {
+				notifyDataSetChanged();
+				return true;
+			}
+		});
+		
 		////@Override
 		public View getView(int position, View view, ViewGroup parent)
 		{
@@ -761,16 +787,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
 			int mWidth = 36, mHeight = 36;
+			if(mShowGrid)
+				mWidth = mHeight = 72;
 			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				if(mShowGrid) {
-					view = in.inflate(R.layout.grid_content_layout, parent, false);
-					mWidth = mHeight = 72;
-				} else
-					view = in.inflate(R.layout.list_content_layout, parent, false);
+				view = in.inflate(mShowGrid ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
 				
 				mHolder = new BookmarkHolder(file, mName, view);
 				
@@ -779,9 +803,6 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			} else {
 				mHolder = (BookmarkHolder)view.getTag();
 			}
-			
-			if (mThumbnail == null)
-				mThumbnail = new ThumbnailCreator(mContext, mWidth, mHeight);
 
 			if(!mShowGrid) {
 				mHolder.setInfo(getFileDetails(file));
@@ -858,27 +879,31 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						mHolder.setIconResource(R.drawable.photo);
 					}
 					
-					BitmapDrawable thumb = mThumbnail.isBitmapCached(file.getPath());
+					Bitmap thumb = mThumbnail.isBitmapCached(file.getPath());
 
 					if (thumb == null) {
-						final Handler handle = new Handler(new Handler.Callback() {
-							public boolean handleMessage(Message msg) {
-								notifyDataSetChanged();
-								return true;
-							}
-						});
-										
-						mThumbnail.createNewThumbnail(mData2, file.getParent().getPath(), handle);
 						
+										
+						//mThumbnail.createNewThumbnail(mData2, file.getParent().getPath(), handle);
+						//mThumbnail.createNewThumbnail(file, mWidth, mHeight);
+						//thumb = ThumbnailCreator.generateThumb(file, mWidth, mHeight).get();
+						new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+						
+						/*
 						try {
-						if (!mThumbnail.isAlive()) 
-							mThumbnail.start();
+							if (!mThumbnail.isAlive()) 
+								mThumbnail.start();
 						} catch(IllegalThreadStateException itse) {
 							Logger.LogError("Unable to start thumbnail cache thread.", itse);
 						}
+						*/
 						
-					} else {
-						mHolder.setIconDrawable(thumb);
+					}
+					if(thumb != null)
+					{
+						BitmapDrawable bd = new BitmapDrawable(thumb);
+						bd.setGravity(Gravity.CENTER);
+						mHolder.setIconDrawable(bd);
 					}
 				
 				} else if(ext.equalsIgnoreCase("mp4") || 
@@ -944,6 +969,60 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				atrs += "w";
 			
 			return t + size + atrs;
+		}
+		
+		public class ThumbnailStruct
+		{
+			public OpenPath File;
+			public int Width = 0, Height = 0;
+			public BookmarkHolder Holder;
+			private SoftReference<Bitmap> mBitmap; 
+			//public Handler Handler;
+			public ThumbnailStruct(OpenPath path, BookmarkHolder holder, int width, int height)
+			{
+				File = path;
+				Holder = holder;
+				//Handler = handler;
+				Width = width;
+				Height = height;
+			}
+			public void setBitmap(SoftReference<Bitmap> thumb)
+			{
+				mBitmap = thumb;
+			}
+			public void updateHolder()
+			{
+				if(Holder != null && mBitmap != null && mBitmap.get() != null)
+					Holder.setIconDrawable(new BitmapDrawable(mBitmap.get()));
+			}
+		}
+		
+		public class ThumbnailTask extends AsyncTask<ThumbnailStruct, Void, ThumbnailStruct[]>
+		{
+			private int iPending = 0;
+			
+			public ThumbnailTask() {
+				
+			}
+			
+			@Override
+			protected ThumbnailStruct[] doInBackground(ThumbnailStruct... params) {
+				ThumbnailStruct[] ret = new ThumbnailStruct[params.length];
+				for(int i = 0; i < params.length; i++)
+				{
+					ret[i] = params[i];
+					ret[i].setBitmap(ThumbnailCreator.generateThumb(ret[i].File, ret[i].Width, ret[i].Height));
+				}
+				return ret;
+			}
+			
+			@Override
+			protected void onPostExecute(ThumbnailStruct[] result) {
+				super.onPostExecute(result);
+				for(ThumbnailStruct t : result)
+					t.updateHolder();
+			}
+			
 		}
 	}
 

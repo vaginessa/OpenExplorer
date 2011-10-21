@@ -21,6 +21,7 @@ package org.brandroid.openmanager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -40,19 +41,19 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnFocusChangeListener;
 import android.widget.SearchView;
 import android.widget.Toast;
 import java.util.ArrayList;
 
+import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
-import org.brandroid.openmanager.fragments.ContentFragment.FileIOCommand;
-import org.brandroid.openmanager.fragments.ContentFragment.FileIOCommandType;
-import org.brandroid.openmanager.fragments.ContentFragment.FileIOTask;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
@@ -64,7 +65,7 @@ public class OpenExplorer
 	private static final int MENU_SEARCH = 		0x1;
 	private static final int MENU_MULTI =		0x2;
 	private static final int MENU_SETTINGS = 	0x3;
-	private static final int MENU_MODE	=		0x4;
+	//private static final int MENU_MODE	=		0x4;
 	private static final int MENU_SORT = 		0x5;
 	private static final int PREF_CODE =		0x6;
 	
@@ -81,6 +82,7 @@ public class OpenExplorer
 	private ActionMode mActionMode;
 	private ArrayList<OpenPath> mHeldFiles;
 	private int mLastBackIndex = -1;
+	private String mLastPath = "";
 	private BroadcastReceiver storageReceiver;
 	
 	private Fragment mFavoritesFragment;
@@ -120,11 +122,33 @@ public class OpenExplorer
         	mFavoritesFragment = new BookmarkFragment();
         
         //BookmarkFragment.setOnChangeLocationListener(this);
+
+		refreshCursors();
+        
+        OpenPath path = null;
+        if(savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals(""))
+        {
+        	String last = savedInstanceState.getString("last");
+        	if(last.startsWith("/"))
+        		path = new OpenFile(last);
+        	else if(last.indexOf(":/") > -1)
+        		path = new OpenFTP(last, null, new FTPManager());
+        	else if(last.equals("Videos"))
+        		path = new OpenCursor(getVideoCursor(), "Videos");
+        	else if(last.equals("Photos"))
+        		path = new OpenCursor(getPhotoCursor(), "Photos");
+        	else
+        		path = new OpenFile(last);
+        	updateTitle(path.getPath());
+        } else
+        	path = new OpenFile(Environment.getExternalStorageDirectory());
+        
+        Logger.LogDebug("Creating with " + path.getPath());
         
         FragmentTransaction ft = fragmentManager.beginTransaction();
         ft.replace(mSinglePane ? R.id.content_frag : R.id.list_frag, mFavoritesFragment);
         if(!mSinglePane)
-        	ft.replace(R.id.content_frag, new ContentFragment());
+        	ft.replace(R.id.content_frag, new ContentFragment(path));
         ft.commit();
         
         /*
@@ -178,8 +202,6 @@ public class OpenExplorer
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
 		filter.addDataScheme("file");
 		registerReceiver(storageReceiver, filter);
-
-		refreshCursors();
         
         /* read and display the users preferences */
         //mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
@@ -188,12 +210,13 @@ public class OpenExplorer
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
     	super.onPostCreate(savedInstanceState);
+    	/*
     	if(mSettingsListener != null)
         {
 	        mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
 			mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
 			mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
-        }
+        } */
     }
     
     @Override
@@ -210,13 +233,13 @@ public class OpenExplorer
         if(mPhotoCursor == null)
         	mPhotoCursor = managedQuery(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
         		new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-				MediaStore.Images.Media.SIZE + " > 0", null,
+				MediaStore.Images.Media.SIZE + " > 10000", null,
 				MediaStore.Images.Media.DATE_ADDED + " DESC");
         else mPhotoCursor.requery();
         if(mVideoCursor == null)
         	mVideoCursor = managedQuery(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
         		new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-				MediaStore.Video.Media.SIZE + " > 0", null,
+				MediaStore.Video.Media.SIZE + " > 100000", null,
 				MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 				MediaStore.Video.Media.DATE_MODIFIED + " DESC");
         else mVideoCursor.requery();
@@ -241,7 +264,7 @@ public class OpenExplorer
     	Logger.LogDebug("getDirContentFragment");
     	Fragment ret = fragmentManager.findFragmentById(R.id.content_frag);
     	if(ret == null || !ret.getClass().equals(ContentFragment.class))
-   			ret = new ContentFragment();
+   			ret = new ContentFragment(new OpenFile(mLastPath));
     	if(activate)
     	{
     		Logger.LogDebug("Activating content fragment");
@@ -542,12 +565,20 @@ public class OpenExplorer
     		e.commit();
     	}
     }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+    	super.onSaveInstanceState(outState);
+    	if(mLastPath == null || mLastPath.equals("")) return;
+    	Logger.LogDebug("Saving " + mLastPath);
+    	outState.putString("last", mLastPath);
+    }
 
 
 	public void goBack()
 	{
 		//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.PREV, mFileManager.getLastPath()));
-		OpenPath last = mFileManager.getLastPath();
+		OpenPath last = mFileManager.popStack();
 		if(last == null) return;
 		Logger.LogDebug("Going back to " + last.getPath());
 		changePath(last, false);
@@ -556,21 +587,28 @@ public class OpenExplorer
 	
 	public void onBackStackChanged() {
 		int i = fragmentManager.getBackStackEntryCount();
-		if(i < mLastBackIndex)
+		final Boolean isBack = i < mLastBackIndex;
+		BackStackEntry entry = null;
+		if(i > 0) entry = fragmentManager.getBackStackEntryAt(i - 1);
+		Logger.LogDebug("Back Stack " + i + (entry != null ? ": " + entry.getBreadCrumbTitle() : ""));
+		if(isBack)
 		{
 			if(i > 0)
 			{
-				BackStackEntry entry = fragmentManager.getBackStackEntryAt(i - 1);
 				if(entry != null && entry.getBreadCrumbTitle() != null)
 					updateTitle(entry.getBreadCrumbTitle().toString());
 				else
 					updateTitle("");
-			} else updateTitle("");
+			} else if (mSinglePane) updateTitle("");
+			else {
+				updateTitle("");
+				//showToast("Press back again to exit.");
+			}
 		}
-		if(i < mLastBackIndex && mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
+		if(isBack && mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
 		{
 			goBack();
-		} else if(mSinglePane)
+		} else if(mSinglePane && isBack)
 		{
 			if(findViewById(R.id.list_frag) != null && findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			{
@@ -628,16 +666,29 @@ public class OpenExplorer
 
 	public void changePath(OpenPath path, Boolean addToStack)
 	{
+		if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		ContentFragment content = new ContentFragment(path);
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		ft.replace(R.id.content_frag, content);
 		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		if(addToStack)
+		{
+			int bsCount = fragmentManager.getBackStackEntryCount();
+			if(bsCount > 0)
+			{
+				BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
+				Logger.LogDebug("Changing " + entry.getBreadCrumbTitle() + " to " + path.getPath() + "? " + (entry.getBreadCrumbTitle().toString().equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
+				if(entry.getBreadCrumbTitle().toString().equalsIgnoreCase(path.getPath()))
+					return;
+			}
+			mFileManager.pushStack(path);
 			ft.addToBackStack("path");
-		ft.setBreadCrumbTitle(path.getPath());
+		}
 		Logger.LogDebug("Setting path to " + path.getPath());
+		ft.setBreadCrumbTitle(path.getPath());
 		updateTitle(path.getPath());
 		ft.commit();
+		mLastPath = path.getPath();
 	}
 	public void onChangeLocation(OpenPath path) {
 		changePath(path, true);

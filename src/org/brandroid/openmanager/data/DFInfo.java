@@ -48,11 +48,23 @@ public class DFInfo
 	public static Hashtable<String, DFInfo> LoadDF()
 	{
 		if(mDefault != null) return mDefault;
-		Process dfProc;
+		Process dfProc = null;
 		DataInputStream is = null;
 		mDefault = new Hashtable<String, DFInfo>();
 		try {
-			dfProc = Runtime.getRuntime().exec("busybox df -h");
+			Boolean handled = false;
+			try {
+				dfProc = Runtime.getRuntime().exec("busybox df -h\n");
+				handled = true;
+			} catch(IOException ex) {
+				Logger.LogWarning("busybox failed");
+			}
+			if(!handled)
+			{
+				dfProc = Runtime.getRuntime().exec("df");
+				handled = true;
+			}
+			if(!handled) return null;
 			is = new DataInputStream(dfProc.getInputStream());
 			String sl;
 			while((sl = is.readLine()) != null)

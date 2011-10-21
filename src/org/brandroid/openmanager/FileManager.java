@@ -439,13 +439,7 @@ public class FileManager {
 		mOpenCache.put(path, file);
 		return file;
 	}
-	
-	public OpenPath getLastPath()
-	{
-		mPathStack.pop();
-		return mPathStack.peek();
-	}
-	
+		
 	public OpenPath[] getChildren(OpenPath directory)
 	{
 		//mDirContent.clear();
