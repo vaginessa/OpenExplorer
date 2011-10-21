@@ -22,7 +22,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -30,7 +29,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.provider.MediaStore.Images.Media;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -41,28 +39,20 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.CompoundButton;
-import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-
-import java.io.File;
 import java.util.ArrayList;
 
-import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
+import org.brandroid.openmanager.fragments.BookmarkFragment.OnChangeLocationListener;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.DirContentActivity;
-import org.brandroid.openmanager.fragments.DirListFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
-public class OpenExplorer extends FragmentActivity implements OnBackStackChangedListener {	
+public class OpenExplorer extends FragmentActivity implements OnBackStackChangedListener, OnChangeLocationListener {	
 	//menu IDs
 	private static final int MENU_DIR = 		0x0;
 	private static final int MENU_SEARCH = 		0x1;
@@ -77,16 +67,17 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private static final int MENU_ID_CUT = 14;
 	private static final int MENU_ID_SEND = 15;
 	
+	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
+	
 	private static OnSettingsChangeListener mSettingsListener;
 	private SharedPreferences mPreferences;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
 	private ArrayList<OpenPath> mHeldFiles;
-	private boolean mBackQuit = false;
 	private int mLastBackIndex = -1;
 	private BroadcastReceiver storageReceiver;
 	
-	private Fragment mFavoritesFragment;
+	private Fragment mFavoritesFragment, mContentFragment;
 	
 	private EventHandler mEvHandler;
 	private FileManager mFileManger;
@@ -94,6 +85,8 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	private FragmentManager fragmentManager;
 	
 	private Cursor mPhotoCursor, mVideoCursor;
+	
+	private Boolean mSinglePane = false;
     
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,15 +101,26 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         if(findViewById(R.id.title_bar) != null)
         	findViewById(R.id.title_bar).setVisibility(View.GONE);
         
+        if(findViewById(R.id.list_frag) == null)
+        	mSinglePane = true;
+        else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
+        	mSinglePane = true;
+        
         fragmentManager = getSupportFragmentManager();
         fragmentManager.addOnBackStackChangedListener(this);
         
         //mTreeFragment = new DirListFragment();
-        mFavoritesFragment = new BookmarkFragment();
+        if(mFavoritesFragment == null)
+        	mFavoritesFragment = new BookmarkFragment();
+        if(mContentFragment == null)
+        	mContentFragment = new DirContentActivity();
+        
+        BookmarkFragment.setOnChangeLocationListener(this);
         
         FragmentTransaction ft = fragmentManager.beginTransaction();
-        ft.add(R.id.list_frag, mFavoritesFragment);
-        ft.add(R.id.content_frag, new DirContentActivity());
+        ft.replace(mSinglePane ? R.id.content_frag : R.id.list_frag, mFavoritesFragment);
+        if(!mSinglePane)
+        	ft.replace(R.id.content_frag, mContentFragment);
         ft.commit();
         
         /*
@@ -127,11 +131,11 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
         */
         //getFragmentManager().findFragmentById(R.id.content_frag);
                         
-        mEvHandler = getDirContentFragment().getEventHandlerInst();
-        mFileManger = getDirContentFragment().getFileManagerInst();
+        mEvHandler = getDirContentFragment(false).getEventHandlerInst();
+        mFileManger = getDirContentFragment(false).getFileManagerInst();
         
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if(Build.VERSION.SDK_INT >= 11)
+        if(!BEFORE_HONEYCOMB)
         {
 	        mSearchView = new SearchView(this);
 	        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -170,20 +174,26 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
 		filter.addDataScheme("file");
 		registerReceiver(storageReceiver, filter);
+
+		refreshCursors();
         
         /* read and display the users preferences */
-        if(mSettingsListener != null)
+        //mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+    }
+    
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+    	super.onPostCreate(savedInstanceState);
+    	if(mSettingsListener != null)
         {
 	        mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
 			mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, true));
 			mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
         }
-		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
-        refreshCursors();
     }
     
-    public Cursor getPhotoCursor() { return mPhotoCursor; }
-    public Cursor getVideoCursor() { return mVideoCursor; }
+    public Cursor getPhotoCursor() { if(mPhotoCursor == null) refreshCursors(); return mPhotoCursor; }
+    public Cursor getVideoCursor() { if(mVideoCursor == null) refreshCursors(); return mVideoCursor; }
     
     @Override
     protected void onDestroy() {
@@ -222,18 +232,27 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     	}
     }
     
-    public DirContentActivity getDirContentFragment()
+    public DirContentActivity getDirContentFragment(Boolean activate)
     {
-    	Fragment frag = fragmentManager.findFragmentById(R.id.content_frag);
-    	if(frag != null && frag.getClass().equals(DirContentActivity.class))
-    		return (DirContentActivity)fragmentManager.findFragmentById(R.id.content_frag);
-    	else {
-    		frag = new DirContentActivity();
-    		FragmentTransaction ft = fragmentManager.beginTransaction();
-    		ft.replace(R.id.content_frag, frag);
-    		ft.commit();
-    		return (DirContentActivity)frag;
+    	//Logger.LogDebug("getDirContentFragment");
+    	if(mContentFragment == null)
+    	{
+    		if(mSinglePane)
+    			mContentFragment = new DirContentActivity();
+    		else {
+    			mContentFragment = fragmentManager.findFragmentById(R.id.content_frag);
+    			if(mContentFragment == null || !mContentFragment.getClass().equals(DirContentActivity.class))
+    				mContentFragment = new DirContentActivity();
+    		}
     	}
+    	if(activate && mSinglePane)
+    	{
+    		FragmentTransaction ft = fragmentManager.beginTransaction();
+    		ft.replace(R.id.content_frag, mContentFragment);
+    		ft.commit();
+    	}
+    	
+   		return (DirContentActivity)mContentFragment;
     }
     
     public void updateTitle(String s)
@@ -312,7 +331,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    			
 	    			
 	    			public void onDestroyActionMode(ActionMode mode) {			
-	    				getDirContentFragment().changeMultiSelectState(false, handler);
+	    				getDirContentFragment(false).changeMultiSelectState(false, handler);
 	    				
 	    				mActionMode = null;
 	    				handler = null;
@@ -328,7 +347,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    				menu.add(0, MENU_ID_CUT, 0, "Cut");
 	    				menu.add(0, MENU_ID_SEND, 0, "Send");
 	    				
-	    				getDirContentFragment().changeMultiSelectState(true, handler);
+	    				getDirContentFragment(false).changeMultiSelectState(true, handler);
 	    				
 	    				return true;
 	    			}
@@ -359,7 +378,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    				
 	    				case 13: /* copy */
 	    					getActionBar().setTitle("Holding " + files.size() + " File");
-	    					getDirContentFragment().setCopiedFiles(mHeldFiles, false);
+	    					getDirContentFragment(false).setCopiedFiles(mHeldFiles, false);
 	    					
 	    					Toast.makeText(OpenExplorer.this, 
 	    								   "Tap the upper left corner to see your held files",
@@ -369,7 +388,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	    					
 	    				case 14: /* cut */
 	    					getActionBar().setTitle("Holding " + files.size() + " File");
-	    					getDirContentFragment().setCopiedFiles(mHeldFiles, true);
+	    					getDirContentFragment(false).setCopiedFiles(mHeldFiles, true);
 	    					
 	    					Toast.makeText(OpenExplorer.this, 
 	    							   "Tap the upper left corner to see your held files",
@@ -502,7 +521,7 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
     
     protected void onPause() {
     	super.onPause();
-    	Fragment fragList = fragmentManager.findFragmentById(R.id.list_frag);
+    	Fragment fragList = fragmentManager.findFragmentById(mSinglePane ? R.id.content_frag : R.id.list_frag);
     	String list = "", bookmark = "";
     	if(fragList.getClass().equals(BookmarkFragment.class))
     	{
@@ -529,8 +548,14 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	
 	public void onBackStackChanged() {
 		int i = fragmentManager.getBackStackEntryCount();
-		if(i < mLastBackIndex)
-			getDirContentFragment().goBack();
+		if(i < mLastBackIndex && mFileManger != null && mFileManger.getStack() != null && mFileManger.getStack().size() > 0)
+			getDirContentFragment(true).goBack();
+		else if(mSinglePane)
+		{
+			FragmentTransaction ft = fragmentManager.beginTransaction();
+			ft.show(mFavoritesFragment);
+			ft.commit();
+		}
 		mLastBackIndex = i;
 	}
 	
@@ -566,6 +591,16 @@ public class OpenExplorer extends FragmentActivity implements OnBackStackChanged
 	public void showBookmarkTitles() {
 		BookmarkFragment bf = ((BookmarkFragment)fragmentManager.findFragmentById(R.id.list_frag));
 		bf.showTitles();
+	}
+
+	public void onChangeLocation(OpenPath path) {
+		if(mSinglePane)
+		{
+			FragmentTransaction ft = fragmentManager.beginTransaction();
+			ft.replace(R.id.content_frag, new DirContentActivity(path));
+			ft.addToBackStack("path");
+			ft.commit();
+		} else ((DirContentActivity)fragmentManager.findFragmentById(R.id.content_frag)).onChangeLocation(path);
 	}
 	
 }

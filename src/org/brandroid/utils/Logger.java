@@ -77,16 +77,20 @@ public class Logger
 	public static void LogError(String msg, Error ex)
 	{
 		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return;
-		ex.setStackTrace(getMyStackTrace(ex));
+		StackTraceElement[] trace = getMyStackTrace(ex);
+		ex.setStackTrace(trace);
 		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
-		Log.e(LOG_KEY, msg, ex);
+		Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
 	public static void LogError(String msg, Exception ex)
 	{
 		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return;
-		ex.setStackTrace(getMyStackTrace(ex));
+		StackTraceElement[] trace = getMyStackTrace(ex);
+		if(trace.length == 0)
+			trace = ex.getStackTrace();
+		ex.setStackTrace(trace);
 		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
-		Log.e(LOG_KEY, msg, ex);
+		Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
 	public static void LogWarning(String msg)
 	{
@@ -97,16 +101,18 @@ public class Logger
 	public static void LogWarning(String msg, Error w)
 	{
 		if(CheckLastLog(w.getMessage(), Log.WARN)) return;
-		w.setStackTrace(getMyStackTrace(w));
+		StackTraceElement[] trace = getMyStackTrace(w);
+		w.setStackTrace(trace);
 		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
-		Log.w(LOG_KEY, msg, w);
+		Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
 	}
 	public static void LogWarning(String msg, Exception w)
 	{
 		if(CheckLastLog(w.getMessage(), Log.WARN)) return;
-		w.setStackTrace(getMyStackTrace(w));
+		StackTraceElement[] trace = getMyStackTrace(w);
+		w.setStackTrace(trace);
 		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
-		Log.w(LOG_KEY, msg, w);
+		Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
 	}
 	public static void LogInfo(String msg)
 	{

@@ -106,8 +106,9 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 	private ListView mList = null;
 	private boolean mShowGrid;
 	
+	private OpenPath mPath = null;
 	private OpenPath[] mData; 
-	private ArrayList<OpenPath> mData2; //the data that is bound to our array adapter.
+	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private ArrayList<OpenPath> mHoldingFileList; //holding files waiting to be pasted(moved)
 	private ArrayList<OpenPath> mHoldingZipList; //holding zip files waiting to be unzipped.
 	private Context mContext;
@@ -125,6 +126,15 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		public void onBookMarkAdd(String path);
 	}
 	
+	public DirContentActivity()
+	{
+		
+	}
+	public DirContentActivity(OpenPath path)
+	{
+		mPath = path;
+	}
+	
 	//@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -134,9 +144,14 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mHandler = new EventHandler(mContext, mFileMang);
 		mHandler.setOnWorkerThreadFinishedListener(this);
 		
-		mData2 = new ArrayList<OpenPath>();
+		if(mData2 == null)
+			mData2 = new ArrayList<OpenPath>();
+		else
+			mData2.clear();
 		
-		OpenPath path = new OpenFile(Environment.getExternalStorageDirectory());
+		OpenPath path = mPath;
+		if(path == null)
+			path = new OpenFile(Environment.getExternalStorageDirectory());
 		if (savedInstanceState != null)
 			path = new OpenFile(savedInstanceState.getString("location"));
 		else
@@ -155,7 +170,6 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, true);
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
-		BookmarkFragment.setOnChangeLocationListener(this);
 		
 		updateData(mData);
 	}
@@ -192,7 +206,10 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 		mList = (ListView)v.findViewById(R.id.list_listview);
 		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
 
-		updateChosenMode(mShowGrid ? mGrid : mList);
+		if(mGrid == null && mList == null)
+			Logger.LogError("WTF, where are they?");
+		else
+			updateChosenMode(mShowGrid ? mGrid : mList);
 	}
 	
 	public void updateChosenMode(AbsListView mChosenMode)
@@ -217,7 +234,7 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 				OpenPath file = mData2.get(pos);
 				
 				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					if(Build.VERSION.SDK_INT >= 11)
+					if(OpenExplorer.BEFORE_HONEYCOMB)
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
 						//@Override
 						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -679,7 +696,24 @@ public class DirContentActivity extends Fragment implements OnItemClickListener,
 			mShowGrid = false;
 		else if (state.equals("grid") && !mShowGrid)
 			mShowGrid = true;
-		updateChosenMode(mShowGrid ? mGrid : mList);
+		
+		View v = getView();
+		if(v != null)
+		{
+			if(mPathView == null)
+				mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
+			if(mGrid == null)
+				mGrid = (GridView)v.findViewById(R.id.grid_gridview);
+			if(mList == null)
+				mList = (ListView)v.findViewById(R.id.list_listview);
+			if(mMultiSelectView == null)
+				mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
+		}
+
+		if(mGrid == null && mList == null)
+			Logger.LogError("WTF, where are they?");
+		else
+			updateChosenMode(mShowGrid ? mGrid : mList);
 	}
 			
 	public void changeMultiSelectState(boolean state, MultiSelectHandler handler) {

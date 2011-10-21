@@ -21,15 +21,10 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
-import org.brandroid.openmanager.R.drawable;
-import org.brandroid.openmanager.R.id;
-import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.DFInfo;
 import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DirContentActivity.OnBookMarkAddListener;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
@@ -39,43 +34,28 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.Cursor;
 import android.graphics.Color;
-import android.hardware.usb.UsbAccessory;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.app.AlertDialog;
-import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.LinearLayout.LayoutParams;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class BookmarkFragment extends ListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
@@ -112,6 +92,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	public void scanBookmarks()
 	{
+		Logger.LogDebug("Scanning bookmarks...");
 		OpenCursor mPhotoCursor = new OpenCursor(((OpenExplorer)getActivity()).getPhotoCursor(), "Photos");
 		OpenCursor mVideoCursor = new OpenCursor(((OpenExplorer)getActivity()).getVideoCursor(), "Videos");
 		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
@@ -185,9 +166,16 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		else return false;
 	}
 	
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		//Logger.LogDebug("Bookmark View Created");
+	}
 	
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		
+		//Logger.LogDebug("Bookmark Fragment Created");
 		
 		ListView lv = getListView();		
 		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -195,6 +183,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		lv.setDrawSelectorOnTop(true);
 		lv.setOnItemLongClickListener(this);
 		//lv.setBackgroundResource(R.drawable.listgradback);
+		
+		//Logger.LogDebug(mBookmarks.size() + " bookmarks");
 		
 		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarks);
 		registerForContextMenu(lv);
@@ -206,7 +196,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	
 	public void onListItemClick(ListView list, View view, int pos, long id) {
-		ImageView v;
+		//ImageView v;
 		
 		//if(mLastIndicater != null)
 		//	mLastIndicater.setVisibility(View.GONE);
@@ -220,6 +210,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		
 		if(mChangeLocList != null)
 			mChangeLocList.onChangeLocation(mBookmarks.get(pos));
+		else
+			Logger.LogWarning("No location change listener?");
 	}
 	
 	
