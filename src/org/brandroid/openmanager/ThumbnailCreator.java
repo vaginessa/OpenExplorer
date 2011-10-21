@@ -134,13 +134,17 @@ public class ThumbnailCreator extends Thread {
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
 				opts.outWidth = mWidth;
-				opts.outHeight = mHeight;
+				//opts.outHeight = mHeight;
 				opts.inSampleSize = 1;
 				Bitmap bmp = null;
+				int w = om.getWidth();
+				int h = om.getHeight();
+				if(w > 0 && h > 0)
+					opts.outHeight = mHeight = (int)(mWidth * ((double)h / (double)w));
 				if(om.getParent().getName().equals("Photos"))
 					bmp = MediaStore.Images.Thumbnails.getThumbnail(
 								mContext.getContentResolver(),
-								om.getMediaID(), MediaStore.Images.Thumbnails.MINI_KIND, opts
+								om.getMediaID(), MediaStore.Images.Thumbnails.MICRO_KIND, opts
 							);
 				else if(om.getParent().getName().equals("Videos"))
 					bmp = MediaStore.Video.Thumbnails.getThumbnail(
@@ -148,10 +152,15 @@ public class ThumbnailCreator extends Thread {
 								om.getMediaID(), MediaStore.Video.Thumbnails.MINI_KIND, opts
 							);
 				if(bmp != null) {
-					int w = bmp.getWidth();
-					int h = bmp.getHeight();
-					mHeight = (int)(mWidth * ((double)h / (double)w));
-					mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false));
+					w = bmp.getWidth();
+					h = bmp.getHeight();
+					if(w > mWidth)
+					{
+						//mHeight = (int)(mWidth * ((double)h / (double)w));
+						//Logger.LogDebug("Bitmap is " + w + "x" + h + " to " + mWidth + "x" + mHeight);	
+						bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false);
+					}
+					mThumb = new SoftReference<Bitmap>(bmp);
 					valid = true;
 				}
 			}
@@ -277,7 +286,7 @@ public class ThumbnailCreator extends Thread {
 					for(int vi = 0; vi < mVideoCursor.getCount(); vi++)
 					{
 						mVideoCursor.moveToPosition(vi);
-						id = mVideoCursor.getInt(mVideoCursor.getColumnIndex(MediaStore.Video.Media._ID));
+						id = mVideoCursor.getInt(0);
 						String name = mVideoCursor.getString(mVideoCursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME));
 						if(name.equalsIgnoreCase(file.getName()))
 							break;
@@ -291,6 +300,7 @@ public class ThumbnailCreator extends Thread {
 					mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(BitmapFactory.decodeResource(mContext.getResources(), R.drawable.movie), mWidth, mHeight, false));
 			}
 		}
+		
 		if(mThumb != null)
 			mCacheMap.put(file.getPath(), mThumb.get());
 		return mThumb;

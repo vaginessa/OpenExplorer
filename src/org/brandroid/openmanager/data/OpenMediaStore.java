@@ -19,6 +19,7 @@ public class OpenMediaStore extends OpenPath
 	private OpenFile mFile = null;
 	private long size = -1;
 	private long modified = -1;
+	private int width = 0, height = 0;
 	
 	public OpenMediaStore(OpenCursor parent)
 	{
@@ -41,8 +42,21 @@ public class OpenMediaStore extends OpenPath
 			if(mFile != null)
 				modified = mFile.lastModified();
 		}
+		try {
+			width = cursor.getInt(cursor.getColumnIndexOrThrow("width"));
+		} catch(Exception e) {
+			width = 0;
+		}
+		try {
+			height = cursor.getInt(cursor.getColumnIndexOrThrow("height"));
+		} catch(Exception e) {
+			height = 0;
+		}
 				
 	}
+	
+	public int getWidth() { return width; }
+	public int getHeight() { return height; }
 
 	@Override
 	public String getName() {

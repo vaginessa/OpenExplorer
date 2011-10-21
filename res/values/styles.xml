@@ -22,11 +22,11 @@
         <item name="android:singleLine">true</item>
     </style>
     <style name="icon.big" parent="@android:style/Theme.Holo">
-    	<item name="android:layout_width">48dip</item>
-		<item name="android:layout_height">48dip</item>
+    	<item name="android:layout_width">96dp</item>
+		<item name="android:layout_height">wrap_content</item>
     </style>
     <style name="icon.small" parent="@android:style/Theme.Holo">
-    	<item name="android:layout_width">36dip</item>
-		<item name="android:layout_height">36dip</item>
+    	<item name="android:layout_width">36dp</item>
+		<item name="android:layout_height">36dp</item>
     </style>
 </resources>
