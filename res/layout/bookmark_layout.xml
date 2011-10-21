@@ -18,8 +18,7 @@
  -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="horizontal"
-	android:layout_width="match_parent"
+	android:layout_width="wrap_content"
 	android:layout_height="wrap_content"
 	android:gravity="center_vertical|left"
 	android:paddingLeft="4dp"
@@ -66,9 +65,10 @@
 	<ProgressBar
 		style="?android:attr/progressBarStyleHorizontal"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
+		android:layout_height="10dp"
 		android:id="@+id/size_bar"
 		android:layout_below="@+id/content_text"
+		android:layout_toLeftOf="@+id/eject"
 		android:layout_alignLeft="@+id/content_text"
 		/>
 	

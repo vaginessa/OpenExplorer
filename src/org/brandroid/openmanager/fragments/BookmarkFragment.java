@@ -26,7 +26,7 @@ import org.brandroid.openmanager.data.DFInfo;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.fragments.DirContentActivity.OnBookMarkAddListener;
+import org.brandroid.openmanager.fragments.ContentFragment.OnBookMarkAddListener;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
@@ -47,7 +47,6 @@ import android.view.LayoutInflater;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ArrayAdapter;
@@ -61,7 +60,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 															 OnItemLongClickListener{
 	private static int BOOKMARK_POS = 6;
 	
-	private static OnChangeLocationListener mChangeLocList;
 	private ArrayList<OpenPath> mBookmarks;
 	private Context mContext;
 	//private ImageView mLastIndicater = null;
@@ -70,12 +68,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private String mBookmarkString;
 	private Boolean mHasExternal = false;
 	private Boolean mShowTitles = true;
-
-	public interface OnChangeLocationListener {
-		void onChangeLocation(OpenPath path);
-	}
-	
-	
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -190,28 +182,13 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		registerForContextMenu(lv);
 		setListAdapter(mBookmarkAdapter);
 		
-		DirContentActivity.setOnBookMarkAddListener(this);
+		ContentFragment.setOnBookMarkAddListener(this);
 		
 	}
 	
 	
 	public void onListItemClick(ListView list, View view, int pos, long id) {
-		//ImageView v;
-		
-		//if(mLastIndicater != null)
-		//	mLastIndicater.setVisibility(View.GONE);
-			
-		//v.setVisibility(View.VISIBLE);
-		//mLastIndicater = v;
-		
-		
-		
-		//getFragmentManager().popBackStackImmediate("Settings", 0);
-		
-		if(mChangeLocList != null)
-			mChangeLocList.onChangeLocation(mBookmarks.get(pos));
-		else
-			Logger.LogWarning("No location change listener?");
+		((OpenExplorer)getActivity()).onChangeLocation(mBookmarks.get(pos));
 	}
 	
 	
@@ -355,10 +332,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		
 		buildDirString();
 		mBookmarkAdapter.notifyDataSetChanged();
-	}
-	
-	public static void setOnChangeLocationListener(OnChangeLocationListener l) {
-		mChangeLocList = l;
 	}
 	
 	public String getDirListString() {

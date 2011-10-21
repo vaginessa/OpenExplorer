@@ -40,7 +40,7 @@ public class DFInfo
 		else if(s.endsWith("T"))
 			level = 4;
 		try {
-			double sz = Integer.parseInt(s.replaceAll("[^0-9\\.]", ""));
+			double sz = Double.parseDouble(s.replaceAll("[^0-9\\.]", ""));
 			sz *= (1024 ^ level);
 			return (int)Math.floor(sz);
 		} catch(Exception e) { Logger.LogError("Unable to get size from [" + s + "]", e); return -1; }
@@ -50,14 +50,10 @@ public class DFInfo
 		if(mDefault != null) return mDefault;
 		Process dfProc;
 		DataInputStream is = null;
-		DataOutputStream os = null;
 		mDefault = new Hashtable<String, DFInfo>();
 		try {
-			dfProc = Runtime.getRuntime().exec("df");
+			dfProc = Runtime.getRuntime().exec("busybox df -h");
 			is = new DataInputStream(dfProc.getInputStream());
-			os = new DataOutputStream(dfProc.getOutputStream());
-			os.writeBytes("df\n");
-			os.flush();
 			String sl;
 			while((sl = is.readLine()) != null)
 			{
@@ -76,8 +72,6 @@ public class DFInfo
 			Logger.LogError("DF: Couldn't get Drive sizes.", e);
 		} finally {
 			try {
-				if(os != null)
-					os.close();
 				if(is != null)
 					is.close();
 			} catch (IOException e) {
