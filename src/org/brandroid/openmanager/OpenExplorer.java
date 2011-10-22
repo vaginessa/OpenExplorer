@@ -19,6 +19,7 @@
 package org.brandroid.openmanager;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -45,9 +46,11 @@ import android.widget.SearchView;
 import android.widget.Toast;
 import java.util.ArrayList;
 
+import org.brandroid.openmanager.data.FileSystemAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -93,6 +96,7 @@ public class OpenExplorer
 	private FragmentManager fragmentManager;
 	
 	private Cursor mPhotoCursor, mVideoCursor;
+	private OpenCursor mPhotoParent, mVideoParent;
 	
 	private Boolean mSinglePane = false;
     
@@ -243,6 +247,45 @@ public class OpenExplorer
 				MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 				MediaStore.Video.Media.DATE_MODIFIED + " DESC");
         else mVideoCursor.requery();
+        mPhotoParent = new OpenCursor(mPhotoCursor, "Photos");
+        mVideoParent = new OpenCursor(mVideoCursor, "Videos");
+        ensureCursorCache();
+    }
+    public void ensureCursorCache()
+    {
+    	ThumbnailCreator.setContext(this);
+    	// group into blocks
+    	int enSize = 6;
+    	ArrayList<OpenPath> buffer = new ArrayList<OpenPath>(enSize);
+    	for(OpenMediaStore ms : mPhotoParent.list())
+    	{
+    		buffer.add(ms);
+    		if(buffer.size() == enSize)
+    		{
+    			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
+    			buffer.toArray(buff);
+    			buffer.clear();
+    			new EnsureCursorCacheTask().execute(buff);
+    		}
+    	}
+    	for(OpenMediaStore ms : mVideoParent.list())
+    	{
+    		buffer.add(ms);
+    		if(buffer.size() == enSize)
+    		{
+    			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
+    			buffer.toArray(buff);
+    			buffer.clear();
+    			new EnsureCursorCacheTask().execute(buff);
+    		}
+    	}
+    	if(buffer.size() > 0)
+    	{
+    		OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
+			buffer.toArray(buff);
+			buffer.clear();
+			new EnsureCursorCacheTask().execute(buff);
+    	}
     }
     
     public void refreshBookmarks()
@@ -708,6 +751,31 @@ public class OpenExplorer
 	public void setEventHandler(EventHandler handler)
 	{
 		mEvHandler = handler;
+	}
+	
+	public class EnsureCursorCacheTask extends AsyncTask<OpenPath, Void, Void>
+	{
+		@Override
+		protected Void doInBackground(OpenPath... params) {
+			int done = 0;
+			for(OpenPath path : params)
+			{
+				if(path.isDirectory())
+				{
+					for(OpenPath kid : path.list())
+					{
+						ThumbnailCreator.generateThumb(kid, 72, 72);
+						done++;
+					}
+				} else {
+					ThumbnailCreator.generateThumb(path, 72, 72);
+					done++;
+				}
+			}
+			Logger.LogDebug("cursor cache of " + done + " generated.");
+			return null;
+		}
+		
 	}
 }
 

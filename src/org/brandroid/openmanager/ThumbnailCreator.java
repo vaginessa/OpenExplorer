@@ -19,6 +19,7 @@
 package org.brandroid.openmanager;
 
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.drawable.BitmapDrawable;
@@ -42,6 +43,9 @@ import java.util.ArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -54,7 +58,7 @@ import org.brandroid.utils.Logger;
 
 public class ThumbnailCreator extends Thread {
 	private SoftReference<Bitmap> mThumb;
-	private static HashMap<String, Bitmap> mCacheMap = null;
+	private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
 	private ArrayList<ThumbnailStruct> mPending;
 	private Handler mHandler;
 	
@@ -66,10 +70,9 @@ public class ThumbnailCreator extends Thread {
 		mContext = context;
 		mPending = new ArrayList<ThumbnailStruct>();
 		mHandler = handler;
-		
-		if(mCacheMap == null)
-			mCacheMap = new HashMap<String, Bitmap>();
 	}
+	
+	public static void setContext(Context c) { mContext = c; }
 	
 	public Bitmap isBitmapCached(String name) {
 		return mCacheMap.get(name);
@@ -119,15 +122,24 @@ public class ThumbnailCreator extends Thread {
 		SoftReference<Bitmap> mThumb = null;
 		//final Handler mHandler = next.Handler;
 		
+		String mCacheFilename = file.getPath().replace("/", "_") + "_" + mWidth + "x" + mHeight + ".jpg";
+		
 		//we already loaded this thumbnail, just return it.
-		if (mCacheMap.containsKey(file.getPath())) 
+		if (mCacheMap.containsKey(mCacheFilename)) 
 		{
-			Bitmap bd = mCacheMap.get(file.getPath());
+			Bitmap bd = mCacheMap.get(mCacheFilename);
 			mThumb = new SoftReference<Bitmap>(bd);
 			return mThumb;
-
-			//we havn't loaded it yet, lets make it. 
-		} else {
+		}
+		Bitmap bmp = loadThumbnail(mCacheFilename);
+		if(bmp != null)
+		{
+			mCacheMap.put(mCacheFilename, bmp);
+			mThumb = new SoftReference<Bitmap>(bmp);
+			return mThumb;
+		}
+		if(mThumb == null)
+		{
 			Boolean valid = false;
 			if (file.getClass().equals(OpenMediaStore.class))
 			{
@@ -136,7 +148,6 @@ public class ThumbnailCreator extends Thread {
 				opts.outWidth = mWidth;
 				//opts.outHeight = mHeight;
 				opts.inSampleSize = 1;
-				Bitmap bmp = null;
 				int w = om.getWidth();
 				int h = om.getHeight();
 				if(w > 0 && h > 0)
@@ -302,8 +313,53 @@ public class ThumbnailCreator extends Thread {
 		}
 		
 		if(mThumb != null)
-			mCacheMap.put(file.getPath(), mThumb.get());
+		{
+			saveThumbnail(mCacheFilename, mThumb.get());
+			mCacheMap.put(mCacheFilename, mThumb.get());
+		}
 		return mThumb;
+	}
+	
+	private static Bitmap loadThumbnail(String file)
+	{
+		Bitmap ret = null;
+		FileInputStream is = null;
+		try {
+			is = mContext.openFileInput(file);
+			ret = BitmapFactory.decodeStream(is);
+		} catch(FileNotFoundException e) {
+		} catch(IOException e)
+		{
+			Logger.LogError("Unable to load bitmap.", e);
+		} finally {
+			if(is != null)
+				try {
+					is.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		return ret;
+	}
+	
+	private static void saveThumbnail(String file, Bitmap bmp)
+	{
+		FileOutputStream os = null;
+		try {
+			os = mContext.openFileOutput(file, 0);
+			bmp.compress(CompressFormat.JPEG, 85, os);
+		} catch(IOException e) {
+			Logger.LogError("Unable to save thumbnail for " + file, e);
+		} finally {
+			if(os != null)
+				try {
+					os.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
 	}
 	
 	
