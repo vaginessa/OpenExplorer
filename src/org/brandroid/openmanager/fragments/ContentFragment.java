@@ -58,11 +58,14 @@ import android.support.v4.app.FragmentTransaction;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.ActionMode;
+import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -80,15 +83,6 @@ import android.net.Uri;
 public class ContentFragment extends Fragment implements OnItemClickListener,
 															OnSettingsChangeListener,
 															OnWorkerThreadFinishedListener{
-	private static final int D_MENU_DELETE 	= 0x00;
-	private static final int D_MENU_RENAME 	= 0x01;
-	private static final int D_MENU_COPY	= 0x02;
-	private static final int D_MENU_MOVE	= 0x03;
-	private static final int D_MENU_ZIP		= 0x04;
-	private static final int D_MENU_PASTE	= 0x05;
-	private static final int D_MENU_UNZIP	= 0x0b;
-	private static final int D_MENU_BOOK	= 0x0c;
-	private static final int D_MENU_INFO	= 0x0d;
 	
 	private static final int F_MENU_DELETE	= 0x06;
 	private static final int F_MENU_RENAME	= 0x07;
@@ -122,6 +116,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private boolean mCutFile;
 	private boolean mShowThumbnails;
 	private boolean mReadyToUpdate = true;
+	private int mMenuContextItemIndex = -1;
 	
 	public interface OnBookMarkAddListener {
 		public void onBookMarkAdd(String path);
@@ -236,6 +231,21 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			Logger.LogError("WTF, where are they?");
 		else
 			updateChosenMode(mShowGrid ? mGrid : mList);
+		
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+			registerForContextMenu(mShowGrid ? mGrid : mList);
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		new MenuInflater(mContext).inflate(R.menu.context, menu);
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		executeMenu(item.getItemId(), mData2.get(mMenuContextItemIndex).getName());
+		return super.onContextItemSelected(item);
 	}
 	
 	public void updateChosenMode(AbsListView mChosenMode)
@@ -257,10 +267,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
+				if(OpenExplorer.BEFORE_HONEYCOMB)
+				{
+					mMenuContextItemIndex = pos;
+					return false;
+				}
 				OpenPath file = mData2.get(pos);
 				
 				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					if(OpenExplorer.BEFORE_HONEYCOMB)
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
 						//@Override
 						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -364,7 +378,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				}
 				
 				if(file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					if(Build.VERSION.SDK_INT >= 11)
+					if(!OpenExplorer.BEFORE_HONEYCOMB)
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
 						
 						//@Override
@@ -380,15 +394,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						
 						//@Override
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							menu.add(0, D_MENU_BOOK, 0, "Bookmark");
-							menu.add(0, D_MENU_INFO, 0, "Info");
-							menu.add(0, D_MENU_DELETE, 0, "Delete");
-							menu.add(0, D_MENU_RENAME, 0, "Rename");
-				        	menu.add(0, D_MENU_COPY, 0, "Copy");
-				        	menu.add(0, D_MENU_MOVE, 0, "Cut");
-				        	menu.add(0, D_MENU_ZIP, 0, "Zip");
-				        	menu.add(0, D_MENU_PASTE, 0, "Paste into folder").setEnabled(mHoldingFile);
-				        	menu.add(0, D_MENU_UNZIP, 0, "Unzip here").setEnabled(mHoldingZip);
+							mode.getMenuInflater().inflate(R.menu.context, menu);
+							menu.findItem(R.id.menu_paste).setEnabled(mHoldingFile);
+							menu.findItem(R.id.menu_unzip).setEnabled(mHoldingZip);
 				        	
 				        	mActionModeSelected = true;
 							
@@ -397,90 +405,12 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						
 						//@Override
 						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-							ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-							OpenPath file = mFileManager.peekStack().getChild(mode.getTitle().toString());
-							String path = file.getPath();
-							String name = file.getName();
-							
-							switch(item.getItemId()) {
-								case D_MENU_BOOK:
-									mBookmarkList.onBookMarkAdd(path);
-									mode.finish();
-									return true;
-									
-								case D_MENU_DELETE:
-									files.add(file);
-									mHandler.deleteFile(files);
-									mode.finish();
-									return true;
-									
-								case D_MENU_RENAME:
-									mHandler.renameFile(path, true);
-									mode.finish();
-									return true;
-									
-								case D_MENU_COPY:
-									if(mHoldingFileList == null)
-										mHoldingFileList = new ArrayList<OpenPath>();
-									
-									mHoldingFileList.clear();
-									mHoldingFileList.add(file);
-									mHoldingFile = true;
-									mCutFile = false;
-									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
-									mode.finish();
-									return true;
-									
-								case D_MENU_MOVE:
-									if(mHoldingFileList == null)
-										mHoldingFileList = new ArrayList<OpenPath>();
-									
-									mHoldingFileList.clear();
-									mHoldingFileList.add(file);
-									mHoldingFile = true;
-									mCutFile = true;
-									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
-									mode.finish();
-									return true;
-									
-								case D_MENU_PASTE:
-									if(mHoldingFile && mHoldingFileList.size() > 0)
-										if(mCutFile)
-											mHandler.cutFile(mHoldingFileList, path);
-										else
-											mHandler.copyFile(mHoldingFileList, path);
-									
-									mHoldingFile = false;
-									mCutFile = false;
-									mHoldingFileList.clear();
-									mHoldingFileList = null;
-									((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
-									mode.finish();
-									return true;
-									
-								case D_MENU_ZIP:
-									mHandler.zipFile(path);
-									mode.finish();
-									return true;
-									
-								case D_MENU_UNZIP:
-									mHandler.unZipFileTo(mHoldingZipList.get(0), file);
-									
-									mHoldingZip = false;
-									mHoldingZipList.clear();
-									mHoldingZipList = null;
-									((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
-									mode.finish();
-									return true;
-								
-								case D_MENU_INFO:
-									DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
-									dialog.setFilePath(path);
-									dialog.show(getFragmentManager(), "info");
-									mode.finish();
-									return true;
-							}			
-							return false;
+							if(executeMenu(item.getItemId(), mode.getTitle().toString()))
+							{
+								mode.finish();
+								return true;
+							}
+							return true;
 						}
 					});
 					mActionMode.setTitle(file.getName());
@@ -491,6 +421,75 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return false;
 			}
 		});
+	}
+	
+	public boolean executeMenu(final int id, String child)
+	{
+		ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+		OpenPath file = mFileManager.peekStack().getChild(child);
+		String path = file.getPath();
+		String name = file.getName();
+		
+		switch(id) {
+		case R.id.menu_bookmark:
+			mBookmarkList.onBookMarkAdd(path);
+			return true;
+			
+		case R.id.menu_delete:
+			files.add(file);
+			mHandler.deleteFile(files);
+			return true;
+			
+		case R.id.menu_rename:
+			mHandler.renameFile(path, true);
+			return true;
+			
+		case R.id.menu_copy:
+		case R.id.menu_cut:
+			mCutFile = id == R.id.menu_cut;
+			if(mHoldingFileList == null)
+				mHoldingFileList = new ArrayList<OpenPath>();
+			
+			mHoldingFileList.clear();
+			mHoldingFileList.add(file);
+			mHoldingFile = true;
+			((OpenExplorer)getActivity()).updateTitle("Holding " + name);
+			return false;
+			
+		case R.id.menu_paste:
+			if(mHoldingFile && mHoldingFileList.size() > 0)
+				if(mCutFile)
+					mHandler.cutFile(mHoldingFileList, path);
+				else
+					mHandler.copyFile(mHoldingFileList, path);
+			
+			mHoldingFile = false;
+			mCutFile = false;
+			mHoldingFileList.clear();
+			mHoldingFileList = null;
+			((OpenExplorer)getActivity()).updateTitle(path);
+			return true;
+			
+		case R.id.menu_zip:
+			mHandler.zipFile(path);
+			return true;
+			
+		case R.id.menu_unzip:
+			mHandler.unZipFileTo(mHoldingZipList.get(0), file);
+			
+			mHoldingZip = false;
+			mHoldingZipList.clear();
+			mHoldingZipList = null;
+			((OpenExplorer)getActivity()).changeActionBarTitle("Open Manager");
+			return true;
+		
+		case R.id.menu_info:
+			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
+			dialog.setFilePath(path);
+			dialog.show(getFragmentManager(), "info");
+			return true;
+		}
+		return true;
 	}
 	
 	//@Override
@@ -583,7 +582,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	 * the file system has been made from our background thread or EventHandler.
 	 */
 	//@Override
-	public void onWorkerThreadComplete(int type, ArrayList<OpenPath> results) {
+	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
 		
 		if(type == EventHandler.SEARCH_TYPE) {
 			if(results == null || results.size() < 1) {
@@ -592,7 +591,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			}
 			
 			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.SEARCHRESULT_DIALOG, mContext);
-			dialog.setHoldingFileList(results);
+			ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+			for(String s : results)
+				files.add(new OpenFile(s));
+			dialog.setHoldingFileList(files);
 			dialog.setOnSearchFileSelected(new OnSearchFileSelected() {
 				
 				//@Override
@@ -610,22 +612,25 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			dialog.show(getFragmentManager(), "dialog");
 			
 		} else if(type == EventHandler.UNZIPTO_TYPE && results != null) {
-			String name = results.get(0).getName();
+			String name = new OpenFile(results.get(0)).getName();
 			
 			if(mHoldingZipList == null)
 				mHoldingZipList = new ArrayList<OpenPath>();
 			
-			mHoldingZipList.add(results.get(0));
+			mHoldingZipList.add(new OpenFile(results.get(0)));
 			mHoldingZip = true;
 			((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);
 			
 		} else {
-			changePath(mFileManager.peekStack());
+			Logger.LogDebug("Worker thread complete?");
+			changePath(mFileManager.peekStack(), false);
 		}
 	}
 	
 	public void changePath(OpenPath path) { changePath(path, true); }
 	public void changePath(OpenPath path, Boolean addToStack) {
+		if(path == null)
+			path = new OpenFile(Environment.getExternalStorageDirectory());
 		((OpenExplorer)getActivity()).changePath(path, addToStack);
 	}
 	

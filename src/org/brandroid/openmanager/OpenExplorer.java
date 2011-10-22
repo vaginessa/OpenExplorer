@@ -46,6 +46,7 @@ import android.widget.SearchView;
 import android.widget.Toast;
 import java.util.ArrayList;
 
+import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.openmanager.data.FileSystemAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -79,7 +80,7 @@ public class OpenExplorer
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	
-	private static OnSettingsChangeListener mSettingsListener;
+	private static OnSettingsChangeListener mSettingsListener = null;
 	private SharedPreferences mPreferences;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
@@ -164,7 +165,7 @@ public class OpenExplorer
         //getFragmentManager().findFragmentById(R.id.content_frag);
                         
         mFileManager = new FileManager();
-        mEvHandler = new EventHandler(getApplicationContext(), mFileManager);
+        mEvHandler = new EventHandler(this, mFileManager);
         
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if(!BEFORE_HONEYCOMB)
@@ -319,7 +320,7 @@ public class OpenExplorer
    		return (ContentFragment)ret;
     }
     
-    private void updateTitle(String s)
+    public void updateTitle(String s)
     {
     	setTitle(getResources().getString(R.string.app_name) + (s.equals("") ? "" : " - " + s));
     }
@@ -495,18 +496,18 @@ public class OpenExplorer
 	    	case MENU_SORT:
 	    		return true;
 	    	
-	    	case R.id.menu_sort_name_asc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
-	    	case R.id.menu_sort_name_desc:	mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
-	    	case R.id.menu_sort_date_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
-	    	case R.id.menu_sort_date_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
-	    	case R.id.menu_sort_size_asc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE); return true; 
-	    	case R.id.menu_sort_size_desc: 	mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
-	    	case R.id.menu_sort_type: 		mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
+	    	case R.id.menu_sort_name_asc:	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
+	    	case R.id.menu_sort_name_desc:	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
+	    	case R.id.menu_sort_date_asc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
+	    	case R.id.menu_sort_date_desc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
+	    	case R.id.menu_sort_size_asc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.SIZE); return true; 
+	    	case R.id.menu_sort_size_desc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
+	    	case R.id.menu_sort_type: 		if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
 	    	
-	    	case R.id.menu_view_grid: mSettingsListener.onViewChanged("grid"); return true;
-	    	case R.id.menu_view_list: mSettingsListener.onViewChanged("list"); return true;
-	    	case R.id.menu_view_hidden: mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
-	    	case R.id.menu_view_thumbs: mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
+	    	case R.id.menu_view_grid: if(mSettingsListener!=null) mSettingsListener.onViewChanged("grid"); return true;
+	    	case R.id.menu_view_list: if(mSettingsListener!=null) mSettingsListener.onViewChanged("list"); return true;
+	    	case R.id.menu_view_hidden: if(mSettingsListener!=null) mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
+	    	case R.id.menu_view_thumbs: if(mSettingsListener!=null) mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
 	    	    	
 	    	case R.id.menu_root:
 	    		if(!item.isCheckable() || item.isChecked())
@@ -709,7 +710,8 @@ public class OpenExplorer
 
 	public void changePath(OpenPath path, Boolean addToStack)
 	{
-		if(mLastPath.equalsIgnoreCase(path.getPath())) return;
+		if(path == null) path = new OpenFile(mLastPath);
+		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		ContentFragment content = new ContentFragment(path);
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		ft.replace(R.id.content_frag, content);
@@ -726,7 +728,7 @@ public class OpenExplorer
 			}
 			mFileManager.pushStack(path);
 			ft.addToBackStack("path");
-		}
+		} else Logger.LogDebug("Covertly changing to " + path.getPath());
 		Logger.LogDebug("Setting path to " + path.getPath());
 		ft.setBreadCrumbTitle(path.getPath());
 		updateTitle(path.getPath());

@@ -72,7 +72,7 @@ public class EventHandler {
 		 * 			   you may pass null if you do not want to report the results.
 		 * @param results the results of the work
 		 */
-		public void onWorkerThreadComplete(int type, ArrayList<OpenPath> results);
+		public void onWorkerThreadComplete(int type, ArrayList<String> results);
 	}
 	
 	
@@ -127,29 +127,29 @@ public class EventHandler {
 		}
 		
 		new AlertDialog.Builder(mContext)
-		.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				String name = text.getText().toString();
-				
-				if(name.length() > 0) {
-					mFileMang.renameTarget(path, name);
-					mThreadListener.onWorkerThreadComplete(RENAME_TYPE, null);
-				} else {
+			.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					String name = text.getText().toString();
+					
+					if(name.length() > 0) {
+						mFileMang.renameTarget(path, name);
+						mThreadListener.onWorkerThreadComplete(RENAME_TYPE, null);
+					} else {
+						dialog.dismiss();
+					}
+				}
+			})
+			.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
-			}
-		})
-		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-		})
-		.setView(view)
-		.setTitle("Rename " + name)
-		.setCancelable(false)
-		.setIcon(R.drawable.download).create().show();
+			})
+			.setView(view)
+			.setTitle("Rename " + name)
+			.setCancelable(false)
+			.setIcon(R.drawable.download)
+			.create()
+			.show();
 	}
 
 	/**
@@ -276,8 +276,8 @@ public class EventHandler {
 				})
 			 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						ArrayList<OpenPath> l = new ArrayList<OpenPath>();
-						l.add(file);
+						ArrayList<String> l = new ArrayList<String>();
+						l.add(file.getPath());
 						mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
 					}
 			 	})
@@ -294,7 +294,7 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	private class BackgroundWork extends AsyncTask<OpenPath, Integer, ArrayList<OpenPath>> {
+	private class BackgroundWork extends AsyncTask<OpenPath, Integer, ArrayList<String>> {
 		private int mType;
 		private ProgressDialog mPDialog;
 		
@@ -339,8 +339,8 @@ public class EventHandler {
 		}
 		
 		
-		protected ArrayList<OpenPath> doInBackground(OpenPath... params) {
-			ArrayList<OpenPath> results = null;
+		protected ArrayList<String> doInBackground(OpenPath... params) {
+			ArrayList<String> results = null;
 			int len = params.length;
 			
 			try {
@@ -348,10 +348,10 @@ public class EventHandler {
 			
 			case DELETE_TYPE:
 				if(results == null)
-					 results = new ArrayList<OpenPath>();
+					 results = new ArrayList<String>();
 				
 				for(int i = 0; i < len; i++)
-					mFileMang.deleteTarget(params[i]);
+					results.add(mFileMang.deleteTarget(params[i]) + "");
 				
 				return results;
 				
@@ -364,13 +364,13 @@ public class EventHandler {
 				//the first index is our dest path.
 				
 				if(results == null)
-					 results = new ArrayList<OpenPath>();
+					 results = new ArrayList<String>();
 				
 				for(int i = 1; i < len; i++) {
 					copyToDirectory(params[i], params[0], 0);
 					
 					if(mDeleteFile) {
-						mFileMang.deleteTarget(params[i]);
+						results.add(mFileMang.deleteTarget(params[i]) + "");
 					}
 					
 				}
@@ -391,7 +391,7 @@ public class EventHandler {
 				Logger.LogError("Error performing task.", e);
 			}
 			
-			return null;
+			return results;
 		}
 		
 		private Integer copyToDirectory(OpenPath old, OpenPath newDir, int total) throws IOException
@@ -511,7 +511,7 @@ public class EventHandler {
 		}
 
 		
-		protected void onPostExecute(ArrayList<OpenPath> result) {
+		protected void onPostExecute(ArrayList<String> result) {
 			switch(mType) {
 			
 			case DELETE_TYPE:				
