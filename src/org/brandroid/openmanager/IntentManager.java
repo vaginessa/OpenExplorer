@@ -84,7 +84,7 @@ public class IntentManager
     		Boolean bUseIntent = false;
     		if(!bUseIntent)
     		{
-    			activity.editFile(file.getAbsolutePath());
+    			activity.editFile(file);
     			return null;
     		} else {
     			ret.setDataAndType(file.getUri(), "text/plain");

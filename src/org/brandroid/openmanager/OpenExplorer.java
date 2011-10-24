@@ -23,6 +23,11 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.app.ActionBar.Tab;
+import android.app.ActionBar.TabListener;
+import android.app.actionbarcompat.ActionBarActivity;
+import android.app.actionbarcompat.ActionBarHelper;
+import android.app.actionbarcompat.ActionBarHelperTab;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -32,7 +37,6 @@ import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
@@ -46,8 +50,6 @@ import android.widget.SearchView;
 import android.widget.Toast;
 import java.util.ArrayList;
 
-import org.brandroid.openmanager.FileManager.SortType;
-import org.brandroid.openmanager.data.FileSystemAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
@@ -62,7 +64,7 @@ import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
 public class OpenExplorer
-		extends FragmentActivity
+		extends ActionBarActivity
 		implements OnBackStackChangedListener {	
 	//menu IDs
 	private static final int MENU_DIR = 		0x0;
@@ -171,28 +173,16 @@ public class OpenExplorer
         mEvHandler = new EventHandler(this, mFileManager);
         
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if(!BEFORE_HONEYCOMB)
-        {
-	        mSearchView = new SearchView(this);
-	        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-	        
-				
-				public boolean onQueryTextSubmit(String query) {
-					mSearchView.clearFocus();
-					mEvHandler.searchFile(mFileManager.peekStack().getPath(), query);
-					
-					return true;
-				}
-				
-				
-				public boolean onQueryTextChange(String newText) {
-					return false;
-				}
-			});
-        }
         
+        handleMediaReceiver();
         
-        storageReceiver = new BroadcastReceiver() {
+        /* read and display the users preferences */
+        //mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
+    }
+    
+    public void handleMediaReceiver()
+    {
+    	storageReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
@@ -210,9 +200,6 @@ public class OpenExplorer
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
 		filter.addDataScheme("file");
 		registerReceiver(storageReceiver, filter);
-        
-        /* read and display the users preferences */
-        //mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
     
     @Override
@@ -305,6 +292,42 @@ public class OpenExplorer
     		((BookmarkFragment)mFavoritesFragment).scanBookmarks();
     	}
     }
+    public void addTab(final Fragment frag, final String title, Boolean activate)
+    {
+    	ActionBarHelper bar = getActionBarHelper();
+    	ActionBarHelperTab tab = (ActionBarHelperTab) ((Tab) bar.newTab()
+				.setText(title))
+				.setTabListener(new TabListener() {
+					public void onTabSelected(Tab tab, android.app.FragmentTransaction ft2) {
+						Logger.LogInfo("onTabSelected");
+						FragmentTransaction ft = fragmentManager.beginTransaction();
+						ft.replace(R.id.content_frag, frag);
+						ft.setBreadCrumbTitle(title);
+						ft.addToBackStack("edit");
+						ft.commit();
+					}
+					public void onTabUnselected(Tab tab, android.app.FragmentTransaction ft2) {
+						Logger.LogInfo("onTabReselected");
+						FragmentTransaction ft = fragmentManager.beginTransaction();
+						ft.remove(frag);
+						ft.commit();
+					}
+					public void onTabReselected(Tab tab, android.app.FragmentTransaction ft) {
+						Logger.LogInfo("onTabReselected");
+					}
+				});
+		bar.addTab(tab);
+		if(activate)
+		{
+			tab.select();
+		}
+		/*
+		FragmentTransaction ft = fragmentManager.beginTransaction();
+		ft.replace(R.id.content_frag, frag);
+		ft.addToBackStack("edit");
+		ft.commit();
+		*/
+    }
     
     public ContentFragment getDirContentFragment(Boolean activate)
     {
@@ -325,21 +348,38 @@ public class OpenExplorer
     
     public void updateTitle(String s)
     {
-    	setTitle(getResources().getString(R.string.app_name) + (s.equals("") ? "" : " - " + s));
+    	String t = getResources().getString(R.string.app_name) + (s.equals("") ? "" : " - " + s);
+    	if(BEFORE_HONEYCOMB)
+    	{
+    		setTitle(t);
+    	} else {
+    		getActionBar().setTitle(t);
+    	}
     }
     
-    public void editFile(String path)
+    public void editFile(OpenPath path)
     {
-    	TextEditorFragment editor = new TextEditorFragment(path);
-    	FragmentTransaction ft = fragmentManager.beginTransaction();
-    	ft.replace(R.id.content_frag, editor);
-    	ft.addToBackStack("edit");
-    	ft.commit();
+    	TextEditorFragment editor = new TextEditorFragment(path.getPath());
+    	addTab(editor, path.getName(), true);
     }
     
     public boolean onCreateOptionsMenu(Menu menu) {
     	getMenuInflater().inflate(R.menu.actbar, menu);
-    	return true;
+    	if(!BEFORE_HONEYCOMB)
+    	{
+    		mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
+	        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+	        	public boolean onQueryTextSubmit(String query) {
+					mSearchView.clearFocus();
+					mEvHandler.searchFile(mFileManager.peekStack().getPath(), query);
+					return true;
+				}
+				public boolean onQueryTextChange(String newText) {
+					return false;
+				}
+			});
+    	}
+    	return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -533,7 +573,7 @@ public class OpenExplorer
 	    		
 	    	case R.id.menu_search:
 	    	case MENU_SEARCH:
-	    		item.setActionView(mSearchView);
+	    		//item.setActionView(mSearchView);
 	    		return true;
     	}
     	
