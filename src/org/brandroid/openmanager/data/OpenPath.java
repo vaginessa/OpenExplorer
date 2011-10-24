@@ -5,18 +5,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.util.Comparator;
 
 import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.view.View;
 
 public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 {
 	public static SortType Sorting = SortType.ALPHA;
 	
 	private static final long serialVersionUID = 332701810738149106L;
+	private Object mTag = null;
 	public abstract String getName();
 	public abstract String getPath();
 	public abstract String getAbsolutePath();
@@ -39,6 +42,8 @@ public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 	public abstract Boolean mkdir();
 	public abstract InputStream getInputStream() throws IOException;
 	public abstract OutputStream getOutputStream() throws IOException;
+	public Object getTag() { return mTag; }
+	public void setTag(Object o) { mTag = o; }
 	public int compareTo(OpenPath other)
 	{
 		return compare(this, other);

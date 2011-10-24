@@ -52,7 +52,7 @@ import java.io.InputStream;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.fragments.ContentFragment.FileSystemAdapter.ThumbnailStruct;
+import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailStruct;
 import org.brandroid.utils.Decoder;
 import org.brandroid.utils.Logger;
 
@@ -122,19 +122,20 @@ public class ThumbnailCreator extends Thread {
 		SoftReference<Bitmap> mThumb = null;
 		//final Handler mHandler = next.Handler;
 		
+		String path = file.getPath();
 		String mCacheFilename = file.getPath().replace("/", "_") + "_" + mWidth + "x" + mHeight + ".jpg";
 		
 		//we already loaded this thumbnail, just return it.
-		if (mCacheMap.containsKey(mCacheFilename)) 
+		if (mCacheMap.containsKey(path)) 
 		{
-			Bitmap bd = mCacheMap.get(mCacheFilename);
+			Bitmap bd = mCacheMap.get(path);
 			mThumb = new SoftReference<Bitmap>(bd);
 			return mThumb;
 		}
 		Bitmap bmp = loadThumbnail(mCacheFilename);
 		if(bmp != null)
 		{
-			mCacheMap.put(mCacheFilename, bmp);
+			mCacheMap.put(path, bmp);
 			mThumb = new SoftReference<Bitmap>(bmp);
 			return mThumb;
 		}
@@ -145,13 +146,13 @@ public class ThumbnailCreator extends Thread {
 			{
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
-				opts.outWidth = mWidth;
+				opts.outHeight = mHeight;
 				//opts.outHeight = mHeight;
 				opts.inSampleSize = 1;
 				int w = om.getWidth();
 				int h = om.getHeight();
 				if(w > 0 && h > 0)
-					opts.outHeight = mHeight = (int)(mWidth * ((double)h / (double)w));
+					opts.outWidth = mWidth = (int)(mHeight * ((double)w / (double)h));
 				if(om.getParent().getName().equals("Photos"))
 					bmp = MediaStore.Images.Thumbnails.getThumbnail(
 								mContext.getContentResolver(),
@@ -165,7 +166,7 @@ public class ThumbnailCreator extends Thread {
 				if(bmp != null) {
 					w = bmp.getWidth();
 					h = bmp.getHeight();
-					if(w > mWidth)
+					if(h > mHeight)
 					{
 						//mHeight = (int)(mWidth * ((double)h / (double)w));
 						//Logger.LogDebug("Bitmap is " + w + "x" + h + " to " + mWidth + "x" + mHeight);	
@@ -315,7 +316,7 @@ public class ThumbnailCreator extends Thread {
 		if(mThumb != null)
 		{
 			saveThumbnail(mCacheFilename, mThumb.get());
-			mCacheMap.put(mCacheFilename, mThumb.get());
+			mCacheMap.put(path, mThumb.get());
 		}
 		return mThumb;
 	}

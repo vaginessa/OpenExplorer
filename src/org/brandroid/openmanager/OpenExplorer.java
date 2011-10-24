@@ -114,6 +114,9 @@ public class OpenExplorer
         if(findViewById(R.id.title_bar) != null)
         	findViewById(R.id.title_bar).setVisibility(View.GONE);
         
+        if(!BEFORE_HONEYCOMB)
+        	setTheme(android.R.style.Theme_Holo);
+        
         if(findViewById(R.id.list_frag) == null)
         	mSinglePane = true;
         else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)

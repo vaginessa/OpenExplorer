@@ -71,8 +71,8 @@ public class DFInfo
 			{
 				sl = sl.replaceAll("  *", " ");
 				//Logger.LogInfo("DF: " + sl);
-				if(!sl.startsWith("/"))
-					continue;
+				if(!sl.startsWith("/")) continue;
+				if(sl.startsWith("/dev/")) continue;
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));

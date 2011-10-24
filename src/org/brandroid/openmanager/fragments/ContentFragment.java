@@ -18,6 +18,7 @@
 
 package org.brandroid.openmanager.fragments;
 
+import org.apache.commons.net.ftp.parser.MVSFTPEntryParser;
 import org.brandroid.openmanager.EventHandler;
 import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.IntentManager;
@@ -66,9 +67,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnCreateContextMenuListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -117,6 +122,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private boolean mShowThumbnails;
 	private boolean mReadyToUpdate = true;
 	private int mMenuContextItemIndex = -1;
+	private int mListScrollingState = 0;
+	private int mListVisibleStartIndex = 0;
+	private int mListVisibleLength = 0; 
 	
 	public interface OnBookMarkAddListener {
 		public void onBookMarkAdd(String path);
@@ -237,14 +245,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	}
 	
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, v, menuInfo);
-		new MenuInflater(mContext).inflate(R.menu.context, menu);
-	}
-	
-	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		executeMenu(item.getItemId(), mData2.get(mMenuContextItemIndex).getName());
+		executeMenu(item.getItemId(), mData2.get(mMenuContextItemIndex));
 		return super.onContextItemSelected(item);
 	}
 	
@@ -264,15 +266,31 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				mGrid.setVisibility(View.GONE);
 		}
 		mChosenMode.setOnItemClickListener(this);
+		mChosenMode.setOnCreateContextMenuListener(this);
+		mChosenMode.setOnScrollListener(new OnScrollListener() {
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				mListScrollingState = scrollState;
+				if(scrollState == 0)
+					onScrollStopped(view);
+			}
+			
+			public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
+			{
+				if(firstVisibleItem != mListVisibleStartIndex)
+					mListVisibleStartIndex = firstVisibleItem;
+				if(visibleItemCount != mListVisibleLength)
+					mListVisibleLength = visibleItemCount;
+			}
+		});
 		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-				if(OpenExplorer.BEFORE_HONEYCOMB)
-				{
+				if(OpenExplorer.BEFORE_HONEYCOMB) {
+					Logger.LogDebug("Showing context?");
 					mMenuContextItemIndex = pos;
-					return false;
+					return list.showContextMenu();
 				}
-				OpenPath file = mData2.get(pos);
+				final OpenPath file = mData2.get(pos);
 				
 				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
@@ -289,12 +307,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						
 						//@Override
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							menu.add(0, F_MENU_INFO, 0, "Info");
-							menu.add(0, F_MENU_DELETE, 0, "Delete");
-				    		menu.add(0, F_MENU_RENAME, 0, "Rename");
-				    		menu.add(0, F_MENU_COPY, 0, "Copy");
-				    		menu.add(0, F_MENU_MOVE, 0, "Cut");
-				    		menu.add(0, F_MENU_SEND, 0, "Send");
+							mode.getMenuInflater().inflate(R.menu.context_file, menu);
 				    		
 				    		mActionModeSelected = true;
 							return true;
@@ -305,71 +318,13 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 							ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 							
 							OpenPath file = mFileManager.peekStack().getChild(mode.getTitle().toString());
-							String path = file.getPath();
-							String name = file.getName();
 							
-							switch(item.getItemId()) {
-								case F_MENU_DELETE:
-									files.add(file);
-									mHandler.deleteFile(files);
-									mode.finish();
-									return true;
-									
-								case F_MENU_RENAME:
-									mHandler.renameFile(path, false);
-									mode.finish();
-									return true;
-									
-								case F_MENU_COPY:
-									if(mHoldingFileList == null)
-										mHoldingFileList = new ArrayList<OpenPath>();
-									
-									mHoldingFileList.clear();
-									mHoldingFileList.add(file);
-									mHoldingFile = true;
-									mCutFile = false;
-									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);				
-									mode.finish();
-									return true;
-									
-								case F_MENU_MOVE:
-									if(mHoldingFileList == null)
-										mHoldingFileList = new ArrayList<OpenPath>();
-									
-									mHoldingFileList.clear();
-									mHoldingFileList.add(file);
-									mHoldingFile = true;
-									mCutFile = true;
-									((OpenExplorer)getActivity()).changeActionBarTitle("Holding " + name);		
-									mode.finish();
-									return true;
-									
-								case F_MENU_SEND:
-									Intent mail = new Intent();
-									mail.setType("application/mail");
-									
-									mail.setAction(android.content.Intent.ACTION_SEND);
-									mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
-									startActivity(mail);
-									
-									mode.finish();
-									return true;
-
-//									this is for bluetooth
-//									files.add(path);
-//									mHandler.sendFile(files);
-//									mode.finish();
-//									return true;
-									
-								case F_MENU_INFO:
-									DialogHandler dialog = DialogHandler.newDialog(DialogHandler.FILEINFO_DIALOG, mContext);
-									dialog.setFilePath(path);
-									dialog.show(getFragmentManager(), "info");
-									mode.finish();
-									return true;
+							if(item.getItemId() != R.id.menu_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_copy)
+							{
+								mode.finish();
+								mActionModeSelected = false;
 							}
-							mActionModeSelected = false;
-							return false;
+							return executeMenu(item.getItemId(), file);
 						}
 					});
 					mActionMode.setTitle(file.getName());
@@ -394,7 +349,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						
 						//@Override
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							mode.getMenuInflater().inflate(R.menu.context, menu);
+							mode.getMenuInflater().inflate(R.menu.context_dir, menu);
 							menu.findItem(R.id.menu_paste).setEnabled(mHoldingFile);
 							menu.findItem(R.id.menu_unzip).setEnabled(mHoldingZip);
 				        	
@@ -405,7 +360,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						
 						//@Override
 						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-							if(executeMenu(item.getItemId(), mode.getTitle().toString()))
+							if(executeMenu(item.getItemId(), file))
 							{
 								mode.finish();
 								return true;
@@ -423,10 +378,34 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		});
 	}
 	
-	public boolean executeMenu(final int id, String child)
+	protected void onScrollStopped(AbsListView view)
 	{
-		ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-		OpenPath file = mFileManager.peekStack().getChild(child);
+		int start = Math.max(0, mListVisibleStartIndex);
+		int end = Math.min(mData2.size() - 1, mListVisibleStartIndex + mListVisibleLength);
+		int mWidth = 72;
+		int mHeight = 72;
+		//ThumbnailStruct[] thumbs = ThumbnailStruct[end - start];
+		for(int i = start; i < end; i++)
+		{
+			Object o = view.getItemAtPosition(i);
+			if(o != null)
+			{
+				OpenPath file = (OpenPath)o;
+				if(file.getTag() != null && file.getTag().getClass().equals(BookmarkHolder.class))
+				{
+					BookmarkHolder mHolder = (BookmarkHolder)file.getTag();
+					ImageView v = mHolder.getIconView();
+					//thumbs[i - start] = new ThumbnailStruct(file, mHolder, mWidth, mHeight);
+					new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+				}
+			}
+			//view.getItemAtPosition(i);
+		}
+		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
+	}
+	
+	public boolean executeMenu(final int id, OpenPath file)
+	{
 		String path = file.getPath();
 		String name = file.getName();
 		
@@ -436,6 +415,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			return true;
 			
 		case R.id.menu_delete:
+			ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 			files.add(file);
 			mHandler.deleteFile(files);
 			return true;
@@ -488,8 +468,40 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			dialog.setFilePath(path);
 			dialog.show(getFragmentManager(), "info");
 			return true;
+			
+		case R.id.menu_share:
+			
+			// TODO: WTF is this?
+			Intent mail = new Intent();
+			mail.setType("application/mail");
+			
+			mail.setAction(android.content.Intent.ACTION_SEND);
+			mail.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
+			startActivity(mail);
+			
+			//mode.finish();
+			return true;
+
+//			this is for bluetooth
+//			files.add(path);
+//			mHandler.sendFile(files);
+//			mode.finish();
+//			return true;
 		}
 		return true;
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
+		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
+		new MenuInflater(mContext).inflate(file.isDirectory() ? R.menu.context_dir : R.menu.context_file, menu);
+		if(file.isDirectory())
+		{
+			menu.findItem(R.id.menu_paste).setEnabled(mHoldingFile);
+			menu.findItem(R.id.menu_unzip).setEnabled(mHoldingZip);
+		}
 	}
 	
 	//@Override
@@ -861,13 +873,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
 				mHolder.setIconResource(R.drawable.music);
-			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
-					  ext.equalsIgnoreCase("apk")  ||
-					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif") ||
+			} else if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
+					  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
+					  ext.equalsIgnoreCase("bmp") ||
+					  ext.equalsIgnoreCase("apk") ||
 					  ext.equalsIgnoreCase("mp4") || 
 					  ext.equalsIgnoreCase("3gp") || 
 					  ext.equalsIgnoreCase("avi") ||
-					  ext.equalsIgnoreCase("webm") || 
+					  ext.equalsIgnoreCase("webm")|| 
 					  ext.equalsIgnoreCase("m4v"))
 			{
 
@@ -885,14 +898,17 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 					}
 					
 					Bitmap thumb = mThumbnail.isBitmapCached(file.getPath());
-
+					
 					if (thumb == null) {
 						
-										
+						file.setTag(mHolder);
+						
+						if(mListScrollingState == 0)
+							new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 						//mThumbnail.createNewThumbnail(mData2, file.getParent().getPath(), handle);
 						//mThumbnail.createNewThumbnail(file, mWidth, mHeight);
 						//thumb = ThumbnailCreator.generateThumb(file, mWidth, mHeight).get();
-						new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+						//new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 						
 						/*
 						try {
@@ -976,59 +992,63 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			return t + size + atrs;
 		}
 		
-		public class ThumbnailStruct
+	}
+	
+
+	public class ThumbnailStruct
+	{
+		public OpenPath File;
+		public int Width = 0, Height = 0;
+		public BookmarkHolder Holder;
+		private SoftReference<Bitmap> mBitmap; 
+		//public Handler Handler;
+		public ThumbnailStruct(OpenPath path, BookmarkHolder holder, int width, int height)
 		{
-			public OpenPath File;
-			public int Width = 0, Height = 0;
-			public BookmarkHolder Holder;
-			private SoftReference<Bitmap> mBitmap; 
-			//public Handler Handler;
-			public ThumbnailStruct(OpenPath path, BookmarkHolder holder, int width, int height)
-			{
-				File = path;
-				Holder = holder;
-				//Handler = handler;
-				Width = width;
-				Height = height;
-			}
-			public void setBitmap(SoftReference<Bitmap> thumb)
-			{
-				mBitmap = thumb;
-			}
-			public void updateHolder()
-			{
-				if(Holder != null && mBitmap != null && mBitmap.get() != null)
-					Holder.setIconDrawable(new BitmapDrawable(mBitmap.get()));
-			}
+			File = path;
+			Holder = holder;
+			//Handler = handler;
+			Width = width;
+			Height = height;
+		}
+		public void setBitmap(SoftReference<Bitmap> thumb)
+		{
+			mBitmap = thumb;
+		}
+		public void updateHolder()
+		{
+			if(Holder != null && mBitmap != null && mBitmap.get() != null)
+				Holder.setIconDrawable(new BitmapDrawable(mBitmap.get()));
+		}
+	}
+	
+	public class ThumbnailTask extends AsyncTask<ThumbnailStruct, Void, ThumbnailStruct[]>
+	{
+		private int iPending = 0;
+		
+		public ThumbnailTask() {
+			
 		}
 		
-		public class ThumbnailTask extends AsyncTask<ThumbnailStruct, Void, ThumbnailStruct[]>
-		{
-			private int iPending = 0;
-			
-			public ThumbnailTask() {
-				
+		@Override
+		protected ThumbnailStruct[] doInBackground(ThumbnailStruct... params) {
+			ThumbnailStruct[] ret = new ThumbnailStruct[params.length];
+			for(int i = 0; i < params.length; i++)
+			{
+				ret[i] = params[i];
+				if(ret == null) continue;
+				//Logger.LogDebug("Getting thumb for " + ret[i].File.getName());
+				ret[i].setBitmap(ThumbnailCreator.generateThumb(ret[i].File, ret[i].Width, ret[i].Height));
 			}
-			
-			@Override
-			protected ThumbnailStruct[] doInBackground(ThumbnailStruct... params) {
-				ThumbnailStruct[] ret = new ThumbnailStruct[params.length];
-				for(int i = 0; i < params.length; i++)
-				{
-					ret[i] = params[i];
-					ret[i].setBitmap(ThumbnailCreator.generateThumb(ret[i].File, ret[i].Width, ret[i].Height));
-				}
-				return ret;
-			}
-			
-			@Override
-			protected void onPostExecute(ThumbnailStruct[] result) {
-				super.onPostExecute(result);
-				for(ThumbnailStruct t : result)
-					t.updateHolder();
-			}
-			
+			return ret;
 		}
+		
+		@Override
+		protected void onPostExecute(ThumbnailStruct[] result) {
+			super.onPostExecute(result);
+			for(ThumbnailStruct t : result)
+				t.updateHolder();
+		}
+		
 	}
 
 	public enum FileIOCommandType
