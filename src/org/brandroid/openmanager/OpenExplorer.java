@@ -37,6 +37,7 @@ import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
@@ -65,7 +66,7 @@ import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
 public class OpenExplorer
-		extends ActionBarActivity
+		extends FragmentActivity
 		implements OnBackStackChangedListener {	
 
 	private static final int PREF_CODE =		0x6;
@@ -282,43 +283,6 @@ public class OpenExplorer
     		((BookmarkFragment)mFavoritesFragment).scanBookmarks();
     	}
     }
-    public void addTab(final Fragment frag, final String title, Boolean activate)
-    {
-    	ActionBarHelper bar = getActionBarHelper();
-    	ActionBarHelperTab tab = (ActionBarHelperTab) ((Tab) bar.newTab()
-				.setText(title))
-				.setTabListener(new TabListener() {
-					public void onTabSelected(Tab tab, android.app.FragmentTransaction ft2) {
-						Logger.LogInfo("onTabSelected");
-						FragmentTransaction ft = fragmentManager.beginTransaction();
-						ft.replace(R.id.content_frag, frag);
-						ft.setBreadCrumbTitle(title);
-						ft.addToBackStack("edit");
-						ft.commit();
-					}
-					public void onTabUnselected(Tab tab, android.app.FragmentTransaction ft2) {
-						Logger.LogInfo("onTabReselected");
-						FragmentTransaction ft = fragmentManager.beginTransaction();
-						ft.remove(frag);
-						ft.commit();
-					}
-					public void onTabReselected(Tab tab, android.app.FragmentTransaction ft) {
-						Logger.LogInfo("onTabReselected");
-					}
-				});
-		bar.addTab(tab);
-		if(activate)
-		{
-			tab.select();
-		}
-		/*
-		FragmentTransaction ft = fragmentManager.beginTransaction();
-		ft.replace(R.id.content_frag, frag);
-		ft.addToBackStack("edit");
-		ft.commit();
-		*/
-    }
-    
     public ContentFragment getDirContentFragment(Boolean activate)
     {
     	Logger.LogDebug("getDirContentFragment");
@@ -350,7 +314,12 @@ public class OpenExplorer
     public void editFile(OpenPath path)
     {
     	TextEditorFragment editor = new TextEditorFragment(path.getPath());
-    	addTab(editor, path.getName(), true);
+    	FragmentTransaction ft = fragmentManager.beginTransaction();
+    	ft.replace(R.id.content_frag, editor);
+    	ft.addToBackStack("edit");
+    	ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+    	ft.commit();
+    	//addTab(editor, path.getName(), true);
     }
     
     public boolean onCreateOptionsMenu(Menu menu) {

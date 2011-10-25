@@ -242,8 +242,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		executeMenu(item.getItemId(), mData2.get(mMenuContextItemIndex));
-		return super.onContextItemSelected(item);
+		return executeMenu(item.getItemId(), mData2.get(mMenuContextItemIndex));
+		//return super.onContextItemSelected(item);
 	}
 	
 	public void updateChosenMode(AbsListView mChosenMode)
@@ -539,6 +539,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
+		if(!OpenExplorer.BEFORE_HONEYCOMB) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
 		int menuResId = R.menu.context_file;

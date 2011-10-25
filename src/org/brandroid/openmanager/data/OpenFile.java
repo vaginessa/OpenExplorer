@@ -13,7 +13,9 @@ import java.util.Hashtable;
 
 import org.brandroid.utils.Logger;
 
+import android.app.AlertDialog.Builder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 
 public class OpenFile extends OpenPath
@@ -53,7 +55,7 @@ public class OpenFile extends OpenPath
 	public long getTotalSpace() {
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)DFInfo.LoadDF().get(getPath()).getSize();
-		return mFile.getTotalSpace();
+		return Build.VERSION.SDK_INT > 8 ? mFile.getTotalSpace() : length();
 	}
 
 	@Override
