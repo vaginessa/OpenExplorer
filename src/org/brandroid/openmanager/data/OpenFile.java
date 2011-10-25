@@ -58,6 +58,8 @@ public class OpenFile extends OpenPath
 
 	@Override
 	public OpenPath getParent() {
+		if(mFile.getParent() == null)
+			return null;
 		return new OpenFile(mFile.getParent());
 	}
 

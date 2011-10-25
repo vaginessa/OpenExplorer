@@ -46,6 +46,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
 import java.util.ArrayList;
@@ -66,19 +67,8 @@ import org.brandroid.utils.Logger;
 public class OpenExplorer
 		extends ActionBarActivity
 		implements OnBackStackChangedListener {	
-	//menu IDs
-	private static final int MENU_DIR = 		0x0;
-	private static final int MENU_SEARCH = 		0x1;
-	private static final int MENU_MULTI =		0x2;
-	private static final int MENU_SETTINGS = 	0x3;
-	//private static final int MENU_MODE	=		0x4;
-	private static final int MENU_SORT = 		0x5;
+
 	private static final int PREF_CODE =		0x6;
-	
-	private static final int MENU_ID_DELETE = 12;
-	private static final int MENU_ID_COPY = 13;
-	private static final int MENU_ID_CUT = 14;
-	private static final int MENU_ID_SEND = 15;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	
@@ -406,7 +396,7 @@ public class OpenExplorer
 	    	case android.R.id.home:
 	    		if (mHeldFiles != null) {
 	    			//DialogFragment df = 
-	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.HOLDINGFILE_DIALOG, this);
+	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.DialogType.HOLDINGFILE_DIALOG, this);
 	    			dialog.setHoldingFileList(mHeldFiles);
 	    			
 	    			FragmentTransaction trans = fragmentManager.beginTransaction();
@@ -420,125 +410,62 @@ public class OpenExplorer
 	    		return true;
 	    	
 	    	case R.id.menu_new_folder:
-	    	case MENU_DIR:
 	    		mEvHandler.createNewFolder(mFileManager.peekStack().getPath());
 	    		return true;
 	    		
 	    	case R.id.menu_multi:
-	    	case MENU_MULTI:
 	    		if(mActionMode != null)
 	    			return false;
 	    		
-	    		mActionMode = startActionMode(new ActionMode.Callback() {
-	    			MultiSelectHandler handler;
+	    		if(BEFORE_HONEYCOMB)
+	    		{
+	    			getDirContentFragment(true).changeMultiSelectState(true, MultiSelectHandler.getInstance(OpenExplorer.this));
+	    		} else {
 	    			
-	    			
-	    			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-	    				return false;
-	    			}
-	    			
-	    			
-	    			public void onDestroyActionMode(ActionMode mode) {			
-	    				getDirContentFragment(false).changeMultiSelectState(false, handler);
-	    				
-	    				mActionMode = null;
-	    				handler = null;
-	    			}
-	    			
-	    			
-	    			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-	    				handler = MultiSelectHandler.getInstance(OpenExplorer.this);
-	    				mode.setTitle("Multi-select Options");
-	    				
-	    				menu.add(0, MENU_ID_DELETE, 0, "Delete");
-	    				menu.add(0, MENU_ID_COPY, 0, "Copy");
-	    				menu.add(0, MENU_ID_CUT, 0, "Cut");
-	    				menu.add(0, MENU_ID_SEND, 0, "Send");
-	    				
-	    				getDirContentFragment(false).changeMultiSelectState(true, handler);
-	    				
-	    				return true;
-	    			}
-	    			
-	    			
-	    			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-	    				ArrayList<String>files = handler.getSelectedFiles();
-	    				
-	    				//nothing was selected
-	    				if(files.size() < 1) {
-	    					mode.finish();
-	    					return true;
-	    				}
-	    				
-	    				if(mHeldFiles == null)
-	    					mHeldFiles = new ArrayList<OpenPath>();
-	    				
-	    				mHeldFiles.clear();
-	    				
-	    				for(String s : files)
-	    					mHeldFiles.add(FileManager.getOpenCache(s));
-	    				
-	    				switch(item.getItemId()) {
-	    				case 12: /* delete */
-	    					mEvHandler.deleteFile(mHeldFiles);
-	    					mode.finish();
-	    					return true;
-	    				
-	    				case 13: /* copy */
-	    					getActionBar().setTitle("Holding " + files.size() + " File");
-	    					getDirContentFragment(false).setCopiedFiles(mHeldFiles, false);
-	    					
-	    					Toast.makeText(OpenExplorer.this, 
-	    								   "Tap the upper left corner to see your held files",
-	    								   Toast.LENGTH_LONG).show();
-	    					mode.finish();
-	    					return true;
-	    					
-	    				case 14: /* cut */
-	    					getActionBar().setTitle("Holding " + files.size() + " File");
-	    					getDirContentFragment(false).setCopiedFiles(mHeldFiles, true);
-	    					
-	    					Toast.makeText(OpenExplorer.this, 
-	    							   "Tap the upper left corner to see your held files",
-	    							   Toast.LENGTH_LONG).show();
-	    					mode.finish();
-	    					return true;
-	    					
-	    				case 15: /* send */
-	    					ArrayList<Uri> uris = new ArrayList<Uri>();
-	    					Intent mail = new Intent();
-	    					mail.setType("application/mail");
-
-	    					if(mHeldFiles.size() == 1) {
-	    						mail.setAction(android.content.Intent.ACTION_SEND);
-	    						mail.putExtra(Intent.EXTRA_STREAM, mHeldFiles.get(0).getUri());
-	    						startActivity(mail);
-	    						
-	    						mode.finish();
-	    						return true;
-	    					}
-	    					
-	    					for(int i = 0; i < mHeldFiles.size(); i++)
-	    						uris.add(mHeldFiles.get(i).getUri());
-	    					
-	    					mail.setAction(android.content.Intent.ACTION_SEND_MULTIPLE);
-	    					mail.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-	    					startActivity(mail);
-
-//	    					this is for bluetooth
-//	    					mEvHandler.sendFile(mHeldFiles);
-	    					mode.finish();
-	    					return true;
-	    				}
-	    				
-	    				return false;
-	    			}
-	    		});
+		    		mActionMode = startActionMode(new ActionMode.Callback() {
+		    			
+		    			MultiSelectHandler handler;
+		    			
+		    			
+		    			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+		    				return false;
+		    			}
+		    			public void onDestroyActionMode(ActionMode mode) {
+		    				getDirContentFragment(false).changeMultiSelectState(false, handler);
+		    				mActionMode = null;
+		    				handler = null;
+		    			}
+		    			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+		    				handler = MultiSelectHandler.getInstance(OpenExplorer.this);
+		    				mode.setTitle("Multi-select Options");
+		    				mode.getMenuInflater().inflate(R.menu.context_multi, menu);
+		    				getDirContentFragment(true).changeMultiSelectState(true, handler);
+		    				return true;
+		    			}
+		    			public boolean onActionItemClicked(ActionMode mode, MenuItem item)
+		    			{
+		    				ArrayList<String>files = handler.getSelectedFiles();
+		    				
+		    				//nothing was selected
+		    				if(files.size() < 1) {
+		    					mode.finish();
+		    					return true;
+		    				}
+		    				
+		    				if(mHeldFiles == null)
+		    					mHeldFiles = new ArrayList<OpenPath>();
+		    				
+		    				mHeldFiles.clear();
+		    				
+		    				for(String s : files)
+		    					mHeldFiles.add(FileManager.getOpenCache(s));
+		    			
+		    				return getDirContentFragment(false).executeMenu(item.getItemId(), mode, mHeldFiles);
+		    			}
+		    		});
+	    		}
 	    		return true;
 	    		
-	    	case MENU_SORT:
-	    		return true;
-	    	
 	    	case R.id.menu_sort_name_asc:	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
 	    	case R.id.menu_sort_name_desc:	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
 	    	case R.id.menu_sort_date_asc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
@@ -567,12 +494,10 @@ public class OpenExplorer
 	    		return true;
 	    	
 	    	case R.id.menu_settings:
-	    	case MENU_SETTINGS:
 	    		startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
 	    		return true;
 	    		
 	    	case R.id.menu_search:
-	    	case MENU_SEARCH:
 	    		//item.setActionView(mSearchView);
 	    		return true;
     	}
@@ -598,21 +523,6 @@ public class OpenExplorer
 	
 	public static void setOnSettingsChangeListener(OnSettingsChangeListener e) {
     	mSettingsListener = e;
-    }
-    
-    /*
-     * used to inform the user when they are holding a file to copy, zip, et cetera
-     * When the user does something with the held files (from copy or cut) this is 
-     * called to reset the apps title. When that happens we will get rid of the cached
-     * held files if there are any.  
-     * @param title the title to be displayed
-     */
-    public void changeActionBarTitle(String title) {
-    	if (title.equals(getResources().getString(R.string.app_name)) && mHeldFiles != null) {
-	    	mHeldFiles.clear();
-	    	mHeldFiles = null;
-    	}
-    	getActionBar().setTitle(title);
     }
     
     
@@ -754,6 +664,7 @@ public class OpenExplorer
 	public void changePath(OpenPath path, Boolean addToStack)
 	{
 		if(path == null) path = new OpenFile(mLastPath);
+		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		ContentFragment content = new ContentFragment(path);
 		FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -776,7 +687,16 @@ public class OpenExplorer
 		ft.setBreadCrumbTitle(path.getPath());
 		updateTitle(path.getPath());
 		ft.commit();
+		if(!BEFORE_HONEYCOMB)
+			setLights(!path.getName().equals("Videos"));
 		mLastPath = path.getPath();
+	}
+	public void setLights(Boolean on)
+	{
+		View root = getCurrentFocus().getRootView();
+		int vis = on ? View.STATUS_BAR_VISIBLE : View.STATUS_BAR_HIDDEN;
+		if(root.getSystemUiVisibility() != vis)
+			root.setSystemUiVisibility(vis);
 	}
 	public void onChangeLocation(OpenPath path) {
 		changePath(path, true);

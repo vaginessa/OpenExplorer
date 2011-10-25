@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item android:id="@+id/menu_multiselect" android:title="Select More..." />
+    <item android:id="@+id/menu_multi" android:title="Select More..." />
     <item android:id="@+id/menu_bookmark" android:title="Add Bookmark" />
     <item android:id="@+id/menu_copy" android:title="Copy" />
     <item android:id="@+id/menu_cut" android:title="Cut" />

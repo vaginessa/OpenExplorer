@@ -52,12 +52,15 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Logger;
 
 public class DialogHandler extends DialogFragment {
-	public static final int HOLDINGFILE_DIALOG = 	0X01;
-	public static final int SEARCHRESULT_DIALOG = 	0x02;
-	public static final int FILEINFO_DIALOG =		0x03;
+	
+	public static enum DialogType {
+		HOLDINGFILE_DIALOG,
+		SEARCHRESULT_DIALOG,
+		FILEINFO_DIALOG
+	}
 	
 	private static DialogHandler instance = null;
-	private static int mDialogType;
+	private static DialogType mDialogType;
 	private static Context mContext;
 	
 	private OnSearchFileSelected mSearchListener;
@@ -69,7 +72,7 @@ public class DialogHandler extends DialogFragment {
 		public void onFileSelected(String fileName);
 	}
 	
-	public static DialogHandler newDialog(int type, Context context) {
+	public static DialogHandler newDialog(DialogType type, Context context) {
 		instance = new DialogHandler();
 		mDialogType = type;
 		mContext = context;

@@ -259,8 +259,8 @@ public class EventHandler {
 		//new BackgroundWork(SEARCH_TYPE).execute(dir, query);
 	}
 	
-	public void zipFile(String path) {
-		//new BackgroundWork(ZIP_TYPE).execute(path);
+	public void zipFile(OpenPath[] files) {
+		new BackgroundWork(ZIP_TYPE).execute(files);
 	}
 	
 	public void unzipFile(final OpenPath file) {
@@ -383,8 +383,17 @@ public class EventHandler {
 				mFileMang.extractZipFilesFromDir(params[0], params[1]);
 				return null;
 				
-			case ZIP_TYPE:				
-				mFileMang.createZipFile(params[0].getPath());
+			case ZIP_TYPE:
+				OpenPath files[] = null;
+				if(params.length == 1)
+					files = new OpenPath[]{params[0]};
+				else
+				{
+					files = new OpenPath[params.length - 1];
+					for(int i = 0; i < files.length; i++)
+						files[i] = params[i + 1];
+				}
+				mFileMang.createZipFile(params[0], files);
 				return null;
 			}
 			} catch(IOException e) {

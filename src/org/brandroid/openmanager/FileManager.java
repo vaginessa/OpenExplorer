@@ -250,37 +250,59 @@ public class FileManager {
 	 * 
 	 * @param path
 	 */
-	public void createZipFile(String path) {
-		File dir = new File(path);
-		String[] list = dir.list();
-		String name = path.substring(path.lastIndexOf("/"), path.length());
-		String _path;
-		
-		if(!dir.canRead() || !dir.canWrite())
-			return;
-		
-		int len = list.length;
-		
-		if(path.charAt(path.length() -1) != '/')
-			_path = path + "/";
-		else
-			_path = path;
-		
+	public void createZipFile(OpenPath zip, OpenPath[] files) {
+		ZipOutputStream zout = null;
 		try {
-			ZipOutputStream zip_out = new ZipOutputStream(
+			zout = new ZipOutputStream(
 									  new BufferedOutputStream(
-									  new FileOutputStream(_path + name + ".zip"), BUFFER));
+									  new FileOutputStream(((OpenFile)zip).getFile()), BUFFER));
 			
-			for (int i = 0; i < len; i++)
-				zip_folder(new File(_path + list[i]), zip_out);
+			for(OpenPath file : files)
+			{
+				try {
+					zipIt(file, zout);
+				} catch(IOException e) {
+					Logger.LogError("Error zipping file.", e);
+				}
+			}
 
-			zip_out.close();
+			zout.close();
 			
 		} catch (FileNotFoundException e) {
 			Log.e("File not found", e.getMessage());
 
 		} catch (IOException e) {
 			Log.e("IOException", e.getMessage());
+		} finally {
+			if(zout != null)
+				try {
+					zout.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+	}
+	private void zipIt(OpenPath file, ZipOutputStream zout) throws IOException
+	{
+		byte[] data = new byte[BUFFER];
+		int read;
+		
+		if(file.isFile()){
+			ZipEntry entry = new ZipEntry(file.getName());
+			zout.putNextEntry(entry);
+			BufferedInputStream instream = new BufferedInputStream(file.getInputStream());
+			Log.e("File Manager", "zip_folder file name = " + entry.getName());
+			while((read = instream.read(data, 0, BUFFER)) != -1)
+				zout.write(data, 0, read);
+			
+			zout.closeEntry();
+			instream.close();
+		
+		} else if (file.isDirectory()) {
+			Log.e("File Manager", "zip_folder dir name = " + file.getPath());
+			for(OpenPath kid : file.list())
+				zipIt(kid, zout);
 		}
 	}
 	
@@ -445,38 +467,6 @@ public class FileManager {
 		//mDirContent.clear();
 		if(directory == null) return new OpenPath[0];
 		return directory.list();
-	}
-	
-	/*
-	 * 
-	 * @param file
-	 * @param zout
-	 * @throws IOException
-	 */
-	private void zip_folder(File file, ZipOutputStream zout) throws IOException {
-		byte[] data = new byte[BUFFER];
-		int read;
-		
-		if(file.isFile()){
-			ZipEntry entry = new ZipEntry(file.getName());
-			zout.putNextEntry(entry);
-			BufferedInputStream instream = new BufferedInputStream(
-										   new FileInputStream(file));
-			Log.e("File Manager", "zip_folder file name = " + entry.getName());
-			while((read = instream.read(data, 0, BUFFER)) != -1)
-				zout.write(data, 0, read);
-			
-			zout.closeEntry();
-			instream.close();
-		
-		} else if (file.isDirectory()) {
-			Log.e("File Manager", "zip_folder dir name = " + file.getPath());
-			String[] list = file.list();
-			int len = list.length;
-										
-			for(int i = 0; i < len; i++)
-				zip_folder(new File(file.getPath() +"/"+ list[i]), zout);
-		}
 	}
 	
 	/*

@@ -195,7 +195,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	public boolean onItemLongClick(AdapterView<?> list, View view, final int pos, long id) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		
 		View v = inflater.inflate(R.layout.input_dialog_layout, null);
 		final EditText mText = (EditText)v.findViewById(R.id.dialog_input);
 		final EditText mTextTop = (EditText)v.findViewById(R.id.dialog_input_top);
