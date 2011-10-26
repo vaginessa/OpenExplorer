@@ -31,7 +31,9 @@ public class DFInfo
 	public static int getSize(String s)
 	{
 		int level = 0;
-		if(s.endsWith("K"))
+		if(s.endsWith("B"))
+			level = 0;
+		else if(s.endsWith("K"))
 			level = 1;
 		else if(s.endsWith("M"))
 			level = 2;
@@ -39,11 +41,25 @@ public class DFInfo
 			level = 3;
 		else if(s.endsWith("T"))
 			level = 4;
+		else level = 1;
 		try {
 			double sz = Double.parseDouble(s.replaceAll("[^0-9\\.]", ""));
 			sz *= (1024 ^ level);
 			return (int)Math.floor(sz);
 		} catch(Exception e) { Logger.LogError("Unable to get size from [" + s + "]", e); return -1; }
+	}
+	public static String getFriendlySize(Long bytes) { return getFriendlySize(bytes, true); }
+	public static String getFriendlySize(Long bytes, Boolean showLevel)
+	{
+		int level = 0;
+		float f = (float)bytes;
+		while(f > 1024)
+		{
+			level++;
+			f /= 1024;
+		}
+		f = (float) ((double)Math.round(f * 100) / 100);
+		return (f + (showLevel ? (new String[]{""," K"," MB"," GB"," TB"})[level] : "")).replace(".0", "");
 	}
 	public static Hashtable<String, DFInfo> LoadDF()
 	{
@@ -76,7 +92,7 @@ public class DFInfo
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					//Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
 					mDefault.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 			}

@@ -17,6 +17,8 @@ import android.app.AlertDialog.Builder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.StatFs;
+import android.text.format.Formatter;
 
 public class OpenFile extends OpenPath
 {
@@ -43,19 +45,34 @@ public class OpenFile extends OpenPath
 	}
 	
 	public long getFreeSpace() {
+		StatFs stat = new StatFs(getPath());
+		if(stat.getFreeBlocks() > 0)
+			return (long)stat.getFreeBlocks() * (long)stat.getBlockSize();
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)DFInfo.LoadDF().get(getPath()).getFree();
-		return mFile.getFreeSpace();
+		return Build.VERSION.SDK_INT > 8 ? mFile.getFreeSpace() * 1024 * 1024 : 0;
 	}
 	public long getUsableSpace() {
+		if(Build.VERSION.SDK_INT > 0)
+		{
+			StatFs stat = new StatFs(getPath());
+			if(stat.getAvailableBlocks() > 0)
+				return (long)stat.getAvailableBlocks() * (long)stat.getBlockSize();
+		}
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)(DFInfo.LoadDF().get(getPath()).getSize() - DFInfo.LoadDF().get(getPath()).getFree());
 		return mFile.getUsableSpace();
 	}
 	public long getTotalSpace() {
+		if(Build.VERSION.SDK_INT > 0)
+		{
+			StatFs stat = new StatFs(getPath());
+			if(stat.getBlockCount() > 0)
+				return (long)stat.getBlockCount() * (long)stat.getBlockSize();
+		}
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)DFInfo.LoadDF().get(getPath()).getSize();
-		return Build.VERSION.SDK_INT > 8 ? mFile.getTotalSpace() : length();
+		return Build.VERSION.SDK_INT > 8 ? mFile.getTotalSpace() * 1024 * 1024 : length();
 	}
 
 	@Override

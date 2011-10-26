@@ -80,7 +80,7 @@ public class OpenExplorer
 	private ArrayList<OpenPath> mHeldFiles;
 	private int mLastBackIndex = -1;
 	private String mLastPath = "";
-	private BroadcastReceiver storageReceiver;
+	private BroadcastReceiver storageReceiver = null;
 	
 	private Fragment mFavoritesFragment;
 	
@@ -177,8 +177,13 @@ public class OpenExplorer
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
-				showToast(action);
-				if(action.equals(Intent.ACTION_MEDIA_MOUNTED) || action.equals(Intent.ACTION_MEDIA_UNMOUNTED))
+				String data = intent.getDataString();
+				//Bundle extras = intent.getExtras();
+				showToast(data.replace("file://", "").replace("/mnt/", "") + " " +
+						action.replace("android.intent.action.", "").replace("MEDIA_", ""));
+				if(action.equals(Intent.ACTION_MEDIA_MOUNTED) ||
+						action.equals(Intent.ACTION_MEDIA_UNMOUNTED)
+						)
 				{
 					refreshBookmarks();
 				}
@@ -208,7 +213,8 @@ public class OpenExplorer
     @Override
     protected void onDestroy() {
     	super.onDestroy();
-    	unregisterReceiver(storageReceiver);
+    	if(storageReceiver != null)
+    		unregisterReceiver(storageReceiver);
     }
     
     public Cursor getPhotoCursor() { if(mPhotoCursor == null) refreshCursors(); return mPhotoCursor; }
@@ -706,7 +712,7 @@ public class OpenExplorer
 					done++;
 				}
 			}
-			Logger.LogDebug("cursor cache of " + done + " generated.");
+			//Logger.LogDebug("cursor cache of " + done + " generated.");
 			return null;
 		}
 		

@@ -47,6 +47,7 @@ import android.view.LayoutInflater;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ArrayAdapter;
@@ -104,9 +105,12 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
 		for(String sItem : df.keySet())
 		{
+			if(sItem.toLowerCase().startsWith("/dev")) continue;
+			if(sItem.toLowerCase().indexOf("/system") > -1) continue;
+			if(sItem.toLowerCase().indexOf("vendor") > -1) continue;
 			OpenFile file = new OpenFile(sItem);
 			if(file.isHidden()) continue;
-			if(!file.getFile().canWrite()) continue;
+			//if(!file.getFile().canWrite()) continue;
 			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
 			checkAndAdd(file);
 		}
@@ -373,9 +377,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		
 		
 		public View getView(int position, View view, ViewGroup parent) {			
-			final OpenPath path = super.getItem(position);
+			final OpenPath path = mBookmarks.get(position);
 			final String sPath = path.getPath();
-			if(view == null || view.getTag() == null || !view.getTag().getClass().equals(BookmarkHolder.class) || !!((BookmarkHolder)view.getTag()).getPath().equalsIgnoreCase(sPath)) {
+			if(view == null || view.getTag() == null || !view.getTag().getClass().equals(BookmarkHolder.class) || !((BookmarkHolder)view.getTag()).getPath().equalsIgnoreCase(sPath)) {
 				LayoutInflater in = (LayoutInflater)
 					mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				view = in.inflate(R.layout.bookmark_layout, parent, false);
@@ -390,6 +394,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 						});
 					}
 				});
+				
+				updateSizeIndicator(path, view);
 				
 				view.setTag(mHolder);
 				
@@ -446,7 +452,12 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				mHolder.setText("Photos");
 				mHolder.setIconResource(R.drawable.photo);
 			} else if(sPath2.indexOf("usb") > -1) {
-				mHolder.setText("USB");
+				sPath2 = sPath2.substring(sPath2.lastIndexOf("/") + 1);
+				if(sPath2.indexOf("_") > -1 && sPath2.indexOf("usb") < sPath2.indexOf("_"))
+					sPath2 = sPath2.substring(0, sPath2.indexOf("_"));
+				else if (sPath2.indexOf("_") > -1 && sPath2.indexOf("USB") > sPath2.indexOf("_"))
+					sPath2 = sPath2.substring(sPath2.indexOf("_") + 1);
+				mHolder.setText(sPath2.toUpperCase());
 				mHolder.setEjectable(true);
 				mHolder.setIconResource(R.drawable.usb);
 			} else if(sPath2.indexOf("sdcard-ext") > -1 || sPath2.indexOf("external") > -1) {
@@ -488,4 +499,36 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			return view;
 		}
 	}	
+
+	public void updateSizeIndicator(OpenPath mFile, View mParentView)
+	{
+		View mSizeView = (View)mParentView.findViewById(R.id.size_layout);
+		ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
+		TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
+		if(bar == null) return;
+		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
+		{
+			OpenFile f = (OpenFile)mFile;
+			long size = f.getTotalSpace();
+			long free = f.getFreeSpace();
+			/*
+			if(DFInfo.LoadDF().containsKey(f.getPath()))
+				size = (long)DFInfo.LoadDF().get(f.getPath()).getSize();
+			if(DFInfo.LoadDF().containsKey(f.getPath()))
+				free = (long)DFInfo.LoadDF().get(f.getPath()).getFree();
+				*/
+			//while(size > 0 && size < 100000000) { size *= (1024 * 1024); free *= 1024; }
+			if(size > 0 && free < size)
+			{
+				bar.setMax((int)size);
+				bar.setProgress((int)(size - free));
+				if(bar.getProgress() == 0)
+					mSizeView.setVisibility(View.GONE);
+				else
+					mSizeText.setText(DFInfo.getFriendlySize(free, false) + "/" + DFInfo.getFriendlySize(size));
+				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
+			} else mSizeView.setVisibility(View.GONE);
+		} else mSizeView.setVisibility(View.GONE);
+	}
+	
 }

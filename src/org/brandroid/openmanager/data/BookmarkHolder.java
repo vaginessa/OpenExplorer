@@ -18,23 +18,22 @@
 
 package org.brandroid.openmanager.data;
 
+import java.io.File;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
 
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class BookmarkHolder {
-	private ImageView mIcon;
-	private ImageView mEject;
-	private ImageView mIndicate;
-	private TextView mMainText;
-	private TextView mInfo;
-	private TextView mPath;
+	private ImageView mIcon, mEject, mIndicate;
+	private TextView mMainText, mInfo, mPath, mSizeText;
 	private View mParentView;
 	private String sTitle;
 	private String sPath;
@@ -67,25 +66,15 @@ public class BookmarkHolder {
 			mInfo = (TextView)mParentView.findViewById(R.id.content_info);
 		if(mPath == null)
 			mPath = (TextView)mParentView.findViewById(R.id.content_fullpath);
-		updateSizeIndicator();
+		if(mSizeText == null)
+			mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
 	}
 	
-	public void updateSizeIndicator()
+	public void hideViews(View... views)
 	{
-		ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
-		if(bar == null) return;
-		if(mFile != null && mFile.getClass().equals(OpenFile.class))
-		{
-			OpenFile f = (OpenFile)mFile;
-			if(f.getTotalSpace() > 0 && f.getFreeSpace() < f.getTotalSpace())
-			{
-				bar.setMax((int)f.getTotalSpace());
-				bar.setProgress((int)(f.getTotalSpace() - f.getFreeSpace()));
-				if(bar.getProgress() == 0)
-					bar.setVisibility(View.GONE);
-				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
-			} else bar.setVisibility(View.GONE);
-		} else bar.setVisibility(View.GONE);
+		for(View v : views)
+			if(v != null)
+				v.setVisibility(View.GONE);
 	}
 	
 	public ImageView getIconView() { ensureViews(); return mIcon; }
@@ -129,6 +118,7 @@ public class BookmarkHolder {
 	public View getView() { return mParentView; }
 	public String getInfo() { return mInfo != null ? mInfo.getText().toString() : null; }
 	public void setInfo(String info) { if(mInfo != null) mInfo.setText(info); }
+	public void setSizeText(String txt) { if(mSizeText != null) mSizeText.setText(txt); }
 	
 	private static String getTitleFromPath(String path)
 	{
