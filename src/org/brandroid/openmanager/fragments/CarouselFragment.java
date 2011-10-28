@@ -67,14 +67,12 @@ public class CarouselFragment extends Fragment {
 
         @Override
         public void onDetailSelected(final int id, int x, int y) {
-        	Intent intent = IntentManager.getIntent(mPathItems[id], (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler());
-        	intent.putExtra("path", mPathItems[id].getPath());
-        	startActivity(intent);
+        	onCardSelected(id);
         }
 
         @Override
         public void onCardLongPress(int n, int touchPosition[], Rect detailCoordinates) {
-            postMessage("Selection", "Long press on card " + n);
+            onCardSelected(n);
         }
 
         @Override
