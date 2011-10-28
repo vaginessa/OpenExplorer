@@ -1,5 +1,7 @@
-<PreferenceScreen
-	xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+        android:title="Settings">
+        
 	<PreferenceCategory android:title="Display">
 		<CheckBoxPreference
 			android:key="pref_hiddenFiles"
@@ -11,7 +13,7 @@
 			android:summary="Display a thumbnail for image files"/>
 		<ListPreference
 			android:key="pref_view"
-			android:title="View  Type"
+			android:title="View Type"
 			android:summary="Display files in a grid or a list"
 			android:entries="@array/view"
 			android:entryValues="@array/view_value"

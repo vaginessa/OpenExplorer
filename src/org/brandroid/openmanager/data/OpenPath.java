@@ -9,8 +9,11 @@ import java.lang.ref.SoftReference;
 import java.util.Comparator;
 
 import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.view.View;
 
@@ -48,6 +51,7 @@ public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 	{
 		return compare(this, other);
 	}
+	public SoftReference<Bitmap> getThumbnail(int w, int h) { return ThumbnailCreator.generateThumb(this, w, h); }
 	public static int compare(OpenPath fa, OpenPath fb)
 	{
 		if(fa == null && fb != null)

@@ -117,7 +117,8 @@ public class ThumbnailCreator extends Thread {
 		}
 	}
 	
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight)
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true); }
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache)
 	{
 		SoftReference<Bitmap> mThumb = null;
 		//final Handler mHandler = next.Handler;
@@ -126,13 +127,15 @@ public class ThumbnailCreator extends Thread {
 		String mCacheFilename = file.getPath().replace("/", "_") + "_" + mWidth + "x" + mHeight + ".jpg";
 		
 		//we already loaded this thumbnail, just return it.
-		if (mCacheMap.containsKey(path)) 
+		if (readCache && mCacheMap.containsKey(path)) 
 		{
 			Bitmap bd = mCacheMap.get(path);
 			mThumb = new SoftReference<Bitmap>(bd);
 			return mThumb;
 		}
-		Bitmap bmp = loadThumbnail(mCacheFilename);
+		Bitmap bmp = null;
+		if(readCache)
+			bmp = loadThumbnail(mCacheFilename);
 		if(bmp != null)
 		{
 			mCacheMap.put(path, bmp);
@@ -146,13 +149,13 @@ public class ThumbnailCreator extends Thread {
 			{
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
-				opts.outHeight = mHeight;
 				//opts.outHeight = mHeight;
-				opts.inSampleSize = 1;
+				//opts.inSampleSize = 1;
 				int w = om.getWidth();
 				int h = om.getHeight();
-				if(w > 0 && h > 0)
-					opts.outWidth = mWidth = (int)(mHeight * ((double)w / (double)h));
+				//if(w > 0 && h > 0)
+				//	opts.outWidth = mWidth = (int)(mHeight * ((double)w / (double)h));
+				//opts.outWidth = mWidth;
 				if(om.getParent().getName().equals("Photos"))
 					bmp = MediaStore.Images.Thumbnails.getThumbnail(
 								mContext.getContentResolver(),
@@ -161,16 +164,16 @@ public class ThumbnailCreator extends Thread {
 				else if(om.getParent().getName().equals("Videos"))
 					bmp = MediaStore.Video.Thumbnails.getThumbnail(
 								mContext.getContentResolver(),
-								om.getMediaID(), MediaStore.Video.Thumbnails.MINI_KIND, opts
+								om.getMediaID(), MediaStore.Video.Thumbnails.MINI_KIND, null
 							);
 				if(bmp != null) {
 					w = bmp.getWidth();
 					h = bmp.getHeight();
-					if(h > mHeight)
+					if(h != mHeight)
 					{
-						//mHeight = (int)(mWidth * ((double)h / (double)w));
 						//Logger.LogDebug("Bitmap is " + w + "x" + h + " to " + mWidth + "x" + mHeight);	
-						bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false);
+						//mHeight = (int)(mWidth * ((double)h / (double)w));
+						//bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false);
 					}
 					mThumb = new SoftReference<Bitmap>(bmp);
 					valid = true;
@@ -255,7 +258,7 @@ public class ThumbnailCreator extends Thread {
 						Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
 					}
 				}
-			} else if (isImageFile(file.getName())) {
+			} else if (isImageFile(file.getPath())) {
 				long len_kb = file.length() / 1024;
 				
 				BitmapFactory.Options options = new BitmapFactory.Options();
@@ -281,7 +284,7 @@ public class ThumbnailCreator extends Thread {
 					
 					mThumb = new SoftReference<Bitmap>(Bitmap.createScaledBitmap(b, mWidth, mHeight, false));
 				}
-			} else if (isVideoFile(file.getName()))
+			} else if (isVideoFile(file.getPath()))
 			{
 				ContentResolver cr = mContext.getContentResolver();
 				BitmapFactory.Options opts = new BitmapFactory.Options();
@@ -315,7 +318,8 @@ public class ThumbnailCreator extends Thread {
 		
 		if(mThumb != null)
 		{
-			saveThumbnail(mCacheFilename, mThumb.get());
+			if(writeCache)
+				saveThumbnail(mCacheFilename, mThumb.get());
 			mCacheMap.put(path, mThumb.get());
 		}
 		return mThumb;

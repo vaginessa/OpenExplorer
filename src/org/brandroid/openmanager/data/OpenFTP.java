@@ -15,6 +15,8 @@ import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.utils.Logger;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 public class OpenFTP extends OpenPath
@@ -174,5 +176,4 @@ public class OpenFTP extends OpenPath
 	public Boolean isHidden() {
 		return mFile.getName().startsWith(".");
 	}
-
 }

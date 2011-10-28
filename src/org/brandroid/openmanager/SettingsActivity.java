@@ -42,7 +42,7 @@ public class SettingsActivity extends PreferenceActivity {
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.actbar, menu);
+		//getMenuInflater().inflate(R.menu.actbar, menu);
 		return true;
 	}
 }

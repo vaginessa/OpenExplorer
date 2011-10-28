@@ -14,6 +14,8 @@ import java.util.Hashtable;
 import org.brandroid.utils.Logger;
 
 import android.app.AlertDialog.Builder;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;

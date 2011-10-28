@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 public class OpenCursor extends OpenPath

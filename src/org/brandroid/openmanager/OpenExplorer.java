@@ -18,16 +18,10 @@
 
 package org.brandroid.openmanager;
 
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.app.ActionBar.Tab;
-import android.app.ActionBar.TabListener;
-import android.app.actionbarcompat.ActionBarActivity;
-import android.app.actionbarcompat.ActionBarHelper;
-import android.app.actionbarcompat.ActionBarHelperTab;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -47,7 +41,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
 import java.util.ArrayList;
@@ -58,12 +51,16 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
+import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.PreferenceFragment;
+import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 
 public class OpenExplorer
 		extends FragmentActivity
@@ -74,12 +71,12 @@ public class OpenExplorer
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	
 	private static OnSettingsChangeListener mSettingsListener = null;
-	private SharedPreferences mPreferences;
+	private Preferences mPreferences;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
 	private ArrayList<OpenPath> mHeldFiles;
 	private int mLastBackIndex = -1;
-	private String mLastPath = "";
+	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
 	
 	private Fragment mFavoritesFragment;
@@ -146,10 +143,12 @@ public class OpenExplorer
         
         Logger.LogDebug("Creating with " + path.getPath());
         
+        ThumbnailCreator.setContext(this);
+        
         FragmentTransaction ft = fragmentManager.beginTransaction();
         ft.replace(mSinglePane ? R.id.content_frag : R.id.list_frag, mFavoritesFragment);
         if(!mSinglePane)
-        	ft.replace(R.id.content_frag, new ContentFragment(path));
+        	ft.replace(R.id.content_frag, new CarouselFragment(new OpenCursor(getVideoCursor().getCount() > 1 ? getVideoCursor() : getPhotoCursor(), "Carousel")));
         ft.commit();
         
         /*
@@ -163,7 +162,8 @@ public class OpenExplorer
         mFileManager = new FileManager();
         mEvHandler = new EventHandler(this, mFileManager);
         
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        //mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mPreferences = new Preferences(this);
         
         handleMediaReceiver();
         
@@ -294,7 +294,7 @@ public class OpenExplorer
     	Logger.LogDebug("getDirContentFragment");
     	Fragment ret = fragmentManager.findFragmentById(R.id.content_frag);
     	if(ret == null || !ret.getClass().equals(ContentFragment.class))
-   			ret = new ContentFragment(new OpenFile(mLastPath));
+   			ret = new ContentFragment(mLastPath);
     	if(activate)
     	{
     		Logger.LogDebug("Activating content fragment");
@@ -469,7 +469,7 @@ public class OpenExplorer
 	    		return true;
 	    	
 	    	case R.id.menu_settings:
-	    		startActivityForResult(new Intent(this, SettingsActivity.class), PREF_CODE);
+	    		showPreferences(mLastPath);
 	    		return true;
 	    		
 	    	case R.id.menu_search:
@@ -478,6 +478,41 @@ public class OpenExplorer
     	}
     	
     	return super.onOptionsItemSelected(item);
+    }
+    
+    public void showPreferences(OpenPath path)
+    {
+    	if(Build.VERSION.SDK_INT > 10)
+    	{
+    		FragmentTransaction ft = fragmentManager.beginTransaction();
+    		ft.hide(fragmentManager.findFragmentById(R.id.content_frag));
+	    	//ft.replace(R.id.content_frag, new PreferenceFragment(this, path));
+	    	ft.setBreadCrumbTitle("prefs://" + (path != null ? path.getPath() : ""));
+			ft.addToBackStack("prefs");
+			ft.commit();
+			final PreferenceFragmentV11 pf2 = new PreferenceFragmentV11();
+			getFragmentManager().addOnBackStackChangedListener(new android.app.FragmentManager.OnBackStackChangedListener() {
+				
+				public void onBackStackChanged() {
+					//android.app.FragmentTransaction ft3 = getFragmentManager().beginTransaction();
+					Logger.LogDebug("hide me!");
+					//getFragmentManager().removeOnBackStackChangedListener(this);
+					if(pf2 != null && pf2.getView() != null && getFragmentManager().getBackStackEntryCount() == 0)
+						pf2.getView().setVisibility(View.GONE);
+				}
+			});
+			android.app.FragmentTransaction ftBlank = getFragmentManager().beginTransaction();
+			ftBlank.addToBackStack("blank");
+			ftBlank.commit();
+			android.app.FragmentTransaction ft2 = getFragmentManager().beginTransaction();
+			ft2.replace(R.id.content_frag, pf2);
+			ft2.addToBackStack("prefs");
+			ft2.commit();
+    	} else {
+    		Intent intent = new Intent(this, SettingsActivity.class);
+    		intent.putExtra("path", path);
+    		startActivityForResult(intent, PREF_CODE);
+    	}
     }
     
     public boolean onKeyUp(int keyCode, KeyEvent event) {
@@ -504,9 +539,13 @@ public class OpenExplorer
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if(requestCode == PREF_CODE) {
     		//this could be done better.
-    		mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
-    		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, false));
-    		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
+    		try {
+	    		mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
+	    		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, false));
+	    		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
+    		} catch(Exception e) {
+    			Logger.LogError("onActivityResult FAIL", e);
+    		}
     		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
     	}
     }
@@ -526,15 +565,17 @@ public class OpenExplorer
     	String saved_book = mPreferences.getString(SettingsActivity.PREF_BOOKNAME_KEY, "");
     	
     	if (!list.equals(saved)) {
-    		SharedPreferences.Editor e = mPreferences.edit();
-    		e.putString(SettingsActivity.PREF_LIST_KEY, list);
-    		e.commit();
+    		//SharedPreferences.Editor e = mPreferences.edit();
+    		//e.putString(SettingsActivity.PREF_LIST_KEY, list);
+    		//e.commit();
+    		mPreferences.setSetting(SettingsActivity.PREF_LIST_KEY, list);
     	}
     	
     	if (!bookmark.equals(saved_book)) {
-    		SharedPreferences.Editor e = mPreferences.edit();
-    		e.putString(SettingsActivity.PREF_BOOKNAME_KEY, bookmark);
-    		e.commit();
+    		//SharedPreferences.Editor e = mPreferences.edit();
+    		//e.putString(SettingsActivity.PREF_BOOKNAME_KEY, bookmark);
+    		//e.commit();
+    		mPreferences.setSetting(SettingsActivity.PREF_BOOKNAME_KEY, bookmark);
     	}
     }
     
@@ -543,7 +584,7 @@ public class OpenExplorer
     	super.onSaveInstanceState(outState);
     	if(mLastPath == null || mLastPath.equals("")) return;
     	Logger.LogDebug("Saving " + mLastPath);
-    	outState.putString("last", mLastPath);
+    	outState.putString("last", mLastPath.getPath());
     }
 
 
@@ -638,7 +679,7 @@ public class OpenExplorer
 
 	public void changePath(OpenPath path, Boolean addToStack)
 	{
-		if(path == null) path = new OpenFile(mLastPath);
+		if(path == null) path = mLastPath;
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		ContentFragment content = new ContentFragment(path);
@@ -664,7 +705,7 @@ public class OpenExplorer
 		ft.commit();
 		if(!BEFORE_HONEYCOMB)
 			setLights(!path.getName().equals("Videos"));
-		mLastPath = path.getPath();
+		mLastPath = path;
 	}
 	public void setLights(Boolean on)
 	{

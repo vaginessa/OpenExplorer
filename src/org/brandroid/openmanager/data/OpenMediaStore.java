@@ -6,8 +6,12 @@ import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.util.Hashtable;
 
+import org.brandroid.openmanager.ThumbnailCreator;
+
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 
@@ -175,5 +179,6 @@ public class OpenMediaStore extends OpenPath
 	public long getMediaID() {
 		return Long.parseLong(id);
 	}
+	
 
 }
