@@ -95,6 +95,8 @@ public class OpenExplorer
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main_fragments);
+        
+        ThumbnailCreator.setContext(this);
 
         if(isGTV())
 		{
@@ -132,9 +134,9 @@ public class OpenExplorer
         	else if(last.indexOf(":/") > -1)
         		path = new OpenFTP(last, null, new FTPManager());
         	else if(last.equals("Videos"))
-        		path = new OpenCursor(getVideoCursor(), "Videos");
+        		path = mVideoParent;
         	else if(last.equals("Photos"))
-        		path = new OpenCursor(getPhotoCursor(), "Photos");
+        		path = mPhotoParent;
         	else
         		path = new OpenFile(last);
         	updateTitle(path.getPath());
@@ -143,22 +145,19 @@ public class OpenExplorer
         
         Logger.LogDebug("Creating with " + path.getPath());
         
-        ThumbnailCreator.setContext(this);
-        
         FragmentTransaction ft = fragmentManager.beginTransaction();
-        ft.replace(mSinglePane ? R.id.content_frag : R.id.list_frag, mFavoritesFragment);
+        Fragment home = null;
+        if(Build.VERSION.SDK_INT > 11)
+        {
+        	home = new CarouselFragment(mVideoParent.length() > 1 ? mVideoParent : mPhotoParent);
+        } else
+        	home = new ContentFragment(path);
+        		
+        ft.replace(R.id.content_frag, home);
         if(!mSinglePane)
-        	ft.replace(R.id.content_frag, new CarouselFragment(new OpenCursor(getVideoCursor().getCount() > 1 ? getVideoCursor() : getPhotoCursor(), "Carousel")));
+        	ft.replace(mSinglePane ? R.id.content_frag : R.id.list_frag, mFavoritesFragment);
         ft.commit();
         
-        /*
-        FragmentTransaction trans = fragmentManager.beginTransaction();
-        trans.add(R.id.content_frag, new DirContentActivity());
-        trans.addToBackStack(null);
-        trans.commit();
-        */
-        //getFragmentManager().findFragmentById(R.id.content_frag);
-                        
         mFileManager = new FileManager();
         mEvHandler = new EventHandler(this, mFileManager);
         
@@ -201,6 +200,7 @@ public class OpenExplorer
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
     	super.onPostCreate(savedInstanceState);
+    	ensureCursorCache();
     	/*
     	if(mSettingsListener != null)
         {
@@ -222,28 +222,29 @@ public class OpenExplorer
     
     public void refreshCursors()
     {
-        if(mPhotoCursor == null)
-        	mPhotoCursor = managedQuery(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-        		new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+		if(mPhotoCursor == null)
+			mPhotoCursor = managedQuery(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+				new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 				MediaStore.Images.Media.SIZE + " > 10000", null,
 				MediaStore.Images.Media.DATE_ADDED + " DESC");
-        else mPhotoCursor.requery();
-        if(mVideoCursor == null)
-        	mVideoCursor = managedQuery(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-        		new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+		else mPhotoCursor.requery();
+		startManagingCursor(mPhotoCursor);
+		if(mVideoCursor == null)
+			mVideoCursor = managedQuery(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+				new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 				MediaStore.Video.Media.SIZE + " > 100000", null,
 				MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 				MediaStore.Video.Media.DATE_MODIFIED + " DESC");
-        else mVideoCursor.requery();
-        mPhotoParent = new OpenCursor(mPhotoCursor, "Photos");
-        mVideoParent = new OpenCursor(mVideoCursor, "Videos");
-        ensureCursorCache();
+		else mVideoCursor.requery();
+		startManagingCursor(mVideoCursor);
+		mPhotoParent = new OpenCursor(mPhotoCursor, "Photos");
+		mVideoParent = new OpenCursor(mVideoCursor, "Videos");
+		//ensureCursorCache();
     }
     public void ensureCursorCache()
     {
-    	ThumbnailCreator.setContext(this);
     	// group into blocks
-    	int enSize = 6;
+    	int enSize = 20;
     	ArrayList<OpenPath> buffer = new ArrayList<OpenPath>(enSize);
     	for(OpenMediaStore ms : mPhotoParent.list())
     	{
@@ -466,6 +467,11 @@ public class OpenExplorer
 	    				showToast("Unable to achieve root.");
 	    			}
 	    		}
+	    		return true;
+	    	case R.id.menu_flush:
+	    		ThumbnailCreator.flushCache();
+	    		if(Build.VERSION.SDK_INT > 10)
+	    			recreate();
 	    		return true;
 	    	
 	    	case R.id.menu_settings:

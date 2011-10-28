@@ -9,10 +9,13 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Matrix.ScaleToFit;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -24,7 +27,9 @@ import org.brandroid.carousel.CarouselView;
 import org.brandroid.openmanager.IntentManager;
 import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.utils.Logger;
 
 public class CarouselFragment extends Fragment {
 	private static final String TAG = "CarouselTestActivity";
@@ -40,6 +45,8 @@ public class CarouselFragment extends Fragment {
     private static boolean INCREMENTAL_ADD = false; // To debug incrementally adding cards
     private CarouselView mView;
     private Paint mPaint = new Paint();
+    private Paint mBlackPaint = new Paint();
+    
     private CarouselViewHelper mHelper;
     private Bitmap mGlossyOverlay;
     private Bitmap mBorder;
@@ -88,16 +95,21 @@ public class CarouselFragment extends Fragment {
             canvas.drawARGB(0, 0, 0, 0);
             mPaint.setColor(0x40808080);
             canvas.drawRect(2, 2, TEXTURE_WIDTH-2, TEXTURE_HEIGHT-2, mPaint);
+            mPaint.setColor(0xffffffff);
+	        
             SoftReference<Bitmap> thumb = null;
             final OpenPath mPath = mPathItems[n];
-            
-            mPaint.setColor(0xffffffff);
-	        if(mPathItems != null && (thumb = mPath.getThumbnail(TEXTURE_WIDTH, TEXTURE_HEIGHT)) != null && thumb.get() != null)
+            if(mPathItems != null && (thumb = mPath.getThumbnail(TEXTURE_WIDTH, TEXTURE_HEIGHT)) != null && thumb.get() != null)
             {
+	        	Bitmap b = thumb.get();
+	        	int w = b.getWidth();
+	        	int h = b.getHeight();
+	        	Logger.LogDebug("Bitmap returned is " + w + "x" + h);
             	Matrix matrix = canvas.getMatrix();
-            	matrix.setScale(0.975f, 0.975f);
-            	matrix.postTranslate(3, 3);
-            	canvas.drawBitmap(thumb.get(), matrix, null);
+            	matrix.setRectToRect(new RectF(0, 0, w, h), new RectF(3, 3, TEXTURE_WIDTH - 3, TEXTURE_HEIGHT - 3), ScaleToFit.CENTER);
+            	canvas.drawRect(new RectF(3, 3, TEXTURE_WIDTH - 3, TEXTURE_HEIGHT - 3), mBlackPaint);
+            	//matrix.postTranslate(3, 3);
+            	canvas.drawBitmap(b, matrix, null);
             } else {
 	            mPaint.setTextSize(100.0f);
 	            mPaint.setAntiAlias(true);
@@ -156,8 +168,15 @@ public class CarouselFragment extends Fragment {
         });
     }
     
+    public CarouselFragment()
+    {
+    	super();
+    	mPathItems = new OpenFile[0];
+    }
     public CarouselFragment(OpenPath mParent)
     {
+    	super();
+    	mBlackPaint.setColor(Color.BLACK);
     	mPathItems = mParent.list();
     }
     
@@ -181,7 +200,7 @@ public class CarouselFragment extends Fragment {
         final Resources res = getResources();
         mHelper.setCarouselView(mView);
         mView.setSlotCount(CARD_SLOTS);
-        mView.createCards(INCREMENTAL_ADD ? 1: size());
+        mView.createCards(INCREMENTAL_ADD ? 1 : size());
         mView.setVisibleSlots(SLOTS_VISIBLE);
         mView.setStartAngle((float) -(2.0f*Math.PI * 5 / CARD_SLOTS));
         mBorder = BitmapFactory.decodeResource(res, R.drawable.border);

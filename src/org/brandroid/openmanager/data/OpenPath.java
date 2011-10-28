@@ -52,6 +52,7 @@ public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 		return compare(this, other);
 	}
 	public SoftReference<Bitmap> getThumbnail(int w, int h) { return ThumbnailCreator.generateThumb(this, w, h); }
+	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read, Boolean write) { return ThumbnailCreator.generateThumb(this, w, h, read, write); }
 	public static int compare(OpenPath fa, OpenPath fb)
 	{
 		if(fa == null && fb != null)

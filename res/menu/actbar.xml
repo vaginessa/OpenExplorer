@@ -75,10 +75,6 @@
 				android:checkable="true"
 				android:checked="true"
 				android:title="Show Image Thumbnails" />
-			<item
-				android:id="@+id/menu_root"
-				android:checkable="true"
-				android:title="Root" />
 		</menu>
 	</item>
 	<item
@@ -87,8 +83,18 @@
 		android:showAsAction="ifRoom"
 		android:title="New Folder" />
 	<item
-		android:id="@+id/menu_settings"
+		android:id="@+id/menu_other"
 		android:icon="@drawable/settings_actbar"
-		android:showAsAction="ifRoom"
-		android:title="Settings" />
+		android:showAsAction="always"
+		android:title="Settings">
+		<menu>
+			<item
+				android:id="@+id/menu_flush"
+				android:title="Flush Cache" />
+			<item
+				android:id="@+id/menu_root"
+				android:checkable="true"
+				android:title="Root" />
+		</menu>
+	</item>
 </menu>
