@@ -67,6 +67,9 @@ public class OpenExplorer
 		implements OnBackStackChangedListener {	
 
 	private static final int PREF_CODE =		0x6;
+	public static final int VIEW_LIST = 0;
+	public static final int VIEW_GRID = 1;
+	public static final int VIEW_CAROUSEL = 2;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	
@@ -78,6 +81,7 @@ public class OpenExplorer
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
+	private int mViewMode = VIEW_LIST;
 	
 	private Fragment mFavoritesFragment;
 	
@@ -148,7 +152,10 @@ public class OpenExplorer
         FragmentTransaction ft = fragmentManager.beginTransaction();
         Fragment home = mFavoritesFragment;
         if(Build.VERSION.SDK_INT > 11)
-        	home = new CarouselFragment(mVideoParent.length() > 1 ? mVideoParent : mPhotoParent);
+        {
+        	mLastPath = mVideoParent.length() > 1 ? mVideoParent : mPhotoParent;
+        	home = new CarouselFragment(mLastPath);
+        }
         		
         ft.replace(R.id.content_frag, home);
         if(!mSinglePane)
@@ -166,6 +173,8 @@ public class OpenExplorer
         /* read and display the users preferences */
         //mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
     }
+    
+    public Preferences getPreferences() { return mPreferences; }
     
     public void handleMediaReceiver()
     {
@@ -447,8 +456,39 @@ public class OpenExplorer
 	    	case R.id.menu_sort_size_desc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
 	    	case R.id.menu_sort_type: 		if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
 	    	
-	    	case R.id.menu_view_grid: if(mSettingsListener!=null) mSettingsListener.onViewChanged("grid"); return true;
-	    	case R.id.menu_view_list: if(mSettingsListener!=null) mSettingsListener.onViewChanged("list"); return true;
+	    	case R.id.menu_view_grid:
+	    		if(mViewMode == VIEW_GRID) return true;
+	    		if(mViewMode == VIEW_LIST) {
+	    			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_LIST);
+	    		} else {
+	    			FragmentTransaction ft = fragmentManager.beginTransaction();
+	    			ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
+	    			ft.addToBackStack("view");
+	    			ft.commit();
+	    		}
+	    		mViewMode = VIEW_GRID;
+	    		return true;
+	    	case R.id.menu_view_list:
+	    		if(mViewMode == VIEW_LIST) return true;
+	    		if(mViewMode == VIEW_GRID) {
+	    			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_GRID);
+	    		} else {
+	    			FragmentTransaction ft = fragmentManager.beginTransaction();
+	    			ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
+	    			ft.addToBackStack("view");
+	    			ft.commit();
+	    		}
+	    		mViewMode = VIEW_LIST;
+	    		return true;
+	    	case R.id.menu_view_carousel:
+	    		if(mViewMode == VIEW_CAROUSEL) return true;
+	    		//if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_CAROUSEL);
+	    		FragmentTransaction ft = fragmentManager.beginTransaction();
+	    		ft.replace(R.id.content_frag, new CarouselFragment(mLastPath));
+	    		ft.addToBackStack("view");
+	    		ft.commit();
+	    		mViewMode = VIEW_GRID;
+	    		return true;
 	    	case R.id.menu_view_hidden: if(mSettingsListener!=null) mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
 	    	case R.id.menu_view_thumbs: if(mSettingsListener!=null) mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
 	    	    	
@@ -550,7 +590,7 @@ public class OpenExplorer
     		try {
 	    		mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(SettingsActivity.PREF_HIDDEN_KEY, false));
 	    		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(SettingsActivity.PREF_THUMB_KEY, false));
-	    		mSettingsListener.onViewChanged(mPreferences.getString(SettingsActivity.PREF_VIEW_KEY, "list"));
+	    		mSettingsListener.onViewChanged(mPreferences.getInt(SettingsActivity.PREF_VIEW_KEY, VIEW_LIST));
     		} catch(Exception e) {
     			Logger.LogError("onActivityResult FAIL", e);
     		}
@@ -662,7 +702,7 @@ public class OpenExplorer
 		
 		public void onHiddenFilesChanged(boolean state);
 		public void onThumbnailChanged(boolean state);
-		public void onViewChanged(String state);
+		public void onViewChanged(int viewGrid);
 		public void onSortingChanged(FileManager.SortType type);
 	}
 
@@ -765,6 +805,13 @@ public class OpenExplorer
 			return null;
 		}
 		
+	}
+
+
+	public void showFileInfo(OpenPath path) {
+		DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
+		dialogInfo.setFilePath(path.getPath());
+		dialogInfo.show(fragmentManager, "info");
 	}
 }
 

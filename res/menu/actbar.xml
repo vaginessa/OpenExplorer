@@ -65,6 +65,9 @@
 					android:id="@+id/menu_view_list"
 					android:checked="true"
 					android:title="List View" />
+				<item
+					android:id="@+id/menu_view_carousel"
+					android:title="Carousel View" />
 			</group>
 			<item
 				android:id="@+id/menu_view_hidden"

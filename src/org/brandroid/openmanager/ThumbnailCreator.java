@@ -121,7 +121,7 @@ public class ThumbnailCreator extends Thread {
 	
 	private static String getCacheFilename(String path, int w, int h)
 	{
-		return w + "x" + h + "_" + path.replaceAll("[^A-Za-z0-9]", "-") + ".jpg";
+		return w + "x" + h + "_" + path.replaceAll("[^A-Za-z0-9]", "-") + ".png";
 	}
 	
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true); }
@@ -283,7 +283,19 @@ public class ThumbnailCreator extends Thread {
 					bmp = MediaStore.Video.Thumbnails.getThumbnail(cr, id, kind, opts);
 				else
 					bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.movie);
+			} else if (bmp == null && file.getClass().equals(OpenFile.class))
+			{
+				if(file.isDirectory())
+					bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.folder);
+				else
+					bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.unknown);
 			}
+		}
+		
+		if(bmp != null && bmp.getWidth() > mWidth)
+		{
+			int h = (int) Math.floor(mWidth * ((double)bmp.getHeight() / (double)bmp.getWidth())); 
+			bmp = Bitmap.createScaledBitmap(bmp, mWidth, h, false);
 		}
 		
 		if(bmp != null)
@@ -293,11 +305,6 @@ public class ThumbnailCreator extends Thread {
 			mCacheMap.put(mCacheFilename, bmp);
 		}
 		//Logger.LogDebug("Created " + bmp.getWidth() + "x" + bmp.getHeight() + " thumb (" + mWidth + "x" + mHeight + ")");
-		if(bmp != null && bmp.getWidth() > mWidth)
-		{
-			int h = (int) Math.floor(mWidth * ((double)bmp.getHeight() / (double)bmp.getWidth())); 
-			bmp = Bitmap.createScaledBitmap(bmp, mWidth, h, false);
-		}
 		return new SoftReference<Bitmap>(bmp);
 	}
 	
@@ -309,17 +316,14 @@ public class ThumbnailCreator extends Thread {
 			is = mContext.openFileInput(file);
 			ret = BitmapFactory.decodeStream(is);
 		} catch(FileNotFoundException e) {
-		} catch(IOException e)
+		} catch(Exception e)
 		{
 			Logger.LogError("Unable to load bitmap.", e);
 		} finally {
 			if(is != null)
 				try {
 					is.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				} catch (IOException e) { }
 		}
 		return ret;
 	}
@@ -329,17 +333,14 @@ public class ThumbnailCreator extends Thread {
 		FileOutputStream os = null;
 		try {
 			os = mContext.openFileOutput(file, 0);
-			bmp.compress(CompressFormat.JPEG, 95, os);
+			bmp.compress(CompressFormat.PNG, 100, os);
 		} catch(IOException e) {
 			Logger.LogError("Unable to save thumbnail for " + file, e);
 		} finally {
 			if(os != null)
 				try {
 					os.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				} catch (IOException e) { }
 		}
 	}
 	

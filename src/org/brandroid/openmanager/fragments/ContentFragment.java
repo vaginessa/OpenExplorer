@@ -101,7 +101,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private LinearLayout mPathView, mMultiSelectView;
 	private GridView mGrid = null;
 	private ListView mList = null;
-	private boolean mShowGrid;
+	private int mViewMode;
 	
 	private OpenPath mPath = null;
 	private OpenPath[] mData; 
@@ -174,14 +174,16 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mHoldingFile = false;
 		mHoldingZip = false;
 		mActionModeSelected = false;
-		mShowGrid = "grid".equals((PreferenceManager
-									.getDefaultSharedPreferences(mContext))
-										.getString("pref_view", "list"));
-		mShowThumbnails = PreferenceManager.getDefaultSharedPreferences(mContext)
+		mViewMode = ((OpenExplorer)getActivity()).getPreferences()
+										.getInt("pref_view", OpenExplorer.VIEW_LIST);
+		mShowThumbnails = ((OpenExplorer)getActivity()).getPreferences()
 							.getBoolean(SettingsActivity.PREF_THUMB_KEY, true);
 
 		if(path.getClass().equals(OpenCursor.class))
-			mShowGrid = mShowThumbnails = true;
+		{
+			mViewMode = OpenExplorer.VIEW_CAROUSEL;
+			mShowThumbnails = true;
+		}
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
 		
@@ -233,11 +235,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 		if(mGrid == null && mList == null)
 			Logger.LogError("WTF, where are they?");
-		else
-			updateChosenMode(mShowGrid ? mGrid : mList);
-		
-		if(OpenExplorer.BEFORE_HONEYCOMB)
-			registerForContextMenu(mShowGrid ? mGrid : mList);
+		else if (mViewMode == OpenExplorer.VIEW_GRID)
+			updateChosenMode(mGrid);
+		else //if (mViewMode == OpenExplorer.VIEW_LIST)
+			updateChosenMode(mList);
 	}
 	
 	@Override
@@ -248,19 +249,17 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	public void updateChosenMode(AbsListView mChosenMode)
 	{
-		if(mGrid != null && (mShowGrid || mList == null)) {
+		if(mGrid != null && (mViewMode == OpenExplorer.VIEW_GRID || mList == null)) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
-			mGrid.setVisibility(View.VISIBLE);
-			mGrid.setAdapter(mContentAdapter);
 			if(mList != null)
 				mList.setVisibility(View.GONE);
 		} else if(mList != null) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
-			mList.setVisibility(View.VISIBLE);
-			mList.setAdapter(mContentAdapter);
 			if(mGrid != null)
 				mGrid.setVisibility(View.GONE);
 		}
+		mChosenMode.setVisibility(View.VISIBLE);
+		mChosenMode.setAdapter(mContentAdapter);
 		mChosenMode.setOnItemClickListener(this);
 		mChosenMode.setOnCreateContextMenuListener(this);
 		mChosenMode.setOnScrollListener(new OnScrollListener() {
@@ -367,6 +366,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return false;
 			}
 		});
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+			registerForContextMenu(mChosenMode);
 	}
 	
 	protected void onScrollStopped(AbsListView view)
@@ -508,9 +509,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return true;
 			
 			case R.id.menu_info:
-				DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, mContext);
-				dialogInfo.setFilePath(path);
-				dialogInfo.show(getFragmentManager(), "info");
+				((OpenExplorer)getActivity()).showFileInfo(file);
 				finishMode(mode);
 				return true;
 				
@@ -737,11 +736,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	}
 
 	//@Override
-	public void onViewChanged(String state) {
-		if(state.equals("list") && mShowGrid)					
-			mShowGrid = false;
-		else if (state.equals("grid") && !mShowGrid)
-			mShowGrid = true;
+	public void onViewChanged(int state) {
+		mViewMode = state;
 		
 		View v = getView();
 		if(v != null)
@@ -758,8 +754,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 		if(mGrid == null && mList == null)
 			Logger.LogError("WTF, where are they?");
+		else if (mViewMode == OpenExplorer.VIEW_GRID)
+			updateChosenMode(mGrid);
 		else
-			updateChosenMode(mShowGrid ? mGrid : mList);
+			updateChosenMode(mList);
 	}
 			
 	public void changeMultiSelectState(boolean state, MultiSelectHandler handler) {
@@ -855,14 +853,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
 			int mWidth = 36, mHeight = 36;
-			if(mShowGrid)
+			if(mViewMode == OpenExplorer.VIEW_GRID)
 				mWidth = mHeight = 72;
 			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				view = in.inflate(mShowGrid ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
+				view = in.inflate(mViewMode == OpenExplorer.VIEW_GRID ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
 				
 				mHolder = new BookmarkHolder(file, mName, view);
 				
@@ -872,7 +870,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				mHolder = (BookmarkHolder)view.getTag();
 			}
 
-			if(!mShowGrid) {
+			if(mViewMode == OpenExplorer.VIEW_LIST) {
 				mHolder.setInfo(getFileDetails(file));
 				mHolder.setPath(file.getPath());
 			}
