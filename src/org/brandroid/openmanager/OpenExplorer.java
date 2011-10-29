@@ -146,16 +146,13 @@ public class OpenExplorer
         Logger.LogDebug("Creating with " + path.getPath());
         
         FragmentTransaction ft = fragmentManager.beginTransaction();
-        Fragment home = null;
+        Fragment home = mFavoritesFragment;
         if(Build.VERSION.SDK_INT > 11)
-        {
         	home = new CarouselFragment(mVideoParent.length() > 1 ? mVideoParent : mPhotoParent);
-        } else
-        	home = new ContentFragment(path);
         		
         ft.replace(R.id.content_frag, home);
         if(!mSinglePane)
-        	ft.replace(mSinglePane ? R.id.content_frag : R.id.list_frag, mFavoritesFragment);
+        	ft.replace(R.id.list_frag, mFavoritesFragment);
         ft.commit();
         
         mFileManager = new FileManager();
@@ -239,7 +236,7 @@ public class OpenExplorer
 		startManagingCursor(mVideoCursor);
 		mPhotoParent = new OpenCursor(mPhotoCursor, "Photos");
 		mVideoParent = new OpenCursor(mVideoCursor, "Videos");
-		//ensureCursorCache();
+		ensureCursorCache();
     }
     public void ensureCursorCache()
     {
@@ -472,6 +469,11 @@ public class OpenExplorer
 	    		ThumbnailCreator.flushCache();
 	    		if(Build.VERSION.SDK_INT > 10)
 	    			recreate();
+	    		else {
+	    			Intent intent = new Intent(this, OpenExplorer.class); 
+	    			startActivity(intent);
+	    			finish();
+	    		}
 	    		return true;
 	    	
 	    	case R.id.menu_settings:

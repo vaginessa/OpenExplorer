@@ -76,8 +76,8 @@ public class ThumbnailCreator extends Thread {
 	
 	public static void setContext(Context c) { mContext = c; }
 	
-	public Bitmap isBitmapCached(String name) {
-		return mCacheMap.get(name);
+	public Bitmap isBitmapCached(String name, int w, int h) {
+		return mCacheMap.get(getCacheFilename(name, w, h));
 	}
 	
 	/*

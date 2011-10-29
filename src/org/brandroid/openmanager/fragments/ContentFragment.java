@@ -948,7 +948,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 						mHolder.setIconResource(R.drawable.photo);
 					}
 					
-					Bitmap thumb = mThumbnail.isBitmapCached(file.getPath());
+					Bitmap thumb = mThumbnail.isBitmapCached(file.getPath(), mWidth, mHeight);
 					
 					if (thumb == null) {
 						

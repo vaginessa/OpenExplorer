@@ -28,6 +28,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.io.File;
 
+import org.brandroid.openmanager.data.OpenFile;
+
 public class MultiSelectHandler {
 	private static MultiSelectHandler mInstance = null;
 	private static Context mContext;
@@ -82,10 +84,7 @@ public class MultiSelectHandler {
 				ext.equalsIgnoreCase("jpg") ||
 				ext.equalsIgnoreCase("jpeg")|| 
 				ext.equalsIgnoreCase("gif")) {
-				Bitmap b = Bitmap.createScaledBitmap(mThumbnail.isBitmapCached(file), 
-													 58,
-													 58,
-													 false);
+				Bitmap b = mThumbnail.generateThumb(new OpenFile(file), 64, 64).get(); 
 				image.setImageBitmap(b);
 				
 			} else {
