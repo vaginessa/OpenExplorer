@@ -18,8 +18,17 @@
 
 package org.brandroid.openmanager;
 
+import java.lang.reflect.Method;
+
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.utils.Logger;
+
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
@@ -37,8 +46,47 @@ public class SettingsActivity extends PreferenceActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		Intent intent = getIntent();
+		String path = "";
+		if(intent.hasExtra("path"))
+			path = intent.getStringExtra("path");
+		else if(savedInstanceState != null && savedInstanceState.containsKey("path"))
+			path = savedInstanceState.getString("path");
+		
+		PreferenceManager pm = getPreferenceManager();
+		pm.setSharedPreferencesName("global");
+		
+		PreferenceManager.setDefaultValues(this, "global", PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 		addPreferencesFromResource(R.xml.preferences);
+		
+		PreferenceScreen root = getPreferenceScreen();
+		
+		root.getPreference(0).setTitle(root.getPreference(0).getTitle() + " - Global");
+		
+		if(path != "")
+		{
+			int iCount = root.getPreferenceCount();
+			addPreferencesFromResource(inflatePreferenceScreenFromResource(R.xml.preferences_folders));
+			//pm.setSharedPreferencesName(path);
+			root.getPreference(iCount).setTitle(root.getPreference(iCount).getTitle() + " - " + path);
+			PreferenceManager.setDefaultValues(this, path, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);
+		} else Logger.LogWarning("No path specified for preferences");
 	}
+	
+
+    public PreferenceScreen inflatePreferenceScreenFromResource(int resId) {
+        try {
+            Class<PreferenceManager> cls = PreferenceManager.class;
+            Method method = cls.getDeclaredMethod("inflateFromResource", Context.class, int.class, PreferenceScreen.class);
+            return (PreferenceScreen) method.invoke(getPreferenceManager(), this, resId, null);         
+        } catch(Exception e) {
+            Logger.LogWarning("Could not inflate preference screen from XML", e);
+        }
+
+        return null;
+    }
+
+    
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

@@ -176,4 +176,12 @@ public class OpenFTP extends OpenPath
 	public Boolean isHidden() {
 		return mFile.getName().startsWith(".");
 	}
+	
+	@Override
+	public void setPath(String path) {
+		mManager.setBasePath(path);
+		mFile = new FTPFile();
+		mFile.setName(path);
+		mChildren = new ArrayList<OpenFTP>();
+	}
 }

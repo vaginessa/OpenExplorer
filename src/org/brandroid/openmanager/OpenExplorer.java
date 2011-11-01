@@ -29,6 +29,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -43,6 +44,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
+
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.data.OpenCursor;
@@ -530,15 +533,15 @@ public class OpenExplorer
     
     public void showPreferences(OpenPath path)
     {
-    	if(Build.VERSION.SDK_INT > 10)
-    	{
+    	if(Build.VERSION.SDK_INT > 100)
+    	{	
     		FragmentTransaction ft = fragmentManager.beginTransaction();
     		ft.hide(fragmentManager.findFragmentById(R.id.content_frag));
 	    	//ft.replace(R.id.content_frag, new PreferenceFragment(this, path));
 	    	ft.setBreadCrumbTitle("prefs://" + (path != null ? path.getPath() : ""));
 			ft.addToBackStack("prefs");
 			ft.commit();
-			final PreferenceFragmentV11 pf2 = new PreferenceFragmentV11();
+			final PreferenceFragmentV11 pf2 = new PreferenceFragmentV11(path);
 			getFragmentManager().addOnBackStackChangedListener(new android.app.FragmentManager.OnBackStackChangedListener() {
 				
 				public void onBackStackChanged() {
@@ -558,7 +561,7 @@ public class OpenExplorer
 			ft2.commit();
     	} else {
     		Intent intent = new Intent(this, SettingsActivity.class);
-    		intent.putExtra("path", path);
+    		intent.putExtra("path", path.getPath());
     		startActivityForResult(intent, PREF_CODE);
     	}
     }

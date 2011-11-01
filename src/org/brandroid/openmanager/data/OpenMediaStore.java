@@ -188,5 +188,10 @@ public class OpenMediaStore extends OpenPath
 		height = h;
 		return ret;
 	}
+	
+	@Override
+	public void setPath(String path) {
+		
+	}
 
 }

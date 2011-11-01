@@ -89,7 +89,7 @@
 		android:id="@+id/menu_other"
 		android:icon="@drawable/settings_actbar"
 		android:showAsAction="always"
-		android:title="Settings">
+		android:title="Other Settings">
 		<menu>
 			<item
 				android:id="@+id/menu_flush"
@@ -98,6 +98,9 @@
 				android:id="@+id/menu_root"
 				android:checkable="true"
 				android:title="Root" />
+			<item
+				android:id="@+id/menu_settings"
+				android:title="Preferences" />
 		</menu>
 	</item>
 </menu>

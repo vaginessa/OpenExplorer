@@ -148,4 +148,9 @@ public class OpenCursor extends OpenPath
 		return mCursor; 
 	}
 
+	@Override
+	public void setPath(String path) {
+		
+	}
+
 }

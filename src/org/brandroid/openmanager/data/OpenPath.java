@@ -1,23 +1,29 @@
 package org.brandroid.openmanager.data;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.Comparator;
 
 import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.View;
 
-public abstract class OpenPath implements Serializable, Comparable<OpenPath>
+public abstract class OpenPath implements Serializable, Parcelable, Comparable<OpenPath>
 {
 	public static SortType Sorting = SortType.ALPHA;
 	
@@ -26,6 +32,7 @@ public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 	public abstract String getName();
 	public abstract String getPath();
 	public abstract String getAbsolutePath();
+	public abstract void setPath(String path);
 	public abstract long length();
 	public abstract OpenPath getParent();
 	public abstract OpenPath getChild(String name);
@@ -89,4 +96,38 @@ public abstract class OpenPath implements Serializable, Comparable<OpenPath>
 				return a.toLowerCase().compareTo(b.toLowerCase());
 		}
 	}
+	
+	private void writeObject(ObjectOutputStream out) throws IOException
+	{
+		out.writeChars(getPath());
+	}
+
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
+	{
+		setPath(in.readLine());
+	}
+	
+	public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(getPath());
+    }
+
+    public static final Parcelable.Creator<OpenPath> CREATOR
+            = new Parcelable.Creator<OpenPath>() {
+        public OpenPath createFromParcel(Parcel in) {
+        	String path = in.readString();
+        	if(new File(path).exists())
+        		return new OpenFile(path);
+        	return FileManager.getOpenCache(path);
+        }
+
+        public OpenPath[] newArray(int size) {
+            return new OpenPath[size];
+        }
+    };
+
+
 }

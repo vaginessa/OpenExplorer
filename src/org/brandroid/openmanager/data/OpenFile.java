@@ -181,4 +181,9 @@ public class OpenFile extends OpenPath
 	public Boolean isHidden() {
 		return mFile.isHidden() || mFile.getName().startsWith(".");
 	}
+	
+	@Override
+	public void setPath(String path) {
+		mFile = new File(path); 
+	}
 }

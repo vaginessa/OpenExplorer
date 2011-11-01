@@ -2,12 +2,14 @@ package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.SettingsActivity;
 import org.brandroid.openmanager.data.OpenPath;
 
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.os.Bundle;
+import android.preference.PreferenceScreen;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,8 +36,8 @@ public class PreferenceFragment extends Fragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mPrefs = new PreferenceFragmentV11();
-		mPrefs.addPreferencesFromResource(R.xml.preferences);
+		PreferenceScreen ps = new SettingsActivity().inflatePreferenceScreenFromResource(R.xml.preferences);
+		mPrefs = new PreferenceFragmentV11(mBase);
 		//mPrefs.
 		//pf.getView();
 	}
