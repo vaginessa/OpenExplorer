@@ -25,6 +25,7 @@ public class PreferenceFragmentV11 extends PreferenceFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		addPreferencesFromResource(R.xml.preferences);
 		PreferenceManager pm = getPreferenceManager();
 		pm.setSharedPreferencesName("global");
@@ -39,6 +40,31 @@ public class PreferenceFragmentV11 extends PreferenceFragment
 			pm.setSharedPreferencesName(mPath.getPath());
 			root.getPreference(iCount).setTitle(root.getPreference(iCount).getTitle() + " - " + mPath.getPath());
 			PreferenceManager.setDefaultValues(getActivity(), mPath.getPath(), PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
+		}
+	}
+	
+	@Override
+	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+			Preference preference) {
+		super.onPreferenceTreeClick(preferenceScreen, preference);
+		if(preference.getKey().equals("server_prefs"))
+		{
+			getFragmentManager()
+				.beginTransaction()
+				.replace(R.id.content_frag, new ServerSettings())
+				.addToBackStack(null)
+				.commit();
+			return true;
+		}
+		return false;
+	}
+	
+	public class ServerSettings extends PreferenceFragment
+	{
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			addPreferencesFromResource(R.xml.server_prefs);
 		}
 	}
 }

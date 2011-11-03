@@ -533,7 +533,7 @@ public class OpenExplorer
     
     public void showPreferences(OpenPath path)
     {
-    	if(Build.VERSION.SDK_INT > 100)
+    	if(Build.VERSION.SDK_INT > 10)
     	{	
     		FragmentTransaction ft = fragmentManager.beginTransaction();
     		ft.hide(fragmentManager.findFragmentById(R.id.content_frag));
@@ -682,6 +682,12 @@ public class OpenExplorer
 				ft.show(mFavoritesFragment);
 				ft.commit();
 			}
+		}
+		if(Build.VERSION.SDK_INT > 10)
+		{
+			android.app.Fragment frag = getFragmentManager().findFragmentById(R.id.content_frag);
+			if(frag != null)
+				getFragmentManager().beginTransaction().hide(frag).commit();
 		}
 		mLastBackIndex = i;
 	}

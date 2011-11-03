@@ -25,4 +25,8 @@
 		<item>carousel</item>
 		<item>pinch</item>
 	</string-array>
+	
+	<string-array name="server_choice">
+	    <item>Brandon\'s FTP</item>
+	</string-array>
 </resources>

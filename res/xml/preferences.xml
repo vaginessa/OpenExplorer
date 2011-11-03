@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-        android:title="Settings">
+		android:title="Settings">
+	
+    <PreferenceScreen android:key="server_prefs" android:title="Servers" />
         
 	<PreferenceCategory android:title="Display">
 		<CheckBoxPreference
@@ -19,7 +21,6 @@
 			android:entryValues="@array/view_value"
 			android:dialogTitle="Choose a View" />
 	</PreferenceCategory>
-	
 	<PreferenceCategory android:title="Sorting">
 		<ListPreference
 			android:key="pref_sorting"
@@ -28,6 +29,7 @@
 			android:entries="@array/sorting"
 			android:entryValues="@array/sorting_value"
 			android:dialogTitle="Choose a Sorting Option" />
-		
+			
 	</PreferenceCategory>
+		
 </PreferenceScreen>

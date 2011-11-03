@@ -98,7 +98,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private MultiSelectHandler mMultiSelect;
 	private static OnBookMarkAddListener mBookmarkList;
 	
-	private LinearLayout mPathView, mMultiSelectView;
+	//private LinearLayout mPathView;
+	private LinearLayout mMultiSelectView;
 	private GridView mGrid = null;
 	private ListView mList = null;
 	private int mViewMode;
@@ -228,7 +229,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	public void onViewCreated(View v, Bundle savedInstanceState) {
 		super.onViewCreated(v, savedInstanceState);
 		
-		mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
+		//mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
 		mList = (ListView)v.findViewById(R.id.list_listview);
 		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
@@ -742,8 +743,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		View v = getView();
 		if(v != null)
 		{
-			if(mPathView == null)
-				mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
+			//if(mPathView == null)
+			//	mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 			if(mGrid == null)
 				mGrid = (GridView)v.findViewById(R.id.grid_gridview);
 			if(mList == null)

@@ -66,8 +66,9 @@ public class SettingsActivity extends PreferenceActivity {
 		if(path != "")
 		{
 			int iCount = root.getPreferenceCount();
-			addPreferencesFromResource(inflatePreferenceScreenFromResource(R.xml.preferences_folders));
-			//pm.setSharedPreferencesName(path);
+			PreferenceScreen ps = inflatePreferenceScreenFromResource(R.xml.preferences_folders);
+			addPreferencesFromResource(R.xml.preferences_folders);
+			pm.setSharedPreferencesName(path);
 			root.getPreference(iCount).setTitle(root.getPreference(iCount).getTitle() + " - " + path);
 			PreferenceManager.setDefaultValues(this, path, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);
 		} else Logger.LogWarning("No path specified for preferences");
