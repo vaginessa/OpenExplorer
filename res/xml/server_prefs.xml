@@ -2,6 +2,11 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
 	android:title="Server Settings">
 	<EditTextPreference
+	    android:key="server_name"
+	    android:title="Name"
+	    android:summary=""
+	    />
+	<EditTextPreference
 		android:key="server_url"
 		android:title="Title"
 		android:summary="Summary"
@@ -17,4 +22,8 @@
 		android:summary="Login Password"
 		android:password="true"
 		/>
+	<PreferenceScreen
+	    android:key="server_update"
+	    android:title="Add Server"
+	    />
 </PreferenceScreen>

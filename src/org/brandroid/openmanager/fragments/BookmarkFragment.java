@@ -74,11 +74,11 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		super.onCreate(savedInstanceState);
 		mContext = getActivity();
 		mBookmarks = new ArrayList<OpenPath>();
-		mDirListString = (PreferenceManager.getDefaultSharedPreferences(mContext))
-										    .getString(SettingsActivity.PREF_LIST_KEY, "");
+		mDirListString = ((OpenExplorer)getActivity()).getPreferences()
+								.getString("global", SettingsActivity.PREF_LIST_KEY, "");
 		
-		mBookmarkString = (PreferenceManager.getDefaultSharedPreferences(mContext))
-											.getString(SettingsActivity.PREF_BOOKNAME_KEY, "");
+		mBookmarkString = ((OpenExplorer)getActivity()).getPreferences()
+								.getString("global", SettingsActivity.PREF_BOOKNAME_KEY, "");
 		
 		scanBookmarks();
 	}
@@ -520,12 +520,22 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			//while(size > 0 && size < 100000000) { size *= (1024 * 1024); free *= 1024; }
 			if(size > 0 && free < size)
 			{
+				String sFree = DFInfo.getFriendlySize(free);
+				String sTotal = DFInfo.getFriendlySize(size);
+				//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
+				//	sFree = DFInfo.getFriendlySize(free, false);
+				mSizeText.setText(sFree + "/" + sTotal);
+				
+				while(size > 100000)
+				{
+					size /= 10;
+					free /= 10;
+				}
 				bar.setMax((int)size);
 				bar.setProgress((int)(size - free));
 				if(bar.getProgress() == 0)
-					mSizeView.setVisibility(View.GONE);
-				else
-					mSizeText.setText(DFInfo.getFriendlySize(free, false) + "/" + DFInfo.getFriendlySize(size));
+					bar.setVisibility(View.GONE);
+				Logger.LogDebug(bar.getProgress() + "?");
 				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
 			} else mSizeView.setVisibility(View.GONE);
 		} else mSizeView.setVisibility(View.GONE);

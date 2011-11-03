@@ -58,6 +58,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -105,6 +106,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private int mViewMode;
 	
 	private OpenPath mPath = null;
+	private static OpenPath mLastPath = null;
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private ArrayList<OpenPath> mHoldingFileList; //holding files waiting to be pasted(moved)
@@ -130,10 +132,11 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	public ContentFragment()
 	{
 		Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
+		mPath = mLastPath;
 	}
 	public ContentFragment(OpenPath path)
 	{
-		mPath = path;
+		mPath = mLastPath = path;
 	}
 	
 	//@Override
@@ -163,6 +166,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			mData2.clear();
 		
 		OpenPath path = mPath;
+		if(path == null) path = mLastPath;
 		if(path == null)
 		{
 			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
@@ -175,12 +179,17 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mHoldingFile = false;
 		mHoldingZip = false;
 		mActionModeSelected = false;
-		mViewMode = ((OpenExplorer)getActivity()).getPreferences()
-										.getInt("pref_view", OpenExplorer.VIEW_LIST);
-		mShowThumbnails = ((OpenExplorer)getActivity()).getPreferences()
-							.getBoolean(SettingsActivity.PREF_THUMB_KEY, true);
+		try {
+			mViewMode = ((OpenExplorer)getActivity()).getPreferences()
+											.getSetting(mPath.getPath(), "pref_view", ((OpenExplorer)getActivity()).getViewMode());
+			mShowThumbnails = ((OpenExplorer)getActivity()).getPreferences()
+								.getSetting(mPath.getPath(), SettingsActivity.PREF_THUMB_KEY, true);
+		} catch(NullPointerException npe) {
+			mViewMode = OpenExplorer.VIEW_LIST;
+			mShowThumbnails = true;
+		}
 
-		if(path.getClass().equals(OpenCursor.class))
+		if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
 		{
 			mViewMode = OpenExplorer.VIEW_CAROUSEL;
 			mShowThumbnails = true;
@@ -238,8 +247,16 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			Logger.LogError("WTF, where are they?");
 		else if (mViewMode == OpenExplorer.VIEW_GRID)
 			updateChosenMode(mGrid);
-		else //if (mViewMode == OpenExplorer.VIEW_LIST)
+		else if (mViewMode == OpenExplorer.VIEW_LIST)
 			updateChosenMode(mList);
+		else if (mViewMode == OpenExplorer.VIEW_CAROUSEL)
+		{
+			getFragmentManager().beginTransaction()
+				.replace(R.id.content_frag, new CarouselFragment(mPath))
+				.setBreadCrumbTitle(mPath.getPath())
+				.addToBackStack(null)
+				.commit();
+		}
 	}
 	
 	@Override
@@ -254,13 +271,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
 			if(mList != null)
 				mList.setVisibility(View.GONE);
+			mGrid.setAdapter(mContentAdapter);
 		} else if(mList != null) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
 			if(mGrid != null)
 				mGrid.setVisibility(View.GONE);
+			mList.setAdapter(mContentAdapter);
 		}
 		mChosenMode.setVisibility(View.VISIBLE);
-		mChosenMode.setAdapter(mContentAdapter);
 		mChosenMode.setOnItemClickListener(this);
 		mChosenMode.setOnCreateContextMenuListener(this);
 		mChosenMode.setOnScrollListener(new OnScrollListener() {

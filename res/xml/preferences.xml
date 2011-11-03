@@ -2,7 +2,11 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
 		android:title="Settings">
 	
-    <PreferenceScreen android:key="server_prefs" android:title="Servers" />
+	<PreferenceCategory android:key="servers" android:title="Additional Servers">
+    	<PreferenceScreen android:key="server_add"
+    		android:title="+ Add New Server"
+    	/>
+    </PreferenceCategory>
         
 	<PreferenceCategory android:title="Display">
 		<CheckBoxPreference
