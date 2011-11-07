@@ -2,7 +2,7 @@ package org.brandroid.openmanager.data;
 
 import java.util.Comparator;
 
-import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.util.FileManager.SortType;
 
 public class OpenComparer implements Comparator<OpenPath>
 {

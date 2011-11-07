@@ -23,10 +23,13 @@ import android.os.Bundle;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v4.app.DialogFragment;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -42,6 +45,7 @@ import java.util.Date;
 import java.io.File;
 import java.io.IOException;
 
+import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
@@ -49,6 +53,8 @@ import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
 public class DialogHandler extends DialogFragment {
@@ -87,16 +93,19 @@ public class DialogHandler extends DialogFragment {
 		switch(mDialogType) {
 		case HOLDINGFILE_DIALOG:
 			setStyle(DialogFragment.STYLE_NORMAL,
-					 android.R.style.Theme_Holo_Dialog);
+					!OpenExplorer.BEFORE_HONEYCOMB ?
+							android.R.style.Theme_Holo_Dialog : android.R.style.Theme_Dialog);
 			break;
 		case SEARCHRESULT_DIALOG:
-			setStyle(DialogFragment.STYLE_NO_TITLE, 
-					 android.R.style.Theme_Holo_Panel);
+			setStyle(OpenExplorer.BEFORE_HONEYCOMB ? DialogFragment.STYLE_NORMAL : DialogFragment.STYLE_NO_TITLE, 
+					!OpenExplorer.BEFORE_HONEYCOMB ?
+							android.R.style.Theme_Holo_Panel : android.R.style.Theme_Panel);
 			break;
 			
 		case FILEINFO_DIALOG:
-			setStyle(DialogFragment.STYLE_NO_FRAME, 
-					 android.R.style.Theme_Holo_Panel);
+			setStyle(OpenExplorer.BEFORE_HONEYCOMB ? DialogFragment.STYLE_NORMAL : DialogFragment.STYLE_NO_FRAME,
+					!OpenExplorer.BEFORE_HONEYCOMB ?
+							android.R.style.Theme_Holo_Panel : android.R.style.Theme_Panel);
 			break;
 		}
 	}
@@ -162,6 +171,14 @@ public class DialogHandler extends DialogFragment {
 						dismiss();
 					}
 				});
+				
+				Intent intent = IntentManager.getIntent(selected, (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler());
+				if(intent != null)
+				{
+					startActivity(intent);
+					return;
+				}
+				
 				
 				if (!selected.isDirectory()) {
 					launch_button.setVisibility(View.VISIBLE);
@@ -319,6 +336,11 @@ public class DialogHandler extends DialogFragment {
 		OpenFile file = new OpenFile(mPath);
 		View v = inflater.inflate(R.layout.info_layout, null);
 		v.setBackgroundColor(0xcc000000);
+		v.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				getDialog().hide();
+			}
+		});
 		
 		try {
 			populateFileInfoViews(v, file);
@@ -386,7 +408,7 @@ public class DialogHandler extends DialogFragment {
 		((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
 		((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
 		((TextView)v.findViewById(R.id.info_path_label)).setText(apath.substring(0, apath.lastIndexOf("/") + 1));
-		((TextView)v.findViewById(R.id.info_total_size)).setText(formatSize(file.length()));		
+		((TextView)v.findViewById(R.id.info_total_size)).setText(formatSize(((OpenFile)file).getUsedSpace()));		
 		((TextView)v.findViewById(R.id.info_read_perm)).setText(file.canRead() + "");
 		((TextView)v.findViewById(R.id.info_write_perm)).setText(file.canWrite() + "");
 		((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
@@ -394,66 +416,11 @@ public class DialogHandler extends DialogFragment {
 		if (file.isDirectory())
 			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.folder);
 		else
-			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(getFileIcon(file.getName(), false));
+			((ImageView)v.findViewById(R.id.info_icon)).setImageDrawable(getFileIcon(file, false));
 	}
 	
-	private int getFileIcon(String fileName, boolean largeSize) {
-		int res;
-		String ext = "";
-		
-		try {
-			ext = fileName.substring(fileName.lastIndexOf(".") + 1);
-			
-		} catch (StringIndexOutOfBoundsException e) {
-			ext = "dir";
-		}
-		
-		if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-			res = largeSize ? R.drawable.doc : R.drawable.doc;
-			
-		} else if(ext.equalsIgnoreCase("xls")  || 
-				  ext.equalsIgnoreCase("xlsx") ||
-				  ext.equalsIgnoreCase("xlsm")) {
-			res = largeSize ? R.drawable.excel : R.drawable.excel;
-			
-		} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-			res = largeSize ? R.drawable.powerpoint : R.drawable.powerpoint;
-			
-		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-			res = largeSize ? R.drawable.zip : R.drawable.zip;
-			
-		} else if(ext.equalsIgnoreCase("rar")) {
-			res = largeSize ? R.drawable.rar : R.drawable.rar;
-			
-		} else if(ext.equalsIgnoreCase("apk")) {
-			res = largeSize ? R.drawable.apk : R.drawable.apk;
-			
-		} else if(ext.equalsIgnoreCase("pdf")) {
-			res = largeSize ? R.drawable.pdf : R.drawable.pdf;
-			
-		} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-			res = largeSize ? R.drawable.xml_html : R.drawable.xml_html;
-			
-		} else if(ext.equalsIgnoreCase("mp4") || 
-				  ext.equalsIgnoreCase("3gp") ||
-				  ext.equalsIgnoreCase("webm") || 
-				  ext.equalsIgnoreCase("m4v")) {
-			res = largeSize ? R.drawable.movie : R.drawable.movie;
-			
-		} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
-				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
-				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-			res = largeSize ? R.drawable.music : R.drawable.music;
-			
-		} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
-				  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
-			res = largeSize ? R.drawable.photo : R.drawable.photo;
-			
-		} else {
-			res = largeSize ? R.drawable.unknown : R.drawable.unknown;
-		}
-		
-		return res;
+	private Drawable getFileIcon(OpenPath file, boolean largeSize) {
+		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96).get());
 	}
 	
 	/*

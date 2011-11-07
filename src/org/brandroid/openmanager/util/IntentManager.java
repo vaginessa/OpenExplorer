@@ -1,5 +1,6 @@
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.util;
 
+import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath;
 
 import android.content.ActivityNotFoundException;

@@ -11,9 +11,9 @@ import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.Comparator;
 
-import org.brandroid.openmanager.FileManager.SortType;
-import org.brandroid.openmanager.FileManager;
-import org.brandroid.openmanager.ThumbnailCreator;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import android.graphics.Bitmap;

@@ -11,8 +11,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPFile;
-import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
 import android.graphics.Bitmap;

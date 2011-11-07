@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.util;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -50,6 +50,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
@@ -65,7 +67,6 @@ public class ThumbnailCreator extends Thread {
 	private Handler mHandler;
 	
 	private static Context mContext;
-	private static Cursor mVideoCursor;
 	private boolean mStop = false;
 
 	public ThumbnailCreator(Context context, Handler handler) {
@@ -103,13 +104,6 @@ public class ThumbnailCreator extends Thread {
 	
 	public void setCancelThumbnails(boolean stop) {
 		mStop = stop;
-	}
-	
-	@Override
-	public void destroy() {
-		if(mVideoCursor != null && !mVideoCursor.isClosed())
-			mVideoCursor.close();
-		super.destroy();
 	}
 	
 	public void run() {
@@ -263,37 +257,6 @@ public class ThumbnailCreator extends Thread {
 						bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.photo);
 					
 				}
-			} else if (bmp == null && isVideoFile(file.getPath()))
-			{
-				Logger.LogDebug("Video File? " + file.getClass().getName());
-				ContentResolver cr = mContext.getContentResolver();
-				BitmapFactory.Options opts = new BitmapFactory.Options();
-				opts.inSampleSize = 1;
-				int kind = mWidth > 96 || mHeight > 96 ? MediaStore.Video.Thumbnails.MINI_KIND : MediaStore.Video.Thumbnails.MICRO_KIND;
-				String[] cols = {MediaStore.Video.Media._ID, MediaStore.Video.Media.DISPLAY_NAME};
-				int id = -1;
-				try {
-					if(mVideoCursor == null)
-					{
-						mVideoCursor = MediaStore.Video.query(cr, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, cols);
-						Logger.LogDebug("Video cursor returned " + mVideoCursor.getCount());
-						mVideoCursor.moveToFirst();
-					}
-					for(int vi = 0; vi < mVideoCursor.getCount(); vi++)
-					{
-						if(!mVideoCursor.moveToPosition(vi)) break;
-						id = mVideoCursor.getInt(0);
-						String name = mVideoCursor.getString(mVideoCursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME));
-						if(name.equalsIgnoreCase(file.getName()))
-							break;
-					}
-				} catch(Exception e) {
-					Logger.LogError("Exception querying video thumbnail for " + file.getPath(), e);
-				}
-				if(id > -1)
-					bmp = MediaStore.Video.Thumbnails.getThumbnail(cr, id, kind, opts);
-				else
-					bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.movie);
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
 				if(file.isDirectory())

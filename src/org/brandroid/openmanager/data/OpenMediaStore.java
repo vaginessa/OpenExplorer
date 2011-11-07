@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.util.Hashtable;
 
-import org.brandroid.openmanager.ThumbnailCreator;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 
 import android.content.Context;
 import android.database.Cursor;

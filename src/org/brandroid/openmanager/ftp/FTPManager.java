@@ -13,8 +13,8 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
-import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;

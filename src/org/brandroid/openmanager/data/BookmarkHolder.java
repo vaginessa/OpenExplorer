@@ -20,11 +20,11 @@ package org.brandroid.openmanager.data;
 
 import java.io.File;
 
-import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.ThumbnailCreator;
 import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailStruct;
 import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailTask;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
 

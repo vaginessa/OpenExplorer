@@ -57,7 +57,11 @@ import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.MultiSelectHandler;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
@@ -285,7 +289,7 @@ public class OpenExplorer
     public void ensureCursorCache()
     {
     	// group into blocks
-    	int enSize = 20;
+    	int enSize = 10;
     	ArrayList<OpenPath> buffer = new ArrayList<OpenPath>(enSize);
     	for(OpenMediaStore ms : mPhotoParent.list())
     	{
@@ -846,13 +850,15 @@ public class OpenExplorer
 				{
 					for(OpenPath kid : path.list())
 					{
-						ThumbnailCreator.generateThumb(kid, 72, 72);
+						ThumbnailCreator.generateThumb(kid, 36, 36);
+						ThumbnailCreator.generateThumb(kid, 96, 96);
 						done++;
 					}
 				} else {
 					if(!ThumbnailCreator.hasContext())
 						ThumbnailCreator.setContext(getApplicationContext());
-					ThumbnailCreator.generateThumb(path, 72, 72);
+					ThumbnailCreator.generateThumb(path, 36, 36);
+					ThumbnailCreator.generateThumb(path, 96, 96);
 					done++;
 				}
 			}

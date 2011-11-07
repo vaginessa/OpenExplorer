@@ -18,16 +18,9 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.EventHandler;
-import org.brandroid.openmanager.FileManager;
-import org.brandroid.openmanager.IntentManager;
-import org.brandroid.openmanager.MultiSelectHandler;
 import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
-import org.brandroid.openmanager.ThumbnailCreator;
-import org.brandroid.openmanager.EventHandler.OnWorkerThreadFinishedListener;
-import org.brandroid.openmanager.FileManager.SortType;
 import org.brandroid.openmanager.OpenExplorer.OnSettingsChangeListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -38,6 +31,13 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.fragments.DialogHandler.DialogType;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.MultiSelectHandler;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import java.io.File;
@@ -391,10 +391,12 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	protected void onScrollStopped(AbsListView view)
 	{
+		boolean skipThis = true;
+		if(skipThis) return;
 		int start = Math.max(0, mListVisibleStartIndex);
 		int end = Math.min(mData2.size() - 1, mListVisibleStartIndex + mListVisibleLength);
-		int mWidth = 72;
-		int mHeight = 72;
+		int mWidth = 96;
+		int mHeight = 96;
 		//ThumbnailStruct[] thumbs = ThumbnailStruct[end - start];
 		for(int i = start; i < end; i++)
 		{
@@ -704,7 +706,8 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			
 		} else {
 			Logger.LogDebug("Worker thread complete?");
-			changePath(mFileManager.peekStack(), false);
+			mContentAdapter.notifyDataSetChanged();
+			//changePath(mFileManager.peekStack(), false);
 		}
 	}
 	

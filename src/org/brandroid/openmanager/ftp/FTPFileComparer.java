@@ -3,7 +3,7 @@ package org.brandroid.openmanager.ftp;
 import java.util.Comparator;
 
 import org.apache.commons.net.ftp.FTPFile;
-import org.brandroid.openmanager.FileManager.SortType;
+import org.brandroid.openmanager.util.FileManager.SortType;
 
 public class FTPFileComparer implements Comparator<FTPFile>
 {

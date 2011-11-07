@@ -76,6 +76,13 @@ public class OpenFile extends OpenPath
 			return (long)DFInfo.LoadDF().get(getPath()).getSize();
 		return Build.VERSION.SDK_INT > 8 ? mFile.getTotalSpace() * 1024 * 1024 : length();
 	}
+	public long getUsedSpace() {
+		long ret = length();
+		if(isDirectory())
+			for(OpenPath kid : list())
+				ret += ((OpenFile)kid).getUsedSpace();
+		return ret;
+	}
 
 	@Override
 	public OpenPath getParent() {
