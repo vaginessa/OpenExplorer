@@ -3,23 +3,28 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
-
-import org.brandroid.utils.Logger;
-
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 public class OpenCursor extends OpenPath
 {
-	private Cursor mCursor;
+	private static final long serialVersionUID = -8828123354531942575L;
+	//private Cursor mCursor;
+	private OpenMediaStore[] mChildren;
 	private String mName;
+	private Long mTotalSize = 0l;
 	
 	public OpenCursor(Cursor c, String name)
 	{
-		mCursor = c;
+		//mCursor = c;
+		mChildren = new OpenMediaStore[(int)c.getCount()];
+		c.moveToFirst();
+		for(int i = 0; i < mChildren.length; i++)
+		{
+			c.moveToPosition(i);
+			mChildren[i] = new OpenMediaStore(this, c);
+			mTotalSize += mChildren[i].getFile().length();
+		}
 		mName = name;
 	}
 
@@ -40,7 +45,7 @@ public class OpenCursor extends OpenPath
 
 	@Override
 	public long length() {
-		return mCursor.getCount();
+		return mChildren.length; // mCursor.getCount();
 	}
 
 	@Override
@@ -55,15 +60,19 @@ public class OpenCursor extends OpenPath
 
 	@Override
 	public OpenMediaStore[] list() {
+		return mChildren;
+		/*
 		OpenMediaStore[] ret = new OpenMediaStore[(int)length()];
 		mCursor.moveToFirst();
 		int i = 0;
 		while(!mCursor.isAfterLast())
 		{
-			ret[i++] = new OpenMediaStore(this);
+			if(!mCursor.isBeforeFirst())
+				ret[i++] = new OpenMediaStore(this);
 			mCursor.moveToNext();
 		}
 		return ret;
+		*/
 	}
 
 	@Override
@@ -143,14 +152,15 @@ public class OpenCursor extends OpenPath
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	public Cursor getCursor() {
-		return mCursor; 
-	}
-
+	
 	@Override
 	public void setPath(String path) {
 		
+	}
+	
+	public long getTotalSize()
+	{
+		return mTotalSize;
 	}
 
 }

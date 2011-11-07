@@ -267,15 +267,15 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	public void updateChosenMode(AbsListView mChosenMode)
 	{
-		if(mGrid != null && (mViewMode == OpenExplorer.VIEW_GRID || mList == null)) {
+		if(mViewMode == OpenExplorer.VIEW_GRID) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
-			if(mList != null)
-				mList.setVisibility(View.GONE);
+			mList.setVisibility(View.GONE);
+			mGrid.setVisibility(View.VISIBLE);
 			mGrid.setAdapter(mContentAdapter);
-		} else if(mList != null) {
+		} else if(mViewMode == OpenExplorer.VIEW_LIST) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
-			if(mGrid != null)
-				mGrid.setVisibility(View.GONE);
+			mGrid.setVisibility(View.GONE);
+			mList.setVisibility(View.VISIBLE);
 			mList.setAdapter(mContentAdapter);
 		}
 		mChosenMode.setVisibility(View.VISIBLE);
@@ -757,6 +757,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	//@Override
 	public void onViewChanged(int state) {
 		mViewMode = state;
+		((OpenExplorer)getActivity()).setViewMode(state);
 		
 		View v = getView();
 		if(v != null)
@@ -873,7 +874,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			
 			int mWidth = 36, mHeight = 36;
 			if(mViewMode == OpenExplorer.VIEW_GRID)
-				mWidth = mHeight = 72;
+				mWidth = mHeight = 96;
 			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
@@ -887,6 +888,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				
 			} else {
 				mHolder = (BookmarkHolder)view.getTag();
+				mHolder.cancelTask();
 			}
 
 			if(mViewMode == OpenExplorer.VIEW_LIST) {
@@ -953,40 +955,28 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			{
 
 				if(mShowThumbnails) {
-					if(ext.equalsIgnoreCase("mp4") || 
-						  ext.equalsIgnoreCase("3gp") || 
-						  ext.equalsIgnoreCase("avi") ||
-						  ext.equalsIgnoreCase("webm") || 
-						  ext.equalsIgnoreCase("m4v")) {
-						mHolder.setIconResource(R.drawable.movie);
-					} else if(ext.equals("apk")) {
-						mHolder.setIconResource(R.drawable.apk);
-					} else {
-						mHolder.setIconResource(R.drawable.photo);
-					}
+
+					Bitmap thumb = ThumbnailCreator.isBitmapCached(file.getPath(), mWidth, mHeight);
 					
-					Bitmap thumb = mThumbnail.isBitmapCached(file.getPath(), mWidth, mHeight);
-					
-					if (thumb == null) {
+					if(thumb == null)
+					{
+						if(ext.equalsIgnoreCase("mp4") || 
+							  ext.equalsIgnoreCase("3gp") || 
+							  ext.equalsIgnoreCase("avi") ||
+							  ext.equalsIgnoreCase("webm") || 
+							  ext.equalsIgnoreCase("m4v")) {
+							mHolder.setIconResource(R.drawable.movie);
+						} else if(ext.equals("apk")) {
+							mHolder.setIconResource(R.drawable.apk);
+						} else {
+							mHolder.setIconResource(R.drawable.photo);
+						}
 						
 						file.setTag(mHolder);
 						
-						if(mListScrollingState == 0)
-							new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
-						//mThumbnail.createNewThumbnail(mData2, file.getParent().getPath(), handle);
-						//mThumbnail.createNewThumbnail(file, mWidth, mHeight);
-						//thumb = ThumbnailCreator.generateThumb(file, mWidth, mHeight).get();
-						//new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
-						
-						/*
-						try {
-							if (!mThumbnail.isAlive()) 
-								mThumbnail.start();
-						} catch(IllegalThreadStateException itse) {
-							Logger.LogError("Unable to start thumbnail cache thread.", itse);
-						}
-						*/
-						
+						ThumbnailTask task = new ThumbnailTask();
+						mHolder.setTask(task);
+						task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 					}
 					if(thumb != null)
 					{
@@ -1085,7 +1075,11 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		public void updateHolder()
 		{
 			if(Holder != null && mBitmap != null && mBitmap.get() != null)
-				Holder.setIconDrawable(new BitmapDrawable(mBitmap.get()));
+			{
+				BitmapDrawable bd = new BitmapDrawable(mBitmap.get());
+				bd.setGravity(Gravity.CENTER);
+				Holder.setIconDrawable(bd, this);
+			}
 		}
 	}
 	

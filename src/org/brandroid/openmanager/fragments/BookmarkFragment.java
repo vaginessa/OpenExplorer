@@ -69,6 +69,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private String mBookmarkString;
 	private Boolean mHasExternal = false;
 	private Boolean mShowTitles = true;
+	private Long mAllDataSize = 0l;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -86,8 +87,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	public void scanBookmarks()
 	{
 		Logger.LogDebug("Scanning bookmarks...");
-		OpenCursor mPhotoCursor = new OpenCursor(((OpenExplorer)getActivity()).getPhotoCursor(), "Photos");
-		OpenCursor mVideoCursor = new OpenCursor(((OpenExplorer)getActivity()).getVideoCursor(), "Videos");
+		OpenCursor mPhotoCursor = ((OpenExplorer)getActivity()).getPhotoParent();
+		OpenCursor mVideoCursor = ((OpenExplorer)getActivity()).getVideoParent();
 		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
 		mBookmarks.clear();
 		mBookmarks.add(new OpenFile("/"));
@@ -110,6 +111,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			if(sItem.toLowerCase().indexOf("vendor") > -1) continue;
 			OpenFile file = new OpenFile(sItem);
 			if(file.isHidden()) continue;
+			if(file.getTotalSpace() > 0)
+				mAllDataSize += file.getTotalSpace();
 			//if(!file.getFile().canWrite()) continue;
 			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
 			checkAndAdd(file);
@@ -538,6 +541,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				Logger.LogDebug(bar.getProgress() + "?");
 				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
 			} else mSizeView.setVisibility(View.GONE);
+		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
+			bar.setVisibility(View.INVISIBLE);
+			mSizeText.setText(DFInfo.getFriendlySize(((OpenCursor)mFile).getTotalSize()));
 		} else mSizeView.setVisibility(View.GONE);
 	}
 	

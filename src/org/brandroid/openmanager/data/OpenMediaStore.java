@@ -25,10 +25,10 @@ public class OpenMediaStore extends OpenPath
 	private long modified = -1;
 	private int width = 0, height = 0;
 	
-	public OpenMediaStore(OpenCursor parent)
+	public OpenMediaStore(OpenCursor parent, Cursor cursor)
 	{
 		curs = parent;
-		Cursor cursor = parent.getCursor();
+		//Cursor cursor = parent.getCursor();
 		id = cursor.getString(0);
 		if(cursor.getColumnCount() > 1)
 			name = cursor.getString(1);
@@ -183,10 +183,7 @@ public class OpenMediaStore extends OpenPath
 	
 	@Override
 	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read, Boolean write) {
-		SoftReference<Bitmap> ret = super.getThumbnail(w, h, read, write);
-		width = w;
-		height = h;
-		return ret;
+		return super.getThumbnail(w, h, read, write);
 	}
 	
 	@Override

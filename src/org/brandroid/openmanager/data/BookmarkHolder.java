@@ -20,12 +20,19 @@ package org.brandroid.openmanager.data;
 
 import java.io.File;
 
+import org.brandroid.openmanager.FileManager;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.ThumbnailCreator;
+import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailStruct;
+import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailTask;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -38,6 +45,7 @@ public class BookmarkHolder {
 	private String sTitle;
 	private String sPath;
 	private OpenPath mFile;
+	private ThumbnailTask mTask;
 	
 	public BookmarkHolder(String path, View view) {
 		this(new OpenFile(path), getTitleFromPath(path), view);
@@ -79,7 +87,26 @@ public class BookmarkHolder {
 	
 	public ImageView getIconView() { ensureViews(); return mIcon; }
 	public void setIconResource(int res) { ensureViews(); if(mIcon != null) mIcon.setImageResource(res); }
-	public void setIconDrawable(Drawable d) { ensureViews(); if(mIcon != null) mIcon.setImageDrawable(d); }
+	public void setIconDrawable(Drawable d, ThumbnailStruct ts) {
+		OpenPath file = ts.File;
+		if(!file.getPath().equals(mFile.getPath())) {
+			int w = ts.Width, h = ts.Height;
+			Bitmap bmp = ThumbnailCreator.isBitmapCached(mFile.getPath(), w, h);
+			if(bmp != null)
+			{
+				BitmapDrawable bd = new BitmapDrawable(bmp);
+				bd.setGravity(Gravity.CENTER);
+				d = bd;
+			} else {
+				mParentView.notify();
+				Logger.LogWarning("Bad path " + mFile.getName() + " != " + file.getName());
+				return;
+			}
+		}
+		ensureViews();
+		if(mIcon != null) mIcon.setImageDrawable(d);
+	}
+	public void setIconDrawable(Drawable d) { mIcon.setImageDrawable(d); }
 	
 	public void setEjectClickListener(View.OnClickListener listener)
 	{
@@ -134,4 +161,8 @@ public class BookmarkHolder {
 		if(mPath != null)
 			mPath.setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
+	public void setTask(ThumbnailTask task) {
+		mTask = task;
+	}
+	public void cancelTask() { if(mTask!=null) mTask.cancel(true); }
 }

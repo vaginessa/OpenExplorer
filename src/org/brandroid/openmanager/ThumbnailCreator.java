@@ -76,8 +76,16 @@ public class ThumbnailCreator extends Thread {
 	
 	public static void setContext(Context c) { mContext = c; }
 	
-	public Bitmap isBitmapCached(String name, int w, int h) {
-		return mCacheMap.get(getCacheFilename(name, w, h));
+	public static Bitmap isBitmapCached(String name, int w, int h) {
+		String cacheName = getCacheFilename(name, w, h);
+		if(mCacheMap.containsKey(cacheName))
+			return mCacheMap.get(cacheName);
+		else {
+			File f = mContext.getFileStreamPath(cacheName);
+			if(f.exists())
+				return BitmapFactory.decodeFile(f.getPath());
+		}
+		return null;
 	}
 	
 	/*
@@ -132,6 +140,9 @@ public class ThumbnailCreator extends Thread {
 		//final Handler mHandler = next.Handler;
 		
 		String path = file.getPath();
+		
+		if((bmp = isBitmapCached(path, mWidth, mHeight)) != null)
+			return new SoftReference<Bitmap>(bmp);
 		
 		String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
 		
@@ -270,7 +281,7 @@ public class ThumbnailCreator extends Thread {
 					}
 					for(int vi = 0; vi < mVideoCursor.getCount(); vi++)
 					{
-						if(!mVideoCursor.moveToNext()) break;
+						if(!mVideoCursor.moveToPosition(vi)) break;
 						id = mVideoCursor.getInt(0);
 						String name = mVideoCursor.getString(mVideoCursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME));
 						if(name.equalsIgnoreCase(file.getName()))
@@ -310,22 +321,9 @@ public class ThumbnailCreator extends Thread {
 	
 	private static Bitmap loadThumbnail(String file)
 	{
-		Bitmap ret = null;
-		FileInputStream is = null;
-		try {
-			is = mContext.openFileInput(file);
-			ret = BitmapFactory.decodeStream(is);
-		} catch(FileNotFoundException e) {
-		} catch(Exception e)
-		{
-			Logger.LogError("Unable to load bitmap.", e);
-		} finally {
-			if(is != null)
-				try {
-					is.close();
-				} catch (IOException e) { }
-		}
-		return ret;
+		if(mContext != null)
+			return BitmapFactory.decodeFile(file);
+		return null;
 	}
 	
 	private static void saveThumbnail(String file, Bitmap bmp)
@@ -398,5 +396,9 @@ public class ThumbnailCreator extends Thread {
 		mCacheMap.clear();
 		for(String s : mContext.fileList())
 			mContext.deleteFile(s);
+	}
+
+	public static boolean hasContext() {
+		return mContext != null;
 	}
 }

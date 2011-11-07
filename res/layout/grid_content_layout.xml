@@ -25,7 +25,9 @@
 	android:padding="2dip">
 	<ImageView
 		android:id="@+id/content_icon"
-		style="@style/icon.big" />
+		style="@style/icon.big"
+		android:layout_width="fill_parent"
+		 />
 	<TextView
 		android:id="@+id/content_text"
 		android:lines="2"
