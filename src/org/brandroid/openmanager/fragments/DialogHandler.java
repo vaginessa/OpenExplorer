@@ -19,6 +19,7 @@
 package org.brandroid.openmanager.fragments;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -71,7 +72,7 @@ public class DialogHandler extends DialogFragment {
 	
 	private OnSearchFileSelected mSearchListener;
 	private ArrayList<OpenPath> mFiles;
-	private String mPath;
+	private OpenPath mPath;
 	
 	
 	public interface OnSearchFileSelected {
@@ -112,6 +113,8 @@ public class DialogHandler extends DialogFragment {
 	
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		if(savedInstanceState != null && savedInstanceState.containsKey("path"))
+			mPath = new OpenFile(savedInstanceState.getString("path"));
 		switch(mDialogType) {
 		case HOLDINGFILE_DIALOG:  	return createHoldingFileDialog();
 		case SEARCHRESULT_DIALOG: 	return createSearchResultDialog(inflater);
@@ -121,12 +124,18 @@ public class DialogHandler extends DialogFragment {
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}
 	
+	@Override
+	public void onSaveInstanceState(Bundle arg0) {
+		super.onSaveInstanceState(arg0);
+		arg0.putString("path", mPath.getPath());
+	}
+	
 	public void setHoldingFileList(ArrayList<OpenPath> list) {
 		mFiles = list;
 	}
 	
 	public void setFilePath(String path) {
-		mPath = path;
+		mPath = new OpenFile(path);
 	}
 	
 	public void setOnSearchFileSelected(OnSearchFileSelected s) {
@@ -333,7 +342,6 @@ public class DialogHandler extends DialogFragment {
 	}
 	
 	private View createFileInfoDialog(LayoutInflater inflater) {
-		OpenFile file = new OpenFile(mPath);
 		View v = inflater.inflate(R.layout.info_layout, null);
 		v.setBackgroundColor(0xcc000000);
 		v.setOnClickListener(new OnClickListener() {
@@ -343,7 +351,7 @@ public class DialogHandler extends DialogFragment {
 		});
 		
 		try {
-			populateFileInfoViews(v, file);
+			populateFileInfoViews(v, mPath);
 		} catch (IOException e) {
 			Logger.LogError("Couldn't create info dialog", e);
 		}
@@ -370,35 +378,18 @@ public class DialogHandler extends DialogFragment {
 	}
 	
 	private void populateFileInfoViews(View v, OpenPath file) throws IOException {
-		int dirCount = 0;
-		int fileCount = 0;
+			
 		String apath = file.getPath();
-		OpenPath files[] = file.listFiles();
 		Date date = new Date(file.lastModified());
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
 		TextView numFile = (TextView)v.findViewById(R.id.info_files_label);
 		
 		if (file.isDirectory()) {
-			files = file.listFiles();
 			
-			if (files != null) {
-				for(OpenPath f : files)
-					if (f.isDirectory())
-						dirCount++;
-					else
-						fileCount++;
-			}
-			
-			if (fileCount == 0)
-				numFile.setText("-");
-			else
-				numFile.setText("" + fileCount);
-			
-			if(dirCount == 0)
-				numDir.setText("-");
-			else
-				numDir.setText("" + dirCount);
+			new CountAllFilesTask(numFile, 0).execute((OpenFile)file);
+			new CountAllFilesTask(numDir, 1).execute((OpenFile)file);
+			new CountAllFilesTask((TextView)v.findViewById(R.id.info_total_size), 2).execute((OpenFile)file);
 			
 		} else {
 			numFile.setText("-");
@@ -408,7 +399,6 @@ public class DialogHandler extends DialogFragment {
 		((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
 		((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
 		((TextView)v.findViewById(R.id.info_path_label)).setText(apath.substring(0, apath.lastIndexOf("/") + 1));
-		((TextView)v.findViewById(R.id.info_total_size)).setText(formatSize(((OpenFile)file).getUsedSpace()));		
 		((TextView)v.findViewById(R.id.info_read_perm)).setText(file.canRead() + "");
 		((TextView)v.findViewById(R.id.info_write_perm)).setText(file.canWrite() + "");
 		((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
@@ -421,6 +411,59 @@ public class DialogHandler extends DialogFragment {
 	
 	private Drawable getFileIcon(OpenPath file, boolean largeSize) {
 		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96).get());
+	}
+	
+	private class CountAllFilesTask extends AsyncTask<OpenFile, Void, String>
+	{
+		private TextView mText;
+		private int which = 0;
+		
+		public CountAllFilesTask(TextView mText, int which) {
+			this.mText = mText;
+			this.which = which;
+		}
+
+		@Override
+		protected String doInBackground(OpenFile... params) {
+			int dirCount = 0;
+			int fileCount = 0;
+			OpenPath[] files = params[0].listFiles();
+			
+			if (files != null) {
+				for(OpenPath f : files)
+					if (f.isDirectory())
+						dirCount++;
+					else
+						fileCount++;
+			}
+			
+			String ret = "";
+			if(params[0].isDirectory())
+			{
+				if(which == 0)
+					ret = fileCount + " (" + params[0].countAllFiles() + ")";
+				else if(which == 1)
+					ret = dirCount + " (" + params[0].countAllDirectories() + ")";
+			}
+			if(which == 2)
+				ret = formatSize(((OpenFile)params[0]).getUsedSpace());
+			return ret;
+		}
+		
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			if(mText != null)
+				mText.setText("...");
+		}
+		
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+			if(mText != null && result != null)
+				mText.setText(result);
+		}
+		
 	}
 	
 	/*

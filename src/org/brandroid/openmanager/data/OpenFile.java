@@ -83,6 +83,20 @@ public class OpenFile extends OpenPath
 				ret += ((OpenFile)kid).getUsedSpace();
 		return ret;
 	}
+	public int countAllFiles() {
+		if(!isDirectory()) return 1;
+		int ret = 0;
+		for(OpenPath kid : list())
+			ret += ((OpenFile)kid).countAllFiles();
+		return ret;
+	}
+	public int countAllDirectories() {
+		if(!isDirectory()) return 0;
+		int ret = 1;
+		for(OpenPath kid : list())
+			ret += ((OpenFile)kid).countAllFiles();
+		return ret;
+	}
 
 	@Override
 	public OpenPath getParent() {

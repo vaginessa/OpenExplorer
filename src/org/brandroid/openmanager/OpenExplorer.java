@@ -155,6 +155,7 @@ public class OpenExplorer
         	updateTitle(path.getPath());
         } else
         	path = new OpenFile(Environment.getExternalStorageDirectory());
+        mLastPath = path;
         
         super.onCreate(savedInstanceState);
 
@@ -170,6 +171,8 @@ public class OpenExplorer
         	home = new ContentFragment(mLastPath);
         	ft.replace(R.id.list_frag, mFavoritesFragment);
         } else if (showFavorites)
+        	home = new ContentFragment(mLastPath);
+        else if (savedInstanceState != null && savedInstanceState.containsKey("last"))
         	home = new ContentFragment(mLastPath);
 
         if(Build.VERSION.SDK_INT > 11)
