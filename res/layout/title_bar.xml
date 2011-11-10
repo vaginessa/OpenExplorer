@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:background="@android:drawable/title_bar"
+    >
+    
+	<ImageButton
+	    android:src="@drawable/icon"
+	    android:id="@+id/title_icon"
+	    android:paddingLeft="6dp"
+	    android:paddingRight="4dp"
+	    android:paddingTop="2dp"
+	    android:paddingBottom="2dp"
+	    android:clickable="true"	    
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content" />
+
+	<TextView
+	    android:id="@+id/title_text"
+	    style="@style/Large"
+	    android:layout_marginTop="5dp"
+	    android:layout_alignParentTop="true"
+	    android:layout_toRightOf="@+id/title_icon"
+	    android:gravity="left|center_vertical"
+	    android:text="@string/app_name" />
+	
+	<TextView
+	    android:id="@+id/title_path"
+	    style="@style/Small"
+	    android:layout_marginTop="1dp"
+	    android:layout_below="@+id/title_text"
+	    android:layout_toRightOf="@+id/title_icon"
+	    android:gravity="left|center_vertical"
+	    />
+	
+    <ImageView
+        android:id="@+id/title_search"
+        android:src="@drawable/search"
+        android:clickable="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    
+</RelativeLayout>

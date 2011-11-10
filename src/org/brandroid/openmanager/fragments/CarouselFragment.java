@@ -69,9 +69,7 @@ public class CarouselFragment extends Fragment {
 
 		@Override
 		public void onCardSelected(final int id) {
-			Intent intent = IntentManager.getIntent(mPathItems[id], (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler());
-			intent.putExtra("path", mPathItems[id].getPath());
-			startActivity(intent);
+			IntentManager.startIntent(mPathItems[id], (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler());
 			//postMessage("Selection", "Card " + id + " was selected");
 		}
 
@@ -205,6 +203,10 @@ public class CarouselFragment extends Fragment {
 	public CarouselFragment(OpenPath mParent)
 	{
 		super();
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			Logger.LogError("Who is making me?", new Exception("WTF!"));
+		}
 		mBlackPaint.setColor(Color.BLACK);
 		mPathItems = mParent.list();
 	}
@@ -212,10 +214,12 @@ public class CarouselFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		
 		View mParent = inflater.inflate(R.layout.carousel_test, null);
 		
 		mView = (CarouselView)mParent.findViewById(R.id.carousel);
-		mHelper = new LocalCarouselViewHelper(getActivity());
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+			mHelper = new LocalCarouselViewHelper(getActivity());
 		
 		return mParent;
 	}
@@ -254,13 +258,15 @@ public class CarouselFragment extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
-		mHelper.onResume();
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+			mHelper.onResume();
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
-		mHelper.onPause();
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+			mHelper.onPause();
 	}
 
 }

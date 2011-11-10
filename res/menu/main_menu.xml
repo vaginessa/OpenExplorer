@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
+  	<item
+  	    android:id="@+id/menu_favorites"
+  	    android:showAsAction="never"
+  	    android:title="Show Favorites" />
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@drawable/search"
 		android:showAsAction="always"
+		android:actionViewClass="android.widget.SearchView"
 		android:title="Search" />
 	<item
 		android:id="@+id/menu_sort"
 		android:icon="@android:drawable/ic_menu_sort_alphabetically"
-		android:showAsAction="always|withText"
+		android:showAsAction="ifRoom"
 		android:title="Sort">
 		<menu>
 			<group android:checkableBehavior="single">
@@ -48,7 +53,7 @@
 	<item
 		android:id="@+id/menu_view"
 		android:icon="@android:drawable/picture_frame"
-		android:showAsAction="always|withText"
+		android:showAsAction="ifRoom"
 		android:title="View">
 		<menu>
 			<item
@@ -64,6 +69,9 @@
 					android:id="@+id/menu_view_list"
 					android:checked="true"
 					android:title="List View" />
+				<item
+					android:id="@+id/menu_view_carousel"
+					android:title="Carousel View" />
 			</group>
 			<item
 				android:id="@+id/menu_view_hidden"
@@ -74,20 +82,32 @@
 				android:checkable="true"
 				android:checked="true"
 				android:title="Show Image Thumbnails" />
-			<item
-				android:id="@+id/menu_root"
-				android:checkable="true"
-				android:title="Root" />
 		</menu>
 	</item>
 	<item
 		android:id="@+id/menu_new_folder"
 		android:icon="@drawable/newfolder"
-		android:showAsAction="always|withText"
+		android:showAsAction="ifRoom"
 		android:title="New Folder" />
 	<item
-		android:id="@+id/menu_settings"
+		android:id="@+id/menu_other"
 		android:icon="@drawable/settings_actbar"
-		android:showAsAction="always|withText"
-		android:title="Settings" />
+		android:showAsAction="always"
+		android:title="Other Settings">
+		<menu>
+			<item
+				android:id="@+id/menu_flush"
+				android:title="Flush Cache" />
+			<item
+				android:id="@+id/menu_root"
+				android:checkable="true"
+				android:title="Root" />
+			<item
+				android:id="@+id/menu_settings_folder"
+				android:title="Folder Preferences" />
+			<item
+				android:id="@+id/menu_settings"
+				android:title="Global Preferences" />
+		</menu>
+	</item>
 </menu>

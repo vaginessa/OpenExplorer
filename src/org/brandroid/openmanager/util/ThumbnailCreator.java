@@ -21,17 +21,12 @@ package org.brandroid.openmanager.util;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapFactory.Options;
-import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.database.Cursor;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -44,20 +39,15 @@ import java.util.ArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailStruct;
-import org.brandroid.utils.Decoder;
-import org.brandroid.utils.General;
 import org.brandroid.utils.Logger;
 
 public class ThumbnailCreator extends Thread {
@@ -157,16 +147,20 @@ public class ThumbnailCreator extends Thread {
 				//opts.outWidth = mWidth;
 				//opts.outHeight = mHeight;
 				int kind = mWidth > 96 ? MediaStore.Video.Thumbnails.MINI_KIND : MediaStore.Video.Thumbnails.MICRO_KIND;
-				if(om.getParent().getName().equals("Photos"))
-					bmp = MediaStore.Images.Thumbnails.getThumbnail(
-								mContext.getContentResolver(),
-								om.getMediaID(), kind, opts
-							);
-				else // if(om.getParent().getName().equals("Videos"))
-					bmp = MediaStore.Video.Thumbnails.getThumbnail(
-								mContext.getContentResolver(),
-								om.getMediaID(), kind, opts
-							);
+				try {
+					if(om.getParent().getName().equals("Photos"))
+						bmp = MediaStore.Images.Thumbnails.getThumbnail(
+									mContext.getContentResolver(),
+									om.getMediaID(), kind, opts
+								);
+					else // if(om.getParent().getName().equals("Videos"))
+						bmp = MediaStore.Video.Thumbnails.getThumbnail(
+									mContext.getContentResolver(),
+									om.getMediaID(), kind, opts
+								);
+				} catch(Exception e) {
+					Logger.LogWarning("Couldn't get MediaStore thumbnail.", e);
+				}
 				if(bmp != null) {
 					//Logger.LogDebug("Bitmap is " + bmp.getWidth() + "x" + bmp.getHeight() + " to " + mWidth + "x" + mHeight);
 					valid = true;

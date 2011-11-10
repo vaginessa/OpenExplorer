@@ -55,6 +55,7 @@ import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.IntentSender.SendIntentException;
 import android.content.Intent;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -103,7 +104,6 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private LinearLayout mMultiSelectView;
 	private GridView mGrid = null;
 	private ListView mList = null;
-	private int mViewMode;
 	
 	private OpenPath mPath = null;
 	private static OpenPath mLastPath = null;
@@ -131,7 +131,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	public ContentFragment()
 	{
-		Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
+		//Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		mPath = mLastPath;
 	}
 	public ContentFragment(OpenPath path)
@@ -139,9 +139,17 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mPath = mLastPath = path;
 	}
 	
+	private int getViewMode() { return ((OpenExplorer)getActivity()).getViewMode(); }
+	
 	//@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		if(savedInstanceState != null && savedInstanceState.containsKey("last"))
+			mPath = mLastPath = new OpenFile(savedInstanceState.getString("last"));
+		
+		if(mPath == null)
+			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		
 		mContext = getActivity();
 		
@@ -180,20 +188,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mHoldingZip = false;
 		mActionModeSelected = false;
 		try {
-			mViewMode = ((OpenExplorer)getActivity()).getPreferences()
-											.getSetting(mPath.getPath(), "pref_view", ((OpenExplorer)getActivity()).getViewMode());
 			mShowThumbnails = ((OpenExplorer)getActivity()).getPreferences()
 								.getSetting(mPath.getPath(), SettingsActivity.PREF_THUMB_KEY, true);
 		} catch(NullPointerException npe) {
-			mViewMode = OpenExplorer.VIEW_LIST;
 			mShowThumbnails = true;
 		}
 
 		if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
-		{
-			mViewMode = OpenExplorer.VIEW_CAROUSEL;
 			mShowThumbnails = true;
-		}
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
 		
@@ -245,18 +247,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 		if(mGrid == null && mList == null)
 			Logger.LogError("WTF, where are they?");
-		else if (mViewMode == OpenExplorer.VIEW_GRID)
+		else if (getViewMode() == OpenExplorer.VIEW_GRID)
 			updateChosenMode(mGrid);
-		else if (mViewMode == OpenExplorer.VIEW_LIST)
+		else if (getViewMode() == OpenExplorer.VIEW_LIST)
 			updateChosenMode(mList);
-		else if (mViewMode == OpenExplorer.VIEW_CAROUSEL)
-		{
-			getFragmentManager().beginTransaction()
-				.replace(R.id.content_frag, new CarouselFragment(mPath))
-				.setBreadCrumbTitle(mPath.getPath())
-				.addToBackStack(null)
-				.commit();
-		}
 	}
 	
 	@Override
@@ -267,12 +261,12 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	
 	public void updateChosenMode(AbsListView mChosenMode)
 	{
-		if(mViewMode == OpenExplorer.VIEW_GRID) {
+		if(getViewMode() == OpenExplorer.VIEW_GRID) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
 			mList.setVisibility(View.GONE);
 			mGrid.setVisibility(View.VISIBLE);
 			mGrid.setAdapter(mContentAdapter);
-		} else if(mViewMode == OpenExplorer.VIEW_LIST) {
+		} else if(getViewMode() == OpenExplorer.VIEW_LIST) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
 			mGrid.setVisibility(View.GONE);
 			mList.setVisibility(View.VISIBLE);
@@ -623,11 +617,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return;
 			}
 			
-			Intent intent = IntentManager.getIntent(file, (OpenExplorer)getActivity(), mHandler);
-			if(intent != null && intent.getDataString() != null && intent.getDataString() != "")
-			{
-				startActivity(intent);
-			}
+			IntentManager.startIntent(file, (OpenExplorer)getActivity(), mHandler);
 		}
 	}
 	
@@ -759,7 +749,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 	//@Override
 	public void onViewChanged(int state) {
-		mViewMode = state;
+		//mViewMode = state;
 		((OpenExplorer)getActivity()).setViewMode(state);
 		
 		View v = getView();
@@ -777,7 +767,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 		if(mGrid == null && mList == null)
 			Logger.LogError("WTF, where are they?");
-		else if (mViewMode == OpenExplorer.VIEW_GRID)
+		else if (getViewMode() == OpenExplorer.VIEW_GRID)
 			updateChosenMode(mGrid);
 		else
 			updateChosenMode(mList);
@@ -876,14 +866,14 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
 			int mWidth = 36, mHeight = 36;
-			if(mViewMode == OpenExplorer.VIEW_GRID)
+			if(getViewMode() == OpenExplorer.VIEW_GRID)
 				mWidth = mHeight = 96;
 			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				view = in.inflate(mViewMode == OpenExplorer.VIEW_GRID ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
+				view = in.inflate(getViewMode() == OpenExplorer.VIEW_GRID ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
 				
 				mHolder = new BookmarkHolder(file, mName, view);
 				
@@ -894,7 +884,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				mHolder.cancelTask();
 			}
 
-			if(mViewMode == OpenExplorer.VIEW_LIST) {
+			if(getViewMode() == OpenExplorer.VIEW_LIST) {
 				mHolder.setInfo(getFileDetails(file));
 				mHolder.setPath(file.getPath());
 			}

@@ -22,16 +22,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     
-	<LinearLayout android:id="@+id/title_bar" android:orientation="horizontal"
-		android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone">
-		<ImageButton android:src="@drawable/icon" android:id="@+id/homeIcon"
-			android:layout_height="wrap_content" android:layout_width="wrap_content" />
-		<TextView android:text="@string/app_name"
-			android:gravity="left|center_vertical"
-			android:id="@+id/homeText"
-			style="@style/Large" />
-	    
-	</LinearLayout>
+	
+    <ViewStub android:layout="@layout/title_bar" android:id="@+id/title_stub" android:inflatedId="@+id/title_bar"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        />
+    
 	<RelativeLayout
 		android:id="@+id/frag_holder"
 	    android:layout_width="match_parent"

@@ -181,12 +181,8 @@ public class DialogHandler extends DialogFragment {
 					}
 				});
 				
-				Intent intent = IntentManager.getIntent(selected, (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler());
-				if(intent != null)
-				{
-					startActivity(intent);
+				if(IntentManager.startIntent(selected, (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler()))
 					return;
-				}
 				
 				
 				if (!selected.isDirectory()) {

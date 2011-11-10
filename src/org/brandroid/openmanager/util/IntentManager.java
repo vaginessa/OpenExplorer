@@ -2,6 +2,7 @@ package org.brandroid.openmanager.util;
 
 import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.utils.Logger;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -16,6 +17,7 @@ public class IntentManager
 		
 		Intent ret = new Intent();
 		ret.setAction(Intent.ACTION_VIEW);
+		//ret.set
 		
 		/*audio files*/
 		
@@ -97,5 +99,22 @@ public class IntentManager
     		ret.setDataAndType(file.getUri(), "application/*");
     	}
 		return ret;
+	}
+
+	public static boolean startIntent(OpenPath file, OpenExplorer activity, EventHandler mHandler)
+	{
+		Intent intent = getIntent(file, activity, mHandler);
+		//intent.addFlags(Intent.FL);
+		if(intent != null)
+		{
+			try {
+				activity.startActivity(intent);
+			} catch(ActivityNotFoundException e) {
+				Logger.LogWarning("Couldn't launch intent for " + file.getPath(), e);
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 }

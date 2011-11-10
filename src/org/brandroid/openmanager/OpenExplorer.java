@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,6 +30,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -40,7 +42,11 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewStub;
+import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -67,7 +73,7 @@ import org.brandroid.utils.Preferences;
 
 public class OpenExplorer
 		extends FragmentActivity
-		implements OnBackStackChangedListener
+		implements OnBackStackChangedListener, OnClickListener
 	{	
 
 	private static final int PREF_CODE =		0x6;
@@ -102,6 +108,9 @@ public class OpenExplorer
 	public void setViewMode(int mode) { mViewMode = mode; }
     
     public void onCreate(Bundle savedInstanceState) {
+    	
+    	if(BEFORE_HONEYCOMB)
+    		requestWindowFeature(Window.FEATURE_NO_TITLE);
         
         setContentView(R.layout.main_fragments);
         
@@ -113,11 +122,18 @@ public class OpenExplorer
 			getPreferences().setSetting("global", "welcome", true);
 			//getActionBar().hide();
 		} // else
-        if(findViewById(R.id.title_bar) != null)
-        	findViewById(R.id.title_bar).setVisibility(View.GONE);
         
         if(!BEFORE_HONEYCOMB)
+        {
         	setTheme(android.R.style.Theme_Holo);
+            if(findViewById(R.id.title_bar) != null)
+            	findViewById(R.id.title_bar).setVisibility(View.GONE);
+        } else {
+        	ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
+        	if(mTitleStub != null)
+        		mTitleStub.inflate();
+        	setOnClicks(R.id.title_icon, R.id.title_search);
+        }
         
         if(findViewById(R.id.list_frag) == null)
         	mSinglePane = true;
@@ -159,26 +175,32 @@ public class OpenExplorer
         
         super.onCreate(savedInstanceState);
 
-        final Boolean showFavorites = savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals("");
-        
         FragmentTransaction ft = fragmentManager.beginTransaction();
-        Fragment home = mFavoritesFragment;
+        Fragment home = new ContentFragment(mLastPath);
         
         Logger.LogDebug("Creating with " + path.getPath());
-        		
+
         if(!mSinglePane)
         {
-        	home = new ContentFragment(mLastPath);
-        	ft.replace(R.id.list_frag, mFavoritesFragment);
-        } else if (showFavorites)
-        	home = new ContentFragment(mLastPath);
-        else if (savedInstanceState != null && savedInstanceState.containsKey("last"))
-        	home = new ContentFragment(mLastPath);
+        	FragmentTransaction ft2 = fragmentManager.beginTransaction();
+        	ft2.replace(R.id.list_frag, mFavoritesFragment);
+        	ft2.commit();
+        	//ft.replace(R.id.list_frag, mFavoritesFragment);
+        }
 
-        if(Build.VERSION.SDK_INT > 11)
+        if(Build.VERSION.SDK_INT > 11 && savedInstanceState == null)
         {
-        	path = mLastPath = mVideoParent.length() > 1 ? mVideoParent : mPhotoParent;
-        	home = new CarouselFragment(mLastPath);
+        	if(mVideoParent.length() > 1)
+        	{
+        		mViewMode = VIEW_CAROUSEL;
+        		path = mLastPath = mVideoParent;
+        	} else if (mPhotoParent.length() > 1) {
+        		mViewMode = VIEW_CAROUSEL;
+        		path = mLastPath = mPhotoParent;
+        	}
+        	
+        	if(mViewMode == VIEW_CAROUSEL)
+        		home = new CarouselFragment(mLastPath);
         }
 
         Intent intent = getIntent();
@@ -190,9 +212,14 @@ public class OpenExplorer
         }
 
         ft.replace(R.id.content_frag, home);
-        if(fragmentManager.getBackStackEntryCount() > 0 && !showFavorites)
+        if(fragmentManager.getBackStackEntryCount() > 0)
+        {
         	ft.addToBackStack("path");
+        	ft.setBreadCrumbTitle(mLastPath.getPath());
+        }
         ft.commit();
+        
+        updateTitle(mLastPath.getPath());
         
         if(mFileManager == null)
         	mFileManager = new FileManager();
@@ -263,7 +290,7 @@ public class OpenExplorer
     public OpenCursor getPhotoParent() { if(mPhotoParent == null) refreshCursors(); return mPhotoParent; }
     public OpenCursor getVideoParent() { if(mVideoParent == null) refreshCursors(); return mVideoParent; }
     
-    public void refreshCursors()
+    private void refreshCursors()
     {
     	if(mPhotoParent == null)
     	{
@@ -271,7 +298,7 @@ public class OpenExplorer
 					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 					MediaStore.Images.Media.SIZE + " > 10000", null,
 					MediaStore.Images.Media.DATE_ADDED + " DESC");
-	    	//startManagingCursor(mPhotoCursor);
+	    	startManagingCursor(mPhotoCursor);
 	    	mPhotoParent = new OpenCursor(mPhotoCursor, "Photos");
 	    	mPhotoCursor.close();
 		}
@@ -282,7 +309,7 @@ public class OpenExplorer
 					MediaStore.Video.Media.SIZE + " > 100000", null,
 					MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 					MediaStore.Video.Media.DATE_MODIFIED + " DESC");
-			//startManagingCursor(mVideoCursor);
+			startManagingCursor(mVideoCursor);
 			mVideoParent = new OpenCursor(mVideoCursor, "Videos");
 			mVideoCursor.close();
     	}
@@ -360,7 +387,10 @@ public class OpenExplorer
     	String t = getResources().getString(R.string.app_name) + (s.equals("") ? "" : " - " + s);
     	if(BEFORE_HONEYCOMB)
     	{
-    		setTitle(t);
+    		if(findViewById(R.id.title_path) != null)
+    			((TextView)findViewById(R.id.title_path)).setText(s);
+    		else
+    			setTitle(t);
     	} else {
     		getActionBar().setTitle(t);
     	}
@@ -378,7 +408,7 @@ public class OpenExplorer
     }
     
     public boolean onCreateOptionsMenu(Menu menu) {
-    	getMenuInflater().inflate(R.menu.actbar, menu);
+    	getMenuInflater().inflate(R.menu.main_menu, menu);
     	if(!BEFORE_HONEYCOMB)
     	{
     		mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
@@ -400,6 +430,14 @@ public class OpenExplorer
     public boolean onPrepareOptionsMenu(Menu menu) {
     	if(BEFORE_HONEYCOMB)
     		menu.findItem(R.id.menu_view_carousel).setVisible(false);
+    	if(!mSinglePane)
+    		menu.findItem(R.id.menu_favorites).setVisible(false);
+    	if(mViewMode == VIEW_GRID)
+    		menu.findItem(R.id.menu_view_grid).setChecked(true);
+    	else if(mViewMode == VIEW_LIST)
+    		menu.findItem(R.id.menu_view_list).setChecked(true);
+    	else if(mViewMode == VIEW_CAROUSEL)
+    		menu.findItem(R.id.menu_view_carousel).setChecked(true);
     	return super.onPrepareOptionsMenu(menu);
     }
 
@@ -422,8 +460,14 @@ public class OpenExplorer
     	if(item.isCheckable())
     		item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
     	
-    	switch(item.getItemId())
+    	return onClick(item.getItemId(), item);
+    }
+    public boolean onClick(int id, MenuItem item)
+    {
+    	switch(id)
     	{
+    		case R.id.title_icon:
+    			Logger.LogDebug("gj!");
 	    	case android.R.id.home:
 	    		if (mHeldFiles != null) {
 	    			//DialogFragment df = 
@@ -436,7 +480,10 @@ public class OpenExplorer
 	    			trans.addToBackStack("dialog");
 	    			trans.commit();
 	    		} else {
-	    			//toggleListView();
+	    			if(mViewMode == VIEW_GRID)
+	    				changeViewMode(VIEW_LIST);
+	    			else
+	    				changeViewMode(VIEW_GRID);
 	    		}
 	    		return true;
 	    	
@@ -506,34 +553,13 @@ public class OpenExplorer
 	    	case R.id.menu_sort_type: 		if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
 	    	
 	    	case R.id.menu_view_grid:
-	    		if(mViewMode == VIEW_GRID) return true;
-	    		if(mViewMode == VIEW_LIST) {
-	    			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_GRID);
-	    		} else {
-	    			FragmentTransaction ft = fragmentManager.beginTransaction();
-	    			ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
-	    			ft.commit();
-	    		}
-	    		mViewMode = VIEW_GRID;
+	    		changeViewMode(VIEW_GRID);
 	    		return true;
 	    	case R.id.menu_view_list:
-	    		if(mViewMode == VIEW_LIST) return true;
-	    		if(mViewMode == VIEW_GRID) {
-	    			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_LIST);
-	    		} else {
-	    			FragmentTransaction ft = fragmentManager.beginTransaction();
-	    			ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
-	    			ft.commit();
-	    		}
-	    		mViewMode = VIEW_LIST;
+	    		changeViewMode(VIEW_LIST);
 	    		return true;
 	    	case R.id.menu_view_carousel:
-	    		if(mViewMode == VIEW_CAROUSEL) return true;
-	    		//if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_CAROUSEL);
-	    		FragmentTransaction ft = fragmentManager.beginTransaction();
-	    		ft.replace(R.id.content_frag, new CarouselFragment(mLastPath));
-	    		ft.commit();
-	    		mViewMode = VIEW_CAROUSEL;
+	    		changeViewMode(VIEW_CAROUSEL);
 	    		return true;
 	    	case R.id.menu_view_hidden: if(mSettingsListener!=null) mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
 	    	case R.id.menu_view_thumbs: if(mSettingsListener!=null) mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
@@ -570,6 +596,7 @@ public class OpenExplorer
 	    		showPreferences(mLastPath);
 	    		return true;
 	    		
+	    	case R.id.title_search:
 	    	case R.id.menu_search:
 	    		//item.setActionView(mSearchView);
 	    		return onSearchRequested();
@@ -579,7 +606,36 @@ public class OpenExplorer
     	return super.onOptionsItemSelected(item);
     }
     
-    public void showPreferences(OpenPath path)
+    public void changeViewMode(int newView) {
+    	if(mViewMode == newView) {
+    		Logger.LogWarning("changeViewMode called unnecessarily! " + newView + " = " + mViewMode);
+    		return;
+    	}
+    	if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
+    		newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
+    	int oldView = mViewMode;
+		setViewMode(newView);
+		if(BEFORE_HONEYCOMB)
+		{
+			if(mSettingsListener != null)
+				mSettingsListener.onViewChanged(newView);
+			else Logger.LogWarning("Listener not available.");
+		} else if(newView == VIEW_CAROUSEL)
+		{
+			FragmentTransaction ft = fragmentManager.beginTransaction();
+			ft.replace(R.id.content_frag, new CarouselFragment(mLastPath));
+			ft.addToBackStack(null);
+			ft.commit();
+			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_GRID);
+		} else if (oldView == VIEW_CAROUSEL) { // if we need to transition from carousel
+			FragmentTransaction ft = fragmentManager.beginTransaction();
+			ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
+			ft.addToBackStack(null);
+			ft.commit();
+		} else if (mSettingsListener != null)
+			mSettingsListener.onViewChanged(newView);
+	}
+	public void showPreferences(OpenPath path)
     {
     	if(Build.VERSION.SDK_INT > 100)
     	{	
@@ -752,15 +808,6 @@ public class OpenExplorer
         });
     }
 
-	
-	public interface OnSettingsChangeListener {
-		
-		public void onHiddenFilesChanged(boolean state);
-		public void onThumbnailChanged(boolean state);
-		public void onViewChanged(int viewGrid);
-		public void onSortingChanged(FileManager.SortType type);
-	}
-
 
 	public void hideBookmarkTitles() {
 		BookmarkFragment bf = ((BookmarkFragment)fragmentManager.findFragmentById(R.id.list_frag));
@@ -876,6 +923,25 @@ public class OpenExplorer
 		DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
 		dialogInfo.setFilePath(path.getPath());
 		dialogInfo.show(fragmentManager, "info");
+	}
+
+	public interface OnSettingsChangeListener {
+		public void onHiddenFilesChanged(boolean state);
+		public void onThumbnailChanged(boolean state);
+		public void onViewChanged(int viewGrid);
+		public void onSortingChanged(FileManager.SortType type);
+	}
+
+
+    public void setOnClicks(int... ids)
+    {
+    	for(int id : ids)
+    		if(findViewById(id) != null)
+    			findViewById(id).setOnClickListener(this);
+    }
+    
+	public void onClick(View v) {
+		onClick(v.getId(), null);
 	}
 }
 
