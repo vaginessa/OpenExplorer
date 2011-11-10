@@ -22,19 +22,26 @@ import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
-import org.brandroid.openmanager.data.DFInfo;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment.OnBookMarkAddListener;
+import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.ExecuteAsRootBase;
 import org.brandroid.utils.Logger;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StatFs;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.animation.Animator;
@@ -54,8 +61,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class BookmarkFragment extends ListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
@@ -366,6 +377,53 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			mDirListString += mBookmarks.get(i).getPath() + ";";
 	}
 	
+	public void updateSizeIndicator(OpenPath mFile, View mParentView)
+	{
+		View mSizeView = (View)mParentView.findViewById(R.id.size_layout);
+		ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
+		TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
+		if(bar == null) return;
+		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
+		{
+			OpenFile f = (OpenFile)mFile;
+			long size = f.getTotalSpace();
+			long free = f.getFreeSpace();
+			//Logger.LogDebug("Sizes: " + free + " / " + size);
+			
+			/*
+			if(DFInfo.LoadDF().containsKey(f.getPath()))
+				size = (long)DFInfo.LoadDF().get(f.getPath()).getSize();
+			if(DFInfo.LoadDF().containsKey(f.getPath()))
+				free = (long)DFInfo.LoadDF().get(f.getPath()).getFree();
+				*/
+			//while(size > 0 && size < 100000000) { size *= (1024 * 1024); free *= 1024; }
+			if(size > 0 && free < size)
+			{
+				String sFree = DialogHandler.formatSize(free);
+				String sTotal = DialogHandler.formatSize(size);
+				//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
+				//	sFree = DFInfo.getFriendlySize(free, false);
+				if(sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
+					sFree = sFree.substring(0, sFree.lastIndexOf(" "));
+				mSizeText.setText(sFree + "/" + sTotal);
+				
+				while(size > 100000)
+				{
+					size /= 10;
+					free /= 10;
+				}
+				bar.setMax((int)size);
+				bar.setProgress((int)(size - free));
+				if(bar.getProgress() == 0)
+					bar.setVisibility(View.GONE);
+				//Logger.LogDebug(bar.getProgress() + "?");
+				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
+			} else mSizeView.setVisibility(View.GONE);
+		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
+			bar.setVisibility(View.INVISIBLE);
+			mSizeText.setText(DialogHandler.formatSize(((OpenCursor)mFile).getTotalSize()));
+		} else mSizeView.setVisibility(View.GONE);
+	}
 	
 	
 	/*
@@ -455,12 +513,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				mHolder.setText("Photos");
 				mHolder.setIconResource(R.drawable.photo);
 			} else if(sPath2.indexOf("usb") > -1) {
-				sPath2 = sPath2.substring(sPath2.lastIndexOf("/") + 1);
-				if(sPath2.indexOf("_") > -1 && sPath2.indexOf("usb") < sPath2.indexOf("_"))
-					sPath2 = sPath2.substring(0, sPath2.indexOf("_"));
-				else if (sPath2.indexOf("_") > -1 && sPath2.indexOf("USB") > sPath2.indexOf("_"))
-					sPath2 = sPath2.substring(sPath2.indexOf("_") + 1);
-				mHolder.setText(sPath2.toUpperCase());
+				sPath2 = OpenExplorer.getVolumeName(sPath2);
+				
+				mHolder.setText(sPath2);
 				mHolder.setEjectable(true);
 				mHolder.setIconResource(R.drawable.usb);
 			} else if(sPath2.indexOf("sdcard-ext") > -1 || sPath2.indexOf("external") > -1) {
@@ -503,48 +558,5 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		}
 	}	
 
-	public void updateSizeIndicator(OpenPath mFile, View mParentView)
-	{
-		View mSizeView = (View)mParentView.findViewById(R.id.size_layout);
-		ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
-		TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
-		if(bar == null) return;
-		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
-		{
-			OpenFile f = (OpenFile)mFile;
-			long size = f.getTotalSpace();
-			long free = f.getFreeSpace();
-			/*
-			if(DFInfo.LoadDF().containsKey(f.getPath()))
-				size = (long)DFInfo.LoadDF().get(f.getPath()).getSize();
-			if(DFInfo.LoadDF().containsKey(f.getPath()))
-				free = (long)DFInfo.LoadDF().get(f.getPath()).getFree();
-				*/
-			//while(size > 0 && size < 100000000) { size *= (1024 * 1024); free *= 1024; }
-			if(size > 0 && free < size)
-			{
-				String sFree = DFInfo.getFriendlySize(free);
-				String sTotal = DFInfo.getFriendlySize(size);
-				//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
-				//	sFree = DFInfo.getFriendlySize(free, false);
-				mSizeText.setText(sFree + "/" + sTotal);
-				
-				while(size > 100000)
-				{
-					size /= 10;
-					free /= 10;
-				}
-				bar.setMax((int)size);
-				bar.setProgress((int)(size - free));
-				if(bar.getProgress() == 0)
-					bar.setVisibility(View.GONE);
-				Logger.LogDebug(bar.getProgress() + "?");
-				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
-			} else mSizeView.setVisibility(View.GONE);
-		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
-			bar.setVisibility(View.INVISIBLE);
-			mSizeText.setText(DFInfo.getFriendlySize(((OpenCursor)mFile).getTotalSize()));
-		} else mSizeView.setVisibility(View.GONE);
-	}
-	
+
 }

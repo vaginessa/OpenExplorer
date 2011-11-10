@@ -1,4 +1,4 @@
-package org.brandroid.openmanager.data;
+package org.brandroid.openmanager.util;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -12,7 +12,6 @@ public class DFInfo
 {
 	private String mPath;
 	private int mSize, mUsed, mFree, mBlocksize;
-	private static Hashtable<String, DFInfo> mDefault = null;
 	
 	public String getPath() { return mPath; }
 	public int getSize() { return mSize; }
@@ -48,25 +47,12 @@ public class DFInfo
 			return (int)Math.floor(sz);
 		} catch(Exception e) { Logger.LogError("Unable to get size from [" + s + "]", e); return -1; }
 	}
-	public static String getFriendlySize(Long bytes) { return getFriendlySize(bytes, true); }
-	public static String getFriendlySize(Long bytes, Boolean showLevel)
-	{
-		int level = 0;
-		float f = (float)bytes;
-		while(f > 1024)
-		{
-			level++;
-			f /= 1024;
-		}
-		f = (float) ((double)Math.round(f * 100) / 100);
-		return (f + (showLevel ? (new String[]{""," K"," MB"," GB"," TB"})[level] : "")).replace(".0", "");
-	}
 	public static Hashtable<String, DFInfo> LoadDF()
 	{
-		if(mDefault != null) return mDefault;
+		//if(mDefault != null) return mDefault;
 		Process dfProc = null;
 		DataInputStream is = null;
-		mDefault = new Hashtable<String, DFInfo>();
+		Hashtable<String, DFInfo> ret = new Hashtable<String, DFInfo>();
 		try {
 			Boolean handled = false;
 			try {
@@ -92,8 +78,8 @@ public class DFInfo
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
-					mDefault.put(slParts[0], item);
+					//Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					ret.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 			}
 		} catch (IOException e) {
@@ -106,7 +92,7 @@ public class DFInfo
 				Logger.LogWarning("DF: Couldn't close drive size input stream.", e);
 			}
 		}
-		return mDefault;
+		return ret;
 	}
 	
 }

@@ -22,6 +22,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.StatFs;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -49,6 +51,9 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.data.OpenCursor;
@@ -197,7 +202,7 @@ public class OpenExplorer
         	} else if (mPhotoParent.length() > 1) {
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mPhotoParent;
-        	}
+        	} else mViewMode = VIEW_LIST;
         	
         	if(mViewMode == VIEW_CAROUSEL)
         		home = new CarouselFragment(mLastPath);
@@ -240,6 +245,32 @@ public class OpenExplorer
     	return mPreferences;
     }
     
+    public void handleRefreshMedia(final String path, boolean keepChecking, final int retries)
+    {
+    	if(!keepChecking || retries <= 0)
+    	{
+    		refreshBookmarks();
+    		return;
+    	}
+    	final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			public void run() {
+				Logger.LogDebug("Check " + retries + " for " + path);
+				try {
+					StatFs sf = new StatFs(path);
+					if(sf.getBlockCount() == 0)
+						throw new Exception("No blocks");
+					//showToast("New USB! " + getVolumeName(path) + " @ " + DialogHandler.formatSize((long)sf.getBlockSize() * (long)sf.getAvailableBlocks()));
+					refreshBookmarks();
+				} catch(Throwable e)
+				{
+					Logger.LogWarning("Couldn't read " + path);
+					handleRefreshMedia(path, true, retries - 1); // retry again in 1/2 second
+				}
+			}
+		}, 1000);
+    }
+    
     public void handleMediaReceiver()
     {
     	storageReceiver = new BroadcastReceiver() {
@@ -247,21 +278,20 @@ public class OpenExplorer
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
 				String data = intent.getDataString();
+				final String path = data.replace("file://", "");
+				//Logger.LogInfo("Received " + intent.toString());
 				//Bundle extras = intent.getExtras();
-				showToast(data.replace("file://", "").replace("/mnt/", "") + " " +
-						action.replace("android.intent.action.", "").replace("MEDIA_", ""));
-				if(action.equals(Intent.ACTION_MEDIA_MOUNTED) ||
-						action.equals(Intent.ACTION_MEDIA_UNMOUNTED)
-						)
-				{
+				//showToast(data.replace("file://", "").replace("/mnt/", "") + " " +
+				//		action.replace("android.intent.action.", "").replace("MEDIA_", ""));
+				if(action.equals(Intent.ACTION_MEDIA_MOUNTED))
+					handleRefreshMedia(path, true, 10);
+				else
 					refreshBookmarks();
-				}
 			}
 		};
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
-		filter.addAction(Intent.ACTION_MEDIA_EJECT);
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
 		filter.addDataScheme("file");
 		registerReceiver(storageReceiver, filter);
@@ -833,7 +863,7 @@ public class OpenExplorer
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		Fragment content;
-		if(mViewMode == VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
+		if(mViewMode == VIEW_CAROUSEL && !BEFORE_HONEYCOMB && path.getClass().equals(OpenCursor.class))
 			content = new CarouselFragment(path);
 		else
 			content = new ContentFragment(path);
@@ -942,6 +972,44 @@ public class OpenExplorer
     
 	public void onClick(View v) {
 		onClick(v.getId(), null);
+	}
+	public static String getVolumeName(String sPath2) {
+		Process mLog = null;
+		BufferedReader reader = null;
+		try {
+			mLog = Runtime.getRuntime().exec(new String[] {"logcat", "-d", "MediaVolume:D *:S"});
+			reader = new BufferedReader(new InputStreamReader(mLog.getInputStream()));
+			String check = sPath2.substring(sPath2.lastIndexOf("/") + 1);
+			if(check.indexOf(".") > -1)
+				check = check.substring(check.indexOf(".") + 1);
+			String s = null;
+			String last = null;
+			do {
+				s = reader.readLine();
+				if(s == null) break;
+				if(s.indexOf("New volume - Label:[") > -1 || s.indexOf(check) > -1)
+					last = s.substring(s.indexOf("[") + 1, s.indexOf("]"));
+			} while(s != null);
+			if(last == null) throw new IOException("Couldn't find volume label.");
+			sPath2 = last;
+		} catch (IOException e) {
+			Logger.LogError("Couldn't read LogCat :(", e);
+			sPath2 = sPath2.substring(sPath2.lastIndexOf("/") + 1);
+			if(sPath2.indexOf("_") > -1 && sPath2.indexOf("usb") < sPath2.indexOf("_"))
+				sPath2 = sPath2.substring(0, sPath2.indexOf("_"));
+			else if (sPath2.indexOf("_") > -1 && sPath2.indexOf("USB") > sPath2.indexOf("_"))
+				sPath2 = sPath2.substring(sPath2.indexOf("_") + 1);
+			sPath2 = sPath2.toUpperCase();
+		} finally {
+			if(reader != null)
+				try {
+					reader.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		return sPath2;
 	}
 }
 

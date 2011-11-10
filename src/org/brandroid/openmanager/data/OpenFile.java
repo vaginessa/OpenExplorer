@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Hashtable;
 
+import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.utils.Logger;
 
 import android.app.AlertDialog.Builder;
@@ -47,30 +48,36 @@ public class OpenFile extends OpenPath
 	}
 	
 	public long getFreeSpace() {
-		StatFs stat = new StatFs(getPath());
-		if(stat.getFreeBlocks() > 0)
-			return (long)stat.getFreeBlocks() * (long)stat.getBlockSize();
+		try {
+			StatFs stat = new StatFs(getPath());
+			if(stat.getFreeBlocks() > 0)
+				return (long)stat.getFreeBlocks() * (long)stat.getBlockSize();
+		} catch(Exception e) {
+			Logger.LogWarning("Couldn't get Total Space.", e);
+		}
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)DFInfo.LoadDF().get(getPath()).getFree();
 		return Build.VERSION.SDK_INT > 8 ? mFile.getFreeSpace() * 1024 * 1024 : 0;
 	}
 	public long getUsableSpace() {
-		if(Build.VERSION.SDK_INT > 0)
-		{
+		try {
 			StatFs stat = new StatFs(getPath());
 			if(stat.getAvailableBlocks() > 0)
 				return (long)stat.getAvailableBlocks() * (long)stat.getBlockSize();
+		} catch(Exception e) {
+			Logger.LogWarning("Couldn't get Total Space.", e);
 		}
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)(DFInfo.LoadDF().get(getPath()).getSize() - DFInfo.LoadDF().get(getPath()).getFree());
 		return mFile.getUsableSpace();
 	}
 	public long getTotalSpace() {
-		if(Build.VERSION.SDK_INT > 0)
-		{
+		try {
 			StatFs stat = new StatFs(getPath());
 			if(stat.getBlockCount() > 0)
 				return (long)stat.getBlockCount() * (long)stat.getBlockSize();
+		} catch(Exception e) {
+			Logger.LogWarning("Couldn't get Total Space for " + getPath(), e);
 		}
 		if(DFInfo.LoadDF().containsKey(getPath()))
 			return (long)DFInfo.LoadDF().get(getPath()).getSize();

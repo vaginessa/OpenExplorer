@@ -355,14 +355,14 @@ public class DialogHandler extends DialogFragment {
 		return v;
 	}
 	
-	private String formatSize(long size) {
+	public static String formatSize(long size) {
 		int kb = 1024;
 		int mb = kb * 1024;
 		int gb = mb * 1024;
 		String ssize = "";
 		
 		if (size < kb)
-			ssize = String.format("%.2f bytes", (double)size);
+			ssize = String.format("%.2f b", (double)size);
 		else if (size > kb && size < mb)
 			ssize = String.format("%.2f Kb", (double)size / kb);
 		else if (size > mb && size < gb)
