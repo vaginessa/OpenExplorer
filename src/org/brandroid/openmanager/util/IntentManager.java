@@ -78,7 +78,7 @@ public class IntentManager
 		
 		/* ZIP files */
     	else if(ext.equalsIgnoreCase("zip")) {
-    		mHandler.unzipFile(file);
+    		//mHandler.unzipFile(file, );
     		return null;
     	}
 		

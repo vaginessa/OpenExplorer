@@ -29,8 +29,10 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.app.DialogFragment;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -340,9 +342,10 @@ public class DialogHandler extends DialogFragment {
 	private View createFileInfoDialog(LayoutInflater inflater) {
 		View v = inflater.inflate(R.layout.info_layout, null);
 		v.setBackgroundColor(0xcc000000);
-		v.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
+		v.setOnTouchListener(new OnTouchListener() {
+			public boolean onTouch(View v, MotionEvent event) {
 				getDialog().hide();
+				return false;
 			}
 		});
 		

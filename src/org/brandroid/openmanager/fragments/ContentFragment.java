@@ -93,6 +93,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 															OnSettingsChangeListener,
 															OnWorkerThreadFinishedListener{
 	
+	public static final boolean USE_ACTIONMODE = true;
 	private static boolean mMultiSelectOn = false;
 	
 	private FileManager mFileManager;
@@ -163,7 +164,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mHandler = explorer.getEventHandler();
 		if(mHandler == null)
 		{
-			mHandler = new EventHandler(mContext, mFileManager);
+			mHandler = new EventHandler(mFileManager);
 			explorer.setEventHandler(mHandler);
 		}
 		mHandler.setOnWorkerThreadFinishedListener(this);
@@ -249,7 +250,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			Logger.LogError("WTF, where are they?");
 		else if (getViewMode() == OpenExplorer.VIEW_GRID)
 			updateChosenMode(mGrid);
-		else if (getViewMode() == OpenExplorer.VIEW_LIST)
+		else
 			updateChosenMode(mList);
 	}
 	
@@ -266,7 +267,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			mList.setVisibility(View.GONE);
 			mGrid.setVisibility(View.VISIBLE);
 			mGrid.setAdapter(mContentAdapter);
-		} else if(getViewMode() == OpenExplorer.VIEW_LIST) {
+		} else {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
 			mGrid.setVisibility(View.GONE);
 			mList.setVisibility(View.VISIBLE);
@@ -293,7 +294,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-				if(OpenExplorer.BEFORE_HONEYCOMB) {
+				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
 					Logger.LogDebug("Showing context?");
 					mMenuContextItemIndex = pos;
 					return list.showContextMenu();
@@ -323,16 +324,17 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 						//@Override
 						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-							ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+							//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 							
-							OpenPath file = mFileManager.peekStack().getChild(mode.getTitle().toString());
+							//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
+							//files.add(file);
 							
 							if(item.getItemId() != R.id.menu_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_copy)
 							{
 								mode.finish();
 								mActionModeSelected = false;
 							}
-							return executeMenu(item.getItemId(), file);
+							return executeMenu(item.getItemId(), mode, file);
 						}
 					});
 					mActionMode.setTitle(file.getName());
@@ -341,7 +343,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				}
 				
 				if(file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					if(!OpenExplorer.BEFORE_HONEYCOMB)
+					if(!OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE)
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
 						
 						//@Override
@@ -379,7 +381,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return false;
 			}
 		});
-		if(OpenExplorer.BEFORE_HONEYCOMB)
+		if(OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE)
 			registerForContextMenu(mChosenMode);
 	}
 	
@@ -430,9 +432,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	public boolean executeMenu(final int id, final Object mode, ArrayList<OpenPath> files)
 	{
 		final OpenPath file = files.get(0);
-		final String path = file.getPath();
-		final OpenPath folder = file.getParent();
-		String name = file.getName();
+		final String path = file != null ? file.getPath() : null;
+		final OpenPath folder = file != null ? file.getParent() : null;
+		String name = file != null ? file.getName() : null;
 		
 		switch(id) {
 			case R.id.menu_multi:
@@ -444,12 +446,13 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return true;
 				
 			case R.id.menu_delete:
-				mHandler.deleteFile(files);
+				mHandler.deleteFile(files, getActivity());
 				finishMode(mode);
+				mContentAdapter.notifyDataSetChanged();
 				return true;
 				
 			case R.id.menu_rename:
-				mHandler.renameFile(path, true);
+				mHandler.renameFile(path, true, getActivity());
 				finishMode(mode);
 				return true;
 				
@@ -471,9 +474,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			case R.id.menu_paste:
 				if(mHoldingFile && mHoldingFileList.size() > 0)
 					if(mCutFile)
-						mHandler.cutFile(mHoldingFileList, path);
+						mHandler.cutFile(mHoldingFileList, path, getActivity());
 					else
-						mHandler.copyFile(mHoldingFileList, path);
+						mHandler.copyFile(mHoldingFileList, path, getActivity());
 				
 				mHoldingFile = false;
 				mCutFile = false;
@@ -507,7 +510,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 								for(int i = 0; i < mHoldingFileList.size(); i++)
 									toZip[i + 1] = mHoldingFileList.get(i);
 								Logger.LogInfo("Zipping " + (toZip.length == 2 ? toZip[toZip.length - 1].getPath() : (toZip.length - 1) + " files") + " to " + toZip[0].getPath());
-								mHandler.zipFile(toZip);
+								mHandler.zipFile(toZip, getActivity());
 								finishMode(mode);
 							}
 						})
@@ -515,7 +518,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				return true;
 				
 			case R.id.menu_unzip:
-				mHandler.unZipFileTo(mHoldingZipList.get(0), file);
+				mHandler.unZipFileTo(mHoldingZipList.get(0), file, getActivity());
 				
 				mHoldingZip = false;
 				mHoldingZipList.clear();
@@ -553,7 +556,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
-		if(!OpenExplorer.BEFORE_HONEYCOMB) return;
+		if(!OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
 		int menuResId = R.menu.context_file;

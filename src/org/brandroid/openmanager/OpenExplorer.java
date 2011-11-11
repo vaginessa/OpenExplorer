@@ -25,6 +25,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,11 +40,13 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
+import android.support.v4.content.CursorLoader;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -78,7 +81,7 @@ import org.brandroid.utils.Preferences;
 
 public class OpenExplorer
 		extends FragmentActivity
-		implements OnBackStackChangedListener, OnClickListener
+		implements OnBackStackChangedListener, OnClickListener, OnLongClickListener
 	{	
 
 	private static final int PREF_CODE =		0x6;
@@ -87,6 +90,7 @@ public class OpenExplorer
 	public static final int VIEW_CAROUSEL = Build.VERSION.SDK_INT > 11 ? 2 : 1;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
+	public static final int REQUEST_CANCEL = 101;
 	
 	private static OnSettingsChangeListener mSettingsListener = null;
 	private Preferences mPreferences = null;
@@ -105,7 +109,7 @@ public class OpenExplorer
 	
 	private FragmentManager fragmentManager;
 	
-	private OpenCursor mPhotoParent, mVideoParent;
+	private OpenCursor mPhotoParent, mVideoParent, mMusicParent;
 	
 	private Boolean mSinglePane = false;
 	
@@ -212,7 +216,7 @@ public class OpenExplorer
         if(intent != null && Intent.ACTION_SEARCH.equals(intent.getAction()))
         {
         	String query = intent.getStringExtra(SearchManager.QUERY);
-        	mEvHandler.searchFile(mLastPath.getPath(), query);
+        	mEvHandler.searchFile(mLastPath, query, this);
         	home = new ContentFragment();
         }
 
@@ -229,7 +233,7 @@ public class OpenExplorer
         if(mFileManager == null)
         	mFileManager = new FileManager();
         if(mEvHandler == null)
-        	mEvHandler = new EventHandler(this, mFileManager);
+        	mEvHandler = new EventHandler(mFileManager);
         
         //mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         handleMediaReceiver();
@@ -319,30 +323,44 @@ public class OpenExplorer
     
     public OpenCursor getPhotoParent() { if(mPhotoParent == null) refreshCursors(); return mPhotoParent; }
     public OpenCursor getVideoParent() { if(mVideoParent == null) refreshCursors(); return mVideoParent; }
+    public OpenCursor getMusicParent() { if(mMusicParent == null) refreshCursors(); return mMusicParent; }
     
     private void refreshCursors()
     {
     	if(mPhotoParent == null)
     	{
-	    	Cursor mPhotoCursor = managedQuery(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-					MediaStore.Images.Media.SIZE + " > 10000", null,
-					MediaStore.Images.Media.DATE_ADDED + " DESC");
-	    	startManagingCursor(mPhotoCursor);
-	    	mPhotoParent = new OpenCursor(mPhotoCursor, "Photos");
-	    	mPhotoCursor.close();
+    		try {
+    			CursorLoader loader = new CursorLoader(getApplicationContext(),
+						MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+						MediaStore.Images.Media.SIZE + " > 10000", null,
+						MediaStore.Images.Media.DATE_ADDED + " DESC");
+		    	mPhotoParent = new OpenCursor(loader.loadInBackground(), "Photos");
+    		} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
 		if(mVideoParent == null)
     	{
-			Cursor mVideoCursor = managedQuery(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-					MediaStore.Video.Media.SIZE + " > 100000", null,
-					MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
-					MediaStore.Video.Media.DATE_MODIFIED + " DESC");
-			startManagingCursor(mVideoCursor);
-			mVideoParent = new OpenCursor(mVideoCursor, "Videos");
-			mVideoCursor.close();
+			try {
+				CursorLoader loader = new CursorLoader(getApplicationContext(),
+						MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+						MediaStore.Video.Media.SIZE + " > 100000", null,
+						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
+						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
+				mVideoParent = new OpenCursor(loader.loadInBackground(), "Videos");
+    		} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
     	}
+		if(mMusicParent == null)
+		{
+			try {
+				CursorLoader loader = new CursorLoader(getApplicationContext(),
+						MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+						MediaStore.Audio.Media.SIZE + " > 10000", null,
+						MediaStore.Audio.Media.DATE_ADDED + " DESC");
+				mMusicParent = new OpenCursor(loader.loadInBackground(), "Music");
+    		} catch(IllegalStateException e) { Logger.LogError("Couldn't query music.", e); }
+		}
 		//Cursor mAudioCursor = managedQuery(MediaStore.Audio, projection, selection, selectionArgs, sortOrder)
 		ensureCursorCache();
     }
@@ -382,15 +400,29 @@ public class OpenExplorer
     	}
     }
     
+    public void toggleBookmarks()
+    {
+    	if(mFavoritesFragment == null)
+    		mFavoritesFragment = new BookmarkFragment();
+    		
+    	FragmentTransaction ft = fragmentManager.beginTransaction();
+    	if(mFavoritesFragment.isVisible())
+    		ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
+    	else
+    		ft.replace(R.id.content_frag, mFavoritesFragment);
+
+    	ft.addToBackStack("favs");
+		ft.commit();
+    }
     public void refreshBookmarks()
     {
     	refreshCursors();
     	if(mFavoritesFragment == null)
     	{
-			mFavoritesFragment = new BookmarkFragment();
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.replace(R.id.list_frag, mFavoritesFragment);
-			ft.commit();
+    		mFavoritesFragment = new BookmarkFragment();
+    		FragmentTransaction ft = fragmentManager.beginTransaction();
+    		ft.replace(R.id.list_frag, mFavoritesFragment);
+    		ft.commit();
     	} else {
     		((BookmarkFragment)mFavoritesFragment).scanBookmarks();
     	}
@@ -445,7 +477,7 @@ public class OpenExplorer
 	        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 	        	public boolean onQueryTextSubmit(String query) {
 					mSearchView.clearFocus();
-					mEvHandler.searchFile(mFileManager.peekStack().getPath(), query);
+					mEvHandler.searchFile(mLastPath, query, getApplicationContext());
 					return true;
 				}
 				public boolean onQueryTextChange(String newText) {
@@ -497,7 +529,6 @@ public class OpenExplorer
     	switch(id)
     	{
     		case R.id.title_icon:
-    			Logger.LogDebug("gj!");
 	    	case android.R.id.home:
 	    		if (mHeldFiles != null) {
 	    			//DialogFragment df = 
@@ -510,15 +541,12 @@ public class OpenExplorer
 	    			trans.addToBackStack("dialog");
 	    			trans.commit();
 	    		} else {
-	    			if(mViewMode == VIEW_GRID)
-	    				changeViewMode(VIEW_LIST);
-	    			else
-	    				changeViewMode(VIEW_GRID);
+	    			toggleBookmarks();
 	    		}
 	    		return true;
 	    	
 	    	case R.id.menu_new_folder:
-	    		mEvHandler.createNewFolder(mFileManager.peekStack().getPath());
+	    		mEvHandler.createNewFolder(mFileManager.peekStack().getPath(), this);
 	    		return true;
 	    		
 	    	case R.id.menu_multi:
@@ -628,12 +656,21 @@ public class OpenExplorer
 	    		
 	    	case R.id.title_search:
 	    	case R.id.menu_search:
-	    		//item.setActionView(mSearchView);
 	    		return onSearchRequested();
-	    		//return true;
+
+	    	case R.id.menu_favorites:
+	    		toggleBookmarks();
+	    		return true;
     	}
     	
     	return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    public boolean onSearchRequested() {
+    	mEvHandler.startSearch(mLastPath, this);
+		//showToast("Sorry, not working yet.");
+    	return super.onSearchRequested();
     }
     
     public void changeViewMode(int newView) {
@@ -894,10 +931,12 @@ public class OpenExplorer
 	}
 	public void setLights(Boolean on)
 	{
-		View root = getCurrentFocus().getRootView();
-		int vis = on ? View.STATUS_BAR_VISIBLE : View.STATUS_BAR_HIDDEN;
-		if(root.getSystemUiVisibility() != vis)
-			root.setSystemUiVisibility(vis);
+		try {
+			View root = getCurrentFocus().getRootView();
+			int vis = on ? View.STATUS_BAR_VISIBLE : View.STATUS_BAR_HIDDEN;
+			if(root.getSystemUiVisibility() != vis)
+				root.setSystemUiVisibility(vis);
+		} catch(Exception e) { }
 	}
 	public void onChangeLocation(OpenPath path) {
 		changePath(path, true);
@@ -967,7 +1006,12 @@ public class OpenExplorer
     {
     	for(int id : ids)
     		if(findViewById(id) != null)
-    			findViewById(id).setOnClickListener(this);
+    		{
+    			View v = findViewById(id);
+    			if(v.isLongClickable())
+    				v.setOnLongClickListener(this);
+    			v.setOnClickListener(this);
+    		}
     }
     
 	public void onClick(View v) {
@@ -1010,6 +1054,18 @@ public class OpenExplorer
 				}
 		}
 		return sPath2;
+	}
+	public boolean onLongClick(View v) {
+		switch(v.getId())
+		{
+			case R.id.title_icon:
+				if(mViewMode == VIEW_LIST)
+					changeViewMode(VIEW_GRID);
+				else
+					changeViewMode(VIEW_LIST);
+				return true;
+		}
+		return false;
 	}
 }
 

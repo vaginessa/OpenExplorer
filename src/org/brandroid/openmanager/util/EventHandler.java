@@ -20,13 +20,18 @@ package org.brandroid.openmanager.util;
 
 import android.os.AsyncTask;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.util.Log;
 import android.view.View;
 import android.view.LayoutInflater;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.Context;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -44,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.brandroid.openmanager.BluetoothActivity;
+import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.drawable;
 import org.brandroid.openmanager.R.id;
@@ -65,7 +71,6 @@ public class EventHandler {
 	
 	private OnWorkerThreadFinishedListener mThreadListener;
 	private FileManager mFileMang;
-	private Context mContext;
 	private boolean mDeleteFile = false;
 	
 	public interface OnWorkerThreadFinishedListener {
@@ -81,16 +86,16 @@ public class EventHandler {
 	}
 	
 	
-	public EventHandler(Context context, FileManager filemanager) {
+	public EventHandler(FileManager filemanager) {
 		mFileMang = filemanager;
-		mContext = context;
 	}
 	
 	public void setOnWorkerThreadFinishedListener(OnWorkerThreadFinishedListener e) {
 		mThreadListener = e;
-	}
-	
-	public void deleteFile(final ArrayList<OpenPath> path) {
+	}	
+
+
+	public void deleteFile(final ArrayList<OpenPath> path, final Context mContext) {
 		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		String name;
@@ -104,19 +109,47 @@ public class EventHandler {
 		b.setTitle("Deleting " + name)
 			.setMessage("Deleting " + name + " cannot be undone.\nAre you sure you want to continue?")
 			.setIcon(R.drawable.download)
-			.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+			.setPositiveButton("Delete", new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					new BackgroundWork(DELETE_TYPE).execute(files);
+					new BackgroundWork(DELETE_TYPE, mContext).execute(files);
 				}})
-			.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			.setNegativeButton("Cancel", new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}})
 			.create()
 			.show();
 	}
+
+	public void startSearch(final OpenPath base, final Context mContext)
+	{
+		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View view = inflater.inflate(R.layout.input_dialog_layout, null);
+		final EditText mQuery = (EditText)view.findViewById(R.id.dialog_input);
+		TextView mSubtitle = ((TextView)view.findViewById(R.id.dialog_subtitle));
+		mSubtitle.setText(base.getPath());
+		mSubtitle.setVisibility(View.VISIBLE);
+		view.findViewById(R.id.dialog_message).setVisibility(View.GONE);
+		
+		new AlertDialog.Builder(mContext)
+			.setPositiveButton("Search", new OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					searchFile(base, mQuery.getText().toString(), mContext);
+				}
+			})
+			.setNegativeButton("Cancel", new OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			})
+			.setView(view)
+			.setTitle("Search")
+			.setCancelable(true)
+			.setIcon(R.drawable.search)
+			.create().show();
+	}
 	
-	public void renameFile(final String path, boolean isFolder) {
+	public void renameFile(final String path, boolean isFolder, Context mContext) {
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View view = inflater.inflate(R.layout.input_dialog_layout, null);
 		String name = path.substring(path.lastIndexOf("/") + 1, path.length());
@@ -132,7 +165,7 @@ public class EventHandler {
 		}
 		
 		new AlertDialog.Builder(mContext)
-			.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
+			.setPositiveButton("Rename", new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					String name = text.getText().toString();
 					
@@ -144,7 +177,7 @@ public class EventHandler {
 					}
 				}
 			})
-			.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			.setNegativeButton("Cancel", new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
@@ -161,7 +194,7 @@ public class EventHandler {
 	 * 
 	 * @param directory directory path to create the new folder in.
 	 */
-	public void createNewFolder(final String directory) {
+	public void createNewFolder(final String directory, Context mContext) {
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View view = inflater.inflate(R.layout.input_dialog_layout, null);
 		
@@ -171,7 +204,7 @@ public class EventHandler {
 		msg.setText("Type the name of the folder you would like to create.");
 		
 		new AlertDialog.Builder(mContext)
-		.setPositiveButton("Create", new DialogInterface.OnClickListener() {
+		.setPositiveButton("Create", new OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
@@ -184,7 +217,7 @@ public class EventHandler {
 				}
 			}
 		})
-		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+		.setNegativeButton("Cancel", new OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
@@ -196,7 +229,7 @@ public class EventHandler {
 		.setIcon(R.drawable.folder).create().show();
 	}
 	
-	public void sendFile(final ArrayList<OpenPath> path) {
+	public void sendFile(final ArrayList<OpenPath> path, final Context mContext) {
 		String name;
 		CharSequence[] list = {"Bluetooth", "Email"};
 		final OpenPath[] files = new OpenPath[path.size()];
@@ -211,7 +244,7 @@ public class EventHandler {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle("Sending " + name)
 		 .setIcon(R.drawable.download)
-		 .setItems(list, new DialogInterface.OnClickListener() {
+		 .setItems(list, new OnClickListener() {
 			
 			
 			public void onClick(DialogInterface dialog, int which) {
@@ -247,39 +280,39 @@ public class EventHandler {
 		}).create().show();
 	}
 	
-	public void copyFile(ArrayList<OpenPath> files, String newPath) {
+	public void copyFile(ArrayList<OpenPath> files, String newPath, Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 		
-		new BackgroundWork(COPY_TYPE).execute(array);
+		new BackgroundWork(COPY_TYPE, mContext).execute(array);
 	}
 	
-	public void cutFile(ArrayList<OpenPath> files, String newPath) {
+	public void cutFile(ArrayList<OpenPath> files, String newPath, Context mContext) {
 		mDeleteFile = true;
 		
-		copyFile(files, newPath);
+		copyFile(files, newPath, mContext);
 	}
 	
-	public void searchFile(String dir, String query) {
-		//new BackgroundWork(SEARCH_TYPE).execute(dir, query);
+	public void searchFile(OpenPath dir, String query, Context mContext) {
+		new BackgroundWork(SEARCH_TYPE, mContext, query).execute(dir);
 	}
 	
-	public void zipFile(OpenPath[] files) {
-		new BackgroundWork(ZIP_TYPE).execute(files);
+	public void zipFile(OpenPath[] files, Context mContext) {
+		new BackgroundWork(ZIP_TYPE, mContext).execute(files);
 	}
 	
-	public void unzipFile(final OpenPath file) {
+	public void unzipFile(final OpenPath file, final Context mContext) {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle("Unzip file " + file.getName())
 			 .setMessage("Would you like to unzip " + file.getName() +
 					 	 " here or some other folder?")
 			 .setIcon(R.drawable.zip)
-			 .setPositiveButton("Unzip here", new DialogInterface.OnClickListener() {
+			 .setPositiveButton("Unzip here", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						new BackgroundWork(UNZIP_TYPE).execute(file);
+						new BackgroundWork(UNZIP_TYPE, mContext).execute(file);
 					}
 				})
-			 .setNegativeButton("Unzip else where", new DialogInterface.OnClickListener() {
+			 .setNegativeButton("Unzip else where", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						ArrayList<String> l = new ArrayList<String>();
 						l.add(file.getPath());
@@ -290,8 +323,8 @@ public class EventHandler {
 			.show();
 	}
 	
-	public void unZipFileTo(OpenPath zipFile, OpenPath toDir) {
-		new BackgroundWork(UNZIPTO_TYPE).execute(zipFile, toDir);
+	public void unZipFileTo(OpenPath zipFile, OpenPath toDir, Context mContext) {
+		new BackgroundWork(UNZIPTO_TYPE, mContext).execute(zipFile, toDir);
 	}
 		
 	
@@ -302,45 +335,54 @@ public class EventHandler {
 	private class BackgroundWork extends AsyncTask<OpenPath, Integer, ArrayList<String>> {
 		private int mType;
 		private ProgressDialog mPDialog;
+		private static final int BACKGROUND_NOTIFICATION_ID = 123;
+		private Notification mNote;
+		private Context mContext;
+		private String[] mInitParams = null;
 		
-		public BackgroundWork(int type) {
+		public BackgroundWork(int type, Context context, String... params) {
 			mType = type;
+			mContext = context;
+			mInitParams = params;
 		}
 		
-		
 		protected void onPreExecute() {
+			String title = "Executing";
 			switch(mType) {
-			case DELETE_TYPE:
-				mPDialog = ProgressDialog.show(mContext, "Deleting", 
-											   "Please Wait...");
-				break;
-				
-			case SEARCH_TYPE:
-				mPDialog = ProgressDialog.show(mContext, "Searching", 
-				   							   "Please Wait...");
-				break;
-				
+			case DELETE_TYPE: title = "Deleting"; break;
+			case SEARCH_TYPE: title = "Searching"; break;
 			case COPY_TYPE:
 				if(mDeleteFile)
-					mPDialog = ProgressDialog.show(mContext, "Copying", 
-					   							   "Please Wait...");
+					title = "Copying"; 
 				else
-					mPDialog = ProgressDialog.show(mContext, "Moving", 
-					   							   "Please Wait...");
-				mPDialog.setMax(0);
+					title = "Moving";
 				break;
-				
 			case UNZIP_TYPE:
 			case UNZIPTO_TYPE:
-				mPDialog = ProgressDialog.show(mContext, "Unzipping", 
-				   							   "Please Wait...");
+				title = "Unzipping"; 
 				break;
-								
 			case ZIP_TYPE:
-				mPDialog = ProgressDialog.show(mContext, "Zipping Folder", 
-				   							   "Please Wait...");
+				title = "Zipping"; 
 				break;
 			}
+			try {
+				mPDialog = ProgressDialog.show(mContext, title, "Please Wait...");
+			} catch(Exception e) { }
+			try {
+				RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.title_bar);
+				noteView.setImageViewResource(R.id.title_icon, R.drawable.icon);
+				noteView.setTextViewText(R.id.title_text, title);
+				noteView.setProgressBar(R.id.title_progress, 100, 0, true);
+				noteView.setViewVisibility(R.id.title_search, View.GONE);
+				noteView.setViewVisibility(R.id.title_path, View.GONE);
+				Intent intent = new Intent(mContext, OpenExplorer.class);
+				PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OpenExplorer.REQUEST_CANCEL, intent, 0);
+				NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+				mNote = new Notification(R.drawable.icon, title, 0);
+				mNote.contentView = noteView;
+				mNote.contentIntent = pendingIntent;
+				mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
+			} catch(Exception e) { }
 		}
 		
 		
@@ -361,7 +403,10 @@ public class EventHandler {
 				return results;
 				
 			case SEARCH_TYPE:
-				//results = mFileMang.searchInDirectory(params[0], params[1]);
+				if(mInitParams != null && mInitParams.length > 0)
+				{
+					results = mFileMang.searchInDirectory(params[0].getPath(), mInitParams[0]);
+				}
 				
 				return results;
 				
@@ -381,11 +426,13 @@ public class EventHandler {
 				}
 				
 			case UNZIP_TYPE:
-				extractZipFiles(params[0], params[1]);
+				if(len > 1)
+					extractZipFiles(params[0], params[1]);
 				return null;
 				
 			case UNZIPTO_TYPE:
-				mFileMang.extractZipFilesFromDir(params[0], params[1]);
+				if(len > 1)
+					mFileMang.extractZipFilesFromDir(params[0], params[1]);
 				return null;
 				
 			case ZIP_TYPE:
@@ -513,23 +560,37 @@ public class EventHandler {
 			int progB = (int)(((float)current / (float)total) * 1000f);
 			
 			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-(" + progA + "," + progB + ")");
+			
+			//mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
 
-			if(values.length == 0)
-				mPDialog.setIndeterminate(true);
-			else {
-				mPDialog.setIndeterminate(false);
-				mPDialog.setMax(1000);
-				mPDialog.setProgress(progA);
-				mPDialog.setSecondaryProgress(progB);
-			}
+			try {
+				RemoteViews noteView = mNote.contentView;
+				noteView.setProgressBar(R.id.title_progress, 1000, progA, values.length == 0);
+				noteView.notify();
+			} catch(Exception e) { }
+			
+			try {
+				if(values.length == 0)
+					mPDialog.setIndeterminate(true);
+				else {
+					mPDialog.setIndeterminate(false);
+					mPDialog.setMax(1000);
+					mPDialog.setProgress(progA);
+					mPDialog.setSecondaryProgress(progB);
+				}
+			} catch(Exception e) { }
 		}
 
 		
 		protected void onPostExecute(ArrayList<String> result) {
+			NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+			mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
+			
 			switch(mType) {
 			
-			case DELETE_TYPE:				
-				mPDialog.dismiss();
+			case DELETE_TYPE:		
+				if(mPDialog != null)
+					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				
 				if(!result.contains("0"))
@@ -542,25 +603,27 @@ public class EventHandler {
 				break;
 				
 			case SEARCH_TYPE:
-				mPDialog.dismiss();
+				if(mPDialog != null)
+					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, result);
 				break;
 				
 			case COPY_TYPE:
-				mPDialog.dismiss();
+				if(mPDialog != null)
+					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				
 				if(!mDeleteFile) {
-					if(!result.contains("0"))
+					if(result == null || !result.contains("0"))
 						Toast.makeText(mContext, "File(s) could not be copied", Toast.LENGTH_SHORT).show();
-					else if(result.contains("-1"))
+					else if(result != null && result.contains("-1"))
 						Toast.makeText(mContext, "Some file(s) were not copied", Toast.LENGTH_SHORT).show();
 					else
 						Toast.makeText(mContext, "File(s) successfully copied", Toast.LENGTH_SHORT).show();
 				} else {
-					if(!result.contains("0"))
+					if(result == null || !result.contains("0"))
 						Toast.makeText(mContext, "File(s) could not be moved", Toast.LENGTH_SHORT).show();
-					else if(result.contains("-1"))
+					else if(result != null && result.contains("-1"))
 						Toast.makeText(mContext, "Some file(s) were not moved", Toast.LENGTH_SHORT).show();
 					else
 						Toast.makeText(mContext, "File(s) successfully moved", Toast.LENGTH_SHORT).show();
@@ -569,20 +632,24 @@ public class EventHandler {
 				break;
 				
 			case UNZIPTO_TYPE:
-				mPDialog.dismiss();
+				if(mPDialog != null)
+					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				break;
 				
 			case UNZIP_TYPE:
-				mPDialog.dismiss();
+				if(mPDialog != null)
+					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				break;
 				
 			case ZIP_TYPE:
-				mPDialog.dismiss();
+				if(mPDialog != null)
+					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				break;
 			}
 		}
 	}
+
 }

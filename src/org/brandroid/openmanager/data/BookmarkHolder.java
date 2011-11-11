@@ -98,7 +98,9 @@ public class BookmarkHolder {
 				bd.setGravity(Gravity.CENTER);
 				d = bd;
 			} else {
-				mParentView.notify();
+				try {
+					mParentView.notify();
+				} catch(Exception e) { }
 				Logger.LogWarning("Bad path " + mFile.getName() + " != " + file.getName());
 				return;
 			}

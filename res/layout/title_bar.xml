@@ -11,7 +11,8 @@
 	    android:paddingRight="4dp"
 	    android:paddingTop="2dp"
 	    android:paddingBottom="2dp"
-	    android:clickable="true"	    
+	    android:clickable="true"
+	    android:longClickable="true"
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content" />
 
@@ -23,6 +24,17 @@
 	    android:layout_toRightOf="@+id/title_icon"
 	    android:gravity="left|center_vertical"
 	    android:text="@string/app_name" />
+	
+	<ProgressBar
+	    android:id="@+id/title_progress"
+	    style="@android:style/Widget.ProgressBar.Horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@+id/title_text"
+	    android:layout_alignLeft="@+id/title_text"
+	    android:indeterminate="true"
+	    android:visibility="gone"
+	    />
 	
 	<TextView
 	    android:id="@+id/title_path"
