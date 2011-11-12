@@ -100,6 +100,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		Logger.LogDebug("Scanning bookmarks...");
 		OpenCursor mPhotoCursor = ((OpenExplorer)getActivity()).getPhotoParent();
 		OpenCursor mVideoCursor = ((OpenExplorer)getActivity()).getVideoParent();
+		OpenCursor mMusicCursor = ((OpenExplorer)getActivity()).getMusicParent();
 		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
 		mBookmarks.clear();
 		mBookmarks.add(new OpenFile("/"));
@@ -108,7 +109,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			mBookmarks.add(mVideoCursor);
 		if(mPhotoCursor.length() > 0)
 			mBookmarks.add(mPhotoCursor);
-		checkAndAdd(storage.getChild("Music"));
+		if(mMusicCursor.length() > 0)
+			mBookmarks.add(mMusicCursor);
 		checkAndAdd(storage.getChild("Download"));
 		if(checkAndAdd(new OpenFile("/mnt/external_sd")))
 			mHasExternal = true;

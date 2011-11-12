@@ -179,6 +179,8 @@ public class OpenExplorer
         		path = mVideoParent;
         	else if(last.equals("Photos"))
         		path = mPhotoParent;
+        	else if(last.equals("Music"))
+        		path = mMusicParent;
         	else
         		path = new OpenFile(last);
         	updateTitle(path.getPath());
