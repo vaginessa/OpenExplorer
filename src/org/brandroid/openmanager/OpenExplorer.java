@@ -399,7 +399,15 @@ public class OpenExplorer
 			new EnsureCursorCacheTask().execute(buff);
     	}
     }
-    
+    public void toggleView()
+    {
+    	if(mViewMode == VIEW_GRID)
+			changeViewMode(VIEW_LIST);
+		else if (!BEFORE_HONEYCOMB && mViewMode == VIEW_LIST)
+			changeViewMode(VIEW_CAROUSEL);
+		else
+			changeViewMode(VIEW_GRID);
+    }
     public void toggleBookmarks()
     {
     	if(mFavoritesFragment == null)
@@ -541,7 +549,10 @@ public class OpenExplorer
 	    			trans.addToBackStack("dialog");
 	    			trans.commit();
 	    		} else {
-	    			toggleBookmarks();
+	    			if(mSinglePane)
+	    				toggleBookmarks();
+	    			else
+	    				toggleView();
 	    		}
 	    		return true;
 	    	
@@ -1059,10 +1070,7 @@ public class OpenExplorer
 		switch(v.getId())
 		{
 			case R.id.title_icon:
-				if(mViewMode == VIEW_LIST)
-					changeViewMode(VIEW_GRID);
-				else
-					changeViewMode(VIEW_LIST);
+				toggleView();
 				return true;
 		}
 		return false;
