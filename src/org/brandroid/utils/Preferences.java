@@ -1,5 +1,6 @@
 package org.brandroid.utils;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -30,11 +31,21 @@ public class Preferences {
 		if(preferences == null)
 			preferences = new Preferences(context);
 		Logger.LogVerbose("Getting instance of SharedPreferences");
-		return mStorageHash.put(file, context.getSharedPreferences(file, PreferenceActivity.MODE_PRIVATE));
+		SharedPreferences prefs = null;
+		if(context != null)
+			prefs = context.getSharedPreferences(getPreferenceFilename(file), PreferenceActivity.MODE_PRIVATE);
+		if(prefs != null)
+			mStorageHash.put(file, prefs);
+		//else throw new NullPointerException("Couldn't create Preferences @ " + file);
+		return prefs;
+	}
+	private static String getPreferenceFilename(String file)
+	{
+		return file.replaceAll("[^A-Za-z0-9\\-]", "_");
 	}
 	public static SharedPreferences getPreferences(String file)
 	{
-		return mStorageHash.get(file);
+		return getPreferences(mContext, file);
 	}
 	
 	public String getSetting(String file, String key, String defValue)
@@ -72,9 +83,13 @@ public class Preferences {
 	{
 		//return mStorage.getBoolean(key, defValue);
 		try {
-			String s = getPreferences(file).getString(key, defValue.toString());
+			SharedPreferences prefs = getPreferences(file);
+			String s = prefs.getString(key, defValue.toString());
 			return Boolean.parseBoolean(s);
-		} catch(Exception e) { return defValue; }
+		} catch(Exception e) {
+			Logger.LogError("Error getting setting [" + key + "] from " + file, e);
+			return defValue;
+		}
 	}
 	public Long getSetting(String file, String key, Long defValue)
 	{

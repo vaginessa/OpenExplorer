@@ -72,7 +72,7 @@ import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.ExecuteAsRootBase;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -131,6 +131,10 @@ public class OpenExplorer
 			getPreferences().setSetting("global", "welcome", true);
 			//getActionBar().hide();
 		} // else
+        
+        if(getPreferences().getSetting("global", "root", false) ||
+        		Preferences.getPreferences(getApplicationContext(), "global").getBoolean("root", false))
+        	RootManager.Default.requestRoot();
         
         if(!BEFORE_HONEYCOMB)
         {
@@ -245,7 +249,7 @@ public class OpenExplorer
     
     public Preferences getPreferences() {
     	if(mPreferences == null)
-    		mPreferences = new Preferences(this);
+    		mPreferences = new Preferences(getApplicationContext());
     	return mPreferences;
     }
     
@@ -508,6 +512,8 @@ public class OpenExplorer
     		menu.findItem(R.id.menu_view_list).setChecked(true);
     	else if(mViewMode == VIEW_CAROUSEL)
     		menu.findItem(R.id.menu_view_carousel).setChecked(true);
+    	if(RootManager.Default.isRoot())
+    		menu.findItem(R.id.menu_root).setChecked(true);
     	return super.onPrepareOptionsMenu(menu);
     }
 
@@ -636,12 +642,13 @@ public class OpenExplorer
 	    	case R.id.menu_root:
 	    		if(!item.isCheckable() || item.isChecked())
 	    		{
-	    			if(ExecuteAsRootBase.canRunRootCommands())
+	    			if(RootManager.Default.isRoot() || RootManager.Default.requestRoot())
 	    			{
-	    				showToast("Root enabled");
-	    				item.setTitle("ROOT!");
+	    				getPreferences().setSetting("global", "root", true);
+	    				showToast(getString(R.string.s_menu_root) + "!");
+	    				item.setTitle(getString(R.string.s_menu_root) + "!");
 	    			} else {
-	    				item.setEnabled(false).setChecked(false);
+	    				item.setChecked(false);
 	    				showToast("Unable to achieve root.");
 	    			}
 	    		}

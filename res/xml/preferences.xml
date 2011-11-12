@@ -5,6 +5,7 @@
 	<PreferenceCategory android:key="servers" android:title="Additional Servers">
     	<PreferenceScreen android:key="server_add"
     		android:title="+ Add New Server"
+    		android:enabled="false"
     	/>
     </PreferenceCategory>
         
@@ -35,5 +36,13 @@
 			android:dialogTitle="Choose a Sorting Option" />
 			
 	</PreferenceCategory>
+	
+	    <PreferenceCategory android:title="Advanced">
+	        <CheckBoxPreference
+	            android:key="pref_root"
+	            android:title="@string/s_menu_root"
+	            android:defaultValue="false"
+	            />
+	    </PreferenceCategory>
 		
 </PreferenceScreen>

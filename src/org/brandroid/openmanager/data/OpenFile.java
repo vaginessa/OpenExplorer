@@ -9,9 +9,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.utils.Logger;
 
 import android.app.AlertDialog.Builder;
@@ -115,6 +117,22 @@ public class OpenFile extends OpenPath
 	@Override
 	public OpenPath[] listFiles() {
 		File[] arr = mFile.listFiles();
+		if((arr == null || arr.length == 0) && isDirectory())
+		{
+			if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
+			{
+				Logger.LogDebug("Trying to list " + mFile.getPath() + " via Su");
+				HashSet<String> files = RootManager.Default.execute("ls " + mFile.getPath());
+				if(files != null)
+				{
+					OpenFile[] ret = new OpenFile[files.size()];
+					int i = 0;
+					for(String s : files)
+						ret[i++] = new OpenFile(getPath() + "/" + s);
+					return ret;
+				}
+			}
+		}
 		if((arr == null || arr.length == 0) && !isDirectory() && mFile.getParentFile() != null)
 			arr = mFile.getParentFile().listFiles();
 		

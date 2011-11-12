@@ -27,7 +27,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment.OnBookMarkAddListener;
 import org.brandroid.openmanager.util.DFInfo;
-import org.brandroid.openmanager.util.ExecuteAsRootBase;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.utils.Logger;
 
 import android.os.Build;
@@ -329,7 +329,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	protected void tryEject(String sPath, BookmarkHolder mHolder) {
 		final View viewf = mHolder.getView();
-		if(ExecuteAsRootBase.execute("umount " + sPath))
+		if(RootManager.Default.tryExecute("umount " + sPath))
 		{
 			((OpenExplorer)getActivity()).showToast("You may now safely remove the drive.");
 			viewf.animate().setListener(new AnimatorListener() {
