@@ -4,111 +4,112 @@
   	<item
   	    android:id="@+id/menu_favorites"
   	    android:showAsAction="never"
-  	    android:icon="@drawable/favorites"
-  	    android:title="Show Favorites" />
+  	    android:icon="@drawable/ic_menu_star"
+  	    android:title="@string/s_menu_favorites" />
 	<item
 		android:id="@+id/menu_search"
-		android:icon="@drawable/search"
+		android:icon="@android:drawable/ic_menu_search"
 		android:showAsAction="always"
 		android:actionViewClass="android.widget.SearchView"
-		android:title="Search" />
+		android:title="@string/s_search" />
 	<item
 		android:id="@+id/menu_sort"
-		android:icon="@android:drawable/ic_menu_sort_alphabetically"
+		android:icon="@android:drawable/ic_menu_sort_by_size"
 		android:showAsAction="ifRoom"
-		android:title="Sort">
+		android:title="@string/s_menu_sort">
 		<menu>
 			<group android:checkableBehavior="single">
 				<item
 					android:id="@+id/menu_sort_name_asc"
 					android:checked="true"
-					android:title="Sort by Name (A-Z)"
+					android:title="@string/s_menu_sort_name_asc"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_name_desc"
-					android:title="Sort by Name (Z-A)"
+					android:title="@string/s_menu_sort_name_desc"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_date_asc"
-					android:title="Sort by Newest"
+					android:title="@string/s_menu_sort_date_asc"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_date_desc"
-					android:title="Sort by Oldest"
+					android:title="@string/s_menu_sort_date_desc"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_size_asc"
-					android:title="Sort by Smallest"
+					android:title="@string/s_menu_sort_size_asc"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_size_desc"
-					android:title="Sort by Largest"
+					android:title="@string/s_menu_sort_size_desc"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_type"
-					android:title="Sort by Filetype"
+					android:title="@string/s_menu_sort_type"
 					android:showAsAction="withText" />
 			</group>
 		</menu>
 	</item>
 	<item
 		android:id="@+id/menu_view"
-		android:icon="@android:drawable/picture_frame"
+		android:icon="@android:drawable/ic_menu_view"
 		android:showAsAction="ifRoom"
-		android:title="View">
+		android:title="@string/s_view">
 		<menu>
 			<item
 				android:id="@+id/menu_multi"
 				android:icon="@drawable/multiselect"
 				android:showAsAction="ifRoom"
-				android:title="Multi-Select" />
+				android:title="@string/s_menu_multi" />
 			<group android:checkableBehavior="single">
 				<item
 					android:id="@+id/menu_view_grid"
-					android:title="Grid View" />
+					android:title="@string/s_menu_grid" />
 				<item
 					android:id="@+id/menu_view_list"
 					android:checked="true"
-					android:title="List View" />
+					android:title="@string/s_menu_list" />
 				<item
 					android:id="@+id/menu_view_carousel"
-					android:title="Carousel View" />
+					android:title="@string/s_menu_carousel" />
 			</group>
 			<item
 				android:id="@+id/menu_view_hidden"
 				android:checkable="true"
-				android:title="Show Hidden Files" />
+				android:title="@string/s_menu_hidden" />
 			<item
 				android:id="@+id/menu_view_thumbs"
 				android:checkable="true"
 				android:checked="true"
-				android:title="Show Image Thumbnails" />
+				android:title="@string/s_menu_thumbs" />
 		</menu>
 	</item>
 	<item
 		android:id="@+id/menu_new_folder"
-		android:icon="@drawable/newfolder"
+		android:icon="@android:drawable/ic_menu_add"
 		android:showAsAction="ifRoom"
-		android:title="New Folder" />
+		android:title="@string/s_menu_new_folder" />
 	<item
 		android:id="@+id/menu_other"
-		android:icon="@drawable/settings_actbar"
+		android:icon="@drawable/ic_menu_moreoverflow"
 		android:showAsAction="always"
-		android:title="Other Settings">
+		android:title="@string/s_menu_other">
 		<menu>
 			<item
 				android:id="@+id/menu_flush"
-				android:title="Flush Cache" />
+				android:icon="@drawable/ic_menu_refresh"
+				android:title="@string/s_menu_flush" />
 			<item
 				android:id="@+id/menu_root"
 				android:checkable="true"
-				android:title="Root" />
+				android:title="@string/s_menu_root" />
 			<item
 				android:id="@+id/menu_settings_folder"
-				android:title="Folder Preferences" />
+				android:title="@string/s_menu_prefs_folder" />
 			<item
 				android:id="@+id/menu_settings"
-				android:title="Global Preferences" />
+				android:title="@string/s_menu_prefs_global" />
 		</menu>
 	</item>
 </menu>

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item android:id="@+id/menu_copy" android:title="Copy" />
-    <item android:id="@+id/menu_cut" android:title="Cut" />
-    <item android:id="@+id/menu_paste" android:title="Paste" />
-    <item android:id="@+id/menu_delete" android:title="Delete" />
-    <item android:id="@+id/menu_rename" android:title="Rename" />
-    <item android:id="@+id/menu_zip" android:title="Zip..." />
-    <item android:id="@+id/menu_multi" android:title="Select More..." />
-    <item android:id="@+id/menu_info" android:title="Info..." />
-    <item android:id="@+id/menu_share" android:title="Share/Send..." />
+    <item android:id="@+id/menu_copy" android:title="@string/s_menu_copy" android:icon="@drawable/ic_menu_copy" />
+    <item android:id="@+id/menu_cut" android:title="@string/s_menu_cut" android:icon="@drawable/ic_menu_cut" />
+    <item android:id="@+id/menu_paste" android:title="@string/s_menu_paste" android:icon="@drawable/ic_menu_paste" />
+    <item android:id="@+id/menu_delete" android:title="@string/s_menu_delete" android:icon="@drawable/ic_menu_delete" />
+    <item android:id="@+id/menu_rename" android:title="@string/s_menu_rename" />
+    <item android:id="@+id/menu_zip" android:title="@string/s_menu_zip" />
+    <item android:id="@+id/menu_multi" android:title="@string/s_menu_multi" />
+    <item android:id="@+id/menu_info" android:title="@string/s_menu_info" android:icon="@drawable/ic_menu_info_details" />
+    <item android:id="@+id/menu_share" android:title="@string/s_menu_share" android:icon="@drawable/ic_menu_share" />
     
 </menu>
