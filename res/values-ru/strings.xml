@@ -35,7 +35,7 @@
     <string name="s_menu_cut">Вырезать</string>
     <string name="s_menu_paste">Вставить</string>
     <string name="s_menu_delete">Удалить</string>
-    <string name="s_menu_share">Send/Share...</string>
+    <string name="s_menu_share">Поделиться...</string>
     <string name="s_menu_zip">Zip file(s)...</string>
     <string name="s_menu_unzip">Распаковать</string>
     <string name="s_menu_rename">Переименовать</string>
