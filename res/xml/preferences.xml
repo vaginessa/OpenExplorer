@@ -2,42 +2,42 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
 		android:title="Settings">
 	
-	<PreferenceCategory android:key="servers" android:title="Additional Servers">
+	<PreferenceCategory android:key="servers" android:title="@string/s_pref_servers">
     	<PreferenceScreen android:key="server_add"
-    		android:title="+ Add New Server"
+    		android:title="@string/s_pref_server_add"
     		android:enabled="false"
     	/>
     </PreferenceCategory>
         
-	<PreferenceCategory android:title="Display">
+	<PreferenceCategory android:title="@string/s_pref_display">
 		<CheckBoxPreference
 			android:key="pref_hiddenFiles"
-			android:title="Show Hidden Files"
-			android:summary="Display hidden files and folders"/>
+			android:title="@string/s_pref_hidden"
+			android:summary="@string/s_pref_hidden_summary"/>
 		<CheckBoxPreference
 			android:key="pref_thumbnail"
-			android:title="Show Image Thumbnails"
-			android:summary="Display a thumbnail for image files"/>
+			android:title="@string/s_pref_thumbs"
+			android:summary="@string/s_pref_thumbs_summary"/>
 		<ListPreference
 			android:key="pref_view"
-			android:title="View Type"
-			android:summary="Display files in a grid or a list"
+			android:title="@string/s_pref_view"
+			android:summary="@string/s_pref_view_summary"
 			android:entries="@array/view"
 			android:entryValues="@array/view_value"
-			android:dialogTitle="Choose a View" />
+			android:dialogTitle="@string/s_pref_view" />
 	</PreferenceCategory>
-	<PreferenceCategory android:title="Sorting">
+	<PreferenceCategory android:title="@string/s_pref_sort">
 		<ListPreference
 			android:key="pref_sorting"
-			android:title="Sorting Type"
-			android:summary="Choose how to sort files and folders"
+			android:title="@string/s_pref_sort"
+			android:summary="@string/s_pref_sort_summary"
 			android:entries="@array/sorting"
 			android:entryValues="@array/sorting_value"
-			android:dialogTitle="Choose a Sorting Option" />
+			android:dialogTitle="@string/s_pref_sort" />
 			
 	</PreferenceCategory>
 	
-	    <PreferenceCategory android:title="Advanced">
+	    <PreferenceCategory android:title="@string/s_pref_advanced">
 	        <CheckBoxPreference
 	            android:key="pref_root"
 	            android:title="@string/s_menu_root"

@@ -5,8 +5,6 @@
 		android:key="server_choice"
 		android:title="Server"
 		android:summary="Choose Server"
-		android:entries="@array/server_choice"
-		android:entryValues="@array/server_choice"
 		/>
 	<PreferenceScreen
 		android:title="Settings"

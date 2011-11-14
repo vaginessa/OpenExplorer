@@ -3,27 +3,27 @@
 	android:title="Server Settings">
 	<EditTextPreference
 	    android:key="server_name"
-	    android:title="Name"
-	    android:summary=""
+	    android:title="@string/s_pref_server_name"
+	    android:summary="@string/s_pref_server_name_summary"
 	    />
 	<EditTextPreference
 		android:key="server_url"
-		android:title="Title"
-		android:summary="Summary"
+		android:title="@string/s_pref_server_url"
+		android:summary="@string/s_pref_server_url_summary"
 		/>
 	<EditTextPreference
 		android:key="server_user"
-		android:title="User"
-		android:summary="Username"
+		android:title="@string/s_pref_server_user"
+		android:summary="@string/s_pref_server_user_summary"
 		/>
 	<EditTextPreference
 		android:key="server_password"
-		android:title="Password"
-		android:summary="Login Password"
+		android:title="@string/s_pref_server_password"
+		android:summary="@string/s_pref_server_password_summary"
 		android:password="true"
 		/>
 	<PreferenceScreen
 	    android:key="server_update"
-	    android:title="Add Server"
+	    android:title="@string/s_pref_server_update"
 	    />
 </PreferenceScreen>
