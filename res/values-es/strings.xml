@@ -9,6 +9,7 @@
 <string name="s_external">Exteriores</string>
 <string name="s_internal">Interno</string>
 <string name="s_view">Ver</string>
+<string name="s_bookmarks">Favoritos</string>
 <string name="s_menu_favorites">favoritos</string>
 <string name="s_menu_sort">Ordenar</string>
 <string name="s_menu_sort_name_asc">Ordenar por nombre (AZ)</string>
@@ -17,7 +18,7 @@
 <string name="s_menu_sort_date_desc">Ordenar por más viejo</string>
 <string name="s_menu_sort_size_asc">Ordenar por</string>
 <string name="s_menu_sort_size_desc">Ordenar por más pequeño</string>
-<string name="s_menu_sort_type ">Ordenar por Tipo de archivo</string>
+<string name="s_menu_sort_type">Ordenar por Tipo de archivo</string>
 <string name="s_menu_multi">de selección múltiple</string>
 <string name="s_menu_grid">vista en cuadrícula</string>
 <string name="s_menu_list">Ver Lista</string>
@@ -57,7 +58,7 @@
 <string name="s_pref_sort">Clasificación</string>
 <string name="s_pref_sort_summary">Elija la forma de ordenar los archivos y carpetas</string>
 <string name="s_pref_advanced">avanzada</string>
-<string name="s_pref_server_name ">nombre del servidor</string>
+<string name="s_pref_server_name">nombre del servidor</string>
 <string name="s_pref_server_name_summary">Introduzca el nombre del servidor</string>
 <string name="s_pref_server_url">URL del servidor</string>
 <string name="s_pref_server_url_summary">Introduzca la URL completa del servidor</string>

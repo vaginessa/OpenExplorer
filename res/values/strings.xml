@@ -9,6 +9,7 @@
     <string name="s_external">External</string>
     <string name="s_internal">Internal</string>
     <string name="s_view">View</string>
+    <string name="s_bookmarks">Favorites</string>
     <string name="s_menu_favorites">Show Favorites</string>
     <string name="s_menu_sort">Sort</string>
     <string name="s_menu_sort_name_asc">Sort by Name (A-Z)</string>

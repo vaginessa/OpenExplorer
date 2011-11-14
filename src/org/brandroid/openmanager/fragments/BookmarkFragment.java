@@ -496,23 +496,23 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			} else if(sPath2.endsWith("sdcard")) {
 				if(mHasExternal)
 				{
-					mHolder.setText("Internal Storage");
+					mHolder.setText(getResources().getString(R.string.s_internal));
 					mHolder.setIconResource(R.drawable.drive);
 				} else {
 					mHolder.setText("sdcard");
 					mHolder.setIconResource(R.drawable.sdcard);
 				}
 			} else if(sPath2.indexOf("download") > -1) {
-				mHolder.setText("Downloads");
+				mHolder.setText(getResources().getString(R.string.s_downloads));
 				mHolder.setIconResource(R.drawable.download);
 			} else if(sPath2.indexOf("music") > -1) {
-				mHolder.setText("Music");
+				mHolder.setText(getResources().getString(R.string.s_music));
 				mHolder.setIconResource(R.drawable.music);
 			} else if(sPath2.indexOf("movie") > -1 || sPath2.indexOf("videos") > -1) {
-				mHolder.setText("Videos");
+				mHolder.setText(getResources().getString(R.string.s_videos));
 				mHolder.setIconResource(R.drawable.movie);
 			} else if(sPath2.indexOf("photo") > -1 || sPath2.indexOf("dcim") > -1 || sPath2.indexOf("camera") > -1) {
-				mHolder.setText("Photos");
+				mHolder.setText(getResources().getString(R.string.s_photos));
 				mHolder.setIconResource(R.drawable.photo);
 			} else if(sPath2.indexOf("usb") > -1) {
 				sPath2 = OpenExplorer.getVolumeName(sPath2);
@@ -521,7 +521,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				mHolder.setEjectable(true);
 				mHolder.setIconResource(R.drawable.usb);
 			} else if(sPath2.indexOf("sdcard-ext") > -1 || sPath2.indexOf("external") > -1) {
-				mHolder.setText("External SD");
+				mHolder.setText(getResources().getString(R.string.s_external));
 				mHolder.setEjectable(true);
 				mHolder.setIconResource(R.drawable.sdcard);
 			} else if(sPath2.equals("bookmarks")) {
@@ -530,7 +530,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				view.setEnabled(false);
 				view.setClickable(false);
 				view.setPadding(0, 0, 0, 0);
-				mHolder.setText("Bookmarks");
+				mHolder.setText(getResources().getString(R.string.s_bookmarks));
 				//mHolder.setTextSize(18);
 				if(mHolder.getIconView() != null)
 				{

@@ -127,7 +127,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Total size: "/>
+						android:text="@string/s_size"/>
 					<TextView
 						android:id="@+id/info_total_size"
 						android:layout_width="match_parent"
