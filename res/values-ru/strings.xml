@@ -6,8 +6,8 @@
     <string name="s_videos">Видео</string>
     <string name="s_music">Музыка</string>
     <string name="s_downloads">Загрузки</string>
-    <string name="s_external">External</string>
-    <string name="s_internal">Internal</string>
+    <string name="s_external">Внешн.</string>
+    <string name="s_internal">Внутр.</string>
     <string name="s_view">View</string>
     <string name="s_menu_favorites">Show Favorites</string>
     <string name="s_menu_sort">Сортировка</string>
@@ -36,12 +36,12 @@
     <string name="s_menu_paste">Вставить</string>
     <string name="s_menu_delete">Удалить</string>
     <string name="s_menu_share">Поделиться...</string>
-    <string name="s_menu_zip">Zip file(s)...</string>
+    <string name="s_menu_zip">Сжать файл(ы)...</string>
     <string name="s_menu_unzip">Распаковать</string>
     <string name="s_menu_rename">Переименовать</string>
     <string name="s_menu_bookmark">Добавить в закладки</string>
     <string name="s_save">Сохранить</string>
     <string name="s_saveas">Сохранить как ...</string>
     <string name="s_cancel">Отмена</string>
-    <string name="s_size">Size</string>
+    <string name="s_size">Размер</string>
 </resources>
