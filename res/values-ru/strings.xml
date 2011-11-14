@@ -44,4 +44,26 @@
     <string name="s_saveas">Сохранить как ...</string>
     <string name="s_cancel">Отмена</string>
     <string name="s_size">Size</string>
+    <string name="s_none">None</string>
+    <string name="s_pref_servers">Additional Servers</string>
+    <string name="s_pref_server_add">+ Add New Server</string>
+    <string name="s_pref_display">Display Preferences</string>
+    <string name="s_pref_hidden">Show Hidden Files</string>
+    <string name="s_pref_hidden_summary">Display hidden files and folders</string>
+    <string name="s_pref_thumbs">Show Image Thumbnails</string>
+    <string name="s_pref_thumbs_summary">Display a thumbnail for Image/Video/App files</string>
+    <string name="s_pref_view">View Mode</string>
+    <string name="s_pref_view_summary">Display files in a grid, list, or carousel (Honeycomb only)</string>
+    <string name="s_pref_sort">Sorting</string>
+    <string name="s_pref_sort_summary">Choose how to sort files and folders</string>
+    <string name="s_pref_advanced">Advanced</string>
+    <string name="s_pref_server_name">Server name</string>
+    <string name="s_pref_server_name_summary">Enter Server Name</string>
+    <string name="s_pref_server_url">Server URL</string>
+    <string name="s_pref_server_url_summary">Enter full server URL</string>
+    <string name="s_pref_server_user">User</string>
+    <string name="s_pref_server_user_summary">Username</string>
+    <string name="s_pref_server_password">Password</string>
+    <string name="s_pref_server_password_summary">Login Password</string>
+    <string name="s_pref_server_update">Add/Update Server</string>
 </resources>

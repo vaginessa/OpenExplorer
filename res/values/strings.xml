@@ -9,7 +9,6 @@
     <string name="s_external">External</string>
     <string name="s_internal">Internal</string>
     <string name="s_view">View</string>
-    <string name="s_none">None</string>
     <string name="s_menu_favorites">Show Favorites</string>
     <string name="s_menu_sort">Sort</string>
     <string name="s_menu_sort_name_asc">Sort by Name (A-Z)</string>
@@ -45,6 +44,7 @@
     <string name="s_saveas">Save as...</string>
     <string name="s_cancel">Cancel</string>
     <string name="s_size">Size</string>
+    <string name="s_none">None</string>
     <string name="s_pref_servers">Additional Servers</string>
     <string name="s_pref_server_add">+ Add New Server</string>
     <string name="s_pref_display">Display Preferences</string>
