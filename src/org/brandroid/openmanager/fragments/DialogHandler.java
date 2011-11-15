@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.DialogFragment;
@@ -146,7 +147,7 @@ public class DialogHandler extends DialogFragment {
 	
 	private View createHoldingFileDialog() {
 		getDialog().getWindow().setGravity(Gravity.LEFT | Gravity.TOP);
-		getDialog().setTitle("Holding " + mFiles.size() + " files");
+		getDialog().setTitle(getResources().getString(R.string.s_title_holding_x_files).replace("xxx", "" + mFiles.size()));
 		
 		ListView list = new ListView(mContext);
 		list.setAdapter(new DialogListAdapter(mContext, R.layout.bookmark_layout, mFiles));
@@ -529,10 +530,16 @@ public class DialogHandler extends DialogFragment {
 			
 			mHolder.setText(name);
 			
-			if(ext.equalsIgnoreCase("dir")) {	
+			Bitmap bmp = ThumbnailCreator.isBitmapCached(file.getPath(), 96, 96);
+			
+			if(bmp != null)
+			{
+				BitmapDrawable bd = new BitmapDrawable(bmp);
+				mHolder.setIconDrawable(bd);
+			} else if(ext.equalsIgnoreCase("dir"))
 				mHolder.setIconResource(R.drawable.folder);
 				
-			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
+			else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
 				mHolder.setIconResource(R.drawable.doc);
 				
 			} else if(ext.equalsIgnoreCase("xls")  || 
