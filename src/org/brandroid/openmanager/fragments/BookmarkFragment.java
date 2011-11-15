@@ -405,7 +405,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				String sTotal = DialogHandler.formatSize(size);
 				//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
 				//	sFree = DFInfo.getFriendlySize(free, false);
-				if(sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
+				if(sFree.indexOf(" ") > -1 && sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
 					sFree = sFree.substring(0, sFree.lastIndexOf(" "));
 				mSizeText.setText(sFree + "/" + sTotal);
 				

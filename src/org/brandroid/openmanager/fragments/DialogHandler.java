@@ -365,13 +365,13 @@ public class DialogHandler extends DialogFragment {
 		String ssize = "";
 		
 		if (size < kb)
-			ssize = String.format("%.2f b", (double)size);
+			ssize = size + " B";
 		else if (size > kb && size < mb)
-			ssize = String.format("%.2f Kb", (double)size / kb);
+			ssize = ((double)Math.round(((double)size / kb) * 100) / 100) + " KB";
 		else if (size > mb && size < gb)
-			ssize = String.format("%.2f Mb", (double)size / mb);
+			ssize = ((double)Math.round(((double)size / mb) * 100) / 100) + " MB";
 		else if(size > gb)
-			ssize = String.format("%.2f Gb", (double)size / gb);
+			ssize = ((double)Math.round(((double)size / gb) * 100) / 100) + " GB";
 		
 		return ssize;
 	}
@@ -383,12 +383,11 @@ public class DialogHandler extends DialogFragment {
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
 		TextView numFile = (TextView)v.findViewById(R.id.info_files_label);
+		TextView numSize = (TextView)v.findViewById(R.id.info_total_size);
 		
 		if (file.isDirectory()) {
 			
-			new CountAllFilesTask(numFile, 0).execute((OpenFile)file);
-			new CountAllFilesTask(numDir, 1).execute((OpenFile)file);
-			new CountAllFilesTask((TextView)v.findViewById(R.id.info_total_size), 2).execute((OpenFile)file);
+			new CountAllFilesTask(numDir, numFile, numSize).execute((OpenFile)file);
 			
 		} else {
 			numFile.setText("-");
@@ -412,55 +411,83 @@ public class DialogHandler extends DialogFragment {
 		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96).get());
 	}
 	
-	private class CountAllFilesTask extends AsyncTask<OpenFile, Void, String>
+	private class CountAllFilesTask extends AsyncTask<OpenFile, Integer, String[]>
 	{
-		private TextView mText;
-		private int which = 0;
+		private TextView mTextFiles, mTextDirs, mTextSize;
+		private int firstDirs = 0, firstFiles = 0;
+		private int dirCount = 0, fileCount = 0;
+		private long totalSize = 0, firstSize = 0;
 		
-		public CountAllFilesTask(TextView mText, int which) {
-			this.mText = mText;
-			this.which = which;
+		public CountAllFilesTask(TextView mTextFiles, TextView mTextDirs, TextView mTextSize) {
+			this.mTextFiles = mTextFiles;
+			this.mTextDirs = mTextDirs;
+			this.mTextSize = mTextSize;
+		}
+		
+		private void addPath(OpenPath p, boolean bFirst)
+		{
+			if(!p.isDirectory())
+			{
+				fileCount++;
+				totalSize += p.length();
+				if(bFirst)
+				{
+					firstFiles++;
+					firstSize += p.length();
+				}
+			} else {
+				dirCount++;
+				if(bFirst)
+					firstDirs++;
+				for(OpenPath f : p.list())
+					addPath(f, false);
+			}
+			if(fileCount + dirCount % 50 == 0)
+				publishProgress(fileCount, dirCount);
+		}
+		
+		@Override
+		protected void onProgressUpdate(Integer... values) {
+			updateTexts(mTextFiles, fileCount, mTextDirs, dirCount, mTextSize, totalSize);
 		}
 
 		@Override
-		protected String doInBackground(OpenFile... params) {
-			int dirCount = 0;
-			int fileCount = 0;
-			OpenPath[] files = params[0].listFiles();
+		protected String[] doInBackground(OpenFile... params) {
+			OpenPath path = params[0];
 			
-			if (files != null) {
-				for(OpenPath f : files)
-					if (f.isDirectory())
-						dirCount++;
-					else
-						fileCount++;
-			}
+			addPath(path, true);
 			
-			String ret = "";
-			if(params[0].isDirectory())
-			{
-				if(which == 0)
-					ret = fileCount + " (" + params[0].countAllFiles() + ")";
-				else if(which == 1)
-					ret = dirCount + " (" + params[0].countAllDirectories() + ")";
-			}
-			if(which == 2)
-				ret = formatSize(((OpenFile)params[0]).getUsedSpace());
+			String[] ret = new String[3];
+			ret[0] = firstFiles + " (" + fileCount + ")";
+			ret[1] = firstDirs + " (" + dirCount + ")";
+			ret[2] = formatSize(totalSize);
 			return ret;
+		}
+		
+		public void updateTexts(Object... params)
+		{
+			for(int i = 0; i < params.length - 1; i += 2)
+			{
+				if(TextView.class.equals(params[i].getClass()))
+					((TextView)params[i]).setText(params[i+1].toString());
+			}
 		}
 		
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			if(mText != null)
-				mText.setText("...");
+			updateTexts(mTextFiles, "-", mTextDirs, "-", mTextSize, "0");
 		}
 		
 		@Override
-		protected void onPostExecute(String result) {
+		protected void onPostExecute(String[] result) {
 			super.onPostExecute(result);
-			if(mText != null && result != null)
-				mText.setText(result);
+			if(mTextFiles != null && result != null && result.length > 0)
+				mTextFiles.setText(result[0]);
+			if(mTextDirs != null && result != null && result.length > 1)
+				mTextDirs.setText(result[1]);
+			if(mTextSize != null && result != null && result.length > 2)
+				mTextSize.setText(result[2]);
 		}
 		
 	}
