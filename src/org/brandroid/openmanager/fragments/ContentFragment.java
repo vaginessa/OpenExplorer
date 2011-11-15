@@ -42,6 +42,9 @@ import org.brandroid.utils.Logger;
 
 import java.io.File;
 import java.lang.ref.SoftReference;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -50,6 +53,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.StatFs;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
@@ -1015,35 +1019,27 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		}
 		private String getFileDetails(OpenPath file) {
 			//OpenPath file = mFileManager.peekStack().getChild(name); 
-			String t = ""; //file.getPath() + "\t\t";
-			double bytes;
-			String size = "";
-			String atrs = " | - ";
+			String deets = ""; //file.getPath() + "\t\t";
 			
 			if(file.isDirectory() && !file.requiresThread()) {
-				if(file.canRead())
-					size =  file.list().length + " items";
-				atrs += " d";
-				
+				deets = file.list().length + " items";
 			} else {
-				bytes = file.length();
-				
-				if (bytes > GB)
-    				size = String.format("%.2f Gb ", (double)bytes / GB);
-    			else if (bytes < GB && bytes > MG)
-    				size = String.format("%.2f Mb ", (double)bytes / MG);
-    			else if (bytes < MG && bytes > KB)
-    				size = String.format("%.2f Kb ", (double)bytes/ KB);
-    			else
-    				size = String.format("%.2f bytes ", (double)bytes);
+				deets = DialogHandler.formatSize(file.length());
 			}
 			
-			if(file.canRead())
-				atrs += "r";
-			if(file.canWrite())
-				atrs += "w";
+			deets += " | ";
 			
-			return t + size + atrs;
+			DateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm");
+			deets += df.format(file.lastModified());
+			
+			deets += " | ";
+			
+			deets += (file.isDirectory()?"d":"-");
+			deets += (file.canRead()?"r":"-");
+			deets += (file.canWrite()?"w":"-");
+			deets += (file.canExecute()?"x":"-");
+			
+			return deets;
 		}
 		
 	}
