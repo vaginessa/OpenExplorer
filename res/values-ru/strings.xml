@@ -69,7 +69,7 @@
     <string name="s_pref_server_update">Add/Update Server</string>
     <string name="s_files">файлы</string>
     <string name="s_create">Создать</string>
-	<string name="s_title_holding_x_files">Holding xxx files</string>
+	<string name="s_title_holding_x_files">Holding xxx файлы</string>
 	<string name="s_title_newfolder">Создать новую папку</string>
 	<string name="s_title_send">Отправка xxx</string>
 	<string name="s_title_unzip">Распаковка xxx</string>
