@@ -129,6 +129,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private int mListScrollingState = 0;
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
+	public Boolean mShowLongDate = false; 
 	
 	public interface OnBookMarkAddListener {
 		public void onBookMarkAdd(String path);
@@ -201,6 +202,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 		if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
 			mShowThumbnails = true;
+		
+		mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() > 500
+				&& OpenFile.class.equals(mPath.getClass());
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
 		
@@ -880,7 +884,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				view = in.inflate(getViewMode() == OpenExplorer.VIEW_GRID ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
+				view = in.inflate(getViewMode() == OpenExplorer.VIEW_GRID ?
+							R.layout.grid_content_layout : R.layout.list_content_layout
+						, parent, false);
 				
 				mHolder = new BookmarkHolder(file, mName, view);
 				
@@ -892,7 +898,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			}
 
 			if(getViewMode() == OpenExplorer.VIEW_LIST) {
-				mHolder.setInfo(getFileDetails(file));
+				mHolder.setInfo(getFileDetails(file, mShowLongDate));
 				mHolder.setPath(file.getPath());
 			}
 			
@@ -1017,7 +1023,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		private String getFilePath(String name) {
 			return mFileManager.peekStack().getChild(name).getPath();
 		}
-		private String getFileDetails(OpenPath file) {
+		private String getFileDetails(OpenPath file, Boolean longDate) {
 			//OpenPath file = mFileManager.peekStack().getChild(name); 
 			String deets = ""; //file.getPath() + "\t\t";
 			
@@ -1029,7 +1035,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			
 			deets += " | ";
 			
-			DateFormat df = new SimpleDateFormat("MM-dd-yyyy HH:mm");
+			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd");
 			deets += df.format(file.lastModified());
 			
 			deets += " | ";

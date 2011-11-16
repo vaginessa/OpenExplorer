@@ -17,6 +17,7 @@ public class OpenCursor extends OpenPath
 	public OpenCursor(Cursor c, String name)
 	{
 		//mCursor = c;
+		if(c == null) return;
 		mChildren = new OpenMediaStore[(int)c.getCount()];
 		c.moveToFirst();
 		for(int i = 0; i < mChildren.length; i++)

@@ -58,6 +58,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -341,7 +342,9 @@ public class OpenExplorer
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Images.Media.SIZE + " > 10000", null,
 						MediaStore.Images.Media.DATE_ADDED + " DESC");
-		    	mPhotoParent = new OpenCursor(loader.loadInBackground(), "Photos");
+    			Cursor c = loader.loadInBackground();
+    			if(c != null)
+    				mPhotoParent = new OpenCursor(c, "Photos");
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
 		if(mVideoParent == null)
@@ -353,7 +356,9 @@ public class OpenExplorer
 						MediaStore.Video.Media.SIZE + " > 100000", null,
 						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
-				mVideoParent = new OpenCursor(loader.loadInBackground(), "Videos");
+				Cursor c = loader.loadInBackground();
+    			if(c != null)
+    				mVideoParent = new OpenCursor(c, "Videos");
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
     	}
 		if(mMusicParent == null)
@@ -364,7 +369,9 @@ public class OpenExplorer
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Audio.Media.SIZE + " > 10000", null,
 						MediaStore.Audio.Media.DATE_ADDED + " DESC");
-				mMusicParent = new OpenCursor(loader.loadInBackground(), "Music");
+				Cursor c = loader.loadInBackground();
+    			if(c != null)
+    				mMusicParent = new OpenCursor(c, "Music");
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query music.", e); }
 		}
 		//Cursor mAudioCursor = managedQuery(MediaStore.Audio, projection, selection, selectionArgs, sortOrder)
@@ -373,7 +380,7 @@ public class OpenExplorer
     public void ensureCursorCache()
     {
     	// group into blocks
-    	int enSize = 10;
+    	int enSize = 20;
     	ArrayList<OpenPath> buffer = new ArrayList<OpenPath>(enSize);
     	for(OpenMediaStore ms : mPhotoParent.list())
     	{
@@ -383,7 +390,12 @@ public class OpenExplorer
     			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
     			buffer.toArray(buff);
     			buffer.clear();
-    			new EnsureCursorCacheTask().execute(buff);
+    			try {
+    				new EnsureCursorCacheTask().execute(buff);
+    			} catch(RejectedExecutionException e) {
+    				Logger.LogWarning("Couldn't ensure cache.", e);
+    				return;
+    			}
     		}
     	}
     	for(OpenMediaStore ms : mVideoParent.list())
@@ -394,7 +406,12 @@ public class OpenExplorer
     			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
     			buffer.toArray(buff);
     			buffer.clear();
-    			new EnsureCursorCacheTask().execute(buff);
+    			try {
+    				new EnsureCursorCacheTask().execute(buff);
+    			} catch(RejectedExecutionException e) {
+    				Logger.LogWarning("Couldn't ensure cache.", e);
+    				return;
+    			}
     		}
     	}
     	if(buffer.size() > 0)
@@ -402,7 +419,12 @@ public class OpenExplorer
     		OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
 			buffer.toArray(buff);
 			buffer.clear();
-			new EnsureCursorCacheTask().execute(buff);
+			try {
+				new EnsureCursorCacheTask().execute(buff);
+			} catch(RejectedExecutionException e) {
+				Logger.LogWarning("Couldn't ensure cache.", e);
+				return;
+			}
     	}
     }
     public void toggleView()

@@ -172,7 +172,9 @@ public class OpenFile extends OpenPath
 
 	@Override
 	public Boolean canExecute() {
-		return mFile.canExecute();
+		if(Build.VERSION.SDK_INT > 9)
+			return mFile.canExecute();
+		else return false;
 	}
 
 	@Override

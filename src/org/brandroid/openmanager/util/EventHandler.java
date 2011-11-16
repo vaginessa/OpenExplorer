@@ -211,14 +211,16 @@ public class EventHandler {
 		msg.setText(getResourceString(mContext, R.string.s_alert_newfolder));
 		
 		new AlertDialog.Builder(mContext)
-		.setPositiveButton(getResourceString(mContext, R.string.s_create), new OnClickListener() {
+			.setPositiveButton(getResourceString(mContext, R.string.s_create), new OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
 				
 				if(name.length() > 0) {
-					mFileMang.createDir(directory, name);
-					mThreadListener.onWorkerThreadComplete(MKDIR_TYPE, null);
+					if(mFileMang != null)
+						mFileMang.createDir(directory, name);
+					if(mThreadListener != null)
+						mThreadListener.onWorkerThreadComplete(MKDIR_TYPE, null);
 				} else {
 					dialog.dismiss();
 				}

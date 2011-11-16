@@ -43,6 +43,7 @@
 	    android:layout_below="@+id/title_text"
 	    android:layout_toRightOf="@+id/title_icon"
 	    android:gravity="left|center_vertical"
+	    android:text="/mnt/sdcard"
 	    />
 	
     <ImageView
