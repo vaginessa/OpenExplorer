@@ -1,16 +1,22 @@
 package org.brandroid.utils;
 
 import java.io.File;
+import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.util.JsonReader;
 
 public class Preferences {
 	private static Preferences preferences;
@@ -47,6 +53,21 @@ public class Preferences {
 	{
 		return getPreferences(mContext, file);
 	}
+	
+	public JSONObject getSettings(String file)
+	{
+		JSONObject ret = new JSONObject();
+		try {
+			Map<String,?> all = getPreferences(file).getAll();
+			for(String key : all.keySet())
+				ret.put(key, all.get(key));
+		} catch (JSONException e) {
+			Logger.LogError("Couldn't get all settings for " + file, e);
+			ret = null;
+		}
+		return ret;
+	}
+	
 	
 	public String getSetting(String file, String key, String defValue)
 	{
@@ -106,6 +127,25 @@ public class Preferences {
 	public float getFloat(String file, String key, float defValue) 		{ if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
 	public Boolean getBoolean(String file, String key, Boolean defValue) { if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
 	public Long getLong(String file, String key, Long defValue) 			{ if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	
+	public void setSettings(String file, JSONObject json)
+	{
+		SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
+		Iterator keys = json.keys();
+		Object okey;
+		while((okey = keys.next()) != null)
+		{
+			String key = (String)okey;
+			String val = null;
+			try {
+				val = json.getString(key);
+			} catch (JSONException e) {
+				Logger.LogError("Error storing " + key, e);
+			}
+			editor.putString(key, val);
+		}
+		editor.commit();
+	}
 	
 	public void setSetting(String file, String key, String value)
 	{
