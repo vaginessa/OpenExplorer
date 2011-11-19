@@ -431,13 +431,7 @@ public class OpenExplorer
 			}
     	}
     }
-    public void toggleView()
-    {
-    	int newMode = (mViewMode + 1) % 3;
-    	if(BEFORE_HONEYCOMB && newMode == VIEW_CAROUSEL)
-    		newMode = 0;
-    	changeViewMode(newMode);
-    }
+    
     public void toggleBookmarks()
     {
     	if(mFavoritesFragment == null)
@@ -507,8 +501,16 @@ public class OpenExplorer
     	//addTab(editor, path.getName(), true);
     }
     
+    public void goHome()
+    {
+		Intent intent = new Intent(this, OpenExplorer.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		startActivity(intent);
+    }
+    
     public boolean onCreateOptionsMenu(Menu menu) {
     	getMenuInflater().inflate(R.menu.main_menu, menu);
+    	onPrepareOptionsMenu(menu);
     	if(!BEFORE_HONEYCOMB)
     	{
     		mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
@@ -533,11 +535,19 @@ public class OpenExplorer
     	if(!mSinglePane)
     		menu.findItem(R.id.menu_favorites).setVisible(false);
     	if(mViewMode == VIEW_GRID)
+    	{
     		menu.findItem(R.id.menu_view_grid).setChecked(true);
-    	else if(mViewMode == VIEW_LIST)
+    		menu.findItem(R.id.menu_view_list).setChecked(false);
+    		menu.findItem(R.id.menu_view_carousel).setChecked(false);
+    	} else if(mViewMode == VIEW_LIST) {
+    		menu.findItem(R.id.menu_view_grid).setChecked(false);
     		menu.findItem(R.id.menu_view_list).setChecked(true);
-    	else if(mViewMode == VIEW_CAROUSEL)
+    		menu.findItem(R.id.menu_view_carousel).setChecked(false);
+    	} else if(mViewMode == VIEW_CAROUSEL) {
+    		menu.findItem(R.id.menu_view_grid).setChecked(false);
+    		menu.findItem(R.id.menu_view_list).setChecked(false);
     		menu.findItem(R.id.menu_view_carousel).setChecked(true);
+    	}
     	if(RootManager.Default.isRoot())
     		menu.findItem(R.id.menu_root).setChecked(true);
     	return super.onPrepareOptionsMenu(menu);
@@ -584,7 +594,7 @@ public class OpenExplorer
 	    			if(mSinglePane)
 	    				toggleBookmarks();
 	    			else
-	    				toggleView();
+	    				goHome();
 	    		}
 	    		return true;
 	    	
@@ -681,9 +691,7 @@ public class OpenExplorer
 	    		return true;
 	    	case R.id.menu_flush:
 	    		ThumbnailCreator.flushCache();
-    			Intent intent = new Intent(this, OpenExplorer.class); 
-    			startActivity(intent);
-    			finish();
+	    		goHome();
 	    		return true;
 	    		
 	    	case R.id.menu_settings:
@@ -732,14 +740,18 @@ public class OpenExplorer
 			fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, new CarouselFragment(mLastPath))
 				.commit();
-			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_GRID);
+			invalidateOptionsMenu();
 		} else if (oldView == VIEW_CAROUSEL) { // if we need to transition from carousel
 			fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, new ContentFragment(mLastPath))
 				//.addToBackStack(null)
 				.commit();
-		} else if (mSettingsListener != null)
-			mSettingsListener.onViewChanged(newView);
+			invalidateOptionsMenu();
+		} else {
+			if (mSettingsListener != null)
+				mSettingsListener.onViewChanged(newView);
+			invalidateOptionsMenu();
+		}
 	}
 	public void showPreferences(OpenPath path)
     {
@@ -1091,7 +1103,7 @@ public class OpenExplorer
 		switch(v.getId())
 		{
 			case R.id.title_icon:
-				toggleView();
+				goHome();
 				return true;
 		}
 		return false;

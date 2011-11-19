@@ -169,11 +169,11 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	public String getSetting(OpenPath file, String key, String defValue)
 	{
-		return Preferences.getPreferences(getActivity(), "bookmarks").getString(key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return new Preferences(getActivity()).getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
 	{
-		return Preferences.getPreferences(getActivity(), "bookmarks").getBoolean(key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return new Preferences(getActivity()).getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public void setSetting(OpenPath file, String key, String value)
 	{
@@ -313,6 +313,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			builder.setNeutralButton(getResources().getString(R.string.s_remove), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					setSetting(mPath, "hide", true);
+					if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
+						mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
 					v.animate().alpha(0).setDuration(200).setListener(getDefaultAnimatorListener());
 				}
 			});
