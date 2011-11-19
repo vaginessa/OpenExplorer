@@ -110,7 +110,7 @@ public class OpenExplorer
 	
 	private FragmentManager fragmentManager;
 	
-	private OpenCursor mPhotoParent, mVideoParent, mMusicParent;
+	private OpenCursor mPhotoParent, mVideoParent, mMusicParent, mApkParent;
 	
 	private Boolean mSinglePane = false;
 	
@@ -190,6 +190,8 @@ public class OpenExplorer
         mLastPath = path;
         
         super.onCreate(savedInstanceState);
+        
+        boolean bAddToStack = fragmentManager.getBackStackEntryCount() > 0;
 
         FragmentTransaction ft = fragmentManager.beginTransaction();
         Fragment home = new ContentFragment(mLastPath);
@@ -198,9 +200,9 @@ public class OpenExplorer
 
         if(!mSinglePane)
         {
-        	FragmentTransaction ft2 = fragmentManager.beginTransaction();
-        	ft2.replace(R.id.list_frag, mFavoritesFragment);
-        	ft2.commit();
+        	fragmentManager.beginTransaction()
+        		.replace(R.id.list_frag, mFavoritesFragment)
+        		.commit();
         	//ft.replace(R.id.list_frag, mFavoritesFragment);
         }
 
@@ -217,22 +219,23 @@ public class OpenExplorer
         	
         	if(mViewMode == VIEW_CAROUSEL)
         		home = new CarouselFragment(mLastPath);
-        }
+        } else if(savedInstanceState != null)
+        	if(savedInstanceState.containsKey("edit_path"))
+        	{
+        		Logger.LogDebug("textEditor restore @ " + savedInstanceState.getString("edit_path"));
+        		home = new TextEditorFragment(new OpenFile(savedInstanceState.getString("edit_path")));
+        		bAddToStack = false;
+        	}
 
-        Intent intent = getIntent();
-        if(intent != null && Intent.ACTION_SEARCH.equals(intent.getAction()))
+        if(bAddToStack)
         {
-        	String query = intent.getStringExtra(SearchManager.QUERY);
-        	mEvHandler.searchFile(mLastPath, query, this);
-        	home = new ContentFragment();
+        	if(fragmentManager.getBackStackEntryCount() == 0 || !mLastPath.getPath().equals(fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getBreadCrumbTitle()))
+	        	fragmentManager.beginTransaction()
+	        		.addToBackStack("path")
+	        		.setBreadCrumbTitle(mLastPath.getPath())
+	        		.commit();
         }
-
         ft.replace(R.id.content_frag, home);
-        if(fragmentManager.getBackStackEntryCount() > 0)
-        {
-        	ft.addToBackStack("path");
-        	ft.setBreadCrumbTitle(mLastPath.getPath());
-        }
         ft.commit();
         
         updateTitle(mLastPath.getPath());
@@ -374,6 +377,19 @@ public class OpenExplorer
     				mMusicParent = new OpenCursor(c, "Music");
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query music.", e); }
 		}
+		if(mApkParent == null && Build.VERSION.SDK_INT > 10)
+		{
+			try {
+				CursorLoader loader = new CursorLoader(getApplicationContext(),
+						MediaStore.Files.getContentUri(Environment.getExternalStorageDirectory().getPath()),
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+						"_size > 10000", null,
+						"date modified DESC");
+				Cursor c = loader.loadInBackground();
+				if(c != null)
+					mApkParent = new OpenCursor(c, "Apps");
+			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Apks.", e); }
+		}
 		//Cursor mAudioCursor = managedQuery(MediaStore.Audio, projection, selection, selectionArgs, sortOrder)
 		ensureCursorCache();
     }
@@ -382,37 +398,25 @@ public class OpenExplorer
     	// group into blocks
     	int enSize = 20;
     	ArrayList<OpenPath> buffer = new ArrayList<OpenPath>(enSize);
-    	for(OpenMediaStore ms : mPhotoParent.list())
+    	for(OpenCursor curs : new OpenCursor[]{mPhotoParent, mVideoParent, mApkParent})
     	{
-    		buffer.add(ms);
-    		if(buffer.size() == enSize)
-    		{
-    			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
-    			buffer.toArray(buff);
-    			buffer.clear();
-    			try {
-    				new EnsureCursorCacheTask().execute(buff);
-    			} catch(RejectedExecutionException e) {
-    				Logger.LogWarning("Couldn't ensure cache.", e);
-    				return;
-    			}
-    		}
-    	}
-    	for(OpenMediaStore ms : mVideoParent.list())
-    	{
-    		buffer.add(ms);
-    		if(buffer.size() == enSize)
-    		{
-    			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
-    			buffer.toArray(buff);
-    			buffer.clear();
-    			try {
-    				new EnsureCursorCacheTask().execute(buff);
-    			} catch(RejectedExecutionException e) {
-    				Logger.LogWarning("Couldn't ensure cache.", e);
-    				return;
-    			}
-    		}
+    		if(curs == null) continue;
+	    	for(OpenMediaStore ms : curs.list())
+	    	{
+	    		buffer.add(ms);
+	    		if(buffer.size() == enSize)
+	    		{
+	    			OpenMediaStore[] buff = new OpenMediaStore[buffer.size()];
+	    			buffer.toArray(buff);
+	    			buffer.clear();
+	    			try {
+	    				new EnsureCursorCacheTask().execute(buff);
+	    			} catch(RejectedExecutionException e) {
+	    				Logger.LogWarning("Couldn't ensure cache.", e);
+	    				return;
+	    			}
+	    		}
+	    	}
     	}
     	if(buffer.size() > 0)
     	{
@@ -429,12 +433,10 @@ public class OpenExplorer
     }
     public void toggleView()
     {
-    	if(mViewMode == VIEW_GRID)
-			changeViewMode(VIEW_LIST);
-		else if (!BEFORE_HONEYCOMB && mViewMode == VIEW_LIST)
-			changeViewMode(VIEW_CAROUSEL);
-		else
-			changeViewMode(VIEW_GRID);
+    	int newMode = (mViewMode + 1) % 3;
+    	if(BEFORE_HONEYCOMB && newMode == VIEW_CAROUSEL)
+    		newMode = 0;
+    	changeViewMode(newMode);
     }
     public void toggleBookmarks()
     {
@@ -472,9 +474,9 @@ public class OpenExplorer
     	if(activate)
     	{
     		Logger.LogDebug("Activating content fragment");
-    		FragmentTransaction ft = fragmentManager.beginTransaction();
-    		ft.replace(R.id.content_frag, ret);
-    		ft.commit();
+    		fragmentManager.beginTransaction()
+    			.replace(R.id.content_frag, ret)
+    			.commit();
     	}
     	
    		return (ContentFragment)ret;
@@ -496,12 +498,12 @@ public class OpenExplorer
     
     public void editFile(OpenPath path)
     {
-    	TextEditorFragment editor = new TextEditorFragment(path.getPath());
-    	FragmentTransaction ft = fragmentManager.beginTransaction();
-    	ft.replace(R.id.content_frag, editor);
-    	ft.addToBackStack("edit");
-    	ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-    	ft.commit();
+    	TextEditorFragment editor = new TextEditorFragment(path);
+    	fragmentManager.beginTransaction()
+    		.replace(R.id.content_frag, editor)
+    		.addToBackStack(null)
+    		.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+    		.commit();
     	//addTab(editor, path.getName(), true);
     }
     
@@ -731,23 +733,22 @@ public class OpenExplorer
 			else Logger.LogWarning("Listener not available.");
 		} else if(newView == VIEW_CAROUSEL)
 		{
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.replace(R.id.content_frag, new CarouselFragment(mLastPath));
-			ft.addToBackStack(null);
-			ft.commit();
+			fragmentManager.beginTransaction()
+				.replace(R.id.content_frag, new CarouselFragment(mLastPath))
+				.commit();
 			if(mSettingsListener!=null) mSettingsListener.onViewChanged(VIEW_GRID);
 		} else if (oldView == VIEW_CAROUSEL) { // if we need to transition from carousel
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
-			ft.addToBackStack(null);
-			ft.commit();
+			fragmentManager.beginTransaction()
+				.replace(R.id.content_frag, new ContentFragment(mLastPath))
+				//.addToBackStack(null)
+				.commit();
 		} else if (mSettingsListener != null)
 			mSettingsListener.onViewChanged(newView);
 	}
 	public void showPreferences(OpenPath path)
     {
     	if(Build.VERSION.SDK_INT > 100)
-    	{	
+    	{
     		FragmentTransaction ft = fragmentManager.beginTransaction();
     		ft.hide(fragmentManager.findFragmentById(R.id.content_frag));
 	    	//ft.replace(R.id.content_frag, new PreferenceFragment(this, path));
@@ -845,8 +846,22 @@ public class OpenExplorer
     protected void onSaveInstanceState(Bundle outState) {
     	super.onSaveInstanceState(outState);
     	if(mLastPath == null || mLastPath.equals("")) return;
-    	Logger.LogDebug("Saving " + mLastPath);
+    	Logger.LogDebug("Saving instance last path = " + mLastPath.getPath());
     	outState.putString("last", mLastPath.getPath());
+    }
+    
+    public void pushFragment(Object o)
+    {
+    	if(Build.VERSION.SDK_INT > 10 && o.getClass().equals(android.app.Fragment.class))
+    		getFragmentManager().beginTransaction()
+    			.replace(R.id.content_frag, ((android.app.Fragment)o))
+    			.addToBackStack(null)
+    			.commit();
+    	else
+    		getSupportFragmentManager().beginTransaction()
+    			.replace(R.id.content_frag, (Fragment)o)
+    			.addToBackStack(null)
+    			.commit();
     }
 
 
@@ -935,6 +950,11 @@ public class OpenExplorer
 		View v = frag.getView();
 		v.setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
+	
+	public void killBadFragments()
+	{
+		
+	}
 
 	public void changePath(OpenPath path, Boolean addToStack)
 	{
@@ -944,8 +964,11 @@ public class OpenExplorer
 		Fragment content;
 		if(mViewMode == VIEW_CAROUSEL && !BEFORE_HONEYCOMB && path.getClass().equals(OpenCursor.class))
 			content = new CarouselFragment(path);
-		else
+		else {
+			if(mViewMode == VIEW_CAROUSEL)
+				mViewMode = VIEW_LIST;
 			content = new ContentFragment(path);
+		}
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		ft.replace(R.id.content_frag, content);
 		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
@@ -961,7 +984,7 @@ public class OpenExplorer
 					return;
 			}
 			mFileManager.pushStack(path);
-			ft.addToBackStack("path");
+			ft.addToBackStack(null);
 		} else Logger.LogDebug("Covertly changing to " + path.getPath());
 		Logger.LogDebug("Setting path to " + path.getPath());
 		ft.setBreadCrumbTitle(path.getPath());

@@ -12,13 +12,23 @@
 		android:layout_alignParentLeft="true"
 		android:gravity="center"
 	>
+		<ProgressBar android:id="@+id/progress"
+		    style="@android:style/Widget.ProgressBar.Large"
+		    android:layout_width="30dp"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentTop="true"
+		    android:layout_alignBottom="@+id/label_path"
+		    android:layout_marginRight="4dp"
+		    android:visibility="gone"
+		    android:indeterminate="true"
+		    />
 	    <TextView android:id="@+id/label_path"
 	    	android:layout_width="wrap_content"
 			android:textAppearance="?android:attr/textAppearanceLarge"
 			android:layout_height="wrap_content"
 			android:layout_alignParentTop="true"
 			android:layout_alignBottom="@+id/btn_save"
-			android:layout_alignParentLeft="true"
+			android:layout_toRightOf="@+id/progress"
 			android:gravity="center"
 			android:text="File Path: /" />
 		<Button android:id="@+id/btn_save"
@@ -40,6 +50,7 @@
 			android:layout_toLeftOf="@+id/btn_save"
 			android:layout_alignTop="@+id/btn_save"
 			android:layout_marginRight="10dp"
+			android:visibility="gone"
 			android:gravity="center"
 			android:text="Size: 0" />
 	</RelativeLayout>

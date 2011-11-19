@@ -94,5 +94,8 @@
 	<string name="s_msg_deleted">deleted</string>
 	<string name="s_msg_moved">moved</string>
 	<string name="s_msg_copied">copied</string>
+	<string name="s_remove">Remove</string>
+	<string name="s_eject">Eject</string>
+	<string name="s_update">Update</string>
     
 </resources>
