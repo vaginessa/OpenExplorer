@@ -93,7 +93,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.net.Uri;
 
-public class ContentFragment extends Fragment implements OnItemClickListener,
+public class ContentFragment extends OpenFragment implements OnItemClickListener,
 															OnSettingsChangeListener,
 															OnWorkerThreadFinishedListener{
 	
