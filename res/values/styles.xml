@@ -23,11 +23,17 @@
         <item name="android:singleLine">true</item>
         <item name="android:textSize">16dp</item>
     </style>
-    <style name="icon.big" parent="@android:style/Theme.Holo">
+    <style name="icon.grid" parent="@android:style/Theme.Black">
+    	<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:minHeight">96dp</item>
+		<item name="android:minWidth">96dp</item>
+    </style>
+    <style name="icon.big" parent="@android:style/Theme.Black">
     	<item name="android:layout_width">wrap_content</item>
 		<item name="android:layout_height">wrap_content</item>
     </style>
-    <style name="icon.small" parent="@android:style/Theme.Holo">
+    <style name="icon.small" parent="@android:style/Theme.Black">
     	<item name="android:layout_width">36dp</item>
 		<item name="android:layout_height">36dp</item>
     </style>
