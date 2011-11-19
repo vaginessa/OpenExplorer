@@ -68,8 +68,9 @@ public class IntentManager
     	}
 		
 		/* HTML XML file */
-    	else if(ext.equalsIgnoreCase("html") || 
-    			ext.equalsIgnoreCase("xml")) {
+    	else if(ext.equalsIgnoreCase("html") 
+    			//ext.equalsIgnoreCase("xml")
+    			) {
     		
     		if(file.exists()) {
     			ret.setDataAndType(file.getUri(), "text/html");
@@ -83,7 +84,8 @@ public class IntentManager
     	}
 		
 		/* text file*/
-    	else if(ext.equalsIgnoreCase("txt")) {
+    	else //if(ext.equalsIgnoreCase("txt")) {
+    	{
     		Boolean bUseIntent = false;
     		if(!bUseIntent)
     		{
@@ -95,9 +97,7 @@ public class IntentManager
     	}
 		
 		/* generic intent */
-    	else {
-    		ret.setDataAndType(file.getUri(), "application/*");
-    	}
+    	//else ret.setDataAndType(file.getUri(), "application/*");
 		return ret;
 	}
 

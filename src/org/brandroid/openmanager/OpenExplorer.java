@@ -730,6 +730,7 @@ public class OpenExplorer
     		newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
     	int oldView = mViewMode;
 		setViewMode(newView);
+		setSetting(mLastPath, "view", newView);
 		if(BEFORE_HONEYCOMB)
 		{
 			if(mSettingsListener != null)
@@ -753,6 +754,32 @@ public class OpenExplorer
 			invalidateOptionsMenu();
 		}
 	}
+	
+	public String getSetting(OpenPath file, String key, String defValue)
+	{
+		return getPreferences().getSetting("global", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
+	{
+		return getPreferences().getSetting("global", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public Integer getSetting(OpenPath file, String key, Integer defValue)
+	{
+		return getPreferences().getSetting("global", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public void setSetting(OpenPath file, String key, String value)
+	{
+		getPreferences().setSetting("global", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+	public void setSetting(OpenPath file, String key, Boolean value)
+	{
+		getPreferences().setSetting("global", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+	public void setSetting(OpenPath file, String key, Integer value)
+	{
+		getPreferences().setSetting("global", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+
 	public void showPreferences(OpenPath path)
     {
     	if(Build.VERSION.SDK_INT > 100)
@@ -941,11 +968,13 @@ public class OpenExplorer
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		Fragment content;
-		if(mViewMode == VIEW_CAROUSEL && !BEFORE_HONEYCOMB && path.getClass().equals(OpenCursor.class))
+		int newView = getSetting(path, "view", mViewMode);
+		setViewMode(newView);
+		if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB && path.getClass().equals(OpenCursor.class))
 			content = new CarouselFragment(path);
 		else {
-			if(mViewMode == VIEW_CAROUSEL)
-				mViewMode = VIEW_LIST;
+			if(newView == VIEW_CAROUSEL)
+				setViewMode(newView = VIEW_LIST);
 			content = new ContentFragment(path);
 		}
 		FragmentTransaction ft = fragmentManager.beginTransaction();

@@ -28,9 +28,7 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.fragments.DialogHandler.DialogType;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
-import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
@@ -41,8 +39,6 @@ import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import java.io.File;
-import java.lang.ref.SoftReference;
-import java.sql.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,23 +49,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.os.StatFs;
-import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.IntentSender.SendIntentException;
 import android.content.Intent;
-import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
 import android.view.ContextMenu;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -80,7 +67,6 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.BaseExpandableListAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -157,7 +143,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		
-		mContext = getActivity();
+		mContext = getActivity().getApplicationContext();
 		
 		OpenExplorer explorer = ((OpenExplorer)getActivity());
 		mFileManager = explorer.getFileManager();
@@ -898,13 +884,17 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 			if(getViewMode() == OpenExplorer.VIEW_LIST) {
 				mHolder.setInfo(getFileDetails(file, mShowLongDate));
-				mHolder.setPath(file.getPath());
+				
+				if(file.getClass().equals(OpenMediaStore.class))
+				{
+					mHolder.setPath(file.getPath());
+					mHolder.showPath(true);
+				}
+				else
+					mHolder.showPath(false);
 			}
 			
-			if(file.getClass().equals(OpenMediaStore.class))
-				mHolder.showPath(true);
-			else
-				mHolder.showPath(false);
+			mHolder.setTitle(mName);
 			
 			ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
 

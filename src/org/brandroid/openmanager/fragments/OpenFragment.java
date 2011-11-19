@@ -17,6 +17,8 @@ public class OpenFragment extends Fragment
 	{
 		return this.getClass().getSimpleName();
 	}
+	
+	/*
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -68,5 +70,5 @@ public class OpenFragment extends Fragment
 		super.onSaveInstanceState(outState);
 		Logger.LogInfo("->onSaveInstanceState - " + getClassName());
 	}
-	
+	*/
 }

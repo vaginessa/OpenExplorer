@@ -72,40 +72,34 @@ public class Preferences {
 	public String getSetting(String file, String key, String defValue)
 	{
 		try {
-			return getPreferences(file).getString(key, defValue);
+			String ret = getPreferences(file).getString(key, defValue);
+			//Logger.LogInfo("Pref GET [" + file + ":" + key + "] = " + ret);
+			return ret;
 		} catch(ClassCastException cce) { Logger.LogError("Couldn't get string \"" + key + "\" from Prefs.", cce); return defValue; }
 		catch(NullPointerException npe) { return defValue; }
 	}
 	public int getSetting(String file, String key, Integer defValue)
 	{
-		//return mStorage.getInt(key, defValue);
 		try {
-			String s = getPreferences(file).getString(key, defValue.toString());
-			return Integer.parseInt(s);
+			return Integer.parseInt(getSetting(file, key, defValue.toString()));
 		} catch(Exception e) { return defValue; }
 	}
 	public float getSetting(String file, String key, Float defValue)
 	{
-		//return mStorage.getFloat(key, defValue);
 		try {
-			String s = getPreferences(file).getString(key, defValue.toString());
-			return Float.parseFloat(s);
+			return Float.parseFloat(getSetting(file, key, defValue.toString()));
 		} catch(Exception e) { return defValue; }
 	}
 	public Double getSetting(String file, String key, Double defValue)
 	{
-		//return mStorage.getFloat(key, defValue);
 		try {
-			String s = getPreferences(file).getString(key, defValue.toString());
-			return Double.parseDouble(s);
+			return Double.parseDouble(getSetting(file, key, defValue.toString()));
 		} catch(Exception e) { return defValue; }
 	}
 	public Boolean getSetting(String file, String key, Boolean defValue)
 	{
-		//return mStorage.getBoolean(key, defValue);
 		try {
-			SharedPreferences prefs = getPreferences(file);
-			String s = prefs.getString(key, defValue.toString());
+			String s = getSetting(file, key, defValue.toString());
 			return Boolean.parseBoolean(s);
 		} catch(Exception e) {
 			Logger.LogError("Error getting setting [" + key + "] from " + file, e);
@@ -150,7 +144,7 @@ public class Preferences {
 	public void setSetting(String file, String key, String value)
 	{
 		try {
-			Logger.LogDebug("Setting " + key + " to " + value);
+			//Logger.LogDebug("Setting " + key + " to " + value);
 			SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
 			editor.putString(key, value.toString());
 			//editor.putString(key, value);
@@ -159,21 +153,11 @@ public class Preferences {
 	}
 	public void setSetting(String file, String key, Boolean value)
 	{
-		try {
-			SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
-			editor.putString(key, value.toString());
-			//editor.putBoolean(key, value);
-			editor.commit();
-		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
+		setSetting(file, key, value.toString());
 	}
 	public void setSetting(String file, String key, Integer value)
 	{
-		try {
-			SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
-			editor.putString(key, value.toString());
-			//editor.putInt(key, value);
-			editor.commit();
-		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
+		setSetting(file, key, value.toString());
 	}
 	public void setSettings(String file, Object... vals)
 	{

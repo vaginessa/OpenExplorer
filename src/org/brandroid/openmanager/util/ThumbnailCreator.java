@@ -149,6 +149,7 @@ public class ThumbnailCreator extends Thread {
 
 			if(showThumbPreviews) {
 
+				ThumbnailCreator.setContext(mContext);
 				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)

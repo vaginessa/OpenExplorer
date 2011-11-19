@@ -241,7 +241,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	private static boolean checkDir(String sPath)
 	{
 		File fTest = new File(sPath);
-		if(fTest.exists() && fTest.isDirectory() && fTest.list() != null && fTest.list().length > 0)
+		if(fTest.exists())
 			return true;
 		else return false;
 	}
