@@ -97,5 +97,9 @@
 	<string name="s_remove">Remove</string>
 	<string name="s_eject">Eject</string>
 	<string name="s_update">Update</string>
+	<string name="s_alert_bookmark_rename">Change the title of your bookmark.</string>
+	<string name="s_title_bookmark_prefix">Manage Bookmark: </string>
+	<string name="s_alert_remove_safe">You may now safely remove the drive.</string>
+	<string name="s_alert_remove_error">Unable to eject.</string>
     
 </resources>

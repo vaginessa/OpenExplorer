@@ -515,8 +515,8 @@ public class DialogHandler extends DialogFragment {
 			if (view == null) {
 				LayoutInflater inflater = (LayoutInflater)mContext
 											.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				
-				mHolder = new BookmarkHolder(file, name, inflater.inflate(R.layout.bookmark_layout, parent, false));				
+				view = inflater.inflate(R.layout.bookmark_layout, parent, false);
+				mHolder = new BookmarkHolder(file, name, view);				
 				view.setTag(mHolder);
 				
 			} else {
@@ -528,58 +528,9 @@ public class DialogHandler extends DialogFragment {
 			else
 				ext = name.substring(name.lastIndexOf(".") + 1);
 			
-			mHolder.setText(name);
+			mHolder.setTitle(name);
 			
-			Bitmap bmp = ThumbnailCreator.isBitmapCached(file.getPath(), 96, 96);
-			
-			if(bmp != null)
-			{
-				BitmapDrawable bd = new BitmapDrawable(bmp);
-				mHolder.setIconDrawable(bd);
-			} else if(ext.equalsIgnoreCase("dir"))
-				mHolder.setIconResource(R.drawable.folder);
-				
-			else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-				mHolder.setIconResource(R.drawable.doc);
-				
-			} else if(ext.equalsIgnoreCase("xls")  || 
-					  ext.equalsIgnoreCase("xlsx") ||
-					  ext.equalsIgnoreCase("xlsm")) {
-				mHolder.setIconResource(R.drawable.excel);
-				
-			} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-				mHolder.setIconResource(R.drawable.powerpoint);
-				
-			} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-				mHolder.setIconResource(R.drawable.zip);
-				
-			} else if(ext.equalsIgnoreCase("apk")) {
-				mHolder.setIconResource(R.drawable.apk);
-				
-			} else if(ext.equalsIgnoreCase("pdf")) {
-				mHolder.setIconResource(R.drawable.pdf);
-				
-			} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-				mHolder.setIconResource(R.drawable.xml_html);
-				
-			} else if(ext.equalsIgnoreCase("mp4") || 
-					  ext.equalsIgnoreCase("3gp") ||
-					  ext.equalsIgnoreCase("webm") || 
-					  ext.equalsIgnoreCase("m4v")) {
-				mHolder.setIconResource(R.drawable.movie);
-				
-			} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
-					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
-					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-				mHolder.setIconResource(R.drawable.music);
-				
-			} else if(ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png") ||
-					  ext.equalsIgnoreCase("jpg")  || ext.equalsIgnoreCase("gif")) {
-				mHolder.setIconResource(R.drawable.photo);
-				
-			} else {
-				mHolder.setIconResource(R.drawable.unknown);
-			}
+			ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, 96, 96);
 			
 			return view;
 		}

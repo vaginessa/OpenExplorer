@@ -681,13 +681,9 @@ public class OpenExplorer
 	    		return true;
 	    	case R.id.menu_flush:
 	    		ThumbnailCreator.flushCache();
-	    		if(Build.VERSION.SDK_INT > 10)
-	    			recreate();
-	    		else {
-	    			Intent intent = new Intent(this, OpenExplorer.class); 
-	    			startActivity(intent);
-	    			finish();
-	    		}
+    			Intent intent = new Intent(this, OpenExplorer.class); 
+    			startActivity(intent);
+    			finish();
 	    		return true;
 	    		
 	    	case R.id.menu_settings:
@@ -810,35 +806,6 @@ public class OpenExplorer
     			Logger.LogError("onActivityResult FAIL", e);
     		}
     		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
-    	}
-    }
-    
-    
-    protected void onPause() {
-    	super.onPause();
-    	Fragment fragList = fragmentManager.findFragmentById(mSinglePane ? R.id.content_frag : R.id.list_frag);
-    	String list = "", bookmark = "";
-    	if(fragList.getClass().equals(BookmarkFragment.class))
-    	{
-    		list = ((BookmarkFragment)fragList).getDirListString();
-    		bookmark = ((BookmarkFragment)fragList).getBookMarkNameString();
-    	}
-    	
-    	String saved = mPreferences.getString("global", SettingsActivity.PREF_LIST_KEY, "");
-    	String saved_book = mPreferences.getString("global", SettingsActivity.PREF_BOOKNAME_KEY, "");
-    	
-    	if (!list.equals(saved)) {
-    		//SharedPreferences.Editor e = mPreferences.edit();
-    		//e.putString(SettingsActivity.PREF_LIST_KEY, list);
-    		//e.commit();
-    		mPreferences.setSetting("global", SettingsActivity.PREF_LIST_KEY, list);
-    	}
-    	
-    	if (!bookmark.equals(saved_book)) {
-    		//SharedPreferences.Editor e = mPreferences.edit();
-    		//e.putString(SettingsActivity.PREF_BOOKNAME_KEY, bookmark);
-    		//e.commit();
-    		mPreferences.setSetting("global", SettingsActivity.PREF_BOOKNAME_KEY, bookmark);
     	}
     }
     

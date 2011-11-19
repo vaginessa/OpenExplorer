@@ -23,26 +23,23 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment.OnBookMarkAddListener;
+import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StatFs;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
-import android.hardware.usb.UsbAccessory;
-import android.hardware.usb.UsbConstants;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbInterface;
-import android.hardware.usb.UsbManager;
-import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
@@ -51,66 +48,66 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class BookmarkFragment extends ListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
-	private static int BOOKMARK_POS = 6;
-	
 	private ArrayList<OpenPath> mBookmarks;
 	private Context mContext;
 	//private ImageView mLastIndicater = null;
 	private BookmarkAdapter mBookmarkAdapter;
-	private String mDirListString;
 	private String mBookmarkString;
 	private Boolean mHasExternal = false;
 	private Boolean mShowTitles = true;
 	private Long mAllDataSize = 0l;
 	
+	public class AnimatorEndListen implements AnimatorListener
+	{
+		public void onAnimationCancel(Animator animation) { }
+		public void onAnimationEnd(Animator animation) { }
+		public void onAnimationRepeat(Animator animation) { }
+		public void onAnimationStart(Animator animation) { }	
+	}
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mContext = getActivity();
 		mBookmarks = new ArrayList<OpenPath>();
-		mDirListString = ((OpenExplorer)getActivity()).getPreferences()
-								.getString("global", SettingsActivity.PREF_LIST_KEY, "");
-		
-		mBookmarkString = ((OpenExplorer)getActivity()).getPreferences()
-								.getString("global", SettingsActivity.PREF_BOOKNAME_KEY, "");
-		
+		mBookmarkString = getSetting(null, "bookmarks", "");
 		scanBookmarks();
+	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		setSetting(null, "bookmarks", mBookmarkString);
 	}
 	
 	public void scanBookmarks()
 	{
 		Logger.LogDebug("Scanning bookmarks...");
-		OpenCursor mPhotoCursor = ((OpenExplorer)getActivity()).getPhotoParent();
-		OpenCursor mVideoCursor = ((OpenExplorer)getActivity()).getVideoParent();
-		OpenCursor mMusicCursor = ((OpenExplorer)getActivity()).getMusicParent();
 		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
 		mBookmarks.clear();
-		mBookmarks.add(new OpenFile("/"));
-		mBookmarks.add(storage);
-		if(mVideoCursor.length() > 0)
-			mBookmarks.add(mVideoCursor);
-		if(mPhotoCursor.length() > 0)
-			mBookmarks.add(mPhotoCursor);
-		if(mMusicCursor.length() > 0)
-			mBookmarks.add(mMusicCursor);
+		
+		checkAndAdd(new OpenFile("/"));
+		checkAndAdd(storage);
+		
+		checkAndAdd(((OpenExplorer)getActivity()).getVideoParent());
+		checkAndAdd(((OpenExplorer)getActivity()).getPhotoParent());
+		checkAndAdd(((OpenExplorer)getActivity()).getMusicParent());
+		
 		checkAndAdd(storage.getChild("Download"));
 		if(checkAndAdd(new OpenFile("/mnt/external_sd")))
 			mHasExternal = true;
@@ -134,12 +131,34 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			String[] l = mBookmarkString.split(";");
 			
 			for(String s : l)
-				checkAndAdd(new OpenFile(s));
+				checkAndAdd(getOpenBookmark(s));
 		}
 		if(mBookmarkAdapter != null)
 			mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
+	private OpenPath getOpenBookmark(String s) {
+		if(new File(s).exists())
+			return new OpenFile(s);
+		JSONObject json = new Preferences(getActivity()).getSettings(s);
+		final String type = json.optString("type");
+		final String path = json.optString("path");
+		if(type.equalsIgnoreCase("ftp"))
+		{
+			try {
+				return new OpenFTP(path, null,
+						new FTPManager(
+								json.getString("host"),
+								json.getString("user"),
+								json.getString("password"),
+								path));
+			} catch (JSONException e) {
+				Logger.LogError("Couldn't add FTP bookmark - " + path, e);
+			}
+		}
+		return null;
+	}
+
 	private boolean hasBookmark(OpenPath path)
 	{
 		for(OpenPath p : mBookmarks)
@@ -148,10 +167,59 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		return false;
 	}
 	
+	public String getSetting(OpenPath file, String key, String defValue)
+	{
+		return Preferences.getPreferences(getActivity(), "bookmarks").getString(key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
+	{
+		return Preferences.getPreferences(getActivity(), "bookmarks").getBoolean(key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public void setSetting(OpenPath file, String key, String value)
+	{
+		new Preferences(getActivity()).setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+	public void setSetting(OpenPath file, String key, Boolean value)
+	{
+		new Preferences(getActivity()).setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+
+	public String getPathTitle(OpenPath path)
+	{
+		return getSetting(path, "title", getPathTitleDefault(path));
+	}
+	
+	public void setPathTitle(OpenPath path, String title)
+	{
+		setSetting(path, "title", title);
+	}
+	public String getPathTitleDefault(OpenPath file)
+	{
+		String path = file.getPath().toLowerCase();
+		if(path.equals("/"))
+			return "/";
+		else if(path.indexOf("ext") > -1)
+			return getString(R.string.s_external);
+		else if(path.indexOf("download") > -1)
+			return getString(R.string.s_downloads);
+		else if(path.indexOf("sdcard") > -1)
+			return getString(mHasExternal ? R.string.s_internal : R.string.s_external);
+		else if(path.indexOf("usb") > -1 || path.indexOf("removeable") > -1)
+			return OpenExplorer.getVolumeName(file.getPath());
+		else return file.getName();
+	}
+	
+	
 	private boolean checkAndAdd(OpenPath path)
 	{
+		if(path == null) return false;
+		if(OpenCursor.class.equals(path.getClass()))
+			if(((OpenCursor)path).length() == 0)
+				return false;
+		if(getSetting(path, "hide", false))
+			return false;
 		if(hasBookmark(path)) return false;
-		if(checkDir(path.getPath()))
+		if(OpenCursor.class.equals(path.getClass()) || checkDir(path.getPath()))
 		{
 			mBookmarks.add(path);
 			return true;
@@ -198,8 +266,9 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		
 		//Logger.LogDebug(mBookmarks.size() + " bookmarks");
 		
-		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarks);
 		registerForContextMenu(lv);
+		
+		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarks);
 		setListAdapter(mBookmarkAdapter);
 		
 		ContentFragment.setOnBookMarkAddListener(this);
@@ -211,172 +280,82 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		((OpenExplorer)getActivity()).onChangeLocation(mBookmarks.get(pos));
 	}
 	
+	public AnimatorEndListen getDefaultAnimatorListener()
+	{
+		return new AnimatorEndListen(){
+			public void onAnimationEnd(Animator animation) {
+				((OpenExplorer)getActivity()).refreshBookmarks();
+			}};
+	}
 	
 	public boolean onItemLongClick(AdapterView<?> list, View view, final int pos, long id) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View v = inflater.inflate(R.layout.input_dialog_layout, null);
+		final View v = inflater.inflate(R.layout.input_dialog_layout, null);
 		final EditText mText = (EditText)v.findViewById(R.id.dialog_input);
-		final EditText mTextTop = (EditText)v.findViewById(R.id.dialog_input_top);
+		//final EditText mTextTop = (EditText)v.findViewById(R.id.dialog_input_top);
 		final BookmarkHolder mHolder = (BookmarkHolder)view.getTag();
+		final OpenPath mPath = mBookmarks.get(pos);
+		final String title = getPathTitle(mPath);
+
+		((TextView)v.findViewById(R.id.dialog_message))
+						.setText(getResources().getString(R.string.s_alert_bookmark_rename));
+		mText.setText(title);
 		
-		/* the first two items in our dir list is / and sdcard.
-		 * the user should not be able to change the location
-		 * of these two entries. Everything else is fair game */
-		if (pos > 1 && pos < BOOKMARK_POS) {
-						
-			((TextView)v.findViewById(R.id.dialog_message))
-							.setText("Change the location of this directory.");
-			
-			((TextView)v.findViewById(R.id.dialog_message_top))
-							.setText("Change the title of your bookmark.");
-			v.findViewById(R.id.dialog_layout_top).setVisibility(View.VISIBLE);
-			
-			mTextTop.setText(mHolder.getText());
-						
-			mText.setText(mBookmarks.get(pos).getName());
-			builder.setTitle("Bookmark Location");
-			builder.setView(v);
-			
-			builder.setIcon(mHolder.getIconView().getDrawable());
-			
-			if(mHolder.isEjectable())
-			{
-				v.findViewById(R.id.dialog_message).setVisibility(View.GONE);
-				((View)mText.getParent()).setVisibility(View.GONE);
-				
-				builder.setNeutralButton("Eject", new DialogInterface.OnClickListener() {
-					
-					public void onClick(DialogInterface dialog, int which) {
-						tryEject(mBookmarks.get(pos).getPath(), mHolder);
-					}
-				});
-			}
-			
-			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				
-				
+		if(mHolder.isEjectable())
+		{	
+			builder.setNeutralButton(getResources().getString(R.string.s_eject), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					tryEject(mBookmarks.get(pos).getPath(), mHolder);
+				}
+			});
+		} else
+			builder.setNeutralButton(getResources().getString(R.string.s_remove), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					setSetting(mPath, "hide", true);
+					v.animate().alpha(0).setDuration(200).setListener(getDefaultAnimatorListener());
+				}
+			});
+		
+		builder
+			.setView(v)
+			.setIcon(mHolder.getIconView().getDrawable())
+			.setNegativeButton(getResources().getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
-				}
-			});
-			
-			builder.setPositiveButton("Change", new DialogInterface.OnClickListener() {
-				
-				
+				}})
+			.setPositiveButton(getResources().getString(R.string.s_update), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					String location = mText.getText().toString();
-					File file = new File(location);
-					
-					if (!file.isDirectory()) {
-						Toast.makeText(mContext, 
-									   location + " is an invalid directory", 
-									   Toast.LENGTH_LONG).show();
-						dialog.dismiss();
-					
-					} else {
-						mBookmarks.set(pos, new OpenFile(file));
-						buildDirString();
-						mBookmarkAdapter.notifyDataSetChanged();
-					}
-				}
-			});
-			
-			builder.create().show();
-			return true;
-		
-		/*manage the users bookmarks, delete or rename*/
-		} else if (pos > BOOKMARK_POS) {
-			
-			String bookmark = mHolder.getPath(); // mBookmarkNames.get(p - (BOOKMARK_POS + 1));
-			
-			
-			builder.setTitle("Manage bookmark: " + bookmark);
-			builder.setIcon(R.drawable.folder);
-			builder.setView(v);
-			
-			((TextView)v.findViewById(R.id.dialog_message))
-						.setText("Would you like to delete or rename this bookmark?");
-			
-			mText.setText(bookmark);
-			builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-				
-				
-				public void onClick(DialogInterface dialog, int which) {
-					mBookmarks.remove(pos);
-					buildDirString();
+					setPathTitle(mPath, mText.getText().toString());					
 					mBookmarkAdapter.notifyDataSetChanged();
 				}
-			});
-			builder.setNegativeButton("Rename", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					/*
-					mBookmarkNames.remove(p - (BOOKMARK_POS + 1));
-					mBookmarkNames.add(p - (BOOKMARK_POS + 1), mText.getText().toString());
-					*/
-					/// TODO: Add ability to rename OpenPath
-					
-					buildDirString();
-					mBookmarkAdapter.notifyDataSetChanged();
-				}
-			});
-			
-			builder.create().show();
-			return true;
-			
-		}
-		return false;
+			})
+			.setTitle(getResources().getString(R.string.s_title_bookmark_prefix) + " " + title)
+			.create()
+			.show();
+		return true;
 	}
 
 	
 	protected void tryEject(String sPath, BookmarkHolder mHolder) {
 		final View viewf = mHolder.getView();
-		if(RootManager.Default.tryExecute("umount " + sPath))
+		if(RootManager.tryExecute("umount " + sPath))
 		{
-			((OpenExplorer)getActivity()).showToast("You may now safely remove the drive.");
-			viewf.animate().setListener(new AnimatorListener() {
-				public void onAnimationStart(Animator animation) {}
-				public void onAnimationRepeat(Animator animation) {}
-				public void onAnimationCancel(Animator animation) {}
-				public void onAnimationEnd(Animator animation) {
-					((OpenExplorer)getActivity()).refreshBookmarks();
-				}
-			}).setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0);
+			((OpenExplorer)getActivity()).showToast(getString(R.string.s_alert_remove_safe));
+			viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
+				.setListener(getDefaultAnimatorListener());
 		} else
-			((OpenExplorer)getActivity()).showToast("Unable to eject.");
+			((OpenExplorer)getActivity()).showToast(getString(R.string.s_alert_remove_error));
 	}
 
-	public void onBookMarkAdd(String path) {
-		mBookmarks.add(new OpenFile(path));
-		
-		buildDirString();
+	public void onBookMarkAdd(OpenPath path) {
+		mBookmarks.add(path);
+		mBookmarkString = (mBookmarkString != null && mBookmarkString != "" ? mBookmarkString + ";" : "") + path.getPath();
 		mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
-	public String getDirListString() {
-		return mDirListString;
-	}
-	
-	
 	public String getBookMarkNameString() {
 		return mBookmarkString;
-	}
-	
-	/*
-	 * Builds a string from mDirList to easily save and recall
-	 * from preferences. 
-	 */
-	private void buildDirString() {
-		int len = mBookmarks.size();
-		String mDirListString = "";
-		
-		if(mDirListString != null && mDirListString.length() > 0) {
-			mDirListString = "";
-			mBookmarkString = "";
-		}
-		
-		for (int i = 0; i <len; i++)
-			mDirListString += mBookmarks.get(i).getPath() + ";";
 	}
 	
 	public void updateSizeIndicator(OpenPath mFile, View mParentView)
@@ -390,15 +369,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			OpenFile f = (OpenFile)mFile;
 			long size = f.getTotalSpace();
 			long free = f.getFreeSpace();
-			//Logger.LogDebug("Sizes: " + free + " / " + size);
 			
-			/*
-			if(DFInfo.LoadDF().containsKey(f.getPath()))
-				size = (long)DFInfo.LoadDF().get(f.getPath()).getSize();
-			if(DFInfo.LoadDF().containsKey(f.getPath()))
-				free = (long)DFInfo.LoadDF().get(f.getPath()).getFree();
-				*/
-			//while(size > 0 && size < 100000000) { size *= (1024 * 1024); free *= 1024; }
 			if(size > 0 && free < size)
 			{
 				String sFree = DialogHandler.formatSize(free);
@@ -428,6 +399,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	}
 	
 	
+	
 	/*
 	 * 
 	 */
@@ -438,7 +410,6 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			super(context, layout, data);		
 		}
 		
-		
 		public View getView(int position, View view, ViewGroup parent) {			
 			final OpenPath path = mBookmarks.get(position);
 			final String sPath = path.getPath();
@@ -446,7 +417,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				LayoutInflater in = (LayoutInflater)
 					mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				view = in.inflate(R.layout.bookmark_layout, parent, false);
-				mHolder = new BookmarkHolder(path, sPath, view);
+				mHolder = new BookmarkHolder(path, getPathTitle(path), view);
 				
 				mHolder.setEjectClickListener(new OnClickListener() {
 					public void onClick(View v) {
@@ -487,74 +458,12 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 				//((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.LEFT);
 				mHolder.showTitle();
 			}
-
-			String sPath2 = sPath.toLowerCase();
-			if(position == 0)
-			{
-				mHolder.setText("/");
-				mHolder.setIconResource(R.drawable.drive);
-			} else if(sPath2.endsWith("sdcard")) {
-				if(mHasExternal)
-				{
-					mHolder.setText(getResources().getString(R.string.s_internal));
-					mHolder.setIconResource(R.drawable.drive);
-				} else {
-					mHolder.setText("sdcard");
-					mHolder.setIconResource(R.drawable.sdcard);
-				}
-			} else if(sPath2.indexOf("download") > -1) {
-				mHolder.setText(getResources().getString(R.string.s_downloads));
-				mHolder.setIconResource(R.drawable.download);
-			} else if(sPath2.indexOf("music") > -1) {
-				mHolder.setText(getResources().getString(R.string.s_music));
-				mHolder.setIconResource(R.drawable.music);
-			} else if(sPath2.indexOf("movie") > -1 || sPath2.indexOf("videos") > -1) {
-				mHolder.setText(getResources().getString(R.string.s_videos));
-				mHolder.setIconResource(R.drawable.movie);
-			} else if(sPath2.indexOf("photo") > -1 || sPath2.indexOf("dcim") > -1 || sPath2.indexOf("camera") > -1) {
-				mHolder.setText(getResources().getString(R.string.s_photos));
-				mHolder.setIconResource(R.drawable.photo);
-			} else if(sPath2.indexOf("usb") > -1) {
-				sPath2 = OpenExplorer.getVolumeName(sPath2);
-				
-				mHolder.setText(sPath2);
-				mHolder.setEjectable(true);
-				mHolder.setIconResource(R.drawable.usb);
-			} else if(sPath2.indexOf("sdcard-ext") > -1 || sPath2.indexOf("external") > -1) {
-				mHolder.setText(getResources().getString(R.string.s_external));
-				mHolder.setEjectable(true);
-				mHolder.setIconResource(R.drawable.sdcard);
-			} else if(sPath2.equals("bookmarks")) {
-				view.setBackgroundColor(Color.BLACK);
-				view.setFocusable(false);
-				view.setEnabled(false);
-				view.setClickable(false);
-				view.setPadding(0, 0, 0, 0);
-				mHolder.setText(getResources().getString(R.string.s_bookmarks));
-				//mHolder.setTextSize(18);
-				if(mHolder.getIconView() != null)
-				{
-					mHolder.getIconView().setVisibility(View.GONE);
-					mHolder.setIconResource(R.drawable.favorites);
-					mHolder.getIconView().setMaxHeight(24);
-				}
-				BOOKMARK_POS = position;
-				//view.setBackgroundColor(R.color.black);
-			} else if(sPath2.startsWith("ftp:/")) {
-				String item = sPath.replace("ftp:/","");
-				if(item.indexOf("@") > -1)
-					item = item.substring(item.indexOf("@") + 1);
-				mHolder.setText(item);
-				mHolder.setIconResource(R.drawable.ftp);
-			} else {
-				mHolder.setText(super.getItem(position).getName());
-				mHolder.setIconResource(R.drawable.folder);
-			}
 			
+			ThumbnailCreator.setThumbnail(((ImageView)view.findViewById(R.id.content_icon)), path, 36, 36);
+			
+			mHolder.setTitle(getPathTitle(path));
 			if(path.getClass().equals(OpenCursor.class))
-			{
-				mHolder.setText(mHolder.getText() + " (" + ((OpenCursor)path).length() + ")");
-			}
+				mHolder.setTitle(mHolder.getTitle() + " (" + ((OpenCursor)path).length() + ")", false);
 			
 			return view;
 		}
