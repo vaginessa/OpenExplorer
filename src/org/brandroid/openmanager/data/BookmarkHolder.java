@@ -18,24 +18,19 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.File;
-
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailStruct;
-import org.brandroid.openmanager.fragments.ContentFragment.ThumbnailTask;
-import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.ThumbnailStruct;
+import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class BookmarkHolder {
@@ -91,7 +86,7 @@ public class BookmarkHolder {
 		OpenPath file = ts.File;
 		if(!file.getPath().equals(mFile.getPath())) {
 			int w = ts.Width, h = ts.Height;
-			Bitmap bmp = ThumbnailCreator.isBitmapCached(mFile.getPath(), w, h);
+			Bitmap bmp = ThumbnailCreator.getThumbnailCache(mFile.getPath(), w, h);
 			if(bmp != null)
 			{
 				BitmapDrawable bd = new BitmapDrawable(bmp);
@@ -135,15 +130,15 @@ public class BookmarkHolder {
 			mPath.setText(path.substring(0, path.lastIndexOf("/")));
 	}
 	public String getTitle() { return sTitle; }
-	public void setTitle(String title) {
+	public void setTitle(String title) { setTitle(title, true); }
+	public void setTitle(String title, boolean permanent) {
 		if(mMainText != null)
 			mMainText.setText(title);
-		sTitle = title;
+		if(permanent)
+			sTitle = title;
 	}
 	public void hideTitle() { if(mMainText != null) mMainText.setVisibility(View.GONE); }
 	public void showTitle() { if(mMainText != null) mMainText.setVisibility(View.VISIBLE); }
-	public String getText() { return mMainText != null ? mMainText.getText().toString() : null; }
-	public void setText(String text) { if(mMainText != null) mMainText.setText(text); }
 	public View getView() { return mParentView; }
 	public String getInfo() { return mInfo != null ? mInfo.getText().toString() : null; }
 	public void setInfo(String info) { if(mInfo != null) mInfo.setText(info); }

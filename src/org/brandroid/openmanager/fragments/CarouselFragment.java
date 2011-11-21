@@ -34,7 +34,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.utils.Logger;
 
-public class CarouselFragment extends Fragment {
+public class CarouselFragment extends OpenFragment {
 	private static final String TAG = "CarouselTestActivity";
 	private static final int CARD_SLOTS = 56;
 	private static final int SLOTS_VISIBLE = 7;

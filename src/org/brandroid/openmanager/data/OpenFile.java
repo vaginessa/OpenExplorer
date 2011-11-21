@@ -28,6 +28,7 @@ import android.text.format.Formatter;
 public class OpenFile extends OpenPath
 {
 	private File mFile;
+	private OpenFile[] mChildren = null;
 	
 	public OpenFile(File f) { mFile = f; }
 	public OpenFile(String path) { mFile = new File(path); }
@@ -115,7 +116,10 @@ public class OpenFile extends OpenPath
 	}
 
 	@Override
-	public OpenPath[] listFiles() {
+	public OpenPath[] listFiles() { return listFiles(false); }
+	
+	public OpenPath[] listFiles(boolean grandPeek) {
+		if(mChildren != null) return mChildren;
 		File[] arr = mFile.listFiles();
 		if((arr == null || arr.length == 0) && isDirectory())
 		{
@@ -128,7 +132,11 @@ public class OpenFile extends OpenPath
 					OpenFile[] ret = new OpenFile[files.size()];
 					int i = 0;
 					for(String s : files)
+					{
 						ret[i++] = new OpenFile(getPath() + "/" + s);
+						if(grandPeek)
+							ret[i++].listFiles();
+					}
 					return ret;
 				}
 			}
@@ -172,7 +180,9 @@ public class OpenFile extends OpenPath
 
 	@Override
 	public Boolean canExecute() {
-		return mFile.canExecute();
+		if(Build.VERSION.SDK_INT > 9)
+			return mFile.canExecute();
+		else return false;
 	}
 
 	@Override

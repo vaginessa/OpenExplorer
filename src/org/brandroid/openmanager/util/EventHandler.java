@@ -94,6 +94,13 @@ public class EventHandler {
 		mThreadListener = e;
 	}	
 
+	public static CharSequence getResourceString(Context mContext, int... resIds)
+	{
+		String ret = "";
+		for(int resId : resIds)
+			ret += (ret == "" ? "" : " ") + mContext.getText(resId);
+		return ret;
+	}
 
 	public void deleteFile(final ArrayList<OpenPath> path, final Context mContext) {
 		final OpenPath[] files = new OpenPath[path.size()];
@@ -103,17 +110,17 @@ public class EventHandler {
 		if(path.size() == 1)
 			name = path.get(0).getName();
 		else
-			name = path.size() + " files";
+			name = path.size() + " " + getResourceString(mContext, R.string.s_files);
 		
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-		b.setTitle("Deleting " + name)
-			.setMessage("Deleting " + name + " cannot be undone.\nAre you sure you want to continue?")
+		b.setTitle(getResourceString(mContext, R.string.s_menu_delete) + " " + name)
+			.setMessage(((String)mContext.getText(R.string.s_alert_confirm_delete)).replace("xxx", name))
 			.setIcon(R.drawable.download)
-			.setPositiveButton("Delete", new OnClickListener() {
+			.setPositiveButton(getResourceString(mContext, R.string.s_menu_delete), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					new BackgroundWork(DELETE_TYPE, mContext).execute(files);
 				}})
-			.setNegativeButton("Cancel", new OnClickListener() {
+			.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}})
@@ -132,18 +139,18 @@ public class EventHandler {
 		view.findViewById(R.id.dialog_message).setVisibility(View.GONE);
 		
 		new AlertDialog.Builder(mContext)
-			.setPositiveButton("Search", new OnClickListener() {
+			.setPositiveButton(getResourceString(mContext, R.string.s_search), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					searchFile(base, mQuery.getText().toString(), mContext);
 				}
 			})
-			.setNegativeButton("Cancel", new OnClickListener() {
+			.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
 			})
 			.setView(view)
-			.setTitle("Search")
+			.setTitle(getResourceString(mContext, R.string.s_search))
 			.setCancelable(true)
 			.setIcon(R.drawable.search)
 			.create().show();
@@ -156,7 +163,7 @@ public class EventHandler {
 		
 		final EditText text = (EditText)view.findViewById(R.id.dialog_input);	
 		TextView msg = (TextView)view.findViewById(R.id.dialog_message);
-		msg.setText("Please type the new name you want to call this file.");
+		msg.setText(getResourceString(mContext, R.string.s_alert_rename));
 		
 		if(!isFolder) {
 			TextView type = (TextView)view.findViewById(R.id.dialog_ext);
@@ -165,7 +172,7 @@ public class EventHandler {
 		}
 		
 		new AlertDialog.Builder(mContext)
-			.setPositiveButton("Rename", new OnClickListener() {
+			.setPositiveButton(getResourceString(mContext, R.string.s_menu_rename), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					String name = text.getText().toString();
 					
@@ -177,13 +184,13 @@ public class EventHandler {
 					}
 				}
 			})
-			.setNegativeButton("Cancel", new OnClickListener() {
+			.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
 			})
 			.setView(view)
-			.setTitle("Rename " + name)
+			.setTitle(getResourceString(mContext, R.string.s_menu_rename) + " " + name)
 			.setCancelable(false)
 			.setIcon(R.drawable.download)
 			.create()
@@ -201,30 +208,32 @@ public class EventHandler {
 		final EditText text = (EditText)view.findViewById(R.id.dialog_input);
 		TextView msg = (TextView)view.findViewById(R.id.dialog_message);
 		
-		msg.setText("Type the name of the folder you would like to create.");
+		msg.setText(getResourceString(mContext, R.string.s_alert_newfolder));
 		
 		new AlertDialog.Builder(mContext)
-		.setPositiveButton("Create", new OnClickListener() {
+			.setPositiveButton(getResourceString(mContext, R.string.s_create), new OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				String name = text.getText().toString();
 				
 				if(name.length() > 0) {
-					mFileMang.createDir(directory, name);
-					mThreadListener.onWorkerThreadComplete(MKDIR_TYPE, null);
+					if(mFileMang != null)
+						mFileMang.createDir(directory, name);
+					if(mThreadListener != null)
+						mThreadListener.onWorkerThreadComplete(MKDIR_TYPE, null);
 				} else {
 					dialog.dismiss();
 				}
 			}
 		})
-		.setNegativeButton("Cancel", new OnClickListener() {
+		.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
 		})
 		.setView(view)
-		.setTitle("Create a new Folder")
+		.setTitle(getResourceString(mContext, R.string.s_title_newfolder))
 		.setCancelable(false)
 		.setIcon(R.drawable.folder).create().show();
 	}
@@ -239,10 +248,10 @@ public class EventHandler {
 		if(num == 1)
 			name = path.get(0).getName();
 		else
-			name = path.size() + " files.";
+			name = path.size() + " " + getResourceString(mContext, R.string.s_files) + ".";
 				
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-		b.setTitle("Sending " + name)
+		b.setTitle(getResourceString(mContext, R.string.s_title_send).toString().replace("xxx", name))
 		 .setIcon(R.drawable.download)
 		 .setItems(list, new OnClickListener() {
 			
@@ -303,16 +312,15 @@ public class EventHandler {
 	
 	public void unzipFile(final OpenPath file, final Context mContext) {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-		b.setTitle("Unzip file " + file.getName())
-			 .setMessage("Would you like to unzip " + file.getName() +
-					 	 " here or some other folder?")
+		b.setTitle(((String) getResourceString(mContext, R.string.s_title_unzip)).replace("xxx", file.getName()))
+			 .setMessage(((String) getResourceString(mContext, R.string.s_alert_unzip)).replace("xxx", file.getName()))
 			 .setIcon(R.drawable.zip)
-			 .setPositiveButton("Unzip here", new OnClickListener() {
+			 .setPositiveButton(getResourceString(mContext, R.string.s_button_unzip_here), new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						new BackgroundWork(UNZIP_TYPE, mContext).execute(file);
 					}
 				})
-			 .setNegativeButton("Unzip else where", new OnClickListener() {
+			 .setNegativeButton(getResourceString(mContext, R.string.s_button_unzip_else), new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						ArrayList<String> l = new ArrayList<String>();
 						l.add(file.getPath());
@@ -347,26 +355,26 @@ public class EventHandler {
 		}
 		
 		protected void onPreExecute() {
-			String title = "Executing";
+			String title = getResourceString(mContext, R.string.s_title_executing).toString();
 			switch(mType) {
-			case DELETE_TYPE: title = "Deleting"; break;
-			case SEARCH_TYPE: title = "Searching"; break;
+			case DELETE_TYPE: title = getResourceString(mContext, R.string.s_title_deleting).toString(); break;
+			case SEARCH_TYPE: title = getResourceString(mContext, R.string.s_title_searching).toString(); break;
 			case COPY_TYPE:
 				if(mDeleteFile)
-					title = "Copying"; 
+					title = getResourceString(mContext, R.string.s_title_copying).toString(); 
 				else
-					title = "Moving";
+					title = getResourceString(mContext, R.string.s_title_moving).toString();
 				break;
 			case UNZIP_TYPE:
 			case UNZIPTO_TYPE:
-				title = "Unzipping"; 
+				title = getResourceString(mContext, R.string.s_title_unzipping).toString(); 
 				break;
 			case ZIP_TYPE:
-				title = "Zipping"; 
+				title = getResourceString(mContext, R.string.s_title_zipping).toString(); 
 				break;
 			}
 			try {
-				mPDialog = ProgressDialog.show(mContext, title, "Please Wait...");
+				mPDialog = ProgressDialog.show(mContext, title, getResourceString(mContext, R.string.s_title_wait).toString());
 			} catch(Exception e) { }
 			try {
 				RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.title_bar);
@@ -594,11 +602,11 @@ public class EventHandler {
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				
 				if(!result.contains("0"))
-					Toast.makeText(mContext, "File(s) could not be deleted", Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
 				else if(result.contains("-1"))
-					Toast.makeText(mContext, "Some file(s) were not deleted", Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some,R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
 				else
-					Toast.makeText(mContext, "File(s) successfully deleted", Toast.LENGTH_SHORT).show();
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
 					
 				break;
 				
@@ -615,18 +623,18 @@ public class EventHandler {
 				
 				if(!mDeleteFile) {
 					if(result == null || !result.contains("0"))
-						Toast.makeText(mContext, "File(s) could not be copied", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
 					else if(result != null && result.contains("-1"))
-						Toast.makeText(mContext, "Some file(s) were not copied", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
 					else
-						Toast.makeText(mContext, "File(s) successfully copied", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
 				} else {
 					if(result == null || !result.contains("0"))
-						Toast.makeText(mContext, "File(s) could not be moved", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
 					else if(result != null && result.contains("-1"))
-						Toast.makeText(mContext, "Some file(s) were not moved", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
 					else
-						Toast.makeText(mContext, "File(s) successfully moved", Toast.LENGTH_SHORT).show();
+						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
 				}
 				mDeleteFile = false;				
 				break;

@@ -500,11 +500,11 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 				if((classType & 0x100) > 0)
 					mHolder.setIconResource(R.drawable.computer);
 				
-				mHolder.setText(name.substring(0, name.lastIndexOf(":")));
+				mHolder.setTitle(name.substring(0, name.lastIndexOf(":")));
 			
 			} else {
 				mHolder.setIconResource(R.drawable.computer);
-				mHolder.setText(name);
+				mHolder.setTitle(name);
 			}
 			
 			//mHolder.mMainText.setMaxLines(5);

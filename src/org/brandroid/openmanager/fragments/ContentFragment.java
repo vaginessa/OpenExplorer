@@ -28,9 +28,7 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.fragments.DialogHandler.DialogType;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
-import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
@@ -41,7 +39,8 @@ import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import java.io.File;
-import java.lang.ref.SoftReference;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -50,22 +49,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.IntentSender.SendIntentException;
 import android.content.Intent;
-import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
 import android.view.ContextMenu;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -76,7 +67,6 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.BaseExpandableListAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -89,7 +79,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.net.Uri;
 
-public class ContentFragment extends Fragment implements OnItemClickListener,
+public class ContentFragment extends OpenFragment implements OnItemClickListener,
 															OnSettingsChangeListener,
 															OnWorkerThreadFinishedListener{
 	
@@ -125,9 +115,10 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 	private int mListScrollingState = 0;
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
+	public Boolean mShowLongDate = false; 
 	
 	public interface OnBookMarkAddListener {
-		public void onBookMarkAdd(String path);
+		public void onBookMarkAdd(OpenPath path);
 	}
 	
 	public ContentFragment()
@@ -152,7 +143,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		
-		mContext = getActivity();
+		mContext = getActivity().getApplicationContext();
 		
 		OpenExplorer explorer = ((OpenExplorer)getActivity());
 		mFileManager = explorer.getFileManager();
@@ -197,6 +188,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 
 		if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
 			mShowThumbnails = true;
+		
+		mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() > 500
+				&& OpenFile.class.equals(mPath.getClass());
 		
 		OpenExplorer.setOnSettingsChangeListener(this);
 		
@@ -405,7 +399,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 					BookmarkHolder mHolder = (BookmarkHolder)file.getTag();
 					ImageView v = mHolder.getIconView();
 					//thumbs[i - start] = new ThumbnailStruct(file, mHolder, mWidth, mHeight);
-					new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+					//new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 				}
 			}
 			//view.getItemAtPosition(i);
@@ -441,7 +435,7 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
 				return true;
 			case R.id.menu_bookmark:
-				mBookmarkList.onBookMarkAdd(path);
+				mBookmarkList.onBookMarkAdd(file);
 				finishMode(mode);
 				return true;
 				
@@ -866,7 +860,6 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		{
 			final OpenPath file = super.getItem(position);
 			final String mName = file.getName();
-			final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 			
 			int mWidth = 36, mHeight = 36;
 			if(getViewMode() == OpenExplorer.VIEW_GRID)
@@ -876,7 +869,9 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				view = in.inflate(getViewMode() == OpenExplorer.VIEW_GRID ? R.layout.grid_content_layout : R.layout.list_content_layout, parent, false);
+				view = in.inflate(getViewMode() == OpenExplorer.VIEW_GRID ?
+							R.layout.grid_content_layout : R.layout.list_content_layout
+						, parent, false);
 				
 				mHolder = new BookmarkHolder(file, mName, view);
 				
@@ -888,124 +883,21 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 			}
 
 			if(getViewMode() == OpenExplorer.VIEW_LIST) {
-				mHolder.setInfo(getFileDetails(file));
-				mHolder.setPath(file.getPath());
+				mHolder.setInfo(getFileDetails(file, mShowLongDate));
+				
+				if(file.getClass().equals(OpenMediaStore.class))
+				{
+					mHolder.setPath(file.getPath());
+					mHolder.showPath(true);
+				}
+				else
+					mHolder.showPath(false);
 			}
 			
-			if(file.getClass().equals(OpenMediaStore.class))
-				mHolder.showPath(true);
-			else
-				mHolder.showPath(false);
+			mHolder.setTitle(mName);
 			
-			mHolder.setText(mName);
-			
-			/* assign custom icons based on file type */
-			if(file.isDirectory()) {
-				OpenPath[] lists = null;
-				if(!file.requiresThread())
-					lists = file.list();
-				
-				if(file.canRead() && lists != null && lists.length > 0)
-					mHolder.setIconResource(R.drawable.folder_large_full);
-				else
-					mHolder.setIconResource(R.drawable.folder);
-			} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-				mHolder.setIconResource(R.drawable.doc);
-				
-			} else if(ext.equalsIgnoreCase("xls")  || 
-					  ext.equalsIgnoreCase("xlsx") ||
-					  ext.equalsIgnoreCase("xlsm")) {
-				mHolder.setIconResource(R.drawable.excel);
-				
-			} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-				mHolder.setIconResource(R.drawable.powerpoint);
-				
-			} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-				mHolder.setIconResource(R.drawable.zip);
-				
-			} else if (ext.equalsIgnoreCase("rar")) {
-				mHolder.setIconResource(R.drawable.rar);
-				
-			//} else if(ext.equalsIgnoreCase("apk")) {
-			//	mHolder.setIconResource(R.drawable.apk);
-				
-			} else if(ext.equalsIgnoreCase("pdf")) {
-				mHolder.setIconResource(R.drawable.pdf);
-				
-			} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-				mHolder.setIconResource(R.drawable.xml_html);
-				
-			} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
-					  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
-					  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-				mHolder.setIconResource(R.drawable.music);
-			} else if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
-					  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
-					  ext.equalsIgnoreCase("bmp") ||
-					  ext.equalsIgnoreCase("apk") ||
-					  ext.equalsIgnoreCase("mp4") || 
-					  ext.equalsIgnoreCase("3gp") || 
-					  ext.equalsIgnoreCase("avi") ||
-					  ext.equalsIgnoreCase("webm")|| 
-					  ext.equalsIgnoreCase("m4v"))
-			{
+			ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
 
-				if(mShowThumbnails) {
-
-					Bitmap thumb = ThumbnailCreator.isBitmapCached(file.getPath(), mWidth, mHeight);
-					
-					if(thumb == null)
-					{
-						if(ext.equalsIgnoreCase("mp4") || 
-							  ext.equalsIgnoreCase("3gp") || 
-							  ext.equalsIgnoreCase("avi") ||
-							  ext.equalsIgnoreCase("webm") || 
-							  ext.equalsIgnoreCase("m4v")) {
-							mHolder.setIconResource(R.drawable.movie);
-						} else if(ext.equals("apk")) {
-							mHolder.setIconResource(R.drawable.apk);
-						} else {
-							mHolder.setIconResource(R.drawable.photo);
-						}
-						
-						file.setTag(mHolder);
-						
-						ThumbnailTask task = new ThumbnailTask();
-						mHolder.setTask(task);
-						task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
-					}
-					if(thumb != null)
-					{
-						BitmapDrawable bd = new BitmapDrawable(thumb);
-						bd.setGravity(Gravity.CENTER);
-						mHolder.setIconDrawable(bd);
-					}
-				
-				} else if(ext.equalsIgnoreCase("mp4") || 
-					  ext.equalsIgnoreCase("3gp") || 
-					  ext.equalsIgnoreCase("avi") ||
-					  ext.equalsIgnoreCase("webm") || 
-					  ext.equalsIgnoreCase("m4v")) {
-					mHolder.setIconResource(R.drawable.movie);
-				} else if(ext.equals("apk")) {
-					mHolder.setIconResource(R.drawable.apk);
-				} else {
-					mHolder.setIconResource(R.drawable.photo);
-				}
-				
-			} else if(file.getPath() != null && file.getPath().indexOf("ftp:/") > -1) {
-				
-				OpenFTP f = FTPManager.getFTPFile(mName);
-				if(f != null)
-				{
-					if(f.isDirectory())
-						mHolder.setIconResource(R.drawable.folder);
-					else
-						mHolder.setIconResource(R.drawable.unknown);
-				} else
-					mHolder.setIconResource(R.drawable.unknown);
-			} else
-				mHolder.setIconResource(R.drawable.unknown);
 			
 			return view;
 		}
@@ -1013,102 +905,33 @@ public class ContentFragment extends Fragment implements OnItemClickListener,
 		private String getFilePath(String name) {
 			return mFileManager.peekStack().getChild(name).getPath();
 		}
-		private String getFileDetails(OpenPath file) {
+		private String getFileDetails(OpenPath file, Boolean longDate) {
 			//OpenPath file = mFileManager.peekStack().getChild(name); 
-			String t = ""; //file.getPath() + "\t\t";
-			double bytes;
-			String size = "";
-			String atrs = " | - ";
+			String deets = ""; //file.getPath() + "\t\t";
 			
 			if(file.isDirectory() && !file.requiresThread()) {
-				if(file.canRead())
-					size =  file.list().length + " items";
-				atrs += " d";
-				
+				deets = file.list().length + " items";
 			} else {
-				bytes = file.length();
-				
-				if (bytes > GB)
-    				size = String.format("%.2f Gb ", (double)bytes / GB);
-    			else if (bytes < GB && bytes > MG)
-    				size = String.format("%.2f Mb ", (double)bytes / MG);
-    			else if (bytes < MG && bytes > KB)
-    				size = String.format("%.2f Kb ", (double)bytes/ KB);
-    			else
-    				size = String.format("%.2f bytes ", (double)bytes);
+				deets = DialogHandler.formatSize(file.length());
 			}
 			
-			if(file.canRead())
-				atrs += "r";
-			if(file.canWrite())
-				atrs += "w";
+			deets += " | ";
 			
-			return t + size + atrs;
+			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd");
+			deets += df.format(file.lastModified());
+			
+			deets += " | ";
+			
+			deets += (file.isDirectory()?"d":"-");
+			deets += (file.canRead()?"r":"-");
+			deets += (file.canWrite()?"w":"-");
+			deets += (file.canExecute()?"x":"-");
+			
+			return deets;
 		}
 		
 	}
 	
-
-	public class ThumbnailStruct
-	{
-		public OpenPath File;
-		public int Width = 0, Height = 0;
-		public BookmarkHolder Holder;
-		private SoftReference<Bitmap> mBitmap; 
-		//public Handler Handler;
-		public ThumbnailStruct(OpenPath path, BookmarkHolder holder, int width, int height)
-		{
-			File = path;
-			Holder = holder;
-			//Handler = handler;
-			Width = width;
-			Height = height;
-		}
-		public void setBitmap(SoftReference<Bitmap> thumb)
-		{
-			mBitmap = thumb;
-		}
-		public void updateHolder()
-		{
-			if(Holder != null && mBitmap != null && mBitmap.get() != null)
-			{
-				BitmapDrawable bd = new BitmapDrawable(mBitmap.get());
-				bd.setGravity(Gravity.CENTER);
-				Holder.setIconDrawable(bd, this);
-			}
-		}
-	}
-	
-	public class ThumbnailTask extends AsyncTask<ThumbnailStruct, Void, ThumbnailStruct[]>
-	{
-		private int iPending = 0;
-		
-		public ThumbnailTask() {
-			
-		}
-		
-		@Override
-		protected ThumbnailStruct[] doInBackground(ThumbnailStruct... params) {
-			ThumbnailStruct[] ret = new ThumbnailStruct[params.length];
-			for(int i = 0; i < params.length; i++)
-			{
-				ret[i] = params[i];
-				if(ret == null) continue;
-				//Logger.LogDebug("Getting thumb for " + ret[i].File.getName());
-				ret[i].setBitmap(ThumbnailCreator.generateThumb(ret[i].File, ret[i].Width, ret[i].Height));
-			}
-			return ret;
-		}
-		
-		@Override
-		protected void onPostExecute(ThumbnailStruct[] result) {
-			super.onPostExecute(result);
-			for(ThumbnailStruct t : result)
-				t.updateHolder();
-		}
-		
-	}
-
 	public enum FileIOCommandType
 	{
 		ALL

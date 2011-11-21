@@ -52,9 +52,10 @@
 		style="@style/Small" />
 	<TextView
 		android:id="@+id/content_info"
-		android:text="1 item | - drw"
 		android:layout_alignParentRight="true"
 		android:layout_alignParentBottom="true"
 		android:gravity="right"
+		android:text=""
+		android:typeface="monospace"
 		style="@style/Small" />
 </RelativeLayout>
