@@ -413,20 +413,6 @@ public class FileManager {
 		return ascii_address;
 	 }
 	
-	/**
-	 * 
-	 * @param dir
-	 * @param pathName
-	 * @return
-	 */
-	public ArrayList<String> searchInDirectory(String dir, String pathName) {
-		ArrayList<String> names = new ArrayList<String>();
-//		search_file(dir, pathName, names);
-		search_file("/sdcard", pathName, names);
-
-		return names;
-	}
-	
 	public static OpenPath getOpenCache(String path) { return getOpenCache(path, false); }
 	
 	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles)
@@ -467,81 +453,6 @@ public class FileManager {
 		//mDirContent.clear();
 		if(directory == null) return new OpenPath[0];
 		return directory.list();
-	}
-	
-	/*
-	 * This function will be rewritten as there is a problem getting
-	 * the directory size in certain folders from root. ex /sys, /proc.
-	 * The app will continue until a stack overflow. get size is fine uder the 
-	 * sdcard folder.
-	 * 
-	 * @param path
-	 */
-	private void get_dir_size(File path) {
-		File[] list = path.listFiles();
-		int len;
-		
-		if(list != null) {
-			len = list.length;
-			
-			for (int i = 0; i < len; i++) {
-				if(list[i].isFile() && list[i].canRead()) {
-					mDirSize += list[i].length();
-					
-				} else if(list[i].isDirectory() && list[i].canRead()) { 
-					get_dir_size(list[i]);
-				}
-			}
-		}
-	}
-
-	/*
-	 * (non-JavaDoc)
-	 * I dont like this method, it needs to be rewritten. Its hacky in that
-	 * if you are searching in the root dir (/) then it is not going to be treated
-	 * as a recursive method so the user dosen't have to sit forever and wait.
-	 * 
-	 * I will rewrite this ugly method.
-	 * 
-	 * @param dir		directory to search in
-	 * @param fileName	filename that is being searched for
-	 * @param n			ArrayList to populate results
-	 */
-	private void search_file(String dir, String fileName, ArrayList<String> n) {
-		File root_dir = new File(dir);
-		String[] list = root_dir.list();
-		
-		if(list != null && root_dir.canRead()) {
-			int len = list.length;
-			
-			for (int i = 0; i < len; i++) {
-				File check = new File(dir + "/" + list[i]);
-				String name = check.getName();
-					
-				if(check.isFile() && name.toLowerCase().
-										contains(fileName.toLowerCase())) {
-					n.add(check.getPath());
-				}
-				else if(check.isDirectory()) {
-					if(name.toLowerCase().contains(fileName.toLowerCase()))
-						n.add(check.getPath());
-					
-					if(!dir.equals("/"))
-						search_file(check.getAbsolutePath(), fileName, n);
-				}
-			}
-		}
-	}
-	
-	public class NetworkActivityTask extends AsyncTask<String, Integer, String[]>
-	{
-
-		@Override
-		protected String[] doInBackground(String... params) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-		
 	}
 }
 

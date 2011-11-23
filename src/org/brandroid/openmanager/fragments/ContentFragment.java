@@ -21,7 +21,9 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
-import org.brandroid.openmanager.OpenExplorer.OnSettingsChangeListener;
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -37,6 +39,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -63,6 +66,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
@@ -80,10 +84,9 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.net.Uri;
 
 public class ContentFragment extends OpenFragment implements OnItemClickListener,
-															OnSettingsChangeListener,
 															OnWorkerThreadFinishedListener{
 	
-	public static final boolean USE_ACTIONMODE = true;
+	public static final boolean USE_ACTIONMODE = false;
 	private static boolean mMultiSelectOn = false;
 	
 	private FileManager mFileManager;
@@ -100,16 +103,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private static OpenPath mLastPath = null;
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
-	private ArrayList<OpenPath> mHoldingFileList; //holding files waiting to be pasted(moved)
-	private ArrayList<OpenPath> mHoldingZipList; //holding zip files waiting to be unzipped.
 	private Context mContext;
 	private FileSystemAdapter mContentAdapter;
 	private ActionMode mActionMode = null;
 	private boolean mActionModeSelected;
-	private boolean mHoldingFile;
-	private boolean mHoldingZip;
-	private boolean mCutFile;
-	private boolean mShowThumbnails;
+	private boolean mCutFile = false;
+	private boolean mShowThumbnails = true;
 	private boolean mReadyToUpdate = true;
 	private int mMenuContextItemIndex = -1;
 	private int mListScrollingState = 0;
@@ -159,7 +158,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			explorer.setEventHandler(mHandler);
 		}
 		mHandler.setOnWorkerThreadFinishedListener(this);
-		
+		refreshData(savedInstanceState);
+	}
+	public void refreshData(Bundle savedInstanceState)
+	{
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
 		else
@@ -176,8 +178,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		mData = mFileManager.getChildren(path);
 		
-		mHoldingFile = false;
-		mHoldingZip = false;
 		mActionModeSelected = false;
 		try {
 			mShowThumbnails = ((OpenExplorer)getActivity()).getPreferences()
@@ -190,9 +190,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mShowThumbnails = true;
 		
 		mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() > 500
+				&& mPath != null
 				&& OpenFile.class.equals(mPath.getClass());
 		
-		OpenExplorer.setOnSettingsChangeListener(this);
+		//OpenExplorer.setOnSettingsChangeListener(this);
 		
 		updateData(mData);
 	}
@@ -250,11 +251,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		return executeMenu(item.getItemId(), mData2.get(mMenuContextItemIndex));
+		OpenPath path = mData2.get(mMenuContextItemIndex);
+		Logger.LogDebug("Showing context for " + path.getName() + "?");
+		return executeMenu(item.getItemId(), path);
 		//return super.onContextItemSelected(item);
 	}
 	
-	public void updateChosenMode(AbsListView mChosenMode)
+	public void updateChosenMode(final AbsListView mChosenMode)
 	{
 		if(getViewMode() == OpenExplorer.VIEW_GRID) {
 			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
@@ -269,7 +272,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		mChosenMode.setVisibility(View.VISIBLE);
 		mChosenMode.setOnItemClickListener(this);
-		mChosenMode.setOnCreateContextMenuListener(this);
 		mChosenMode.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
@@ -285,15 +287,34 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mListVisibleLength = visibleItemCount;
 			}
 		});
+		//mChosenMode.setOnCreateContextMenuListener(this);
+		//if(cm == null)
 		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
-					Logger.LogDebug("Showing context?");
-					mMenuContextItemIndex = pos;
-					return list.showContextMenu();
-				}
 				final OpenPath file = mData2.get(pos);
+				final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
+				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
+					mMenuContextItemIndex = pos;
+					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file);
+					MenuBuilder cmm = cm.getMenu();
+					if(getHoldingFiles().size() > 0)
+						cmm.hideItem(R.id.menu_context_multi);
+					else
+						cmm.hideItem(R.id.menu_context_paste);
+					if(!name.toLowerCase().endsWith(".zip"))
+						cmm.hideItem(R.id.menu_context_unzip);
+					cm.setTitle(name);
+					cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
+						public void onIconContextItemSelected(MenuItem item, Object info) {
+							executeMenu(item.getItemId(), mData2.get((Integer)info));
+						}
+					});
+					cm.setInfo(pos);
+					cm.show();
+					//return list.showContextMenu();
+					return true;
+				}
 				
 				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
@@ -323,7 +344,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
 							//files.add(file);
 							
-							if(item.getItemId() != R.id.menu_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_copy)
+							if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_context_multi && item.getItemId() != R.id.menu_context_copy)
 							{
 								mode.finish();
 								mActionModeSelected = false;
@@ -353,9 +374,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						
 						//@Override
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							mode.getMenuInflater().inflate(R.menu.context_dir, menu);
-							menu.findItem(R.id.menu_paste).setEnabled(mHoldingFile);
-							menu.findItem(R.id.menu_unzip).setEnabled(mHoldingZip);
+							mode.getMenuInflater().inflate(R.menu.context_file, menu);
+							menu.findItem(R.id.menu_context_paste).setEnabled(isHoldingFiles());
+							//menu.findItem(R.id.menu_context_unzip).setEnabled(mHoldingZip);
 				        	
 				        	mActionModeSelected = true;
 							
@@ -407,6 +428,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
 	}
 	
+	private ArrayList<OpenPath> getHoldingFiles() {
+		return ((OpenExplorer)getActivity()).getHoldingFiles();
+	}
+	private void addHoldingFile(OpenPath path) {
+		((OpenExplorer)getActivity()).addHoldingFile(path);
+	}
+	private void clearHoldingFiles() { ((OpenExplorer)getActivity()).clearHoldingFiles(); }
+	private boolean isHoldingFiles() { return getHoldingFiles().size() > 0; }
+	
 	private void finishMode(Object mode)
 	{
 		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null)
@@ -421,70 +451,71 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 		files.add(file);
-		return executeMenu(id, mode, files);
+		return executeMenu(id, mode, file, null);
 	}
-	public boolean executeMenu(final int id, final Object mode, ArrayList<OpenPath> files)
+	public boolean executeMenu(final int id, final Object mode, final OpenPath file, ArrayList<OpenPath> fileList)
 	{
-		final OpenPath file = files.get(0);
 		final String path = file != null ? file.getPath() : null;
 		final OpenPath folder = file != null ? file.getParent() : null;
 		String name = file != null ? file.getName() : null;
+		if(fileList == null)
+			fileList = new ArrayList<OpenPath>();
+		final OpenPath[] fileArray = new OpenPath[fileList.size()];
+		fileList.toArray(fileArray);
 		
 		switch(id) {
+			case R.id.menu_context_multi:
+				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
+				addHoldingFile(file);
+				return true;
 			case R.id.menu_multi:
 				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
 				return true;
-			case R.id.menu_bookmark:
-				mBookmarkList.onBookMarkAdd(file);
+			case R.id.menu_context_bookmark:
+				if(mBookmarkList != null)
+					mBookmarkList.onBookMarkAdd(file);
+				else
+					((OpenExplorer)getActivity()).addBookmark(file);
 				finishMode(mode);
 				return true;
 				
-			case R.id.menu_delete:
-				mHandler.deleteFile(files, getActivity());
+			case R.id.menu_context_delete:
+				fileList.add(file);
+				mHandler.deleteFile(fileList, getActivity());
 				finishMode(mode);
 				mContentAdapter.notifyDataSetChanged();
 				return true;
 				
-			case R.id.menu_rename:
-				mHandler.renameFile(path, true, getActivity());
+			case R.id.menu_context_rename:
+				mHandler.renameFile(file.getPath(), true, getActivity());
 				finishMode(mode);
 				return true;
 				
-			case R.id.menu_copy:
-			case R.id.menu_cut:
-				mCutFile = id == R.id.menu_cut;
-				if(mHoldingFileList == null)
-					mHoldingFileList = new ArrayList<OpenPath>();
-				
-				if(!mMultiSelectOn)
-					mHoldingFileList.clear();
-				mHoldingFileList.add(file);
-				mHoldingFile = true;
-				if(mHoldingFileList.size() == 1)
-					((OpenExplorer)getActivity()).showToast("Tap the upper left corner to see your held files");
-				((OpenExplorer)getActivity()).updateTitle("Holding " + (mHoldingFileList.size() == 1 ? name : mHoldingFileList.size() + " files"));
+			case R.id.menu_context_copy:
+			case R.id.menu_context_cut:
+				mCutFile = id == R.id.menu_context_cut;
+
+				addHoldingFile(file);
 				return false;
-				
+
+			case R.id.menu_context_paste:
 			case R.id.menu_paste:
-				if(mHoldingFile && mHoldingFileList.size() > 0)
+				OpenPath into = id == R.id.menu_paste || !file.isDirectory() ? folder : file;
+				if(getHoldingFiles().size() > 0)
 					if(mCutFile)
-						mHandler.cutFile(mHoldingFileList, path, getActivity());
+						mHandler.cutFile(getHoldingFiles(), into, getActivity());
 					else
-						mHandler.copyFile(mHoldingFileList, path, getActivity());
+						mHandler.copyFile(getHoldingFiles(), into, getActivity());
 				
-				mHoldingFile = false;
 				mCutFile = false;
-				mHoldingFileList.clear();
-				mHoldingFileList = null;
+				clearHoldingFiles();
 				((OpenExplorer)getActivity()).updateTitle(path);
 				finishMode(mode);
 				return true;
 				
-			case R.id.menu_zip:
-				if(mHoldingFileList == null)
-					mHoldingFileList = new ArrayList<OpenPath>();
-				mHoldingFileList.add(file);
-				final String def = mHoldingFileList.size() == 1 ?
+			case R.id.menu_context_zip:
+				addHoldingFile(file);
+				final String def = getHoldingFiles().size() == 1 ?
 						file.getName() + ".zip" :
 						file.getParent().getName() + ".zip";
 				
@@ -499,33 +530,28 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						new OnClickListener() {
 							public void onClick(DialogInterface di, int which) {
 								if(which != DialogInterface.BUTTON_POSITIVE) return;
-								OpenPath[] toZip = new OpenPath[mHoldingFileList.size() + 1];
-								toZip[0] = folder.getChild(dZip.getInputText());
-								for(int i = 0; i < mHoldingFileList.size(); i++)
-									toZip[i + 1] = mHoldingFileList.get(i);
-								Logger.LogInfo("Zipping " + (toZip.length == 2 ? toZip[toZip.length - 1].getPath() : (toZip.length - 1) + " files") + " to " + toZip[0].getPath());
-								mHandler.zipFile(toZip, getActivity());
+								OpenPath zipFile = folder.getChild(dZip.getInputText());
+								Logger.LogInfo("Zipping " + fileArray.length + " items to " + zipFile.getPath());
+								mHandler.zipFile(zipFile, fileArray, getActivity());
 								finishMode(mode);
 							}
 						})
 					.create().show();
 				return true;
 				
-			case R.id.menu_unzip:
-				mHandler.unZipFileTo(mHoldingZipList.get(0), file, getActivity());
+			case R.id.menu_context_unzip:
+				mHandler.unZipFileTo(getHoldingFiles().get(0), file, getActivity());
 				
-				mHoldingZip = false;
-				mHoldingZipList.clear();
-				mHoldingZipList = null;
+				clearHoldingFiles();
 				((OpenExplorer)getActivity()).updateTitle("");
 				return true;
 			
-			case R.id.menu_info:
+			case R.id.menu_context_info:
 				((OpenExplorer)getActivity()).showFileInfo(file);
 				finishMode(mode);
 				return true;
 				
-			case R.id.menu_share:
+			case R.id.menu_context_share:
 				
 				// TODO: WTF is this?
 				Intent mail = new Intent();
@@ -553,17 +579,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(!OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
-		int menuResId = R.menu.context_file;
-		if(file.isDirectory())
-			menuResId = R.menu.context_dir;
-		if(mMultiSelectOn)
-			menuResId = R.menu.context_multi;
-		new MenuInflater(mContext).inflate(menuResId, menu);
-		if(menuResId == R.menu.context_dir)
-		{
-			menu.findItem(R.id.menu_paste).setEnabled(mHoldingFile);
-			menu.findItem(R.id.menu_unzip).setEnabled(mHoldingZip);
-		}
+		new MenuInflater(mContext).inflate(R.menu.context_file, menu);
+		menu.findItem(R.id.menu_context_paste).setEnabled(isHoldingFiles());
 	}
 	
 	//@Override
@@ -684,11 +701,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		} else if(type == EventHandler.UNZIPTO_TYPE && results != null) {
 			String name = new OpenFile(results.get(0)).getName();
 			
-			if(mHoldingZipList == null)
-				mHoldingZipList = new ArrayList<OpenPath>();
-			
-			mHoldingZipList.add(new OpenFile(results.get(0)));
-			mHoldingZip = true;
+			addHoldingFile(new OpenFile(results.get(0)));
 			((OpenExplorer)getActivity()).updateTitle("Holding " + name);
 			
 		} else {
@@ -708,40 +721,27 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public void onHiddenFilesChanged(boolean state) {
 		mFileManager.setShowHiddenFiles(state);
-		OpenPath path = mFileManager.peekStack();
-		if(path != null)
-			changePath(path);
+		refreshData(null);
 	}
 
 	//@Override
 	public void onThumbnailChanged(boolean state) {
 		mShowThumbnails = state;
-		OpenPath path = mFileManager.peekStack();
-		if(path != null)
-			changePath(path);
+		refreshData(null);
 	}
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
 		mFileManager.setSorting(type);
-		OpenPath path = mFileManager.peekStack();
-		if(path != null)
-			changePath(path);
+		refreshData(null);
 	}
 	
-	public void onSortingChanged(String state) {
-		if (state.equals("none"))
-			mFileManager.setSorting(SortType.NONE);
-		else if (state.equals("alpha"))
-			mFileManager.setSorting(SortType.ALPHA);
-		else if (state.equals("type"))
-			mFileManager.setSorting(SortType.TYPE);
-		else if (state.equals("size"))
-			mFileManager.setSorting(SortType.SIZE);
-
-		OpenPath path = mFileManager.peekStack();
-		if(path != null)
-			changePath(path);
+	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
+	{
+		mFileManager.setSorting(sort);
+		mShowThumbnails = thumbs;
+		mFileManager.setShowHiddenFiles(hidden);
+		refreshData(null);
 	}
 
 	//@Override
@@ -802,19 +802,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	 */
 	public FileManager getFileManagerInst() {
 		return ((OpenExplorer)getActivity()).getFileManager();
-	}
-	
-	/*
-	 * we need to make a temp arraylist because when the
-	 * multiselect actionmode callback is finished our multiselect
-	 * object will turn off and clear the data in files
-	 */
-	public void setCopiedFiles(ArrayList<OpenPath> files, boolean cutFile) {
-		ArrayList<OpenPath> temp = new ArrayList<OpenPath>(files);
-		
-		mHoldingFile = true;
-		mCutFile = cutFile;
-		mHoldingFileList = temp;
 	}
 	
 	/**

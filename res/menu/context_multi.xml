@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/menu_info" android:title="@string/s_menu_info" />
-    <item android:id="@+id/menu_copy" android:title="@string/s_menu_copy" />
-    <item android:id="@+id/menu_cut" android:title="@string/s_menu_cut" />
-    <item android:id="@+id/menu_share" android:title="@string/s_menu_share" />
-    <item android:id="@+id/menu_zip" android:title="@string/s_menu_zip" />
-</menu>

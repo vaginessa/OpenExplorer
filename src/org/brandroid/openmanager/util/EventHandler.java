@@ -31,6 +31,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.Context;
+import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 import android.widget.EditText;
@@ -72,6 +73,8 @@ public class EventHandler {
 	private OnWorkerThreadFinishedListener mThreadListener;
 	private FileManager mFileMang;
 	private boolean mDeleteFile = false;
+	private ProgressBar mExtraProgress;
+	private TextView mExtraStatus, mExtraPercent;
 	
 	public interface OnWorkerThreadFinishedListener {
 		/**
@@ -85,6 +88,12 @@ public class EventHandler {
 		public void onWorkerThreadComplete(int type, ArrayList<String> results);
 	}
 	
+	public void setExtraViews(ProgressBar pb, TextView status, TextView percent)
+	{
+		mExtraProgress = pb;
+		mExtraStatus = status;
+		mExtraPercent = percent;
+	}
 	
 	public EventHandler(FileManager filemanager) {
 		mFileMang = filemanager;
@@ -118,7 +127,7 @@ public class EventHandler {
 			.setIcon(R.drawable.download)
 			.setPositiveButton(getResourceString(mContext, R.string.s_menu_delete), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					new BackgroundWork(DELETE_TYPE, mContext).execute(files);
+					new BackgroundWork(DELETE_TYPE, mContext, null).execute(files);
 				}})
 			.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
@@ -289,35 +298,35 @@ public class EventHandler {
 		}).create().show();
 	}
 	
-	public void copyFile(ArrayList<OpenPath> files, String newPath, Context mContext) {
+	public void copyFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 		
-		new BackgroundWork(COPY_TYPE, mContext).execute(array);
+		new BackgroundWork(COPY_TYPE, mContext, newPath).execute(array);
 	}
 	
-	public void cutFile(ArrayList<OpenPath> files, String newPath, Context mContext) {
+	public void cutFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
 		mDeleteFile = true;
 		
 		copyFile(files, newPath, mContext);
 	}
 	
 	public void searchFile(OpenPath dir, String query, Context mContext) {
-		new BackgroundWork(SEARCH_TYPE, mContext, query).execute(dir);
+		new BackgroundWork(SEARCH_TYPE, mContext, dir, query).execute();
 	}
 	
-	public void zipFile(OpenPath[] files, Context mContext) {
-		new BackgroundWork(ZIP_TYPE, mContext).execute(files);
+	public void zipFile(OpenPath into, OpenPath[] files, Context mContext) {
+		new BackgroundWork(ZIP_TYPE, mContext, into).execute(files);
 	}
 	
-	public void unzipFile(final OpenPath file, final Context mContext) {
+	public void unzipFile(final OpenPath into, final OpenPath file, final Context mContext) {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-		b.setTitle(((String) getResourceString(mContext, R.string.s_title_unzip)).replace("xxx", file.getName()))
-			 .setMessage(((String) getResourceString(mContext, R.string.s_alert_unzip)).replace("xxx", file.getName()))
+		b.setTitle(getResourceString(mContext, R.string.s_title_unzip).toString().replace("xxx", file.getName()))
+			 .setMessage(getResourceString(mContext, R.string.s_alert_unzip).toString().replace("xxx", file.getName()))
 			 .setIcon(R.drawable.zip)
 			 .setPositiveButton(getResourceString(mContext, R.string.s_button_unzip_here), new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						new BackgroundWork(UNZIP_TYPE, mContext).execute(file);
+						new BackgroundWork(UNZIP_TYPE, mContext, into).execute(file);
 					}
 				})
 			 .setNegativeButton(getResourceString(mContext, R.string.s_button_unzip_else), new OnClickListener() {
@@ -332,7 +341,7 @@ public class EventHandler {
 	}
 	
 	public void unZipFileTo(OpenPath zipFile, OpenPath toDir, Context mContext) {
-		new BackgroundWork(UNZIPTO_TYPE, mContext).execute(zipFile, toDir);
+		new BackgroundWork(UNZIPTO_TYPE, mContext, toDir).execute(zipFile);
 	}
 		
 	
@@ -340,18 +349,21 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	private class BackgroundWork extends AsyncTask<OpenPath, Integer, ArrayList<String>> {
+	private class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> {
 		private int mType;
 		private ProgressDialog mPDialog;
 		private static final int BACKGROUND_NOTIFICATION_ID = 123;
 		private Notification mNote;
 		private Context mContext;
 		private String[] mInitParams = null;
+		private OpenPath mIntoPath;
+		private ArrayList<OpenPath> mSearchResults = null;
 		
-		public BackgroundWork(int type, Context context, String... params) {
+		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
 			mType = type;
 			mContext = context;
 			mInitParams = params;
+			mIntoPath = intoPath;
 		}
 		
 		protected void onPreExecute() {
@@ -393,77 +405,53 @@ public class EventHandler {
 			} catch(Exception e) { }
 		}
 		
-		
-		protected ArrayList<String> doInBackground(OpenPath... params) {
-			ArrayList<String> results = null;
-			int len = params.length;
-			
-			try {
-			switch(mType) {
-			
-			case DELETE_TYPE:
-				if(results == null)
-					 results = new ArrayList<String>();
-				
-				for(int i = 0; i < len; i++)
-					results.add(mFileMang.deleteTarget(params[i]) + "");
-				
-				return results;
-				
-			case SEARCH_TYPE:
-				if(mInitParams != null && mInitParams.length > 0)
-				{
-					results = mFileMang.searchInDirectory(params[0].getPath(), mInitParams[0]);
-				}
-				
-				return results;
-				
-			case COPY_TYPE:
-				//the first index is our dest path.
-				
-				if(results == null)
-					 results = new ArrayList<String>();
-				
-				for(int i = 1; i < len; i++) {
-					copyToDirectory(params[i], params[0], 0);
-					
-					if(mDeleteFile) {
-						results.add(mFileMang.deleteTarget(params[i]) + "");
-					}
-					
-				}
-				
-			case UNZIP_TYPE:
-				if(len > 1)
-					extractZipFiles(params[0], params[1]);
-				return null;
-				
-			case UNZIPTO_TYPE:
-				if(len > 1)
-					mFileMang.extractZipFilesFromDir(params[0], params[1]);
-				return null;
-				
-			case ZIP_TYPE:
-				OpenPath files[] = null;
-				if(params.length == 1)
-					files = new OpenPath[]{params[0]};
-				else
-				{
-					files = new OpenPath[params.length - 1];
-					for(int i = 0; i < files.length; i++)
-						files[i] = params[i + 1];
-				}
-				mFileMang.createZipFile(params[0], files);
-				return null;
-			}
-			} catch(IOException e) {
-				Logger.LogError("Error performing task.", e);
-			}
-			
-			return results;
+		public ArrayList<OpenPath> searchDirectory(OpenPath dir, String pattern)
+		{
+			return null;
 		}
 		
-		private Integer copyToDirectory(OpenPath old, OpenPath newDir, int total) throws IOException
+		protected Integer doInBackground(OpenPath... params) {
+			int len = params.length;
+			int ret = 0;
+			
+			switch(mType) {
+				
+				case DELETE_TYPE:
+					for(int i = 0; i < len; i++)
+						ret += (mFileMang.deleteTarget(params[i]) == 0 ? 1 : 0);
+					break;
+				case SEARCH_TYPE:
+					mSearchResults = searchDirectory(mIntoPath, mInitParams[0]);
+					break;
+				case COPY_TYPE:
+					for(OpenPath file : params)
+					{
+						try {
+							if(copyToDirectory(mIntoPath, file, 0))
+							{
+								ret++;
+								if(mDeleteFile)
+									mFileMang.deleteTarget(file);
+							}
+						} catch (IOException e) {
+							Logger.LogError("Couldn't copy file (" + file.getName() + " to " + mIntoPath.getPath() + ")", e);
+						}
+					}
+					break;
+				case UNZIPTO_TYPE:
+				case UNZIP_TYPE:
+					extractZipFiles(mIntoPath, params[0]);
+					break;
+	
+				case ZIP_TYPE:
+					mFileMang.createZipFile(mIntoPath, params);
+					break;
+			}
+			
+			return ret;
+		}
+		
+		private Boolean copyToDirectory(OpenPath old, OpenPath newDir, int total) throws IOException
 		{
 			byte[] data = new byte[FileManager.BUFFER];
 			int read = 0;
@@ -473,14 +461,14 @@ public class EventHandler {
 				OpenPath newFile = newDir.getChild(old.getName());
 				
 				if(!newFile.mkdir())
-					return -1;
+					return false;
 				
 				for(OpenPath file : files)
 					total += (int)file.length();
 				
 				for(int i = 0; i < files.length; i++)
-					if(copyToDirectory(files[i], newFile.getParent(), total) == -1)
-						return -1;
+					if(!copyToDirectory(files[i], newFile.getParent(), total))
+						return false;
 				
 			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite()){
 				OpenPath newFile = newDir.getChild(old.getName());
@@ -506,17 +494,17 @@ public class EventHandler {
 					
 				} catch (FileNotFoundException e) {
 					Log.e("FileNotFoundException", e.getMessage());
-					return -1;
+					return false;
 					
 				} catch (IOException e) {
 					Log.e("IOException", e.getMessage());
-					return -1;
+					return false;
 				}
 				
 			} else if(!newDir.canWrite())
-				return -1;
+				return false;
 			
-			return 0;
+			return true;
 		}
 		
 		public void extractZipFiles(OpenPath zip, OpenPath directory) {
@@ -570,6 +558,19 @@ public class EventHandler {
 			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-(" + progA + "," + progB + ")");
 			
 			//mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
+			
+			if(mExtraProgress != null)
+			{
+				if(values.length == 0)
+					mExtraProgress.setIndeterminate(true);
+				else
+				{
+					mExtraProgress.setIndeterminate(false);
+					mExtraProgress.setMax(1000);
+					mExtraProgress.setProgress(progA);
+					mExtraProgress.setSecondaryProgress(progB);	
+				}
+			}
 
 			try {
 				RemoteViews noteView = mNote.contentView;

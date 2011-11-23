@@ -169,19 +169,19 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	public String getSetting(OpenPath file, String key, String defValue)
 	{
-		return new Preferences(getActivity()).getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return ((OpenExplorer)getActivity()).getPreferences().getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
 	{
-		return new Preferences(getActivity()).getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return ((OpenExplorer)getActivity()).getPreferences().getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public void setSetting(OpenPath file, String key, String value)
 	{
-		new Preferences(getActivity()).setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
+		((OpenExplorer)getActivity()).getPreferences().setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 	public void setSetting(OpenPath file, String key, Boolean value)
 	{
-		new Preferences(getActivity()).setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
+		((OpenExplorer)getActivity()).getPreferences().setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 
 	public String getPathTitle(OpenPath path)

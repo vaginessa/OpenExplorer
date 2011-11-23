@@ -32,6 +32,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.v4.app.Fragment;
@@ -60,6 +67,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
@@ -73,11 +82,13 @@ import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.Preferences;
 
 public class OpenExplorer
@@ -93,11 +104,10 @@ public class OpenExplorer
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	public static final int REQUEST_CANCEL = 101;
 	
-	private static OnSettingsChangeListener mSettingsListener = null;
 	private Preferences mPreferences = null;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
-	private ArrayList<OpenPath> mHeldFiles;
+	private ArrayList<OpenPath> mHeldFiles = new ArrayList<OpenPath>();
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
@@ -146,7 +156,7 @@ public class OpenExplorer
         	ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
         	if(mTitleStub != null)
         		mTitleStub.inflate();
-        	setOnClicks(R.id.title_icon, R.id.title_search);
+        	setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu);
         }
         
         if(findViewById(R.id.list_frag) == null)
@@ -329,6 +339,16 @@ public class OpenExplorer
     	super.onDestroy();
     	if(storageReceiver != null)
     		unregisterReceiver(storageReceiver);
+    }
+    
+    public ArrayList<OpenPath> getHoldingFiles() { return mHeldFiles; }
+    public void addHoldingFile(OpenPath path) { 
+    	mHeldFiles.add(path);
+    	invalidateOptionsMenu();
+    }
+    public void clearHoldingFiles() {
+    	mHeldFiles.clear();
+    	invalidateOptionsMenu();
     }
     
     public OpenCursor getPhotoParent() { if(mPhotoParent == null) refreshCursors(); return mPhotoParent; }
@@ -528,32 +548,61 @@ public class OpenExplorer
     	return super.onCreateOptionsMenu(menu);
     }
     
+    public static void setMenuChecked(Menu menu, boolean checked, int toCheck, int... toOppose)
+    {
+    	for(int id : toOppose)
+    		if(menu.findItem(id) != null)
+    			menu.findItem(id).setChecked(!checked);
+    	if(menu.findItem(toCheck) != null)
+    		menu.findItem(toCheck).setChecked(checked);
+    }
+    
+    public static void setMenuVisible(Menu menu, boolean visible, int... ids)
+    {
+    	for(int id : ids)
+    		if(menu.findItem(id) != null)
+    			menu.findItem(id).setVisible(visible);
+    }
+    
+    public static void setMenuEnabled(Menu menu, boolean enabled, int... ids)
+    {
+    	for(int id : ids)
+    		if(menu.findItem(id) != null)
+    			menu.findItem(id).setEnabled(enabled);
+    }
+    
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	if(BEFORE_HONEYCOMB)
-    		menu.findItem(R.id.menu_view_carousel).setVisible(false);
+    		setMenuVisible(menu, false, R.id.menu_view_carousel);
+    	
     	if(!mSinglePane)
-    		menu.findItem(R.id.menu_favorites).setVisible(false);
-    	if(mViewMode == VIEW_GRID)
-    	{
-    		menu.findItem(R.id.menu_view_grid).setChecked(true);
-    		menu.findItem(R.id.menu_view_list).setChecked(false);
-    		menu.findItem(R.id.menu_view_carousel).setChecked(false);
-    	} else if(mViewMode == VIEW_LIST) {
-    		menu.findItem(R.id.menu_view_grid).setChecked(false);
-    		menu.findItem(R.id.menu_view_list).setChecked(true);
-    		menu.findItem(R.id.menu_view_carousel).setChecked(false);
-    	} else if(mViewMode == VIEW_CAROUSEL) {
-    		menu.findItem(R.id.menu_view_grid).setChecked(false);
-    		menu.findItem(R.id.menu_view_list).setChecked(false);
-    		menu.findItem(R.id.menu_view_carousel).setChecked(true);
+    		setMenuVisible(menu, false, R.id.menu_favorites);
+    	
+    	if(mHeldFiles == null || mHeldFiles.size() == 0)
+    		setMenuVisible(menu, false, R.id.menu_paste);
+    	else {
+    		MenuItem mPaste = menu.findItem(R.id.menu_paste);
+    		//if()
+    		//mPaste.setIcon();
+    		//mPaste.setIcon(R.drawable.bluetooth);
+    		mPaste.setVisible(true);
     	}
+    	
+    	if(mViewMode == VIEW_GRID)
+    		setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
+    	else if(mViewMode == VIEW_LIST)
+    		setMenuChecked(menu, true, R.id.menu_view_list, R.id.menu_view_grid, R.id.menu_view_carousel);
+    	else if(mViewMode == VIEW_CAROUSEL)
+    		setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
+    	
     	if(RootManager.Default.isRoot())
-    		menu.findItem(R.id.menu_root).setChecked(true);
+    		setMenuChecked(menu, true, R.id.menu_root);
+    	
     	return super.onPrepareOptionsMenu(menu);
     }
-
-    @Override
+    
+	@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
     	switch(keyCode)
     	{
@@ -580,7 +629,7 @@ public class OpenExplorer
     	{
     		case R.id.title_icon:
 	    	case android.R.id.home:
-	    		if (mHeldFiles != null) {
+	    		if (mHeldFiles.size() > 0) {
 	    			//DialogFragment df = 
 	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.DialogType.HOLDINGFILE_DIALOG, this);
 	    			dialog.setHoldingFileList(mHeldFiles);
@@ -627,7 +676,8 @@ public class OpenExplorer
 		    			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 		    				handler = MultiSelectHandler.getInstance(OpenExplorer.this);
 		    				mode.setTitle("Multi-select Options");
-		    				mode.getMenuInflater().inflate(R.menu.context_multi, menu);
+		    				mode.getMenuInflater().inflate(R.menu.context_file, menu);
+		    				setMenuVisible(menu, false, R.id.menu_context_paste, R.id.menu_context_unzip);
 		    				getDirContentFragment(true).changeMultiSelectState(true, handler);
 		    				return true;
 		    			}
@@ -649,19 +699,20 @@ public class OpenExplorer
 		    				for(String s : files)
 		    					mHeldFiles.add(FileManager.getOpenCache(s));
 		    			
-		    				return getDirContentFragment(false).executeMenu(item.getItemId(), mode, mHeldFiles);
+		    				return getDirContentFragment(false)
+		    						.executeMenu(item.getItemId(), mode, mHeldFiles.get(mHeldFiles.size() - 1), (ArrayList<OpenPath>)mHeldFiles.subList(0, mHeldFiles.size() - 2));
 		    			}
 		    		});
 	    		}
 	    		return true;
 	    		
-	    	case R.id.menu_sort_name_asc:	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA); return true; 
-	    	case R.id.menu_sort_name_desc:	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
-	    	case R.id.menu_sort_date_asc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.DATE); return true;
-	    	case R.id.menu_sort_date_desc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
-	    	case R.id.menu_sort_size_asc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.SIZE); return true; 
-	    	case R.id.menu_sort_size_desc: 	if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
-	    	case R.id.menu_sort_type: 		if(mSettingsListener!=null) mSettingsListener.onSortingChanged(FileManager.SortType.TYPE); return true;
+	    	case R.id.menu_sort_name_asc:	setSorting(FileManager.SortType.ALPHA); return true; 
+	    	case R.id.menu_sort_name_desc:	setSorting(FileManager.SortType.ALPHA_DESC); return true; 
+	    	case R.id.menu_sort_date_asc: 	setSorting(FileManager.SortType.DATE); return true;
+	    	case R.id.menu_sort_date_desc: 	setSorting(FileManager.SortType.DATE_DESC); return true; 
+	    	case R.id.menu_sort_size_asc: 	setSorting(FileManager.SortType.SIZE); return true; 
+	    	case R.id.menu_sort_size_desc: 	setSorting(FileManager.SortType.SIZE_DESC); return true; 
+	    	case R.id.menu_sort_type: 		setSorting(FileManager.SortType.TYPE); return true;
 	    	
 	    	case R.id.menu_view_grid:
 	    		changeViewMode(VIEW_GRID);
@@ -672,11 +723,13 @@ public class OpenExplorer
 	    	case R.id.menu_view_carousel:
 	    		changeViewMode(VIEW_CAROUSEL);
 	    		return true;
-	    	case R.id.menu_view_hidden: if(mSettingsListener!=null) mSettingsListener.onHiddenFilesChanged(item.isChecked()); return true;
-	    	case R.id.menu_view_thumbs: if(mSettingsListener!=null) mSettingsListener.onThumbnailChanged(item.isChecked()); return true;
+	    	case R.id.menu_view_hidden: setShowHiddenFiles(item.isChecked()); return true;
+	    	case R.id.menu_view_thumbs: setShowThumbnails(item.isChecked()); return true;
 	    	    	
 	    	case R.id.menu_root:
-	    		if(!item.isCheckable() || item.isChecked())
+	    		if(RootManager.Default.isRoot())
+	    			getPreferences().setSetting("global", "root", false);
+	    		else if(!item.isCheckable() || !item.isChecked())
 	    		{
 	    			if(RootManager.Default.isRoot() || RootManager.Default.requestRoot())
 	    			{
@@ -687,6 +740,9 @@ public class OpenExplorer
 	    				item.setChecked(false);
 	    				showToast("Unable to achieve root.");
 	    			}
+	    		} else {
+	    			getPreferences().setSetting("global", "root", false);
+	    			RootManager.Default.exitRoot();
 	    		}
 	    		return true;
 	    	case R.id.menu_flush:
@@ -709,12 +765,31 @@ public class OpenExplorer
 	    	case R.id.menu_favorites:
 	    		toggleBookmarks();
 	    		return true;
+	    		
+	    	case R.id.title_menu:
+	    		showMenu();
+	    		return true;
     	}
     	
     	return super.onOptionsItemSelected(item);
     }
     
-    @Override
+    private void setShowThumbnails(boolean checked) {
+    	getDirContentFragment(true).onThumbnailChanged(checked);
+	}
+	private void setShowHiddenFiles(boolean checked) {
+		getDirContentFragment(true).onHiddenFilesChanged(checked);
+	}
+	private void setSorting(SortType sort) {
+		getDirContentFragment(true).onSortingChanged(sort);
+	}
+	
+	public void showMenu()
+	{
+		openOptionsMenu();
+	}
+	
+	@Override
     public boolean onSearchRequested() {
     	mEvHandler.startSearch(mLastPath, this);
 		//showToast("Sorry, not working yet.");
@@ -733,9 +808,7 @@ public class OpenExplorer
 		setSetting(mLastPath, "view", newView);
 		if(BEFORE_HONEYCOMB)
 		{
-			if(mSettingsListener != null)
-				mSettingsListener.onViewChanged(newView);
-			else Logger.LogWarning("Listener not available.");
+			getDirContentFragment(true).onViewChanged(newView);
 		} else if(newView == VIEW_CAROUSEL)
 		{
 			fragmentManager.beginTransaction()
@@ -749,8 +822,7 @@ public class OpenExplorer
 				.commit();
 			invalidateOptionsMenu();
 		} else {
-			if (mSettingsListener != null)
-				mSettingsListener.onViewChanged(newView);
+			getDirContentFragment(true).onViewChanged(newView);
 			invalidateOptionsMenu();
 		}
 	}
@@ -827,20 +899,17 @@ public class OpenExplorer
     	return super.onKeyUp(keyCode, event);
     }
     
-	
-	
-	public static void setOnSettingsChangeListener(OnSettingsChangeListener e) {
-    	mSettingsListener = e;
-    }
-    
-    
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if(requestCode == PREF_CODE) {
     		//this could be done better.
     		try {
-	    		mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_HIDDEN_KEY, false));
-	    		mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_THUMB_KEY, false));
-	    		mSettingsListener.onViewChanged(mPreferences.getInt(mLastPath.getPath(), SettingsActivity.PREF_VIEW_KEY, VIEW_LIST));
+    			getDirContentFragment(true).setSettings(mFileManager.getSorting(),
+    					mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_THUMB_KEY, true),
+    					mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_HIDDEN_KEY, false)
+    					);
+	    		//mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_HIDDEN_KEY, false));
+	    		//mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_THUMB_KEY, false));
+	    		//mSettingsListener.onViewChanged(mPreferences.getInt(mLastPath.getPath(), SettingsActivity.PREF_VIEW_KEY, VIEW_LIST));
     		} catch(Exception e) {
     			Logger.LogError("onActivityResult FAIL", e);
     		}
@@ -1067,14 +1136,6 @@ public class OpenExplorer
 		dialogInfo.show(fragmentManager, "info");
 	}
 
-	public interface OnSettingsChangeListener {
-		public void onHiddenFilesChanged(boolean state);
-		public void onThumbnailChanged(boolean state);
-		public void onViewChanged(int viewGrid);
-		public void onSortingChanged(FileManager.SortType type);
-	}
-
-
     public void setOnClicks(int... ids)
     {
     	for(int id : ids)
@@ -1136,6 +1197,11 @@ public class OpenExplorer
 				return true;
 		}
 		return false;
+	}
+	public void addBookmark(OpenPath file) {
+		String sBookmarks = getPreferences().getSetting("bookmarks", "bookmarks", "");
+		sBookmarks += sBookmarks != "" ? ";" : file.getPath();
+		getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
 	}
 }
 

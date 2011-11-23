@@ -2,11 +2,14 @@ package org.brandroid.openmanager.util;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Hashtable;
 
 import org.brandroid.utils.Logger;
+
+import android.os.StatFs;
 
 public class DFInfo
 {
@@ -19,9 +22,14 @@ public class DFInfo
 	public int getFree() { return mFree; }
 	public int getBlockSize() { return mBlocksize; }
 	
-	public DFInfo(String path, int size, int used, int free, int blocksize)
+	public class CannotReadException extends Exception {
+		public CannotReadException(String string) {
+			super(string);
+		} }
+	public DFInfo(String path, int size, int used, int free, int blocksize) throws CannotReadException
 	{
 		mPath = path;
+		if(!new File(path).canRead()) throw new CannotReadException("Cannot read " + path);
 		mSize = size;
 		mUsed = used;
 		mFree = free;
@@ -55,12 +63,14 @@ public class DFInfo
 		Hashtable<String, DFInfo> ret = new Hashtable<String, DFInfo>();
 		try {
 			Boolean handled = false;
+			/*
 			try {
 				dfProc = Runtime.getRuntime().exec("busybox df -h\n");
 				handled = true;
 			} catch(IOException ex) {
 				Logger.LogWarning("busybox failed");
 			}
+			*/
 			if(!handled)
 			{
 				dfProc = Runtime.getRuntime().exec("df");
@@ -74,13 +84,16 @@ public class DFInfo
 				sl = sl.replaceAll("  *", " ");
 				//Logger.LogInfo("DF: " + sl);
 				if(!sl.startsWith("/")) continue;
-				if(sl.startsWith("/dev/")) continue;
+				if(sl.indexOf("/mnt") == -1) continue;
+				if(sl.indexOf("/asec") > -1) continue;
+				if(sl.indexOf("/obb") > -1) continue;
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
 					//Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
 					ret.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
+				catch(CannotReadException e) { } 
 			}
 		} catch (IOException e) {
 			Logger.LogError("DF: Couldn't get Drive sizes.", e);
