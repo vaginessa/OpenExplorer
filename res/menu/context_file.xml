@@ -1,14 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item android:id="@+id/menu_copy" android:title="@string/s_menu_copy" android:icon="@drawable/ic_menu_copy" />
-    <item android:id="@+id/menu_cut" android:title="@string/s_menu_cut" android:icon="@drawable/ic_menu_cut" />
-    <item android:id="@+id/menu_paste" android:title="@string/s_menu_paste" android:icon="@drawable/ic_menu_paste" />
-    <item android:id="@+id/menu_delete" android:title="@string/s_menu_delete" android:icon="@drawable/ic_menu_delete" />
-    <item android:id="@+id/menu_rename" android:title="@string/s_menu_rename" />
-    <item android:id="@+id/menu_zip" android:title="@string/s_menu_zip" />
-    <item android:id="@+id/menu_multi" android:title="@string/s_menu_multi" />
-    <item android:id="@+id/menu_info" android:title="@string/s_menu_info" android:icon="@drawable/ic_menu_info_details" />
-    <item android:id="@+id/menu_share" android:title="@string/s_menu_share" android:icon="@drawable/ic_menu_share" />
+    <item
+		android:id="@+id/menu_context_copy"
+		android:title="@string/s_menu_copy"
+    	android:showAsAction="always|withText"
+		android:icon="@drawable/ic_menu_copy" />
+    <item
+		android:id="@+id/menu_context_cut"
+		android:title="@string/s_menu_cut"
+    	android:showAsAction="ifRoom|withText"
+    	android:icon="@drawable/ic_menu_cut" />
+    <item
+		android:id="@+id/menu_context_paste"
+		android:title="@string/s_menu_paste"
+    	android:showAsAction="always|withText"
+    	android:icon="@drawable/ic_menu_paste" />
+    <item
+		android:id="@+id/menu_context_delete"
+		android:title="@string/s_menu_delete"
+    	android:showAsAction="ifRoom|withText"
+		android:icon="@drawable/ic_menu_delete" />
+    <item
+		android:id="@+id/menu_context_info"
+		android:title="@string/s_menu_info"
+    	android:showAsAction="ifRoom"
+		android:icon="@drawable/ic_menu_info_details" />
+    <item
+		android:id="@+id/menu_context_share"
+		android:title="@string/s_menu_share"
+    	android:showAsAction="ifRoom"
+		android:icon="@drawable/ic_menu_share" />
+    <item
+    	android:id="@+id/menu_context_bookmark"
+		android:title="@string/s_menu_bookmark"
+		android:icon="@drawable/ic_favorites"
+		android:showAsAction="always|withText"
+    	/>
+    <item
+		android:id="@+id/menu_context_multi"
+    	android:showAsAction="ifRoom|withText"
+    	android:icon="@drawable/ic_multiselect"
+		android:title="@string/s_menu_multi" />
+    <item
+		android:id="@+id/menu_context_rename"
+    	android:showAsAction="ifRoom|withText"
+    	android:icon="@drawable/ic_rename"
+		android:title="@string/s_menu_rename" />
+    <item
+		android:id="@+id/menu_context_zip"
+    	android:showAsAction="ifRoom|withText"
+    	android:icon="@drawable/ic_zip"
+		android:title="@string/s_menu_zip" />
+    <item
+		android:id="@+id/menu_context_unzip"
+    	android:showAsAction="ifRoom|withText"
+    	android:icon="@drawable/ic_zip"
+		android:title="@string/s_menu_unzip" />
     
 </menu>

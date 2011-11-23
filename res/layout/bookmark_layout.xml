@@ -22,6 +22,7 @@
 	android:layout_height="wrap_content"
 	android:gravity="center_vertical|left"
 	android:paddingLeft="4dp"
+	android:paddingRight="4dp"
 	android:id="@+id/layout"
 	>
 	<ImageView

@@ -6,6 +6,11 @@
   	    android:showAsAction="never"
   	    android:icon="@drawable/ic_menu_star"
   	    android:title="@string/s_menu_favorites" />
+    <item
+		android:id="@+id/menu_paste"
+		android:title="@string/s_menu_paste"
+    	android:showAsAction="always|withText"
+    	android:icon="@drawable/ic_menu_paste" />
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@android:drawable/ic_menu_search"
