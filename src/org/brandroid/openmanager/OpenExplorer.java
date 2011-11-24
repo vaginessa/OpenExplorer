@@ -18,6 +18,7 @@
 
 package org.brandroid.openmanager;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,6 +32,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -50,6 +53,7 @@ import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
 import android.view.ActionMode;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -57,6 +61,8 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -84,6 +90,8 @@ import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MultiSelectHandler;
@@ -572,6 +580,58 @@ public class OpenExplorer
     			menu.findItem(id).setEnabled(enabled);
     }
     
+    public void showAboutDialog()
+    {
+    	LayoutInflater li = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+    	View view = li.inflate(R.layout.about, null);
+
+    	String sVersionInfo = "";
+    	try {
+			PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+			sVersionInfo += pi.versionName;
+			if(!pi.versionName.contains(""+pi.versionCode))
+				sVersionInfo += " (" + pi.versionCode + ")";
+		} catch (NameNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	final String sSubject = "Feedback for OpenExplorer " + sVersionInfo; 
+
+    	view.findViewById(R.id.about_email).setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+				intent.setType("text/plain");
+				intent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"brandroid64@gmail.com"});
+				intent.putExtra(android.content.Intent.EXTRA_SUBJECT, sSubject);
+				startActivity(Intent.createChooser(intent, getString(R.string.s_chooser_email)));
+			}
+		});
+    	view.findViewById(R.id.about_site).setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				startActivity(
+					new Intent(android.content.Intent.ACTION_VIEW, Uri.parse("http://brandroid.org/open/"))
+					);
+			}
+		});
+    	WebView mRecent = (WebView)view.findViewById(R.id.about_recent);
+    	OpenChromeClient occ = new OpenChromeClient();
+    	occ.mStatus = (TextView)view.findViewById(R.id.about_recent_status);
+    	mRecent.setWebChromeClient(occ);
+    	mRecent.setBackgroundColor(Color.TRANSPARENT);
+    	mRecent.loadUrl("http://brandroid.org/open/?show=recent");
+    	
+    	((TextView)view.findViewById(R.id.about_version)).setText(sVersionInfo);
+    	AlertDialog mDlgAbout = new AlertDialog.Builder(this)
+    		.setView(view)
+    		.create();
+    	
+    	mDlgAbout.getWindow().getAttributes().windowAnimations = R.style.SlideDialogAnimation;
+    	mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
+    	
+    	mDlgAbout.show();
+    }
+    
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	if(BEFORE_HONEYCOMB)
@@ -774,6 +834,10 @@ public class OpenExplorer
 	    		
 	    	case R.id.menu_paste:
 	    		getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+	    		return true;
+	    		
+	    	case R.id.menu_about:
+	    		showAboutDialog();
 	    		return true;
 	    		
 	    	default:

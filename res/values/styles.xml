@@ -84,5 +84,14 @@
     <style name="ActionBarCompatHomeItem" parent="style/ActionBarCompatItemBase">
     </style>
 
+    <style name="SlideDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowAnimationStyle">@style/SlideDialogAnimation</item>
+        <item name="android:alpha">0.9</item>
+    </style>
+
+    <style name="SlideDialogAnimation">
+        <item name="android:windowEnterAnimation">@android:anim/slide_in_left</item>
+        <item name="android:windowExitAnimation">@android:anim/slide_out_right</item>
+    </style>
         
 </resources>

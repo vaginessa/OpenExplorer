@@ -101,5 +101,13 @@
 	<string name="s_title_bookmark_prefix">Manage Bookmark: </string>
 	<string name="s_alert_remove_safe">You may now safely remove the drive.</string>
 	<string name="s_alert_remove_error">Unable to eject.</string>
+	<string name="s_menu_about">About</string>
+	<string name="s_about_version">Version</string>
+	<string name="s_about_author">Author</string>
+	<string name="s_about_site">Website</string>
+	<string name="s_about_email">Email</string>
+	<string name="s_about_recent">Recent Updates</string>
+	<string name="s_chooser_email">Send Feedback...</string>
+	<string name="s_status_loading">Loading...</string>
     
 </resources>
