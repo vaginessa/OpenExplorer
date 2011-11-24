@@ -69,10 +69,10 @@ public class EventHandler {
 	public static final int DELETE_TYPE = 		0x05;
 	public static final int RENAME_TYPE =		0X06;
 	public static final int MKDIR_TYPE = 		0x07;
+	public static final int CUT_TYPE = 0x08;
 	
 	private OnWorkerThreadFinishedListener mThreadListener;
 	private FileManager mFileMang;
-	private boolean mDeleteFile = false;
 	private ProgressBar mExtraProgress;
 	private TextView mExtraStatus, mExtraPercent;
 	
@@ -306,9 +306,10 @@ public class EventHandler {
 	}
 	
 	public void cutFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
-		mDeleteFile = true;
+		OpenPath[] array = new OpenPath[files.size()];
+		files.toArray(array);
 		
-		copyFile(files, newPath, mContext);
+		new BackgroundWork(CUT_TYPE, mContext, newPath).execute(array);
 	}
 	
 	public void searchFile(OpenPath dir, String query, Context mContext) {
@@ -357,7 +358,7 @@ public class EventHandler {
 		private Context mContext;
 		private String[] mInitParams = null;
 		private OpenPath mIntoPath;
-		private ArrayList<OpenPath> mSearchResults = null;
+		private ArrayList<String> mSearchResults = null;
 		
 		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
 			mType = type;
@@ -372,10 +373,10 @@ public class EventHandler {
 			case DELETE_TYPE: title = getResourceString(mContext, R.string.s_title_deleting).toString(); break;
 			case SEARCH_TYPE: title = getResourceString(mContext, R.string.s_title_searching).toString(); break;
 			case COPY_TYPE:
-				if(mDeleteFile)
-					title = getResourceString(mContext, R.string.s_title_copying).toString(); 
-				else
-					title = getResourceString(mContext, R.string.s_title_moving).toString();
+				title = getResourceString(mContext, R.string.s_title_copying).toString(); 
+				break;
+			case CUT_TYPE:
+				title = getResourceString(mContext, R.string.s_title_moving).toString();
 				break;
 			case UNZIP_TYPE:
 			case UNZIPTO_TYPE:
@@ -405,9 +406,14 @@ public class EventHandler {
 			} catch(Exception e) { }
 		}
 		
-		public ArrayList<OpenPath> searchDirectory(OpenPath dir, String pattern)
+		public void searchDirectory(OpenPath dir, String pattern, ArrayList<String> aList)
 		{
-			return null;
+			for(OpenPath p : dir.listFiles())
+				if(p.getName().matches(pattern))
+					aList.add(p.getPath());
+			for(OpenPath p : dir.list())
+				if(p.isDirectory())
+					searchDirectory(p, pattern, aList);
 		}
 		
 		protected Integer doInBackground(OpenPath... params) {
@@ -421,17 +427,28 @@ public class EventHandler {
 						ret += (mFileMang.deleteTarget(params[i]) == 0 ? 1 : 0);
 					break;
 				case SEARCH_TYPE:
-					mSearchResults = searchDirectory(mIntoPath, mInitParams[0]);
+					mSearchResults = new ArrayList<String>();
+					searchDirectory(mIntoPath, mInitParams[0], mSearchResults);
 					break;
 				case COPY_TYPE:
 					for(OpenPath file : params)
 					{
 						try {
 							if(copyToDirectory(mIntoPath, file, 0))
+								ret++;
+						} catch (IOException e) {
+							Logger.LogError("Couldn't copy file (" + file.getName() + " to " + mIntoPath.getPath() + ")", e);
+						}
+					}
+					break;
+				case CUT_TYPE:
+					for(OpenPath file : params)
+					{
+						try {
+							if(copyToDirectory(mIntoPath, file, 0))
 							{
 								ret++;
-								if(mDeleteFile)
-									mFileMang.deleteTarget(file);
+								mFileMang.deleteTarget(file);
 							}
 						} catch (IOException e) {
 							Logger.LogError("Couldn't copy file (" + file.getName() + " to " + mIntoPath.getPath() + ")", e);
@@ -590,8 +607,7 @@ public class EventHandler {
 			} catch(Exception e) { }
 		}
 
-		
-		protected void onPostExecute(ArrayList<String> result) {
+		protected void onPostExecute(Integer result) {
 			NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 			mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
 			
@@ -602,9 +618,9 @@ public class EventHandler {
 					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				
-				if(!result.contains("0"))
+				if(result == 0)
 					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
-				else if(result.contains("-1"))
+				else if(result == -1)
 					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some,R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
 				else
 					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
@@ -614,7 +630,7 @@ public class EventHandler {
 			case SEARCH_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, result);
+				mThreadListener.onWorkerThreadComplete(mType, mSearchResults);
 				break;
 				
 			case COPY_TYPE:
@@ -622,22 +638,25 @@ public class EventHandler {
 					mPDialog.dismiss();
 				mThreadListener.onWorkerThreadComplete(mType, null);
 				
-				if(!mDeleteFile) {
-					if(result == null || !result.contains("0"))
-						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
-					else if(result != null && result.contains("-1"))
-						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
-					else
-						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
-				} else {
-					if(result == null || !result.contains("0"))
-						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
-					else if(result != null && result.contains("-1"))
-						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
-					else
-						Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
-				}
-				mDeleteFile = false;				
+				if(result == null || result == 0)
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
+				else if(result != null && result < 0)
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
+				else
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
+				break;
+			case CUT_TYPE:
+				if(mPDialog != null)
+					mPDialog.dismiss();
+				mThreadListener.onWorkerThreadComplete(mType, null);
+
+				if(result == null || result == 0)
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
+				else if(result != null && result < 0)
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_some, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
+				else
+					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_all, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
+
 				break;
 				
 			case UNZIPTO_TYPE:

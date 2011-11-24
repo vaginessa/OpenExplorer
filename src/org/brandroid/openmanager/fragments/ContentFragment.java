@@ -25,6 +25,7 @@ import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -107,7 +108,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private FileSystemAdapter mContentAdapter;
 	private ActionMode mActionMode = null;
 	private boolean mActionModeSelected;
-	private boolean mCutFile = false;
 	private boolean mShowThumbnails = true;
 	private boolean mReadyToUpdate = true;
 	private int mMenuContextItemIndex = -1;
@@ -298,7 +298,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mMenuContextItemIndex = pos;
 					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file);
 					MenuBuilder cmm = cm.getMenu();
-					if(getHoldingFiles().size() > 0)
+					if(getClipboard().size() > 0)
 						cmm.hideItem(R.id.menu_context_multi);
 					else
 						cmm.hideItem(R.id.menu_context_paste);
@@ -428,14 +428,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
 	}
 	
-	private ArrayList<OpenPath> getHoldingFiles() {
-		return ((OpenExplorer)getActivity()).getHoldingFiles();
+	private OpenClipboard getClipboard() {
+		return ((OpenExplorer)getActivity()).getClipboard();
 	}
 	private void addHoldingFile(OpenPath path) {
 		((OpenExplorer)getActivity()).addHoldingFile(path);
 	}
 	private void clearHoldingFiles() { ((OpenExplorer)getActivity()).clearHoldingFiles(); }
-	private boolean isHoldingFiles() { return getHoldingFiles().size() > 0; }
+	private boolean isHoldingFiles() { return getClipboard().size() > 0; }
 	
 	private void finishMode(Object mode)
 	{
@@ -493,7 +493,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 			case R.id.menu_context_copy:
 			case R.id.menu_context_cut:
-				mCutFile = id == R.id.menu_context_cut;
+				if(id == R.id.menu_context_cut)
+					getClipboard().DeleteSource = true;
+				else
+					getClipboard().DeleteSource = false;
 
 				addHoldingFile(file);
 				return false;
@@ -501,21 +504,23 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			case R.id.menu_context_paste:
 			case R.id.menu_paste:
 				OpenPath into = id == R.id.menu_paste || !file.isDirectory() ? folder : file;
-				if(getHoldingFiles().size() > 0)
-					if(mCutFile)
-						mHandler.cutFile(getHoldingFiles(), into, getActivity());
+				OpenClipboard cb = getClipboard();
+				if(cb.size() > 0)
+					if(cb.DeleteSource)
+						mHandler.cutFile(cb, into, getActivity());
 					else
-						mHandler.copyFile(getHoldingFiles(), into, getActivity());
+						mHandler.copyFile(cb, into, getActivity());
 				
-				mCutFile = false;
-				clearHoldingFiles();
+				cb.DeleteSource = false;
+				if(cb.ClearAfter)
+					clearHoldingFiles();
 				((OpenExplorer)getActivity()).updateTitle(path);
 				finishMode(mode);
 				return true;
 				
 			case R.id.menu_context_zip:
 				addHoldingFile(file);
-				final String def = getHoldingFiles().size() == 1 ?
+				final String def = getClipboard().size() == 1 ?
 						file.getName() + ".zip" :
 						file.getParent().getName() + ".zip";
 				
@@ -540,7 +545,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				return true;
 				
 			case R.id.menu_context_unzip:
-				mHandler.unZipFileTo(getHoldingFiles().get(0), file, getActivity());
+				mHandler.unZipFileTo(getClipboard().get(0), file, getActivity());
 				
 				clearHoldingFiles();
 				((OpenExplorer)getActivity()).updateTitle("");
