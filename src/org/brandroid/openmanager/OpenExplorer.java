@@ -69,6 +69,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
@@ -107,7 +108,7 @@ public class OpenExplorer
 	private Preferences mPreferences = null;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
-	private ArrayList<OpenPath> mHeldFiles = new ArrayList<OpenPath>();
+	private OpenClipboard mHeldFiles = new OpenClipboard();
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
@@ -341,7 +342,7 @@ public class OpenExplorer
     		unregisterReceiver(storageReceiver);
     }
     
-    public ArrayList<OpenPath> getHoldingFiles() { return mHeldFiles; }
+    public OpenClipboard getClipboard() { return mHeldFiles; }
     public void addHoldingFile(OpenPath path) { 
     	mHeldFiles.add(path);
     	invalidateOptionsMenu();
@@ -583,6 +584,7 @@ public class OpenExplorer
     		setMenuVisible(menu, false, R.id.menu_paste);
     	else {
     		MenuItem mPaste = menu.findItem(R.id.menu_paste);
+    		mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
     		//if()
     		//mPaste.setIcon();
     		//mPaste.setIcon(R.drawable.bluetooth);
@@ -692,7 +694,7 @@ public class OpenExplorer
 		    				}
 		    				
 		    				if(mHeldFiles == null)
-		    					mHeldFiles = new ArrayList<OpenPath>();
+		    					mHeldFiles = new OpenClipboard();
 		    				
 		    				mHeldFiles.clear();
 		    				
@@ -769,9 +771,17 @@ public class OpenExplorer
 	    	case R.id.title_menu:
 	    		showMenu();
 	    		return true;
+	    		
+	    	case R.id.menu_paste:
+	    		getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+	    		return true;
+	    		
+	    	default:
+	    		getDirContentFragment(false).executeMenu(id, mLastPath);
+	    		return true;
     	}
     	
-    	return super.onOptionsItemSelected(item);
+    	//return super.onOptionsItemSelected(item);
     }
     
     private void setShowThumbnails(boolean checked) {
