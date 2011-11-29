@@ -369,41 +369,58 @@ public class EventHandler {
 		
 		protected void onPreExecute() {
 			String title = getResourceString(mContext, R.string.s_title_executing).toString();
+			Boolean showDialog = true, showNotification = false;
 			switch(mType) {
-			case DELETE_TYPE: title = getResourceString(mContext, R.string.s_title_deleting).toString(); break;
-			case SEARCH_TYPE: title = getResourceString(mContext, R.string.s_title_searching).toString(); break;
-			case COPY_TYPE:
-				title = getResourceString(mContext, R.string.s_title_copying).toString(); 
-				break;
-			case CUT_TYPE:
-				title = getResourceString(mContext, R.string.s_title_moving).toString();
-				break;
-			case UNZIP_TYPE:
-			case UNZIPTO_TYPE:
-				title = getResourceString(mContext, R.string.s_title_unzipping).toString(); 
-				break;
-			case ZIP_TYPE:
-				title = getResourceString(mContext, R.string.s_title_zipping).toString(); 
-				break;
+				case DELETE_TYPE:
+					title = getResourceString(mContext, R.string.s_title_deleting).toString();
+					showDialog = false;
+					break;
+				case SEARCH_TYPE:
+					title = getResourceString(mContext, R.string.s_title_searching).toString();
+					break;
+				case COPY_TYPE:
+					title = getResourceString(mContext, R.string.s_title_copying).toString();
+					showNotification = true;
+					break;
+				case CUT_TYPE:
+					title = getResourceString(mContext, R.string.s_title_moving).toString();
+					showNotification = true;
+					break;
+				case UNZIP_TYPE:
+				case UNZIPTO_TYPE:
+					title = getResourceString(mContext, R.string.s_title_unzipping).toString();
+					showNotification = true;
+					break;
+				case ZIP_TYPE:
+					title = getResourceString(mContext, R.string.s_title_zipping).toString();
+					showNotification = true;
+					break;
 			}
-			try {
-				mPDialog = ProgressDialog.show(mContext, title, getResourceString(mContext, R.string.s_title_wait).toString());
-			} catch(Exception e) { }
-			try {
-				RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.title_bar);
-				noteView.setImageViewResource(R.id.title_icon, R.drawable.icon);
-				noteView.setTextViewText(R.id.title_text, title);
-				noteView.setProgressBar(R.id.title_progress, 100, 0, true);
-				noteView.setViewVisibility(R.id.title_search, View.GONE);
-				noteView.setViewVisibility(R.id.title_path, View.GONE);
-				Intent intent = new Intent(mContext, OpenExplorer.class);
-				PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OpenExplorer.REQUEST_CANCEL, intent, 0);
-				NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-				mNote = new Notification(R.drawable.icon, title, 0);
-				mNote.contentView = noteView;
-				mNote.contentIntent = pendingIntent;
-				mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
-			} catch(Exception e) { }
+			if(showDialog)
+				try {
+					mPDialog = ProgressDialog.show(mContext, title, getResourceString(mContext, R.string.s_title_wait).toString());
+				} catch(Exception e) { }
+			if(showNotification)
+				try {
+					Intent intent = new Intent(mContext, OpenExplorer.class);
+					PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OpenExplorer.REQUEST_CANCEL, intent, 0);
+					NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+					mNote = new Notification(R.drawable.icon, title, 0);
+					if(!OpenExplorer.BEFORE_HONEYCOMB)
+					{
+						RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.title_bar);
+						noteView.setImageViewResource(R.id.title_icon, R.drawable.icon);
+						noteView.setTextViewText(R.id.title_text, title);
+						noteView.setProgressBar(R.id.title_progress, 100, 0, true);
+						noteView.setViewVisibility(R.id.title_search, View.GONE);
+						noteView.setViewVisibility(R.id.title_path, View.GONE);
+						mNote.contentView = noteView;
+					} else {
+						mNote.tickerText = title;
+					}
+					mNote.contentIntent = pendingIntent;
+					mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
+				} catch(Exception e) { }
 		}
 		
 		public void searchDirectory(OpenPath dir, String pattern, ArrayList<String> aList)
@@ -434,7 +451,7 @@ public class EventHandler {
 					for(OpenPath file : params)
 					{
 						try {
-							if(copyToDirectory(mIntoPath, file, 0))
+							if(copyToDirectory(file, mIntoPath, 0))
 								ret++;
 						} catch (IOException e) {
 							Logger.LogError("Couldn't copy file (" + file.getName() + " to " + mIntoPath.getPath() + ")", e);
@@ -445,7 +462,7 @@ public class EventHandler {
 					for(OpenPath file : params)
 					{
 						try {
-							if(copyToDirectory(mIntoPath, file, 0))
+							if(copyToDirectory(file, mIntoPath, 0))
 							{
 								ret++;
 								mFileMang.deleteTarget(file);
@@ -457,7 +474,7 @@ public class EventHandler {
 					break;
 				case UNZIPTO_TYPE:
 				case UNZIP_TYPE:
-					extractZipFiles(mIntoPath, params[0]);
+					extractZipFiles(params[0], mIntoPath);
 					break;
 	
 				case ZIP_TYPE:
@@ -470,29 +487,51 @@ public class EventHandler {
 		
 		private Boolean copyToDirectory(OpenPath old, OpenPath newDir, int total) throws IOException
 		{
+			Logger.LogDebug("Trying to copy [" + old.getPath() + "] to [" + newDir.getPath() + "]...");
 			byte[] data = new byte[FileManager.BUFFER];
 			int read = 0;
+
+			if(!newDir.mkdir())
+			{
+				Logger.LogWarning("Unable to create (" + newDir.getPath() + ").");
+				//return false;
+			}
 			
 			if(old.isDirectory() && newDir.isDirectory() && newDir.canWrite()) {
 				OpenPath[] files = old.list();
 				OpenPath newFile = newDir.getChild(old.getName());
 				
-				if(!newFile.mkdir())
-					return false;
+				//if(!newFile.mkdir())
+				{
+					//Logger.LogWarning("Couldn't create initial destination directory for file.");
+					//return false;
+				}
 				
 				for(OpenPath file : files)
 					total += (int)file.length();
 				
 				for(int i = 0; i < files.length; i++)
 					if(!copyToDirectory(files[i], newFile.getParent(), total))
+					{
+						Logger.LogWarning("Couldn't copy " + files[i].getName() + ".");
 						return false;
+					}
+				
+				return true;
 				
 			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite()){
 				OpenPath newFile = newDir.getChild(old.getName());
+				//if(!newFile.mkdir())
+				{
+					//Logger.LogWarning("Couldn't create initial destination directory.");
+					//return false;
+				}
+				
 				int size = (int)old.length();
 				int pos = 0;
 
 				try {
+					Logger.LogDebug("Writing " + newFile.getPath());
 					BufferedOutputStream o_stream = new BufferedOutputStream(
 													newFile.getOutputStream());
 					BufferedInputStream i_stream = new BufferedInputStream(
@@ -509,19 +548,25 @@ public class EventHandler {
 					i_stream.close();
 					o_stream.close();
 					
+					return true;
+					
 				} catch (FileNotFoundException e) {
-					Log.e("FileNotFoundException", e.getMessage());
+					Logger.LogError("Couldn't find file to copy.", e);
 					return false;
 					
 				} catch (IOException e) {
-					Log.e("IOException", e.getMessage());
+					Logger.LogError("IOException copying file.", e);
 					return false;
 				}
 				
 			} else if(!newDir.canWrite())
+			{
+				Logger.LogWarning("Destination directory not writable.");
 				return false;
+			}
 			
-			return true;
+			Logger.LogWarning("Couldn't copy file for unknown reason.");
+			return false;
 		}
 		
 		public void extractZipFiles(OpenPath zip, OpenPath directory) {
@@ -576,6 +621,17 @@ public class EventHandler {
 			
 			//mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
 			
+			try {
+				if(values.length == 0)
+					mPDialog.setIndeterminate(true);
+				else {
+					mPDialog.setIndeterminate(false);
+					mPDialog.setMax(1000);
+					mPDialog.setProgress(progA);
+					mPDialog.setSecondaryProgress(progB);
+				}
+			} catch(Exception e) { }
+			
 			if(mExtraProgress != null)
 			{
 				if(values.length == 0)
@@ -593,17 +649,6 @@ public class EventHandler {
 				RemoteViews noteView = mNote.contentView;
 				noteView.setProgressBar(R.id.title_progress, 1000, progA, values.length == 0);
 				noteView.notify();
-			} catch(Exception e) { }
-			
-			try {
-				if(values.length == 0)
-					mPDialog.setIndeterminate(true);
-				else {
-					mPDialog.setIndeterminate(false);
-					mPDialog.setMax(1000);
-					mPDialog.setProgress(progA);
-					mPDialog.setSecondaryProgress(progB);
-				}
 			} catch(Exception e) { }
 		}
 

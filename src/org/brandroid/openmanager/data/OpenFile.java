@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -220,17 +221,14 @@ public class OpenFile extends OpenPath
 	}
 	@Override
 	public Boolean mkdir() {
-		return mFile.mkdir();
+		return mFile.mkdirs();
 	}
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return new FileInputStream(mFile); 
+		return new FileInputStream(mFile);
 	}
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		if(!mFile.exists())
-			if(!mFile.createNewFile())
-				return null;
 		return new FileOutputStream(mFile);
 	}
 	@Override
