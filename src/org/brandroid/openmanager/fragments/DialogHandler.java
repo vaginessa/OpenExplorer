@@ -146,6 +146,7 @@ public class DialogHandler extends DialogFragment {
 	}
 	
 	private View createHoldingFileDialog() {
+		if(getDialog() == null || getDialog().getWindow() == null) return null;
 		getDialog().getWindow().setGravity(Gravity.LEFT | Gravity.TOP);
 		getDialog().setTitle(getResources().getString(R.string.s_title_holding_x_files).replace("xxx", "" + mFiles.size()));
 		
@@ -184,9 +185,12 @@ public class DialogHandler extends DialogFragment {
 					}
 				});
 				
-				if(IntentManager.startIntent(selected, (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler()))
+				if(IntentManager.isIntentAvailable(selected, (OpenExplorer)getActivity()))
+				{
+					IntentManager.startIntent(selected, (OpenExplorer)getActivity());
 					return;
-				
+				}
+					
 				
 				if (!selected.isDirectory()) {
 					launch_button.setVisibility(View.VISIBLE);
