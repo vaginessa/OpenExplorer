@@ -109,5 +109,7 @@
 	<string name="s_about_recent">Recent Updates</string>
 	<string name="s_chooser_email">Send Feedback...</string>
 	<string name="s_status_loading">Loading...</string>
+	<string name="s_menu_open">Open with...</string>
+	<string name="s_menu_edit">Edit with...</string>
     
 </resources>
