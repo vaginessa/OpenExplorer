@@ -205,8 +205,15 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		else if(path.indexOf("sdcard") > -1)
 			return getString(mHasExternal ? R.string.s_internal : R.string.s_external);
 		else if(path.indexOf("usb") > -1 || path.indexOf("removeable") > -1)
-			return OpenExplorer.getVolumeName(file.getPath());
-		else return file.getName();
+		{
+			try {
+				return OpenExplorer.getVolumeName(file.getPath());
+			} catch(Exception e) {
+				Logger.LogWarning("Unable to get actual volume name.", e);
+			}
+		}
+		
+		return file.getName();
 	}
 	
 	

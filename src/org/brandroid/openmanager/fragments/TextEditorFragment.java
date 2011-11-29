@@ -18,6 +18,7 @@ import java.nio.CharBuffer;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.http.util.ByteArrayBuffer;
+import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.string;
 import org.brandroid.openmanager.data.OpenFile;
@@ -213,6 +214,11 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 					String line;
 					while((line = br.readLine()) != null)
 						sb.append(line + "\n");
+				} catch (RuntimeException r) {
+					Logger.LogError("File too large?", r);
+					getExplorer().showToast("Unable to open file. File too large?");
+					cancelTask();
+					getFragmentManager().popBackStack();
 				} catch (Exception e) {
 					Logger.LogError("Couldn't find file - " + path, e);
 				} finally {

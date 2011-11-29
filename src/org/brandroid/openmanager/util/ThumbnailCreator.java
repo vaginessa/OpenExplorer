@@ -27,7 +27,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -36,7 +35,6 @@ import android.view.Gravity;
 import android.widget.ImageView;
 
 import java.lang.ref.SoftReference;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -47,18 +45,16 @@ import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.BookmarkHolder;
-import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 
 public class ThumbnailCreator extends Thread {
-	private SoftReference<Bitmap> mThumb;
-	private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
-	private ArrayList<ThumbnailStruct> mPending;
+	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>();
 	private Handler mHandler;
 	
 	private static Context mContext;
@@ -69,7 +65,6 @@ public class ThumbnailCreator extends Thread {
 
 	public ThumbnailCreator(Context context, Handler handler) {
 		mContext = context;
-		mPending = new ArrayList<ThumbnailStruct>();
 		mHandler = handler;
 	}
 	
@@ -216,7 +211,7 @@ public class ThumbnailCreator extends Thread {
 	
 	public static Bitmap getThumbnailCache(String name, int w, int h) {
 		String cacheName = getCacheFilename(name, w, h);
-		if(mCacheMap.containsKey(cacheName))
+		if(mCacheMap.get(cacheName) != null)
 			return mCacheMap.get(cacheName);
 		else {
 			File f = mContext.getFileStreamPath(cacheName);
@@ -224,38 +219,6 @@ public class ThumbnailCreator extends Thread {
 				return BitmapFactory.decodeFile(f.getPath());
 		}
 		return null;
-	}
-	
-	/*
-	public void createNewThumbnail(ArrayList<OpenPath> files, String dir, int w, int h) {
-		mPending = new ArrayList<ThumbnailStruct>(files.size());
-		for(OpenPath path : files)
-			mPending.add(new ThumbnailStruct(path, w, h));
-	}
-	
-	public void createNewThumbnail(OpenPath file, int w, int h)
-	{
-		mPending.add(new ThumbnailStruct(file, w, h));
-	}
-	*/
-	
-	public void setCancelThumbnails(boolean stop) {
-		mStop = stop;
-	}
-	
-	public void run() {
-		while(mPending.size() > 0)
-		{
-			if (mStop) {
-				mStop = false;
-				//mPending = null;
-				return;
-			}
-			
-			ThumbnailStruct next = mPending.get(0);
-			mThumb = generateThumb(next.File, next.Width, next.Height);
-			sendThumbBack(mThumb, next.File.getPath());
-		}
 	}
 	
 	private static String getCacheFilename(String path, int w, int h)
@@ -278,7 +241,7 @@ public class ThumbnailCreator extends Thread {
 		String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
 		
 		//we already loaded this thumbnail, just return it.
-		if (mCacheMap.containsKey(mCacheFilename)) 
+		if (mCacheMap.get(mCacheFilename) != null) 
 			return new SoftReference<Bitmap>(mCacheMap.get(mCacheFilename));
 		if(readCache && bmp == null)
 			bmp = loadThumbnail(mCacheFilename);
@@ -497,7 +460,7 @@ public class ThumbnailCreator extends Thread {
 
 	public static void flushCache() {
 		Logger.LogInfo("Flushing" + mCacheMap.size() + " from memory & " + mContext.fileList().length + " from disk.");
-		mCacheMap.clear();
+		mCacheMap.evictAll();
 		for(String s : mContext.fileList())
 			mContext.deleteFile(s);
 	}

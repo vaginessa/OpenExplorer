@@ -22,7 +22,6 @@ import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.SettingsActivity;
 import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenClipboard;
@@ -47,7 +46,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -67,7 +65,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
@@ -130,7 +127,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mPath = mLastPath = path;
 	}
 	
-	private int getViewMode() { return ((OpenExplorer)getActivity()).getViewMode(); }
+	private int getViewMode() { return getExplorer().getViewMode(); }
 	
 	//@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -144,7 +141,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mContext = getActivity().getApplicationContext();
 		
-		OpenExplorer explorer = ((OpenExplorer)getActivity());
+		OpenExplorer explorer = getExplorer();
 		mFileManager = explorer.getFileManager();
 		if(mFileManager == null)
 		{
@@ -180,7 +177,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mActionModeSelected = false;
 		try {
-			mShowThumbnails = ((OpenExplorer)getActivity()).getPreferences()
+			mShowThumbnails = getExplorer().getPreferences()
 								.getSetting(mPath.getPath(), SettingsActivity.PREF_THUMB_KEY, true);
 		} catch(NullPointerException npe) {
 			mShowThumbnails = true;
@@ -429,19 +426,21 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	
 	private OpenClipboard getClipboard() {
-		return ((OpenExplorer)getActivity()).getClipboard();
+		return getExplorer().getClipboard();
 	}
 	private void addHoldingFile(OpenPath path) {
-		((OpenExplorer)getActivity()).addHoldingFile(path);
+		getExplorer().addHoldingFile(path);
 	}
-	private void clearHoldingFiles() { ((OpenExplorer)getActivity()).clearHoldingFiles(); }
+	private void clearHoldingFiles() { getExplorer().clearHoldingFiles(); }
 	private boolean isHoldingFiles() { return getClipboard().size() > 0; }
 	
 	private void finishMode(Object mode)
 	{
-		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null)
+		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null && mode instanceof ActionMode)
 			((ActionMode)mode).finish();
 	}
+	
+	public EventHandler getEventHandler() { return getExplorer().getEventHandler(); }
 	
 	public boolean executeMenu(final int id, OpenPath file)
 	{
@@ -463,7 +462,19 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		final OpenPath[] fileArray = new OpenPath[fileList.size()];
 		fileList.toArray(fileArray);
 		
-		switch(id) {
+		switch(id)
+		{
+			case R.id.menu_context_view:
+				IntentManager.startIntent(file, getExplorer());
+				break;
+			case R.id.menu_context_edit:
+				Intent intent = IntentManager.getIntent(file, getExplorer());
+				if(intent != null)
+				{
+					intent.setAction(Intent.ACTION_EDIT);
+					startActivity(intent);
+				}
+				break;
 			case R.id.menu_context_multi:
 				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
 				addHoldingFile(file);
@@ -475,7 +486,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(mBookmarkList != null)
 					mBookmarkList.onBookMarkAdd(file);
 				else
-					((OpenExplorer)getActivity()).addBookmark(file);
+					getExplorer().addBookmark(file);
 				finishMode(mode);
 				return true;
 				
@@ -503,7 +514,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 			case R.id.menu_context_paste:
 			case R.id.menu_paste:
-				OpenPath into = id == R.id.menu_paste || !file.isDirectory() ? folder : file;
+				OpenPath into = file;
+				if(!file.isDirectory())
+				{
+					Logger.LogWarning("Can't paste into file (" + file.getPath() + "). Using parent directory (" + folder.getPath() + ")");
+					into = folder;
+				}
 				OpenClipboard cb = getClipboard();
 				if(cb.size() > 0)
 					if(cb.DeleteSource)
@@ -514,7 +530,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				cb.DeleteSource = false;
 				if(cb.ClearAfter)
 					clearHoldingFiles();
-				((OpenExplorer)getActivity()).updateTitle(path);
+				getExplorer().updateTitle(path);
 				finishMode(mode);
 				return true;
 				
@@ -548,11 +564,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mHandler.unZipFileTo(getClipboard().get(0), file, getActivity());
 				
 				clearHoldingFiles();
-				((OpenExplorer)getActivity()).updateTitle("");
+				getExplorer().updateTitle("");
 				return true;
 			
 			case R.id.menu_context_info:
-				((OpenExplorer)getActivity()).showFileInfo(file);
+				getExplorer().showFileInfo(file);
 				finishMode(mode);
 				return true;
 				
@@ -586,13 +602,18 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
 		new MenuInflater(mContext).inflate(R.menu.context_file, menu);
 		menu.findItem(R.id.menu_context_paste).setEnabled(isHoldingFiles());
+		if(!mLastPath.isFile() || !IntentManager.isIntentAvailable(mLastPath, getExplorer()))
+		{
+			menu.findItem(R.id.menu_context_edit).setVisible(false);
+			menu.findItem(R.id.menu_context_view).setVisible(false);
+		}
 	}
 	
 	//@Override
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		final OpenPath file = (OpenPath)list.getItemAtPosition(pos);
 		
-		//((OpenExplorer)getActivity()).hideBookmarkTitles();
+		//getExplorer().hideBookmarkTitles();
 		
 		if(mMultiSelectOn) {
 			View v;
@@ -625,18 +646,18 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			
 			//setContentPath(file, true);
-			((OpenExplorer)getActivity()).onChangeLocation(file);
+			getExplorer().onChangeLocation(file);
 
 		} else if (!file.isDirectory() && !mActionModeSelected ) {
 			
 			if(file.requiresThread())
 			{
 				/// TODO: handle networked files
-				((OpenExplorer)getActivity()).showToast("Still need to handle this.");
+				getExplorer().showToast("Still need to handle this.");
 				return;
 			}
 			
-			IntentManager.startIntent(file, (OpenExplorer)getActivity(), mHandler);
+			IntentManager.startIntent(file, getExplorer(), true);
 		}
 	}
 	
@@ -707,11 +728,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			String name = new OpenFile(results.get(0)).getName();
 			
 			addHoldingFile(new OpenFile(results.get(0)));
-			((OpenExplorer)getActivity()).updateTitle("Holding " + name);
+			getExplorer().updateTitle("Holding " + name);
 			
 		} else {
 			Logger.LogDebug("Worker thread complete?");
-			mContentAdapter.notifyDataSetChanged();
+			updateData(mPath.list());
+			//changePath(mPath, false);
+			//mContentAdapter.notifyDataSetChanged();
 			//changePath(mFileManager.peekStack(), false);
 		}
 	}
@@ -720,7 +743,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void changePath(OpenPath path, Boolean addToStack) {
 		if(path == null)
 			path = new OpenFile(Environment.getExternalStorageDirectory());
-		((OpenExplorer)getActivity()).changePath(path, addToStack);
+		getExplorer().changePath(path, addToStack);
 	}
 	
 	//@Override
@@ -752,7 +775,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public void onViewChanged(int state) {
 		//mViewMode = state;
-		((OpenExplorer)getActivity()).setViewMode(state);
+		getExplorer().setViewMode(state);
 		
 		View v = getView();
 		if(v != null)
@@ -792,22 +815,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mBookmarkList = bookmarkFragment;
 	}
 	
-	/*
-	 * This is a convience function so our applications main activity
-	 * (MainActivity.java) class can have access to our event handler
-	 * and perform file operations such as delete, rename etc. 
-	 * Event handler sits between our view and modal (FileManager)
-	 */
-	public EventHandler getEventHandlerInst() {
-		return ((OpenExplorer)getActivity()).getEventHandler();
-	}
-	
-	/*
-	 * See comments for getEventHandlerInst(). Same reasoning.
-	 */
-	public FileManager getFileManagerInst() {
-		return ((OpenExplorer)getActivity()).getFileManager();
-	}
 	
 	/**
 	 * 
@@ -826,14 +833,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mThumbnail = new ThumbnailCreator(mContext, handler);
 		}
 		
-		@Override protected void finalize() throws Throwable { mThumbnail.setCancelThumbnails(true); };
-		
 		@Override
 		public void notifyDataSetChanged() {
 			//Logger.LogDebug("Data set changed.");
 			try {
 				//if(mFileManager != null)
-				//	((OpenExplorer)getActivity()).updateTitle(mFileManager.peekStack().getPath());
+				//	getExplorer().updateTitle(mFileManager.peekStack().getPath());
 				super.notifyDataSetChanged();
 			} catch(NullPointerException npe) {
 				Logger.LogError("Null found while notifying data change.", npe);

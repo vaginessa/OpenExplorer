@@ -69,7 +69,7 @@ public class CarouselFragment extends OpenFragment {
 
 		@Override
 		public void onCardSelected(final int id) {
-			IntentManager.startIntent(mPathItems[id], (OpenExplorer)getActivity(), ((OpenExplorer)getActivity()).getEventHandler());
+			IntentManager.startIntent(mPathItems[id], (OpenExplorer)getActivity());
 			//postMessage("Selection", "Card " + id + " was selected");
 		}
 

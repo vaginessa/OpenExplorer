@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.fragments;
 
+import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.utils.Logger;
 
 import android.os.Bundle;
@@ -17,6 +18,8 @@ public class OpenFragment extends Fragment
 	{
 		return this.getClass().getSimpleName();
 	}
+	
+	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
 	
 	/*
 	@Override

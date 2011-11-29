@@ -145,16 +145,20 @@ public class OpenExplorer
         
         ThumbnailCreator.setContext(this);
 
-        if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
-		{
-			showToast("Welcome, GoogleTV user!");
-			getPreferences().setSetting("global", "welcome", true);
-			//getActionBar().hide();
-		} // else
+        try {
+	        if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
+			{
+				showToast("Welcome, GoogleTV user!");
+				getPreferences().setSetting("global", "welcome", true);
+				//getActionBar().hide();
+			} // else
+        } catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
         
-        if(getPreferences().getSetting("global", "root", false) ||
-        		Preferences.getPreferences(getApplicationContext(), "global").getBoolean("root", false))
-        	RootManager.Default.requestRoot();
+        try {
+	        if(getPreferences().getSetting("global", "root", false) ||
+	        		Preferences.getPreferences(getApplicationContext(), "global").getBoolean("root", false))
+	        	RootManager.Default.requestRoot();
+        } catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
         
         if(!BEFORE_HONEYCOMB)
         {
@@ -353,11 +357,13 @@ public class OpenExplorer
     public OpenClipboard getClipboard() { return mHeldFiles; }
     public void addHoldingFile(OpenPath path) { 
     	mHeldFiles.add(path);
-    	invalidateOptionsMenu();
+    	if(!BEFORE_HONEYCOMB)
+    		invalidateOptionsMenu();
     }
     public void clearHoldingFiles() {
     	mHeldFiles.clear();
-    	invalidateOptionsMenu();
+    	if(!BEFORE_HONEYCOMB)
+    		invalidateOptionsMenu();
     }
     
     public OpenCursor getPhotoParent() { if(mPhotoParent == null) refreshCursors(); return mPhotoParent; }
@@ -623,6 +629,7 @@ public class OpenExplorer
     	
     	((TextView)view.findViewById(R.id.about_version)).setText(sVersionInfo);
     	AlertDialog mDlgAbout = new AlertDialog.Builder(this)
+    		.setTitle(R.string.app_name)
     		.setView(view)
     		.create();
     	
@@ -691,22 +698,12 @@ public class OpenExplorer
     	{
     		case R.id.title_icon:
 	    	case android.R.id.home:
-	    		if (mHeldFiles.size() > 0) {
-	    			//DialogFragment df = 
-	    			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.DialogType.HOLDINGFILE_DIALOG, this);
-	    			dialog.setHoldingFileList(mHeldFiles);
-	    			
-	    			FragmentTransaction trans = fragmentManager.beginTransaction();
-	    			trans.replace(R.id.content_frag, dialog, "dialog");
-	    			//dialog.show(getFragmentManager(), "dialog");
-	    			trans.addToBackStack("dialog");
-	    			trans.commit();
-	    		} else {
-	    			if(mSinglePane)
-	    				toggleBookmarks();
-	    			else
-	    				goHome();
-	    		}
+    		
+    			if(mSinglePane)
+    				toggleBookmarks();
+    			else
+    				goHome();
+
 	    		return true;
 	    	
 	    	case R.id.menu_new_folder:
@@ -1239,8 +1236,12 @@ public class OpenExplorer
 			do {
 				s = reader.readLine();
 				if(s == null) break;
-				if(s.indexOf("New volume - Label:[") > -1 || s.indexOf(check) > -1)
-					last = s.substring(s.indexOf("[") + 1, s.indexOf("]"));
+				if(s.indexOf("New volume - Label:[") > -1 && s.indexOf(check) > -1)
+				{
+					last = s.substring(s.indexOf("[") + 1);
+					if(last.indexOf("]") > -1)
+						last = last.substring(0, last.indexOf("]"));
+				}
 			} while(s != null);
 			if(last == null) throw new IOException("Couldn't find volume label.");
 			sPath2 = last;

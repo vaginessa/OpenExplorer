@@ -9,7 +9,7 @@ public class Logger
 {
 	private static String[] sLastMessage = new String[] {"", "", "", "", ""};
 	private static Integer[] iLastCount = new Integer[] {0,0,0,0,0};
-	public final static Boolean LoggingEnabled = true;
+	public final static Boolean LoggingEnabled = false;
 	public static final Integer MIN_DB_LEVEL = Log.ERROR;
 	private static final String LOG_KEY = "OpenExplorer";
 	private static LoggerDbAdapter dbLog;
