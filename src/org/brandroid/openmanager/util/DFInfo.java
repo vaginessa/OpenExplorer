@@ -84,7 +84,7 @@ public class DFInfo
 				sl = sl.replaceAll("  *", " ");
 				//Logger.LogInfo("DF: " + sl);
 				if(!sl.startsWith("/")) continue;
-				if(sl.indexOf("/mnt") == -1) continue;
+				if(sl.indexOf("/mnt") == -1 && sl.indexOf("/Removeable")==-1) continue;
 				if(sl.indexOf("/asec") > -1) continue;
 				if(sl.indexOf("/obb") > -1) continue;
 				try {

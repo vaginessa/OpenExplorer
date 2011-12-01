@@ -68,6 +68,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -140,6 +141,10 @@ public class OpenExplorer
     	
     	if(BEFORE_HONEYCOMB)
     		requestWindowFeature(Window.FEATURE_NO_TITLE);
+    	else {
+	        requestWindowFeature(Window.FEATURE_ACTION_BAR);
+    	}
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         setContentView(R.layout.main_fragments);
         
@@ -231,11 +236,11 @@ public class OpenExplorer
 
         if(Build.VERSION.SDK_INT > 11 && savedInstanceState == null)
         {
-        	if(mVideoParent.length() > 1)
+        	if(mVideoParent != null && mVideoParent.length() > 1)
         	{
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mVideoParent;
-        	} else if (mPhotoParent.length() > 1) {
+        	} else if (mPhotoParent != null && mPhotoParent.length() > 1) {
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mPhotoParent;
         	} else mViewMode = VIEW_LIST;
@@ -375,8 +380,9 @@ public class OpenExplorer
     	if(mPhotoParent == null)
     	{
     		try {
+    			Logger.LogInfo("External content Uri: " + MediaStore.getMediaScannerUri());
     			CursorLoader loader = new CursorLoader(getApplicationContext(),
-						MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    					Uri.parse("content://media/external/images/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Images.Media.SIZE + " > 10000", null,
 						MediaStore.Images.Media.DATE_ADDED + " DESC");
@@ -389,7 +395,7 @@ public class OpenExplorer
     	{
 			try {
 				CursorLoader loader = new CursorLoader(getApplicationContext(),
-						MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+						Uri.parse("content://media/external/video/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Video.Media.SIZE + " > 100000", null,
 						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
@@ -403,7 +409,7 @@ public class OpenExplorer
 		{
 			try {
 				CursorLoader loader = new CursorLoader(getApplicationContext(),
-						MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+						Uri.parse("content://media/external/audio/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Audio.Media.SIZE + " > 10000", null,
 						MediaStore.Audio.Media.DATE_ADDED + " DESC");

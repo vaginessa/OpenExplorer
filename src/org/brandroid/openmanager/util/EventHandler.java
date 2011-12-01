@@ -448,6 +448,7 @@ public class EventHandler {
 					searchDirectory(mIntoPath, mInitParams[0], mSearchResults);
 					break;
 				case COPY_TYPE:
+					/// TODO: Add existing file check 
 					for(OpenPath file : params)
 					{
 						try {

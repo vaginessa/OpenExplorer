@@ -87,7 +87,7 @@ public class ThumbnailCreator extends Thread {
 				mImage.setImageResource(R.drawable.movie);
 			else if(mName.equals("Music"))
 				mImage.setImageResource(R.drawable.music);
-			else if(sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1)
+			else if(sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1)
 				mImage.setImageResource(R.drawable.sdcard);
 			else if(sPath2.indexOf("usb") > -1 || sPath2.indexOf("removeable") > -1)
 				mImage.setImageResource(R.drawable.usb);

@@ -113,6 +113,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 			mHasExternal = true;
 		if(checkAndAdd(new OpenFile("/mnt/sdcard-ext")))
 			mHasExternal = true;
+		if(checkAndAdd(new OpenFile("/Removable/MicroSD")))
+			mHasExternal = true;
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
 		for(String sItem : df.keySet())
 		{
