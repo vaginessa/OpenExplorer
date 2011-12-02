@@ -748,7 +748,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	//@Override
 	public void onHiddenFilesChanged(boolean state) {
-		mFileManager.setShowHiddenFiles(state);
+		if(mFileManager != null)
+			mFileManager.setShowHiddenFiles(state);
 		refreshData(null);
 	}
 
@@ -873,6 +874,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mHolder = new BookmarkHolder(file, mName, view);
 				
 				view.setTag(mHolder);
+				file.setTag(mHolder);
 				
 			} else {
 				mHolder = (BookmarkHolder)view.getTag();

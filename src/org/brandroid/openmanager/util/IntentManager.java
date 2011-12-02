@@ -20,6 +20,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,7 +32,7 @@ import android.widget.Toast;
 
 public class IntentManager
 {
-	public static Intent getIntent(OpenPath file, OpenExplorer activity)
+	public static Intent getIntent(OpenPath file, Context activity)
 	{
 		String name = file.getName();
 		final String ext = name.substring(name.lastIndexOf(".") + 1).toLowerCase();
@@ -112,12 +114,12 @@ public class IntentManager
     	}
 		
 		/* text file*/
-    	else //if(ext.equalsIgnoreCase("txt")) {
+    	else if(ext.equalsIgnoreCase("txt"))
     	{
     		Boolean bUseIntent = false;
-    		if(!bUseIntent)
+    		if(!bUseIntent && activity.getClass().equals(OpenExplorer.class))
     		{
-    			activity.editFile(file);
+    			((OpenExplorer)activity).editFile(file);
     			return null;
     		} else {
     			ret.setDataAndType(file.getUri(), "text/plain");
@@ -140,8 +142,8 @@ public class IntentManager
 		return ret;
 	}
 
-	public static boolean startIntent(OpenPath file, OpenExplorer activity) { return startIntent(file, activity, false); } 
-	public static boolean startIntent(final OpenPath file, final OpenExplorer activity, boolean bInnerChooser)
+	public static boolean startIntent(OpenPath file, Context activity) { return startIntent(file, activity, false); } 
+	public static boolean startIntent(final OpenPath file, final Context activity, boolean bInnerChooser)
 	{
 		if(!isIntentAvailable(file, activity))
 		{
@@ -195,11 +197,38 @@ public class IntentManager
 		return false;
 	}
 	
-	public static boolean isIntentAvailable(OpenPath file, OpenExplorer activity)
+	public static boolean isIntentAvailable(OpenPath file, Context activity)
 	{
 		Intent toCheck = getIntent(file, activity);
 		if(toCheck == null) return false;
 		return activity.getPackageManager().queryIntentActivities(toCheck, PackageManager.MATCH_DEFAULT_ONLY).size() > 0;
+	}
+
+	public static ResolveInfo getResolveInfo(final OpenPath file, final Context activity)
+	{
+		return getResolveInfo(getIntent(file, activity), activity);
+	}
+	public static ResolveInfo getResolveInfo(Intent toCheck, final Context activity)
+	{
+		if(toCheck == null) return null;
+		List<ResolveInfo> lResolves = activity.getPackageManager().queryIntentActivities(toCheck, PackageManager.MATCH_DEFAULT_ONLY);
+		if(lResolves.size() > 0)
+			return lResolves.get(0);
+		return null;
+	}
+	
+	public static Drawable getDefaultIcon(final OpenPath file, final Context activity)
+	{
+		ResolveInfo info = getResolveInfo(file, activity);
+		if(info == null) return null;
+		return info.loadIcon(activity.getPackageManager());
+	}
+	
+	public static Drawable getDefaultIcon(final Intent intent, final Context activity)
+	{
+		ResolveInfo info = getResolveInfo(intent, activity);
+		if(info == null) return null;
+		return info.loadIcon(activity.getPackageManager());
 	}
 	
 

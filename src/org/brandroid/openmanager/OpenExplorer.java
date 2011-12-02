@@ -228,7 +228,7 @@ public class OpenExplorer
         
         Logger.LogDebug("Creating with " + path.getPath());
 
-        if(!mSinglePane)
+        if(!mSinglePane && mFavoritesFragment != null)
         {
         	fragmentManager.beginTransaction()
         		.replace(R.id.list_frag, mFavoritesFragment)
@@ -425,7 +425,10 @@ public class OpenExplorer
 						MediaStore.Images.Media.DATE_ADDED + " DESC");
     			Cursor c = loader.loadInBackground();
     			if(c != null)
+    			{
     				mPhotoParent = new OpenCursor(c, "Photos");
+    				c.close();
+    			}
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
 		if(mVideoParent == null)
@@ -439,7 +442,10 @@ public class OpenExplorer
 						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
 				Cursor c = loader.loadInBackground();
     			if(c != null)
+    			{
     				mVideoParent = new OpenCursor(c, "Videos");
+    				c.close();
+    			}
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
     	}
 		if(mMusicParent == null)
@@ -452,7 +458,10 @@ public class OpenExplorer
 						MediaStore.Audio.Media.DATE_ADDED + " DESC");
 				Cursor c = loader.loadInBackground();
     			if(c != null)
+    			{
     				mMusicParent = new OpenCursor(c, "Music");
+    				c.close();
+    			}
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query music.", e); }
 		}
 		if(mApkParent == null && Build.VERSION.SDK_INT > 10)
@@ -465,7 +474,10 @@ public class OpenExplorer
 						"date modified DESC");
 				Cursor c = loader.loadInBackground();
 				if(c != null)
+				{
 					mApkParent = new OpenCursor(c, "Apps");
+					c.close();
+				}
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Apks.", e); }
 		}
 		//Cursor mAudioCursor = managedQuery(MediaStore.Audio, projection, selection, selectionArgs, sortOrder)

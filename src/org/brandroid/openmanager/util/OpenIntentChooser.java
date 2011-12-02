@@ -2,7 +2,6 @@ package org.brandroid.openmanager.util;
 
 import java.util.List;
 
-import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenPath;
@@ -30,7 +29,7 @@ public class OpenIntentChooser
 		void onIntentSelected(ResolveInfo item);
 	}
 
-	public OpenIntentChooser(final OpenExplorer activity, final OpenPath file)
+	public OpenIntentChooser(final Context activity, final OpenPath file)
 	{
 		mListResolves = activity.getPackageManager().queryIntentActivities(
 				IntentManager.getIntent(file, activity),

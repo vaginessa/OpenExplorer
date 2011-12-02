@@ -24,9 +24,11 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -156,7 +158,13 @@ public class ThumbnailCreator extends Thread {
 						  ext.equalsIgnoreCase("m4v")) {
 						mImage.setImageResource(R.drawable.movie);
 					} else if(ext.equals("apk")) {
-						mImage.setImageResource(R.drawable.apk);
+						Drawable d = IntentManager.getDefaultIcon(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=org.brandroid.openmanager")), mContext);
+						if(d != null)
+							ThumbnailCreator.putThumbnailCache("apk", ((BitmapDrawable)d).getBitmap());
+						if(mCacheMap.containsKey("apk"))
+							mImage.setImageBitmap(mCacheMap.get("apk"));
+						else
+							mImage.setImageResource(R.drawable.apk);
 					} else {
 						mImage.setImageResource(R.drawable.photo);
 					}
@@ -164,12 +172,13 @@ public class ThumbnailCreator extends Thread {
 					//file.setTag(mHolder);
 					
 					ThumbnailTask task = new ThumbnailTask();
+					BookmarkHolder mHolder = null;
 					if(file.getTag() != null && file.getTag().getClass().equals(BookmarkHolder.class))
 					{
-						BookmarkHolder mHolder = ((BookmarkHolder)file.getTag());
+						mHolder = ((BookmarkHolder)file.getTag());
 						mHolder.setTask(task);
-						task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 					}
+					task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 				}
 				if(thumb != null)
 				{
@@ -178,16 +187,6 @@ public class ThumbnailCreator extends Thread {
 					mImage.setImageDrawable(bd);
 				}
 			
-			} else if(ext.equalsIgnoreCase("mp4") || 
-				  ext.equalsIgnoreCase("3gp") || 
-				  ext.equalsIgnoreCase("avi") ||
-				  ext.equalsIgnoreCase("webm") || 
-				  ext.equalsIgnoreCase("m4v")) {
-				mImage.setImageResource(R.drawable.movie);
-			} else if(ext.equals("apk")) {
-				mImage.setImageResource(R.drawable.apk);
-			} else {
-				mImage.setImageResource(R.drawable.photo);
 			}
 			
 		} else if(file.getPath() != null && file.getPath().indexOf("ftp:/") > -1) {
@@ -219,6 +218,11 @@ public class ThumbnailCreator extends Thread {
 				return BitmapFactory.decodeFile(f.getPath());
 		}
 		return null;
+	}
+	private static void putThumbnailCache(String cacheName, Bitmap value)
+	{
+		//String cacheName = getCacheFilename(name, w, h);
+		mCacheMap.put(cacheName, value);
 	}
 	
 	private static String getCacheFilename(String path, int w, int h)

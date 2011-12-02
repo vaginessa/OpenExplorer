@@ -2,9 +2,9 @@ package org.brandroid.openmanager.util;
 
 import java.util.List;
 
-import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.BitmapDrawable;
@@ -19,10 +19,10 @@ import android.widget.TextView;
 
 public class OpenIntentAdapter extends BaseAdapter
 {
-	private OpenExplorer mExplorer;
+	private android.content.Context mExplorer;
 	private List<ResolveInfo> mData;
 	
-	public OpenIntentAdapter(OpenExplorer explorer, List<ResolveInfo> queriedIntents)
+	public OpenIntentAdapter(Context explorer, List<ResolveInfo> queriedIntents)
 	{
 		mExplorer = explorer;
 		mData = queriedIntents;

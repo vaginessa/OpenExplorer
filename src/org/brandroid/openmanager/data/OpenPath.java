@@ -72,28 +72,38 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		String b = fb.getName();
 		Long sa = fa.length();
 		Long sb = fb.length();
-		switch(Sorting)
+		if(a == null && b != null)
+			return 1;
+		if(a == null || b == null)
+			return 0;
+		try {
+			switch(Sorting)
+			{
+				case ALPHA_DESC:
+					return b.toLowerCase().compareTo(a.toLowerCase());
+				case ALPHA:
+					return a.toLowerCase().compareTo(b.toLowerCase());
+				case SIZE_DESC:
+					return sb.compareTo(sa);
+				case SIZE:
+					return sa.compareTo(sb);
+				case DATE_DESC:
+					return fb.lastModified().compareTo(fa.lastModified());
+				case DATE:
+					return fa.lastModified().compareTo(fb.lastModified());
+				case TYPE:
+					String ea = a.substring(a.lastIndexOf(".") + 1, a.length()).toLowerCase();
+					String eb = b.substring(b.lastIndexOf(".") + 1, b.length()).toLowerCase();
+					return ea.compareTo(eb);
+				case NONE:
+					return 0;
+				default:
+					return a.toLowerCase().compareTo(b.toLowerCase());
+			}
+		} catch(Exception e)
 		{
-			case ALPHA_DESC:
-				return b.toLowerCase().compareTo(a.toLowerCase());
-			case ALPHA:
-				return a.toLowerCase().compareTo(b.toLowerCase());
-			case SIZE_DESC:
-				return sb.compareTo(sa);
-			case SIZE:
-				return sa.compareTo(sb);
-			case DATE_DESC:
-				return fb.lastModified().compareTo(fa.lastModified());
-			case DATE:
-				return fa.lastModified().compareTo(fb.lastModified());
-			case TYPE:
-				String ea = a.substring(a.lastIndexOf(".") + 1, a.length()).toLowerCase();
-				String eb = b.substring(b.lastIndexOf(".") + 1, b.length()).toLowerCase();
-				return ea.compareTo(eb);
-			case NONE:
-				return 0;
-			default:
-				return a.toLowerCase().compareTo(b.toLowerCase());
+			Logger.LogError("Unable to sort.", e);
+			return 0;
 		}
 	}
 	
