@@ -54,7 +54,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 
 public class ThumbnailCreator extends Thread {
-	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>();
+	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>(200);
 	private Handler mHandler;
 	
 	private static Context mContext;
@@ -459,8 +459,8 @@ public class ThumbnailCreator extends Thread {
 	}
 
 	public static void flushCache() {
-		Logger.LogInfo("Flushing" + mCacheMap.size() + " from memory & " + mContext.fileList().length + " from disk.");
-		mCacheMap.evictAll();
+		//Logger.LogInfo("Flushing" + mCacheMap.size() + " from memory & " + mContext.fileList().length + " from disk.");
+		mCacheMap.clear();
 		for(String s : mContext.fileList())
 			mContext.deleteFile(s);
 	}
