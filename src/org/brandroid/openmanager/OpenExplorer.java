@@ -34,6 +34,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -121,6 +122,7 @@ public class OpenExplorer
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
+	private Handler mHandler = new Handler();  // handler for the main thread
 	private int mViewMode = VIEW_LIST;
 	
 	private Fragment mFavoritesFragment;
@@ -144,7 +146,7 @@ public class OpenExplorer
     	else {
 	        requestWindowFeature(Window.FEATURE_ACTION_BAR);
     	}
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         setContentView(R.layout.main_fragments);
         
@@ -174,7 +176,7 @@ public class OpenExplorer
         	ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
         	if(mTitleStub != null)
         		mTitleStub.inflate();
-        	setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu);
+        	setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text);
         }
         
         if(findViewById(R.id.list_frag) == null)
@@ -335,8 +337,23 @@ public class OpenExplorer
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
 		filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
-		filter.addDataScheme("file");
+        filter.addAction(Intent.ACTION_MEDIA_SCANNER_STARTED);
+        filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
+        filter.addAction(Intent.ACTION_MEDIA_EJECT);
+        filter.addDataScheme("file");
 		registerReceiver(storageReceiver, filter);
+		
+		ContentObserver mDbObserver = new ContentObserver(mHandler) {
+            @Override
+            public void onChange(boolean selfChange) {
+                //rebake(false, ImageManager.isMediaScannerScanning(
+                 //       getContentResolver()));
+            }
+		};
+		
+		getContentResolver().registerContentObserver(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                true, mDbObserver);
     }
     
     @Override
@@ -359,16 +376,36 @@ public class OpenExplorer
     		unregisterReceiver(storageReceiver);
     }
     
-    public OpenClipboard getClipboard() { return mHeldFiles; }
+    public OpenClipboard getClipboard() {
+    	return mHeldFiles;
+    }
+    public void updateClipboard()
+    {
+    	if(BEFORE_HONEYCOMB)
+    	{
+    		View paste_view = findViewById(R.id.title_paste);
+    		if(paste_view != null)
+    		{
+    			TextView paste_text = (TextView)findViewById(R.id.title_paste_text);
+	    		if(mHeldFiles.size() > 0)
+		    	{
+		    		paste_view.setVisibility(View.VISIBLE);
+		    		paste_text.setText("("+mHeldFiles.size()+")");
+		    	} else paste_view.setVisibility(View.GONE);
+    		}
+    	}
+    }
     public void addHoldingFile(OpenPath path) { 
     	mHeldFiles.add(path);
     	if(!BEFORE_HONEYCOMB)
     		invalidateOptionsMenu();
+    	updateClipboard();
     }
     public void clearHoldingFiles() {
     	mHeldFiles.clear();
     	if(!BEFORE_HONEYCOMB)
     		invalidateOptionsMenu();
+    	updateClipboard();
     }
     
     public OpenCursor getPhotoParent() { if(mPhotoParent == null) refreshCursors(); return mPhotoParent; }
@@ -835,6 +872,9 @@ public class OpenExplorer
 	    		showMenu();
 	    		return true;
 	    		
+	    	case R.id.title_paste:
+	    	case R.id.title_paste_icon:
+	    	case R.id.title_paste_text:
 	    	case R.id.menu_paste:
 	    		getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
 	    		return true;
