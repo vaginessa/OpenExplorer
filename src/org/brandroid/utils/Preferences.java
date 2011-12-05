@@ -75,7 +75,10 @@ public class Preferences {
 			String ret = getPreferences(file).getString(key, defValue);
 			//Logger.LogInfo("Pref GET [" + file + ":" + key + "] = " + ret);
 			return ret;
-		} catch(ClassCastException cce) { Logger.LogError("Couldn't get string \"" + key + "\" from Prefs.", cce); return defValue; }
+		} catch(ClassCastException cce) {
+			Logger.LogWarning("Couldn't get string \"" + key + "\" from Prefs.", cce);
+			return defValue;
+		}
 		catch(NullPointerException npe) { return defValue; }
 	}
 	public int getSetting(String file, String key, Integer defValue)
@@ -99,11 +102,17 @@ public class Preferences {
 	public Boolean getSetting(String file, String key, Boolean defValue)
 	{
 		try {
-			String s = getSetting(file, key, defValue.toString());
-			return Boolean.parseBoolean(s);
-		} catch(Exception e) {
-			Logger.LogError("Error getting setting [" + key + "] from " + file, e);
-			return defValue;
+			Boolean b = getPreferences(file).getBoolean(key, defValue);
+			return b;
+		} catch(Exception e)
+		{
+			try {
+				String s = getSetting(file, key, defValue.toString());
+				return Boolean.parseBoolean(s);
+			} catch(Exception e2) {
+				Logger.LogError("Error getting setting [" + key + "] from " + file, e2);
+				return defValue;
+			}
 		}
 	}
 	public Long getSetting(String file, String key, Long defValue)
@@ -146,14 +155,19 @@ public class Preferences {
 		try {
 			//Logger.LogDebug("Setting " + key + " to " + value);
 			SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
-			editor.putString(key, value.toString());
+			editor.putString(key, value);
 			//editor.putString(key, value);
 			editor.commit();
 		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
 	}
 	public void setSetting(String file, String key, Boolean value)
 	{
-		setSetting(file, key, value.toString());
+		try {
+			getPreferences(mContext, file)
+				.edit()
+				.putBoolean(key, value)
+				.commit();
+		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
 	}
 	public void setSetting(String file, String key, Integer value)
 	{

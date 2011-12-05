@@ -25,26 +25,18 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -62,21 +54,21 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.View.OnClickListener;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.zip.GZIPOutputStream;
 
-import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -87,24 +79,26 @@ import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.OpenFragmentActivity;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager.SortType;
-import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.Preferences;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class OpenExplorer
-		extends FragmentActivity
-		implements OnBackStackChangedListener, OnClickListener, OnLongClickListener
+		extends OpenFragmentActivity
+		implements OnBackStackChangedListener
 	{	
 
 	private static final int PREF_CODE =		0x6;
@@ -147,6 +141,16 @@ public class OpenExplorer
 	        requestWindowFeature(Window.FEATURE_ACTION_BAR);
     	}
         //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+    	
+    	if(Logger.isLoggingEnabled())
+    	{
+    		if(getPreferences().getBoolean("0_global", "pref_stats", true))
+    		{
+    			if(!Logger.hasDb())
+    				Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
+    		} else
+    			Logger.setLoggingEnabled(false);
+    	}
         
         setContentView(R.layout.main_fragments);
         
@@ -162,8 +166,8 @@ public class OpenExplorer
         } catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
         
         try {
-	        if(getPreferences().getSetting("global", "root", false) ||
-	        		Preferences.getPreferences(getApplicationContext(), "global").getBoolean("root", false))
+	        if(getPreferences().getSetting("0_global", "pref_root", false) ||
+	        		Preferences.getPreferences(getApplicationContext(), "0_global").getBoolean("pref_root", false))
 	        	RootManager.Default.requestRoot();
         } catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
         
@@ -283,6 +287,69 @@ public class OpenExplorer
 
     }
     
+    @Override
+    protected void onStart() {
+    	if(Logger.isLoggingEnabled())
+    	{
+    		if(getPreferences().getBoolean("0_global", "pref_stats", true))
+    		{
+    			if(!Logger.hasDb())
+    				Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
+    		} else
+    			Logger.setLoggingEnabled(false);
+    	}
+
+    	super.onStart();
+    }
+    
+    @Override
+    protected void onStop() {
+    	if(Logger.isLoggingEnabled() && Logger.hasDb())
+    	{
+			submitStats();
+			Logger.closeDb();
+    	}
+    	super.onStop();
+    }
+    
+    private JSONObject getDeviceInfo()
+    {
+    	JSONObject ret = new JSONObject();
+    	try {
+			ret.put("SDK", Build.VERSION.SDK_INT);
+			ret.put("Language", Locale.getDefault().getDisplayLanguage());
+			ret.put("Country", Locale.getDefault().getDisplayCountry());
+			ret.put("Brand", Build.BRAND);
+			ret.put("Manufacturer", Build.MANUFACTURER);
+			ret.put("Model", Build.MODEL);
+			ret.put("Product", Build.PRODUCT);
+			ret.put("Board", Build.BOARD);
+			ret.put("Tags", Build.TAGS);
+			ret.put("Type", Build.TYPE);
+			ret.put("Bootloader", Build.BOOTLOADER);
+			ret.put("Hardware", Build.HARDWARE);
+			ret.put("User", Build.USER);
+			if(Build.UNKNOWN != null)
+				ret.put("Unknown", Build.UNKNOWN);
+			ret.put("Display", Build.DISPLAY);
+			ret.put("Fingerprint", Build.FINGERPRINT);
+			ret.put("ID", Build.ID);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return ret;
+    }
+    
+    private void submitStats()
+    {
+		final String logs = Logger.getDbLogs(false);
+		if(logs != null && logs != "") {
+			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
+			new SubmitStatsTask().execute(logs);
+		} else Logger.LogWarning("Logs not found.");
+    }
+    
     public Preferences getPreferences() {
     	if(mPreferences == null)
     		mPreferences = new Preferences(getApplicationContext());
@@ -304,7 +371,7 @@ public class OpenExplorer
 					StatFs sf = new StatFs(path);
 					if(sf.getBlockCount() == 0)
 						throw new Exception("No blocks");
-					//showToast("New USB! " + getVolumeName(path) + " @ " + DialogHandler.formatSize((long)sf.getBlockSize() * (long)sf.getAvailableBlocks()));
+					showToast("New USB! " + getVolumeName(path) + " @ " + DialogHandler.formatSize((long)sf.getBlockSize() * (long)sf.getAvailableBlocks()));
 					refreshBookmarks();
 				} catch(Throwable e)
 				{
@@ -370,7 +437,7 @@ public class OpenExplorer
     }
     
     @Override
-    protected void onDestroy() {
+	public void onDestroy() {
     	super.onDestroy();
     	if(storageReceiver != null)
     		unregisterReceiver(storageReceiver);
@@ -417,7 +484,6 @@ public class OpenExplorer
     	if(mPhotoParent == null)
     	{
     		try {
-    			Logger.LogInfo("External content Uri: " + MediaStore.getMediaScannerUri());
     			CursorLoader loader = new CursorLoader(getApplicationContext(),
     					Uri.parse("content://media/external/images/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
@@ -842,12 +908,12 @@ public class OpenExplorer
 	    	    	
 	    	case R.id.menu_root:
 	    		if(RootManager.Default.isRoot())
-	    			getPreferences().setSetting("global", "root", false);
+	    			getPreferences().setSetting("pref", "root", false);
 	    		else if(!item.isCheckable() || !item.isChecked())
 	    		{
 	    			if(RootManager.Default.isRoot() || RootManager.Default.requestRoot())
 	    			{
-	    				getPreferences().setSetting("global", "root", true);
+	    				getPreferences().setSetting("pref", "root", true);
 	    				showToast(getString(R.string.s_menu_root) + "!");
 	    				item.setTitle(getString(R.string.s_menu_root) + "!");
 	    			} else {
@@ -855,7 +921,7 @@ public class OpenExplorer
 	    				showToast("Unable to achieve root.");
 	    			}
 	    		} else {
-	    			getPreferences().setSetting("global", "root", false);
+	    			getPreferences().setSetting("pref", "root", false);
 	    			RootManager.Default.exitRoot();
 	    		}
 	    		return true;
@@ -1227,6 +1293,54 @@ public class OpenExplorer
 	public void setEventHandler(EventHandler handler)
 	{
 		mEvHandler = handler;
+	}
+	
+	public class SubmitStatsTask extends AsyncTask<String, Void, Void>
+	{
+		@Override
+		protected Void doInBackground(String... params) {
+			HttpURLConnection uc = null;
+			try {
+				uc = (HttpURLConnection)new URL("http://brandroid.org/stats.php").openConnection();
+				uc.setReadTimeout(2000);
+				PackageManager pm = OpenExplorer.this.getPackageManager();
+				PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
+		    	JSONObject device = getDeviceInfo();
+		    	if(device == null) device = new JSONObject();
+		    	String data = "{\"Version\":" + pi.versionCode + ",\"DeviceInfo\":" + device.toString() + ",\"Logs\":" + params[0] + ",\"App\":\"" + getPackageName() + "\"}"; 
+		    	//uc.addRequestProperty("Accept-Encoding", "gzip, deflate");
+		    	uc.addRequestProperty("App", getPackageName());
+	    		uc.addRequestProperty("Version", ""+pi.versionCode);
+	    		uc.setDoOutput(true);
+				GZIPOutputStream out = new GZIPOutputStream(uc.getOutputStream());
+				out.write(data.getBytes());
+				out.flush();
+				out.close();
+				uc.connect();
+				if(uc.getResponseCode() == HttpURLConnection.HTTP_OK)
+				{
+					BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+					String line = br.readLine();
+					if(line == null)
+					{
+						Logger.LogWarning("No response on stat submit.");
+					} else {
+						Logger.LogDebug("Response: " + line);
+						while((line = br.readLine()) != null)
+							Logger.LogDebug("Response: " + line);
+						Logger.LogDebug("Sent logs successfully.");
+						Logger.clearDb();
+					}
+				} else {
+					Logger.LogWarning("Couldn't send logs (" + uc.getResponseCode() + ")");
+				}
+			} catch(Exception e)
+			{
+				Logger.LogError("Error sending logs.", e);
+			}
+			return null;
+		}
+		
 	}
 	
 	public class EnsureCursorCacheTask extends AsyncTask<OpenPath, Void, Void>

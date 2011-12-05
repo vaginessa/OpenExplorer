@@ -71,8 +71,8 @@ public class LoggerDbAdapter
     	if(mDbHelper == null)
     		mDbHelper = new DatabaseHelper(mCtx);
     	try {
-    	if(mDb == null)
-    		mDb = mDbHelper.getWritableDatabase();
+	    	if(mDb == null)
+	    		mDb = mDbHelper.getWritableDatabase();
     	} catch(IllegalStateException ise) {
     		Logger.LogError("Couldn't open logger", ise);
     	}
@@ -80,7 +80,15 @@ public class LoggerDbAdapter
     }
     
     public void close() { 
-    	mDbHelper.close();
+    	if(mDb != null && mDb.isOpen())
+        	mDb.close();
+    }
+    
+    @Override
+    protected void finalize() throws Throwable {
+    	super.finalize();
+    	if(mDb != null && mDb.isOpen())
+    		close();
     }
     
     public long createItem(String message, int level, String stack) {
@@ -92,9 +100,15 @@ public class LoggerDbAdapter
         initialValues.put(KEY_STACK, stack);
 		initialValues.put(KEY_STAMP, new java.util.Date().compareTo(new Date(2011,4,9)));
 
-        if(mDb.replace(DATABASE_TABLE, null, initialValues) > -1)
-        	return 1;
-        else return 0;
+		try {
+			if(mDb.replace(DATABASE_TABLE, null, initialValues) > -1)
+				return 1;
+			else return 0;
+		} catch(Exception e) {
+			// we shouldn't log to this one in case it creates an infinite loop
+			// Logger.LogError("Couldn't write to Log DB.", e);
+			return 0;
+		}
     }
     
     private String arrayToString(int[] list)
@@ -118,20 +132,25 @@ public class LoggerDbAdapter
 
     public Cursor fetchAllItems() {
     	open();
-    	return mDb.query(DATABASE_TABLE,
-    			new String[] {KEY_ID, KEY_MESSAGE, KEY_LEVEL, KEY_STACK, KEY_STAMP},
-    			"sent = 0", null, null, null, null);
+    	try {
+	    	return mDb.query(DATABASE_TABLE,
+	    			new String[] {KEY_ID, KEY_MESSAGE, KEY_LEVEL, KEY_STACK, KEY_STAMP},
+	    			"sent = 0", null, null, null, null);
+    	} catch(Exception e) { return null; }
     }
     
     public int clear() {
-    	return mDb.delete(DATABASE_TABLE, null, null);
+    	if(mDb != null)
+    		return mDb.delete(DATABASE_TABLE, null, null);
+    	else return -1;
     }
     
-    public String getAllItemsAndClear()
+    public String getAllItems()
     {
-    	JSONObject ret = new JSONObject();
-    	JSONArray errors = new JSONArray();
+    	//JSONObject ret = new JSONObject();
+    	JSONArray items = new JSONArray();
     	Cursor c = fetchAllItems();
+    	if(c == null) return null;
     	c.moveToFirst();
     	//sb.append("{errors:[");
     	while(!c.isAfterLast())
@@ -148,19 +167,14 @@ public class LoggerDbAdapter
     		row.put(lvl);
     		row.put(msg);
     		row.put(stack);
-    		errors.put(row);
+    		items.put(row);
     		//sb.append("[" + id + "," + stamp + "," + lvl + ",\"" + msg.replace("\"", "\\\"") + "\"," + ",\"" + stack.replace("\"", "\\\""));
     		c.moveToNext();
     	}
-    	try {
-			ret.put("errors", errors);
-		} catch (JSONException e) {
-			//Logger.LogError("Couldn't output error report", e);
-		}
-    	String retStr = ret.toString();
+    	String retStr = items.toString();
     	//sb.append("]}");
     	c.close();
-    	clear();
+    	//clear();
     	//Logger.LogVerbose("Sending Error report: " + retStr);
     	return retStr;
     }

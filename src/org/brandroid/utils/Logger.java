@@ -1,22 +1,29 @@
 package org.brandroid.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.util.Log;
 
 public class Logger
 {
 	private static String[] sLastMessage = new String[] {"", "", "", "", ""};
 	private static Integer[] iLastCount = new Integer[] {0,0,0,0,0};
-	public final static Boolean LoggingEnabled = false;
-	public static final Integer MIN_DB_LEVEL = Log.ERROR;
-	private static final String LOG_KEY = "OpenExplorer";
+	private final static Boolean DO_LOG = true; // global static
+	private static Boolean bLoggingEnabled = true; // this can be set view preferences
+	public final static Integer MIN_DB_LEVEL = Log.INFO;
+	private final static String LOG_KEY = "OpenExplorer";
 	private static LoggerDbAdapter dbLog;
+	
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		if(dbLog != null)
+			dbLog.close();
+	}
 
+	public static Boolean isLoggingEnabled() { return bLoggingEnabled && DO_LOG; }
+	public static void setLoggingEnabled(Boolean enable) { bLoggingEnabled = enable; }
 	private static boolean CheckLastLog(String msg, int level)
 	{
-		if(!LoggingEnabled) return true;
+		if(!isLoggingEnabled()) return true;
 		level -= 2;
 		if(level < 0 || level > 4) return false;
 		if(sLastMessage[level] != null && msg != null && msg.equalsIgnoreCase(sLastMessage[level]))
@@ -67,7 +74,18 @@ public class Logger
 	}
 	public static Boolean hasDb() { return dbLog != null; }
 	public static void setDb(LoggerDbAdapter newDb) { dbLog = newDb; }
-	public static String getDbLogs() { return dbLog.getAllItemsAndClear(); }
+	public static String getDbLogs(Boolean clear) {
+		if(dbLog == null) return null;
+		String ret = dbLog.getAllItems();
+		if(clear)
+			dbLog.clear();
+		return ret;
+	}
+	public static void clearDb()
+	{
+		if(dbLog != null)
+			dbLog.clear();
+	}
 	public static void LogError(String msg)
 	{
 		if(CheckLastLog(msg, Log.ERROR)) return;
@@ -176,5 +194,10 @@ public class Logger
 		//if(CheckLastLog(msg, Log.VERBOSE)) return;
 		LogToDB(Log.VERBOSE, msg, "");
 		Log.v(LOG_KEY, msg);
+	}
+
+	public static void closeDb() {
+		if(hasDb())
+			dbLog.close();
 	}
 }

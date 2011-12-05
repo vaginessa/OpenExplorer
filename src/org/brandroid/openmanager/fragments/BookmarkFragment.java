@@ -62,7 +62,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.io.File;
 
-public class BookmarkFragment extends ListFragment implements OnBookMarkAddListener,
+public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddListener,
 															 OnItemLongClickListener{
 	private ArrayList<OpenPath> mBookmarks;
 	private Context mContext;
@@ -286,6 +286,7 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 	
 	
 	public void onListItemClick(ListView list, View view, int pos, long id) {
+		super.onItemClick(list, view, pos, id);
 		((OpenExplorer)getActivity()).onChangeLocation(mBookmarks.get(pos));
 	}
 	
@@ -306,6 +307,8 @@ public class BookmarkFragment extends ListFragment implements OnBookMarkAddListe
 		final BookmarkHolder mHolder = (BookmarkHolder)view.getTag();
 		final OpenPath mPath = mBookmarks.get(pos);
 		final String title = getPathTitle(mPath);
+		
+		super.onItemLongClick(list, view, pos, id);
 
 		((TextView)v.findViewById(R.id.dialog_message))
 						.setText(getResources().getString(R.string.s_alert_bookmark_rename));

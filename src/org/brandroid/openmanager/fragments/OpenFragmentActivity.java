@@ -5,12 +5,14 @@ import org.brandroid.utils.Logger;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class OpenFragment
-			extends Fragment
+public class OpenFragmentActivity
+			extends FragmentActivity
 			implements View.OnClickListener, View.OnLongClickListener
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
@@ -20,8 +22,6 @@ public class OpenFragment
 	{
 		return this.getClass().getSimpleName();
 	}
-	
-	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
 	
 	public void onClick(View v) {
 		Logger.LogInfo("View onClick(" + v.getId() + ") - " + v.toString());
@@ -37,6 +37,12 @@ public class OpenFragment
 	}
 	
 	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		Logger.LogInfo("Menu selected(" + item.getItemId() + ") - " + item.toString());
+		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Logger.LogInfo("<-onCreate - " + getClassName());
@@ -46,7 +52,7 @@ public class OpenFragment
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Logger.LogInfo("->onDestroy - " + getClassName());
+		//Logger.LogInfo("->onDestroy - " + getClassName());
 	}
 	
 	/*

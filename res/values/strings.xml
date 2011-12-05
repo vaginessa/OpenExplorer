@@ -111,5 +111,7 @@
 	<string name="s_status_loading">Loading...</string>
 	<string name="s_menu_open">Open with...</string>
 	<string name="s_menu_edit">Edit with...</string>
+	<string name="s_pref_stats_title">Help improve OpenExplorer</string>
+	<string name="s_pref_stats_summary">Send anonymous usage statistics. This does not include any information that could be used to identify the user.</string>
     
 </resources>

@@ -186,9 +186,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
 			mShowThumbnails = true;
 		
-		mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() > 500
-				&& mPath != null
-				&& OpenFile.class.equals(mPath.getClass());
+		if(getActivity() != null && getActivity().getWindow() != null)
+			mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() > 500
+					&& mPath != null
+					&& OpenFile.class.equals(mPath.getClass());
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
 		
@@ -461,6 +462,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			fileList = new ArrayList<OpenPath>();
 		final OpenPath[] fileArray = new OpenPath[fileList.size()];
 		fileList.toArray(fileArray);
+		
+		super.onClick(id);
 		
 		switch(id)
 		{
@@ -747,9 +750,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	
 	//@Override
-	public void onHiddenFilesChanged(boolean state) {
-		if(mFileManager != null)
-			mFileManager.setShowHiddenFiles(state);
+	public void onHiddenFilesChanged(boolean state)
+	{
+		if(mFileManager == null)
+			mFileManager = new FileManager();
+		mFileManager.setShowHiddenFiles(state);
 		refreshData(null);
 	}
 
@@ -761,12 +766,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
+		if(mFileManager == null)
+			mFileManager = new FileManager();
 		mFileManager.setSorting(type);
 		refreshData(null);
 	}
 	
 	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
 	{
+		if(mFileManager == null)
+			mFileManager = new FileManager();
 		mFileManager.setSorting(sort);
 		mShowThumbnails = thumbs;
 		mFileManager.setShowHiddenFiles(hidden);
