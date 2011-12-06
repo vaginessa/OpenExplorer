@@ -82,15 +82,15 @@ public class DFInfo
 			while((sl = is.readLine()) != null)
 			{
 				sl = sl.replaceAll("  *", " ");
-				//Logger.LogInfo("DF: " + sl);
+				//Logger.LogDebug("DF: " + sl);
 				if(!sl.startsWith("/")) continue;
-				if(sl.indexOf("/mnt") == -1 && sl.indexOf("/Removeable")==-1) continue;
+				if(!((sl.indexOf("/mnt") > -1 || sl.toLowerCase().startsWith("/remov"))&&(sl.indexOf("/",1) > -1))) continue;
 				if(sl.indexOf("/asec") > -1) continue;
 				if(sl.indexOf("/obb") > -1) continue;
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					//Logger.LogInfo("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
 					ret.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 				catch(CannotReadException e) { } 

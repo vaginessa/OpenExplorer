@@ -114,7 +114,7 @@ public class BookmarkHolder {
 		if(mEject != null)
 			mEject.setVisibility(eject ? View.VISIBLE : View.GONE);
 	}
-	public Boolean isEjectable() { return mEject != null && mEject.getVisibility() == View.VISIBLE; }
+	public Boolean isEjectable() { return mFile.getPath().toLowerCase().indexOf("ext") > -1 || mFile.getPath().toLowerCase().startsWith("/removable/"); }
 	
 	public void setSelected(Boolean sel)
 	{

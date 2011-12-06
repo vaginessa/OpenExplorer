@@ -10,6 +10,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.view.LayoutInflater;
@@ -31,10 +32,19 @@ public class OpenIntentChooser
 
 	public OpenIntentChooser(final Context activity, final OpenPath file)
 	{
+		this(activity,IntentManager.getIntent(file, activity));
+	}
+	public OpenIntentChooser(final Context activity, final Intent intent)
+	{
 		mListResolves = activity.getPackageManager().queryIntentActivities(
-				IntentManager.getIntent(file, activity),
+				intent,
 				PackageManager.MATCH_DEFAULT_ONLY);
 		setAdapter(activity, new OpenIntentAdapter(activity, mListResolves));
+	}
+	public OpenIntentChooser(final Context activity, List<ResolveInfo> mResolves)
+	{
+		mListResolves = mResolves;
+		setAdapter(activity, new OpenIntentAdapter(activity, mResolves));
 	}
 	public OpenIntentChooser setAdapter(Context context, final OpenIntentAdapter adapter)
 	{

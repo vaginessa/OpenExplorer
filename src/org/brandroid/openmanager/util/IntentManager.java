@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.brandroid.openmanager.OpenExplorer;
+import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.OpenIntentChooser.IntentSelectedListener;
 import org.brandroid.utils.Logger;
@@ -76,7 +77,7 @@ public class IntentManager
     			ext.equalsIgnoreCase("mpg") ||
     			ext.equalsIgnoreCase("mpeg")||
     			ext.equalsIgnoreCase("ogg") ||
-    			ext.equalsIgnoreCase("wav")) {
+    			ext.equalsIgnoreCase("avi")) {
     		
 			ret.setDataAndType(file.getUri(), "video/" + ext.replace("pg", "peg"));
     	}
@@ -124,6 +125,8 @@ public class IntentManager
     		} else {
     			ret.setDataAndType(file.getUri(), "text/plain");
     		}
+    	} else {
+    		ret.setData(file.getUri());
     	}
 		
 		if(ret != null)
@@ -153,34 +156,57 @@ public class IntentManager
 		Logger.LogDebug("Intents match. Use inner chooser? " + bInnerChooser);
 		if(bInnerChooser)
 		{
-			new OpenIntentChooser(activity, file)
-				.setTitle(file.getName())
-				.setOnIntentSelectedListener(new IntentSelectedListener() {
-					public void onIntentSelected(ResolveInfo item) {
-						//activity.showToast("Package? [" + item.activityInfo.packageName + " / " + item.activityInfo.targetActivity + "]");
-						PackageInfo packInfo = null;
-						try {
-							packInfo = activity.getPackageManager().getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
-							if(packInfo != null && packInfo.activities != null)
-							{
-								for(ActivityInfo info : packInfo.activities)
+			final Intent intent = getIntent(file, activity);
+			Logger.LogDebug("Chooser Intent: " + intent.toString());
+			final List<ResolveInfo> mResolves = activity.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+			if(mResolves.size() == 1)
+			{
+				ResolveInfo item = mResolves.get(0);
+				PackageInfo packInfo = null;
+				try {
+					activity.getPackageManager().getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
+					intent.setClassName(packInfo != null ? packInfo.packageName : item.activityInfo.packageName, item.activityInfo.name);
+					activity.startActivity(intent);
+					return true;
+				} catch (NameNotFoundException e) {
+					Logger.LogError("Package not found for " + item.activityInfo.toString(), e);
+				} catch (ActivityNotFoundException ae) {
+					Logger.LogError("Activity not found for " + item.activityInfo.name, ae);
+				}
+			} else if(mResolves.size() > 1) {
+				new OpenIntentChooser(activity, mResolves)
+					.setTitle(file.getName() + " (" + intent.getType() + ")")
+					.setOnIntentSelectedListener(new IntentSelectedListener() {
+						public void onIntentSelected(ResolveInfo item) {
+							//activity.showToast("Package? [" + item.activityInfo.packageName + " / " + item.activityInfo.targetActivity + "]");
+							PackageInfo packInfo = null;
+							try {
+								packInfo = activity.getPackageManager().getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
+								if(packInfo != null && packInfo.activities != null)
 								{
-									Logger.LogInfo("Activity Info: " + info.toString());
+									for(ActivityInfo info : packInfo.activities)
+									{
+										Logger.LogInfo("Activity Info: " + info.toString());
+									}
+									Logger.LogDebug("Intent chosen: " + item.activityInfo.toString());
 								}
-								Logger.LogDebug("Intent chosen: " + item.activityInfo.toString());
+								//Intent activityIntent = new Intent();
+								intent.setClassName(packInfo != null ? packInfo.packageName : item.activityInfo.packageName, item.activityInfo.name);
+								//intent.setData(file.getUri());
+								//intent.setType(file.ge)
+								activity.startActivity(intent);
+							} catch (NameNotFoundException e) {
+								Logger.LogError("Package not found for " + item.activityInfo.toString(), e);
+							} catch (ActivityNotFoundException ae) {
+								Logger.LogError("Activity not found for " + item.activityInfo.name, ae);
 							}
-							Intent intent = new Intent();
-							intent.setClassName(packInfo != null ? packInfo.packageName : item.activityInfo.packageName, item.activityInfo.name);
-							intent.setData(file.getUri());
-							//intent.setType(file.ge)
-							activity.startActivity(intent);
-						} catch (NameNotFoundException e) {
-							Logger.LogError("Package not found for " + item.activityInfo.toString(), e);
 						}
-					}
-				})
-				.show();
-			return true;
+					})
+					.show();
+				return true;
+			} else {
+				Toast.makeText(activity, activity.getText(R.string.s_error_no_intents), Toast.LENGTH_LONG).show();
+			}
 		}
 		Intent intent = getIntent(file, activity);
 		//intent.addFlags(Intent.FL);
