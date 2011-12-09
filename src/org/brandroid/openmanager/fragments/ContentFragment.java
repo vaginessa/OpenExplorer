@@ -52,10 +52,12 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.app.AlertDialog.Builder;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -474,8 +476,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				Intent intent = IntentManager.getIntent(file, getExplorer());
 				if(intent != null)
 				{
-					intent.setAction(Intent.ACTION_EDIT);
-					startActivity(intent);
+					try {
+						intent.setAction(Intent.ACTION_EDIT);
+						getExplorer().startActivity(intent);
+					} catch(ActivityNotFoundException e) {
+						getExplorer().showToast(R.string.s_error_no_intents);
+						getExplorer().editFile(file);
+					}
+				} else {
+					getExplorer().editFile(file);
 				}
 				break;
 			case R.id.menu_context_multi:
@@ -887,7 +896,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 			} else {
 				mHolder = (BookmarkHolder)view.getTag();
-				mHolder.cancelTask();
+				//mHolder.cancelTask();
 			}
 
 			if(getViewMode() == OpenExplorer.VIEW_LIST) {
@@ -902,10 +911,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mHolder.showPath(false);
 			}
 			
-			mHolder.setTitle(mName);
+			if(!mHolder.getTitle().equals(mName))
+				mHolder.setTitle(mName);
 			
-			ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
-
+			Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
+			if(b != null)
+				mHolder.getIconView().setImageBitmap(b);
+			else
+				ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
 			
 			return view;
 		}

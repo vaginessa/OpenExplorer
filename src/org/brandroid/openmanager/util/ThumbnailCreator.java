@@ -38,6 +38,9 @@ import android.widget.ImageView;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.io.File;
@@ -56,7 +59,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 
 public class ThumbnailCreator extends Thread {
-	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>(200);
+	private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
 	private Handler mHandler;
 	
 	private static Context mContext;
@@ -178,7 +181,11 @@ public class ThumbnailCreator extends Thread {
 						mHolder = ((BookmarkHolder)file.getTag());
 						mHolder.setTask(task);
 					}
-					task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+					try {
+						task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+					} catch(RejectedExecutionException rej) {
+						Logger.LogError("Couldn't generate thumbnail because Thread pool was full.", rej);
+					}
 				}
 				if(thumb != null)
 				{
@@ -297,12 +304,15 @@ public class ThumbnailCreator extends Thread {
 					if(!valid) {
 						PackageManager man = mContext.getPackageManager();
 						PackageInfo pinfo = man.getPackageArchiveInfo(file.getAbsolutePath(), PackageManager.GET_ACTIVITIES);
-						ApplicationInfo ainfo = pinfo.applicationInfo;
-						if(Build.VERSION.SDK_INT >= 8)
-							ainfo.publicSourceDir = ainfo.sourceDir = file.getPath();
-						Drawable mIcon = ainfo.loadIcon(man);
-						if(mIcon != null)
-							bmp = ((BitmapDrawable)mIcon).getBitmap();
+						if(pinfo != null)
+						{
+							ApplicationInfo ainfo = pinfo.applicationInfo;
+							if(Build.VERSION.SDK_INT >= 8)
+								ainfo.publicSourceDir = ainfo.sourceDir = file.getPath();
+							Drawable mIcon = ainfo.loadIcon(man);
+							if(mIcon != null)
+								bmp = ((BitmapDrawable)mIcon).getBitmap();
+						}
 					}
 					if(!valid) {
 						Logger.LogWarning("Couldn't get icon for " + file.getAbsolutePath());
