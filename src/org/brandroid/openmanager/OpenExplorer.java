@@ -871,16 +871,18 @@ public class OpenExplorer
 		    					return true;
 		    				}
 		    				
+		    				OpenPath file = FileManager.getOpenCache(files.get(0));
+		    				
 		    				if(mHeldFiles == null)
 		    					mHeldFiles = new OpenClipboard();
 		    				
 		    				mHeldFiles.clear();
 		    				
-		    				for(String s : files)
-		    					mHeldFiles.add(FileManager.getOpenCache(s));
+		    				for(int i=1; i<files.size(); i++)
+		    					mHeldFiles.add(FileManager.getOpenCache(files.get(i)));
 		    			
 		    				return getDirContentFragment(false)
-		    						.executeMenu(item.getItemId(), mode, mHeldFiles.get(mHeldFiles.size() - 1), (ArrayList<OpenPath>)mHeldFiles.subList(0, mHeldFiles.size() - 2));
+		    						.executeMenu(item.getItemId(), mode, file, mHeldFiles);
 		    			}
 		    		});
 	    		}
@@ -908,21 +910,22 @@ public class OpenExplorer
 	    	    	
 	    	case R.id.menu_root:
 	    		if(RootManager.Default.isRoot())
-	    			getPreferences().setSetting("pref", "root", false);
-	    		else if(!item.isCheckable() || !item.isChecked())
+	    		{
+	    			getPreferences().setSetting("0_global", "pref_root", false);
+	    			showToast(getString(R.string.s_menu_root_disabled));
+	    			RootManager.Default.exitRoot();
+	    			item.setChecked(false);
+	    		} else
 	    		{
 	    			if(RootManager.Default.isRoot() || RootManager.Default.requestRoot())
 	    			{
-	    				getPreferences().setSetting("pref", "root", true);
+	    				getPreferences().setSetting("0_global", "pref_root", true);
 	    				showToast(getString(R.string.s_menu_root) + "!");
 	    				item.setTitle(getString(R.string.s_menu_root) + "!");
 	    			} else {
 	    				item.setChecked(false);
 	    				showToast("Unable to achieve root.");
 	    			}
-	    		} else {
-	    			getPreferences().setSetting("pref", "root", false);
-	    			RootManager.Default.exitRoot();
 	    		}
 	    		return true;
 	    	case R.id.menu_flush:

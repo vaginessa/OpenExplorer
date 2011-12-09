@@ -52,8 +52,11 @@ public class RootManager
 		return rootEnabled;
 	}
 	public boolean isRootRequested() { return rootRequested; }
+	@SuppressWarnings("unused")
 	public void exitRoot()
 	{
+		rootEnabled = false;
+		rootRequested = false;
 		Process suProcess = null;
 		if(suProcess != null) // exit su
 		{
