@@ -140,7 +140,7 @@ public class LoggerDbAdapter
     }
     
     public int clear() {
-    	if(mDb != null)
+    	if(mDb != null && mDb.isOpen())
     		return mDb.delete(DATABASE_TABLE, null, null);
     	else return -1;
     }

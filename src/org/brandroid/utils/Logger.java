@@ -1,5 +1,6 @@
 package org.brandroid.utils;
 
+import android.content.Context;
 import android.util.Log;
 
 public class Logger
@@ -71,6 +72,9 @@ public class Logger
 		if(level < MIN_DB_LEVEL) return;
 		if(dbLog == null) return;
 		dbLog.createItem(msg, level, stack);
+	}
+	public static void openDb(Context c) {
+		dbLog = new LoggerDbAdapter(c);
 	}
 	public static Boolean hasDb() { return dbLog != null; }
 	public static void setDb(LoggerDbAdapter newDb) { dbLog = newDb; }

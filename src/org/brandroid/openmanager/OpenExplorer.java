@@ -142,15 +142,7 @@ public class OpenExplorer
     	}
         //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
     	
-    	if(Logger.isLoggingEnabled())
-    	{
-    		if(getPreferences().getBoolean("0_global", "pref_stats", true))
-    		{
-    			if(!Logger.hasDb())
-    				Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
-    		} else
-    			Logger.setLoggingEnabled(false);
-    	}
+    	setupLoggingDb();
         
         setContentView(R.layout.main_fragments);
         
@@ -256,7 +248,7 @@ public class OpenExplorer
         } else if(savedInstanceState != null)
         	if(savedInstanceState.containsKey("edit_path"))
         	{
-        		Logger.LogDebug("textEditor restore @ " + savedInstanceState.getString("edit_path"));
+        		//Logger.LogDebug("textEditor restore @ " + savedInstanceState.getString("edit_path"));
         		home = new TextEditorFragment(new OpenFile(savedInstanceState.getString("edit_path")));
         		bAddToStack = false;
         	}
@@ -289,6 +281,13 @@ public class OpenExplorer
     
     @Override
     protected void onStart() {
+    	setupLoggingDb();
+		submitStats();
+    	super.onStart();
+    }
+    
+    private void setupLoggingDb()
+    {
     	if(Logger.isLoggingEnabled())
     	{
     		if(getPreferences().getBoolean("0_global", "pref_stats", true))
@@ -298,17 +297,12 @@ public class OpenExplorer
     		} else
     			Logger.setLoggingEnabled(false);
     	}
-
-    	super.onStart();
     }
     
     @Override
     protected void onStop() {
     	if(Logger.isLoggingEnabled() && Logger.hasDb())
-    	{
-			submitStats();
 			Logger.closeDb();
-    	}
     	super.onStop();
     }
     
@@ -343,11 +337,14 @@ public class OpenExplorer
     
     private void submitStats()
     {
-		final String logs = Logger.getDbLogs(false);
-		if(logs != null && logs != "") {
+    	if(!Logger.isLoggingEnabled()) return;
+    	setupLoggingDb();
+		String logs = Logger.getDbLogs(false);
+		if(logs == null) logs = "[]";
+		//if(logs != null && logs != "") {
 			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
 			new SubmitStatsTask().execute(logs);
-		} else Logger.LogWarning("Logs not found.");
+		//} else Logger.LogWarning("Logs not found.");
     }
     
     public Preferences getPreferences() {
@@ -1315,6 +1312,7 @@ public class OpenExplorer
 		    	uc.addRequestProperty("App", getPackageName());
 	    		uc.addRequestProperty("Version", ""+pi.versionCode);
 	    		uc.setDoOutput(true);
+	    		Logger.LogDebug("Sending logs...");
 				GZIPOutputStream out = new GZIPOutputStream(uc.getOutputStream());
 				out.write(data.getBytes());
 				out.flush();
@@ -1329,10 +1327,15 @@ public class OpenExplorer
 						Logger.LogWarning("No response on stat submit.");
 					} else {
 						Logger.LogDebug("Response: " + line);
-						while((line = br.readLine()) != null)
-							Logger.LogDebug("Response: " + line);
-						Logger.LogDebug("Sent logs successfully.");
-						Logger.clearDb();
+						if(line.indexOf("Thanks") > -1)
+						{
+							while((line = br.readLine()) != null)
+								Logger.LogDebug("Response: " + line);
+							Logger.LogDebug("Sent logs successfully.");
+							Logger.clearDb();
+						} else {
+							Logger.LogWarning("Logs not thanked");
+						}
 					}
 				} else {
 					Logger.LogWarning("Couldn't send logs (" + uc.getResponseCode() + ")");

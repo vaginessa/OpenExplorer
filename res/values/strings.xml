@@ -60,12 +60,15 @@
     <string name="s_pref_advanced">Advanced</string>
     <string name="s_pref_server_name">Server name</string>
     <string name="s_pref_server_name_summary">Enter Server Name</string>
-    <string name="s_pref_server_url">Server URL</string>
-    <string name="s_pref_server_url_summary">Enter full server URL</string>
-    <string name="s_pref_server_user">User</string>
-    <string name="s_pref_server_user_summary">Username</string>
-    <string name="s_pref_server_password">Password</string>
-    <string name="s_pref_server_password_summary">Login Password</string>
+	<string name="s_pref_server_url">Server URL</string>
+	<string name="s_pref_server_url_summary">Enter full server URL</string>
+	<string name="s_pref_server_host">Server Host</string>
+	<string name="s_pref_server_user">User</string>
+	<string name="s_pref_server_user_summary">Username</string>
+	<string name="s_pref_server_password">Password</string>
+	<string name="s_pref_server_password_summary">Login Password</string>
+    <string name="s_pref_server_path">Subdirectory</string>
+    <string name="s_pref_server_extras">Extra Settings</string>
     <string name="s_pref_server_update">Add/Update Server</string>
  	<string name="s_files">files</string>
 	<string name="s_create">Create</string>
@@ -113,5 +116,6 @@
 	<string name="s_menu_edit">Edit with...</string>
 	<string name="s_pref_stats_title">Help improve OpenExplorer</string>
 	<string name="s_pref_stats_summary">Send anonymous usage statistics. This does not include any information that could be used to identify the user.</string>
-	<string name="s_error_no_intents">No installed applications can read this type of file.</string>    
+	<string name="s_error_no_intents">No installed applications can read this type of file.</string>
+	<string name="s_menu_root_disabled">Root disabled</string>    
 </resources>

@@ -90,7 +90,7 @@ public class DFInfo
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					//Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
 					ret.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 				catch(CannotReadException e) { } 

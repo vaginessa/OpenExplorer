@@ -27,14 +27,18 @@ import java.util.prefs.PreferencesFactory;
 
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 
 import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
@@ -44,7 +48,9 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.view.Menu;
 
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity
+	implements OnPreferenceChangeListener
+{
 	//keys used for preference file
 	public static final String PREF_LIST_KEY =		"pref_dirlist";
 	public static final String PREF_BOOKNAME_KEY = 	"pref_bookmarks";
@@ -120,6 +126,18 @@ public class SettingsActivity extends PreferenceActivity {
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.server_prefs, false);
 			}
 		}
+		setOnChange(getPreferenceScreen());
+	}
+	
+	private void setOnChange(Preference p)
+	{
+		if(p.getClass().equals(PreferenceScreen.class))
+		{
+			PreferenceScreen ps = (PreferenceScreen)p;
+			for(int i = 0; i < ps.getPreferenceCount(); i++)
+				setOnChange(ps.getPreference(i));
+		}
+		p.setOnPreferenceChangeListener(this);
 	}
 	
 	@Override
@@ -127,7 +145,27 @@ public class SettingsActivity extends PreferenceActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if(requestCode == MODE_SERVER)
 		{
+			String sPath = data.getStringExtra("path");
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+			String sServers = prefs.getString("servers", "");
+			Editor editor = prefs.edit();
+			if(sPath.equals("server_add"))
+			{
+				int server_index = prefs.getInt("server_index", 0);
+				sPath = "" + ++server_index;
+				sServers += (sServers != "" ? "," : "") + sPath;
+				editor
+					.putString("servers", sServers)
+					.putInt("server_index", server_index);
+			} else if(sPath.startsWith("server_modify_"))
+				sPath = sPath.replace("server_modify_", "");
+
+			Bundle b = data.getExtras();
+			for(String s : b.keySet())
+				if(s != "mode" && s != "path")
+					editor.putString("server_" + sPath + "_" + s, data.getStringExtra(s));
 			
+			editor.commit();
 		}
 	}
 
@@ -143,27 +181,26 @@ public class SettingsActivity extends PreferenceActivity {
     	} else if(preference.getKey().equals("server_add"))
     	{
     		Intent intentServer = new Intent(this, SettingsActivity.class);
-    		intentServer.putExtra("path", "new_server");
+    		intentServer.putExtra("path", "server_add");
     		intentServer.putExtra("mode", MODE_SERVER);
     		startActivityForResult(intentServer, MODE_SERVER);
     		return true;
     	} else if(preference.getKey().startsWith("server_modify")) {
     		Intent intentServer = new Intent(this, SettingsActivity.class);
-    		intentServer.putExtra("path", preference.getKey().replace("server_modify_", ""));
+    		intentServer.putExtra("path", preference.getKey());
     		intentServer.putExtra("mode", MODE_SERVER);
     		startActivityForResult(intentServer, MODE_SERVER);
     		return true;
     	} else if(preference.getKey().equals("server_update")) {
     		Intent iNew = getIntent();
     		if(iNew == null) iNew = new Intent();
-    		for(String s : new String[]{"name","url","user","pass"})
-    			iNew.putExtra(s, ((EditTextPreference)findPreference("server_" + s)).getText());
+    		for(String s : new String[]{"name","url","user","password","path"})
+    			if(findPreference("server_" + s) != null)
+    				iNew.putExtra(s, ((EditTextPreference)findPreference("server_" + s)).getText());
     		setResult(RESULT_OK, iNew);
     	}
     	return false;
     }
-
-    
 
     public PreferenceScreen inflatePreferenceScreenFromResource(int resId) {
         try {
@@ -182,5 +219,10 @@ public class SettingsActivity extends PreferenceActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//getMenuInflater().inflate(R.menu.actbar, menu);
 		return true;
+	}
+
+	public boolean onPreferenceChange(Preference preference, Object newValue) {
+		preference.setSummary(newValue.toString());
+		return false;
 	}
 }
