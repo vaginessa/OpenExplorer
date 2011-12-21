@@ -3,8 +3,8 @@ package org.brandroid.openmanager.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.OpenIntentChooser.IntentSelectedListener;
 import org.brandroid.utils.Logger;

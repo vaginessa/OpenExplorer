@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.activities;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -60,6 +60,10 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.R.drawable;
+import org.brandroid.openmanager.R.id;
+import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
 
 

@@ -18,9 +18,9 @@ import java.nio.CharBuffer;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.http.util.ByteArrayBuffer;
-import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.string;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.ftp.FTPManager;

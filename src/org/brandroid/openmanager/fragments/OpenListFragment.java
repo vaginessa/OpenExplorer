@@ -1,6 +1,6 @@
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.OpenExplorer;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
 import android.os.Bundle;

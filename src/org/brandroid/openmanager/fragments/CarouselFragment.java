@@ -27,8 +27,8 @@ import android.view.ViewGroup;
 
 import org.brandroid.carousel.CarouselViewHelper;
 import org.brandroid.carousel.CarouselView;
-import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.IntentManager;

@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.activities;
 
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -33,6 +33,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -69,6 +70,12 @@ import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.R.id;
+import org.brandroid.openmanager.R.layout;
+import org.brandroid.openmanager.R.menu;
+import org.brandroid.openmanager.R.string;
+import org.brandroid.openmanager.R.style;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -107,6 +114,7 @@ public class OpenExplorer
 	public static final int VIEW_CAROUSEL = Build.VERSION.SDK_INT > 11 ? 2 : 1;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
+	public static boolean IS_DEBUG_BUILD = false;
 	public static final int REQUEST_CANCEL = 101;
 	
 	private Preferences mPreferences = null;
@@ -144,6 +152,20 @@ public class OpenExplorer
     	
     	setupLoggingDb();
         
+        super.onCreate(savedInstanceState);
+        
+    	try {
+    		Signature[] sigs = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures;
+			for(Signature sig : sigs)
+	    		if(sig.toCharsString().indexOf("4465627567") > -1) // check for "Debug" in signature
+	    			IS_DEBUG_BUILD = true;
+	    } catch (NameNotFoundException e1) { }
+    	
+    	if(IS_DEBUG_BUILD)
+    	{
+    		startActivity(new Intent(this, SettingsActivity.class));
+    	}
+    	
         setContentView(R.layout.main_fragments);
         
         ThumbnailCreator.setContext(this);
@@ -215,8 +237,6 @@ public class OpenExplorer
         	path = new OpenFile(Environment.getExternalStorageDirectory());
         mLastPath = path;
         
-        super.onCreate(savedInstanceState);
-        
         boolean bAddToStack = fragmentManager.getBackStackEntryCount() > 0;
 
         FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -232,7 +252,7 @@ public class OpenExplorer
         	//ft.replace(R.id.list_frag, mFavoritesFragment);
         }
 
-        if(Build.VERSION.SDK_INT > 11 && savedInstanceState == null)
+        if(Build.VERSION.SDK_INT > 11 && !IS_DEBUG_BUILD && savedInstanceState == null)
         {
         	if(mVideoParent != null && mVideoParent.length() > 1)
         	{
@@ -339,6 +359,7 @@ public class OpenExplorer
     {
     	if(!Logger.isLoggingEnabled()) return;
     	setupLoggingDb();
+    	if(IS_DEBUG_BUILD) return;
 		String logs = Logger.getDbLogs(false);
 		if(logs == null) logs = "[]";
 		//if(logs != null && logs != "") {
@@ -496,6 +517,7 @@ public class OpenExplorer
 		}
 		if(mVideoParent == null)
     	{
+			if(!IS_DEBUG_BUILD)
 			try {
 				CursorLoader loader = new CursorLoader(getApplicationContext(),
 						Uri.parse("content://media/external/video/media"),

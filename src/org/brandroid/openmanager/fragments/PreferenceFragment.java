@@ -1,8 +1,8 @@
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.OpenExplorer;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.SettingsActivity;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.OpenPath;
 
 import android.app.FragmentManager;

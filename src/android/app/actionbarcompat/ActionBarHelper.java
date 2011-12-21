@@ -16,7 +16,7 @@
 
 package android.app.actionbarcompat;
 
-import org.brandroid.openmanager.OpenExplorer;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
 
 import android.app.Activity;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.brandroid.openmanager;
+package org.brandroid.openmanager.activities;
 
 
 import org.brandroid.utils.Logger;

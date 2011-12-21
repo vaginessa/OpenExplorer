@@ -18,8 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.brandroid.openmanager" android:versionName=".127"
-	android:versionCode="127">
+	package="org.brandroid.openmanager" android:versionName=".128"
+	android:versionCode="128">
 
 	<uses-sdk android:minSdkVersion="8" android:targetSdkVersion="12" />
 
@@ -39,7 +39,7 @@
 	<application android:icon="@drawable/icon" android:label="@string/app_name"
 	    android:hardwareAccelerated="true" android:debuggable="false">
 
-		<activity android:name=".OpenExplorer" android:label="@string/app_name"
+		<activity android:name=".activities.OpenExplorer" android:label="@string/app_name"
 		    android:configChanges="screenSize|keyboard|keyboardHidden"
 		    >
 			<intent-filter>
@@ -56,7 +56,7 @@
 			    android:resource="@xml/searchable" />
 		</activity>
 		
-		<activity android:name=".UsbActivity" android:label="@string/app_name" android:launchMode="singleInstance">
+		<activity android:name=".activities.UsbActivityUsbActivity" android:label="@string/app_name" android:launchMode="singleInstance">
 			<intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
@@ -74,9 +74,9 @@
 			</intent-filter>
 		</activity -->
 
-		<activity android:name=".SettingsActivity" android:label="Preferences" />
+		<activity android:name=".activities.SettingsActivityngsActivity" android:label="Preferences" />
 
-		<activity android:name=".BluetoothActivity" android:label="Bluetooth"
+		<activity android:name=".activities.BluetoothActivity" android:label="Bluetooth"
 			android:theme="@android:style/Theme.Dialog" />
 
 	</application>

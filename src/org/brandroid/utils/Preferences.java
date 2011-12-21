@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,7 +37,7 @@ public class Preferences {
 			return mStorageHash.get(file);
 		if(preferences == null)
 			preferences = new Preferences(context);
-		Logger.LogVerbose("Getting instance of SharedPreferences");
+		Logger.LogVerbose("Getting instance of SharedPreferences for " + getPreferenceFilename(file));
 		SharedPreferences prefs = null;
 		if(context != null)
 			prefs = context.getSharedPreferences(getPreferenceFilename(file), PreferenceActivity.MODE_PRIVATE);
@@ -68,6 +69,24 @@ public class Preferences {
 		return ret;
 	}
 	
+	public JSONObject getSetting(String file, String key, JSONObject defValue)
+	{
+		try {
+			String s = getPreferences(file).getString(key, defValue.toString());
+			return new JSONObject(s);
+		} catch(JSONException j) {
+			return defValue;
+		}
+	}
+	public JSONArray getSetting(String file, String key, JSONArray defValue)
+	{
+		try {
+			String s = getPreferences(file).getString(key, defValue.toString());
+			return new JSONArray(s);
+		} catch(JSONException j) {
+			return defValue;
+		}
+	}
 	
 	public String getSetting(String file, String key, String defValue)
 	{
@@ -125,11 +144,13 @@ public class Preferences {
 			return Long.parseLong(s);
 		} catch(Exception e) { return defValue; }
 	}
-	public String getString(String file, String key, String defValue) 	{ if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
-	public int getInt(String file, String key, int defValue) 			{ if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
-	public float getFloat(String file, String key, float defValue) 		{ if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
-	public Boolean getBoolean(String file, String key, Boolean defValue) { if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
-	public Long getLong(String file, String key, Long defValue) 			{ if(!hasSetting(file, key)) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public String getString(String file, String key, String defValue) 	{ if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public int getInt(String file, String key, int defValue) 			{ if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public float getFloat(String file, String key, float defValue) 		{ if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public Boolean getBoolean(String file, String key, Boolean defValue) { if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public Long getLong(String file, String key, Long defValue) 			{ if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public JSONObject getJSON(String file, String key, JSONObject defValue) { if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
+	public JSONArray getJSON(String file, String key, JSONArray defValue) { if(!hasSetting(file, key)&&!file.equals("global")) return getSetting("global", key, defValue); else return getSetting(file, key, defValue); }
 	
 	public void setSettings(String file, JSONObject json)
 	{
@@ -196,6 +217,14 @@ public class Preferences {
 			editor.commit();
 		} catch(Exception e) { Logger.LogError("Couldn't set values in " + file + " preferences.", e); }
 		//pairs.
+	}
+	public void setSetting(String file, String key, JSONObject value)
+	{
+		setSetting(file, key, value.toString());
+	}
+	public void setSettings(String file, String key, JSONArray value)
+	{
+		setSetting(file, key, value.toString());
 	}
 	public Boolean hasSetting(String file, String key)
 	{
