@@ -381,6 +381,8 @@ public class SettingsActivity extends PreferenceActivity
 				while(r.read(chars) > 0)
 					sb.append(chars);
 				r.close();
+				if(sb.length() == 0)
+					return new OpenServers();
 				return new OpenServers(new JSONArray(sb.toString()));
 			}
 		} catch (IOException e) {
@@ -389,7 +391,6 @@ public class SettingsActivity extends PreferenceActivity
 				try {
 					r.close();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			return new OpenServers();
@@ -398,7 +399,6 @@ public class SettingsActivity extends PreferenceActivity
 				try {
 					r.close();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			Logger.LogError("Error translating default server list into JSON.", e);

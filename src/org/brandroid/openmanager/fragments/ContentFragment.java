@@ -175,7 +175,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			else
 				path = new OpenFile(Environment.getExternalStorageDirectory());
 		}
-		mData = mFileManager.getChildren(path);
+		if(!path.requiresThread())
+			mData = mFileManager.getChildren(path);
+		else
+			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 		
 		mActionModeSelected = false;
 		try {
@@ -675,6 +678,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	private void updateData(final OpenPath[] items) {
 		if(!mReadyToUpdate) return;
+		if(items == null) return;
 		mReadyToUpdate = false;
 		
 		OpenPath.Sorting = mFileManager.getSorting();
