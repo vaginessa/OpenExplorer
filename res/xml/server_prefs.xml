@@ -2,15 +2,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
 	android:title="Server Settings">
 	<EditTextPreference
-	    android:key="server_name"
-	    android:title="@string/s_pref_server_name"
-	    android:summary="@string/s_pref_server_name_summary"
-	    />
-	<EditTextPreference
-		android:key="server_url"
-		android:title="@string/s_pref_server_url"
+		android:key="server_host"
+		android:title="@string/s_pref_server_host"
 		android:summary="@string/s_pref_server_url_summary"
 		/>
+	<EditTextPreference
+	    android:key="server_dir"
+	    android:title="@string/s_pref_server_path"
+	    android:summary="@string/s_pref_server_path_summary"
+	    />
 	<EditTextPreference
 		android:key="server_user"
 		android:title="@string/s_pref_server_user"
@@ -22,8 +22,14 @@
 		android:summary="@string/s_pref_server_password_summary"
 		android:password="true"
 		/>
+	<EditTextPreference
+	    android:key="server_name"
+	    android:title="@string/s_pref_server_name"
+	    android:summary="@string/s_pref_server_name_summary"
+	    />
 	<PreferenceScreen
 	    android:key="server_update"
 	    android:title="@string/s_pref_server_update"
 	    />
+	<Preference android:key="server_delete" android:title="@string/s_menu_delete" />
 </PreferenceScreen>

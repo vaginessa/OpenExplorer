@@ -68,8 +68,10 @@
 	<string name="s_pref_server_password">Password</string>
 	<string name="s_pref_server_password_summary">Login Password</string>
     <string name="s_pref_server_path">Subdirectory</string>
+    <string name="s_pref_server_path_summary">Enter default login path</string>
     <string name="s_pref_server_extras">Extra Settings</string>
     <string name="s_pref_server_update">Add/Update Server</string>
+    <string name="s_pref_server_type">Server Type</string>
  	<string name="s_files">files</string>
 	<string name="s_create">Create</string>
 	<string name="s_title_holding_x_files">Holding xxx files</string>

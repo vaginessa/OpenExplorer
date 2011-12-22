@@ -35,6 +35,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -111,22 +112,7 @@ public class SettingsActivity extends PreferenceActivity
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				addPreferencesFromResource(R.xml.preferences);
 				
-				PreferenceCategory mPrefServers = (PreferenceCategory)findPreference("servers");
-				if(mPrefServers != null)
-				{
-					OpenServers servers = LoadDefaultServers(); //new OpenServers(prefs.getSetting("global", "servers", new JSONObject()));
-					for(String sName : servers.keySet())
-					{
-						OpenServer server = servers.get(sName);
-						Logger.LogDebug("Checking server [" + sName + "]");
-						if(sName.equals("")) continue;
-						Preference p = new Preference(this);
-						//PreferenceScreen ps = inflatePreferenceScreenFromResource(R.xml.server_prefs);
-						p.setKey("server_modify_" + sName);
-						p.setTitle(sName);
-						mPrefServers.addPreference(p);
-					}
-				}
+				refreshServerList();
 			}
 		} else if(mode == MODE_SERVER) {
 			addPreferencesFromResource(R.xml.server_prefs);
@@ -136,18 +122,28 @@ public class SettingsActivity extends PreferenceActivity
 			if(path.equals("server_add"))
 			{
 				setTitle(getTitle() + " - Add New");
+				getPreferenceScreen().findPreference("server_delete").setEnabled(false);
 			} else {
 				path = path.replace("server_modify_", "");
+				OpenServer server = new OpenServer();
+				int index = 0;
+				try {
+					index = Integer.parseInt(path);
+					server = servers.get(index);
+					path = server.getName();
+				} catch(NumberFormatException e) {
+					Logger.LogWarning("Couldn't parseInt " + path);
+				}
 				setTitle(getTitle() + " - " + path);
-				OpenServer server = servers.get(path);
+				Preference p;
 				if(server != null)
-					for(String s : new String[]{"name","url","user","password","path"})
-						if(findPreference(s) != null)
+					for(String s : new String[]{"name","host","user","password","dir"})
+						if((p = getPreferenceManager().findPreference("server_" + s)) != null)
 						{
-							Preference p = findPreference(s);
-							String val = server.getString(s, "");
-							if(val != "")
+							String val = server.getString(s);
+							if(val != null)
 							{
+								getIntent().putExtra(s, val);
 								((EditTextPreference)p).setText(val);
 								p.setSummary(val);
 								p.setDefaultValue(val);
@@ -160,6 +156,30 @@ public class SettingsActivity extends PreferenceActivity
 		setOnChange(getPreferenceScreen(), false);
 	}
 	
+	private void refreshServerList() {
+		PreferenceCategory mPrefServers = (PreferenceCategory)findPreference("servers");
+		if(mPrefServers != null)
+		{
+			//for(int i = mPrefServers.getPreferenceCount() - 1; i > 0; i--)
+			//	mPrefServers.removePreference(mPrefServers.getPreference(i));
+			OpenServers servers = LoadDefaultServers(); //new OpenServers(prefs.getSetting("global", "servers", new JSONObject()));
+			for(int i = 0; i < servers.size(); i++)
+			{
+				OpenServer server = servers.get(i);
+				//Logger.LogDebug("Checking server [" + sName + "]");
+				//if(sName.equals("")) continue;
+				Preference p = mPrefServers.findPreference("server_modify_" + i);
+				if(p == null) p = new Preference(this);
+				//PreferenceScreen ps = inflatePreferenceScreenFromResource(R.xml.server_prefs);
+				p.setKey("server_modify_" + i);
+				p.setTitle(server.getName());
+				mPrefServers.addPreference(p);
+			}
+			for(int i = mPrefServers.getPreferenceCount() - 1; i > servers.size(); i--)
+				mPrefServers.removePreference(mPrefServers.getPreference(i)); // remove the rest
+		}
+	}
+
 	@Override
 	protected void onStop() {
 		super.onStop();
@@ -194,23 +214,48 @@ public class SettingsActivity extends PreferenceActivity
 			String sPath = data.getStringExtra("path");
 			Preferences prefs = new Preferences(getApplicationContext());
 			OpenServers servers = LoadDefaultServers(); //new OpenServers(prefs.getJSON("global", "servers", new JSONObject()));
-			String name = sPath;
-			if(data.hasExtra("name"))
-				name = data.getStringExtra("name");
-			OpenServer server = servers.get(name);
+			OpenServer server = null;
+			int index = 0;
+			if(sPath.equals("server_add"))
+			{
+				server = new OpenServer();
+				index = servers.size();
+				sPath = index + "";
+				servers.add(server);
+			} else {
+				try {
+					index = Integer.parseInt(sPath.replaceAll("[^0-9]", ""));
+					server = servers.get(index);
+					if(resultCode == RESULT_FIRST_USER) // delete
+					{
+						servers.remove(index);
+						SaveToDefaultServers(servers, getApplicationContext());
+						refreshServerList();
+						return;
+					} else
+						sPath = index + "";
+				} catch(NumberFormatException e) {
+					Logger.LogWarning("Couldn't parseInt " + sPath);
+				}
+			}
+
 			if(server == null)
 				server = new OpenServer();
 
 			Bundle b = data.getExtras();
 			for(String s : b.keySet())
-				if(s != "mode" && s != "path")
+				if(s != "mode")
 				{
 					if(b.get(s) == null) continue;
 					server.setSetting(s, b.get(s).toString());
 				}
 			
-			servers.addServer(name, server);
+			if(server.getPath() == null || (b.containsKey("dir") && !b.getString("dir").equalsIgnoreCase(server.getPath())))
+				server.setPath(b.getString("dir"));
+			
+			servers.set(index, server);
 			SaveToDefaultServers(servers, getApplicationContext());
+			refreshServerList();
 			//prefs.setSetting("global", "servers", servers.getJSONObject());
 		}
 	}
@@ -239,18 +284,26 @@ public class SettingsActivity extends PreferenceActivity
     		return true;
     	} else if(preference.getKey().equals("server_update")) {
     		Intent iNew = getIntent();
-    		OpenServer server = new OpenServer();
-    		server.setSetting("name", "Server " + new Random().nextInt());
-    		for(String s : new String[]{"name","url","user","password","path"})
-    			if(findPreference("server_" + s) != null)
-    				server.setSetting(s, ((EditTextPreference)findPreference("server_" + s)).getText());
-    			else if(findPreference(s) != null)
-    				server.setSetting(s, ((EditTextPreference)findPreference(s)).getText());
-    		OpenServers servers = LoadDefaultServers(); //new OpenServers(prefs.getJSON("global", "servers", new JSONObject()));
-    		servers.addServer(server.getString("name", "Server"), server);
-    		SaveToDefaultServers(servers, getApplicationContext());
+    		//OpenServer server = new OpenServer();
+    		Preference p;
+    		for(String s : new String[]{"name","host","url","user","password","dir"})
+    			if((p = preferenceScreen.findPreference("server_" + s)) != null)
+    			{
+    				if(iNew.hasExtra(s)) continue;
+    				//server.setSetting(s, ((EditTextPreference)getPreferenceManager().findPreference("server_" + s)).getText());
+    				Logger.LogDebug("Found " + s + " = " + ((EditTextPreference)p).getEditText().getText().toString());
+    				iNew.putExtra(s, ((EditTextPreference)p).getEditText().getText().toString());
+    			}
+    		//server.setSetting("name", server.getString("name", server.getHost()));
+    		//Logger.LogDebug("Saving " + server.getName() + " (" + server.getHost() + ") - " + server.getJSONObject().toString());
+    		//OpenServers servers = LoadDefaultServers(); //new OpenServers(prefs.getJSON("global", "servers", new JSONObject()));
+    		//servers.addServer(server.getString("name", "Server"), server);
+    		//SaveToDefaultServers(servers, getApplicationContext());
     		//prefs.setSetting("global", "servers", servers.getJSONObject());
-    		setResult(RESULT_OK);
+    		setResult(RESULT_OK, iNew);
+    		finish();
+    	} else if(preference.getKey().equals("server_delete")) {
+    		setResult(RESULT_FIRST_USER, getIntent());
     		finish();
     	}
     	return false;
@@ -277,8 +330,11 @@ public class SettingsActivity extends PreferenceActivity
 
 	public boolean onPreferenceChange(Preference preference, Object newValue) {
 		preference.setSummary(newValue.toString());
+		if(preference.getKey().equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
+			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
+		//preference.getExtras().putString("value", newValue.toString());
 		Intent intent = getIntent();
-		intent.putExtra(preference.getKey(), newValue.toString());
+		intent.putExtra(preference.getKey().replace("server_", ""), newValue.toString());
 		setIntent(intent);
 		return false;
 	}
@@ -292,7 +348,7 @@ public class SettingsActivity extends PreferenceActivity
 			f.delete();
 			f.createNewFile();
 			w = new BufferedWriter(new FileWriter(f));
-			String data = servers.getJSONObject().toString();
+			String data = servers.getJSONArray().toString();
 			w.write(data);
 			w.close();
 		} catch(IOException e) {
@@ -306,9 +362,10 @@ public class SettingsActivity extends PreferenceActivity
 			}
 		}
 	}
-	public OpenServers LoadDefaultServers()
+	public OpenServers LoadDefaultServers() { return LoadDefaultServers(getApplicationContext()); }
+	public static OpenServers LoadDefaultServers(Context context)
 	{
-		File f = new File(getApplicationContext().getFilesDir().getPath(), "servers.json");
+		File f = new File(context.getFilesDir().getPath(), "servers.json");
 		Reader r = null;
 		try {
 			//getApplicationContext().openFileInput("servers.json"); //, Context.MODE_PRIVATE);
@@ -317,14 +374,14 @@ public class SettingsActivity extends PreferenceActivity
 				Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
 				return new OpenServers();
 			} else {
-				Logger.LogWarning("Created default servers file (" + f.getPath() + ")");
+				Logger.LogDebug("Created default servers file (" + f.getPath() + ")");
 				r = new BufferedReader(new FileReader(f));
 				char[] chars = new char[256];
 				StringBuilder sb = new StringBuilder();
 				while(r.read(chars) > 0)
 					sb.append(chars);
 				r.close();
-				return new OpenServers(new JSONObject(sb.toString()));
+				return new OpenServers(new JSONArray(sb.toString()));
 			}
 		} catch (IOException e) {
 			Logger.LogError("Error loading default server list.", e);

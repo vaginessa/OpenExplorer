@@ -74,10 +74,13 @@
 			</intent-filter>
 		</activity -->
 
-		<activity android:name=".activities.SettingsActivityngsActivity" android:label="Preferences" />
+		<activity android:name=".activities.SettingsActivity" android:label="Preferences" />
 
 		<activity android:name=".activities.BluetoothActivity" android:label="Bluetooth"
 			android:theme="@android:style/Theme.Dialog" />
+		
+		<activity android:name=".activities.ServerActivity" android:label="Servers"
+		    android:theme="@android:style/Theme.Dialog" />
 
 	</application>
 </manifest>

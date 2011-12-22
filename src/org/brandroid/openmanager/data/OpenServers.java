@@ -1,75 +1,76 @@
 package org.brandroid.openmanager.data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.brandroid.utils.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class OpenServers
 {
 	private static final long serialVersionUID = 6279070404986957630L;
-	private Hashtable<String, OpenServer> mData = new Hashtable<String, OpenServer>();
+	private ArrayList<OpenServer> mData = new ArrayList<OpenServer>(); 
 
-	public OpenServers() { super(); }
-	public OpenServers(JSONObject obj)
+	public OpenServers() { mData = new ArrayList<OpenServer>(); }
+	public OpenServers(JSONArray arr)
 	{
-		super();
-		if(obj == null) return;
-		if(obj.keys() == null) return;
-		Iterator keys = obj.keys();
-		try {
-			while(keys.hasNext())
-			{
-				String s = (String) keys.next();
-				Logger.LogDebug("OpenServers added " + s);
-				mData.put(s, new OpenServer(obj.optJSONObject(s)));
+		this();
+		if(arr == null) return;
+		for(int i = 0; i < arr.length(); i++)
+			try {
+				add(new OpenServer(arr.getJSONObject(i)));
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			Logger.LogDebug("Done making OpenServers");
-		} catch(NoSuchElementException e) {
-			
+	}
+	
+	
+	public boolean add(OpenServer value)
+	{
+		if(!value.isValid()) return false;
+		return mData.add(value);
+	}
+	
+	public OpenServer remove(int index)
+	{
+		return mData.remove(index);
+	}
+	
+	public boolean set(int index, OpenServer value)
+	{
+		if(!value.isValid()) return false;
+		if(index >= size())
+			return add(value);
+		else
+		{
+			try {
+				mData.set(index, value);
+			} catch(RuntimeException e) {
+				Logger.LogError("Couldn't add server.", e);
+				return false;
+			}
+			return true;
 		}
 	}
 	
-	
-	public OpenServers addServer(String key, OpenServer value)
+	public int size() { return mData.size(); }
+	public OpenServer get(int index)
 	{
-		mData.put(key, value);
-		return this;
+		return mData.get(index);
 	}
 	
-	public OpenServers removeServer(String key)
-	{
-		mData.remove(key);
-		return this;
-	}
-	
-	public OpenServer get(String key)
-	{
-		return mData.get(key);
-	}
-	
-	public boolean containsKey(String key)
-	{
-		return mData.containsKey(key);
-	}
-
-	public JSONObject getJSONObject() {
-		JSONObject ret = new JSONObject();
-		for(String s : mData.keySet())
-			try {
-				if(s != null)
-					ret.put(s, mData.get(s).getJSONObject());
-			} catch (JSONException e) {
-				Logger.LogError("Couldn't put " + s + " into OpenServers", e);
-			}
+	public JSONArray getJSONArray() {
+		JSONArray ret = new JSONArray();
+		for(int i = 0; i < mData.size(); i++)
+			ret.put(mData.get(i).getJSONObject());
 		return ret;
-	}
-	public Set<String> keySet() {
-		return mData.keySet();
 	}
 }

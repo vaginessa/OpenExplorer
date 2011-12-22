@@ -18,6 +18,7 @@
 
 package org.brandroid.openmanager.fragments;
 
+import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
@@ -26,6 +27,8 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.ContentFragment.OnBookMarkAddListener;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
@@ -135,6 +138,16 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 			for(String s : l)
 				checkAndAdd(getOpenBookmark(s));
 		}
+		OpenServers servers = SettingsActivity.LoadDefaultServers(getExplorer());
+		for(int i = 0; i < servers.size(); i++)
+		{
+			OpenServer server = servers.get(i);
+			FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
+			FTPFile file = new FTPFile();
+			file.setName(server.getName());
+			OpenFTP ftp = new OpenFTP(file, man);
+			checkAndAdd(ftp);
+		}
 		if(mBookmarkAdapter != null)
 			mBookmarkAdapter.notifyDataSetChanged();
 	}
@@ -228,7 +241,7 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		if(getSetting(path, "hide", false))
 			return false;
 		if(hasBookmark(path)) return false;
-		if(OpenCursor.class.equals(path.getClass()) || checkDir(path.getPath()))
+		if(OpenCursor.class.equals(path.getClass()) || OpenFTP.class.equals(path.getClass()) || checkDir(path.getPath()))
 		{
 			mBookmarks.add(path);
 			return true;

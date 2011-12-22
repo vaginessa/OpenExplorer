@@ -161,12 +161,7 @@ public class OpenExplorer
 	    			IS_DEBUG_BUILD = true;
 	    } catch (NameNotFoundException e1) { }
     	
-    	if(IS_DEBUG_BUILD)
-    	{
-    		startActivity(new Intent(this, SettingsActivity.class));
-    	}
-    	
-        setContentView(R.layout.main_fragments);
+    	setContentView(R.layout.main_fragments);
         
         ThumbnailCreator.setContext(this);
 
