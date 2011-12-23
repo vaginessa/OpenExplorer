@@ -2,6 +2,7 @@ package org.brandroid.openmanager.adapters;
 
 import org.brandroid.utils.MenuBuilder;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.*;
 import android.view.*;
 
@@ -11,7 +12,7 @@ public class IconContextMenu
 		void onIconContextItemSelected(MenuItem item, Object info);
 	}
 	
-	private AlertDialog dialog;
+	private Dialog dialog;
 	private MenuBuilder menu;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
@@ -91,7 +92,7 @@ public class IconContextMenu
     	dialog.cancel();
     }
     
-    public AlertDialog getDialog() {
+    public Dialog getDialog() {
     	return dialog;
     }
 }
