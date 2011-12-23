@@ -18,8 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.brandroid.openmanager" android:versionName=".128"
-	android:versionCode="128">
+	package="org.brandroid.openmanager" android:versionName=".129"
+	android:versionCode="129">
 
 	<uses-sdk android:minSdkVersion="8" android:targetSdkVersion="12" />
 
@@ -30,6 +30,7 @@
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
 	<uses-permission android:name="android.permission.READ_LOGS" />
+	<uses-permission android:name="com.android.vending.BILLING" />
 
 	<uses-feature android:name="android.hardware.bluetooth" android:required="false" />
 	<uses-feature android:name="android.hardware.faketouch" android:required="false" />
@@ -81,6 +82,16 @@
 		
 		<activity android:name=".activities.ServerActivity" android:label="Servers"
 		    android:theme="@android:style/Theme.Dialog" />
+		
+		<service android:name="org.brandroid.billing.BillingService" />
+
+		<receiver android:name="org.brandroid.billing.BillingReceiver">
+			<intent-filter>
+				<action android:name="com.android.vending.billing.IN_APP_NOTIFY" />
+			    <action android:name="com.android.vending.billing.RESPONSE_CODE" />
+			    <action android:name="com.android.vending.billing.PURCHASE_STATE_CHANGED" />
+			</intent-filter>
+		</receiver>
 
 	</application>
 </manifest>

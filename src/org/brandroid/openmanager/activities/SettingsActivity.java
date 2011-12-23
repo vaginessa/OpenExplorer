@@ -29,6 +29,8 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.Random;
 
+import org.brandroid.billing.BillingService;
+import org.brandroid.billing.PurchaseObserver;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
 import org.brandroid.openmanager.data.OpenServer;
@@ -39,17 +41,30 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.brandroid.billing.ResponseHandler;
+
+import org.brandroid.billing.Consts;
+import org.brandroid.billing.BillingService.RequestPurchase;
+import org.brandroid.billing.BillingService.RestoreTransactions;
+import org.brandroid.billing.Consts.PurchaseState;
+import org.brandroid.billing.Consts.ResponseCode;
+
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.RemoteException;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.util.Log;
 import android.view.Menu;
 
 public class SettingsActivity extends PreferenceActivity
@@ -66,6 +81,9 @@ public class SettingsActivity extends PreferenceActivity
 	public static final int MODE_SERVER = 1;
 	
 	private Preferences prefs;
+	private BillingService mBillingService;
+	private DonationObserver mDonationObserver;
+	private Handler mHandler;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -112,6 +130,32 @@ public class SettingsActivity extends PreferenceActivity
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				addPreferencesFromResource(R.xml.preferences);
 				
+				Preference preference = pm.findPreference("pref_stats");
+				if(preference != null) { // "Help improve..."
+					preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+						public boolean onPreferenceClick(Preference preference) {
+				    		try {
+					    		if(mBillingService == null)
+					    		{
+					    			mBillingService = new BillingService();
+					    			mBillingService.setContext(SettingsActivity.this);
+					    		}
+					    		if (mBillingService.checkBillingSupported())
+					    		{
+					    			if(mBillingService.requestPurchase("donate_01", null))
+					    				Logger.LogDebug("Donation success!");
+					    			else
+					    				Logger.LogWarning("Donation fail?");
+					    		} else
+					    			Logger.LogWarning("Billing not supported");
+				    		} catch(Exception e) {
+				    			Logger.LogError("Error using billing service.", e);
+				    		}
+				    		return false;
+						}
+					});
+				} else Logger.LogWarning("Couldn't find donation button");
+				
 				refreshServerList();
 			}
 		} else if(mode == MODE_SERVER) {
@@ -154,6 +198,99 @@ public class SettingsActivity extends PreferenceActivity
 			//setIntent(intent);
 		}
 		setOnChange(getPreferenceScreen(), false);
+		
+		mHandler = new Handler();
+		mDonationObserver = new DonationObserver(mHandler);
+		mBillingService = new BillingService();
+		mBillingService.setContext(this);
+		ResponseHandler.register(mDonationObserver);
+        if (!mBillingService.checkBillingSupported()) {
+        	Logger.LogWarning("Billing not supported.");
+            //showDialog(DIALOG_CANNOT_CONNECT_ID);
+        }
+	}
+	
+	/**
+     * A {@link PurchaseObserver} is used to get callbacks when Android Market sends
+     * messages to this application so that we can update the UI.
+     */
+    private class DonationObserver extends PurchaseObserver {
+        public DonationObserver(Handler handler) {
+            super(SettingsActivity.this, handler);
+        }
+
+        @Override
+        public void onBillingSupported(boolean supported) {
+            if (Consts.DEBUG) {
+                //Log.i(TAG, "supported: " + supported);
+            }
+            if (supported) {
+                //restoreDatabase();
+                //mBuyButton.setEnabled(true);
+                //mEditPayloadButton.setEnabled(true);
+            } else {
+                //showDialog(DIALOG_BILLING_NOT_SUPPORTED_ID);
+            }
+        }
+
+        @Override
+        public void onPurchaseStateChange(PurchaseState purchaseState, String itemId,
+                int quantity, long purchaseTime, String developerPayload) {
+        	Logger.LogDebug("onPurchaseStateChange() itemId: " + itemId + " " + purchaseState);
+            /*
+
+            if (developerPayload == null) {
+                logProductActivity(itemId, purchaseState.toString());
+            } else {
+                logProductActivity(itemId, purchaseState + "\n\t" + developerPayload);
+            }
+
+            if (purchaseState == PurchaseState.PURCHASED) {
+                mOwnedItems.add(itemId);
+            }
+            mCatalogAdapter.setOwnedItems(mOwnedItems);
+            mOwnedItemsCursor.requery();
+            */
+        }
+
+        @Override
+        public void onRequestPurchaseResponse(RequestPurchase request,
+                ResponseCode responseCode) {
+        	Logger.LogDebug(request.mProductId + ": " + responseCode);
+        	if (responseCode == ResponseCode.RESULT_OK) {
+                Logger.LogInfo("purchase was successfully sent to server");
+                //logProductActivity(request.mProductId, "sending purchase request");
+            } else if (responseCode == ResponseCode.RESULT_USER_CANCELED) {
+                Logger.LogInfo("user canceled purchase");
+                //logProductActivity(request.mProductId, "dismissed purchase dialog");
+            } else {
+                Logger.LogInfo("purchase failed");
+                //logProductActivity(request.mProductId, "request purchase returned " + responseCode);
+            }
+        }
+
+        @Override
+        public void onRestoreTransactionsResponse(RestoreTransactions request,
+                ResponseCode responseCode) {
+        	if (responseCode == ResponseCode.RESULT_OK) {
+                Logger.LogDebug("completed RestoreTransactions request");
+                // Update the shared preferences so that we don't perform
+                // a RestoreTransactions again.
+                /*SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor edit = prefs.edit();
+                edit.putBoolean(DB_INITIALIZED, true);
+                edit.commit();*/
+            } else {
+                Logger.LogDebug("RestoreTransactions error: " + responseCode);
+            }
+        }
+    }
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if(mBillingService != null)
+			mBillingService.unbind();
 	}
 	
 	private void refreshServerList() {
@@ -179,10 +316,17 @@ public class SettingsActivity extends PreferenceActivity
 				mPrefServers.removePreference(mPrefServers.getPreference(i)); // remove the rest
 		}
 	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		ResponseHandler.register(mDonationObserver);
+	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
+		ResponseHandler.unregister(mDonationObserver);
 	}
 	
 	private void setOnChange(Preference p, Boolean bSetSummaries)

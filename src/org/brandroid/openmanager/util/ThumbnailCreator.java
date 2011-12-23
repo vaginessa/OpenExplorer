@@ -81,7 +81,10 @@ public class ThumbnailCreator extends Thread {
 		
 		final Context mContext = mImage.getContext();
 		
-		if(file.isDirectory()) {
+		if(OpenFTP.class.equals(file.getClass()))
+		{
+			mImage.setImageResource(R.drawable.ftp);
+		} else if(file.isDirectory()) {
 			if(file.getAbsolutePath().equals("/") && mName.equals(""))
 				mImage.setImageResource(R.drawable.drive);
 			else if(sPath2.indexOf("download") > -1)
@@ -375,6 +378,9 @@ public class ThumbnailCreator extends Thread {
 						bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.photo);
 					
 				}
+			} else if (bmp == null && file.getClass().equals(OpenFTP.class))
+			{
+				bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ftp);
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
 				if(file.isDirectory())
