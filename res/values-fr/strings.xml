@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ouvrez l'Explorateur</string>
+    <string name="app_name">Ouvrez l\'Explorateur</string>
 	<string name="s_search">Rechercher</string>
 	<string name="s_photos">Photos</string>
 	<string name="s_videos">Vidéos</string>
@@ -24,7 +24,7 @@
 	<string name="s_menu_list">Voir la liste</string>
 	<string name="s_menu_carousel">Carrousel</string>
 	<string name="s_menu_hidden">Afficher les fichiers cachés</string>
-	<string name="s_menu_thumbs">Afficher les vignettes d'images</string>
+	<string name="s_menu_thumbs">Afficher les vignettes d\'images</string>
 	<string name="s_menu_new_folder">Nouveau dossier</string>
 	<string name="s_menu_other">Autres paramètres</string>
 	<string name="s_menu_flush">Vidage du cache</string>
@@ -48,12 +48,12 @@
 	<string name="s_none">Aucun</string>
 	<string name="s_pref_servers">Serveurs supplémentaires</string>
 	<string name="s_pref_server_add">+ Ajouter un nouveau serveur</string>
-	<string name="s_pref_display">Préférences d'affichage</string>
+	<string name="s_pref_display">Préférences d\'affichage</string>
 	<string name="s_pref_hidden">Afficher les fichiers cachés</string>
 	<string name="s_pref_hidden_summary">Afficher les fichiers et dossiers cachés</string>
-	<string name="s_pref_thumbs">Afficher les vignettes d'images</string>
-	<string name="s_pref_thumbs_summary">Affichage d'une miniature de l'Image / Vidéo / App fichiers</string>
-	<string name="s_pref_view">Mode d'affichage</string>
+	<string name="s_pref_thumbs">Afficher les vignettes d\'images</string>
+	<string name="s_pref_thumbs_summary">Affichage d\'une miniature de l\'Image / Vidéo / App fichiers</string>
+	<string name="s_pref_view">Mode d\'affichage</string>
 	<string name="s_pref_view_summary">Afficher les fichiers dans une grille, une liste ou carrousel (Honeycomb seulement)</string>
 	<string name="s_pref_sort">Tri</string>
 	<string name="s_pref_sort_summary">Choisissez la façon de trier les fichiers et dossiers</string>
@@ -61,10 +61,10 @@
 	<string name="s_pref_server_name">Nom du serveur</string>
 	<string name="s_pref_server_name_summary">Entrez le nom du serveur</string>
 	<string name="s_pref_server_url">URL du serveur</string>
-	<string name="s_pref_server_url_summary">Entrez l'URL complète du serveur</string>
+	<string name="s_pref_server_url_summary">Entrez l\'URL complète du serveur</string>
 	<string name="s_pref_server_host">Hôte du serveur</string>
 	<string name="s_pref_server_user">Utilisateur</string>
-	<string name="s_pref_server_user_summary">Nom d'utilisateur</string>
+	<string name="s_pref_server_user_summary">Nom d\'utilisateur</string>
 	<string name="s_pref_server_password">Mot de passe</string>
 	<string name="s_pref_server_password_summary">Login Mot de passe</string>
 	<string name="s_pref_server_path">Sous-répertoire</string>
@@ -86,9 +86,9 @@
 	<string name="s_title_copying">Copie</string>
 	<string name="s_title_zipping">Compresser</string>
 	<string name="s_title_unzipping">Décompression</string>
-	<string name="s_title_wait">S'il vous plaît patienter ...</string>
+	<string name="s_title_wait">S\'il vous plaît patienter ...</string>
 	<string name="s_alert_confirm_delete">Suppression xxx ne peut être défait. Etes-vous sûr de vouloir continuer?</string>
-	<string name="s_alert_rename">S'il vous plaît entrez le nouveau nom de ce fichier</string>
+	<string name="s_alert_rename">S\'il vous plaît entrez le nouveau nom de ce fichier</string>
 	<string name="s_alert_newfolder">Tapez le nom du dossier que vous souhaitez créer.</string>
 	<string name="s_alert_unzip">Aimeriez-vous pour décompresser xxx ici ou dans un autre dossier?</string>
 	<string name="s_button_unzip_here">Décompressez ici</string>
@@ -105,7 +105,7 @@
 	<string name="s_alert_bookmark_rename">Changer le titre de votre signet.</string>
 	<string name="s_title_bookmark_prefix">Gérer favori:</string>
 	<string name="s_alert_remove_safe">Vous pouvez maintenant supprimer en toute sécurité le lecteur.</string>
-	<string name="s_alert_remove_error">Impossible d'éjecter.</string>
+	<string name="s_alert_remove_error">Impossible d\'éjecter.</string>
 	<string name="s_menu_about">À propos</string>
 	<string name="s_about_version">Version</string>
 	<string name="s_about_author">Auteur</string>
@@ -117,12 +117,12 @@
 	<string name="s_menu_open">Ouvrir avec ...</string>
 	<string name="s_menu_edit">Modifier avec ...</string>
 	<string name="s_pref_stats_title">Aide à améliorer OpenExplorer</string>
-	<string name="s_pref_stats_summary">Envoyer les statistiques d'utilisation anonymes. Ceci n'inclut pas toutes les informations qui pourraient être utilisés pour identifier l'utilisateur.</string>
+	<string name="s_pref_stats_summary">Envoyer les statistiques d\'utilisation anonymes. Ceci n\'inclut pas toutes les informations qui pourraient être utilisés pour identifier l\'utilisateur.</string>
 	<string name="s_error_no_intents">Aucune des applications installées peuvent lire ce type de fichier.</string>
 	<string name="s_menu_root_disabled">Racine désactivé</string>
 	<string name="s_pref_start">Dossier de démarrage</string>
 	<string name="s_pref_start_summary">Indique le dossier dans lequel OpenExplorer commence en</string>
 	<string name="s_custom">Personnalisé ...</string>
 	<string name="s_text_intro_top">Bienvenue OpenExplorer!</string>
-	<string name="s_text_intro_body">Le but de OpenExplorer est de vous rendre plus productif au sein du système de fichiers Android et dans le nuage. Que vous ayez besoin de gérer des vidéos ou des photos à partir d'emplacements multiples ou de gérer votre serveur à distance via FTP, OpenExplorer peuvent convenir à vos besoins \n\nVeuillez choisir votre chemin de départ.:</string>
+	<string name="s_text_intro_body">Le but de OpenExplorer est de vous rendre plus productif au sein du système de fichiers Android et dans le nuage. Que vous ayez besoin de gérer des vidéos ou des photos à partir d\'emplacements multiples ou de gérer votre serveur à distance via FTP, OpenExplorer peuvent convenir à vos besoins \n\nVeuillez choisir votre chemin de départ.:</string>
 </resources>
