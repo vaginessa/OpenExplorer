@@ -5,13 +5,13 @@ package org.brandroid.billing;
 import org.brandroid.billing.Consts.PurchaseState;
 import org.brandroid.utils.Base64;
 import org.brandroid.utils.Base64DecoderException;
+import org.brandroid.utils.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -104,11 +104,11 @@ public class Security {
      */
     public static ArrayList<VerifiedPurchase> verifyPurchase(String signedData, String signature) {
         if (signedData == null) {
-            Log.e(TAG, "data is null");
+            Logger.LogError("data is null");
             return null;
         }
         if (Consts.DEBUG) {
-            Log.i(TAG, "signedData: " + signedData);
+            Logger.LogInfo("signedData: " + signedData);
         }
         boolean verified = false;
         if (!TextUtils.isEmpty(signature)) {
@@ -125,11 +125,11 @@ public class Security {
              * Generally, encryption keys / passwords should only be kept in memory
              * long enough to perform the operation they need to perform.
              */
-            String base64EncodedPublicKey = "your public key here";
+            //String base64EncodedPublicKey = "your public key here";
             PublicKey key = Security.generatePublicKey(base64EncodedPublicKey);
             verified = Security.verify(key, signedData, signature);
             if (!verified) {
-                Log.w(TAG, "signature does not match data.");
+                Logger.LogWarning("signature does not match data.");
                 return null;
             }
         }
@@ -152,7 +152,7 @@ public class Security {
         }
 
         if (!Security.isNonceKnown(nonce)) {
-            Log.w(TAG, "Nonce not found: " + nonce);
+            Logger.LogWarning("Nonce not found: " + nonce);
             return null;
         }
 
@@ -181,7 +181,7 @@ public class Security {
                         orderId, purchaseTime, developerPayload));
             }
         } catch (JSONException e) {
-            Log.e(TAG, "JSON exception: ", e);
+            Logger.LogError("JSON exception: ", e);
             return null;
         }
         removeNonce(nonce);
@@ -203,10 +203,10 @@ public class Security {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         } catch (InvalidKeySpecException e) {
-            Log.e(TAG, "Invalid key specification.");
+            Logger.LogError("Invalid key specification.");
             throw new IllegalArgumentException(e);
         } catch (Base64DecoderException e) {
-            Log.e(TAG, "Base64 decoding failed.");
+            Logger.LogError("Base64 decoding failed.");
             throw new IllegalArgumentException(e);
         }
     }
@@ -222,7 +222,7 @@ public class Security {
      */
     public static boolean verify(PublicKey publicKey, String signedData, String signature) {
         if (Consts.DEBUG) {
-            Log.i(TAG, "signature: " + signature);
+            Logger.LogInfo("signature: " + signature);
         }
         Signature sig;
         try {
@@ -230,18 +230,20 @@ public class Security {
             sig.initVerify(publicKey);
             sig.update(signedData.getBytes());
             if (!sig.verify(Base64.decode(signature))) {
-                Log.e(TAG, "Signature verification failed.");
+                Logger.LogError("Signature verification failed.");
                 return false;
             }
             return true;
         } catch (NoSuchAlgorithmException e) {
-            Log.e(TAG, "NoSuchAlgorithmException.");
+            Logger.LogError("NoSuchAlgorithmException.");
         } catch (InvalidKeyException e) {
-            Log.e(TAG, "Invalid key specification.");
+            Logger.LogError("Invalid key specification.");
         } catch (SignatureException e) {
-            Log.e(TAG, "Signature exception.");
+            Logger.LogError("Signature exception.");
         } catch (Base64DecoderException e) {
-            Log.e(TAG, "Base64 decoding failed.");
+            Logger.LogError("Base64 decoding failed.");
+        } catch (IllegalArgumentException e) {
+        	Logger.LogError("Base64 illegal argument", e);
         }
         return false;
     }
