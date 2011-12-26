@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/text_intro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/s_text_intro"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <RadioButton
+        android:layout_below="@+id/text_intro"
+        android:id="@+id/pref_start_videos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/s_videos" />
+
+    <RadioButton
+        android:layout_alignTop="@+id/pref_start_videos"
+        android:layout_toRightOf="@+id/pref_start_videos"
+        android:layout_alignLeft="@+id/pref_start_root"
+        android:id="@+id/pref_start_photos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/s_photos" />
+
+    <RadioButton
+        android:layout_below="@+id/pref_start_photos"
+        android:id="@+id/pref_start_external"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:text="@string/s_external" />
+
+    <RadioButton
+        android:layout_below="@+id/pref_start_videos"
+        android:layout_toRightOf="@+id/pref_start_external"
+        android:id="@+id/pref_start_root"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="/" />
+
+</RelativeLayout>
