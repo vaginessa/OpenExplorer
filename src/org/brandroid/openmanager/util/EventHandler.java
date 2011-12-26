@@ -486,33 +486,33 @@ public class EventHandler {
 			return ret;
 		}
 		
-		private Boolean copyToDirectory(OpenPath old, OpenPath newDir, int total) throws IOException
+		private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total) throws IOException
 		{
-			Logger.LogDebug("Trying to copy [" + old.getPath() + "] to [" + newDir.getPath() + "]...");
+			Logger.LogDebug("Trying to copy [" + old.getPath() + "] to [" + intoDir.getPath() + "]...");
+			if(old.getPath().equals(intoDir.getPath())) {
+				return false;
+			}
+			OpenPath newDir = intoDir;
+			if(old.isDirectory())
+			{
+				newDir = newDir.getChild(old.getName());
+				if(!newDir.exists() && !newDir.mkdir())
+				{
+					Logger.LogWarning("Couldn't create initial destination file.");
+				}
+			}
 			byte[] data = new byte[FileManager.BUFFER];
 			int read = 0;
 
-			if(!newDir.mkdir())
+			if(old.isDirectory() && newDir.isDirectory() && newDir.canWrite())
 			{
-				Logger.LogWarning("Unable to create (" + newDir.getPath() + ").");
-				//return false;
-			}
-			
-			if(old.isDirectory() && newDir.isDirectory() && newDir.canWrite()) {
 				OpenPath[] files = old.list();
-				OpenPath newFile = newDir.getChild(old.getName());
-				
-				//if(!newFile.mkdir())
-				{
-					//Logger.LogWarning("Couldn't create initial destination directory for file.");
-					//return false;
-				}
 				
 				for(OpenPath file : files)
 					total += (int)file.length();
 				
 				for(int i = 0; i < files.length; i++)
-					if(!copyToDirectory(files[i], newFile.getParent(), total))
+					if(!copyToDirectory(files[i], newDir, total))
 					{
 						Logger.LogWarning("Couldn't copy " + files[i].getName() + ".");
 						return false;
@@ -520,12 +520,14 @@ public class EventHandler {
 				
 				return true;
 				
-			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite()){
+			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite())
+			{
 				OpenPath newFile = newDir.getChild(old.getName());
-				//if(!newFile.mkdir())
+				Logger.LogDebug("Creating File [" + newFile.getPath() + "]...");
+				if(!newDir.exists() && !newFile.mkdir())
 				{
-					//Logger.LogWarning("Couldn't create initial destination directory.");
-					//return false;
+					Logger.LogWarning("Couldn't create initial destination file.");
+					return false;
 				}
 				
 				int size = (int)old.length();

@@ -109,6 +109,7 @@ public class OpenExplorer
 	{	
 
 	private static final int PREF_CODE =		0x6;
+	private static final int REQ_SPLASH = 7;
 	public static final int VIEW_LIST = 0;
 	public static final int VIEW_GRID = 1;
 	public static final int VIEW_CAROUSEL = Build.VERSION.SDK_INT > 11 ? 2 : 1;
@@ -170,9 +171,13 @@ public class OpenExplorer
 			{
 				showToast("Welcome, GoogleTV user!");
 				getPreferences().setSetting("global", "welcome", true);
-				//getActionBar().hide();
-			} // else
+			}
         } catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
+        
+        if(!getPreferences().getBoolean("0_global", "pref_splash", false))
+        {
+        	startActivityForResult(new Intent(this, SplashActivity.class), REQ_SPLASH);
+        }
         
         try {
 	        if(getPreferences().getSetting("0_global", "pref_root", false) ||
@@ -203,13 +208,10 @@ public class OpenExplorer
 	        fragmentManager.addOnBackStackChangedListener(this);
         }
         
-        //mTreeFragment = new DirListFragment();
         if(mFavoritesFragment == null)
         	mFavoritesFragment = new BookmarkFragment();
         
-        //BookmarkFragment.setOnChangeLocationListener(this);
-
-		refreshCursors();
+        refreshCursors();
         
         OpenPath path = null;
         if(savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals(""))
@@ -227,12 +229,12 @@ public class OpenExplorer
         		path = mMusicParent;
         	else
         		path = new OpenFile(last);
-        	updateTitle(path.getPath());
         } else
         	path = new OpenFile(Environment.getExternalStorageDirectory());
+    	updateTitle(path.getPath());
         mLastPath = path;
         
-        boolean bAddToStack = fragmentManager.getBackStackEntryCount() > 0;
+        boolean bAddToStack = true; //fragmentManager.getBackStackEntryCount() > 0;
 
         FragmentTransaction ft = fragmentManager.beginTransaction();
         Fragment home = new ContentFragment(mLastPath);
@@ -249,11 +251,11 @@ public class OpenExplorer
 
         if(Build.VERSION.SDK_INT > 11 && !IS_DEBUG_BUILD && savedInstanceState == null)
         {
-        	if(mVideoParent != null && mVideoParent.length() > 1)
+        	if(mVideoParent != null && mVideoParent.length() > 1 && "Videos".equals(getPreferences().getString("0_global", "pref_start", "Videos")))
         	{
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mVideoParent;
-        	} else if (mPhotoParent != null && mPhotoParent.length() > 1) {
+        	} else if (mPhotoParent != null && mPhotoParent.length() > 1 && "Photos".equals(getPreferences().getString("0_global", "pref_start", "Photos"))) {
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mPhotoParent;
         	} else mViewMode = VIEW_LIST;
@@ -270,7 +272,8 @@ public class OpenExplorer
 
         if(bAddToStack)
         {
-        	if(fragmentManager.getBackStackEntryCount() == 0 || !mLastPath.getPath().equals(fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getBreadCrumbTitle()))
+        	if(fragmentManager.getBackStackEntryCount() == 0 ||
+        			!mLastPath.getPath().equals(fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getBreadCrumbTitle()))
 	        	fragmentManager.beginTransaction()
 	        		.addToBackStack("path")
 	        		.setBreadCrumbTitle(mLastPath.getPath())
@@ -1174,8 +1177,10 @@ public class OpenExplorer
 			{
 				if(entry != null && entry.getBreadCrumbTitle() != null)
 					updateTitle(entry.getBreadCrumbTitle().toString());
-				else
+				else {
+					Logger.LogWarning("No Breadcrumb Title");
 					updateTitle("");
+				}
 			} else if (mSinglePane) updateTitle("");
 			else {
 				updateTitle("");
