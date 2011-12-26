@@ -62,13 +62,14 @@
 	        style="@style/ActionBarCompatHomeItem"
 		    android:layout_width="@dimen/actionbar_compat_button_width"
 		    android:layout_height="@dimen/actionbar_compat_height"
+			android:layout_alignParentTop="true"
 		    android:padding="0dp"
         />
         <TextView
             android:id="@+id/title_paste_text"
             android:layout_width="@dimen/actionbar_compat_button_width"
             android:layout_height="@dimen/actionbar_compat_height" 
-            android:layout_alignBottom="@+id/title_paste_icon"
+            android:layout_below="@+id/title_paste_icon"
             style="@style/Small"
             android:text="1"
             android:gravity="center"
