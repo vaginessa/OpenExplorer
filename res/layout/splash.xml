@@ -6,11 +6,17 @@
     android:orientation="vertical" >
 
     <TextView
+        android:id="@+id/text_intro_top"
+        android:text="@string/s_text_intro_top"
+        style="@style/Mid"
+        />
+    
+    <TextView
         android:id="@+id/text_intro"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/s_text_intro"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:text="@string/s_text_intro_body"
+        style="@style/Small"
+        android:layout_below="@+id/text_intro_top"
+        />
 
     <RadioButton
         android:layout_below="@+id/text_intro"
