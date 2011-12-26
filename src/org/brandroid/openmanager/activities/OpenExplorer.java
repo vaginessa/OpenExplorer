@@ -1129,6 +1129,9 @@ public class OpenExplorer
     			Logger.LogError("onActivityResult FAIL", e);
     		}
     		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
+    	} else if (requestCode == REQ_SPLASH) {
+    		if(resultCode == RESULT_OK)
+    			getPreferences().setSetting("0_global", "pref_splash", true);
     	}
     }
     
@@ -1176,8 +1179,11 @@ public class OpenExplorer
 			if(i > 0)
 			{
 				if(entry != null && entry.getBreadCrumbTitle() != null)
+				{
+					if(new OpenFile(entry.getBreadCrumbTitle().toString()).exists())
+						mLastPath = new OpenFile(entry.getBreadCrumbTitle().toString());
 					updateTitle(entry.getBreadCrumbTitle().toString());
-				else {
+				} else {
 					Logger.LogWarning("No Breadcrumb Title");
 					updateTitle("");
 				}
