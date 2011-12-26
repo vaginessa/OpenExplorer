@@ -119,5 +119,9 @@
 	<string name="s_pref_stats_title">Help improve OpenExplorer</string>
 	<string name="s_pref_stats_summary">Send anonymous usage statistics. This does not include any information that could be used to identify the user.</string>
 	<string name="s_error_no_intents">No installed applications can read this type of file.</string>
-	<string name="s_menu_root_disabled">Root disabled</string>    
+	<string name="s_menu_root_disabled">Root disabled</string>
+	<string name="s_pref_start">Starting Folder</string>
+	<string name="s_pref_start_summary">Indicates which folder OpenExplorer starts in</string>
+	<string name="s_custom">Custom...</string>    
+	<string name="s_text_intro">Welcome to OpenExplorer!\nThe goal of OpenExplorer is to make you more productive within the Android filesystem and in the cloud. Whether you need to manage videos or photos from multiple locations or manage your webserver remotely via FTP, OpenExplorer can suit your needs.\n\nPlease select your starting path:</string>
 </resources>

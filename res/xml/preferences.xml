@@ -24,6 +24,13 @@
 			android:entries="@array/view"
 			android:entryValues="@array/view_value"
 			android:dialogTitle="@string/s_pref_view" />
+		<ListPreference
+		    android:key="pref_start"
+		    android:title="@string/s_pref_start"
+		    android:summary="@string/s_pref_start_summary"
+		    android:entries="@array/starts"
+		    android:entryValues="@array/start_value"
+		    android:dialogTitle="@string/s_pref_start" />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/s_pref_sort">
 		<ListPreference

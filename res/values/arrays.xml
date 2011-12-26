@@ -29,4 +29,18 @@
 		<item>grid</item>
 		<item>list</item>
 	</string-array>
+	
+	<string-array name="starts">
+	    <item>@string/s_videos</item>
+	    <item>@string/s_photos</item>
+	    <item>@string/s_external</item>
+	    <item>/</item>
+	</string-array>
+	
+	<string-array name="start_value">
+	    <item>Videos</item>
+	    <item>Photos</item>
+	    <item>External</item>
+	    <item>/</item>
+	</string-array>
 </resources>
