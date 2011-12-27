@@ -3,6 +3,8 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -18,14 +20,20 @@ public class OpenCursor extends OpenPath
 	{
 		//mCursor = c;
 		if(c == null) return;
-		mChildren = new OpenMediaStore[(int)c.getCount()];
+		ArrayList<OpenMediaStore> kids = new ArrayList<OpenMediaStore>(c.getCount());
+		//mChildren = new OpenMediaStore[(int)c.getCount()];
 		c.moveToFirst();
-		for(int i = 0; i < mChildren.length; i++)
+		for(int i = 0; i < c.getCount(); i++)
 		{
 			c.moveToPosition(i);
-			mChildren[i] = new OpenMediaStore(this, c);
-			mTotalSize += mChildren[i].getFile().length();
+			OpenMediaStore tmp = new OpenMediaStore(this, c);
+			if(!tmp.exists()) continue;
+			if(!tmp.getFile().exists()) continue;
+			kids.add(tmp);
+			mTotalSize += tmp.getFile().length();
 		}
+		mChildren = new OpenMediaStore[kids.size()];
+		mChildren = kids.toArray(mChildren);
 		mName = name;
 	}
 

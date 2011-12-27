@@ -67,6 +67,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
@@ -174,11 +175,6 @@ public class OpenExplorer
 			}
         } catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
         
-        if(!getPreferences().getBoolean("0_global", "pref_splash", false))
-        {
-        	startActivityForResult(new Intent(this, SplashActivity.class), REQ_SPLASH);
-        }
-        
         try {
 	        if(getPreferences().getSetting("0_global", "pref_root", false) ||
 	        		Preferences.getPreferences(getApplicationContext(), "0_global").getBoolean("pref_root", false))
@@ -213,6 +209,8 @@ public class OpenExplorer
         
         refreshCursors();
         
+        String start = getPreferences().getString("0_global", "pref_start", "Videos");
+
         OpenPath path = null;
         if(savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals(""))
         {
@@ -229,8 +227,16 @@ public class OpenExplorer
         		path = mMusicParent;
         	else
         		path = new OpenFile(last);
-        } else
+        }
+        else if("/".equals(start))
+        	path = new OpenFile("/");
+        else if("Videos".equals(start) && mVideoParent != null && mVideoParent.length() > 0)
+        	path = mVideoParent;
+        else if("Photos".equals(start) && mPhotoParent != null && mPhotoParent.length() > 0)
+        	path = mPhotoParent;
+        else
         	path = new OpenFile(Environment.getExternalStorageDirectory());
+        
     	updateTitle(path.getPath());
         mLastPath = path;
         
@@ -248,14 +254,14 @@ public class OpenExplorer
         		.commit();
         	//ft.replace(R.id.list_frag, mFavoritesFragment);
         }
-
+        
         if(Build.VERSION.SDK_INT > 11 && !IS_DEBUG_BUILD && savedInstanceState == null)
         {
-        	if(mVideoParent != null && mVideoParent.length() > 1 && "Videos".equals(getPreferences().getString("0_global", "pref_start", "Videos")))
+        	if(mVideoParent != null && mVideoParent.length() > 1 && "Videos".equals(start))
         	{
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mVideoParent;
-        	} else if (mPhotoParent != null && mPhotoParent.length() > 1 && "Photos".equals(getPreferences().getString("0_global", "pref_start", "Photos"))) {
+        	} else if (mPhotoParent != null && mPhotoParent.length() > 1 && "Photos".equals(start)) {
         		mViewMode = VIEW_CAROUSEL;
         		path = mLastPath = mPhotoParent;
         	} else mViewMode = VIEW_LIST;
@@ -291,6 +297,14 @@ public class OpenExplorer
         
         //mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         handleMediaReceiver();
+        
+
+        if(!getPreferences().getBoolean("0_global", "pref_splash", false))
+        {
+        	Intent intent = new Intent(this, SplashActivity.class);
+        	intent.putExtra("start", mLastPath.getPath());
+        	startActivityForResult(intent, REQ_SPLASH);
+        }
         
         /* read and display the users preferences */
         //mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
@@ -497,6 +511,24 @@ public class OpenExplorer
     
     private void refreshCursors()
     {
+		if(mVideoParent == null)
+    	{
+			//if(!IS_DEBUG_BUILD)
+			try {
+				CursorLoader loader = new CursorLoader(getApplicationContext(),
+						Uri.parse("content://media/external/video/media"),
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+						MediaStore.Video.Media.SIZE + " > 100000", null,
+						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
+						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
+				Cursor c = loader.loadInBackground();
+    			if(c != null)
+    			{
+    				mVideoParent = new OpenCursor(c, "Videos");
+    				c.close();
+    			}
+    		} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
+    	}
     	if(mPhotoParent == null)
     	{
     		try {
@@ -513,24 +545,6 @@ public class OpenExplorer
     			}
     		} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
-		if(mVideoParent == null)
-    	{
-			if(!IS_DEBUG_BUILD)
-			try {
-				CursorLoader loader = new CursorLoader(getApplicationContext(),
-						Uri.parse("content://media/external/video/media"),
-						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						MediaStore.Video.Media.SIZE + " > 100000", null,
-						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
-						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
-				Cursor c = loader.loadInBackground();
-    			if(c != null)
-    			{
-    				mVideoParent = new OpenCursor(c, "Videos");
-    				c.close();
-    			}
-    		} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
-    	}
 		if(mMusicParent == null)
 		{
 			try {
@@ -553,7 +567,7 @@ public class OpenExplorer
 				CursorLoader loader = new CursorLoader(getApplicationContext(),
 						MediaStore.Files.getContentUri(Environment.getExternalStorageDirectory().getPath()),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						"_size > 10000", null,
+						"_size > 10000 AND _data LIKE '%apk'", null,
 						"date modified DESC");
 				Cursor c = loader.loadInBackground();
 				if(c != null)
@@ -569,9 +583,14 @@ public class OpenExplorer
     public void ensureCursorCache()
     {
     	// group into blocks
-    	int enSize = 20;
+    	int iTotalSize = 0;
+    	for(OpenCursor cur : new OpenCursor[]{mVideoParent, mPhotoParent, mApkParent})
+    		if(cur != null)
+    			iTotalSize += cur.length();
+    	int enSize = Math.max(20, iTotalSize / 10);
+    	Logger.LogDebug("EnsureCursorCache size: " + enSize + " / " + iTotalSize);
     	ArrayList<OpenPath> buffer = new ArrayList<OpenPath>(enSize);
-    	for(OpenCursor curs : new OpenCursor[]{mPhotoParent, mVideoParent, mApkParent})
+    	for(OpenCursor curs : new OpenCursor[]{mVideoParent, mPhotoParent, mApkParent})
     	{
     		if(curs == null) continue;
 	    	for(OpenMediaStore ms : curs.list())
@@ -1116,22 +1135,25 @@ public class OpenExplorer
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	if(requestCode == PREF_CODE) {
-    		//this could be done better.
-    		try {
-    			getDirContentFragment(true).setSettings(mFileManager.getSorting(),
-    					mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_THUMB_KEY, true),
-    					mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_HIDDEN_KEY, false)
-    					);
-	    		//mSettingsListener.onHiddenFilesChanged(mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_HIDDEN_KEY, false));
-	    		//mSettingsListener.onThumbnailChanged(mPreferences.getBoolean(mLastPath.getPath(), SettingsActivity.PREF_THUMB_KEY, false));
-	    		//mSettingsListener.onViewChanged(mPreferences.getInt(mLastPath.getPath(), SettingsActivity.PREF_VIEW_KEY, VIEW_LIST));
-    		} catch(Exception e) {
-    			Logger.LogError("onActivityResult FAIL", e);
-    		}
-    		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "alpha"));
+    		goHome(); // just restart
     	} else if (requestCode == REQ_SPLASH) {
-    		if(resultCode == RESULT_OK)
+    		if(resultCode == RESULT_OK && data != null && data.hasExtra("start"))
+    		{
+    			String start = data.getStringExtra("start");
     			getPreferences().setSetting("0_global", "pref_splash", true);
+    			getPreferences().setSetting("0_global", "pref_start", start);
+    			if(!start.equals(mLastPath.getPath()))
+    			{
+	    			if("Videos".equals(start))
+	    				changePath(mVideoParent, true);
+	    			else if("Photos".equals(start))
+	    				changePath(mPhotoParent, true);
+	    			else if("External".equals(start))
+	    				changePath(new OpenFile(Environment.getExternalStorageDirectory()), true);
+	    			else
+	    				changePath(new OpenFile("/"), true);
+    			}
+    		}
     	}
     }
     
@@ -1291,8 +1313,12 @@ public class OpenExplorer
 		} else Logger.LogDebug("Covertly changing to " + path.getPath());
 		Logger.LogDebug("Setting path to " + path.getPath());
 		ft.setBreadCrumbTitle(path.getPath());
-		updateTitle(path.getPath());
-		ft.commit();
+		try {
+			ft.commit();
+			updateTitle(path.getPath());
+		} catch(RuntimeException e) {
+			Logger.LogError("Error committing FragmentTransaction", e);
+		}
 		if(!BEFORE_HONEYCOMB)
 			setLights(!path.getName().equals("Videos"));
 		mLastPath = path;

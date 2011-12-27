@@ -64,8 +64,13 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.ReplacementTransformationMethod;
+import android.text.method.TransformationMethod;
 import android.util.Log;
 import android.view.Menu;
+import android.view.animation.TranslateAnimation;
+import android.widget.EditText;
 
 public class SettingsActivity extends PreferenceActivity
 	implements OnPreferenceChangeListener
@@ -473,7 +478,10 @@ public class SettingsActivity extends PreferenceActivity
 	}
 
 	public boolean onPreferenceChange(Preference preference, Object newValue) {
-		preference.setSummary(newValue.toString());
+		if(EditTextPreference.class.equals(preference.getClass()) && ((EditTextPreference)preference).getEditText() != null && ((EditTextPreference)preference).getEditText().getTransformationMethod() != null)
+			preference.setSummary(((EditTextPreference)preference).getEditText().getTransformationMethod().getTransformation(newValue.toString(), ((EditTextPreference)preference).getEditText()));
+		else
+			preference.setSummary(newValue.toString());
 		if(preference.getKey().equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
 			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
 		//preference.getExtras().putString("value", newValue.toString());
@@ -493,6 +501,7 @@ public class SettingsActivity extends PreferenceActivity
 			f.createNewFile();
 			w = new BufferedWriter(new FileWriter(f));
 			String data = servers.getJSONArray().toString();
+			/// TODO: insert encryption function
 			w.write(data);
 			w.close();
 		} catch(IOException e) {
@@ -513,12 +522,12 @@ public class SettingsActivity extends PreferenceActivity
 		Reader r = null;
 		try {
 			//getApplicationContext().openFileInput("servers.json"); //, Context.MODE_PRIVATE);
-			if(f.createNewFile())
+			if(!f.exists() && !f.createNewFile())
 			{
 				Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
 				return new OpenServers();
 			} else {
-				Logger.LogDebug("Created default servers file (" + f.getPath() + ")");
+				//Logger.LogDebug("Created default servers file (" + f.getPath() + ")");
 				r = new BufferedReader(new FileReader(f));
 				char[] chars = new char[256];
 				StringBuilder sb = new StringBuilder();
@@ -527,7 +536,9 @@ public class SettingsActivity extends PreferenceActivity
 				r.close();
 				if(sb.length() == 0)
 					return new OpenServers();
-				return new OpenServers(new JSONArray(sb.toString()));
+				String data = sb.toString();
+				/// TODO: insert decryption function
+				return new OpenServers(new JSONArray(data));
 			}
 		} catch (IOException e) {
 			Logger.LogError("Error loading default server list.", e);

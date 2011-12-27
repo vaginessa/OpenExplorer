@@ -574,7 +574,6 @@ public class EventHandler {
 		
 		public void extractZipFiles(OpenPath zip, OpenPath directory) {
 			byte[] data = new byte[FileManager.BUFFER];
-			String name, path, zipDir;
 			ZipEntry entry;
 			ZipInputStream zipstream;
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!-- 
-	Open Manager For Tablets, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+	OpenExplorer, an open source file manager for the Android system
+    Copyright (C) 2011  Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.brandroid.openmanager" android:versionName=".131"
-	android:versionCode="131">
+	package="org.brandroid.openmanager" android:versionName=".132"
+	android:versionCode="132">
 
 	<uses-sdk android:minSdkVersion="8" android:targetSdkVersion="12" />
 

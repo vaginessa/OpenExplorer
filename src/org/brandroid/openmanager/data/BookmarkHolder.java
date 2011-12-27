@@ -114,7 +114,12 @@ public class BookmarkHolder {
 		if(mEject != null)
 			mEject.setVisibility(eject ? View.VISIBLE : View.GONE);
 	}
-	public Boolean isEjectable() { return mFile.getPath().toLowerCase().indexOf("ext") > -1 || mFile.getPath().toLowerCase().startsWith("/removable/"); }
+	public Boolean isEjectable() {
+		if(mFile.getPath().toLowerCase().indexOf("ext") == -1 || !mFile.getPath().toLowerCase().startsWith("/removable/")) return false;
+		if(mFile.getDepth() > 2 + (mFile.getPath().startsWith("/mnt/") ? 1 : 0))
+			return false;
+		return true;
+	}
 	
 	public void setSelected(Boolean sel)
 	{

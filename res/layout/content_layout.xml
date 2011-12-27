@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-	Open Manager for Tablets, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+	OpenExplorer, an open source file manager for the Android system
+    Copyright (C) 2011  Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical" >
 	
 		<ListView
@@ -43,15 +43,17 @@
 			android:stretchMode="columnWidth"
 			android:gravity="center"
 			android:fastScrollEnabled="true"/>
+
 	<HorizontalScrollView
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="@color/whitegray"
-		android:scrollbars="none">
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:background="@color/whitegray"
+	    android:scrollbars="none" >
+
 		<LinearLayout
 			android:id="@+id/multiselect_path"
 			android:orientation="horizontal"
-			android:layout_width="match_parent"
+			android:layout_width="wrap_content"
 			android:layout_height="match_parent">
 		</LinearLayout>
 	</HorizontalScrollView>

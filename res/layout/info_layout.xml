@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!-- 
-	Open Manager, an open source file manager for the Android system
-    Copyright (C) 2011  Joe Berria <nexesdevelopment@gmail.com>
+	OpenExplorer, an open source file manager for the Android system
+    Copyright (C) 2011  Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,42 +31,43 @@
 			android:id="@+id/info_icon"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
+			android:contentDescription="Icon"
 			android:adjustViewBounds="true"
 			android:layout_gravity="left"/>
-			<LinearLayout
-				android:orientation="vertical"
+		<LinearLayout
+			android:orientation="vertical"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+			<TextView
+				android:id="@+id/info_name_label"
 				android:layout_width="match_parent"
-				android:layout_height="wrap_content">
-					<TextView
-						android:id="@+id/info_name_label"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:gravity="right"
-						android:paddingRight="24dip"
-						android:maxLines="1"
-						android:textColor="@color/white"
-						android:textAppearance= "?android:attr/textAppearanceLarge"/>
-					<TextView
-						android:id="@+id/info_path_label"
-						android:layout_width="fill_parent"
-						android:layout_height="wrap_content"
-						android:maxLines="1"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceLarge"
-						android:paddingRight="4dip"
-						android:gravity="right"/>
-			</LinearLayout>
+				android:layout_height="wrap_content"
+				android:gravity="right"
+				android:paddingRight="24dip"
+				android:maxLines="1"
+				android:textColor="@color/white"
+				android:textAppearance= "?android:attr/textAppearanceLarge"/>
+			<TextView
+				android:id="@+id/info_path_label"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:maxLines="1"
+				android:textColor="@color/white"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:paddingRight="4dip"
+				android:gravity="right"/>
+		</LinearLayout>
 	</LinearLayout>
 	
 	<ScrollView
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
+		android:layout_height="0dp"
 		android:padding="8dip"
 		android:layout_weight="2">
 			<TableLayout
 				android:orientation="vertical"
 				android:layout_width="match_parent"
-				android:layout_height="match_parent"
+				android:layout_height="wrap_content"
 				android:stretchColumns="*"
 				android:shrinkColumns="*">
 				<TableRow>
@@ -76,7 +77,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Number of folders: "/>
+						android:text="@string/s_info_num_folders"/>
 					<TextView
 						android:id="@+id/info_dirs_label"
 						android:layout_width="fill_parent"
@@ -93,7 +94,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Number of files: "/>
+						android:text="@string/s_info_num_files"/>
 					<TextView
 						android:id="@+id/info_files_label"
 						android:layout_width="match_parent"
@@ -110,7 +111,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Last Modified: "/>
+						android:text="@string/s_info_last_modified"/>
 					<TextView
 						android:id="@+id/info_time_stamp"
 						android:layout_width="match_parent"
@@ -144,7 +145,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="File Permissions: "/>
+						android:text="@string/s_info_permissions"/>
 				</TableRow>
 				<TableRow>
 					<TextView
@@ -154,7 +155,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Read: "/>
+						android:text="@string/s_info_permission_read"/>
 					<TextView
 						android:id="@+id/info_read_perm"
 						android:layout_width="match_parent"
@@ -171,7 +172,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Write: "/>
+						android:text="@string/s_info_permission_write"/>
 					<TextView
 						android:id="@+id/info_write_perm"
 						android:layout_width="match_parent"
@@ -188,7 +189,7 @@
 						android:textColor="@color/white"
 						android:gravity="left"
 						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="Execute: "/>
+						android:text="@string/s_info_permission_execute"/>
 					<TextView
 						android:id="@+id/info_execute_perm"
 						android:layout_width="match_parent"

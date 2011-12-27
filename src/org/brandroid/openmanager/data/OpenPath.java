@@ -138,6 +138,11 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             return new OpenPath[size];
         }
     };
+    
+	public int getDepth() {
+		if(getParent() == null || getParent().getPath().equals(getPath())) return 1;
+		return 1 + getParent().getDepth();
+	}
 
 
 }
