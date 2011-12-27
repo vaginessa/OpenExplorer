@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="ContentDescription">
+        <ignore path="res\layout\grid_content_layout.xml" />
+        <ignore path="res\layout\list_content_layout.xml" />
+        <ignore path="res\layout\title_bar.xml" />
+    </issue>
+    <issue id="HardcodedText">
+        <ignore path="res\layout\about.xml" />
+        <ignore path="res\layout\bluetooth_layout.xml" />
+        <ignore path="res\layout\edit_text.xml" />
+        <ignore path="res\layout\info_layout.xml" />
+        <ignore path="res\layout\list_content_layout.xml" />
+        <ignore path="res\layout\title_bar.xml" />
+    </issue>
+    <issue id="UseCompoundDrawables">
+        <ignore path="res\layout\grid_content_layout.xml" />
+        <ignore path="res\layout\multiselect_layout.xml" />
+    </issue>
+</lint>
