@@ -78,6 +78,7 @@ public class ThumbnailCreator extends Thread {
 		final String mName = file.getName();
 		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 		final String sPath2 = mName.toLowerCase();
+		final boolean useLarge = mWidth > 72;
 		
 		final Context mContext = mImage.getContext();
 		
@@ -90,35 +91,35 @@ public class ThumbnailCreator extends Thread {
 			else if(sPath2.indexOf("download") > -1)
 				mImage.setImageResource(R.drawable.download);
 			else if(mName.equals("Photos"))
-				mImage.setImageResource(R.drawable.photo);
+				mImage.setImageResource(useLarge ? R.drawable.lg_photo : R.drawable.photo);
 			else if(mName.equals("Videos"))
-				mImage.setImageResource(R.drawable.movie);
+				mImage.setImageResource(useLarge ? R.drawable.lg_movie : R.drawable.movie);
 			else if(mName.equals("Music"))
-				mImage.setImageResource(R.drawable.music);
+				mImage.setImageResource(useLarge ? R.drawable.lg_music : R.drawable.music);
 			else if(sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1)
 				mImage.setImageResource(R.drawable.sdcard);
 			else if(sPath2.indexOf("usb") > -1 || sPath2.indexOf("removeable") > -1)
-				mImage.setImageResource(R.drawable.usb);
+				mImage.setImageResource(useLarge ? R.drawable.lg_usb : R.drawable.usb);
 			else {
 				OpenPath[] lists = null;
 				if(!file.requiresThread())
 					lists = file.list();
 			
 				if(file.canRead() && lists != null && lists.length > 0)
-					mImage.setImageResource(R.drawable.folder_large_full);
+					mImage.setImageResource(useLarge ? R.drawable.lg_folder_full : R.drawable.folder_full);
 				else
-					mImage.setImageResource(R.drawable.folder);
+					mImage.setImageResource(useLarge ? R.drawable.lg_folder : R.drawable.folder);
 			}
 		} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-			mImage.setImageResource(R.drawable.doc);
+			mImage.setImageResource(useLarge ? R.drawable.lg_doc : R.drawable.doc);
 			
 		} else if(ext.equalsIgnoreCase("xls")  || 
 				  ext.equalsIgnoreCase("xlsx") ||
 				  ext.equalsIgnoreCase("xlsm")) {
-			mImage.setImageResource(R.drawable.excel);
+			mImage.setImageResource(useLarge ? R.drawable.lg_excel : R.drawable.excel);
 			
 		} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-			mImage.setImageResource(R.drawable.powerpoint);
+			mImage.setImageResource(useLarge ? R.drawable.lg_powerpoint : R.drawable.powerpoint);
 			
 		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
 			mImage.setImageResource(R.drawable.zip);
@@ -130,15 +131,15 @@ public class ThumbnailCreator extends Thread {
 		//	mImage.setImageResource(R.drawable.apk);
 			
 		} else if(ext.equalsIgnoreCase("pdf")) {
-			mImage.setImageResource(R.drawable.pdf);
+			mImage.setImageResource(useLarge ? R.drawable.lg_pdf : R.drawable.pdf);
 			
 		} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-			mImage.setImageResource(R.drawable.xml_html);
+			mImage.setImageResource(useLarge ? R.drawable.lg_xml_html : R.drawable.xml_html);
 			
 		} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-			mImage.setImageResource(R.drawable.music);
+			mImage.setImageResource(useLarge ? R.drawable.lg_music : R.drawable.music);
 		} else if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
 				  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
 				  ext.equalsIgnoreCase("bmp") ||
@@ -172,7 +173,7 @@ public class ThumbnailCreator extends Thread {
 						else
 							mImage.setImageResource(R.drawable.apk);
 					} else {
-						mImage.setImageResource(R.drawable.photo);
+						mImage.setImageResource(useLarge ? R.drawable.lg_photo : R.drawable.photo);
 					}
 					
 					//file.setTag(mHolder);
@@ -205,13 +206,13 @@ public class ThumbnailCreator extends Thread {
 			if(f != null)
 			{
 				if(f.isDirectory())
-					mImage.setImageResource(R.drawable.folder);
+					mImage.setImageResource(useLarge ? R.drawable.lg_folder : R.drawable.folder);
 				else
-					mImage.setImageResource(R.drawable.unknown);
+					mImage.setImageResource(useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
 			} else
-				mImage.setImageResource(R.drawable.unknown);
+				mImage.setImageResource(useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
 		} else
-			mImage.setImageResource(R.drawable.unknown);
+			mImage.setImageResource(useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
 		return false;
 	}
 	
@@ -243,6 +244,7 @@ public class ThumbnailCreator extends Thread {
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true); }
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache)
 	{
+		final boolean useLarge = mWidth > 72;
 		//SoftReference<Bitmap> mThumb = null;
 		Bitmap bmp = null;
 		//final Handler mHandler = next.Handler;
@@ -375,18 +377,18 @@ public class ThumbnailCreator extends Thread {
 					bmp = BitmapFactory.decodeFile(file.getPath());
 					
 					if (bmp == null) 
-						bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.photo);
+						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_photo : R.drawable.photo);
 					
 				}
 			} else if (bmp == null && file.getClass().equals(OpenFTP.class))
 			{
-				bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ftp);
+				bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
 				if(file.isDirectory())
-					bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.folder);
+					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_folder : R.drawable.folder);
 				else
-					bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.unknown);
+					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
 			}
 		}
 		
