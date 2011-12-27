@@ -845,7 +845,7 @@ public class OpenExplorer
 	    		return true;
 	    	
 	    	case R.id.menu_new_folder:
-	    		mEvHandler.createNewFolder(mFileManager.peekStack().getPath(), this);
+	    		mEvHandler.createNewFolder(mLastPath.getPath(), this);
 	    		return true;
 	    		
 	    	case R.id.menu_multi:
@@ -1181,7 +1181,10 @@ public class OpenExplorer
 				if(entry != null && entry.getBreadCrumbTitle() != null)
 				{
 					if(new OpenFile(entry.getBreadCrumbTitle().toString()).exists())
+					{
 						mLastPath = new OpenFile(entry.getBreadCrumbTitle().toString());
+						Logger.LogDebug("last path set to " + mLastPath.getPath());
+					}
 					updateTitle(entry.getBreadCrumbTitle().toString());
 				} else {
 					Logger.LogWarning("No Breadcrumb Title");
