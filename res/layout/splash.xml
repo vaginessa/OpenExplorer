@@ -8,13 +8,14 @@
     <TextView
         android:id="@+id/text_intro_top"
         android:text="@string/s_text_intro_top"
-        style="@style/Mid"
+        style="@style/Large"
         />
     
     <TextView
         android:id="@+id/text_intro"
         android:text="@string/s_text_intro_body"
-        style="@style/Small"
+        style="@style/Mid"
+        android:gravity="left"
         android:layout_below="@+id/text_intro_top"
         />
 
