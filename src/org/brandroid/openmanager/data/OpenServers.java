@@ -13,19 +13,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
+
 public class OpenServers
 {
 	private static final long serialVersionUID = 6279070404986957630L;
 	private ArrayList<OpenServer> mData = new ArrayList<OpenServer>(); 
 
 	public OpenServers() { mData = new ArrayList<OpenServer>(); }
-	public OpenServers(JSONArray arr)
+	public OpenServers(JSONArray arr, String decryptPW)
 	{
 		this();
 		if(arr == null) return;
 		for(int i = 0; i < arr.length(); i++)
 			try {
-				add(new OpenServer(arr.getJSONObject(i)));
+				add(new OpenServer(arr.getJSONObject(i), decryptPW));
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -67,10 +69,11 @@ public class OpenServers
 		return mData.get(index);
 	}
 	
-	public JSONArray getJSONArray() {
+	public JSONArray getJSONArray() { return getJSONArray(false, null); }
+	public JSONArray getJSONArray(Boolean encryptPW, Context context) {
 		JSONArray ret = new JSONArray();
 		for(int i = 0; i < mData.size(); i++)
-			ret.put(mData.get(i).getJSONObject());
+			ret.put(mData.get(i).getJSONObject(encryptPW, context));
 		return ret;
 	}
 }

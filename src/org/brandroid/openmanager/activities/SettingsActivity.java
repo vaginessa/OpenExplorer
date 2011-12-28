@@ -37,6 +37,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SimpleCrypto;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,6 +53,9 @@ import org.brandroid.billing.Consts.ResponseCode;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -500,12 +504,15 @@ public class SettingsActivity extends PreferenceActivity
 			f.delete();
 			f.createNewFile();
 			w = new BufferedWriter(new FileWriter(f));
-			String data = servers.getJSONArray().toString();
-			/// TODO: insert encryption function
+			String data = servers.getJSONArray(true, context).toString();
+			//data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
 			w.write(data);
 			w.close();
 		} catch(IOException e) {
 			Logger.LogError("Couldn't save OpenServers.", e);
+		} catch (Exception e) {
+			Logger.LogError("Problem encrypting servers?", e);
+		} finally {
 			try {
 				if(w != null)
 					w.close();
@@ -537,28 +544,35 @@ public class SettingsActivity extends PreferenceActivity
 				if(sb.length() == 0)
 					return new OpenServers();
 				String data = sb.toString();
-				/// TODO: insert decryption function
-				return new OpenServers(new JSONArray(data));
+				return new OpenServers(new JSONArray(data), GetSignatureKey(context));
 			}
 		} catch (IOException e) {
 			Logger.LogError("Error loading default server list.", e);
-			if(r != null)
-				try {
-					r.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
 			return new OpenServers();
 		} catch (JSONException e) {
+			Logger.LogError("Error decoding JSON for default server list.", e);
+			return new OpenServers();
+		} finally {
 			if(r != null)
 				try {
 					r.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-			Logger.LogError("Error translating default server list into JSON.", e);
-			return new OpenServers();
 		}
 		
+	}
+	
+	public static String GetSignatureKey(Context context)
+	{
+		String ret = "";
+		try {
+			Signature[] sigs = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_SIGNATURES).signatures;
+			for(Signature sig : sigs)
+				ret += sig.toCharsString();
+		} catch (NameNotFoundException e) {
+			Logger.LogError("No Package for Signature?", e);
+		}
+		return ret;
 	}
 }

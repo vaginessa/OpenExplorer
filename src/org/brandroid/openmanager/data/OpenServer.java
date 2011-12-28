@@ -3,9 +3,13 @@ package org.brandroid.openmanager.data;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.SimpleCrypto;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.content.Context;
 
 public class OpenServer
 {
@@ -15,13 +19,19 @@ public class OpenServer
 	public OpenServer() {
 		//mData = new Hashtable<String, String>();
 	}
-	public OpenServer(JSONObject obj)
+	public OpenServer(JSONObject obj, String decryptPW)
 	{
 		mName = obj.optString("name");
 		mHost = obj.optString("host");
 		mPath = obj.optString("dir");
 		mUser = obj.optString("user");
 		mPassword = obj.optString("password");
+		if(decryptPW != null && decryptPW != "")
+			try {
+				mPassword = SimpleCrypto.decrypt(decryptPW, mPassword);
+			} catch (Exception e) {
+				Logger.LogError("Error decrypting password.", e);
+			}
 		/*mData = new Hashtable<String, String>();
 		if(obj != null)
 		{
@@ -43,13 +53,20 @@ public class OpenServer
 	}
 	public boolean isValid() { return mHost != null; }
 	
-	public JSONObject getJSONObject() {
+	public JSONObject getJSONObject(Boolean encryptPW, Context context) {
 		JSONObject ret = new JSONObject();
 		try {
 			ret.put("name", getName());
 			ret.put("host", getHost());
 			ret.put("user", getUser());
-			ret.put("password", getPassword());
+			if(encryptPW && context != null)
+				try {
+					ret.put("password", SimpleCrypto.encrypt(SettingsActivity.GetSignatureKey(context), getPassword()));
+				} catch (Exception e) {
+					ret.put("password", getPassword());
+				}
+			else
+				ret.put("password", getPassword());
 			ret.put("dir", getPath());
 		} catch(JSONException e) { }
 		/*for(String s : mData.keySet())
