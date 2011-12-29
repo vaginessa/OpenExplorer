@@ -145,4 +145,48 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	}
 
 
+	public boolean isTextFile() { return isTextFile(getName()); }
+	public static boolean isTextFile(String file) {
+		String ext = file.substring(file.lastIndexOf(".") + 1);
+		if(ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("php")
+				|| ext.equalsIgnoreCase("html") || ext.equalsIgnoreCase("htm")
+				|| ext.equalsIgnoreCase("xml"))
+			return true;
+		return false;
+	}
+	
+	public boolean isImageFile() { return isImageFile(getName()); }
+	public static boolean isImageFile(String file) {
+		String ext = file.substring(file.lastIndexOf(".") + 1);
+		
+		if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg") ||
+			ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("gif") ||
+			ext.equalsIgnoreCase("tiff")|| ext.equalsIgnoreCase("tif"))
+			return true;
+		
+		return false;
+	}
+	
+	public boolean isAPKFile() { return isAPKFile(getName()); }
+	public static boolean isAPKFile(String file) {
+		String ext = file.substring(file.lastIndexOf(".") + 1);
+		
+		if (ext.equalsIgnoreCase("apk"))
+			return true;
+		
+		return false;
+	}
+	
+	public boolean isVideoFile() { return isVideoFile(getName()); }
+	public static boolean isVideoFile(String path)
+	{
+		String ext = path.substring(path.lastIndexOf(".") + 1);
+		if(ext.equalsIgnoreCase("mp4") || 
+			  ext.equalsIgnoreCase("3gp") || 
+			  ext.equalsIgnoreCase("avi") ||
+			  ext.equalsIgnoreCase("webm") || 
+			  ext.equalsIgnoreCase("m4v"))
+			return true;
+		return false;
+	}
 }

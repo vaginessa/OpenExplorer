@@ -89,20 +89,12 @@ public class ThumbnailCreator extends Thread {
 		
 		final Context mContext = mImage.getContext();
 		
-		if(isTextFile(ext))
+		if(file.isTextFile())
 			mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
 		else
 			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 		
-		if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
-				  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
-				  ext.equalsIgnoreCase("bmp") ||
-				  ext.equalsIgnoreCase("apk") ||
-				  ext.equalsIgnoreCase("mp4") || 
-				  ext.equalsIgnoreCase("3gp") || 
-				  ext.equalsIgnoreCase("avi") ||
-				  ext.equalsIgnoreCase("webm")|| 
-				  ext.equalsIgnoreCase("m4v"))
+		if(file.isImageFile() || file.isVideoFile() || file.isAPKFile())
 		{
 
 			if(showThumbPreviews && !file.requiresThread()) {
@@ -155,13 +147,6 @@ public class ThumbnailCreator extends Thread {
 		c.drawText(ext, src.getWidth() / 2, (src.getHeight() / 2) + ((th / 3) * 2), p);
 		c.save();
 		return b;
-	}
-	
-	public static boolean isTextFile(String file) {
-		String ext = file.substring(file.lastIndexOf(".") + 1);
-		if(ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("php"))
-			return true;
-		return false;
 	}
 
 	public static int getDefaultResourceId(OpenPath file, int mWidth, int mHeight)
@@ -229,17 +214,11 @@ public class ThumbnailCreator extends Thread {
 				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
 			return (useLarge ? R.drawable.lg_music : R.drawable.music);
-		} else if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
-				  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
-				  ext.equalsIgnoreCase("bmp"))
+		} else if(file.isImageFile())
 			return (useLarge ? R.drawable.lg_photo : R.drawable.photo);
-		else if(ext.equalsIgnoreCase("apk"))
+		else if(file.isAPKFile())
 			return (R.drawable.apk);
-		else if(ext.equalsIgnoreCase("mp4") || 
-				  ext.equalsIgnoreCase("3gp") || 
-				  ext.equalsIgnoreCase("avi") ||
-				  ext.equalsIgnoreCase("webm")|| 
-				  ext.equalsIgnoreCase("m4v"))
+		else if(file.isVideoFile())
 			return (useLarge ? R.drawable.lg_movie : R.drawable.movie);
 		else if(OpenFTP.class.equals(file.getClass()) && file.isDirectory())
 			return (useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
@@ -283,7 +262,7 @@ public class ThumbnailCreator extends Thread {
 		
 		if(context != null)
 		{
-			if(isTextFile(file.getName()))
+			if(file.isTextFile())
 				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), context, mWidth > 72));
 			
 			bmp = BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight));
@@ -293,7 +272,7 @@ public class ThumbnailCreator extends Thread {
 		
 		String path = file.getPath();
 		
-		if((isImageFile(path) || isVideoFile(path) || isAPKFile(path)) && (bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
+		if((file.isImageFile() || file.isVideoFile() || file.isAPKFile()) && (bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
 			return new SoftReference<Bitmap>(bmp);
 		
 		String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
@@ -334,7 +313,7 @@ public class ThumbnailCreator extends Thread {
 					valid = true;
 				} else Logger.LogError("Unable to create MediaStore thumbnail.");
 			}
-			if (!valid && isAPKFile(file.getName()))
+			if (!valid && file.isAPKFile())
 			{
 				//Logger.LogInfo("Getting apk icon for " + file.getName());
 				JarFile apk = null;
@@ -397,7 +376,7 @@ public class ThumbnailCreator extends Thread {
 						Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
 					}
 				}
-			} else if (!valid && isImageFile(file.getPath())) {
+			} else if (!valid && file.isImageFile()) {
 				long len_kb = file.length() / 1024;
 				
 				BitmapFactory.Options options = new BitmapFactory.Options();
@@ -485,38 +464,6 @@ public class ThumbnailCreator extends Thread {
 				msg.sendToTarget();
 			}
 		});
-	}
-	
-	public static boolean isImageFile(String file) {
-		String ext = file.substring(file.lastIndexOf(".") + 1);
-		
-		if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg") ||
-			ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("gif") ||
-			ext.equalsIgnoreCase("tiff")|| ext.equalsIgnoreCase("tif"))
-			return true;
-		
-		return false;
-	}
-	
-	public static boolean isAPKFile(String file) {
-		String ext = file.substring(file.lastIndexOf(".") + 1);
-		
-		if (ext.equalsIgnoreCase("apk"))
-			return true;
-		
-		return false;
-	}
-	
-	public static boolean isVideoFile(String path)
-	{
-		String ext = path.substring(path.lastIndexOf(".") + 1);
-		if(ext.equalsIgnoreCase("mp4") || 
-			  ext.equalsIgnoreCase("3gp") || 
-			  ext.equalsIgnoreCase("avi") ||
-			  ext.equalsIgnoreCase("webm") || 
-			  ext.equalsIgnoreCase("m4v"))
-			return true;
-		return false;
 	}
 
 	public static void flushCache() {
