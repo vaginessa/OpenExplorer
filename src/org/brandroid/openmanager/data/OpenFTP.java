@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,9 +14,15 @@ import java.util.ArrayList;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
@@ -31,9 +38,14 @@ public class OpenFTP extends OpenPath
 		mFile = new FTPFile();
 		mFile.setName(path);
 		mChildren = new ArrayList<OpenFTP>();
+		String base = path;
+		if(base.indexOf("//") > -1)
+			base = base.substring(base.indexOf("/", base.indexOf("//") + 2));
+		if(!base.endsWith("/"))
+			base += "/";
 		if(children != null)
 			for(FTPFile f : children)
-				mChildren.add(new OpenFTP(f, man));
+				mChildren.add(new OpenFTP(f, new FTPManager(man, base + f.getName())));
 	}
 	public OpenFTP(FTPFile file, FTPManager man) { mFile = file; mManager = man; }
 	
@@ -48,7 +60,7 @@ public class OpenFTP extends OpenPath
 	}
 
 	@Override
-	public String getPath() { return getPath(true); }
+	public String getPath() { return getPath(false); }
 	public String getPath(boolean bIncludeUser) {
 		return mManager.getPath(bIncludeUser);
 		//return mFile.getRawListing();
@@ -72,14 +84,26 @@ public class OpenFTP extends OpenPath
 			return null;
 			
 		OpenFTP[] ret = new OpenFTP[arr.length];
+		String base = getPath();
+		if(base.indexOf("//") > -1)
+			base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
+		if(!base.endsWith("/"))
+			base += "/";
 		for(int i = 0; i < arr.length; i++)
-			ret[i] = new OpenFTP(arr[i], mManager);
+		{
+			ret[i] = new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName()));
+		}
 		return ret;
 	}
 
 	@Override
 	public Boolean isDirectory() {
 		if(mChildren != null)
+			return true;
+		String path = getPath();
+		if(path.endsWith("/")) return true;
+		path = path.substring(path.indexOf("//") + 2);
+		if(path.indexOf("/") == -1)
 			return true;
 		return mFile.isDirectory();
 	}
@@ -130,7 +154,7 @@ public class OpenFTP extends OpenPath
 	}
 	@Override
 	public String getAbsolutePath() {
-		return mFile.getRawListing();
+		return getPath(true);
 	}
 	@Override
 	public OpenPath getChild(String name)
@@ -144,12 +168,7 @@ public class OpenFTP extends OpenPath
 		String path = getPath();
 		if(!path.endsWith(name))
 			path += (path.endsWith("/") ? "" : "/") + name;
-		try {
-			return new OpenFTP(path, null, new FTPManager(path));
-		} catch(MalformedURLException e) {
-			Logger.LogError("Error getting FTP child for " + path + " - " + name, e);
-		}
-		return null; //new OpenFile(new FTPFile(base, name));
+		return new OpenFTP(path, null, new FTPManager(mManager, path));
 	}
 	@Override
 	public Boolean isFile() {
@@ -157,24 +176,49 @@ public class OpenFTP extends OpenPath
 	}
 	@Override
 	public Boolean delete() {
-		return false; //mFile.delete();
+		try {
+			return mManager.delete(); //mFile.delete();
+		} catch(IOException e) {
+			Logger.LogError("Error removing FTP file.", e);
+			return false;
+		}
 	}
 	@Override
 	public Boolean mkdir() {
 		return false; //mFile.mkdir();
 	}
+	public void get(OutputStream stream) throws IOException
+	{
+		mManager.get(mFile.getName(), stream);
+	}
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return null; //new FileInputStream(mFile); 
+		return mManager.getInputStream(mFile.getName());
 	}
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return null; //new FileOutputStream(mFile);
+		return mManager.getOutputStream(mFile.getName());
 	}
 
 	@Override
 	public Boolean isHidden() {
 		return mFile.getName().startsWith(".");
+	}
+	
+	@Override
+	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read,
+			Boolean write) {
+		SoftReference<Bitmap> ret = super.getThumbnail(w, h, read, write);
+		Bitmap b = Bitmap.createBitmap(ret.get());
+		Canvas c = new Canvas(b);
+		Paint p = new Paint();
+		p.setColor(Color.BLACK);
+		p.setStyle(Paint.Style.FILL_AND_STROKE);
+		p.setTextAlign(Align.CENTER);
+		p.setTextSize(12);
+		c.drawText("FTP", b.getWidth() / 2, b.getHeight() / 2, p);
+		Logger.LogDebug("Painting on FTP");
+		return new SoftReference<Bitmap>(b);
 	}
 	
 	@Override

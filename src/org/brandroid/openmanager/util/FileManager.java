@@ -426,7 +426,7 @@ public class FileManager {
 				FTPManager man;
 				try {
 					man = new FTPManager(path);
-					ret = new OpenFTP(null, man);
+					ret = new OpenFTP(new FTPFile(), man);
 					if(bGetNetworkedFiles)
 					{
 						FTPFile[] ff = FTPManager.getFTPFiles(path);
