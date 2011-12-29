@@ -123,7 +123,7 @@ public class FTPManager {
 		return ret;
 	}
 	
-	private void disconnect()
+	public void disconnect()
 	{
 		try {
 			client.disconnect();
@@ -206,7 +206,7 @@ public class FTPManager {
 			{
 				FTPFile[] ret = client.listFiles();
 				for(FTPFile f : ret)
-					fileCache.put(f.getName(), new OpenFTP(f, this));
+					fileCache.put(f.getName(), new OpenFTP(f, new FTPManager(this, f.getName())));
 				return ret;
 			} else return null;
 		} catch (IOException e) {
@@ -214,17 +214,26 @@ public class FTPManager {
 			return null;
 		}
 	}
+	public InputStream getInputStream() throws IOException
+	{
+		return getInputStream(getBasePath());
+	}
 	public InputStream getInputStream(String path) throws IOException
 	{
+		Logger.LogDebug("Getting InputStream for " + path);
 		if(connect())
 			return client.retrieveFileStream(path);
-		else return null;
+		else throw new IOException("Couldn't connect");
+	}
+	public OutputStream getOutputStream() throws IOException
+	{
+		return getOutputStream(getBasePath());
 	}
 	public OutputStream getOutputStream(String path) throws IOException
 	{
 		if(connect())
 			return client.storeFileStream(path);
-		else return null;
+		else throw new IOException("Couldn't connect");
 	}
 	
 	public String getPath() { return getPath(true); }

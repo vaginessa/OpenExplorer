@@ -193,16 +193,16 @@ public class OpenFTP extends OpenPath
 	}
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return mManager.getInputStream(mFile.getName());
+		return mManager.getInputStream();
 	}
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return mManager.getOutputStream(mFile.getName());
+		return mManager.getOutputStream();
 	}
 
 	@Override
 	public Boolean isHidden() {
-		return mFile.getName().startsWith(".");
+		return getName().startsWith(".");
 	}
 	
 	@Override

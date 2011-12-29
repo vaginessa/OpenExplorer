@@ -670,12 +670,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//setContentPath(file, true);
 			getExplorer().onChangeLocation(file);
 
-		} else if (!file.isDirectory() && !mActionModeSelected ) {
+		} else if (!file.isDirectory() && !mActionModeSelected) {
 			
 			if(file.requiresThread())
 			{
-				/// TODO: handle networked files
-				getExplorer().showToast("Still need to handle this.");
+				//getExplorer().showToast("Still need to handle this.");
+				getExplorer().editFile(file);
 				return;
 			}
 			
@@ -1003,6 +1003,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					for(OpenPath f : cmd.Path.list())
 						ret.add(f);
 				}
+				if(OpenFTP.class.equals(cmd.Path.getClass()))
+					((OpenFTP)cmd.Path).getManager().disconnect();
 				mFileManager.pushStack(cmd.Path);
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");
