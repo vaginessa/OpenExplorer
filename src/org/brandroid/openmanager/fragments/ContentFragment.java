@@ -755,7 +755,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 		} else {
 			Logger.LogDebug("Worker thread complete?");
-			updateData(mPath.list());
+			if(!mPath.requiresThread())
+				updateData(mPath.list());
+			else
+				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
+			
 			//changePath(mPath, false);
 			//mContentAdapter.notifyDataSetChanged();
 			//changePath(mFileManager.peekStack(), false);
