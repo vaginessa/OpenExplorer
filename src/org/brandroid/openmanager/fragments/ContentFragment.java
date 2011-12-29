@@ -929,7 +929,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(!mHolder.getTitle().equals(mName))
 				mHolder.setTitle(mName);
 			
-			SoftReference<Bitmap> sr = ThumbnailCreator.generateThumb(file, mWidth, mHeight, false, false, getContext());
+			SoftReference<Bitmap> sr = file.getThumbnail(mWidth, mHeight, false, false); // ThumbnailCreator.generateThumb(file, mWidth, mHeight, false, false, getContext());
 			//Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
 			if(sr != null && sr.get() != null)
 				mHolder.getIconView().setImageBitmap(sr.get());

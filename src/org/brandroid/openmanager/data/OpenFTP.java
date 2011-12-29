@@ -209,15 +209,17 @@ public class OpenFTP extends OpenPath
 	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read,
 			Boolean write) {
 		SoftReference<Bitmap> ret = super.getThumbnail(w, h, read, write);
-		Bitmap b = Bitmap.createBitmap(ret.get());
+		Bitmap src = ret.get();
+		Bitmap b = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
 		Canvas c = new Canvas(b);
 		Paint p = new Paint();
-		p.setColor(Color.BLACK);
+		c.drawBitmap(src, 0, 0, p);
+		p.setARGB(220, 255, 255, 255);
 		p.setStyle(Paint.Style.FILL_AND_STROKE);
 		p.setTextAlign(Align.CENTER);
 		p.setTextSize(12);
+		p.setShadowLayer(1f, 0, 0, Color.BLACK);
 		c.drawText("FTP", b.getWidth() / 2, b.getHeight() / 2, p);
-		Logger.LogDebug("Painting on FTP");
 		return new SoftReference<Bitmap>(b);
 	}
 	

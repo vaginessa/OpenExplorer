@@ -19,8 +19,13 @@
 package org.brandroid.openmanager.util;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Paint.Align;
 import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.content.Context;
@@ -84,7 +89,11 @@ public class ThumbnailCreator extends Thread {
 		
 		final Context mContext = mImage.getContext();
 		
-		mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
+		if(isTextFile(ext))
+			mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
+		else
+			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
+		
 		if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
 				  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
 				  ext.equalsIgnoreCase("bmp") ||
@@ -129,6 +138,32 @@ public class ThumbnailCreator extends Thread {
 		return false;
 	}
 	
+	public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge)
+	{
+		Bitmap src = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_file : R.drawable.file);
+		Bitmap b = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+		Canvas c = new Canvas(b);
+		Paint p = new Paint();
+		c.drawBitmap(src, 0, 0, p);
+		p.setColor(Color.WHITE);
+		p.setStyle(Paint.Style.FILL_AND_STROKE);
+		p.setTextAlign(Align.CENTER);
+		p.setTypeface(Typeface.MONOSPACE);
+		float th = (float)src.getHeight() * ((float)(3f / 16f));
+		p.setTextSize(th);
+		p.setShadowLayer(2.5f, 1, 1, Color.BLACK);
+		c.drawText(ext, src.getWidth() / 2, (src.getHeight() / 2) + ((th / 3) * 2), p);
+		c.save();
+		return b;
+	}
+	
+	public static boolean isTextFile(String file) {
+		String ext = file.substring(file.lastIndexOf(".") + 1);
+		if(ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("php"))
+			return true;
+		return false;
+	}
+
 	public static int getDefaultResourceId(OpenPath file, int mWidth, int mHeight)
 	{
 		final String mName = file.getName();
@@ -168,6 +203,7 @@ public class ThumbnailCreator extends Thread {
 			
 		} else if(ext.equalsIgnoreCase("xls")  || 
 				  ext.equalsIgnoreCase("xlsx") ||
+				  ext.equalsIgnoreCase("csv") ||
 				  ext.equalsIgnoreCase("xlsm")) {
 			return (useLarge ? R.drawable.lg_excel : R.drawable.excel);
 			
@@ -245,15 +281,19 @@ public class ThumbnailCreator extends Thread {
 		Bitmap bmp = null;
 		//final Handler mHandler = next.Handler;
 		
-		if(file.requiresThread())
+		if(context != null)
 		{
-			if(context != null)
-				return new SoftReference<Bitmap>(BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight)));
+			if(isTextFile(file.getName()))
+				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), context, mWidth > 72));
+			
+			bmp = BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight));
+			if(file.requiresThread())
+				return new SoftReference<Bitmap>(bmp);
 		}
 		
 		String path = file.getPath();
 		
-		if((bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
+		if((isImageFile(path) || isVideoFile(path) || isAPKFile(path)) && (bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
 			return new SoftReference<Bitmap>(bmp);
 		
 		String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
@@ -447,7 +487,7 @@ public class ThumbnailCreator extends Thread {
 		});
 	}
 	
-	private static boolean isImageFile(String file) {
+	public static boolean isImageFile(String file) {
 		String ext = file.substring(file.lastIndexOf(".") + 1);
 		
 		if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg") ||
@@ -458,7 +498,7 @@ public class ThumbnailCreator extends Thread {
 		return false;
 	}
 	
-	private static boolean isAPKFile(String file) {
+	public static boolean isAPKFile(String file) {
 		String ext = file.substring(file.lastIndexOf(".") + 1);
 		
 		if (ext.equalsIgnoreCase("apk"))
@@ -467,7 +507,7 @@ public class ThumbnailCreator extends Thread {
 		return false;
 	}
 	
-	private static boolean isVideoFile(String path)
+	public static boolean isVideoFile(String path)
 	{
 		String ext = path.substring(path.lastIndexOf(".") + 1);
 		if(ext.equalsIgnoreCase("mp4") || 

@@ -10,11 +10,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.util.HashSet;
 import java.util.Hashtable;
 
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
 import android.app.AlertDialog.Builder;
@@ -240,4 +242,5 @@ public class OpenFile extends OpenPath
 	public void setPath(String path) {
 		mFile = new File(path); 
 	}
+	
 }
