@@ -38,10 +38,13 @@ import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.ThumbnailStruct;
+import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -409,9 +412,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(skipThis) return;
 		int start = Math.max(0, mListVisibleStartIndex);
 		int end = Math.min(mData2.size() - 1, mListVisibleStartIndex + mListVisibleLength);
-		int mWidth = 96;
-		int mHeight = 96;
-		//ThumbnailStruct[] thumbs = ThumbnailStruct[end - start];
+		int mWidth = 128, mHeight = 128;
+		ThumbnailStruct[] thumbs = new ThumbnailStruct[end - start];
 		for(int i = start; i < end; i++)
 		{
 			Object o = view.getItemAtPosition(i);
@@ -422,12 +424,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				{
 					BookmarkHolder mHolder = (BookmarkHolder)file.getTag();
 					ImageView v = mHolder.getIconView();
-					//thumbs[i - start] = new ThumbnailStruct(file, mHolder, mWidth, mHeight);
+					thumbs[i - start] = new ThumbnailStruct(file, mHolder, mWidth, mHeight);
 					//new ThumbnailTask().execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
 				}
 			}
 			//view.getItemAtPosition(i);
 		}
+		
+		new ThumbnailTask().execute(thumbs);
 		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
 	}
 	
@@ -628,6 +632,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		final OpenPath file = (OpenPath)list.getItemAtPosition(pos);
 		
+		
+		Logger.LogDebug("File clicked: " + file.getPath());
+		
 		//getExplorer().hideBookmarkTitles();
 		
 		if(mMultiSelectOn) {
@@ -663,12 +670,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//setContentPath(file, true);
 			getExplorer().onChangeLocation(file);
 
-		} else if (!file.isDirectory() && !mActionModeSelected ) {
+		} else if (!file.isDirectory() && !mActionModeSelected) {
 			
 			if(file.requiresThread())
 			{
-				/// TODO: handle networked files
-				getExplorer().showToast("Still need to handle this.");
+				//getExplorer().showToast("Still need to handle this.");
+				getExplorer().editFile(file);
 				return;
 			}
 			
@@ -748,7 +755,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 		} else {
 			Logger.LogDebug("Worker thread complete?");
-			updateData(mPath.list());
+			if(!mPath.requiresThread())
+				updateData(mPath.list());
+			else
+				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
+			
 			//changePath(mPath, false);
 			//mContentAdapter.notifyDataSetChanged();
 			//changePath(mFileManager.peekStack(), false);
@@ -883,7 +894,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			int mWidth = 36, mHeight = 36;
 			if(getViewMode() == OpenExplorer.VIEW_GRID)
-				mWidth = mHeight = 96;
+				mWidth = mHeight = 128;
 			
 			if(view == null) {
 				LayoutInflater in = (LayoutInflater)mContext
@@ -918,9 +929,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(!mHolder.getTitle().equals(mName))
 				mHolder.setTitle(mName);
 			
-			Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
-			if(b != null)
-				mHolder.getIconView().setImageBitmap(b);
+			SoftReference<Bitmap> sr = file.getThumbnail(mWidth, mHeight, false, false); // ThumbnailCreator.generateThumb(file, mWidth, mHeight, false, false, getContext());
+			//Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
+			if(sr != null && sr.get() != null)
+				mHolder.getIconView().setImageBitmap(sr.get());
 			else
 				ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
 			
@@ -982,15 +994,20 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			{
 				if(cmd.Path.requiresThread())
 				{
-					OpenFTP file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getPath(), true);
+					Logger.LogDebug("Using separate thread to get file list");
+					OpenFTP file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
 					OpenPath[] list = file.list();
 					if(list != null)
 						for(OpenPath f : list)
 							ret.add(f);
+					else
+						Logger.LogWarning("Return is null");
 				} else {
 					for(OpenPath f : cmd.Path.list())
 						ret.add(f);
 				}
+				if(OpenFTP.class.equals(cmd.Path.getClass()))
+					((OpenFTP)cmd.Path).getManager().disconnect();
 				mFileManager.pushStack(cmd.Path);
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");

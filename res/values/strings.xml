@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Open Explorer Beta</string>
+	<string name="app_name">Open Explorer Beta</string>
     <string name="app_title">OEβ</string>
-    <string name="s_search">Search</string>
+	<string name="s_search">Search</string>
     <string name="s_photos">Photos</string>
     <string name="s_videos">Videos</string>
     <string name="s_music">Music</string>

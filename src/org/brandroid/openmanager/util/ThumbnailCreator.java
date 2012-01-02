@@ -19,8 +19,13 @@
 package org.brandroid.openmanager.util;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Paint.Align;
 import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.content.Context;
@@ -54,7 +59,9 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.utils.BitmapUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 
@@ -82,102 +89,21 @@ public class ThumbnailCreator extends Thread {
 		
 		final Context mContext = mImage.getContext();
 		
-		if(OpenFTP.class.equals(file.getClass()))
-		{
-			mImage.setImageResource(R.drawable.ftp);
-		} else if(file.isDirectory()) {
-			if(file.getAbsolutePath().equals("/") && mName.equals(""))
-				mImage.setImageResource(R.drawable.drive);
-			else if(sPath2.indexOf("download") > -1)
-				mImage.setImageResource(R.drawable.download);
-			else if(mName.equals("Photos"))
-				mImage.setImageResource(useLarge ? R.drawable.lg_photo : R.drawable.photo);
-			else if(mName.equals("Videos"))
-				mImage.setImageResource(useLarge ? R.drawable.lg_movie : R.drawable.movie);
-			else if(mName.equals("Music"))
-				mImage.setImageResource(useLarge ? R.drawable.lg_music : R.drawable.music);
-			else if(sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1)
-				mImage.setImageResource(R.drawable.sdcard);
-			else if(sPath2.indexOf("usb") > -1 || sPath2.indexOf("removeable") > -1)
-				mImage.setImageResource(useLarge ? R.drawable.lg_usb : R.drawable.usb);
-			else {
-				OpenPath[] lists = null;
-				if(!file.requiresThread())
-					lists = file.list();
-			
-				if(file.canRead() && lists != null && lists.length > 0)
-					mImage.setImageResource(useLarge ? R.drawable.lg_folder_full : R.drawable.folder_full);
-				else
-					mImage.setImageResource(useLarge ? R.drawable.lg_folder : R.drawable.folder);
-			}
-		} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-			mImage.setImageResource(useLarge ? R.drawable.lg_doc : R.drawable.doc);
-			
-		} else if(ext.equalsIgnoreCase("xls")  || 
-				  ext.equalsIgnoreCase("xlsx") ||
-				  ext.equalsIgnoreCase("xlsm")) {
-			mImage.setImageResource(useLarge ? R.drawable.lg_excel : R.drawable.excel);
-			
-		} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-			mImage.setImageResource(useLarge ? R.drawable.lg_powerpoint : R.drawable.powerpoint);
-			
-		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-			mImage.setImageResource(R.drawable.zip);
-			
-		} else if (ext.equalsIgnoreCase("rar")) {
-			mImage.setImageResource(R.drawable.rar);
-			
-		//} else if(ext.equalsIgnoreCase("apk")) {
-		//	mImage.setImageResource(R.drawable.apk);
-			
-		} else if(ext.equalsIgnoreCase("pdf")) {
-			mImage.setImageResource(useLarge ? R.drawable.lg_pdf : R.drawable.pdf);
-			
-		} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-			mImage.setImageResource(useLarge ? R.drawable.lg_xml_html : R.drawable.xml_html);
-			
-		} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
-				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
-				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-			mImage.setImageResource(useLarge ? R.drawable.lg_music : R.drawable.music);
-		} else if(ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("png") ||
-				  ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("gif") ||
-				  ext.equalsIgnoreCase("bmp") ||
-				  ext.equalsIgnoreCase("apk") ||
-				  ext.equalsIgnoreCase("mp4") || 
-				  ext.equalsIgnoreCase("3gp") || 
-				  ext.equalsIgnoreCase("avi") ||
-				  ext.equalsIgnoreCase("webm")|| 
-				  ext.equalsIgnoreCase("m4v"))
+		if(file.isTextFile())
+			mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
+		else
+			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
+		
+		if(file.isImageFile() || file.isVideoFile() || file.isAPKFile())
 		{
 
-			if(showThumbPreviews) {
+			if(showThumbPreviews && !file.requiresThread()) {
 
 				ThumbnailCreator.setContext(mContext);
 				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)
-				{
-					if(ext.equalsIgnoreCase("mp4") || 
-						  ext.equalsIgnoreCase("3gp") || 
-						  ext.equalsIgnoreCase("avi") ||
-						  ext.equalsIgnoreCase("webm") || 
-						  ext.equalsIgnoreCase("m4v")) {
-						mImage.setImageResource(R.drawable.movie);
-					} else if(ext.equals("apk")) {
-						Drawable d = IntentManager.getDefaultIcon(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=org.brandroid.openmanager")), mContext);
-						if(d != null)
-							ThumbnailCreator.putThumbnailCache("apk", ((BitmapDrawable)d).getBitmap());
-						if(mCacheMap.containsKey("apk"))
-							mImage.setImageBitmap(mCacheMap.get("apk"));
-						else
-							mImage.setImageResource(R.drawable.apk);
-					} else {
-						mImage.setImageResource(useLarge ? R.drawable.lg_photo : R.drawable.photo);
-					}
-					
-					//file.setTag(mHolder);
-					
+				{	
 					ThumbnailTask task = new ThumbnailTask();
 					BookmarkHolder mHolder = null;
 					if(file.getTag() != null && file.getTag().getClass().equals(BookmarkHolder.class))
@@ -200,22 +126,105 @@ public class ThumbnailCreator extends Thread {
 			
 			}
 			
-		} else if(file.getPath() != null && file.getPath().indexOf("ftp:/") > -1) {
-			
-			OpenFTP f = FTPManager.getFTPFile(mName);
-			if(f != null)
-			{
-				if(f.isDirectory())
-					mImage.setImageResource(useLarge ? R.drawable.lg_folder : R.drawable.folder);
-				else
-					mImage.setImageResource(useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
-			} else
-				mImage.setImageResource(useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
-		} else
-			mImage.setImageResource(useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
+		}
 		return false;
 	}
 	
+	public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge)
+	{
+		Bitmap src = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_file : R.drawable.file);
+		Bitmap b = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+		Canvas c = new Canvas(b);
+		Paint p = new Paint();
+		c.drawBitmap(src, 0, 0, p);
+		p.setColor(Color.WHITE);
+		p.setStyle(Paint.Style.FILL_AND_STROKE);
+		p.setTextAlign(Align.CENTER);
+		p.setTypeface(Typeface.MONOSPACE);
+		float th = (float)src.getHeight() * ((float)(3f / 16f));
+		p.setTextSize(th);
+		p.setShadowLayer(2.5f, 1, 1, Color.BLACK);
+		c.drawText(ext, src.getWidth() / 2, (src.getHeight() / 2) + ((th / 3) * 2), p);
+		c.save();
+		return b;
+	}
+
+	public static int getDefaultResourceId(OpenPath file, int mWidth, int mHeight)
+	{
+		final String mName = file.getName();
+		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
+		final String sPath2 = mName.toLowerCase();
+		final boolean useLarge = mWidth > 72;
+		
+		if(file.isDirectory()) {
+			if(file.requiresThread())
+				return (useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
+			if(file.getAbsolutePath().equals("/") && mName.equals(""))
+				return (R.drawable.drive);
+			else if(sPath2.indexOf("download") > -1)
+				return (R.drawable.download);
+			else if(mName.equals("Photos"))
+				return (useLarge ? R.drawable.lg_photo : R.drawable.photo);
+			else if(mName.equals("Videos"))
+				return (useLarge ? R.drawable.lg_movie : R.drawable.movie);
+			else if(mName.equals("Music"))
+				return (useLarge ? R.drawable.lg_music : R.drawable.music);
+			else if(sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1)
+				return (R.drawable.sdcard);
+			else if(sPath2.indexOf("usb") > -1 || sPath2.indexOf("removeable") > -1)
+				return (useLarge ? R.drawable.lg_usb : R.drawable.usb);
+			else {
+				OpenPath[] lists = null;
+				if(!file.requiresThread())
+					lists = file.list();
+			
+				if(file.canRead() && lists != null && lists.length > 0)
+					return (useLarge ? R.drawable.lg_folder_full : R.drawable.folder_full);
+				else
+					return (useLarge ? R.drawable.lg_folder : R.drawable.folder);
+			}
+		} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
+			return (useLarge ? R.drawable.lg_doc : R.drawable.doc);
+			
+		} else if(ext.equalsIgnoreCase("xls")  || 
+				  ext.equalsIgnoreCase("xlsx") ||
+				  ext.equalsIgnoreCase("csv") ||
+				  ext.equalsIgnoreCase("xlsm")) {
+			return (useLarge ? R.drawable.lg_excel : R.drawable.excel);
+			
+		} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
+			return (useLarge ? R.drawable.lg_powerpoint : R.drawable.powerpoint);
+			
+		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
+			return (R.drawable.zip);
+			
+		} else if (ext.equalsIgnoreCase("rar")) {
+			return (R.drawable.rar);
+			
+		//} else if(ext.equalsIgnoreCase("apk")) {
+		//	return (R.drawable.apk);
+			
+		} else if(ext.equalsIgnoreCase("pdf")) {
+			return (useLarge ? R.drawable.lg_pdf : R.drawable.pdf);
+			
+		} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
+			return (useLarge ? R.drawable.lg_xml_html : R.drawable.xml_html);
+			
+		} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
+				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
+				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
+			return (useLarge ? R.drawable.lg_music : R.drawable.music);
+		} else if(file.isImageFile())
+			return (useLarge ? R.drawable.lg_photo : R.drawable.photo);
+		else if(file.isAPKFile())
+			return (R.drawable.apk);
+		else if(file.isVideoFile())
+			return (useLarge ? R.drawable.lg_movie : R.drawable.movie);
+		else if(OpenFTP.class.equals(file.getClass()) && file.isDirectory())
+			return (useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
+		else
+			return (useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
+	}
 	
 	public static void setContext(Context c) { mContext = c; }
 	
@@ -241,17 +250,29 @@ public class ThumbnailCreator extends Thread {
 		return w + "x" + h + "_" + path.replaceAll("[^A-Za-z0-9]", "-") + ".png";
 	}
 	
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true); }
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache)
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true, mContext); }
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache) { return generateThumb(file, mWidth, mHeight, readCache, writeCache, mContext); }
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, Context context) { return generateThumb(file, mWidth, mHeight, true, true, context); }
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache, Context context)
 	{
 		final boolean useLarge = mWidth > 72;
 		//SoftReference<Bitmap> mThumb = null;
 		Bitmap bmp = null;
 		//final Handler mHandler = next.Handler;
 		
+		if(context != null)
+		{
+			if(file.isTextFile())
+				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), context, mWidth > 72));
+			
+			bmp = BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight));
+			if(file.requiresThread())
+				return new SoftReference<Bitmap>(bmp);
+		}
+		
 		String path = file.getPath();
 		
-		if((bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
+		if((file.isImageFile() || file.isVideoFile() || file.isAPKFile()) && (bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
 			return new SoftReference<Bitmap>(bmp);
 		
 		String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
@@ -292,7 +313,7 @@ public class ThumbnailCreator extends Thread {
 					valid = true;
 				} else Logger.LogError("Unable to create MediaStore thumbnail.");
 			}
-			if (!valid && isAPKFile(file.getName()))
+			if (!valid && file.isAPKFile())
 			{
 				//Logger.LogInfo("Getting apk icon for " + file.getName());
 				JarFile apk = null;
@@ -355,7 +376,7 @@ public class ThumbnailCreator extends Thread {
 						Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
 					}
 				}
-			} else if (!valid && isImageFile(file.getPath())) {
+			} else if (!valid && file.isImageFile()) {
 				long len_kb = file.length() / 1024;
 				
 				BitmapFactory.Options options = new BitmapFactory.Options();
@@ -380,9 +401,6 @@ public class ThumbnailCreator extends Thread {
 						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_photo : R.drawable.photo);
 					
 				}
-			} else if (bmp == null && file.getClass().equals(OpenFTP.class))
-			{
-				bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
 				if(file.isDirectory())
@@ -446,38 +464,6 @@ public class ThumbnailCreator extends Thread {
 				msg.sendToTarget();
 			}
 		});
-	}
-	
-	private static boolean isImageFile(String file) {
-		String ext = file.substring(file.lastIndexOf(".") + 1);
-		
-		if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg") ||
-			ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("gif") ||
-			ext.equalsIgnoreCase("tiff")|| ext.equalsIgnoreCase("tif"))
-			return true;
-		
-		return false;
-	}
-	
-	private static boolean isAPKFile(String file) {
-		String ext = file.substring(file.lastIndexOf(".") + 1);
-		
-		if (ext.equalsIgnoreCase("apk"))
-			return true;
-		
-		return false;
-	}
-	
-	private static boolean isVideoFile(String path)
-	{
-		String ext = path.substring(path.lastIndexOf(".") + 1);
-		if(ext.equalsIgnoreCase("mp4") || 
-			  ext.equalsIgnoreCase("3gp") || 
-			  ext.equalsIgnoreCase("avi") ||
-			  ext.equalsIgnoreCase("webm") || 
-			  ext.equalsIgnoreCase("m4v"))
-			return true;
-		return false;
 	}
 
 	public static void flushCache() {

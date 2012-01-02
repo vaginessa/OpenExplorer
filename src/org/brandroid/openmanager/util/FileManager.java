@@ -426,10 +426,14 @@ public class FileManager {
 				FTPManager man;
 				try {
 					man = new FTPManager(path);
-					ret = new OpenFTP(null, man);
+					ret = new OpenFTP(new FTPFile(), man);
 					if(bGetNetworkedFiles)
 					{
 						FTPFile[] ff = FTPManager.getFTPFiles(path);
+						if(ff == null)
+							Logger.LogWarning("FTPManager.getFTPFiles return is null");
+						else
+							Logger.LogDebug("FTPManager.getFTPFiles returns " + ff.length);
 						ret = new OpenFTP(path, ff, man);
 					}
 				} catch (MalformedURLException e) {

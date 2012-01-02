@@ -138,6 +138,7 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 			for(String s : l)
 				checkAndAdd(getOpenBookmark(s));
 		}
+		
 		OpenServers servers = SettingsActivity.LoadDefaultServers(getExplorer());
 		for(int i = 0; i < servers.size(); i++)
 		{

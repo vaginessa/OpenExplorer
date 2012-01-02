@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.fragments;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
@@ -11,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,6 +23,7 @@ import org.apache.http.util.ByteArrayBuffer;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.string;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.ftp.FTPManager;
@@ -40,6 +43,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 public class TextEditorFragment extends OpenFragment implements OnClickListener
 {
@@ -52,6 +56,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 	private String mData = null;
 	
 	private AsyncTask mTask = null;
+	
+	private boolean bShowKeyboard = true;
 	
 	public TextEditorFragment() { }
 	public TextEditorFragment(OpenPath path)
@@ -88,13 +94,14 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		super.onViewCreated(view, savedInstanceState);
 		mSave.setOnClickListener(this);
 		mCancel.setOnClickListener(this);
+		((ToggleButton)view.findViewById(R.id.btn_toggle_keyboard)).setOnClickListener(this);
 		mEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
-				if(hasFocus)
+				/*if(hasFocus)
 				{
 					InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 					imm.showSoftInput(v, 0);
-				}
+				}*/
 			}
 		});
 		if(mPath != null && mData == null)
@@ -145,6 +152,9 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 				cancelTask();
 				getFragmentManager().popBackStack();
 				break;
+			case R.id.btn_toggle_keyboard:
+				((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(0, 0);
+				break;
 		}
 	}
 
@@ -169,10 +179,13 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		@Override
 		protected String doInBackground(String... datas) {
 			String data = datas[0];
-			FileOutputStream fos = null;
+			OutputStream fos = null;
 			try {
-				fos = (FileOutputStream)mPath.getOutputStream();
+				fos = new BufferedOutputStream(mPath.getOutputStream());
 				fos.write(data.getBytes());
+				fos.close();
+				if(OpenFTP.class.equals(mPath.getClass()))
+					((OpenFTP)mPath).getManager().disconnect();
 			} catch(Exception e) {
 				Logger.LogError("Couldn't save file.", e);
 			}
@@ -206,11 +219,11 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			Logger.LogDebug("Getting " + path);
 			if(mPath.canRead()) {
 				Logger.LogDebug("File is " + mPath.length() + " bytes.");
-				FileInputStream is = null;
+				InputStream is = null;
 				StringBuilder sb = new StringBuilder();
 				try {
-					is = (FileInputStream)mPath.getInputStream();
-					BufferedReader br = new BufferedReader(new InputStreamReader(new DataInputStream(is)));
+					is = mPath.getInputStream();
+					BufferedReader br = new BufferedReader(new InputStreamReader(is));
 					String line;
 					while((line = br.readLine()) != null)
 						sb.append(line + "\n");
@@ -229,6 +242,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					if(OpenFTP.class.equals(mPath.getClass()))
+						((OpenFTP)mPath).getManager().disconnect();
 				}
 				return sb.toString();
 			}
