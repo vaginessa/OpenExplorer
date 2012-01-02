@@ -407,7 +407,7 @@ public class DialogHandler extends DialogFragment {
 		((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
 		
 		if (file.isDirectory())
-			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.folder);
+			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.lg_folder);
 		else
 			((ImageView)v.findViewById(R.id.info_icon)).setImageDrawable(getFileIcon(file, false));
 	}

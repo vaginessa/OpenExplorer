@@ -174,7 +174,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 			AlertDialog.Builder b = new AlertDialog.Builder(this);
 			b.setTitle("Bluetooth error")
 			 .setMessage("This device does not support bluetooth")
-			 .setIcon(R.drawable.download)
+			 .setIcon(R.drawable.bluetooth)
 			 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				
 				

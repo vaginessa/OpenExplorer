@@ -132,7 +132,7 @@ public class ThumbnailCreator extends Thread {
 	
 	public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge)
 	{
-		Bitmap src = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_file : R.drawable.file);
+		Bitmap src = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_file : R.drawable.sm_file);
 		Bitmap b = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
 		Canvas c = new Canvas(b);
 		Paint p = new Paint();
@@ -158,72 +158,68 @@ public class ThumbnailCreator extends Thread {
 		
 		if(file.isDirectory()) {
 			if(file.requiresThread())
-				return (useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
+				return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
 			if(file.getAbsolutePath().equals("/") && mName.equals(""))
 				return (R.drawable.drive);
 			else if(sPath2.indexOf("download") > -1)
-				return (R.drawable.download);
+				return (useLarge ? R.drawable.lg_download : R.drawable.sm_download);
 			else if(mName.equals("Photos"))
-				return (useLarge ? R.drawable.lg_photo : R.drawable.photo);
+				return (useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
 			else if(mName.equals("Videos"))
-				return (useLarge ? R.drawable.lg_movie : R.drawable.movie);
+				return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
 			else if(mName.equals("Music"))
-				return (useLarge ? R.drawable.lg_music : R.drawable.music);
+				return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
 			else if(sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1)
-				return (R.drawable.sdcard);
+				return (useLarge ? R.drawable.lg_sdcard : R.drawable.sm_sdcard);
 			else if(sPath2.indexOf("usb") > -1 || sPath2.indexOf("removeable") > -1)
-				return (useLarge ? R.drawable.lg_usb : R.drawable.usb);
+				return (useLarge ? R.drawable.lg_usb : R.drawable.sm_usb);
 			else {
 				OpenPath[] lists = null;
 				if(!file.requiresThread())
 					lists = file.list();
 			
 				if(file.canRead() && lists != null && lists.length > 0)
-					return (useLarge ? R.drawable.lg_folder_full : R.drawable.folder_full);
+					return (useLarge ? R.drawable.lg_folder_full : R.drawable.sm_folder_full);
 				else
-					return (useLarge ? R.drawable.lg_folder : R.drawable.folder);
+					return (useLarge ? R.drawable.lg_folder : R.drawable.sm_folder);
 			}
 		} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-			return (useLarge ? R.drawable.lg_doc : R.drawable.doc);
+			return (useLarge ? R.drawable.lg_doc : R.drawable.sm_doc);
 			
 		} else if(ext.equalsIgnoreCase("xls")  || 
 				  ext.equalsIgnoreCase("xlsx") ||
 				  ext.equalsIgnoreCase("csv") ||
 				  ext.equalsIgnoreCase("xlsm")) {
-			return (useLarge ? R.drawable.lg_excel : R.drawable.excel);
+			return (useLarge ? R.drawable.lg_excel : R.drawable.sm_excel);
 			
 		} else if(ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-			return (useLarge ? R.drawable.lg_powerpoint : R.drawable.powerpoint);
+			return (useLarge ? R.drawable.lg_powerpoint : R.drawable.sm_powerpoint);
 			
-		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip")) {
-			return (R.drawable.zip);
-			
-		} else if (ext.equalsIgnoreCase("rar")) {
-			return (R.drawable.rar);
-			
+		} else if(ext.equalsIgnoreCase("zip") || ext.equalsIgnoreCase("gzip") || ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("gz") || ext.equalsIgnoreCase("7z")) {
+			return (useLarge ? R.drawable.lg_zip : R.drawable.sm_zip);
 		//} else if(ext.equalsIgnoreCase("apk")) {
 		//	return (R.drawable.apk);
 			
 		} else if(ext.equalsIgnoreCase("pdf")) {
-			return (useLarge ? R.drawable.lg_pdf : R.drawable.pdf);
+			return (useLarge ? R.drawable.lg_pdf : R.drawable.sm_pdf);
 			
 		} else if(ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-			return (useLarge ? R.drawable.lg_xml_html : R.drawable.xml_html);
+			return (useLarge ? R.drawable.lg_xml_html : R.drawable.sm_xml_html);
 			
 		} else if(ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav") ||
 				  ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p") ||
 				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
-			return (useLarge ? R.drawable.lg_music : R.drawable.music);
+			return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
 		} else if(file.isImageFile())
-			return (useLarge ? R.drawable.lg_photo : R.drawable.photo);
+			return (useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
 		else if(file.isAPKFile())
-			return (R.drawable.apk);
+			return (useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
 		else if(file.isVideoFile())
-			return (useLarge ? R.drawable.lg_movie : R.drawable.movie);
+			return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
 		else if(OpenFTP.class.equals(file.getClass()) && file.isDirectory())
-			return (useLarge ? R.drawable.lg_ftp : R.drawable.ftp);
+			return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
 		else
-			return (useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
+			return (useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
 	}
 	
 	public static void setContext(Context c) { mContext = c; }
@@ -358,7 +354,7 @@ public class ThumbnailCreator extends Thread {
 						}
 					}
 					if(bmp == null)
-						bmp = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.apk);
+						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
 				} catch(IOException ix) {
 					Logger.LogError("Invalid APK: " + file.getPath(), ix);
 				}
@@ -398,15 +394,15 @@ public class ThumbnailCreator extends Thread {
 					bmp = BitmapFactory.decodeFile(file.getPath());
 					
 					if (bmp == null) 
-						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_photo : R.drawable.photo);
+						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
 					
 				}
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
 				if(file.isDirectory())
-					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_folder : R.drawable.folder);
+					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_folder : R.drawable.sm_folder);
 				else
-					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_unknown : R.drawable.unknown);
+					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
 			}
 		}
 		

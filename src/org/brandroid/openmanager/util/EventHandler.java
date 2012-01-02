@@ -124,7 +124,7 @@ public class EventHandler {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle(getResourceString(mContext, R.string.s_menu_delete) + " " + name)
 			.setMessage(((String)mContext.getText(R.string.s_alert_confirm_delete)).replace("xxx", name))
-			.setIcon(R.drawable.download)
+			.setIcon(R.drawable.ic_menu_delete)
 			.setPositiveButton(getResourceString(mContext, R.string.s_menu_delete), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					new BackgroundWork(DELETE_TYPE, mContext, null).execute(files);
@@ -201,7 +201,7 @@ public class EventHandler {
 			.setView(view)
 			.setTitle(getResourceString(mContext, R.string.s_menu_rename) + " " + name)
 			.setCancelable(false)
-			.setIcon(R.drawable.download)
+			.setIcon(R.drawable.ic_rename)
 			.create()
 			.show();
 	}
@@ -244,7 +244,7 @@ public class EventHandler {
 		.setView(view)
 		.setTitle(getResourceString(mContext, R.string.s_title_newfolder))
 		.setCancelable(false)
-		.setIcon(R.drawable.folder).create().show();
+		.setIcon(R.drawable.lg_folder).create().show();
 	}
 	
 	public void sendFile(final ArrayList<OpenPath> path, final Context mContext) {
@@ -261,7 +261,7 @@ public class EventHandler {
 				
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle(getResourceString(mContext, R.string.s_title_send).toString().replace("xxx", name))
-		 .setIcon(R.drawable.download)
+		 .setIcon(R.drawable.bluetooth)
 		 .setItems(list, new OnClickListener() {
 			
 			
@@ -324,7 +324,7 @@ public class EventHandler {
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle(getResourceString(mContext, R.string.s_title_unzip).toString().replace("xxx", file.getName()))
 			 .setMessage(getResourceString(mContext, R.string.s_alert_unzip).toString().replace("xxx", file.getName()))
-			 .setIcon(R.drawable.zip)
+			 .setIcon(R.drawable.lg_zip)
 			 .setPositiveButton(getResourceString(mContext, R.string.s_button_unzip_here), new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						new BackgroundWork(UNZIP_TYPE, mContext, into).execute(file);

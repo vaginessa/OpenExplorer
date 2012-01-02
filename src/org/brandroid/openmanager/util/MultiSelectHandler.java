@@ -122,53 +122,53 @@ public class MultiSelectHandler {
 	
 	private void setImage(String extension, ImageView image) {
 		if(extension.equalsIgnoreCase("dir")) {
-			image.setImageResource(R.drawable.folder);
+			image.setImageResource(R.drawable.lg_folder);
 		
 		} else if(extension.equalsIgnoreCase("doc") || 
 				  extension.equalsIgnoreCase("docx")) {
-			image.setImageResource(R.drawable.doc);
+			image.setImageResource(R.drawable.lg_doc);
 			
 		} else if(extension.equalsIgnoreCase("xls")  || 
 				  extension.equalsIgnoreCase("xlsx") ||
 				  extension.equalsIgnoreCase("xlsm")) {
-			image.setImageResource(R.drawable.excel);
+			image.setImageResource(R.drawable.lg_excel);
 			
 		} else if(extension.equalsIgnoreCase("ppt") || 
 				  extension.equalsIgnoreCase("pptx")) {
-			image.setImageResource(R.drawable.powerpoint);
+			image.setImageResource(R.drawable.lg_powerpoint);
 			
 		} else if(extension.equalsIgnoreCase("zip") || 
 				  extension.equalsIgnoreCase("gzip")) {
-			image.setImageResource(R.drawable.zip);
+			image.setImageResource(R.drawable.lg_zip);
 			
 		} else if(extension.equalsIgnoreCase("rar")) {
-			image.setImageResource(R.drawable.rar);
+			image.setImageResource(R.drawable.lg_zip);
 			
 		} else if(extension.equalsIgnoreCase("apk")) {
-			image.setImageResource(R.drawable.apk);
+			image.setImageResource(R.drawable.lg_apk);
 			
 		} else if(extension.equalsIgnoreCase("pdf")) {
-			image.setImageResource(R.drawable.pdf);
+			image.setImageResource(R.drawable.lg_pdf);
 			
 		} else if(extension.equalsIgnoreCase("xml") || 
 				  extension.equalsIgnoreCase("html")) {
-			image.setImageResource(R.drawable.xml_html);
+			image.setImageResource(R.drawable.lg_xml_html);
 			
 		} else if(extension.equalsIgnoreCase("mp4") || extension.equalsIgnoreCase("3gp") ||
 				extension.equalsIgnoreCase("webm")  || extension.equalsIgnoreCase("m4v")) {
-			image.setImageResource(R.drawable.movie);
+			image.setImageResource(R.drawable.lg_movie);
 			
 		} else if(extension.equalsIgnoreCase("mp3") || extension.equalsIgnoreCase("wav") ||
 				extension.equalsIgnoreCase("wma")   || extension.equalsIgnoreCase("m4p") ||
 				extension.equalsIgnoreCase("m4a")   || extension.equalsIgnoreCase("ogg")) {
-			image.setImageResource(R.drawable.music);
+			image.setImageResource(R.drawable.lg_music);
 			
 		} else if(extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("png") ||
 				extension.equalsIgnoreCase("jpg")    || extension.equalsIgnoreCase("gif")) {
-			image.setImageResource(R.drawable.photo);
+			image.setImageResource(R.drawable.lg_photo);
 			
 		} else {
-			image.setImageResource(R.drawable.unknown);
+			image.setImageResource(R.drawable.lg_unknown);
 		}
 	}
 }
