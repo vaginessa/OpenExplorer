@@ -54,6 +54,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.R.anim;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -76,6 +77,7 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -101,6 +103,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private LinearLayout mMultiSelectView;
 	private GridView mGrid = null;
 	private ListView mList = null;
+	private ProgressBar mProgressBarLoading = null;
 	
 	private OpenPath mPath = null;
 	private static OpenPath mLastPath = null;
@@ -180,8 +183,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		if(!path.requiresThread())
 			mData = mFileManager.getChildren(path);
-		else
+		else {
+			if(mProgressBarLoading != null)
+				mProgressBarLoading.setVisibility(View.VISIBLE);
 			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+		}
 		
 		mActionModeSelected = false;
 		try {
@@ -207,6 +213,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
+		mProgressBarLoading = (ProgressBar)v.findViewById(R.id.content_progress);
+		if(mProgressBarLoading != null)
+			mProgressBarLoading.setVisibility(View.GONE);
 		//v.setBackgroundResource(R.color.lightgray);
 		
 		/*
@@ -246,6 +255,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
 		mList = (ListView)v.findViewById(R.id.list_listview);
 		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
+		mProgressBarLoading = (ProgressBar)v.findViewById(R.id.content_progress);
+		if(mProgressBarLoading != null)
+			mProgressBarLoading.setVisibility(View.GONE);
 
 		if(mGrid == null && mList == null)
 			Logger.LogError("WTF, where are they?");
@@ -563,7 +575,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				dZip
 					.setMessage("Enter filename of new Zip file:")
 					.setDefaultText(def)
-					.setIcon(getResources().getDrawable(R.drawable.zip))
+					.setIcon(getResources().getDrawable(R.drawable.lg_zip))
 					.setTitle("Zip")
 					.setCancelable(true)
 					.setPositiveButton("OK",
@@ -757,8 +769,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			Logger.LogDebug("Worker thread complete?");
 			if(!mPath.requiresThread())
 				updateData(mPath.list());
-			else
+			else {
+				if(mProgressBarLoading != null)
+				{
+					mProgressBarLoading.setIndeterminate(true);
+					mProgressBarLoading.setVisibility(View.VISIBLE);
+				}
 				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
+			}
 			
 			//changePath(mPath, false);
 			//mContentAdapter.notifyDataSetChanged();
@@ -989,12 +1007,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		@Override
 		protected OpenPath[] doInBackground(FileIOCommand... params) {
+			publishProgress(0);
 			ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
 			for(FileIOCommand cmd : params)
 			{
 				if(cmd.Path.requiresThread())
 				{
-					Logger.LogDebug("Using separate thread to get file list");
 					OpenFTP file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
 					OpenPath[] list = file.list();
 					if(list != null)
@@ -1020,11 +1038,30 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		protected void onPreExecute() {
 			super.onPreExecute();
 			//mData.clear();
+			if(mProgressBarLoading != null)
+			{
+				mProgressBarLoading.setIndeterminate(true);
+				mProgressBarLoading.setVisibility(View.VISIBLE);
+			} else Logger.LogDebug("Starting FileIOTask");
+		}
+		
+		@Override
+		protected void onProgressUpdate(Integer... values) {
+			super.onProgressUpdate(values);
+			if(mProgressBarLoading != null)
+			{
+				mProgressBarLoading.setIndeterminate(true);
+				mProgressBarLoading.setVisibility(View.VISIBLE);
+			}
 		}
 		
 		@Override
 		protected void onPostExecute(OpenPath[] result)
 		{
+			if(mProgressBarLoading != null)
+			{
+				mProgressBarLoading.setVisibility(View.GONE);
+			} else Logger.LogDebug("Ending FileIOTask");
 			mData2.clear();
 			updateData(result);
 		}

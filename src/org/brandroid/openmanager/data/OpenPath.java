@@ -29,6 +29,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	
 	private static final long serialVersionUID = 332701810738149106L;
 	private Object mTag = null;
+	private OpenPathThreadUpdater mUpdater;
 	public abstract String getName();
 	public abstract String getPath();
 	public abstract String getAbsolutePath();
@@ -188,5 +189,17 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 			  ext.equalsIgnoreCase("m4v"))
 			return true;
 		return false;
+	}
+	
+	public void setThreadUpdateCallback(OpenPathThreadUpdater updater)
+	{
+		mUpdater = updater;
+	}
+	public OpenPathThreadUpdater getThreadUpdateCallback() { return mUpdater; }
+	
+	public interface OpenPathThreadUpdater
+	{
+		public void update(int progress, int total);
+		public void update(String status);
 	}
 }

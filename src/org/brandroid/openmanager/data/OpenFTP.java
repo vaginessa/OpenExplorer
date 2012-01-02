@@ -79,8 +79,14 @@ public class OpenFTP extends OpenPath
 
 	@Override
 	public OpenPath[] listFiles() {
+		if(mChildren != null && mChildren.size() > 0)
+		{
+			OpenPath[] ret = new OpenPath[mChildren.size()];
+			mChildren.toArray(ret);
+			return ret;
+		} else mChildren = new ArrayList<OpenFTP>();
 		try {
-			FTPFile[] arr = mManager.listFiles();
+			FTPFile[] arr = mManager.listFiles(getThreadUpdateCallback());
 			if(arr == null)
 				return null;
 				
@@ -92,8 +98,9 @@ public class OpenFTP extends OpenPath
 				base += "/";
 			for(int i = 0; i < arr.length; i++)
 			{
-				ret[i] = new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName()));
+				mChildren.add(new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName())));
 			}
+			mChildren.toArray(ret);
 			return ret;
 		} catch(IOException e) {
 			Logger.LogError("Error listing FTP files.", e);
@@ -210,6 +217,7 @@ public class OpenFTP extends OpenPath
 		return getName().startsWith(".");
 	}
 	
+	/*
 	@Override
 	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read,
 			Boolean write) {
@@ -227,6 +235,7 @@ public class OpenFTP extends OpenPath
 		c.drawText("FTP", b.getWidth() / 2, b.getHeight() / 2, p);
 		return new SoftReference<Bitmap>(b);
 	}
+	*/
 	
 	@Override
 	public void setPath(String path) {

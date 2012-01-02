@@ -15,6 +15,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
@@ -85,7 +86,7 @@ public class FTPManager {
 	
 	@Override
 	protected void finalize() throws Throwable {
-		if(client.isConnected())
+		if(client != null && client.isConnected())
 			client.disconnect();
 	}
 	
@@ -182,10 +183,13 @@ public class FTPManager {
 		}
 		else return null;
 	}
-	public FTPFile[] listFiles() throws IOException
+	public FTPFile[] listFiles() throws IOException { return listFiles(null); }
+	public FTPFile[] listFiles(OpenPathThreadUpdater updater) throws IOException
 	{
 		if(connect())
 		{
+			if(updater != null)
+				updater.update("ls " + getPath());
 			FTPFile[] ret = client.listFiles();
 			for(FTPFile f : ret)
 				fileCache.put(f.getName(), new OpenFTP(f, new FTPManager(this, f.getName())));

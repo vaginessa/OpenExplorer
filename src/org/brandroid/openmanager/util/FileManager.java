@@ -426,16 +426,11 @@ public class FileManager {
 				FTPManager man;
 				try {
 					man = new FTPManager(path);
-					ret = new OpenFTP(new FTPFile(), man);
+					FTPFile file = new FTPFile();
+					file.setName(path.substring(path.lastIndexOf("/")+1));
+					ret = new OpenFTP(file, man);
 					if(bGetNetworkedFiles)
-					{
-						FTPFile[] ff = FTPManager.getFTPFiles(path);
-						if(ff == null)
-							Logger.LogWarning("FTPManager.getFTPFiles return is null");
-						else
-							Logger.LogDebug("FTPManager.getFTPFiles returns " + ff.length);
-						ret = new OpenFTP(path, ff, man);
-					}
+						ret.listFiles();
 				} catch (MalformedURLException e) {
 					Logger.LogWarning("Bad URL in File Manager - " + path, e);
 				}
@@ -443,6 +438,7 @@ public class FileManager {
 		}
 		if(ret == null)
 			ret = setOpenCache(path, new OpenFile(path));
+		else setOpenCache(path, ret);
 		return ret;
 	}
 	
