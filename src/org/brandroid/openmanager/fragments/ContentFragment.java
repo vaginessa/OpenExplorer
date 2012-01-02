@@ -994,11 +994,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			{
 				if(cmd.Path.requiresThread())
 				{
+					Logger.LogDebug("Using separate thread to get file list");
 					OpenFTP file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
 					OpenPath[] list = file.list();
 					if(list != null)
 						for(OpenPath f : list)
 							ret.add(f);
+					else
+						Logger.LogWarning("Return is null");
 				} else {
 					for(OpenPath f : cmd.Path.list())
 						ret.add(f);

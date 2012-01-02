@@ -430,6 +430,10 @@ public class FileManager {
 					if(bGetNetworkedFiles)
 					{
 						FTPFile[] ff = FTPManager.getFTPFiles(path);
+						if(ff == null)
+							Logger.LogWarning("FTPManager.getFTPFiles return is null");
+						else
+							Logger.LogDebug("FTPManager.getFTPFiles returns " + ff.length);
 						ret = new OpenFTP(path, ff, man);
 					}
 				} catch (MalformedURLException e) {

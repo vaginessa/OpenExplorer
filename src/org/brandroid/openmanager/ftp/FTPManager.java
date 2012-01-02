@@ -89,23 +89,6 @@ public class FTPManager {
 			client.disconnect();
 	}
 	
-	public static OpenFTP getFTPFile(String name)
-	{
-		if(!fileCache.containsKey(name))
-		{
-			try {
-				URL u = new URL(name);
-				FTPFile[] files = new FTPManager(u).listAll();
-				Logger.LogDebug("Found " + files.length + " ftp children.");
-			} catch (MalformedURLException e) {
-				Logger.LogWarning("Invalid FTP URL - " + name, e);
-			} catch (IOException e) {
-				Logger.LogError("FTP Exception - " + name, e);
-			}
-		}
-		return fileCache.get(name);
-	}
-	
 	public static FTPFile[] getFTPFiles(String name)
 	{
 		FTPFile[] ret = new FTPFile[0]; 
@@ -199,20 +182,15 @@ public class FTPManager {
 		}
 		else return null;
 	}
-	public FTPFile[] listFiles()
+	public FTPFile[] listFiles() throws IOException
 	{
-		try {
-			if(connect())
-			{
-				FTPFile[] ret = client.listFiles();
-				for(FTPFile f : ret)
-					fileCache.put(f.getName(), new OpenFTP(f, new FTPManager(this, f.getName())));
-				return ret;
-			} else return null;
-		} catch (IOException e) {
-			Logger.LogError("Error listing FTP.", e);
-			return null;
-		}
+		if(connect())
+		{
+			FTPFile[] ret = client.listFiles();
+			for(FTPFile f : ret)
+				fileCache.put(f.getName(), new OpenFTP(f, new FTPManager(this, f.getName())));
+			return ret;
+		} else return null;
 	}
 	public InputStream getInputStream() throws IOException
 	{

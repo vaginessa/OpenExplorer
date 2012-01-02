@@ -79,21 +79,26 @@ public class OpenFTP extends OpenPath
 
 	@Override
 	public OpenPath[] listFiles() {
-		FTPFile[] arr = mManager.listFiles();
-		if(arr == null)
+		try {
+			FTPFile[] arr = mManager.listFiles();
+			if(arr == null)
+				return null;
+				
+			OpenFTP[] ret = new OpenFTP[arr.length];
+			String base = getPath();
+			if(base.indexOf("//") > -1)
+				base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
+			if(!base.endsWith("/"))
+				base += "/";
+			for(int i = 0; i < arr.length; i++)
+			{
+				ret[i] = new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName()));
+			}
+			return ret;
+		} catch(IOException e) {
+			Logger.LogError("Error listing FTP files.", e);
 			return null;
-			
-		OpenFTP[] ret = new OpenFTP[arr.length];
-		String base = getPath();
-		if(base.indexOf("//") > -1)
-			base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
-		if(!base.endsWith("/"))
-			base += "/";
-		for(int i = 0; i < arr.length; i++)
-		{
-			ret[i] = new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName()));
 		}
-		return ret;
 	}
 
 	@Override
