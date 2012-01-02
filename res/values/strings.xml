@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Open Explorer</string>
+    <string name="app_name">Open Explorer Beta</string>
+    <string name="app_title">OEβ</string>
     <string name="s_search">Search</string>
     <string name="s_photos">Photos</string>
     <string name="s_videos">Videos</string>
@@ -123,7 +124,7 @@
 	<string name="s_pref_start">Starting Folder</string>
 	<string name="s_pref_start_summary">Indicates which folder OpenExplorer starts in</string>
 	<string name="s_custom">Custom…</string>    
-	<string name="s_text_intro_top">Welcome to OpenExplorer!</string>
+	<string name="s_text_intro_top">Welcome to OpenExplorer Beta!</string>
 	<string name="s_text_intro_body">The goal of OpenExplorer is to make you more productive within the Android filesystem and in the cloud. Whether you need to manage videos or photos from multiple locations or manage your webserver remotely via FTP, OpenExplorer can suit your needs.\n\nPlease select your starting path:</string>
 	<string name="s_info_num_folders">Number of folders: </string>
 	<string name="s_info_num_files">Number of files: </string>
@@ -132,4 +133,5 @@
 	<string name="s_info_permission_read">Read: </string>
 	<string name="s_info_permission_write">Write: </string>
 	<string name="s_info_permission_execute">Execute: </string>
+	<string name="s_toggle_keyboard">Toggle Keyboard</string>
 </resources>

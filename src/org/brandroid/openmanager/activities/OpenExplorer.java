@@ -670,7 +670,7 @@ public class OpenExplorer
     
     public void updateTitle(String s)
     {
-    	String t = getResources().getString(R.string.app_name) + (s.equals("") ? "" : " - " + s);
+    	String t = getResources().getString(R.string.app_title) + (s.equals("") ? "" : " - " + s);
     	if(BEFORE_HONEYCOMB)
     	{
     		if(findViewById(R.id.title_path) != null)
