@@ -44,6 +44,11 @@ import android.os.Environment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v4.app.ListFragment;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.SingleLineTransformationMethod;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.app.AlertDialog;
@@ -55,6 +60,9 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -147,6 +155,7 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 			FTPFile file = new FTPFile();
 			file.setName(server.getName());
 			OpenFTP ftp = new OpenFTP(file, man);
+			ftp.setServersIndex(i);
 			checkAndAdd(ftp);
 		}
 		if(mBookmarkAdapter != null)
@@ -312,17 +321,121 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 			}};
 	}
 	
-	public boolean onItemLongClick(AdapterView<?> list, View view, final int pos, long id) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+	public boolean onItemLongClick(AdapterView<?> list, View view, final int pos, long id)
+	{
+		super.onItemLongClick(list, view, pos, id);
+		final OpenPath mPath = mBookmarks.get(pos);
+		final BookmarkHolder mHolder = (BookmarkHolder)view.getTag();
+		if(OpenFTP.class.equals(mPath.getClass()))
+			return ShowServerDialog((OpenFTP)mPath, mHolder);
+		else return ShowStandardDialog(mPath, mHolder);
+	}
+	public boolean ShowServerDialog(final OpenFTP mPath, final BookmarkHolder mHolder)
+	{
+		final OpenServers servers = SettingsActivity.LoadDefaultServers(mContext);
+		final int iServersIndex = mPath.getServersIndex();
+		final OpenServer server = iServersIndex > -1 ? servers.get(iServersIndex) : new OpenServer().setName("New Server");
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		final View v = inflater.inflate(R.layout.server, null);
+		final EditText mHost = (EditText)v.findViewById(R.id.text_server);
+		final EditText mUser = (EditText)v.findViewById(R.id.text_user);
+		final EditText mPassword = (EditText)v.findViewById(R.id.text_password);
+		final EditText mTextPath = (EditText)v.findViewById(R.id.text_path);
+		final EditText mTextName = (EditText)v.findViewById(R.id.text_name);
+		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
+		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if(isChecked)
+				{
+					mPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+					mPassword.setTransformationMethod(new SingleLineTransformationMethod());
+				} else {
+					mPassword.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+					mPassword.setTransformationMethod(new PasswordTransformationMethod());
+				}
+			}
+		});
+		mHost.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				if(server.getName().equals(server.getHost()) || server.getName().equals("New Server") || server.getName().equals(""))
+					server.setName(s.toString());
+				server.setHost(s.toString());
+			}
+		});
+		mUser.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setUser(s.toString());
+			}
+		});
+		mPassword.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setPassword(s.toString());
+			}
+		});
+		mTextPath.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setPath(s.toString());
+			}
+		});
+		mTextName.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setName(s.toString());
+			}
+		});
+		if(iServersIndex > -1)
+		{
+			mHost.setText(server.getHost());
+			mUser.setText(server.getUser());
+			mPassword.setText(server.getPassword());
+			mTextPath.setText(server.getPath());
+			mTextName.setText(server.getName());
+		}
+		new AlertDialog.Builder(mContext)
+			.setView(v)
+			.setIcon(mHolder.getIconView().getDrawable())
+			.setNegativeButton(getResources().getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+				}
+			})
+			.setNeutralButton(getResources().getString(R.string.s_remove), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					if(iServersIndex > -1)
+						servers.remove(iServersIndex);
+					getExplorer().refreshBookmarks();
+				}
+			})
+			.setPositiveButton(getResources().getString(R.string.s_update), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					if(iServersIndex > -1)
+						servers.set(iServersIndex, server);
+					else
+						servers.add(server);
+					SettingsActivity.SaveToDefaultServers(servers, mContext);
+					getExplorer().refreshBookmarks();
+				}
+			})
+			.setTitle(server.getName())
+			.create().show();
+		return true;
+	}
+	public boolean ShowStandardDialog(final OpenPath mPath, final BookmarkHolder mHolder)
+	{
+		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 		final View v = inflater.inflate(R.layout.input_dialog_layout, null);
 		final EditText mText = (EditText)v.findViewById(R.id.dialog_input);
 		//final EditText mTextTop = (EditText)v.findViewById(R.id.dialog_input_top);
-		final BookmarkHolder mHolder = (BookmarkHolder)view.getTag();
-		final OpenPath mPath = mBookmarks.get(pos);
 		final String title = getPathTitle(mPath);
-		
-		super.onItemLongClick(list, view, pos, id);
 
 		((TextView)v.findViewById(R.id.dialog_message))
 						.setText(getResources().getString(R.string.s_alert_bookmark_rename));
@@ -332,7 +445,7 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		{	
 			builder.setNeutralButton(getResources().getString(R.string.s_eject), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					tryEject(mBookmarks.get(pos).getPath(), mHolder);
+					tryEject(mPath.getPath(), mHolder);
 				}
 			});
 		} else

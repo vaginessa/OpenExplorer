@@ -466,7 +466,8 @@ public class ThumbnailCreator extends Thread {
 		//Logger.LogInfo("Flushing" + mCacheMap.size() + " from memory & " + mContext.fileList().length + " from disk.");
 		mCacheMap.clear();
 		for(String s : mContext.fileList())
-			mContext.deleteFile(s);
+			if(!s.toLowerCase().endsWith(".json"))
+				mContext.deleteFile(s);
 	}
 
 	public static boolean hasContext() {

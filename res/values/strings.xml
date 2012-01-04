@@ -134,4 +134,5 @@
 	<string name="s_info_permission_write">Write: </string>
 	<string name="s_info_permission_execute">Execute: </string>
 	<string name="s_toggle_keyboard">Toggle Keyboard</string>
+	<string name="s_show_password">Show Password</string>
 </resources>

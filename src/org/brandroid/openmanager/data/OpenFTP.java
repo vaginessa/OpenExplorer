@@ -31,6 +31,7 @@ public class OpenFTP extends OpenPath
 	private FTPFile mFile = new FTPFile();
 	private FTPManager mManager;
 	private ArrayList<OpenFTP> mChildren = null; 
+	private int mServersIndex = -1;
 	
 	public OpenFTP(String path, FTPFile[] children, FTPManager man)
 	{
@@ -244,4 +245,7 @@ public class OpenFTP extends OpenPath
 		mFile.setName(path);
 		mChildren = new ArrayList<OpenFTP>();
 	}
+	
+	public int getServersIndex() { return mServersIndex; }
+	public void setServersIndex(int i) { mServersIndex = i; }
 }
