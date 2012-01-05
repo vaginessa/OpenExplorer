@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.fragments;
 
+import java.io.IOException;
 import java.lang.ref.SoftReference;
 
 import android.app.AlertDialog;
@@ -208,7 +209,12 @@ public class CarouselFragment extends OpenFragment {
 			Logger.LogError("Who is making me?", new Exception("WTF!"));
 		}
 		mBlackPaint.setColor(Color.BLACK);
-		mPathItems = mParent.list();
+		try {
+			mPathItems = mParent.list();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Override

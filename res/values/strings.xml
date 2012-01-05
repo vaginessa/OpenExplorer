@@ -133,6 +133,7 @@
 	<string name="s_info_permission_read">Read: </string>
 	<string name="s_info_permission_write">Write: </string>
 	<string name="s_info_permission_execute">Execute: </string>
-	<string name="s_toggle_keyboard">Toggle Keyboard</string>
+	<string name="s_toggle_keyboard">Keyboard</string>
 	<string name="s_show_password">Show Password</string>
+	<string name="s_error_ftp">Error connecting to FTP</string>
 </resources>

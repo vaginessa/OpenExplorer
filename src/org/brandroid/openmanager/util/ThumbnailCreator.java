@@ -89,7 +89,7 @@ public class ThumbnailCreator extends Thread {
 		
 		final Context mContext = mImage.getContext();
 		
-		if(file.isTextFile())
+		if(!file.isDirectory() && file.isTextFile())
 			mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
 		else
 			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
@@ -176,7 +176,12 @@ public class ThumbnailCreator extends Thread {
 			else {
 				OpenPath[] lists = null;
 				if(!file.requiresThread())
-					lists = file.list();
+					try {
+						lists = file.list();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 			
 				if(file.canRead() && lists != null && lists.length > 0)
 					return (useLarge ? R.drawable.lg_folder_full : R.drawable.sm_folder_full);
@@ -258,7 +263,7 @@ public class ThumbnailCreator extends Thread {
 		
 		if(context != null)
 		{
-			if(file.isTextFile())
+			if(!file.isDirectory() && file.isTextFile())
 				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), context, mWidth > 72));
 			
 			bmp = BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight));

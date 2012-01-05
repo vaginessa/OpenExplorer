@@ -444,8 +444,13 @@ public class DialogHandler extends DialogFragment {
 				dirCount++;
 				if(bFirst)
 					firstDirs++;
-				for(OpenPath f : p.list())
-					addPath(f, false);
+				try {
+					for(OpenPath f : p.list())
+						addPath(f, false);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			if(fileCount + dirCount % 50 == 0)
 				publishProgress(fileCount, dirCount);

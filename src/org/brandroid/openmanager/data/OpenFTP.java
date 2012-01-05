@@ -79,34 +79,29 @@ public class OpenFTP extends OpenPath
 	}
 
 	@Override
-	public OpenPath[] listFiles() {
+	public OpenPath[] listFiles() throws IOException {
 		if(mChildren != null && mChildren.size() > 0)
 		{
 			OpenPath[] ret = new OpenPath[mChildren.size()];
 			mChildren.toArray(ret);
 			return ret;
 		} else mChildren = new ArrayList<OpenFTP>();
-		try {
-			FTPFile[] arr = mManager.listFiles(getThreadUpdateCallback());
-			if(arr == null)
-				return null;
-				
-			OpenFTP[] ret = new OpenFTP[arr.length];
-			String base = getPath();
-			if(base.indexOf("//") > -1)
-				base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
-			if(!base.endsWith("/"))
-				base += "/";
-			for(int i = 0; i < arr.length; i++)
-			{
-				mChildren.add(new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName())));
-			}
-			mChildren.toArray(ret);
-			return ret;
-		} catch(IOException e) {
-			Logger.LogError("Error listing FTP files.", e);
+		FTPFile[] arr = mManager.listFiles(getThreadUpdateCallback());
+		if(arr == null)
 			return null;
+			
+		OpenFTP[] ret = new OpenFTP[arr.length];
+		String base = getPath();
+		if(base.indexOf("//") > -1)
+			base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
+		if(!base.endsWith("/"))
+			base += "/";
+		for(int i = 0; i < arr.length; i++)
+		{
+			mChildren.add(new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName())));
 		}
+		mChildren.toArray(ret);
+		return ret;
 	}
 
 	@Override
@@ -151,7 +146,7 @@ public class OpenFTP extends OpenPath
 		return mFile != null;
 	}
 	@Override
-	public OpenPath[] list() {
+	public OpenPath[] list() throws IOException {
 		if(mChildren != null)
 		{
 			OpenPath[] ret = new OpenPath[mChildren.size()];

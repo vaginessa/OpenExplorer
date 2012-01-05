@@ -3,26 +3,13 @@ package org.brandroid.openmanager.fragments;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.CharBuffer;
-
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.http.util.ByteArrayBuffer;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.string;
-import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
@@ -32,7 +19,6 @@ import org.brandroid.utils.Logger;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -43,7 +29,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 public class TextEditorFragment extends OpenFragment implements OnClickListener
 {
@@ -94,7 +79,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		super.onViewCreated(view, savedInstanceState);
 		mSave.setOnClickListener(this);
 		mCancel.setOnClickListener(this);
-		((ToggleButton)view.findViewById(R.id.btn_toggle_keyboard)).setOnClickListener(this);
+		((Button)view.findViewById(R.id.btn_toggle_keyboard)).setOnClickListener(this);
 		mEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
 				/*if(hasFocus)

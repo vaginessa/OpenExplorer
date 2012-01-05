@@ -44,6 +44,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -182,7 +183,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				path = new OpenFile(Environment.getExternalStorageDirectory());
 		}
 		if(!path.requiresThread())
-			mData = mFileManager.getChildren(path);
+			try {
+				mData = mFileManager.getChildren(path);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		else {
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.VISIBLE);
@@ -747,7 +753,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 				//@Override
 				public void onFileSelected(String fileName) {
-					OpenPath file = FileManager.getOpenCache(fileName);
+					OpenPath file = null;
+					try {
+						file = FileManager.getOpenCache(fileName);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					if(file == null)
+						file = new OpenFile(fileName);
 					
 					if (file.isDirectory()) {
 						changePath(mFileManager.pushStack(file));
@@ -768,7 +783,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		} else {
 			Logger.LogDebug("Worker thread complete?");
 			if(!mPath.requiresThread())
-				updateData(mPath.list());
+				try {
+					updateData(mPath.list());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			else {
 				if(mProgressBarLoading != null)
 				{
@@ -965,7 +985,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			String deets = ""; //file.getPath() + "\t\t";
 			
 			if(file.isDirectory() && !file.requiresThread()) {
-				deets = file.list().length + " items";
+				try {
+					deets = file.list().length + " items";
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			} else {
 				deets = DialogHandler.formatSize(file.length());
 			}
@@ -1013,16 +1038,36 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			{
 				if(cmd.Path.requiresThread())
 				{
-					OpenFTP file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
-					OpenPath[] list = file.list();
-					if(list != null)
+					OpenFTP file = null;
+					try {
+						file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					OpenPath[] list = null;
+					try {
+						if(file != null)
+							list = file.list();
+					} catch (IOException e) {
+						list = null;
+					}
+					if(list != null) {
+						Logger.LogDebug("Return is valid?");
 						for(OpenPath f : list)
 							ret.add(f);
-					else
+					} else {
 						Logger.LogWarning("Return is null");
+						getExplorer().showToast(R.string.s_error_ftp);
+					}
 				} else {
-					for(OpenPath f : cmd.Path.list())
-						ret.add(f);
+					try {
+						for(OpenPath f : cmd.Path.list())
+							ret.add(f);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				if(OpenFTP.class.equals(cmd.Path.getClass()))
 					((OpenFTP)cmd.Path).getManager().disconnect();

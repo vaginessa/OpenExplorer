@@ -425,12 +425,22 @@ public class EventHandler {
 		
 		public void searchDirectory(OpenPath dir, String pattern, ArrayList<String> aList)
 		{
-			for(OpenPath p : dir.listFiles())
-				if(p.getName().matches(pattern))
-					aList.add(p.getPath());
-			for(OpenPath p : dir.list())
-				if(p.isDirectory())
-					searchDirectory(p, pattern, aList);
+			try {
+				for(OpenPath p : dir.listFiles())
+					if(p.getName().matches(pattern))
+						aList.add(p.getPath());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				for(OpenPath p : dir.list())
+					if(p.isDirectory())
+						searchDirectory(p, pattern, aList);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		protected Integer doInBackground(OpenPath... params) {

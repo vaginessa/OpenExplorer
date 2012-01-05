@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -142,9 +143,13 @@ public class FTPManager {
 			client = new FTPClient();
 		if(!client.isConnected())
 		{
-			client.connect(mHost);
-			client.login(mUser, mPassword);
-			client.cwd(mBasePath);
+			try {
+				client.connect(mHost);
+				client.login(mUser, mPassword);
+				client.cwd(mBasePath);
+			} catch(Throwable e) {
+				throw new IOException("Error connecting to FTP.", e);
+			}
 		}
 		
 		if(client.isConnected()) return true;
@@ -171,18 +176,6 @@ public class FTPManager {
 		return retf;
 	}
 	
-	public FTPFile[] listDirectories() throws IOException
-	{
-		if(connect())
-		{
-			FTPFile[] ret = client.listDirectories();
-			for(FTPFile f : ret)
-				fileCache.put(f.getName(), new OpenFTP(f, this));
-			fileCache.put(getPath(), new OpenFTP(getPath(), ret, this));
-			return ret;
-		}
-		else return null;
-	}
 	public FTPFile[] listFiles() throws IOException { return listFiles(null); }
 	public FTPFile[] listFiles(OpenPathThreadUpdater updater) throws IOException
 	{

@@ -13,6 +13,7 @@
     <EditText
         android:id="@+id/text_server"
         android:singleLine="true"
+        android:inputType="textUri|textNoSuggestions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
         
@@ -52,11 +53,13 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:inputType="textUri"
         android:text="@string/s_pref_server_path" />
 
     <EditText
         android:id="@+id/text_path"
         android:singleLine="true"
+        android:inputType="textNoSuggestions|text|textWebEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

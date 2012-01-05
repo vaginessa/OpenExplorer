@@ -369,7 +369,12 @@ public class FileManager {
 		
 		else if(target.exists() && target.isDirectory() && target.canRead()) {
 			OpenPath[] file_list = null;
-			file_list = target.list();
+			try {
+				file_list = target.list();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			if(file_list != null && file_list.length == 0) {
 				target.delete();
@@ -413,9 +418,9 @@ public class FileManager {
 		return ascii_address;
 	 }
 	
-	public static OpenPath getOpenCache(String path) { return getOpenCache(path, false); }
+	public static OpenPath getOpenCache(String path) throws IOException { return getOpenCache(path, false); }
 	
-	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles)
+	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles) throws IOException
 	{
 		//Logger.LogDebug("Checking cache for " + path);
 		OpenPath ret = mOpenCache.get(path);
@@ -423,17 +428,12 @@ public class FileManager {
 		{
 			if(path.indexOf("ftp:/") > -1)
 			{
-				FTPManager man;
-				try {
-					man = new FTPManager(path);
-					FTPFile file = new FTPFile();
-					file.setName(path.substring(path.lastIndexOf("/")+1));
-					ret = new OpenFTP(file, man);
-					if(bGetNetworkedFiles)
-						ret.listFiles();
-				} catch (MalformedURLException e) {
-					Logger.LogWarning("Bad URL in File Manager - " + path, e);
-				}
+				FTPManager man = new FTPManager(path);
+				FTPFile file = new FTPFile();
+				file.setName(path.substring(path.lastIndexOf("/")+1));
+				ret = new OpenFTP(file, man);
+				if(bGetNetworkedFiles)
+					ret.listFiles();
 			}
 		}
 		if(ret == null)
@@ -448,7 +448,7 @@ public class FileManager {
 		return file;
 	}
 		
-	public OpenPath[] getChildren(OpenPath directory)
+	public OpenPath[] getChildren(OpenPath directory) throws IOException
 	{
 		//mDirContent.clear();
 		if(directory == null) return new OpenPath[0];

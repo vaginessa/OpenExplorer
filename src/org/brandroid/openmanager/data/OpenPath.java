@@ -37,8 +37,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public abstract long length();
 	public abstract OpenPath getParent();
 	public abstract OpenPath getChild(String name);
-	public abstract OpenPath[] list();
-	public abstract OpenPath[] listFiles();
+	public abstract OpenPath[] list() throws IOException;
+	public abstract OpenPath[] listFiles() throws IOException;
 	public abstract Boolean isDirectory();
 	public abstract Boolean isFile();
 	public abstract Boolean isHidden();
@@ -132,7 +132,13 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         	String path = in.readString();
         	if(new File(path).exists())
         		return new OpenFile(path);
-        	return FileManager.getOpenCache(path);
+        	try {
+				return FileManager.getOpenCache(path);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
         }
 
         public OpenPath[] newArray(int size) {
@@ -148,6 +154,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
 	public boolean isTextFile() { return isTextFile(getName()); }
 	public static boolean isTextFile(String file) {
+		if(file.indexOf(".") == -1) return false;
 		String ext = file.substring(file.lastIndexOf(".") + 1);
 		if(ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("php")
 				|| ext.equalsIgnoreCase("html") || ext.equalsIgnoreCase("htm")

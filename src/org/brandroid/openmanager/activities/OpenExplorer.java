@@ -907,7 +907,13 @@ public class OpenExplorer
 		    					return true;
 		    				}
 		    				
-		    				OpenPath file = FileManager.getOpenCache(files.get(0));
+		    				OpenPath file = new OpenFile(files.get(0));
+							try {
+								file = FileManager.getOpenCache(files.get(0));
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 		    				
 		    				if(mHeldFiles == null)
 		    					mHeldFiles = new OpenClipboard();
@@ -915,7 +921,12 @@ public class OpenExplorer
 		    				mHeldFiles.clear();
 		    				
 		    				for(int i=1; i<files.size(); i++)
-		    					mHeldFiles.add(FileManager.getOpenCache(files.get(i)));
+								try {
+									mHeldFiles.add(FileManager.getOpenCache(files.get(i)));
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 		    			
 		    				return getDirContentFragment(false)
 		    						.executeMenu(item.getItemId(), mode, file, mHeldFiles);
@@ -1415,11 +1426,16 @@ public class OpenExplorer
 			{
 				if(path.isDirectory())
 				{
-					for(OpenPath kid : path.list())
-					{
-						ThumbnailCreator.generateThumb(kid, 36, 36);
-						ThumbnailCreator.generateThumb(kid, 96, 96);
-						done++;
+					try {
+						for(OpenPath kid : path.list())
+						{
+							ThumbnailCreator.generateThumb(kid, 36, 36);
+							ThumbnailCreator.generateThumb(kid, 96, 96);
+							done++;
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				} else {
 					if(!ThumbnailCreator.hasContext())

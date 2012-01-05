@@ -42,7 +42,7 @@
 			android:layout_toLeftOf="@+id/btn_toggle_keyboard"
 			android:layout_alignParentTop="true" />
 
-		<ToggleButton
+		<Button
 		    android:id="@+id/btn_toggle_keyboard"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -61,6 +61,7 @@
 			android:visibility="gone"
 			android:gravity="center"
 			android:text="Size: 0" />
+
 	</RelativeLayout>
     <EditText
     	android:layout_width="fill_parent"
@@ -68,6 +69,8 @@
     	android:inputType="textMultiLine"
 		android:id="@+id/text_edit"
 		android:layout_below="@+id/layout_info"
+		android:typeface="monospace"
+		android:textSize="10dp"
 		android:gravity="top|left"
 		android:layout_alignParentLeft="true">
         <requestFocus></requestFocus>
