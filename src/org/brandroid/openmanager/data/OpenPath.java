@@ -55,6 +55,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public abstract OutputStream getOutputStream() throws IOException;
 	public Object getTag() { return mTag; }
 	public void setTag(Object o) { mTag = o; }
+	public int getListLength() { return -1; }
 	public int compareTo(OpenPath other)
 	{
 		return compare(this, other);
@@ -130,8 +131,6 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             = new Parcelable.Creator<OpenPath>() {
         public OpenPath createFromParcel(Parcel in) {
         	String path = in.readString();
-        	if(new File(path).exists())
-        		return new OpenFile(path);
         	try {
 				return FileManager.getOpenCache(path);
 			} catch (IOException e) {

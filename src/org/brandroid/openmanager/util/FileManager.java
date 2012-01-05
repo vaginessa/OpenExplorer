@@ -452,6 +452,7 @@ public class FileManager {
 	{
 		//mDirContent.clear();
 		if(directory == null) return new OpenPath[0];
+		if(!directory.isDirectory()) return new OpenPath[0];
 		return directory.list();
 	}
 }

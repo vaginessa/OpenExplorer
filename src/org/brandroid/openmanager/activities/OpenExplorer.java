@@ -246,6 +246,8 @@ public class OpenExplorer
         Fragment home = new ContentFragment(mLastPath);
         
         Logger.LogDebug("Creating with " + path.getPath());
+        if(OpenFile.class.equals(path.getClass()))
+        	new PeekAtGrandKidsTask().execute((OpenFile)path);
 
         if(!mSinglePane && mFavoritesFragment != null)
         {
@@ -1305,6 +1307,8 @@ public class OpenExplorer
 				setViewMode(newView = VIEW_LIST);
 			content = new ContentFragment(path);
 		}
+		if(OpenFile.class.equals(path.getClass()))
+			new PeekAtGrandKidsTask().execute((OpenFile)path);
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		ft.replace(R.id.content_frag, content);
 		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
@@ -1528,6 +1532,22 @@ public class OpenExplorer
 		String sBookmarks = getPreferences().getSetting("bookmarks", "bookmarks", "");
 		sBookmarks += sBookmarks != "" ? ";" : file.getPath();
 		getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
+	}
+	
+	public class PeekAtGrandKidsTask extends AsyncTask<OpenFile, Void, Void>
+	{
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			Logger.LogDebug("Peeking at grand kids...");
+		}
+		@Override
+		protected Void doInBackground(OpenFile... params) {
+			for(OpenFile file : params)
+				file.listFiles(true);
+			return null;
+		}
+		
 	}
 }
 

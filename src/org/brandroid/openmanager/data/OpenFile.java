@@ -32,6 +32,7 @@ public class OpenFile extends OpenPath
 {
 	private File mFile;
 	private OpenFile[] mChildren = null;
+	private boolean bGrandPeeked = false;
 	
 	public OpenFile(File f) { mFile = f; }
 	public OpenFile(String path) { mFile = new File(path); }
@@ -51,6 +52,13 @@ public class OpenFile extends OpenPath
 	@Override
 	public long length() {
 		return mFile.length();
+	}
+	
+	@Override
+	public int getListLength() {
+		if(mChildren != null)
+			return mChildren.length;
+		else return -1;
 	}
 	
 	public long getFreeSpace() {
@@ -122,38 +130,52 @@ public class OpenFile extends OpenPath
 	public OpenPath[] listFiles() { return listFiles(false); }
 	
 	public OpenPath[] listFiles(boolean grandPeek) {
-		if(mChildren != null) return mChildren;
-		File[] arr = mFile.listFiles();
-		if((arr == null || arr.length == 0) && isDirectory())
+		if(mChildren == null)
 		{
-			if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
+			File[] arr = mFile.listFiles();
+			if((arr == null || arr.length == 0) && isDirectory())
 			{
-				Logger.LogDebug("Trying to list " + mFile.getPath() + " via Su");
-				HashSet<String> files = RootManager.Default.execute("ls " + mFile.getPath());
-				if(files != null)
+				if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
 				{
-					OpenFile[] ret = new OpenFile[files.size()];
-					int i = 0;
-					for(String s : files)
+					Logger.LogDebug("Trying to list " + mFile.getPath() + " via Su");
+					HashSet<String> files = RootManager.Default.execute("ls " + mFile.getPath());
+					if(files != null)
 					{
-						ret[i++] = new OpenFile(getPath() + "/" + s);
-						if(grandPeek)
-							ret[i++].listFiles();
+						mChildren = new OpenFile[files.size()];
+						int i = 0;
+						for(String s : files)
+						{
+							mChildren[i++] = new OpenFile(getPath() + "/" + s);
+							if(grandPeek && mChildren[i].isDirectory())
+								mChildren[i++].listFiles();
+						}
+						return mChildren;
 					}
-					return ret;
 				}
 			}
-		}
-		if((arr == null || arr.length == 0) && !isDirectory() && mFile.getParentFile() != null)
-			arr = mFile.getParentFile().listFiles();
-		
-		if(arr == null)
-			return new OpenFile[0];
+			if((arr == null || arr.length == 0) && !isDirectory() && mFile.getParentFile() != null)
+				arr = mFile.getParentFile().listFiles();
 			
-		OpenFile[] ret = new OpenFile[arr.length];
-		for(int i = 0; i < arr.length; i++)
-			ret[i] = new OpenFile(arr[i]);
-		return ret;
+			if(arr == null)
+				return new OpenFile[0];
+			
+			mChildren = new OpenFile[arr.length];
+			for(int i = 0; i < arr.length; i++)
+				mChildren[i] = new OpenFile(arr[i]);
+		}
+
+		if(grandPeek && !bGrandPeeked && mChildren != null && mChildren.length > 0)
+		{
+			for(int i=0; i < mChildren.length; i++)
+			{
+				if(!mChildren[i].isDirectory()) continue;
+				Logger.LogDebug("Peeking at " + mChildren[i].getPath());
+				mChildren[i].listFiles();
+			}
+			bGrandPeeked = true;
+		}
+
+		return mChildren;
 	}
 
 	@Override

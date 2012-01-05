@@ -351,15 +351,19 @@ public class ThumbnailCreator extends Thread {
 							icon = apk.getJarEntry("res/" + s + "/" + iconName + ".png");
 							if(icon != null && icon.getSize() > 0)
 							{
+								Logger.LogDebug("Found fallback icon (res/" + s + "/" + iconName + ".png)");
 								in = apk.getInputStream(icon);
-								bmp = BitmapFactory.decodeStream(in);
+								bmp = Bitmap.createScaledBitmap(BitmapFactory.decodeStream(in), mWidth, mHeight, true);
 								in.close();
 								in = null;
+								break;
 							}
 						}
 					}
 					if(bmp == null)
 						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
+					else
+						saveThumbnail(mCacheFilename, bmp);
 				} catch(IOException ix) {
 					Logger.LogError("Invalid APK: " + file.getPath(), ix);
 				}

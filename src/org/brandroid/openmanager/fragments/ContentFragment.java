@@ -104,7 +104,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private LinearLayout mMultiSelectView;
 	private GridView mGrid = null;
 	private ListView mList = null;
-	private ProgressBar mProgressBarLoading = null;
+	private View mProgressBarLoading = null;
 	
 	private OpenPath mPath = null;
 	private static OpenPath mLastPath = null;
@@ -182,14 +182,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			else
 				path = new OpenFile(Environment.getExternalStorageDirectory());
 		}
-		if(!path.requiresThread())
+		if(!path.requiresThread() && path.getListLength() < 100)
 			try {
 				mData = mFileManager.getChildren(path);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
 		else {
+			if(mContentAdapter != null)
+				mContentAdapter.notifyDataSetChanged();
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.VISIBLE);
 			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
@@ -219,7 +220,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
-		mProgressBarLoading = (ProgressBar)v.findViewById(R.id.content_progress);
+		if(mProgressBarLoading == null)
+			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
 		//v.setBackgroundResource(R.color.lightgray);
@@ -261,7 +263,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
 		mList = (ListView)v.findViewById(R.id.list_listview);
 		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
-		mProgressBarLoading = (ProgressBar)v.findViewById(R.id.content_progress);
+		if(mProgressBarLoading == null)
+			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
 
@@ -706,6 +709,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(items == null) return;
 		mReadyToUpdate = false;
 		
+		if(mProgressBarLoading != null)
+			mProgressBarLoading.setVisibility(View.GONE);
+		
 		OpenPath.Sorting = mFileManager.getSorting();
 		Arrays.sort(items);
 		
@@ -790,11 +796,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					e.printStackTrace();
 				}
 			else {
-				if(mProgressBarLoading != null)
-				{
-					mProgressBarLoading.setIndeterminate(true);
-					mProgressBarLoading.setVisibility(View.VISIBLE);
-				}
+				if(mProgressBarLoading == null)
+					mProgressBarLoading = getView().findViewById(R.id.content_progress);
 				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
 			}
 			
@@ -1053,11 +1056,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						list = null;
 					}
 					if(list != null) {
-						Logger.LogDebug("Return is valid?");
 						for(OpenPath f : list)
 							ret.add(f);
 					} else {
-						Logger.LogWarning("Return is null");
 						getExplorer().showToast(R.string.s_error_ftp);
 					}
 				} else {
@@ -1065,8 +1066,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						for(OpenPath f : cmd.Path.list())
 							ret.add(f);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						Logger.LogError("IOException listing children inside FileIOTask", e);
 					}
 				}
 				if(OpenFTP.class.equals(cmd.Path.getClass()))
@@ -1084,29 +1084,23 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			super.onPreExecute();
 			//mData.clear();
 			if(mProgressBarLoading != null)
-			{
-				mProgressBarLoading.setIndeterminate(true);
 				mProgressBarLoading.setVisibility(View.VISIBLE);
-			} else Logger.LogDebug("Starting FileIOTask");
+			else Logger.LogDebug("Starting FileIOTask");
 		}
 		
 		@Override
 		protected void onProgressUpdate(Integer... values) {
 			super.onProgressUpdate(values);
 			if(mProgressBarLoading != null)
-			{
-				mProgressBarLoading.setIndeterminate(true);
 				mProgressBarLoading.setVisibility(View.VISIBLE);
-			}
 		}
 		
 		@Override
 		protected void onPostExecute(OpenPath[] result)
 		{
 			if(mProgressBarLoading != null)
-			{
 				mProgressBarLoading.setVisibility(View.GONE);
-			} else Logger.LogDebug("Ending FileIOTask");
+			else Logger.LogDebug("Ending FileIOTask");
 			mData2.clear();
 			updateData(result);
 		}
