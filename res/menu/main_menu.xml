@@ -14,13 +14,14 @@
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@android:drawable/ic_menu_search"
-		android:showAsAction="always"
+		android:showAsAction="always|collapseActionView"
 		android:actionViewClass="android.widget.SearchView"
 		android:title="@string/s_search" />
 	<item
 		android:id="@+id/menu_sort"
 		android:icon="@android:drawable/ic_menu_sort_by_size"
 		android:showAsAction="ifRoom"
+		android:actionProviderClass="org.brandroid.openmanager.utils.SortActionProvider"
 		android:title="@string/s_menu_sort">
 		<menu>
 			<group android:checkableBehavior="single">

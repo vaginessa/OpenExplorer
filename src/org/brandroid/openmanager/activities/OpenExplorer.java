@@ -25,8 +25,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
-import android.animation.Animator;
-import android.animation.Animator.AnimatorListener;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -41,21 +39,17 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
 import android.view.ActionMode;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnKeyListener;
-import android.view.View.OnLongClickListener;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -63,7 +57,6 @@ import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -75,16 +68,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.id;
-import org.brandroid.openmanager.R.layout;
-import org.brandroid.openmanager.R.menu;
-import org.brandroid.openmanager.R.string;
-import org.brandroid.openmanager.R.style;
+import org.brandroid.openmanager.data.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -103,12 +91,15 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.OpenChromeClient;
+import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
+import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.Preferences;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -140,7 +131,9 @@ public class OpenExplorer
 	
 	private Fragment mFavoritesFragment;
 	private ListView mBookmarksList;
-	private BetterPopupWindow mBookmarksPopup;
+	private OpenBookmarks mBookmarks;
+	private BetterPopupWindow mBookmarksPopup, mMenuPopup;
+	private static OnBookMarkChangeListener mBookmarkListener;
 	
 	private EventHandler mEvHandler;
 	private FileManager mFileManager;
@@ -198,6 +191,7 @@ public class OpenExplorer
             if(findViewById(R.id.title_bar) != null)
             	findViewById(R.id.title_bar).setVisibility(View.GONE);
         } else {
+        	setTheme(android.R.style.Theme_Black);
         	ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
         	if(mTitleStub != null)
         		mTitleStub.inflate();
@@ -224,8 +218,15 @@ public class OpenExplorer
 	    	mBookmarksPopup = new BetterPopupWindow(findViewById(R.id.title_icon));
 	    	mBookmarksPopup.setContentView(mBookmarksList);
 			mBookmarksPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.contextmenu_top_left));
-			mFavoritesFragment = new BookmarkFragment(mBookmarksList);
+			mBookmarks = new OpenBookmarks(this, mBookmarksList);
         }
+        
+		/*
+		// TODO finish this
+		MenuBuilder menu = new MenuBuilder(this);
+		getMenuInflater().inflate(R.menu.main_menu, menu);
+		new BetterPopupWindow(menu.buildView());
+		*/
 
         refreshCursors();
         
@@ -269,8 +270,7 @@ public class OpenExplorer
         if(OpenFile.class.equals(path.getClass()))
         	new PeekAtGrandKidsTask().execute((OpenFile)path);
 
-        //if(!mSinglePane && mFavoritesFragment != null)
-        if(findViewById(R.id.list_frag) != null)
+        if(!mSinglePane && mFavoritesFragment != null)
         {
         	fragmentManager.beginTransaction()
         		.replace(R.id.list_frag, mFavoritesFragment)
@@ -343,7 +343,7 @@ public class OpenExplorer
     protected void onStart() {
     	setupLoggingDb();
 		submitStats();
-		if(mSinglePane && mFavoritesFragment != null)
+		if(mFavoritesFragment != null)
 			((BookmarkFragment)mFavoritesFragment).scanBookmarks();
     	super.onStart();
     }
@@ -391,8 +391,7 @@ public class OpenExplorer
 			ret.put("Fingerprint", Build.FINGERPRINT);
 			ret.put("ID", Build.ID);
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
     	return ret;
     }
@@ -658,34 +657,34 @@ public class OpenExplorer
 	public void toggleBookmarks(Boolean visible)
 	{
 		if(!mSinglePane) return;
-		View v = findViewById(R.id.list_frag);
-		if(v == null)
-			fragmentManager.findFragmentById(R.id.list_frag).getView();
-		if(v != null)
+		if(mBookmarksPopup != null)
 		{
 			if(visible)
-			{
-				mBookmarksPopup.showLikeQuickAction();
-				return;
-			} else {
+				mBookmarksPopup.showLikeQuickAction(R.style.Animations_GrowFromTopLeft);
+			else
 				mBookmarksPopup.dismiss();
-				return;
+		} else {
+			View v = findViewById(R.id.list_frag);
+			if(v == null && fragmentManager.findFragmentById(R.id.list_frag) != null)
+				v = fragmentManager.findFragmentById(R.id.list_frag).getView();
+			if(v != null)
+			{
+				v.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), visible ? android.R.anim.fade_in : android.R.anim.fade_out));
+				v.setVisibility(visible ? View.VISIBLE : View.GONE);
+			} else
+			{
+				if(mFavoritesFragment == null)
+		    		mFavoritesFragment = new BookmarkFragment();
+		    		
+		    	FragmentTransaction ft = fragmentManager.beginTransaction();
+		    	if(mFavoritesFragment.isVisible())
+		    		ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
+		    	else
+		    		ft.replace(R.id.content_frag, mFavoritesFragment);
+	
+		    	ft.addToBackStack("favs");
+				ft.commit();
 			}
-			//v.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), visible ? android.R.anim.fade_in : android.R.anim.fade_out));
-			//v.setVisibility(visible ? View.VISIBLE : View.GONE);
-		} else
-		{
-			if(mFavoritesFragment == null)
-	    		mFavoritesFragment = new BookmarkFragment();
-	    		
-	    	FragmentTransaction ft = fragmentManager.beginTransaction();
-	    	if(mFavoritesFragment.isVisible())
-	    		ft.replace(R.id.content_frag, new ContentFragment(mLastPath));
-	    	else
-	    		ft.replace(R.id.content_frag, mFavoritesFragment);
-
-	    	ft.addToBackStack("favs");
-			ft.commit();
 		}
 	}
 	
@@ -909,7 +908,8 @@ public class OpenExplorer
     }
     public boolean onClick(int id, MenuItem item)
     {
-    	toggleBookmarks(false);
+    	if(id != R.id.title_icon)
+    		toggleBookmarks(false);
     	switch(id)
     	{
     		case R.id.title_icon:
@@ -1090,7 +1090,10 @@ public class OpenExplorer
 	
 	public void showMenu()
 	{
-		openOptionsMenu();
+		if(mMenuPopup == null)
+			openOptionsMenu();
+		else
+			mMenuPopup.showLikePopDownMenu();
 	}
 	
 	@Override
@@ -1295,7 +1298,7 @@ public class OpenExplorer
 		{
 			if(findViewById(R.id.list_frag) != null && findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			{
-				toggleBookmarks();
+				toggleBookmarks(false);
 			} else {
 				FragmentTransaction ft = fragmentManager.beginTransaction();
 				ft.show(mFavoritesFragment);
@@ -1325,16 +1328,6 @@ public class OpenExplorer
         });
     }
 
-
-	public void hideBookmarkTitles() {
-		BookmarkFragment bf = ((BookmarkFragment)fragmentManager.findFragmentById(R.id.list_frag));
-		bf.hideTitles();
-	}
-
-	public void showBookmarkTitles() {
-		BookmarkFragment bf = ((BookmarkFragment)fragmentManager.findFragmentById(R.id.list_frag));
-		bf.showTitles();
-	}
 	
 	public void killBadFragments()
 	{
@@ -1582,6 +1575,12 @@ public class OpenExplorer
 		String sBookmarks = getPreferences().getSetting("bookmarks", "bookmarks", "");
 		sBookmarks += sBookmarks != "" ? ";" : file.getPath();
 		getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
+		if(mBookmarkListener != null)
+			mBookmarkListener.onBookMarkAdd(file);
+	}
+	
+	public static void setOnBookMarkAddListener(OpenInterfaces.OnBookMarkChangeListener bookmarkListener) {
+		mBookmarkListener = bookmarkListener;
 	}
 	
 	public class PeekAtGrandKidsTask extends AsyncTask<OpenFile, Void, Void>
@@ -1589,7 +1588,6 @@ public class OpenExplorer
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			Logger.LogDebug("Peeking at grand kids...");
 		}
 		@Override
 		protected Void doInBackground(OpenFile... params) {

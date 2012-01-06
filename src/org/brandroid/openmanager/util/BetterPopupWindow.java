@@ -172,6 +172,11 @@ public class BetterPopupWindow {
         public void showLikeQuickAction() {
                 this.showLikeQuickAction(0, 0);
         }
+        
+        public void showLikeQuickAction(int anim)
+        {
+        	showLikeQuickAction(0, 0, anim);
+        }
 
 
         /**
@@ -182,11 +187,12 @@ public class BetterPopupWindow {
          * @param yOffset
          *            offset in the Y direction
          */
-        public void showLikeQuickAction(int xOffset, int yOffset) {
+        public void showLikeQuickAction(int xOffset, int yOffset) { showLikeQuickAction(xOffset, yOffset, R.style.Animations_GrowFromBottom); }
+        public void showLikeQuickAction(int xOffset, int yOffset, int anim) {
                 this.preShow();
 
 
-                this.window.setAnimationStyle(R.style.Animations_GrowFromBottom);
+                this.window.setAnimationStyle(anim);
 
 
                 int[] location = new int[2];
@@ -216,7 +222,7 @@ public class BetterPopupWindow {
                 // display on bottom
                 if(rootHeight > anchorRect.top) {
                         yPos = anchorRect.bottom + yOffset;
-                        this.window.setAnimationStyle(R.style.Animations_GrowFromTop);
+                        this.window.setAnimationStyle(anim == R.style.Animations_GrowFromBottom ? R.style.Animations_GrowFromTop : anim);
                 }
 
 

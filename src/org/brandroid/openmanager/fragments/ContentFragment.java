@@ -35,6 +35,7 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MultiSelectHandler;
+import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
@@ -98,7 +99,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private FileManager mFileManager;
 	private EventHandler mHandler;
 	private MultiSelectHandler mMultiSelect;
-	private static OnBookMarkAddListener mBookmarkList;
 	
 	//private LinearLayout mPathView;
 	private LinearLayout mMultiSelectView;
@@ -121,10 +121,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
 	public Boolean mShowLongDate = false; 
-	
-	public interface OnBookMarkAddListener {
-		public void onBookMarkAdd(OpenPath path);
-	}
 	
 	public ContentFragment()
 	{
@@ -523,10 +519,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
 				return true;
 			case R.id.menu_context_bookmark:
-				if(mBookmarkList != null)
-					mBookmarkList.onBookMarkAdd(file);
-				else
-					getExplorer().addBookmark(file);
+				getExplorer().addBookmark(file);
 				finishMode(mode);
 				return true;
 				
@@ -886,9 +879,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 	}
 	
-	public static void setOnBookMarkAddListener(BookmarkFragment bookmarkFragment) {
-		mBookmarkList = bookmarkFragment;
-	}
 	
 	
 	/**

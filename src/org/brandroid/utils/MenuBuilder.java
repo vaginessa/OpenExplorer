@@ -24,6 +24,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.*;
+import android.widget.ListView;
 
 /**
  * Implementation of the {@link android.view.Menu} interface for creating a
@@ -670,5 +671,9 @@ public class MenuBuilder implements Menu {
 
 	public Context getContext() {
 		return mContext;
+	}
+
+	public View buildView() {
+		return null;
 	}
 }

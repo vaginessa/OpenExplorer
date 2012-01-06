@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/view_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+>
+	
+		
+		<TextView
+		    android:id="@+id/title_text"
+		    style="@style/Large"
+		    android:layout_toRightOf="@+id/title_bar"
+		    android:layout_marginLeft="2dp"
+		    android:gravity="left|center_horizontal"
+		    android:text="@string/app_name" />
+		
+		<TextView
+		    android:id="@+id/title_path"
+		    style="@style/Small"
+		    android:layout_marginTop="2dp"
+		    android:layout_marginLeft="5dp"
+		    android:layout_toRightOf="@+id/title_text"
+		    android:gravity="left|center_vertical"
+		    android:text="/mnt/sdcard"
+		    />
+    
+	<RelativeLayout
+	    android:id="@+id/title_bar"
+	    android:layout_width="@dimen/actionbar_compat_height"
+		android:layout_height="match_parent"
+	    android:background="@android:drawable/title_bar_tall"
+	    >
+	    
+		<ImageButton
+		    android:src="@drawable/ic_menu_home"
+		    android:id="@+id/title_icon"
+		    android:padding="0dp"
+		    style="@style/ActionBarCompatHomeItem"
+		    android:clickable="true"
+		    android:longClickable="true"
+		    android:layout_width="@dimen/actionbar_compat_button_home_width"
+		    android:layout_height="@dimen/actionbar_compat_height"
+			/>
+		
+		<ProgressBar
+		    android:id="@+id/title_progress"
+		    style="@android:style/Widget.ProgressBar.Small"
+		    android:layout_width="fill_parent"
+		    android:layout_height="10dp"
+		    android:layout_below="@+id/title_icon"
+		    android:indeterminate="true"
+		    android:visibility="gone"
+		    android:layout_marginTop="2dp"
+		    />
+		
+	    <RelativeLayout
+	        android:id="@+id/title_paste"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+		    android:layout_above="@+id/title_menu"
+		    android:visibility="gone"
+	        >
+	        <ImageView
+	            android:id="@+id/title_paste_icon"
+		        android:src="@drawable/ic_menu_paste"
+		        android:clickable="true"
+		        style="@style/ActionBarCompatHomeItem"
+			    android:layout_width="@dimen/actionbar_compat_button_width"
+			    android:layout_height="@dimen/actionbar_compat_height"
+				android:layout_alignParentTop="true"
+			    android:padding="0dp"
+	        />
+	        <TextView
+	            android:id="@+id/title_paste_text"
+	            android:layout_width="@dimen/actionbar_compat_button_width"
+	            android:layout_height="@dimen/actionbar_compat_height" 
+	            android:layout_alignBottom="@+id/title_paste_icon"
+	            style="@style/Small"
+	            android:text="1"
+	            android:gravity="center"
+	            android:textColor="@color/black"
+	        />
+	    </RelativeLayout>
+		
+	    <ImageButton
+	        android:id="@+id/title_search"
+	        android:src="@drawable/ic_action_search"
+	        android:clickable="true"
+	        android:layout_above="@+id/title_menu"
+	        style="@style/ActionBarCompatHomeItem"
+		    android:layout_width="@dimen/actionbar_compat_button_width"
+		    android:layout_height="@dimen/actionbar_compat_height"
+		    android:padding="0dp"
+		    android:visibility="gone"
+	        />
+	    
+	    <ImageButton
+	        android:id="@+id/title_menu"
+	        android:src="@drawable/ic_menu_moreoverflow"
+	        android:clickable="true"
+	        android:layout_alignParentBottom="true"
+	        style="@style/ActionBarCompatHomeItem"
+		    android:layout_width="@dimen/actionbar_compat_button_width"
+		    android:layout_height="@dimen/actionbar_compat_height"
+	        />
+	    
+	</RelativeLayout>
+   
+	<LinearLayout
+		android:id="@+id/frag_holder"
+	    android:orientation="horizontal"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_toRightOf="@+id/title_bar"
+	    android:layout_below="@+id/title_text"
+	    android:baselineAligned="false">
+	    
+	    <RelativeLayout
+	        android:layout_height="match_parent"
+	        android:layout_width="match_parent"
+	        android:layout_weight="3">
+		    <FrameLayout
+		    	android:id="@+id/list_frag"
+		    	android:layout_height="match_parent"
+		    	android:layout_width="match_parent" 
+		    	/>
+		    <FrameLayout
+		        android:id="@+id/main_buttons"
+		        android:layout_alignParentBottom="true"
+		        android:layout_height="wrap_content"
+		        android:layout_width="match_parent"
+		        />
+	    </RelativeLayout>
+	    		    	
+	    <FrameLayout
+	    	android:id="@+id/content_frag"
+	    	android:layout_height="match_parent"
+	    	android:layout_width="match_parent"
+	    	android:layout_weight="1"
+	    	/>
+	    
+	</LinearLayout>
+</RelativeLayout>

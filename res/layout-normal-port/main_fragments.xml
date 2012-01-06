@@ -40,18 +40,6 @@
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent"
 	    	/>
-	    
-	    <FrameLayout
-	        android:id="@+id/list_frag"
-	        android:layout_height="wrap_content"
-	        android:layout_width="wrap_content"
-	        android:minWidth="100dp"
-	        android:minHeight="100dp"
-	        android:layout_alignParentLeft="true"
-	        android:layout_alignParentTop="true"
-	        android:background="@drawable/contextmenu_top_left"
-	        android:visibility="gone"
-	        
-	        />
+
 	</RelativeLayout>
 </LinearLayout>

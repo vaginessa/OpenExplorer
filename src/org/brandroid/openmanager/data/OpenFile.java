@@ -169,7 +169,6 @@ public class OpenFile extends OpenPath
 			for(int i=0; i < mChildren.length; i++)
 			{
 				if(!mChildren[i].isDirectory()) continue;
-				Logger.LogDebug("Peeking at " + mChildren[i].getPath());
 				mChildren[i].listFiles();
 			}
 			bGrandPeeked = true;
