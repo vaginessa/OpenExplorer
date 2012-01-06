@@ -64,6 +64,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -83,6 +84,7 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 	private Boolean mHasExternal = false;
 	private Boolean mShowTitles = true;
 	private Long mAllDataSize = 0l;
+	private ListView mListViewOverride;
 	
 	public class AnimatorEndListen implements AnimatorListener
 	{
@@ -100,6 +102,21 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		scanBookmarks();
 	}
 	
+	public BookmarkFragment() {
+		super();
+	}
+	public BookmarkFragment(ListView newList)
+	{
+		super();
+		mListViewOverride = newList;
+		mContext = newList.getContext();
+		mBookmarks = new ArrayList<OpenPath>();
+		if(mBookmarkString == null)
+		mBookmarkString = "";
+		if(newList != null)
+			setupListView(newList);
+	}
+	
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -115,9 +132,9 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		checkAndAdd(new OpenFile("/"));
 		checkAndAdd(storage);
 		
-		checkAndAdd(((OpenExplorer)getActivity()).getVideoParent());
-		checkAndAdd(((OpenExplorer)getActivity()).getPhotoParent());
-		checkAndAdd(((OpenExplorer)getActivity()).getMusicParent());
+		checkAndAdd(getExplorer().getVideoParent());
+		checkAndAdd(getExplorer().getPhotoParent());
+		checkAndAdd(getExplorer().getMusicParent());
 		
 		checkAndAdd(storage.getChild("Download"));
 		if(checkAndAdd(new OpenFile("/mnt/external_sd")))
@@ -194,19 +211,19 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 	
 	public String getSetting(OpenPath file, String key, String defValue)
 	{
-		return ((OpenExplorer)getActivity()).getPreferences().getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return getExplorer().getPreferences().getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
 	{
-		return ((OpenExplorer)getActivity()).getPreferences().getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return getExplorer().getPreferences().getSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public void setSetting(OpenPath file, String key, String value)
 	{
-		((OpenExplorer)getActivity()).getPreferences().setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
+		getExplorer().getPreferences().setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 	public void setSetting(OpenPath file, String key, Boolean value)
 	{
-		((OpenExplorer)getActivity()).getPreferences().setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
+		getExplorer().getPreferences().setSetting("bookmarks", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 
 	public String getPathTitle(OpenPath path)
@@ -248,8 +265,10 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		if(OpenCursor.class.equals(path.getClass()))
 			if(((OpenCursor)path).length() == 0)
 				return false;
-		if(getSetting(path, "hide", false))
-			return false;
+		try {
+			if(getSetting(path, "hide", false))
+				return false;
+		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
 		if(OpenCursor.class.equals(path.getClass()) || OpenFTP.class.equals(path.getClass()) || checkDir(path.getPath()))
 		{
@@ -289,7 +308,11 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		
 		//Logger.LogDebug("Bookmark Fragment Created");
 		
-		ListView lv = getListView();		
+		ListView lv = getListView();
+		setupListView(lv);
+	}
+	private void setupListView(ListView lv)
+	{
 		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		lv.setCacheColorHint(0x00000000);
 		lv.setDrawSelectorOnTop(true);
@@ -300,24 +323,27 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		
 		registerForContextMenu(lv);
 		
-		mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarks);
-		setListAdapter(mBookmarkAdapter);
+		if(mBookmarkAdapter == null)
+			mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarks);
+		lv.setAdapter(mBookmarkAdapter);
 		
 		ContentFragment.setOnBookMarkAddListener(this);
 		
 	}
 	
+	public ListAdapter getListAdapter() { return mBookmarkAdapter; }
+	
 	
 	public void onListItemClick(ListView list, View view, int pos, long id) {
 		super.onItemClick(list, view, pos, id);
-		((OpenExplorer)getActivity()).onChangeLocation(mBookmarks.get(pos));
+		getExplorer().onChangeLocation(mBookmarks.get(pos));
 	}
 	
 	public AnimatorEndListen getDefaultAnimatorListener()
 	{
 		return new AnimatorEndListen(){
 			public void onAnimationEnd(Animator animation) {
-				((OpenExplorer)getActivity()).refreshBookmarks();
+				getExplorer().refreshBookmarks();
 			}};
 	}
 	
@@ -482,11 +508,11 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkAddL
 		final View viewf = mHolder.getView();
 		if(RootManager.tryExecute("umount " + sPath))
 		{
-			((OpenExplorer)getActivity()).showToast(getString(R.string.s_alert_remove_safe));
+			getExplorer().showToast(getString(R.string.s_alert_remove_safe));
 			viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
 				.setListener(getDefaultAnimatorListener());
 		} else
-			((OpenExplorer)getActivity()).showToast(getString(R.string.s_alert_remove_error));
+			getExplorer().showToast(getString(R.string.s_alert_remove_error));
 	}
 
 	public void onBookMarkAdd(OpenPath path) {
