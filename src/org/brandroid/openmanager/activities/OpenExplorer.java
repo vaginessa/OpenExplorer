@@ -34,6 +34,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
+import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -45,9 +46,11 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
 import android.view.ActionMode;
+import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewStub;
@@ -72,6 +75,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -103,6 +109,7 @@ import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.Preferences;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
 
 public class OpenExplorer
 		extends OpenFragmentActivity
@@ -132,7 +139,8 @@ public class OpenExplorer
 	private Fragment mFavoritesFragment;
 	private ListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
-	private BetterPopupWindow mBookmarksPopup, mMenuPopup;
+	private BetterPopupWindow mBookmarksPopup;
+	private IconContextMenu mMenuPopup;
 	private static OnBookMarkChangeListener mBookmarkListener;
 	
 	private EventHandler mEvHandler;
@@ -215,19 +223,12 @@ public class OpenExplorer
         if(mSinglePane)
         {
         	mBookmarksList = new ListView(getBaseContext());
-	    	mBookmarksPopup = new BetterPopupWindow(findViewById(R.id.title_icon));
+	    	mBookmarksPopup = new BetterPopupWindow(findViewById(R.id.title_icon), R.style.Animations_GrowFromTopLeft);
 	    	mBookmarksPopup.setContentView(mBookmarksList);
 			mBookmarksPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.contextmenu_top_left));
 			mBookmarks = new OpenBookmarks(this, mBookmarksList);
         }
         
-		/*
-		// TODO finish this
-		MenuBuilder menu = new MenuBuilder(this);
-		getMenuInflater().inflate(R.menu.main_menu, menu);
-		new BetterPopupWindow(menu.buildView());
-		*/
-
         refreshCursors();
         
         String start = getPreferences().getString("0_global", "pref_start", "Videos");
@@ -660,7 +661,7 @@ public class OpenExplorer
 		if(mBookmarksPopup != null)
 		{
 			if(visible)
-				mBookmarksPopup.showLikeQuickAction(R.style.Animations_GrowFromTopLeft);
+				mBookmarksPopup.showLikeQuickAction();
 			else
 				mBookmarksPopup.dismiss();
 		} else {
@@ -994,6 +995,11 @@ public class OpenExplorer
 	    		}
 	    		return true;
 	    		
+	    	case R.id.menu_sort:
+	    	case R.id.menu_view:
+	    		showMenu(id);
+	    		return true;
+	    		
 	    	case R.id.menu_sort_name_asc:	setSorting(FileManager.SortType.ALPHA); return true; 
 	    	case R.id.menu_sort_name_desc:	setSorting(FileManager.SortType.ALPHA_DESC); return true; 
 	    	case R.id.menu_sort_date_asc: 	setSorting(FileManager.SortType.DATE); return true;
@@ -1088,12 +1094,49 @@ public class OpenExplorer
 		getDirContentFragment(true).onSortingChanged(sort);
 	}
 	
-	public void showMenu()
+	public void showMenu() { showMenu(R.menu.main_menu_top); }
+	public void showMenu(int menuId) { showMenu(menuId, null); }
+	public void showMenu(int menuId, View from)
 	{
-		if(mMenuPopup == null)
-			openOptionsMenu();
-		else
-			mMenuPopup.showLikePopDownMenu();
+		if(from == null)
+			from = findViewById(R.id.title_menu);
+		//if(mMenuPopup == null)
+		{
+			IconContextMenu icm = null;
+			try {
+				icm = new IconContextMenu(this, menuId, from);
+			} catch(Exception ie)
+			{ // an id from the main menu has been specified
+				/*
+				XmlResourceParser xrp = getResources().getXml(R.menu.main_menu);
+				Boolean on = false;
+				while(xrp != null)
+				{
+					int eventType = xrp.nextTag();
+					if(eventType == XmlResourceParser.END_DOCUMENT) break;
+					if(eventType == XmlResourceParser.END_TAG && xrp.getName().equalsIgnoreCase("item"))
+						on = false;
+					if(eventType == XmlResourceParser.START_TAG && xrp.getName().equalsIgnoreCase("item") && xrp.getAttributeCount() > 0 && xrp.getAttributeValue("android", "id").equals(menuId + ""))
+						on = true;
+				}
+				Menu menu = IconContextMenu.newMenu(this, R.menu.main_menu);
+				icm = new IconContextMenu(this, menu.findItem(menuId).getSubMenu(), from);
+				*/
+			}
+			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+				public void onIconContextItemSelected(MenuItem item, Object info) {
+					//showToast(item.getTitle().toString());
+					onClick(item.getItemId(), item);
+					//mMenuPopup.dismiss();
+				}
+			});
+			icm.show();
+			//openOptionsMenu();
+		}
+		/*else
+		{
+			mMenuPopup.show(); //LikePopDownMenu();
+		}*/
 	}
 	
 	@Override
