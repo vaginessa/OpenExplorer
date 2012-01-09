@@ -36,9 +36,10 @@ public class BetterPopupWindow {
          * @param anchor
          *            the view that the BetterPopupWindow will be displaying 'from'
          */
-        public BetterPopupWindow(View anchor) {
+        public BetterPopupWindow(View anchor, int anim) {
                 this.anchor = anchor;
                 this.window = new PopupWindow(anchor.getContext());
+                this.window.setAnimationStyle(anim);
 
 
                 // when a touch even happens outside of the window
@@ -89,7 +90,7 @@ public class BetterPopupWindow {
                 // if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
                 // otherwise you need to set the background of the root viewgroup
                 // and set the popupwindow background to an empty BitmapDrawable
-                this.window.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
+                this.window.setWidth(400);
                 this.window.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
                 this.window.setTouchable(true);
                 this.window.setFocusable(true);
@@ -172,11 +173,6 @@ public class BetterPopupWindow {
         public void showLikeQuickAction() {
                 this.showLikeQuickAction(0, 0);
         }
-        
-        public void showLikeQuickAction(int anim)
-        {
-        	showLikeQuickAction(0, 0, anim);
-        }
 
 
         /**
@@ -187,13 +183,8 @@ public class BetterPopupWindow {
          * @param yOffset
          *            offset in the Y direction
          */
-        public void showLikeQuickAction(int xOffset, int yOffset) { showLikeQuickAction(xOffset, yOffset, R.style.Animations_GrowFromBottom); }
-        public void showLikeQuickAction(int xOffset, int yOffset, int anim) {
+        public void showLikeQuickAction(int xOffset, int yOffset) {
                 this.preShow();
-
-
-                this.window.setAnimationStyle(anim);
-
 
                 int[] location = new int[2];
                 this.anchor.getLocationOnScreen(location);
@@ -222,7 +213,7 @@ public class BetterPopupWindow {
                 // display on bottom
                 if(rootHeight > anchorRect.top) {
                         yPos = anchorRect.bottom + yOffset;
-                        this.window.setAnimationStyle(anim == R.style.Animations_GrowFromBottom ? R.style.Animations_GrowFromTop : anim);
+                        //this.window.setAnimationStyle(anim == R.style.Animations_GrowFromBottom ? R.style.Animations_GrowFromTop : anim);
                 }
 
 

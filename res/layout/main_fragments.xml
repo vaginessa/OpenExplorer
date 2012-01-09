@@ -33,22 +33,8 @@
 	    android:layout_height="match_parent"
 	    android:baselineAligned="false">
 	    
-	    <RelativeLayout
-	        android:layout_height="match_parent"
-	        android:layout_width="match_parent"
-	        android:layout_weight="3">
-		    <FrameLayout
-		    	android:id="@+id/list_frag"
-		    	android:layout_height="match_parent"
-		    	android:layout_width="match_parent" 
-		    	/>
-		    <FrameLayout
-		        android:id="@+id/main_buttons"
-		        android:layout_alignParentBottom="true"
-		        android:layout_height="wrap_content"
-		        android:layout_width="match_parent"
-		        />
-	    </RelativeLayout>
+	    <include android:id="@+id/bookmarks" android:layout_weight="3"
+	        layout="@layout/bookmarks_fragment" />
 	    		    	
 	    <FrameLayout
 	    	android:id="@+id/content_frag"

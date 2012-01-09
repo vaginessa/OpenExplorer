@@ -1,25 +1,34 @@
 package org.brandroid.openmanager.adapters;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.utils.MenuBuilder;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.*;
 import android.view.*;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
 public class IconContextMenu
 {
+	
 	public interface IconContextItemSelectedListener {
 		void onIconContextItemSelected(MenuItem item, Object info);
 	}
 	
-	private Dialog dialog;
+	private ListView mList;
+	//private Dialog dialog;
+	private BetterPopupWindow popup;
 	private MenuBuilder menu;
+	private View anchor;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
 	
-    public IconContextMenu(Context context, int menuId) {
-    	this(context, newMenu(context, menuId));
+    public IconContextMenu(Context context, int menuId, View from) {
+    	this(context, newMenu(context, menuId), from);
     }
     
     public static MenuBuilder newMenu(Context context, int menuId) {
@@ -28,14 +37,33 @@ public class IconContextMenu
     	return menu;
     }
 
-	public IconContextMenu(Context context, Menu menu) {
+	public IconContextMenu(Context context, Menu menu, View from) {
         this.menu = (MenuBuilder)menu;
+        this.anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
 	}
+	
 	public void setAdapter(Context context, final IconContextMenuAdapter adapter)
 	{
-		this.dialog = new AlertDialog.Builder(context)
+		mList = new ListView(context);
+		mList.setAdapter(adapter);
+		mList.setOnItemClickListener(new OnItemClickListener() {
+
+			public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
+					long arg3) {
+				if(iconContextItemSelectedListener != null)
+				{
+					iconContextItemSelectedListener.onIconContextItemSelected(adapter.getItem(pos), info);
+				}
+					
+			}
+			
+		} );
+		popup = new BetterPopupWindow(anchor, R.style.Animations_GrowFromTop);
+		popup.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.contextmenu_top));
+		popup.setContentView(mList);
+		/*this.dialog = new AlertDialog.Builder(context)
 	        .setAdapter(adapter, new DialogInterface.OnClickListener() {
 		        //@Override
 		        public void onClick(DialogInterface dialog, int which) {
@@ -46,6 +74,7 @@ public class IconContextMenu
 	        })
 	        .setInverseBackgroundForced(true)
 	        .create();
+	        */
     }
 	
 	public void setInfo(Object info) {
@@ -64,20 +93,30 @@ public class IconContextMenu
         this.iconContextItemSelectedListener = iconContextItemSelectedListener;
     }
     
+    public void setTitle(CharSequence title) {
+    	//dialog.setTitle(title);
+    }
+    
+    public void setTitle(int titleId) {
+    	//dialog.setTitle(titleId);
+    }
+    
+    public void show()
+    {
+    	popup.showLikePopDownMenu();
+    }
+    public void dismiss()
+    {
+    	popup.dismiss();
+    }
+    
+    /*
     public void setOnCancelListener(DialogInterface.OnCancelListener onCancelListener) {
-    	dialog.setOnCancelListener(onCancelListener);
+    	popup.setOnCancelListener(onCancelListener);
     }
     
     public void setOnDismissListener(DialogInterface.OnDismissListener onDismissListener) {
     	dialog.setOnDismissListener(onDismissListener);
-    }
-    
-    public void setTitle(CharSequence title) {
-    	dialog.setTitle(title);
-    }
-    
-    public void setTitle(int titleId) {
-    	dialog.setTitle(titleId);
     }
     
     public void show() {
@@ -95,4 +134,5 @@ public class IconContextMenu
     public Dialog getDialog() {
     	return dialog;
     }
+    */
 }

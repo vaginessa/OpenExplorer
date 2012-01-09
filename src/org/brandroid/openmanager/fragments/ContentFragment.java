@@ -319,7 +319,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
 				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
 					mMenuContextItemIndex = pos;
-					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file);
+					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file, view);
 					MenuBuilder cmm = cm.getMenu();
 					if(getClipboard().size() > 0)
 						cmm.hideItem(R.id.menu_context_multi);

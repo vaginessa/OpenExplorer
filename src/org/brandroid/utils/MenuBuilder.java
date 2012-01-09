@@ -18,13 +18,19 @@ package org.brandroid.utils;
 
 import java.util.*;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+
 import android.content.*;
 import android.content.pm.*;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.*;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 /**
  * Implementation of the {@link android.view.Menu} interface for creating a
@@ -55,6 +61,7 @@ public class MenuBuilder implements Menu {
 
     private final Context mContext;
     private final Resources mResources;
+    private MenuAdapter mAdapter;
 
     /**
      * Whether the shortcuts should be qwerty-accessible. Use isQwertyMode()
@@ -182,7 +189,8 @@ public class MenuBuilder implements Menu {
 
     //@Override
 	public SubMenu addSubMenu(int group, int id, int categoryOrder, CharSequence title) {
-		return ((MenuItemImpl)addInternal(group, id, categoryOrder, title)).setSubMenu(new MenuSubMenuImpl(mContext));
+		return ((MenuItemImpl)addInternal(group, id, categoryOrder, title))
+				.setSubMenu(new MenuSubMenuImpl(this, group, id, categoryOrder, 0, title));
     }
 
     //@Override
@@ -673,7 +681,48 @@ public class MenuBuilder implements Menu {
 		return mContext;
 	}
 
-	public View buildView() {
-		return null;
+	public View buildView()
+	{
+		ListView ret = new ListView(mContext);
+		mAdapter = new MenuAdapter();
+		ret.setAdapter(mAdapter);
+		return ret;
+	}
+	
+	private class MenuAdapter extends BaseAdapter
+	{
+
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return getVisibleItems().size();
+		}
+
+		public Object getItem(int arg0) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public long getItemId(int arg0) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		public View getView(int pos, View pre, ViewGroup parent) {
+			View view = pre;
+			if(view == null)
+			{
+				LayoutInflater in = (LayoutInflater)mContext
+						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+				view = in.inflate(R.layout.bookmark_layout, parent, false);
+			}
+			MenuItemImpl item = getVisibleItems().get(pos); 
+			TextView txt = (TextView)view.findViewById(R.id.content_text);
+			ImageView img = (ImageView)view.findViewById(R.id.content_icon);
+			txt.setText(item.getTitle());
+			img.setImageDrawable(item.getIcon());
+			return view;
+		}
+		
 	}
 }
