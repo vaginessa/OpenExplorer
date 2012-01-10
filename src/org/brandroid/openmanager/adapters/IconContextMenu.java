@@ -2,7 +2,7 @@ package org.brandroid.openmanager.adapters;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.MenuBuilderNew;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.*;
@@ -21,7 +21,7 @@ public class IconContextMenu
 	private ListView mList;
 	//private Dialog dialog;
 	private BetterPopupWindow popup;
-	private MenuBuilder menu;
+	private MenuBuilderNew menu;
 	private View anchor;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
@@ -31,14 +31,14 @@ public class IconContextMenu
     	this(context, newMenu(context, menuId), from);
     }
     
-    public static MenuBuilder newMenu(Context context, int menuId) {
-    	MenuBuilder menu = new MenuBuilder(context);
+    public static MenuBuilderNew newMenu(Context context, int menuId) {
+    	MenuBuilderNew menu = new MenuBuilderNew(context);
     	new MenuInflater(context).inflate(menuId, menu);
     	return menu;
     }
 
 	public IconContextMenu(Context context, Menu menu, View from) {
-        this.menu = (MenuBuilder)menu;
+        this.menu = (MenuBuilderNew)menu;
         this.anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
@@ -85,7 +85,7 @@ public class IconContextMenu
 		return info;
 	}
 	
-	public MenuBuilder getMenu() {
+	public MenuBuilderNew getMenu() {
 		return menu;
 	}
 	

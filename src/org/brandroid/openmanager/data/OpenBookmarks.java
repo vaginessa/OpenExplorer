@@ -1,7 +1,9 @@
 package org.brandroid.openmanager.data;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
@@ -17,13 +19,17 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.w3c.dom.Text;
 
+import android.R.anim;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Environment;
 import android.text.Editable;
@@ -31,16 +37,21 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -48,10 +59,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.ExpandableListView.OnGroupClickListener;
 
-public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickListener, OnItemClickListener
+public class OpenBookmarks implements OnBookMarkChangeListener,
+								OnGroupClickListener,
+								OnChildClickListener
 {
-	private ArrayList<OpenPath> mBookmarksArray;
+	private Map<Integer, ArrayList<OpenPath>> mBookmarksArray;
 	private Context mContext;
 	//private ImageView mLastIndicater = null;
 	private BookmarkAdapter mBookmarkAdapter;
@@ -62,10 +77,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 	private SharedPreferences mPrefs;
 	private OpenExplorer mExplorer;
 	
-	public OpenBookmarks(OpenExplorer explorer, ListView newList)
+	public OpenBookmarks(OpenExplorer explorer, ExpandableListView newList)
 	{
 		mContext = explorer;
-		mBookmarksArray = new ArrayList<OpenPath>();
+		mBookmarksArray = new Hashtable<Integer, ArrayList<OpenPath>>();
+		//for(BookmarkType type : BookmarkType.values())
+		//	mBookmarksArray.put(getTypeInteger(type), new ArrayList<OpenPath>());
 		mPrefs = new Preferences(mContext).getPreferences("bookmarks"); 
 		if(mBookmarkString == null)
 			mBookmarkString = mPrefs.getString("bookmarks", "");
@@ -76,28 +93,50 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 			scanBookmarks();
 	}
 	
+	public enum BookmarkType
+	{
+		BOOKMARK_DRIVE,
+		BOOKMARK_SMART_FOLDER,
+		BOOKMARK_FAVORITE,
+		BOOKMARK_SERVER,
+		BOOKMARK_OFFLINE
+	}
+	
+	private int getTypeInteger(BookmarkType type)
+	{
+		int ret = -1;
+		for(BookmarkType item : BookmarkType.values())
+		{
+			ret++;
+			if(type.equals(item))
+				break;
+		}
+		return ret;
+	}
+	
 	private OpenExplorer getExplorer() { return mExplorer; }
 	
 	public void scanBookmarks()
 	{
 		Logger.LogDebug("Scanning bookmarks...");
 		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
-		mBookmarksArray.clear();
+		//mBookmarksArray.clear();
+		clearBookmarks();
 		
-		checkAndAdd(getExplorer().getVideoParent());
-		checkAndAdd(getExplorer().getPhotoParent());
-		checkAndAdd(getExplorer().getMusicParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, getExplorer().getVideoParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, getExplorer().getPhotoParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, getExplorer().getMusicParent());
 		
-		checkAndAdd(new OpenFile("/"));
+		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/"));
 		
-		checkAndAdd(storage);
+		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage);
 		
-		checkAndAdd(storage.getChild("Download"));
-		if(checkAndAdd(new OpenFile("/mnt/external_sd")))
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("Download"));
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/external_sd")))
 			mHasExternal = true;
-		if(checkAndAdd(new OpenFile("/mnt/sdcard-ext")))
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/sdcard-ext")))
 			mHasExternal = true;
-		if(checkAndAdd(new OpenFile("/Removable/MicroSD")))
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/Removable/MicroSD")))
 			mHasExternal = true;
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
 		for(String sItem : df.keySet())
@@ -111,13 +150,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 				mAllDataSize += file.getTotalSpace();
 			//if(!file.getFile().canWrite()) continue;
 			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
-			checkAndAdd(file);
+			checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file);
 		}
 		if (mBookmarkString.length() > 0) {
 			String[] l = mBookmarkString.split(";");
 			
 			for(String s : l)
-				checkAndAdd(new OpenFile(s));
+				checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
 		}
 		
 		OpenServers servers = SettingsActivity.LoadDefaultServers(getExplorer());
@@ -129,7 +168,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 			file.setName(server.getName());
 			OpenFTP ftp = new OpenFTP(file, man);
 			ftp.setServersIndex(i);
-			checkAndAdd(ftp);
+			checkAndAdd(BookmarkType.BOOKMARK_SERVER, ftp);
 		}
 		if(mBookmarkAdapter != null)
 			mBookmarkAdapter.notifyDataSetChanged();
@@ -161,16 +200,35 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 
 	private boolean hasBookmark(OpenPath path)
 	{
-		for(OpenPath p : mBookmarksArray)
-			if(p.getPath().replaceAll("/", "").equals(path.getPath().replaceAll("/", "")))
-				return true;
+		for(ArrayList<OpenPath> arr : mBookmarksArray.values())
+			for(OpenPath p : arr)
+				if(p.getPath().replaceAll("/", "").equals(path.getPath().replaceAll("/", "")))
+					return true;
 		return false;
 	}
 	
+	private void addBookmark(BookmarkType type, OpenPath path)
+	{
+		int iType = getTypeInteger(type);
+		ArrayList<OpenPath> paths = new ArrayList<OpenPath>();
+		if(mBookmarksArray.containsKey(iType))
+			paths = mBookmarksArray.get(iType);
+		paths.add(path);
+		mBookmarksArray.put(iType, paths);
+	}
+	
+	private void clearBookmarks()
+	{
+		for(int i=0; i < BookmarkType.values().length; i++)
+			mBookmarksArray.put(i, new ArrayList<OpenPath>());
+	}
 
 	public String getPathTitle(OpenPath path)
 	{
-		return getSetting("title_" + path.getAbsolutePath(), getPathTitleDefault(path));
+		String ret = getSetting("title_" + path.getAbsolutePath(), getPathTitleDefault(path));
+		if(OpenCursor.class.equals(path.getClass()) || OpenMediaStore.class.equals(path.getClass()))
+			ret += " (" + path.length() + ")";
+		return ret;
 	}
 	
 	public void setPathTitle(OpenPath path, String title)
@@ -201,7 +259,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 	}
 	
 	
-	private boolean checkAndAdd(OpenPath path)
+	private boolean checkAndAdd(BookmarkType type, OpenPath path)
 	{
 		if(path == null) return false;
 		if(OpenCursor.class.equals(path.getClass()))
@@ -214,9 +272,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 		if(hasBookmark(path)) return false;
 		if(OpenCursor.class.equals(path.getClass()) || OpenFTP.class.equals(path.getClass()) || path.exists())
 		{
-			mBookmarksArray.add(path);
+			addBookmark(type, path);
 			return true;
-		} else return false;
+		}
+		return false;
 	}
 	
 	public void hideTitles()
@@ -232,14 +291,15 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 	}
 	
 
-	public void setupListView(ListView lv)
+	public void setupListView(ExpandableListView lv)
 	{
 		Logger.LogDebug("Setting up ListView in OpenBookmarks");
-		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-		lv.setCacheColorHint(0x00000000);
 		lv.setDrawSelectorOnTop(true);
-		lv.setOnItemLongClickListener(this);
-		lv.setOnItemClickListener(this);
+		lv.setOnChildClickListener(this);
+		lv.setOnGroupClickListener(this);
+		lv.setGroupIndicator(null);
+		//lv.setOnItemLongClickListener(this);
+		//lv.setOnItemClickListener(this);
 		//lv.setBackgroundResource(R.drawable.listgradback);
 		
 		//Logger.LogDebug(mBookmarks.size() + " bookmarks");
@@ -247,14 +307,34 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 		//registerForContextMenu(lv);
 		
 		if(mBookmarkAdapter == null)
-			mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarksArray);
+			mBookmarkAdapter = new BookmarkAdapter();
+			//mBookmarkAdapter = new BookmarkAdapter(mContext, R.layout.bookmark_layout, mBookmarksArray);
 		lv.setAdapter(mBookmarkAdapter);
 		
 		OpenExplorer.setOnBookMarkAddListener(this);
 		
 	}
-	
 
+	public boolean onChildClick(ExpandableListView parent, View v,
+			int groupPosition, int childPosition, long id) {
+		OpenPath path = mBookmarkAdapter.getChild(groupPosition, childPosition);
+		if(path != null)
+		{
+			getExplorer().onChangeLocation(path);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean onGroupClick(ExpandableListView parent, View v,
+			int groupPosition, long id) {
+		if(mBookmarksArray.get(groupPosition).size() > 0)
+			return false;
+		else return true; // don't allow expand of empty groups
+	}
+	
+	
+	/*
 	public void onItemClick(AdapterView<?> arg0, View arg1, int pos, long arg3)
 	{
 		getExplorer().onChangeLocation(mBookmarksArray.get(pos));
@@ -263,24 +343,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 		//super.onItemClick(list, view, pos, id);
 		getExplorer().onChangeLocation(mBookmarksArray.get(pos));
 	}
-	
+	*/
 
 	public void onBookMarkAdd(OpenPath path) {
-		mBookmarksArray.add(path);
+		mBookmarksArray.get(BookmarkType.BOOKMARK_FAVORITE).add(path);
 		mBookmarkString = (mBookmarkString != null && mBookmarkString != "" ? mBookmarkString + ";" : "") + path.getPath();
 		mBookmarkAdapter.notifyDataSetChanged();
 	}
-
-	public boolean onItemLongClick(AdapterView<?> list, View view, final int pos, long id)
-	{
-		//super.onItemLongClick(list, view, pos, id);
-		final OpenPath mPath = mBookmarksArray.get(pos);
-		final BookmarkHolder mHolder = (BookmarkHolder)view.getTag();
-		if(OpenFTP.class.equals(mPath.getClass()))
-			return ShowServerDialog((OpenFTP)mPath, mHolder);
-		else return ShowStandardDialog(mPath, mHolder);
-	}
-	
 
 	public boolean ShowServerDialog(final OpenFTP mPath, final BookmarkHolder mHolder)
 	{
@@ -498,76 +567,104 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 	}
 	
 	
-	
-	/*
-	 * 
-	 */
-	private class BookmarkAdapter extends ArrayAdapter<OpenPath> {
-		private BookmarkHolder mHolder;
-		
-		BookmarkAdapter(Context context, int layout, ArrayList<OpenPath> data) {
-			super(context, layout, data);		
+	private class BookmarkAdapter extends BaseExpandableListAdapter
+	{
+		public OpenPath getChild(int group, int pos) {
+			return mBookmarksArray.get(group).get(pos);
 		}
-		
-		public View getView(int position, View view, ViewGroup parent) {			
-			final OpenPath path = mBookmarksArray.get(position);
-			final String sPath = path.getPath();
-			if(view == null || view.getTag() == null || !view.getTag().getClass().equals(BookmarkHolder.class) || !((BookmarkHolder)view.getTag()).getPath().equalsIgnoreCase(sPath)) {
-				LayoutInflater in = (LayoutInflater)
-					mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				view = in.inflate(R.layout.bookmark_layout, parent, false);
-				mHolder = new BookmarkHolder(path, getPathTitle(path), view);
-				
-				mHolder.setEjectClickListener(new OnClickListener() {
-					public void onClick(View v) {
-						mExplorer.runOnUiThread(new Runnable() {
-							public void run() {
-								tryEject(sPath, mHolder);
-							}
-						});
-					}
-				});
-				
-				updateSizeIndicator(path, view);
-				
-				view.setTag(mHolder);
-				
-			} else {
-				mHolder = (BookmarkHolder)view.getTag();
-				if(mHolder == null)
-					Logger.LogWarning("preView Bookmark Holder is null");
-				if(mHolder.getView() == null)
-					Logger.LogWarning("preView Bookmark Holder View is null");
-			}
-			
-			/*
-			if(mLastIndicater == null) {
-				if(position == 1) {
-					//mHolder.mIndicate.setVisibility(View.VISIBLE);
-					mLastIndicater = mHolder.mIndicate;
-				}
-			}
-			*/
-			
-			if(!mShowTitles)
-			{
-				mHolder.hideTitle();
-				//((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.CENTER);
-			} else {
-				//((RelativeLayout)mHolder.mMainText.getParent()).setGravity(Gravity.LEFT);
-				mHolder.showTitle();
-			}
-			
-			ThumbnailCreator.setThumbnail(((ImageView)view.findViewById(R.id.content_icon)), path, 36, 36);
-			
-			mHolder.setTitle(getPathTitle(path));
-			if(path.getClass().equals(OpenCursor.class))
-				mHolder.setTitle(mHolder.getTitle() + " (" + ((OpenCursor)path).length() + ")", false);
-			
-			return view;
-		}
-	}
 
+		public long getChildId(int group, int pos) {
+			return pos;
+		}
+
+		public View getChildView(int group, int pos,
+				boolean isLastChild, View convertView, ViewGroup parent) {
+			View ret = convertView;
+			OpenPath path = getChild(group, pos);
+			BookmarkHolder mHolder = null;
+			if(ret == null)
+			{
+				ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null);
+				mHolder = new BookmarkHolder(path, getPathTitle(path), ret);
+				ret.setTag(mHolder);
+			} else mHolder = (BookmarkHolder)ret.getTag();
+			
+			if(group == 0)
+				updateSizeIndicator(path, ret);
+			else 
+				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);
+			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(getChild(group, pos)));
+			ThumbnailCreator.setThumbnail(((ImageView)ret.findViewById(R.id.content_icon)), getChild(group, pos), 36, 36);
+			
+            return ret;
+		}
+
+		public int getChildrenCount(int group) {
+			if(mBookmarksArray.containsKey(group))
+				return mBookmarksArray.get(group).size();
+			else return 0;
+		}
+
+		public ArrayList<OpenPath> getGroup(int group) {
+			return mBookmarksArray.get(group);
+		}
+
+		public int getGroupCount() {
+			return mBookmarksArray.size();
+		}
+
+		public long getGroupId(int group) {
+			return group;
+		}
+
+
+        public TextView getGenericView() {
+            // Layout parameters for the ExpandableListView
+            AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, 64);
+
+            TextView textView = new TextView(getExplorer());
+            textView.setLayoutParams(lp);
+            // Center the text vertically
+            textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+            // Set the text starting position
+            textView.setPadding(36, 0, 0, 0);
+            return textView;
+        }
+
+		public View getGroupView(int group, boolean isExpanded,
+				View convertView, ViewGroup parent) {
+			View ret = convertView;
+			if(ret == null)
+				ret = getExplorer().getLayoutInflater().inflate(android.R.layout.preference_category, null);
+			TextView mText = (TextView)ret.findViewById(android.R.id.title);
+			if(mText.getTag() == null && getChildrenCount(group) > 0)
+			{
+				((ExpandableListView)parent).expandGroup(group);
+				mText.setTag(true);
+				isExpanded = true;
+			}
+			if(isExpanded)
+				mText.setTypeface(Typeface.DEFAULT_BOLD);
+			else
+				mText.setTypeface(Typeface.DEFAULT);
+			String[] groups = getExplorer().getResources().getStringArray(R.array.bookmark_groups);
+			if(mText != null)
+				mText.setText(groups[group] + (getChildrenCount(group) > 0 ? " (" + getChildrenCount(group) + ")" : ""));
+			return mText;
+		}
+
+		public boolean hasStableIds() {
+			return false;
+		}
+
+		public boolean isChildSelectable(int group, int pos) {
+			return true;
+		}
+
+		
+	}
+	
 	public class AnimatorEndListen implements AnimatorListener
 	{
 		public void onAnimationCancel(Animator animation) { }
@@ -576,8 +673,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnItemLongClickL
 		public void onAnimationStart(Animator animation) { }	
 	}
 
-	public ListAdapter getListAdapter() {
+	public BookmarkAdapter getListAdapter() {
 		return mBookmarkAdapter;
 	}
-
 }

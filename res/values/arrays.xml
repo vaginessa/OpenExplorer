@@ -43,4 +43,18 @@
 	    <item>External</item>
 	    <item>/</item>
 	</string-array>
+	
+	<string-array name="server_types">
+	    <item>FTP</item>
+	    <item>Dropbox</item>
+	    <item>Box.net</item>
+	</string-array>
+	
+	<string-array name="bookmark_groups">
+	    <item>Drives</item>
+	    <item>Smart Folders</item>
+	    <item>Favorites</item>
+	    <item>Servers</item>
+	    <item>Offline</item>
+	</string-array>
 </resources>

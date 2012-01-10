@@ -43,6 +43,7 @@ import android.os.Environment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -58,6 +59,8 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -68,7 +71,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.io.File;
 
-public class BookmarkFragment extends OpenListFragment implements OnBookMarkChangeListener {
+public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeListener {
 	
 	private OpenBookmarks mBookmarks;
 	
@@ -85,19 +88,29 @@ public class BookmarkFragment extends OpenListFragment implements OnBookMarkChan
 	}
 	
 	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		return inflater.inflate(R.layout.bookmarks_fragment, null);
+		//return super.onCreateView(inflater, container, savedInstanceState);
+	}
+	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 	}
 	
+	public ExpandableListView getListView() { return (ExpandableListView) getView().findViewById(android.R.id.list); }
+	public void setListAdapter(ExpandableListAdapter adapter) { getListView().setAdapter(adapter); }
+	
 	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
+		//super.onActivityCreated(savedInstanceState);
 		
 		//Logger.LogDebug("Bookmark Fragment Created");
 
-		ListView lv = getListView();
+		final ExpandableListView lv = getListView();
 		mBookmarks = new OpenBookmarks(getExplorer(), lv);
 		mBookmarks.setupListView(lv);
-		setListAdapter(mBookmarks.getListAdapter());
+		final ExpandableListAdapter adapter = mBookmarks.getListAdapter();
+		setListAdapter(adapter);
 		registerForContextMenu(lv);
 	}
 	

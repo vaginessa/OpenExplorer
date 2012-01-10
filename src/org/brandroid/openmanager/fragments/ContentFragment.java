@@ -42,7 +42,7 @@ import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.ThumbnailStruct;
 import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.MenuBuilderNew;
 
 import java.io.File;
 import java.io.IOException;
@@ -320,7 +320,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
 					mMenuContextItemIndex = pos;
 					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file, view);
-					MenuBuilder cmm = cm.getMenu();
+					MenuBuilderNew cmm = cm.getMenu();
 					if(getClipboard().size() > 0)
 						cmm.hideItem(R.id.menu_context_multi);
 					else

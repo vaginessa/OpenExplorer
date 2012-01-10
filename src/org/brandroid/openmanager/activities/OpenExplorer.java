@@ -58,6 +58,7 @@ import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
+import android.widget.ExpandableListView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
@@ -105,11 +106,10 @@ import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
-import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.Preferences;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xmlpull.v1.XmlPullParser;
 
 public class OpenExplorer
 		extends OpenFragmentActivity
@@ -137,7 +137,7 @@ public class OpenExplorer
 	private int mViewMode = VIEW_LIST;
 	
 	private Fragment mFavoritesFragment;
-	private ListView mBookmarksList;
+	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
 	private IconContextMenu mMenuPopup;
@@ -222,7 +222,7 @@ public class OpenExplorer
 
         if(mSinglePane)
         {
-        	mBookmarksList = new ListView(getBaseContext());
+        	mBookmarksList = new ExpandableListView(getBaseContext());
 	    	mBookmarksPopup = new BetterPopupWindow(findViewById(R.id.title_icon), R.style.Animations_GrowFromTopLeft);
 	    	mBookmarksPopup.setContentView(mBookmarksList);
 			mBookmarksPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.contextmenu_top_left));
@@ -1105,6 +1105,14 @@ public class OpenExplorer
 			IconContextMenu icm = null;
 			try {
 				icm = new IconContextMenu(this, menuId, from);
+				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+					public void onIconContextItemSelected(MenuItem item, Object info) {
+						//showToast(item.getTitle().toString());
+						onClick(item.getItemId(), item);
+						//mMenuPopup.dismiss();
+					}
+				});
+				icm.show();
 			} catch(Exception ie)
 			{ // an id from the main menu has been specified
 				/*
@@ -1122,15 +1130,9 @@ public class OpenExplorer
 				Menu menu = IconContextMenu.newMenu(this, R.menu.main_menu);
 				icm = new IconContextMenu(this, menu.findItem(menuId).getSubMenu(), from);
 				*/
+				if(menuId == R.menu.main_menu_top || menuId == R.menu.main_menu)
+					openOptionsMenu();
 			}
-			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
-				public void onIconContextItemSelected(MenuItem item, Object info) {
-					//showToast(item.getTitle().toString());
-					onClick(item.getItemId(), item);
-					//mMenuPopup.dismiss();
-				}
-			});
-			icm.show();
 			//openOptionsMenu();
 		}
 		/*else
