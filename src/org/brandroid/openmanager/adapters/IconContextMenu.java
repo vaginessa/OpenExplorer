@@ -61,7 +61,7 @@ public class IconContextMenu
 			
 		} );
 		popup = new BetterPopupWindow(anchor, R.style.Animations_GrowFromTop);
-		popup.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.contextmenu_top));
+		//popup.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.contextmenu_top_right));
 		popup.setContentView(mList);
 		/*this.dialog = new AlertDialog.Builder(context)
 	        .setAdapter(adapter, new DialogInterface.OnClickListener() {

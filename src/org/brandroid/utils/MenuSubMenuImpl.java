@@ -9,7 +9,7 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 
-public class MenuSubMenuImpl extends MenuBuilder implements SubMenu
+public class MenuSubMenuImpl extends MenuBuilderNew implements SubMenu
 {
 	private MenuItem mItem;
 
@@ -17,7 +17,7 @@ public class MenuSubMenuImpl extends MenuBuilder implements SubMenu
 		super(context);
 		mItem = new MenuItemImpl(this, 0,0,0, 0, "pewp");
 	}
-	public MenuSubMenuImpl(MenuBuilder menu, int group, int id, int categoryOrder, int ordering, CharSequence title)
+	public MenuSubMenuImpl(MenuBuilderNew menu, int group, int id, int categoryOrder, int ordering, CharSequence title)
 	{
 		super(menu.getContext());
 		mItem = new MenuItemImpl(menu, group, id, categoryOrder, ordering, title);

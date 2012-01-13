@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+    <TextView
+	    style="?android:attr/listSeparatorTextViewStyle"
+	    android:id="@android:id/title"
+	    android:text="@string/s_pref_servers"
+	/>
+    <Button
+        android:id="@android:id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignBottom="@android:id/title"
+        android:padding="0dp"
+        android:text=" + " 
+        />
+</RelativeLayout>

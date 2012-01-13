@@ -1,7 +1,6 @@
 package org.brandroid.openmanager.data;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -9,8 +8,6 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
-import org.brandroid.openmanager.fragments.BookmarkFragment;
-import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
@@ -19,16 +16,12 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
-import org.w3c.dom.Text;
-
-import android.R.anim;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.database.DataSetObserver;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Environment;
@@ -40,31 +33,28 @@ import android.text.method.SingleLineTransformationMethod;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 
 public class OpenBookmarks implements OnBookMarkChangeListener,
 								OnGroupClickListener,
-								OnChildClickListener
+								OnChildClickListener,
+								OnItemLongClickListener
 {
 	private Map<Integer, ArrayList<OpenPath>> mBookmarksArray;
 	private Context mContext;
@@ -76,6 +66,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	private Long mAllDataSize = 0l;
 	private SharedPreferences mPrefs;
 	private OpenExplorer mExplorer;
+	public static final int BOOKMARK_DRIVE = 0;
+	public static final int BOOKMARK_SMART_FOLDER = 1;
+	public static final int BOOKMARK_FAVORITE = 2;
+	public static final int BOOKMARK_SERVER = 3;
+	public static final int BOOKMARK_OFFLINE = 4;
 	
 	public OpenBookmarks(OpenExplorer explorer, ExpandableListView newList)
 	{
@@ -295,10 +290,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	{
 		Logger.LogDebug("Setting up ListView in OpenBookmarks");
 		lv.setDrawSelectorOnTop(true);
+		lv.setSelector(R.drawable.selector_blue);
 		lv.setOnChildClickListener(this);
 		lv.setOnGroupClickListener(this);
 		lv.setGroupIndicator(null);
-		//lv.setOnItemLongClickListener(this);
+		lv.setOnItemLongClickListener(this);
+		lv.setLongClickable(true);
 		//lv.setOnItemClickListener(this);
 		//lv.setBackgroundResource(R.drawable.listgradback);
 		
@@ -315,6 +312,17 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		
 	}
 
+	public boolean onItemLongClick(AdapterView<?> list, View v, int pos, long id) {
+		if(v.getTag() == null) return false;
+		BookmarkHolder h = (BookmarkHolder)v.getTag();
+		OpenPath path = h.getOpenPath();
+		if(OpenFTP.class.equals(path.getClass()))
+			ShowServerDialog((OpenFTP)path, h);
+		else
+			ShowStandardDialog(path, h);
+		return true;
+	}
+
 	public boolean onChildClick(ExpandableListView parent, View v,
 			int groupPosition, int childPosition, long id) {
 		OpenPath path = mBookmarkAdapter.getChild(groupPosition, childPosition);
@@ -328,9 +336,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 	public boolean onGroupClick(ExpandableListView parent, View v,
 			int groupPosition, long id) {
-		if(mBookmarksArray.get(groupPosition).size() > 0)
-			return false;
-		else return true; // don't allow expand of empty groups
+		//if(mBookmarksArray.get(groupPosition).size() > 0)
+		//	return false;
+		//else return true; // don't allow expand of empty groups
+		return false;
 	}
 	
 	
@@ -617,33 +626,23 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			return group;
 		}
 
-
-        public TextView getGenericView() {
-            // Layout parameters for the ExpandableListView
-            AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, 64);
-
-            TextView textView = new TextView(getExplorer());
-            textView.setLayoutParams(lp);
-            // Center the text vertically
-            textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
-            // Set the text starting position
-            textView.setPadding(36, 0, 0, 0);
-            return textView;
-        }
-
 		public View getGroupView(int group, boolean isExpanded,
-				View convertView, ViewGroup parent) {
+				final View convertView, ViewGroup parent) {
 			View ret = convertView;
 			if(ret == null)
-				ret = getExplorer().getLayoutInflater().inflate(android.R.layout.preference_category, null);
-			TextView mText = (TextView)ret.findViewById(android.R.id.title);
-			if(mText.getTag() == null && getChildrenCount(group) > 0)
 			{
-				((ExpandableListView)parent).expandGroup(group);
-				mText.setTag(true);
-				isExpanded = true;
+				ret = getExplorer().getLayoutInflater().inflate(android.R.layout.preference_category, null);
+						//R.layout.bookmark_group, null);
 			}
+			Button button1 = (Button)ret.findViewById(android.R.id.button1);
+			if((group == BOOKMARK_FAVORITE || group == BOOKMARK_SERVER || group == BOOKMARK_SMART_FOLDER)
+					&& button1 != null)
+			{
+				button1.setVisibility(View.VISIBLE);
+			} else if(button1 != null) {
+				button1.setVisibility(View.GONE);
+			}
+			TextView mText = (TextView)ret.findViewById(android.R.id.title);
 			if(isExpanded)
 				mText.setTypeface(Typeface.DEFAULT_BOLD);
 			else
@@ -651,7 +650,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			String[] groups = getExplorer().getResources().getStringArray(R.array.bookmark_groups);
 			if(mText != null)
 				mText.setText(groups[group] + (getChildrenCount(group) > 0 ? " (" + getChildrenCount(group) + ")" : ""));
-			return mText;
+			return ret;
 		}
 
 		public boolean hasStableIds() {

@@ -293,6 +293,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mList.setVisibility(View.VISIBLE);
 			mList.setAdapter(mContentAdapter);
 		}
+		mChosenMode.setSelector(R.drawable.selector_blue);
 		mChosenMode.setVisibility(View.VISIBLE);
 		mChosenMode.setOnItemClickListener(this);
 		mChosenMode.setOnScrollListener(new OnScrollListener() {
@@ -314,6 +315,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//if(cm == null)
 		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
+			@SuppressWarnings("unused")
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
 				final OpenPath file = mData2.get(pos);
 				final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
@@ -575,12 +577,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 				final DialogBuilder dZip = new DialogBuilder(mContext);
 				dZip
-					.setMessage("Enter filename of new Zip file:")
 					.setDefaultText(def)
 					.setIcon(getResources().getDrawable(R.drawable.lg_zip))
-					.setTitle("Zip")
+					.setTitle(R.string.s_menu_zip)
 					.setCancelable(true)
-					.setPositiveButton("OK",
+					.setPositiveButton(android.R.string.ok,
 						new OnClickListener() {
 							public void onClick(DialogInterface di, int which) {
 								if(which != DialogInterface.BUTTON_POSITIVE) return;
@@ -590,6 +591,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 								finishMode(mode);
 							}
 						})
+					.setMessage(R.string.s_prompt_zip)
 					.create().show();
 				return true;
 				

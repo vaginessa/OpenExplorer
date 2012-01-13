@@ -48,7 +48,7 @@ public final class MenuItemImpl implements MenuItem {
 	private int mIconResId = NO_ICON;
 
 	/** The menu to which this item belongs */
-	private MenuBuilder mMenu;
+	private MenuBuilderNew mMenu;
 
 	private Runnable mItemCallback;
 
@@ -74,7 +74,7 @@ public final class MenuItemImpl implements MenuItem {
 	private static String sSpaceShortcutLabel;
 
 	/**
-	 * Instantiates this menu item. The constructor {@link #MenuItemData(MenuBuilder, int, int, int, CharSequence, int)} is
+	 * Instantiates this menu item. The constructor {@link #MenuItemData(MenuBuilderNew, int, int, int, CharSequence, int)} is
 	 * preferred due to lazy loading of the icon Drawable.
 	 * 
 	 * @param menu
@@ -90,7 +90,7 @@ public final class MenuItemImpl implements MenuItem {
 	 * @param title
 	 *            The text to display for the item.
 	 */
-	MenuItemImpl(MenuBuilder menu, int group, int id, int categoryOrder, int ordering, CharSequence title) {
+	MenuItemImpl(MenuBuilderNew menu, int group, int id, int categoryOrder, int ordering, CharSequence title) {
 		mMenu = menu;
 		mId = id;
 		mGroup = group;

@@ -36,7 +36,7 @@ import android.widget.TextView;
  * Implementation of the {@link android.view.Menu} interface for creating a
  * standard menu UI.
  */
-public class MenuBuilder implements Menu {
+public class MenuBuilderNew implements Menu {
     /** The number of different menu types */
     public static final int NUM_TYPES = 3;
     /** The menu type that represents the icon menu view */
@@ -118,7 +118,7 @@ public class MenuBuilder implements Menu {
         public boolean invokeItem(MenuItemImpl item);
     }
 
-    public MenuBuilder(Context context) {
+    public MenuBuilderNew(Context context) {
         mMenuTypes = new MenuType[NUM_TYPES];
         
         mContext = context;
@@ -579,7 +579,7 @@ public class MenuBuilder implements Menu {
         for (int i = 0; i < N; i++) {
             MenuItemImpl item = mItems.get(i);
             if (item.hasSubMenu()) {
-                List<MenuItemImpl> subMenuItems = ((MenuBuilder)item.getSubMenu())
+                List<MenuItemImpl> subMenuItems = ((MenuBuilderNew)item.getSubMenu())
                     .findItemsWithShortcutForKey(keyCode, event);
                 items.addAll(subMenuItems);
             }

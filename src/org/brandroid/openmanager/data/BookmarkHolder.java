@@ -80,6 +80,8 @@ public class BookmarkHolder {
 				v.setVisibility(View.GONE);
 	}
 	
+	public OpenPath getOpenPath() { return mFile; } 
+	
 	public ImageView getIconView() { ensureViews(); return mIcon; }
 	public void setIconResource(int res) { ensureViews(); if(mIcon != null) mIcon.setImageResource(res); }
 	public void setIconDrawable(Drawable d, ThumbnailStruct ts) {

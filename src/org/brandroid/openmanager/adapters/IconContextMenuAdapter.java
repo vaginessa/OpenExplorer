@@ -34,6 +34,8 @@ public class IconContextMenuAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         MenuItem item = getItem(position);
         
+        if(!item.isVisible()) return null;
+        
         TextView res = (TextView) convertView;
         if (res == null) {
         	res = (TextView) LayoutInflater.from(context).inflate(android.R.layout.select_dialog_item, null);

@@ -102,7 +102,7 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 	public void setListAdapter(ExpandableListAdapter adapter) { getListView().setAdapter(adapter); }
 	
 	public void onActivityCreated(Bundle savedInstanceState) {
-		//super.onActivityCreated(savedInstanceState);
+		super.onActivityCreated(savedInstanceState);
 		
 		//Logger.LogDebug("Bookmark Fragment Created");
 

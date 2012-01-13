@@ -10,9 +10,12 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.PopupWindow;
 
 
@@ -24,10 +27,12 @@ import android.widget.PopupWindow;
  */
 public class BetterPopupWindow {
         protected final View anchor;
-        private final PopupWindow window;
+        private final PopupWindow popup;
         private View root;
         private Drawable background = null;
         private final WindowManager windowManager;
+        
+        private View backgroundView;
 
 
         /**
@@ -38,16 +43,16 @@ public class BetterPopupWindow {
          */
         public BetterPopupWindow(View anchor, int anim) {
                 this.anchor = anchor;
-                this.window = new PopupWindow(anchor.getContext());
-                this.window.setAnimationStyle(anim);
+                this.popup = new PopupWindow(anchor.getContext());
+                this.popup.setAnimationStyle(anim);
 
 
                 // when a touch even happens outside of the window
                 // make the window go away
-                this.window.setTouchInterceptor(new OnTouchListener() {
+                this.popup.setTouchInterceptor(new OnTouchListener() {
                         public boolean onTouch(View v, MotionEvent event) {
                                 if(event.getAction() == MotionEvent.ACTION_OUTSIDE) {
-                                        BetterPopupWindow.this.window.dismiss();
+                                        BetterPopupWindow.this.popup.dismiss();
                                         return true;
                                 }
                                 return false;
@@ -64,7 +69,9 @@ public class BetterPopupWindow {
          * Anything you want to have happen when created. Probably should create a view and setup the event listeners on
          * child views.
          */
-        protected void onCreate() {}
+        protected void onCreate() {
+        	
+        }
 
 
         /**
@@ -80,24 +87,24 @@ public class BetterPopupWindow {
                 onShow();
 
 
-                if(this.background == null) {
-                        this.window.setBackgroundDrawable(new BitmapDrawable());
-                } else {
-                        this.window.setBackgroundDrawable(this.background);
+                //backgroundView.addView(root);
+                this.popup.setBackgroundDrawable(new BitmapDrawable());
+                if(backgroundView == null)
+                {
+	            	backgroundView = ((LayoutInflater)anchor.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.contextmenu_layout, null);
+	            	((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
                 }
-
-
                 // if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
                 // otherwise you need to set the background of the root viewgroup
                 // and set the popupwindow background to an empty BitmapDrawable
-                this.window.setWidth(400);
-                this.window.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-                this.window.setTouchable(true);
-                this.window.setFocusable(true);
-                this.window.setOutsideTouchable(true);
+                this.popup.setWidth(400);
+                this.popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+                this.popup.setTouchable(true);
+                this.popup.setFocusable(true);
+                this.popup.setOutsideTouchable(true);
 
 
-                this.window.setContentView(this.root);
+                this.popup.setContentView(backgroundView);
         }
 
 
@@ -114,7 +121,7 @@ public class BetterPopupWindow {
          */
         public void setContentView(View root) {
                 this.root = root;
-                this.window.setContentView(root);
+                this.popup.setContentView(root);
         }
 
 
@@ -136,7 +143,7 @@ public class BetterPopupWindow {
          * @param listener
          */
         public void setOnDismissListener(PopupWindow.OnDismissListener listener) {
-                this.window.setOnDismissListener(listener);
+                this.popup.setOnDismissListener(listener);
         }
 
 
@@ -144,7 +151,7 @@ public class BetterPopupWindow {
          * Displays like a popdown menu from the anchor view
          */
         public void showLikePopDownMenu() {
-                this.showLikePopDownMenu(0, 0);
+        	this.showLikePopDownMenu(0,0);
         }
 
 
@@ -159,19 +166,52 @@ public class BetterPopupWindow {
         public void showLikePopDownMenu(int xOffset, int yOffset) {
                 this.preShow();
 
+                int arrowOffset = 20;
+                boolean fromRight = anchor.getLeft() > windowManager.getDefaultDisplay().getWidth() / 2;
+                if(fromRight)
+                {
+                	popup.setAnimationStyle(R.style.Animations_GrowFromTopRight);
+                	arrowOffset *= -1;
+                } else {
+                	popup.setAnimationStyle(R.style.Animations_GrowFromTopLeft);
+                }
 
-                this.window.setAnimationStyle(R.style.Animations_PopDownMenu);
+                placeArrow(arrowOffset, this.popup.getWidth() - 46);
 
-
-                this.window.showAsDropDown(this.anchor, xOffset, yOffset);
+                this.popup.showAsDropDown(this.anchor, xOffset, yOffset);
         }
 
+        public void showLikeQuickAction(int arrowOffset) {
+        	showLikeQuickAction(0, 0, arrowOffset);
+        }
 
         /**
          * Displays like a QuickAction from the anchor view.
          */
         public void showLikeQuickAction() {
-                this.showLikeQuickAction(0, 0);
+        	this.showLikeQuickAction(0, 0, anchor != null ? anchor.getLeft() : 20);
+        }
+        
+        private void placeArrow(int arrowOffset, int rootWidth)
+        {
+        	if(arrowOffset >= 0)
+        	{
+	            setViewWidth(backgroundView.findViewById(R.id.space_left), arrowOffset);
+	            setViewWidth(backgroundView.findViewById(R.id.space_right), LayoutParams.FILL_PARENT);
+        	} else {
+        		arrowOffset *= -1;
+        		setViewWidth(backgroundView.findViewById(R.id.space_left), rootWidth - arrowOffset - backgroundView.findViewById(R.id.indicator).getWidth());
+	            setViewWidth(backgroundView.findViewById(R.id.space_right), arrowOffset - 9);
+        	}
+            
+        }
+        
+        private View setViewWidth(View v, int w)
+        {
+        	LayoutParams lp = v.getLayoutParams();
+        	lp.width = w;
+        	v.setLayoutParams(lp);
+        	return v;
         }
 
 
@@ -183,9 +223,9 @@ public class BetterPopupWindow {
          * @param yOffset
          *            offset in the Y direction
          */
-        public void showLikeQuickAction(int xOffset, int yOffset) {
+        public void showLikeQuickAction(int xOffset, int yOffset, int arrowOffset) {
                 this.preShow();
-
+                
                 int[] location = new int[2];
                 this.anchor.getLocationOnScreen(location);
 
@@ -209,6 +249,7 @@ public class BetterPopupWindow {
                 int xPos = ((screenWidth - rootWidth) / 2) + xOffset;
                 int yPos = anchorRect.top - rootHeight + yOffset;
 
+                placeArrow(arrowOffset, rootWidth);
 
                 // display on bottom
                 if(rootHeight > anchorRect.top) {
@@ -217,11 +258,11 @@ public class BetterPopupWindow {
                 }
 
 
-                this.window.showAtLocation(this.anchor, Gravity.NO_GRAVITY, xPos, yPos);
+                this.popup.showAtLocation(this.anchor, Gravity.NO_GRAVITY, xPos, yPos);
         }
 
 
         public void dismiss() {
-                this.window.dismiss();
+                this.popup.dismiss();
         }
 }
