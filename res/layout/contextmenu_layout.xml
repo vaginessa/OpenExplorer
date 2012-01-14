@@ -35,13 +35,38 @@
 			/>
         
     </LinearLayout>
-
-    <FrameLayout
+    
+    <LinearLayout
         android:layout_marginTop="-4dp"
         android:background="@drawable/contextmenu_opentop"
-        android:id="@android:id/widget_frame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" 
-        />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        > 
+        
+	    <LinearLayout android:id="@+id/contextmenu_title"
+	        android:orientation="vertical"
+	        android:visibility="gone"
+	        android:layout_width="match_parent" android:layout_height="wrap_content">
+	        <TextView
+	            style="@style/Large"
+	            android:id="@android:id/title"
+	            android:layout_gravity="center"
+	            android:layout_marginBottom="2dp"
+	            />
+	        <View android:background="@color/blue"
+	            android:layout_marginLeft="5dp"
+	            android:layout_marginRight="5dp"
+	            android:layout_height="1dp" android:layout_width="match_parent"
+				/>"
+	    </LinearLayout> 
+	
+	    <FrameLayout
+	        android:id="@android:id/widget_frame"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent" 
+	        />
+	    
+    </LinearLayout>
 
 </LinearLayout>

@@ -322,16 +322,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
 					mMenuContextItemIndex = pos;
 					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file, view);
-					MenuBuilderNew cmm = cm.getMenu();
+					Menu cmm = cm.getMenu();
 					if(getClipboard().size() > 0)
-						cmm.hideItem(R.id.menu_context_multi);
+						hideItem(cmm, R.id.menu_context_multi);
 					else
-						cmm.hideItem(R.id.menu_context_paste);
+						hideItem(cmm, R.id.menu_context_paste);
 					if(!name.toLowerCase().endsWith(".zip"))
-						cmm.hideItem(R.id.menu_context_unzip);
+						hideItem(cmm, R.id.menu_context_unzip);
 					cm.setTitle(name);
 					cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
-						public void onIconContextItemSelected(MenuItem item, Object info) {
+						public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 							executeMenu(item.getItemId(), mData2.get((Integer)info));
 						}
 					});
@@ -419,6 +419,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				}
 				
 				return false;
+			}
+
+			private void hideItem(Menu menu, int itemId) {
+				if(menu.findItem(itemId) != null)
+					menu.findItem(itemId).setVisible(false);
 			}
 		});
 		if(OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE)

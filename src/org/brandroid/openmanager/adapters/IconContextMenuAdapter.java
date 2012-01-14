@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.adapters;
 
-import android.R;
+import org.brandroid.openmanager.R;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.view.*;
@@ -36,14 +37,18 @@ public class IconContextMenuAdapter extends BaseAdapter {
         
         if(!item.isVisible()) return null;
         
-        TextView res = (TextView) convertView;
+        CheckedTextView res = (CheckedTextView)convertView;
         if (res == null) {
-        	res = (TextView) LayoutInflater.from(context).inflate(android.R.layout.select_dialog_item, null);
+       		res = (CheckedTextView)LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_multiple_choice, null);
         }
         
-        res.setTextColor(context.getResources().getColor(R.color.primary_text_dark));
-        res.setWidth(400);
-
+        if(item.isCheckable())
+        	res.setChecked(item.isChecked());
+        else res.setCheckMarkDrawable(null);
+        
+        res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
+        res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
+        
         res.setTag(item);
         res.setText(item.getTitle());
         res.setCompoundDrawablesWithIntrinsicBounds(item.getIcon(), null, null, null);

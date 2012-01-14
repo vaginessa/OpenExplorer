@@ -15,13 +15,13 @@ public class IconContextMenu
 {
 	
 	public interface IconContextItemSelectedListener {
-		void onIconContextItemSelected(MenuItem item, Object info);
+		void onIconContextItemSelected(MenuItem item, Object info, View view);
 	}
 	
 	private ListView mList;
 	//private Dialog dialog;
 	private BetterPopupWindow popup;
-	private MenuBuilderNew menu;
+	private Menu menu;
 	private View anchor;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
@@ -38,7 +38,7 @@ public class IconContextMenu
     }
 
 	public IconContextMenu(Context context, Menu menu, View from) {
-        this.menu = (MenuBuilderNew)menu;
+        this.menu = menu;
         this.anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
@@ -50,17 +50,17 @@ public class IconContextMenu
 		mList.setAdapter(adapter);
 		mList.setOnItemClickListener(new OnItemClickListener() {
 
-			public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
-					long arg3) {
+			public void onItemClick(AdapterView<?> arg0, View v, int pos, long id) {
 				if(iconContextItemSelectedListener != null)
 				{
-					iconContextItemSelectedListener.onIconContextItemSelected(adapter.getItem(pos), info);
+					iconContextItemSelectedListener.onIconContextItemSelected(
+							adapter.getItem(pos), info, v);
 				}
 					
 			}
 			
 		} );
-		popup = new BetterPopupWindow(anchor, R.style.Animations_GrowFromTop);
+		popup = new BetterPopupWindow(context, anchor, R.style.Animations_GrowFromTop);
 		//popup.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.contextmenu_top_right));
 		popup.setContentView(mList);
 		/*this.dialog = new AlertDialog.Builder(context)
@@ -85,7 +85,7 @@ public class IconContextMenu
 		return info;
 	}
 	
-	public MenuBuilderNew getMenu() {
+	public Menu getMenu() {
 		return menu;
 	}
 	
@@ -94,12 +94,11 @@ public class IconContextMenu
     }
     
     public void setTitle(CharSequence title) {
-    	//dialog.setTitle(title);
+    	popup.setTitle(title);
     }
-    
-    public void setTitle(int titleId) {
-    	//dialog.setTitle(titleId);
-    }
+	public void setTitle(int stringId) {
+		popup.setTitle(stringId);
+	}
     
     public void show()
     {
@@ -109,6 +108,7 @@ public class IconContextMenu
     {
     	popup.dismiss();
     }
+
     
     /*
     public void setOnCancelListener(DialogInterface.OnCancelListener onCancelListener) {

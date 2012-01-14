@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+	<item
+		android:id="@+id/menu_multi"
+		android:icon="@drawable/multiselect"
+		android:showAsAction="ifRoom"
+		android:title="@string/s_menu_multi" />
+	<group android:checkableBehavior="single">
+		<item
+			android:id="@+id/menu_view_grid"
+			android:title="@string/s_menu_grid" />
+		<item
+			android:id="@+id/menu_view_list"
+			android:checked="true"
+			android:title="@string/s_menu_list" />
+		<item
+			android:id="@+id/menu_view_carousel"
+			android:title="@string/s_menu_carousel" />
+	</group>
+	<item
+		android:id="@+id/menu_view_hidden"
+		android:checkable="true"
+		android:title="@string/s_menu_hidden" />
+	<item
+		android:id="@+id/menu_view_thumbs"
+		android:checkable="true"
+		android:checked="true"
+		android:title="@string/s_menu_thumbs" />
+</menu>
