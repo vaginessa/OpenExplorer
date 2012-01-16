@@ -401,7 +401,7 @@ public final class MenuItemImpl implements MenuItem {
 
 	//@Override
 	public boolean hasSubMenu() {
-		return mSubmenu.size() > 0;
+		return mSubmenu != null && mSubmenu.size() > 0;
 	}
 
 	public boolean collapseActionView() {
