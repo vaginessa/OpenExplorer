@@ -25,7 +25,7 @@ import android.view.View;
 
 public abstract class OpenPath implements Serializable, Parcelable, Comparable<OpenPath>
 {
-	public static SortType Sorting = SortType.ALPHA;
+	public static SortType Sorting = SortType.DATE_DESC;
 	
 	private static final long serialVersionUID = 332701810738149106L;
 	private Object mTag = null;
@@ -118,6 +118,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	{
 		setPath(in.readLine());
 	}
+
+	public String getExtension() {
+		return getPath().substring(getPath().lastIndexOf(".") + 1);
+	}
 	
 	public int describeContents() {
         return 0;
@@ -208,4 +212,5 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		public void update(int progress, int total);
 		public void update(String status);
 	}
+	
 }

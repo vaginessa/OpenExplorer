@@ -265,6 +265,11 @@ public class BetterPopupWindow {
 		this.preShow();
 		
 		int[] location = new int[2];
+		if(this.anchor == null)
+		{
+			showLikePopDownMenu(xOffset, yOffset);
+			return;
+		}
 		this.anchor.getLocationOnScreen(location);
 
 
