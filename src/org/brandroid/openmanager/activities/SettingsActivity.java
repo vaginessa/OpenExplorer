@@ -80,12 +80,14 @@ public class SettingsActivity extends PreferenceActivity
 	implements OnPreferenceChangeListener
 {
 	//keys used for preference file
+	/*
 	public static final String PREF_LIST_KEY =		"pref_dirlist";
 	public static final String PREF_BOOKNAME_KEY = 	"pref_bookmarks";
 	public static final String PREF_HIDDEN_KEY = 	"pref_hiddenFiles";
 	public static final String PREF_THUMB_KEY	=	"pref_thumbnail";
 	public static final String PREF_VIEW_KEY =		"pref_view";
 	public static final String PREF_SORT_KEY = 		"pref_sorting";
+	*/
 	public static final int MODE_PREFERENCES = 0;
 	public static final int MODE_SERVER = 1;
 	
@@ -113,7 +115,7 @@ public class SettingsActivity extends PreferenceActivity
 		if(config.containsKey("mode"))
 			mode = config.getInt("mode");
 		
-		String pathSafe = mode + "_" + path.replaceAll("[^A-Za-z0-9]", "_");
+		String pathSafe = path.replaceAll("[^A-Za-z0-9]", "_");
 		//if(mode == MODE_SERVER)
 		//	path = pathSafe = "servers";
 		

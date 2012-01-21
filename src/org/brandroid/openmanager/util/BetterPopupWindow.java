@@ -196,9 +196,11 @@ public class BetterPopupWindow {
 	
 			placeArrow(arrowOffset, this.popup.getWidth() - 46);
 			
+			/*
 			if(this.anchor.getY() > windowManager.getDefaultDisplay().getHeight() / 2)
 				popup.showAtLocation(anchor, Gravity.BOTTOM, xOffset, yOffset);
 			else
+				*/
 				this.popup.showAsDropDown(this.anchor, xOffset, yOffset);
 
 		}
@@ -264,17 +266,14 @@ public class BetterPopupWindow {
 						+ this.anchor.getHeight());
 
 
-		this.root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-
-
-		int rootWidth = this.root.getMeasuredWidth();
-		int rootHeight = this.root.getMeasuredHeight();
-
+		this.backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 
 		int screenWidth = this.windowManager.getDefaultDisplay().getWidth();
 		int screenHeight = this.windowManager.getDefaultDisplay().getHeight();
 
-
+		int rootWidth = Math.min(this.backgroundView.getMeasuredWidth(), screenWidth);
+		int rootHeight = Math.min(this.backgroundView.getMeasuredHeight(), screenHeight);
+		
 		int xPos = ((screenWidth - rootWidth) / 2) + xOffset;
 		int yPos = anchorRect.top - rootHeight + yOffset;
 
@@ -292,6 +291,7 @@ public class BetterPopupWindow {
 		
 		Logger.LogDebug("Showing Popup @ " + xPos + "," + yPos + " root:" + rootWidth + "x" + rootHeight + " screen:" + screenWidth + "x" + screenHeight + " anchor:" + anchorRect.toString());
 
+		//popup.showAsDropDown(this.anchor, xPos, yPos);
 		this.popup.showAtLocation(this.anchor, grav, xPos, yPos);
 	}
 

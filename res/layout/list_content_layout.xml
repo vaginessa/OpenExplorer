@@ -47,7 +47,6 @@
 		android:text="/fullpath"
 		android:layout_below="@+id/content_text"
 		android:layout_alignLeft="@+id/content_text"
-		android:layout_toLeftOf="@+id/content_info"
 		style="@style/Small"
 		android:ellipsize="start"
 		android:singleLine="true"
@@ -57,8 +56,10 @@
 		android:id="@+id/content_info"
 		android:layout_alignParentRight="true"
 		android:layout_alignParentBottom="true"
+		android:layout_toRightOf="@+id/content_fullpath"
 		android:gravity="right"
 		android:text=""
+		android:singleLine="true"
 		android:ellipsize="end"
 		android:typeface="monospace"
 		style="@style/Small" />

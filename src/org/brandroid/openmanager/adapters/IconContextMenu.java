@@ -108,7 +108,8 @@ public class IconContextMenu
     
     public void show()
     {
-    	popup.showLikeQuickAction();
+    	//popup.showLikeQuickAction();
+    	popup.showLikePopDownMenu();
     }
     public void dismiss()
     {
