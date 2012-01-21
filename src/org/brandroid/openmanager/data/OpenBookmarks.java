@@ -109,6 +109,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		return ret;
 	}
 	
+	public int size()
+	{
+		return mBookmarksArray.size();
+	}
 	private OpenExplorer getExplorer() { return mExplorer; }
 	
 	public void scanBookmarks()
@@ -675,4 +679,5 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	public BookmarkAdapter getListAdapter() {
 		return mBookmarkAdapter;
 	}
+
 }
