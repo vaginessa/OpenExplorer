@@ -33,6 +33,10 @@ public class OpenArrayAdapter extends ArrayAdapter<OpenPath> {
 	private String mName;
 	private Context mContext;
 	
+	private int mViewMode = OpenExplorer.VIEW_LIST;
+	
+	public void setViewMode(int mode) { mViewMode = mode; }
+	
 	public OpenArrayAdapter(Context context, int layout, ArrayList<OpenPath> data) {
 		super(context, layout, data);
 		mContext = context;
@@ -67,13 +71,13 @@ public class OpenArrayAdapter extends ArrayAdapter<OpenPath> {
 		final OpenPath file = super.getItem(position);
 		return getView(file, mContext, view, parent);
 	}
-	public static View getView(OpenPath file, Context mContext, View view, ViewGroup parent)
+	public View getView(OpenPath file, Context mContext, View view, ViewGroup parent)
 	{
 		if(file == null) return null;
 		final String mName = file.getName();
 		
 		int mWidth = 36, mHeight = 36;
-		if(OpenExplorer.getViewMode() == OpenExplorer.VIEW_GRID)
+		if(mViewMode == OpenExplorer.VIEW_GRID)
 			mWidth = mHeight = 128;
 		
 		BookmarkHolder mHolder = null;
@@ -82,7 +86,7 @@ public class OpenArrayAdapter extends ArrayAdapter<OpenPath> {
 			LayoutInflater in = (LayoutInflater)mContext
 									.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			
-			view = in.inflate(OpenExplorer.getViewMode() == OpenExplorer.VIEW_GRID ?
+			view = in.inflate(mViewMode == OpenExplorer.VIEW_GRID ?
 						R.layout.grid_content_layout : R.layout.list_content_layout
 					, parent, false);
 			
@@ -98,18 +102,16 @@ public class OpenArrayAdapter extends ArrayAdapter<OpenPath> {
 			//mHolder.cancelTask();
 		}
 
-		if(OpenExplorer.getViewMode() == OpenExplorer.VIEW_LIST) {
-			mHolder.setInfo(getFileDetails(file, false)); //mShowLongDate));
+		mHolder.setInfo(getFileDetails(file, false));
 			
-			if(file.getClass().equals(OpenMediaStore.class))
-			{
-				mHolder.setPath(file.getPath());
-				mHolder.showPath(true);
-			}
-			else
-				mHolder.showPath(false);
+		if(file.getClass().equals(OpenMediaStore.class))
+		{
+			mHolder.setPath(file.getPath());
+			mHolder.showPath(true);
 		}
-		
+		else
+			mHolder.showPath(false);
+
 		if(!mHolder.getTitle().equals(mName))
 			mHolder.setTitle(mName);
 		

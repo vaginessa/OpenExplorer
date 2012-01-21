@@ -103,7 +103,9 @@ public class Preferences {
 	public int getSetting(String file, String key, Integer defValue)
 	{
 		try {
-			return Integer.parseInt(getSetting(file, key, defValue.toString()));
+			int ret = Integer.parseInt(getSetting(file, key, defValue.toString()));
+			Logger.LogDebug("--GetSetting(" + file + "," + key + "," + defValue + ")=" + ret); 
+			return ret;
 		} catch(Exception e) { return defValue; }
 	}
 	public float getSetting(String file, String key, Float defValue)
@@ -154,7 +156,7 @@ public class Preferences {
 	
 	public void setSettings(String file, JSONObject json)
 	{
-		SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
+		SharedPreferences.Editor editor = getPreferences(file).edit();
 		Iterator keys = json.keys();
 		Object okey;
 		while((okey = keys.next()) != null)
@@ -175,7 +177,7 @@ public class Preferences {
 	{
 		try {
 			//Logger.LogDebug("Setting " + key + " to " + value);
-			SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
+			SharedPreferences.Editor editor = getPreferences(file).edit();
 			editor.putString(key, value);
 			//editor.putString(key, value);
 			editor.commit();
@@ -184,7 +186,7 @@ public class Preferences {
 	public void setSetting(String file, String key, Boolean value)
 	{
 		try {
-			getPreferences(mContext, file)
+			getPreferences(file)
 				.edit()
 				.putBoolean(key, value)
 				.commit();
@@ -197,7 +199,7 @@ public class Preferences {
 	public void setSettings(String file, Object... vals)
 	{
 		try {
-			SharedPreferences.Editor editor = getPreferences(mContext, file).edit();
+			SharedPreferences.Editor editor = getPreferences(file).edit();
 			for(int i = 0; i < vals.length - 1; i += 2)
 			{
 				String key = vals[i].toString();

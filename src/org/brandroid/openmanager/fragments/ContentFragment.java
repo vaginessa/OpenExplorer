@@ -22,6 +22,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.OpenArrayAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenClipboard;
@@ -77,6 +78,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -103,7 +105,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//private LinearLayout mPathView;
 	private LinearLayout mMultiSelectView;
 	private GridView mGrid = null;
-	private ListView mList = null;
 	private View mProgressBarLoading = null;
 	
 	private OpenPath mPath = null;
@@ -111,7 +112,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private Context mContext;
-	private FileSystemAdapter mContentAdapter;
+	private BaseAdapter mContentAdapter;
 	private ActionMode mActionMode = null;
 	private boolean mActionModeSelected;
 	private boolean mShowThumbnails = true;
@@ -122,16 +123,37 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private int mListVisibleLength = 0; 
 	public Boolean mShowLongDate = false; 
 	
+	private int mViewMode = OpenExplorer.VIEW_LIST;
+	
 	public ContentFragment()
 	{
 		//Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		mPath = mLastPath;
+		//mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
 	}
 	public ContentFragment(OpenPath path)
 	{
 		mPath = mLastPath = path;
+		//mViewMode = getExplorer().getSetting(path, "view", mViewMode);
+	}
+	public ContentFragment(OpenPath path, int viewMode)
+	{
+		mPath = mLastPath = path;
+		mViewMode = viewMode;
 	}
 	
+	private void setViewMode(int mode) {
+		mViewMode = mode;
+		if(mContentAdapter != null)
+		{
+			if(FileSystemAdapter.class.equals(mContentAdapter.getClass()))
+			{
+				mGrid.setAdapter(null);
+				mContentAdapter = new FileSystemAdapter(mContext, mViewMode, mData2);
+				mGrid.setAdapter(mContentAdapter);
+			}
+		}
+	}
 	private int getViewMode() { return getExplorer().getViewMode(); }
 	
 	//@Override
@@ -147,18 +169,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mContext = getActivity().getApplicationContext();
 		
 		OpenExplorer explorer = getExplorer();
-		mFileManager = explorer.getFileManager();
+		mFileManager = OpenExplorer.getFileManager();
 		if(mFileManager == null)
-		{
 			mFileManager = new FileManager();
-			explorer.setFileManager(mFileManager);
-		}
-		mHandler = explorer.getEventHandler();
+		mHandler = OpenExplorer.getEventHandler();
 		if(mHandler == null)
-		{
 			mHandler = new EventHandler(mFileManager);
-			explorer.setEventHandler(mHandler);
-		}
 		mHandler.setOnWorkerThreadFinishedListener(this);
 		refreshData(savedInstanceState);
 	}
@@ -178,6 +194,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			else
 				path = new OpenFile(Environment.getExternalStorageDirectory());
 		}
+		/*
 		if(!path.requiresThread() && path.getListLength() < 100)
 			try {
 				mData = mFileManager.getChildren(path);
@@ -191,11 +208,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mProgressBarLoading.setVisibility(View.VISIBLE);
 			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 		}
+		*/
 		
 		mActionModeSelected = false;
 		try {
-			mShowThumbnails = getExplorer().getPreferences()
-								.getSetting(mPath.getPath(), SettingsActivity.PREF_THUMB_KEY, true);
+			mShowThumbnails = getExplorer()
+								.getSetting(mPath, SettingsActivity.PREF_THUMB_KEY, true);
 		} catch(NullPointerException npe) {
 			mShowThumbnails = true;
 		}
@@ -210,7 +228,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
 		
-		updateData(mData);
+			if(mContentAdapter != null)
+				mContentAdapter.notifyDataSetChanged();
+			if(mProgressBarLoading != null)
+				mProgressBarLoading.setVisibility(View.VISIBLE);
+			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+			updateData(mData);
 	}
 
 	//@Override
@@ -256,22 +279,21 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		super.onViewCreated(v, savedInstanceState);
 		
 		//mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
-		mGrid = (GridView)v.findViewById(R.id.grid_gridview);
-		mList = (ListView)v.findViewById(R.id.list_listview);
-		mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
+		if(mGrid == null)
+			mGrid = (GridView)v.findViewById(R.id.content_grid);
+		if(mMultiSelectView == null)
+			mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
 
-		if(mGrid == null && mList == null)
+		if(mGrid == null)
 			Logger.LogError("WTF, where are they?");
-		else if (getViewMode() == OpenExplorer.VIEW_GRID)
-			updateChosenMode(mGrid);
 		else
-			updateChosenMode(mList);
+			updateGridView();
 	}
-	
+
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		OpenPath path = mData2.get(mMenuContextItemIndex);
@@ -280,23 +302,67 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//return super.onContextItemSelected(item);
 	}
 	
-	public void updateChosenMode(final AbsListView mChosenMode)
+	public void updateGridView()
 	{
-		if(getViewMode() == OpenExplorer.VIEW_GRID) {
-			mContentAdapter = new FileSystemAdapter(mContext, R.layout.grid_content_layout, mData2);
-			mList.setVisibility(View.GONE);
-			mGrid.setVisibility(View.VISIBLE);
-			mGrid.setAdapter(mContentAdapter);
-		} else {
-			mContentAdapter = new FileSystemAdapter(mContext, R.layout.list_content_layout, mData2);
-			mGrid.setVisibility(View.GONE);
-			mList.setVisibility(View.VISIBLE);
-			mList.setAdapter(mContentAdapter);
+		int mLayoutID;
+		if(mGrid == null)
+			mGrid = (GridView)getView().findViewById(R.id.content_grid);
+		if(mGrid == null)
+		{
+			mGrid = (GridView)((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.content_grid, null);
+			((ViewGroup)getView()).addView(mGrid);
+			setupGridView();
 		}
-		mChosenMode.setSelector(R.drawable.selector_blue);
-		mChosenMode.setVisibility(View.VISIBLE);
-		mChosenMode.setOnItemClickListener(this);
-		mChosenMode.setOnScrollListener(new OnScrollListener() {
+		if(mViewMode == OpenExplorer.VIEW_GRID) {
+			mLayoutID = R.layout.grid_content_layout;
+			int iColWidth = getResources().getDimensionPixelSize(R.dimen.grid_width);
+			Logger.LogVerbose("Grid Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
+			mGrid.setColumnWidth(iColWidth);
+			//mGrid.setNumColumns(getActivity().getWindowManager().getDefaultDisplay().getWidth() / iColWidth);
+			mGrid.setVerticalSpacing(10);
+			//mGrid.setHorizontalSpacing(10);
+		} else {
+			mLayoutID = R.layout.list_content_layout;
+			int iColWidth = getResources().getDimensionPixelSize(R.dimen.list_width);
+			Logger.LogVerbose("List Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
+			mGrid.setColumnWidth(iColWidth);
+			//mGrid.setNumColumns(GridView.AUTO_FIT);
+			mGrid.setVerticalSpacing(0);
+			mGrid.setHorizontalSpacing(0);
+		}
+		mContentAdapter = new FileSystemAdapter(mContext, mLayoutID, mData2);
+		/*
+		if(OpenCursor.class.equals(mPath.getClass())) {
+			if(mContentAdapter != null && OpenCursorAdapter.class.equals(mContentAdapter.getClass()))
+			{
+				((OpenCursorAdapter)mContentAdapter)
+					.setLayout(mLayoutID)
+					.setParent((OpenCursor)mPath);
+				//getLoaderManager().initLoader(((OpenCursor)mPath).getCursorType(), null, this);
+			}
+			else
+			{
+				mContentAdapter = new OpenCursorAdapter(mContext, (OpenCursor)mPath, 0, (OpenCursor)mPath, mLayoutID);
+				mGrid.setAdapter(mContentAdapter);
+			}
+		} else {
+			if(mContentAdapter != null && OpenCursorAdapter.class.equals(mContentAdapter.getClass()))
+				((OpenCursorAdapter)mContentAdapter).swapCursor(null);
+			mContentAdapter = new OpenArrayAdapter(mContext, mLayoutID, mData2);
+		}*/
+		mGrid.setAdapter(mContentAdapter);
+		setupGridView();
+	}
+	public void setupGridView()
+	{
+		if(mGrid.getTag() == null)
+			mGrid.setTag(true);
+		else return; // only do the following the first time
+		
+		mGrid.setSelector(R.drawable.selector_blue);
+		mGrid.setVisibility(View.VISIBLE);
+		mGrid.setOnItemClickListener(this);
+		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
 				if(scrollState == 0)
@@ -311,34 +377,39 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mListVisibleLength = visibleItemCount;
 			}
 		});
-		//mChosenMode.setOnCreateContextMenuListener(this);
+		//mGrid.setOnCreateContextMenuListener(this);
 		//if(cm == null)
-		mChosenMode.setOnItemLongClickListener(new OnItemLongClickListener() {
+		mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			@SuppressWarnings("unused")
 			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
-				final OpenPath file = mData2.get(pos);
+				
+				final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 				final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
 				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
 					mMenuContextItemIndex = pos;
-					final IconContextMenu cm = new IconContextMenu(getActivity(), R.menu.context_file, view);
-					Menu cmm = cm.getMenu();
-					if(getClipboard().size() > 0)
-						hideItem(cmm, R.id.menu_context_multi);
-					else
-						hideItem(cmm, R.id.menu_context_paste);
-					if(!name.toLowerCase().endsWith(".zip"))
-						hideItem(cmm, R.id.menu_context_unzip);
-					cm.setTitle(name);
-					cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
-						public void onIconContextItemSelected(MenuItem item, Object info, View view) {
-							executeMenu(item.getItemId(), mData2.get((Integer)info));
-						}
-					});
-					cm.setInfo(pos);
-					cm.show();
-					//return list.showContextMenu();
-					return true;
+					try {
+						final IconContextMenu cm = new IconContextMenu(view.getContext(), R.menu.context_file, view);
+						Menu cmm = cm.getMenu();
+						if(getClipboard().size() > 0)
+							hideItem(cmm, R.id.menu_context_multi);
+						else
+							hideItem(cmm, R.id.menu_context_paste);
+						if(!name.toLowerCase().endsWith(".zip"))
+							hideItem(cmm, R.id.menu_context_unzip);
+						cm.setTitle(name);
+						cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
+							public void onIconContextItemSelected(MenuItem item, Object info, View view) {
+								executeMenu(item.getItemId(), mData2.get((Integer)info));
+							}
+						});
+						cm.setInfo(pos);
+						cm.show();
+					} catch(Exception e) {
+						return list.showContextMenu();
+					}
+					
+					//return true;
 				}
 				
 				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
@@ -426,9 +497,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					menu.findItem(itemId).setVisible(false);
 			}
 		});
-		if(OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE)
-			registerForContextMenu(mChosenMode);
+		if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE)
+			registerForContextMenu(mGrid);
 	}
+	
 	
 	protected void onScrollStopped(AbsListView view)
 	{
@@ -704,7 +776,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 	}
 	
-	private void updateData(final OpenPath[] items) {
+	private void updateData(final OpenPath[] items)
+	{
+		if(items == null) return;
+		updateData(items,
+				items.length < 200 && mFileManager.getSorting() != SortType.DATE_DESC,
+				items.length < 200,
+				items.length < 200 && mFileManager.getShowHiddenFiles());
+	}
+	private void updateData(final OpenPath[] items, boolean doSort, boolean foldersFirst, boolean showHidden) {
 		if(!mReadyToUpdate) return;
 		if(items == null) return;
 		mReadyToUpdate = false;
@@ -712,16 +792,19 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
 		
-		OpenPath.Sorting = mFileManager.getSorting();
-		Arrays.sort(items);
+		if(doSort)
+		{
+			OpenPath.Sorting = mFileManager.getSorting();
+			Arrays.sort(items);
+		}
 		
 		mData2.clear();
 		int folder_index = 0;
 		for(OpenPath f : items)
 		{
-			if(f.isHidden() && !mFileManager.getShowHiddenFiles())
+			if(!showHidden && f.isHidden())
 				continue;
-			if(f.isDirectory())
+			if(foldersFirst && f.isDirectory())
 				mData2.add(folder_index++, f);
 			else
 				mData2.add(f);
@@ -849,7 +932,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 	//@Override
 	public void onViewChanged(int state) {
-		//mViewMode = state;
+		mViewMode = state;
 		getExplorer().setViewMode(state);
 		
 		View v = getView();
@@ -858,19 +941,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//if(mPathView == null)
 			//	mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 			if(mGrid == null)
-				mGrid = (GridView)v.findViewById(R.id.grid_gridview);
-			if(mList == null)
-				mList = (ListView)v.findViewById(R.id.list_listview);
+				mGrid = (GridView)v.findViewById(R.id.content_grid);
 			if(mMultiSelectView == null)
 				mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
 		}
 
-		if(mGrid == null && mList == null)
-			Logger.LogError("WTF, where are they?");
-		else if (getViewMode() == OpenExplorer.VIEW_GRID)
-			updateChosenMode(mGrid);
-		else
-			updateChosenMode(mList);
+		if(mGrid == null)
+			Logger.LogError("WTF, where is it?");
+		else updateGridView();
 	}
 			
 	public void changeMultiSelectState(boolean state, MultiSelectHandler handler) {

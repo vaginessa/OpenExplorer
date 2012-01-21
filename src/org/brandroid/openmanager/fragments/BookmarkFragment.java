@@ -96,6 +96,7 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
+		expandAll();
 	}
 	
 	public ExpandableListView getListView() { return (ExpandableListView) getView().findViewById(android.R.id.list); }
@@ -112,6 +113,15 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 		final ExpandableListAdapter adapter = mBookmarks.getListAdapter();
 		setListAdapter(adapter);
 		registerForContextMenu(lv);
+		expandAll();
+	}
+	
+	public void expandAll()
+	{
+		ExpandableListView lv = getListView();
+		if(lv == null) return;
+		for(int i=0; i<lv.getCount(); i++)
+			lv.expandGroup(i);
 	}
 	
 
