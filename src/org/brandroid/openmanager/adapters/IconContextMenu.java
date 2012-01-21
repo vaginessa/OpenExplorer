@@ -21,7 +21,7 @@ public class IconContextMenu
 	private ListView mList;
 	//private Dialog dialog;
 	private BetterPopupWindow popup;
-	private Menu menu;
+	private MenuBuilderNew menu;
 	private View anchor;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
@@ -38,7 +38,13 @@ public class IconContextMenu
     }
 
 	public IconContextMenu(Context context, Menu menu, View from) {
-        this.menu = menu;
+		MenuBuilderNew newMenu = new MenuBuilderNew(context);
+		for(int i = 0; i < menu.size(); i++)
+		{
+			MenuItem item = menu.getItem(i);
+			newMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle());
+		}
+        this.menu = newMenu;
         this.anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
@@ -85,7 +91,7 @@ public class IconContextMenu
 		return info;
 	}
 	
-	public Menu getMenu() {
+	public MenuBuilderNew getMenu() {
 		return menu;
 	}
 	
@@ -102,6 +108,7 @@ public class IconContextMenu
     
     public void show()
     {
+    	//popup.showLikeQuickAction();
     	popup.showLikePopDownMenu();
     }
     public void dismiss()

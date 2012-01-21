@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.util;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.graphics.Rect;
@@ -194,27 +195,14 @@ public class BetterPopupWindow {
 			}
 	
 			placeArrow(arrowOffset, this.popup.getWidth() - 46);
-		
-		//try {
-			this.popup.showAsDropDown(this.anchor, xOffset, yOffset);
+			
 			/*
-		} catch(BadTokenException bte) {
-			View v = new View(mContext);
-			if(anchor != null)
-			{
-				v.setLeft(Math.max(0, anchor.getLeft()));
-				v.setTop(Math.max(0, anchor.getTop()));
-				LayoutParams lp = v.getLayoutParams();
-				if(lp != null)
-				{
-					lp.width = anchor.getWidth();
-					lp.height = anchor.getHeight();
-					v.setLayoutParams(lp);
-				}
-			}
-			popup.showAsDropDown(v, xOffset, yOffset);
-		}
-		*/
+			if(this.anchor.getY() > windowManager.getDefaultDisplay().getHeight() / 2)
+				popup.showAtLocation(anchor, Gravity.BOTTOM, xOffset, yOffset);
+			else
+				*/
+				this.popup.showAsDropDown(this.anchor, xOffset, yOffset);
+
 		}
 	}
 
@@ -278,17 +266,14 @@ public class BetterPopupWindow {
 						+ this.anchor.getHeight());
 
 
-		this.root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-
-
-		int rootWidth = this.root.getMeasuredWidth();
-		int rootHeight = this.root.getMeasuredHeight();
-
+		this.backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 
 		int screenWidth = this.windowManager.getDefaultDisplay().getWidth();
 		int screenHeight = this.windowManager.getDefaultDisplay().getHeight();
 
-
+		int rootWidth = Math.min(this.backgroundView.getMeasuredWidth(), screenWidth);
+		int rootHeight = Math.min(this.backgroundView.getMeasuredHeight(), screenHeight);
+		
 		int xPos = ((screenWidth - rootWidth) / 2) + xOffset;
 		int yPos = anchorRect.top - rootHeight + yOffset;
 
@@ -300,8 +285,14 @@ public class BetterPopupWindow {
 				//this.window.setAnimationStyle(anim == R.style.Animations_GrowFromBottom ? R.style.Animations_GrowFromTop : anim);
 		}
 
+		int grav = Gravity.NO_GRAVITY; 
+		if(anchorRect.top > windowManager.getDefaultDisplay().getHeight() / 2)
+			grav = Gravity.BOTTOM;
+		
+		Logger.LogDebug("Showing Popup @ " + xPos + "," + yPos + " root:" + rootWidth + "x" + rootHeight + " screen:" + screenWidth + "x" + screenHeight + " anchor:" + anchorRect.toString());
 
-		this.popup.showAtLocation(this.anchor, Gravity.NO_GRAVITY, xPos, yPos);
+		//popup.showAsDropDown(this.anchor, xPos, yPos);
+		this.popup.showAtLocation(this.anchor, grav, xPos, yPos);
 	}
 
 

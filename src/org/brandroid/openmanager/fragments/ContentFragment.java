@@ -75,6 +75,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -213,7 +214,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mActionModeSelected = false;
 		try {
 			mShowThumbnails = getExplorer()
-								.getSetting(mPath, SettingsActivity.PREF_THUMB_KEY, true);
+								.getSetting(mPath, "thumbs", true);
 		} catch(NullPointerException npe) {
 			mShowThumbnails = true;
 		}
@@ -222,7 +223,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mShowThumbnails = true;
 		
 		if(getActivity() != null && getActivity().getWindow() != null)
-			mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() > 500
+			mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
 					&& mPath != null
 					&& OpenFile.class.equals(mPath.getClass());
 		
@@ -309,6 +310,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mGrid = (GridView)getView().findViewById(R.id.content_grid);
 		if(mGrid == null)
 		{
+			Logger.LogWarning("This shouldn't happen");
 			mGrid = (GridView)((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.content_grid, null);
 			((ViewGroup)getView()).addView(mGrid);
 			setupGridView();
@@ -320,7 +322,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mGrid.setColumnWidth(iColWidth);
 			//mGrid.setNumColumns(getActivity().getWindowManager().getDefaultDisplay().getWidth() / iColWidth);
 			mGrid.setVerticalSpacing(10);
-			//mGrid.setHorizontalSpacing(10);
+			mGrid.setHorizontalSpacing(10);
 		} else {
 			mLayoutID = R.layout.list_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.list_width);
@@ -351,6 +353,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mContentAdapter = new OpenArrayAdapter(mContext, mLayoutID, mData2);
 		}*/
 		mGrid.setAdapter(mContentAdapter);
+		mContentAdapter.notifyDataSetChanged();
 		setupGridView();
 	}
 	public void setupGridView()
@@ -409,46 +412,49 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						return list.showContextMenu();
 					}
 					
-					//return true;
+					return true;
 				}
 				
-				if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
-					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
-						//@Override
-						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-							return false;
-						}
-						
-						//@Override
-						public void onDestroyActionMode(ActionMode mode) {
-							mActionMode = null;
-							mActionModeSelected = false;
-						}
-						
-						//@Override
-						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							mode.getMenuInflater().inflate(R.menu.context_file, menu);
-				    		
-				    		mActionModeSelected = true;
-							return true;
-						}
-
-						//@Override
-						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-							//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+				if(!OpenExplorer.BEFORE_HONEYCOMB)
+				{
+					if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
+						mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
+							//@Override
+							public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+								return false;
+							}
 							
-							//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
-							//files.add(file);
-							
-							if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_context_multi && item.getItemId() != R.id.menu_context_copy)
-							{
-								mode.finish();
+							//@Override
+							public void onDestroyActionMode(ActionMode mode) {
+								mActionMode = null;
 								mActionModeSelected = false;
 							}
-							return executeMenu(item.getItemId(), mode, file);
-						}
-					});
-					mActionMode.setTitle(file.getName());
+							
+							//@Override
+							public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+								mode.getMenuInflater().inflate(R.menu.context_file, menu);
+					    		
+					    		mActionModeSelected = true;
+								return true;
+							}
+	
+							//@Override
+							public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+								//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+								
+								//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
+								//files.add(file);
+								
+								if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_context_multi && item.getItemId() != R.id.menu_context_copy)
+								{
+									mode.finish();
+									mActionModeSelected = false;
+								}
+								return executeMenu(item.getItemId(), mode, file);
+							}
+						});
+						mActionMode.setTitle(file.getName());
+					}
 					
 					return true;
 				}
@@ -792,7 +798,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
 		
-		if(doSort)
+		if(doSort && items != null)
 		{
 			OpenPath.Sorting = mFileManager.getSorting();
 			Arrays.sort(items);
@@ -800,6 +806,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mData2.clear();
 		int folder_index = 0;
+		if(items != null)
 		for(OpenPath f : items)
 		{
 			if(!showHidden && f.isHidden())
@@ -1008,7 +1015,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			final OpenPath file = super.getItem(position);
 			final String mName = file.getName();
 			
-			int mWidth = 36, mHeight = 36;
+			int mWidth = 36;
+			int mHeight = mWidth;
 			if(getViewMode() == OpenExplorer.VIEW_GRID)
 				mWidth = mHeight = 128;
 			
@@ -1030,17 +1038,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				//mHolder.cancelTask();
 			}
 
-			if(getViewMode() == OpenExplorer.VIEW_LIST) {
-				mHolder.setInfo(getFileDetails(file, mShowLongDate));
+			//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			mHolder.setInfo(getFileDetails(file, false));
 				
-				if(file.getClass().equals(OpenMediaStore.class))
-				{
-					mHolder.setPath(file.getPath());
-					mHolder.showPath(true);
-				}
-				else
-					mHolder.showPath(false);
+			if(file.getClass().equals(OpenMediaStore.class))
+			{
+				mHolder.setPath(file.getPath());
+				mHolder.showPath(true);
 			}
+			else
+				mHolder.showPath(false);
 			
 			if(!mHolder.getTitle().equals(mName))
 				mHolder.setTitle(mName);
@@ -1078,12 +1085,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd");
 			deets += df.format(file.lastModified());
 			
+			/*
+			
 			deets += " | ";
 			
 			deets += (file.isDirectory()?"d":"-");
 			deets += (file.canRead()?"r":"-");
 			deets += (file.canWrite()?"w":"-");
 			deets += (file.canExecute()?"x":"-");
+			
+			*/
 			
 			return deets;
 		}
@@ -1176,7 +1187,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.GONE);
 			else Logger.LogDebug("Ending FileIOTask");
-			mData2.clear();
+			//mData2.clear();
 			updateData(result);
 		}
 		

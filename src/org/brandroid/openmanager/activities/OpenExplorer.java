@@ -286,6 +286,8 @@ public class OpenExplorer
         
         boolean bAddToStack = true; //fragmentManager.getBackStackEntryCount() > 0;
 
+        mViewMode = getSetting(path, "view", mViewMode);
+        
         FragmentTransaction ft = fragmentManager.beginTransaction();
         Fragment home = new ContentFragment(mLastPath, mViewMode);
         
@@ -1068,13 +1070,13 @@ public class OpenExplorer
 	    	case R.id.menu_sort_type: 		setSorting(FileManager.SortType.TYPE); return true;
 	    	
 	    	case R.id.menu_view_grid:
-	    		changeViewMode(VIEW_GRID);
+	    		changeViewMode(VIEW_GRID, true);
 	    		return true;
 	    	case R.id.menu_view_list:
-	    		changeViewMode(VIEW_LIST);
+	    		changeViewMode(VIEW_LIST, true);
 	    		return true;
 	    	case R.id.menu_view_carousel:
-	    		changeViewMode(VIEW_CAROUSEL);
+	    		changeViewMode(VIEW_CAROUSEL, true);
 	    		return true;
 	    	case R.id.menu_view_hidden: setShowHiddenFiles(item.isChecked()); return true;
 	    	case R.id.menu_view_thumbs: setShowThumbnails(item.isChecked()); return true;
@@ -1150,7 +1152,7 @@ public class OpenExplorer
     	getDirContentFragment(true).onThumbnailChanged(checked);
 	}
 	private void setShowHiddenFiles(boolean checked) {
-		setSetting(mLastPath, "sort", checked);
+		setSetting(mLastPath, "hide", checked);
     	getDirContentFragment(true).onHiddenFilesChanged(checked);
 	}
 	private void setSorting(SortType sort) {
@@ -1255,7 +1257,7 @@ public class OpenExplorer
     	return super.onSearchRequested();
     }
     
-    public void changeViewMode(int newView) {
+    public void changeViewMode(int newView, boolean doSet) {
     	if(mViewMode == newView) {
     		Logger.LogWarning("changeViewMode called unnecessarily! " + newView + " = " + mViewMode);
     		return;
@@ -1263,8 +1265,9 @@ public class OpenExplorer
     	int oldView = mViewMode;
     	if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
     		newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
-		//setViewMode(newView);
-		setSetting(mLastPath, "view", newView);
+		setViewMode(newView);
+		if(doSet)
+			setSetting(mLastPath, "view", newView);
 		if(!mSinglePane)
 		{
 			getDirContentFragment(true).onViewChanged(newView);
@@ -1556,8 +1559,8 @@ public class OpenExplorer
 			content = new ContentFragment(path, mViewMode);
 			((ContentFragment)content).setSettings(
 					SortType.DATE_DESC,
-					getSetting(mLastPath, "thumbs", true),
-			    	getSetting(mLastPath, "hide", true)
+					getSetting(path, "thumbs", true),
+			    	getSetting(path, "hide", true)
 			    	);
 			
 		}
@@ -1573,6 +1576,7 @@ public class OpenExplorer
 		} catch(RuntimeException e) {
 			Logger.LogError("Error committing FragmentTransaction", e);
 		}
+		changeViewMode(getSetting(path, "view", mViewMode), false);
 		if(!BEFORE_HONEYCOMB)
 			setLights(!path.getName().equals("Videos"));
 		mLastPath = path;
