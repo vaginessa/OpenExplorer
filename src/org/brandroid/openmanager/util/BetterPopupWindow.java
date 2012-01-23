@@ -75,7 +75,8 @@ public class BetterPopupWindow {
 	 * child views.
 	 */
 	protected void onCreate() {
-		
+
+		//backgroundView.addView(root);
 	}
 
 
@@ -91,83 +92,47 @@ public class BetterPopupWindow {
 		}
 		onShow();
 
-
-		//backgroundView.addView(root);
 		this.popup.setBackgroundDrawable(new BitmapDrawable());
+		
+		// if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
+		// otherwise you need to set the background of the root viewgroup
+		// and set the popupwindow background to an empty BitmapDrawable
 		if(backgroundView == null)
 		{
 			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.contextmenu_layout, null);
 			((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
 		}
-		// if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
-		// otherwise you need to set the background of the root viewgroup
-		// and set the popupwindow background to an empty BitmapDrawable
-		this.popup.setWidth(400);
+		this.popup.setContentView(backgroundView);
+		this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
 		this.popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
 		this.popup.setOutsideTouchable(true);
-
-
-		this.popup.setContentView(backgroundView);
 	}
-
 
 	public void setBackgroundDrawable(Drawable background) {
 		this.background = background;
 	}
 
-
-	/**
-	 * Sets the content view. Probably should be called from {@link onCreate}
-	 * 
-	 * @param root
-	 *		the view the popup will display
-	 */
 	public void setContentView(View root) {
 		this.root = root;
 		this.popup.setContentView(root);
 	}
 
-
-	/**
-	 * Will inflate and set the view from a resource id
-	 * 
-	 * @param layoutResID
-	 */
 	public void setContentView(int layoutResID) {
 		LayoutInflater inflator =
 					(LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.setContentView(inflator.inflate(layoutResID, null));
 	}
 
-
-	/**
-	 * If you want to do anything when {@link dismiss} is called
-	 * 
-	 * @param listener
-	 */
 	public void setOnDismissListener(PopupWindow.OnDismissListener listener) {
 		this.popup.setOnDismissListener(listener);
 	}
 
-
-	/**
-	 * Displays like a popdown menu from the anchor view
-	 */
 	public void showLikePopDownMenu() {
 		this.showLikePopDownMenu(0,0);
 	}
 
-
-	/**
-	 * Displays like a popdown menu from the anchor view.
-	 * 
-	 * @param xOffset
-	 *		offset in X direction
-	 * @param yOffset
-	 *		offset in Y direction
-	 */
 	public void showLikePopDownMenu(int xOffset, int yOffset) {
 		this.preShow();
 
@@ -186,15 +151,26 @@ public class BetterPopupWindow {
 		} else {
 			int arrowOffset = 20;
 			boolean fromRight = anchor.getLeft() > windowManager.getDefaultDisplay().getWidth() / 2;
+			boolean fromBottom = anchor.getTop() > windowManager.getDefaultDisplay().getHeight() / 2;
 			if(fromRight)
 			{
-				popup.setAnimationStyle(R.style.Animations_GrowFromTopRight);
+				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
 				arrowOffset *= -1;
+				xOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
+				xOffset += anchor.getWidth();
 			} else {
-				popup.setAnimationStyle(R.style.Animations_GrowFromTopLeft);
+				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
 			}
 	
-			placeArrow(arrowOffset, this.popup.getWidth() - 46);
+			placeArrow(fromBottom ? 0 : arrowOffset, this.popup.getWidth() - 46);
+			
+
+			if(fromBottom)
+			{
+				backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
+				//backgroundView.setBackgroundDrawable(R.drawable.contextmenu_bottom);
+				//yOffset += anchor.getHeight();
+			}
 			
 			/*
 			if(this.anchor.getY() > windowManager.getDefaultDisplay().getHeight() / 2)
@@ -225,7 +201,7 @@ public class BetterPopupWindow {
 			setViewWidth(backgroundView.findViewById(R.id.space_right), LayoutParams.FILL_PARENT);
 		} else {
 			arrowOffset *= -1;
-			setViewWidth(backgroundView.findViewById(R.id.space_left), rootWidth - arrowOffset - backgroundView.findViewById(R.id.indicator).getWidth());
+			setViewWidth(backgroundView.findViewById(R.id.space_left), rootWidth);
 			setViewWidth(backgroundView.findViewById(R.id.space_right), arrowOffset - 9);
 		}
 		backgroundView.findViewById(R.id.indicator).setVisibility(View.VISIBLE);

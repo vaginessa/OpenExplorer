@@ -97,26 +97,34 @@
 
 
     <style name="Animations.GrowFromTopLeft">
-        <item name="@android:windowEnterAnimation">@anim/grow_from_topleft_to_bottomright</item>
-        <item name="@android:windowExitAnimation">@anim/shrink_from_bottomright_to_topleft</item>
+        <item name="@android:windowEnterAnimation">@anim/grow_from_topleft</item>
+        <item name="@android:windowExitAnimation">@anim/shrink_to_bottomright</item>
     </style>
     <style name="Animations.GrowFromTopRight">
-        <item name="@android:windowEnterAnimation">@anim/grow_from_topright_to_bottomleft</item>
-        <item name="@android:windowExitAnimation">@anim/shrink_from_bottomleft_to_topright</item>
+        <item name="@android:windowEnterAnimation">@anim/grow_from_topright</item>
+        <item name="@android:windowExitAnimation">@anim/shrink_to_bottomleft</item>
+    </style>
+        <style name="Animations.GrowFromBottomLeft">
+        <item name="@android:windowEnterAnimation">@anim/grow_from_bottomleft</item>
+        <item name="@android:windowExitAnimation">@anim/shrink_to_topright</item>
+    </style>
+    <style name="Animations.GrowFromBottomRight">
+        <item name="@android:windowEnterAnimation">@anim/grow_from_bottomright</item>
+        <item name="@android:windowExitAnimation">@anim/shrink_to_topleft</item>
     </style>
     <style name="Animations.GrowFromBottom">
             <item name="@android:windowEnterAnimation">@anim/grow_from_bottom</item>
-            <item name="@android:windowExitAnimation">@anim/shrink_from_top</item>
+            <item name="@android:windowExitAnimation">@anim/shrink_to_top</item>
     </style>
     
     <style name="Animations.GrowFromTop">
             <item name="@android:windowEnterAnimation">@anim/grow_from_top</item>
-            <item name="@android:windowExitAnimation">@anim/shrink_from_bottom</item>
+            <item name="@android:windowExitAnimation">@anim/shrink_to_bottom</item>
     </style>
     
     <style name="Animations.PopDownMenu">
-            <item name="@android:windowEnterAnimation">@anim/grow_from_topleft_to_bottomright</item>
-            <item name="@android:windowExitAnimation">@anim/shrink_from_bottomright_to_topleft</item>
+            <item name="@android:windowEnterAnimation">@anim/grow_from_topleft</item>
+            <item name="@android:windowExitAnimation">@anim/shrink_to_bottomright</item>
     </style>
     
 </resources>
