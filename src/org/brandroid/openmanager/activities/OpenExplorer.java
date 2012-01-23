@@ -184,6 +184,15 @@ public class OpenExplorer
         
         if(!BEFORE_HONEYCOMB && getActionBar() == null)
         	USE_ACTION_BAR = false;
+        else if(!BEFORE_HONEYCOMB)
+        {
+        	USE_ACTION_BAR = true;
+        	getActionBar().setCustomView(R.layout.title_bar);
+        	getActionBar().setDisplayShowCustomEnabled(true);
+        	getActionBar().getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
+        	getActionBar().getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
+        	getActionBar().getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
+        }
         
     	try {
     		Signature[] sigs = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures;
