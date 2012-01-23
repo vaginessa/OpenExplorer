@@ -30,7 +30,7 @@
 		android:id="@+id/menu_sort"
 		android:icon="@android:drawable/ic_menu_sort_by_size"
 		android:showAsAction="ifRoom"
-		android:actionProviderClass="org.brandroid.openmanager.utils.SortActionProvider"
+		android:actionProviderClass="org.brandroid.openmanager.util.SortActionProvider"
 		android:title="@string/s_menu_sort">
 		<!-- include menu_sort.xml -->
 		<menu />
