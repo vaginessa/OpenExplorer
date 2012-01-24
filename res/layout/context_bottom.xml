@@ -51,7 +51,7 @@
         <View
             android:layout_alignTop="@+id/indicator"
 			android:layout_height="1dp"
-			android:layout_width="1dp"
+			android:layout_width="10dp"
 			android:layout_alignParentLeft="true"
 			android:id="@+id/space_left"
 			android:alpha="0.95"
@@ -63,9 +63,9 @@
             android:id="@+id/indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:rotation="180"
+            android:minWidth="20dp"
             android:layout_toRightOf="@+id/space_left"
-            android:src="@drawable/contextmenu_arrow" />
+            android:src="@drawable/contextmenu_arrow_down" />
         
         
         <View

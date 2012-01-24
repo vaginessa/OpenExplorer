@@ -22,14 +22,19 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:gravity="center_horizontal"
-	android:padding="2dip">
+	android:padding="10dip">
 	<ImageView
 		android:id="@+id/content_icon"
 		style="@style/icon.grid"
+		android:layout_height="wrap_content"
+		android:minHeight="50dp"
+		android:maxHeight="@dimen/grid_icon_size"
+		android:baselineAlignBottom="true"
 		 />
 	<TextView
 		android:id="@+id/content_text"
-		android:lines="2"
 		android:gravity="top|center_horizontal"
-		style="@style/Mid" />
+		style="@style/Mid"
+		android:ellipsize="none"
+		android:lines="2" />
 </LinearLayout>

@@ -124,7 +124,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private int mListVisibleLength = 0; 
 	public Boolean mShowLongDate = false; 
 	
-	private int mViewMode = OpenExplorer.VIEW_LIST;
+	private int mViewMode = OpenExplorer.VIEW_GRID;
 	
 	public ContentFragment()
 	{
@@ -140,11 +140,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public ContentFragment(OpenPath path, int viewMode)
 	{
 		mPath = mLastPath = path;
-		mViewMode = viewMode;
+		setViewMode(viewMode);
 	}
 	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
+		Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
 			if(FileSystemAdapter.class.equals(mContentAdapter.getClass()))
@@ -195,21 +196,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			else
 				path = new OpenFile(Environment.getExternalStorageDirectory());
 		}
-		/*
-		if(!path.requiresThread() && path.getListLength() < 100)
-			try {
-				mData = mFileManager.getChildren(path);
-			} catch (IOException e) {
-				Logger.LogError("Error getting children from FileManager for " + path, e);
-			}
-		else {
-			if(mContentAdapter != null)
-				mContentAdapter.notifyDataSetChanged();
-			if(mProgressBarLoading != null)
-				mProgressBarLoading.setVisibility(View.VISIBLE);
-			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
-		}
-		*/
 		
 		mActionModeSelected = false;
 		try {
@@ -226,14 +212,26 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
 					&& mPath != null
 					&& OpenFile.class.equals(mPath.getClass());
+
 		
-		//OpenExplorer.setOnSettingsChangeListener(this);
-		
+		if(!path.requiresThread() && path.getListLength() < 100)
+			try {
+				mData = mFileManager.getChildren(path);
+			} catch (IOException e) {
+				Logger.LogError("Error getting children from FileManager for " + path, e);
+			}
+		else {
+			mData2.clear();
 			if(mContentAdapter != null)
 				mContentAdapter.notifyDataSetChanged();
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.VISIBLE);
 			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+		}
+		
+		//OpenExplorer.setOnSettingsChangeListener(this);
+		
+			//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 			updateData(mData);
 	}
 
@@ -315,6 +313,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			((ViewGroup)getView()).addView(mGrid);
 			setupGridView();
 		}
+		mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
+		Logger.LogVerbose("Check View Mode: " + mViewMode);
 		if(mViewMode == OpenExplorer.VIEW_GRID) {
 			mLayoutID = R.layout.grid_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.grid_width);
@@ -819,6 +819,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//Logger.LogDebug("mData has " + mData2.size());
 		if(mContentAdapter != null)
 			mContentAdapter.notifyDataSetChanged();
+		
 		mReadyToUpdate = true;
 		/*
 		mPathView.removeAllViews();
@@ -939,7 +940,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 	//@Override
 	public void onViewChanged(int state) {
-		mViewMode = state;
+		setViewMode(state);
 		getExplorer().setViewMode(state);
 		
 		View v = getView();

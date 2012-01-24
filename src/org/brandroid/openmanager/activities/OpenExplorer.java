@@ -707,7 +707,7 @@ public class OpenExplorer
 		if(mBookmarksPopup != null)
 		{
 			if(visible)
-				mBookmarksPopup.showLikeQuickAction(0,0, 20);
+				mBookmarksPopup.showLikePopDownMenu();
 			else
 				mBookmarksPopup.dismiss();
 		} else {
