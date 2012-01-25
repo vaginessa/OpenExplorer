@@ -3,104 +3,137 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
-    <TableLayout
+    
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
 
-        <TableRow
-            android:id="@+id/tableRow1"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-            <TextView
-                style="@style/Small"
-                android:gravity="right"
-                android:text="@string/s_about_version"
-                android:layout_weight="1"
-                />
-            <TextView
-                style="@style/Mid"
-                android:gravity="left"
-                android:id="@+id/about_version"
-                android:text="Beta"
-                android:layout_weight="3"
-                />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-            <TextView
-                style="@style/Small"
-                android:gravity="right"
-                android:text="@string/s_about_author"
-                android:layout_weight="1"
-                />
-            <TextView
-                style="@style/Mid"
-                android:gravity="left"
-                android:text="Brandon Bowles (US)"
-                android:layout_weight="3"
-                />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-            <TextView
-                style="@style/Small"
-                android:gravity="right"
-                android:text="@string/s_about_site"
-                android:layout_weight="1"
-                />
-            <TextView
-                style="@style/Mid"
-                android:gravity="left"
-                android:id="@+id/about_site"
-                android:text="brandroid.org"
-                android:clickable="true"
-                android:layout_weight="3"
-                />
-        </TableRow>
-        
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-            <TextView
-                style="@style/Small"
-                android:gravity="right"
-                android:text="@string/s_about_email"
-                android:layout_weight="1"
-                />
-            <TextView
-                style="@style/Mid"
-                android:gravity="left"
-                android:id="@+id/about_email"
-                android:text="Brandroid64@gmail.com"
-                android:clickable="true"
-                android:layout_weight="3"
-                />
-        </TableRow>
-        
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-            <TextView
-                style="@style/Small"
-                android:gravity="right"
-                android:text="@string/s_about_recent"
-                android:layout_weight="1"
-                />
-            <TextView
-                style="@style/Mid"
-                android:id="@+id/about_recent_status"
-                android:gravity="left"
-                android:text="@string/s_status_loading"
-                android:layout_weight="3"
-                />
-        </TableRow>
-    </TableLayout>
+	    <TableLayout
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_margin="5dp"
+	        >
+	
+	        <TableRow
+	            android:id="@+id/tableRow1"
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content" >
+	            <TextView
+	                style="@style/Small"
+	                android:gravity="right"
+	                android:text="@string/s_about_version"
+	                android:layout_weight="1"
+	                />
+	            <TextView
+	                style="@style/Mid"
+	                android:gravity="left"
+	                android:id="@+id/about_version"
+	                android:text="Beta"
+	                android:layout_weight="3"
+	                />
+	        </TableRow>
+	
+	        <TableRow
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content" >
+	            <TextView
+	                style="@style/Small"
+	                android:gravity="right"
+	                android:text="@string/s_about_author"
+	                android:layout_weight="1"
+	                />
+	            <TextView
+	                style="@style/Mid"
+	                android:gravity="left"
+	                android:text="Brandon Bowles (US)"
+	                android:layout_weight="3"
+	                />
+	        </TableRow>
+	        
+	        <TableRow
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content" >
+	            <TextView
+	                style="@style/Small"
+	                android:gravity="right"
+	                android:text="@string/s_about_email"
+	                android:layout_weight="1"
+	                />
+	            <TextView
+	                style="@style/Mid"
+	                android:gravity="left"
+	                android:id="@+id/about_email"
+	                android:text="Brandroid64@gmail.com"
+	                android:clickable="true"
+	                android:layout_weight="3"
+	                />
+	        </TableRow>
+	
+	        <TableRow
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content" >
+	            <TextView
+	                style="@style/Small"
+	                android:gravity="right"
+	                android:text="@string/s_about_site"
+	                android:layout_weight="1"
+	                />
+	            <TextView
+	                style="@style/Mid"
+	                android:gravity="left"
+	                android:id="@+id/about_site"
+	                android:text="brandroid.org"
+	                android:clickable="true"
+	                android:layout_weight="3"
+	                />
+	        </TableRow>
+	        
+	        <TableRow
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content" >
+	            <TextView
+	                style="@style/Small"
+	                android:gravity="right"
+	                android:text="@string/s_about_recent"
+	                android:layout_weight="1"
+	                />
+	            <TextView
+	                style="@style/Mid"
+	                android:id="@+id/about_recent_status"
+	                android:gravity="left"
+	                android:text="@string/s_status_loading"
+	                android:layout_weight="3"
+	                />
+	        </TableRow>
+	    </TableLayout>
+	    		
+   		<LinearLayout
+   		    android:layout_width="wrap_content"
+   		    android:layout_height="wrap_content"
+   		    android:orientation="vertical"
+   		    android:gravity="center"
+   		    >
+    		<Button
+    		    style="@style/Mid"
+    		    android:gravity="center"
+			    android:id="@+id/about_email_btn"
+			    android:text="@string/s_about_email"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content" 
+			    />
+			<Button
+			    style="@style/Mid"
+    		    android:gravity="center"
+			    android:id="@+id/about_site_btn"
+			    android:text="@string/s_view"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content" 
+			    />
+    	</LinearLayout>
+    </LinearLayout>
     <WebView
         android:id="@+id/about_recent"
         android:layout_width="fill_parent"
