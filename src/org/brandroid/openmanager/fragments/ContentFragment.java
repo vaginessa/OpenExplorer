@@ -65,6 +65,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -388,13 +389,20 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//@Override
 			@SuppressWarnings("unused")
 			public boolean onItemLongClick(AdapterView<?> list, final View view ,int pos, long id) {
+				mMenuContextItemIndex = pos;
+				//if(list.showContextMenu()) return true;
 				
 				final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 				final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
 				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
-					mMenuContextItemIndex = pos;
+					
 					try {
-						final IconContextMenu cm = new IconContextMenu(view.getContext(), R.menu.context_file, view);
+						View anchor = view.findViewById(R.id.content_context_helper);
+						if(anchor == null) anchor = view;
+						//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+						//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
+						final IconContextMenu cm = new IconContextMenu(
+								mContext, R.menu.context_file, view);
 						Menu cmm = cm.getMenu();
 						if(getClipboard().size() > 0)
 							hideItem(cmm, R.id.menu_context_multi);
@@ -405,7 +413,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						cm.setTitle(name);
 						cm.setOnDismissListener(new android.widget.PopupWindow.OnDismissListener() {
 							public void onDismiss() {
-								view.refreshDrawableState();
+								//view.refreshDrawableState();
 							}
 						});
 						cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
@@ -415,8 +423,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							}
 						});
 						cm.setInfo(pos);
-						cm.show();
+						cm.show(); //r.left, r.top);
 					} catch(Exception e) {
+						Logger.LogWarning("Couldn't show Iconified menu.", e);
 						return list.showContextMenu();
 					}
 					
@@ -507,7 +516,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			}
 
 			private void hideItem(Menu menu, int itemId) {
-				if(menu.findItem(itemId) != null)
+				if(menu != null && menu.findItem(itemId) != null)
 					menu.findItem(itemId).setVisible(false);
 			}
 		});

@@ -7,8 +7,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.*;
 import android.content.DialogInterface.OnDismissListener;
+import android.graphics.Rect;
 import android.view.*;
 import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.PopupWindow;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -20,7 +22,7 @@ public class IconContextMenu
 		void onIconContextItemSelected(MenuItem item, Object info, View view);
 	}
 	
-	private ListView mList;
+	private GridView mList;
 	//private Dialog dialog;
 	protected final BetterPopupWindow popup;
 	private MenuBuilderNew menu;
@@ -28,7 +30,7 @@ public class IconContextMenu
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
-	
+
     public IconContextMenu(Context context, int menuId, View from) {
     	this(context, newMenu(context, menuId), from);
     }
@@ -46,16 +48,17 @@ public class IconContextMenu
 			MenuItem item = menu.getItem(i);
 			newMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle());
 		}
-        this.menu = newMenu;
-        this.anchor = from;
+        //menu = newMenu;
+        anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
-        popup = new BetterPopupWindow(context, anchor, R.style.Animations_GrowFromTop);
+        popup = new BetterPopupWindow(context, anchor);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
 	}
 	
 	public void setAdapter(Context context, final IconContextMenuAdapter adapter)
 	{
-		mList = new ListView(context);
+		mList = new GridView(context);
+		mList.setNumColumns(2);
 		mList.setAdapter(adapter);
 		mList.setOnItemClickListener(new OnItemClickListener() {
 
@@ -112,11 +115,16 @@ public class IconContextMenu
 	public void setTitle(int stringId) {
 		popup.setTitle(stringId);
 	}
-    
+
     public void show()
     {
     	//popup.showLikeQuickAction();
     	popup.showLikePopDownMenu();
+    }
+    public void show(int left, int top)
+    {
+    	//popup.showLikeQuickAction();
+    	popup.showLikePopDownMenu(left, top);
     }
     public void dismiss()
     {

@@ -256,7 +256,7 @@ public class OpenExplorer
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
 			mBookmarksList = new ExpandableListView(getBaseContext());
-			mBookmarksPopup = new BetterPopupWindow(this, findViewById(R.id.title_icon), R.style.Animations_GrowFromTopLeft);
+			mBookmarksPopup = new BetterPopupWindow(this, findViewById(R.id.title_icon));
 			mBookmarksPopup.setContentView(mBookmarksList);
 			//mBookmarksPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.contextmenu_opentop));
 			mBookmarks = new OpenBookmarks(this, mBookmarksList);

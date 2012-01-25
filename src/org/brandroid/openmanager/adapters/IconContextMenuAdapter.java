@@ -37,17 +37,20 @@ public class IconContextMenuAdapter extends BaseAdapter {
         
         if(!item.isVisible()) return null;
         
-        CheckedTextView res = (CheckedTextView)convertView;
+        TextView res = (TextView)convertView;
         if (res == null) {
-       		res = (CheckedTextView)LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_multiple_choice, null);
+       		res = (TextView)LayoutInflater.from(context).inflate(R.layout.context_item, null);
         }
         
-        if(item.isCheckable())
-        	res.setChecked(item.isChecked());
-        else res.setCheckMarkDrawable(null);
+        if(CheckedTextView.class.equals(res.getClass()))
+        {
+	        if(item.isCheckable())
+	        	((CheckedTextView)res).setChecked(item.isChecked());
+	        else ((CheckedTextView)res).setCheckMarkDrawable(null);
+        }
         
-        res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
-        res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
+        //res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
+        //res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
         
         res.setTag(item);
         res.setText(item.getTitle());

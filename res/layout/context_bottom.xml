@@ -9,7 +9,7 @@
     <LinearLayout
         android:background="@drawable/context_bottom"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         > 
         
@@ -27,13 +27,13 @@
 	            android:layout_marginLeft="5dp"
 	            android:layout_marginRight="5dp"
 	            android:layout_height="1dp" android:layout_width="match_parent"
-				/>"
+				/>
 	    </LinearLayout> 
 	
 	    <FrameLayout
 	        android:id="@android:id/widget_frame"
 	        android:layout_width="match_parent"
-	        android:layout_height="match_parent" 
+	        android:layout_height="wrap_content" 
 		    android:minHeight="100dp"
 	        />
 	    
@@ -48,7 +48,7 @@
         android:layout_marginTop="-7dp"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="15dp" >
 
         <View android:layout_gravity="top"
 			android:layout_height="1dp"
@@ -62,6 +62,7 @@
             android:id="@+id/indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:scaleType="matrix"
             android:src="@drawable/contextmenu_arrow_down" />
         
         
@@ -73,7 +74,5 @@
 			/>
         
     </LinearLayout>
-    
-    
 
 </LinearLayout>

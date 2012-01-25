@@ -48,11 +48,11 @@ public class BetterPopupWindow {
 	 * @param anchor
 	 *		the view that the BetterPopupWindow will be displaying 'from'
 	 */
-	public BetterPopupWindow(Context mContext, View anchor, int anim) {
+	public BetterPopupWindow(Context mContext, View anchor) {
 		this.mContext = mContext;
 		this.anchor = anchor;
 		this.popup = new PopupWindow(mContext);
-		this.popup.setAnimationStyle(anim);
+		//this.popup.setAnimationStyle(anim);
 
 
 		// when a touch even happens outside of the window
@@ -117,12 +117,13 @@ public class BetterPopupWindow {
 	private void placeArrow(int arrowOffset, int rootWidth)
 	{
 		View indicator = backgroundView.findViewById(R.id.indicator);
-		indicator.setMinimumHeight(((ImageView)indicator).getDrawable().getIntrinsicHeight());
-		indicator.setMinimumWidth(((ImageView)indicator).getDrawable().getIntrinsicWidth());
+		//indicator.setMinimumHeight(((ImageView)indicator).getDrawable().getIntrinsicHeight());
+		//indicator.setMinimumWidth(((ImageView)indicator).getDrawable().getIntrinsicWidth());
+		int arrowWidth = ((ImageView)indicator).getDrawable().getIntrinsicWidth();
 		//indicator.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		//int arrowWidth = indicator.getMeasuredWidth();
-		int pos1 = Math.max(10, arrowOffset % rootWidth);
-		int pos2 = Math.max(10, (rootWidth + arrowOffset) % rootWidth);
+		int pos1 = Math.min(rootWidth - arrowWidth, Math.max(10, arrowOffset % rootWidth));
+		int pos2 = Math.min(rootWidth - arrowWidth, Math.max(10, (rootWidth + arrowOffset) % rootWidth));
 		Logger.LogVerbose("Arrow: " + arrowOffset + ", " + rootWidth + " -> " + pos1 + " / " + pos2);
 		if(arrowOffset >= 0)
 		{
@@ -213,7 +214,7 @@ public class BetterPopupWindow {
 			
 			float dp = mContext.getResources().getDimension(R.dimen.one_dp);
 			
-			anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+			//anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 			//arrowOffset = anchor.getMeasuredWidth() / 2;
 			arrowOffset = (int) (20 * dp);
 

@@ -17,12 +17,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
 	android:gravity="center_horizontal"
 	android:padding="10dip">
+	<View android:id="@+id/content_context_helper"
+	    android:layout_width="0dp"
+	    android:layout_height="0dp"
+	    android:layout_alignParentTop="true"
+	    android:layout_alignLeft="@+id/content_icon"
+	    android:layout_alignRight="@+id/content_icon"
+	    android:layout_alignBottom="@+id/content_text" />
 	<ImageView
 		android:id="@+id/content_icon"
 		style="@style/icon.grid"
@@ -30,11 +37,15 @@
 		android:minHeight="50dp"
 		android:maxHeight="@dimen/grid_icon_size"
 		android:baselineAlignBottom="true"
-		 />
+		android:scaleType="centerCrop"
+		/>
 	<TextView
+	    android:layout_alignLeft="@+id/content_icon"
+	    android:layout_alignRight="@+id/content_icon"
+	    android:layout_below="@+id/content_icon"
 		android:id="@+id/content_text"
 		android:gravity="top|center_horizontal"
 		style="@style/Mid"
 		android:ellipsize="none"
 		android:lines="2" />
-</LinearLayout>
+</RelativeLayout>

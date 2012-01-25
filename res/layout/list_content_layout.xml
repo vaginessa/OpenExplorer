@@ -24,6 +24,15 @@
 	android:paddingRight="10dip"
 	android:paddingTop="2dip"
 	android:paddingBottom="2dip">
+	
+	<View android:id="@+id/content_context_helper"
+	    android:layout_width="0dp"
+	    android:layout_height="0dp"
+	    android:layout_alignParentTop="true"
+	    android:layout_alignParentLeft="true"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignBottom="@+id/content_icon" />
+	
 	<ImageView
 		style="@style/icon.small"
 		android:layout_alignParentTop="true"
