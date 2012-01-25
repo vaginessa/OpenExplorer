@@ -113,6 +113,32 @@ public class BetterPopupWindow {
 		this.popup.setFocusable(true);
 		this.popup.setOutsideTouchable(true);
 	}
+	
+	private void placeArrow(int arrowOffset, int rootWidth)
+	{
+		View indicator = backgroundView.findViewById(R.id.indicator);
+		indicator.setMinimumHeight(((ImageView)indicator).getDrawable().getIntrinsicHeight());
+		indicator.setMinimumWidth(((ImageView)indicator).getDrawable().getIntrinsicWidth());
+		//indicator.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		//int arrowWidth = indicator.getMeasuredWidth();
+		int pos1 = Math.max(10, arrowOffset % rootWidth);
+		int pos2 = Math.max(10, (rootWidth + arrowOffset) % rootWidth);
+		Logger.LogVerbose("Arrow: " + arrowOffset + ", " + rootWidth + " -> " + pos1 + " / " + pos2);
+		if(arrowOffset >= 0)
+		{
+			//indicator.setLeft(arrowOffset);
+			setViewWidth(backgroundView.findViewById(R.id.space_left), pos1);
+			//setViewWidth(backgroundView.findViewById(R.id.space_right), LayoutParams.FILL_PARENT);
+		} else {
+			//arrowOffset *= -1;
+			
+			//setViewWidth(backgroundView.findViewById(R.id.space_left), rootWidth);
+			setViewWidth(backgroundView.findViewById(R.id.space_left), pos2);
+		}
+		indicator.setVisibility(View.VISIBLE);
+		
+	}
+	
 
 	public void setBackgroundDrawable(Drawable background) {
 		this.background = background;
@@ -164,33 +190,55 @@ public class BetterPopupWindow {
 			int widgetHeight = widget.getMeasuredHeight();
 			if(popup.getMaxAvailableHeight(anchor) < widgetHeight)
 				popup.setHeight(widgetHeight + 20);
-			root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-			int rootWidth = root.getMeasuredWidth();
+			root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			int rootWidth = root.getMeasuredWidth(),
+				rootHeight = root.getMeasuredHeight();
 			if(rootWidth > getWindowWidth())
 				rootWidth = widgetWidth;
 			
-			anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-			arrowOffset = anchor.getMeasuredWidth() / 2;
-			arrowOffset -= 8;
+			backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			int bgWidth = backgroundView.getMeasuredWidth(),
+				bgHeight = backgroundView.getMeasuredHeight();
 
+			Logger.LogVerbose("Widths (root/bg/pop/content/arrow/anchor/offset): " +
+						rootWidth + "x" + rootHeight + "/" +
+						bgWidth + "x" + bgHeight + "/" +
+						popup.getWidth() + "x" + popup.getHeight() + "/" +
+						widgetWidth + "x" + widgetHeight + "/" +
+						getContentWidth() + "x" + getContentHeight() + "/" +
+						//backgroundView.findViewById(R.id.indicator).getWidth() + "/" +
+						anchor.getLeft() + "," + anchor.getTop() + "/" +
+						xOffset + "," + yOffset
+						);
+			
+			float dp = mContext.getResources().getDimension(R.dimen.one_dp);
+			
+			anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+			//arrowOffset = anchor.getMeasuredWidth() / 2;
+			arrowOffset = (int) (20 * dp);
+
+			//anchor.getLocationOnScreen(anchorPos);
 			boolean fromRight = anchor.getLeft() > contentWidth / 2;
 			boolean fromBottom = anchor.getTop() > contentHeight / 2;
 
+			if(fromBottom)
+				popup.setHeight(bgHeight * 2);
+				//yOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
 			if(fromRight)
 			{
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
 				xOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
 				xOffset += anchor.getWidth();
-				//arrowOffset *= ;
-				arrowOffset = -1 * (anchor.getWidth() / 2);
-				arrowOffset += 10;
+				arrowOffset *= -1;
+				//arrowOffset = -1 * (anchor.getWidth() / 2);
+				//arrowOffset += 10;
 			} else {
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
 			}
 	
 			
 			//int rootWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
-			placeArrow(arrowOffset, popup.getWidth() - 26);
+			placeArrow(arrowOffset, popup.getWidth() - (int)(30f * dp));
 			
 
 			if(fromBottom)
@@ -208,8 +256,8 @@ public class BetterPopupWindow {
 			this.popup.showAsDropDown(this.anchor, xOffset, yOffset);
 			
 			//float dp = mContext.getResources().getDimension(R.dimen.one_dp);
-
-			//Logger.LogVerbose("Widths (root/bg/pop/widget/arrow/window): " + rootWidth + "/" + backgroundView.getWidth() + "(" + backgroundView.getMeasuredWidth() + ")/" + popup.getWidth() + "/" + widget.getWidth() + "(" + widgetWidth + ")/" + backgroundView.findViewById(R.id.indicator).getWidth() + "/" + windowWidth + "/" + dp); 
+			
+			//*/
 		}
 	}
 
@@ -220,9 +268,9 @@ public class BetterPopupWindow {
 		while(root != null)
 		{	
 			root = (View)root.getParent();
-			Logger.LogVerbose("Root? " + root);
 			if(root.getId() == R.id.content_frag) break;
 			if(GridView.class.equals(root.getClass())) break;
+			if(root.getId() == R.id.view_root) break;
 		}
 		return root;
 	}
@@ -266,29 +314,6 @@ public class BetterPopupWindow {
 	public void showLikeQuickAction() {
 		this.showLikeQuickAction(0, 0, anchor != null ? anchor.getLeft() : 20);
 	}
-	
-	private void placeArrow(int arrowOffset, int rootWidth)
-	{
-		View indicator = backgroundView.findViewById(R.id.indicator);
-		int arrowWidth = indicator.getWidth();
-		int pos1 = Math.max(0, Math.min(arrowOffset, rootWidth - arrowWidth));
-		int pos2 = Math.max(0, Math.min((rootWidth - arrowWidth) + arrowOffset, rootWidth - arrowWidth));
-		Logger.LogVerbose("Arrow: " + arrowOffset + ", " + rootWidth + " -> " + pos1 + " / " + pos2);
-		if(arrowOffset >= 0)
-		{
-			//indicator.setLeft(arrowOffset);
-			setViewWidth(backgroundView.findViewById(R.id.space_left), pos1);
-			//setViewWidth(backgroundView.findViewById(R.id.space_right), LayoutParams.FILL_PARENT);
-		} else {
-			//arrowOffset *= -1;
-			
-			//setViewWidth(backgroundView.findViewById(R.id.space_left), rootWidth);
-			setViewWidth(backgroundView.findViewById(R.id.space_left), pos2);
-		}
-		indicator.setVisibility(View.VISIBLE);
-		
-	}
-	
 	private View setViewWidth(View v, int w)
 	{
 		LayoutParams lp = v.getLayoutParams();

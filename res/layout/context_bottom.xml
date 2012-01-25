@@ -39,47 +39,41 @@
 	    
     </LinearLayout>
     
-    <RelativeLayout
+    
+    
+    <LinearLayout
         android:id="@+id/indicator_line"
-        android:layout_marginTop="-7dp"
-        android:layout_marginLeft="8dp"
+        android:layout_marginLeft="6dp"
         android:layout_marginRight="8dp"
+        android:layout_marginTop="-7dp"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <View
-            android:layout_alignTop="@+id/indicator"
+        <View android:layout_gravity="top"
 			android:layout_height="1dp"
-			android:layout_width="10dp"
-			android:layout_alignParentLeft="true"
+			android:layout_width="20dp"
 			android:id="@+id/space_left"
 			android:alpha="0.95"
 			android:background="@android:color/white"
 			/>
         
-
         <ImageView
             android:id="@+id/indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="20dp"
-            android:layout_toRightOf="@+id/space_left"
             android:src="@drawable/contextmenu_arrow_down" />
         
         
-        <View
-            android:layout_alignTop="@+id/indicator"
-			android:layout_height="1dp"
-			android:layout_width="10dp"
+        <View android:layout_gravity="top"
+			android:layout_height="1dp" android:layout_width="fill_parent"
 			android:id="@+id/space_right"
-			android:layout_toRightOf="@+id/indicator"
-			android:layout_alignParentRight="true"
 			android:alpha="0.95"
 			android:background="@android:color/white"
 			/>
         
-    </RelativeLayout>
+    </LinearLayout>
+    
     
 
 </LinearLayout>

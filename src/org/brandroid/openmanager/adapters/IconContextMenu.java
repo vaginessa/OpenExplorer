@@ -6,8 +6,10 @@ import org.brandroid.utils.MenuBuilderNew;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.*;
+import android.content.DialogInterface.OnDismissListener;
 import android.view.*;
 import android.widget.AdapterView;
+import android.widget.PopupWindow;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
@@ -20,9 +22,9 @@ public class IconContextMenu
 	
 	private ListView mList;
 	//private Dialog dialog;
-	private BetterPopupWindow popup;
+	protected final BetterPopupWindow popup;
 	private MenuBuilderNew menu;
-	private View anchor;
+	protected final View anchor;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
@@ -37,7 +39,7 @@ public class IconContextMenu
     	return menu;
     }
 
-	public IconContextMenu(Context context, Menu menu, View from) {
+	public IconContextMenu(Context context, Menu menu, final View from) {
 		MenuBuilderNew newMenu = new MenuBuilderNew(context);
 		for(int i = 0; i < menu.size(); i++)
 		{
@@ -47,6 +49,7 @@ public class IconContextMenu
         this.menu = newMenu;
         this.anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
+        popup = new BetterPopupWindow(context, anchor, R.style.Animations_GrowFromTop);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
 	}
 	
@@ -66,7 +69,7 @@ public class IconContextMenu
 			}
 			
 		} );
-		popup = new BetterPopupWindow(context, anchor, R.style.Animations_GrowFromTop);
+		
 		//popup.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.contextmenu_top_right));
 		popup.setContentView(mList);
 		/*this.dialog = new AlertDialog.Builder(context)
@@ -95,6 +98,10 @@ public class IconContextMenu
 		return menu;
 	}
 	
+	public void setOnDismissListener(PopupWindow.OnDismissListener listener)
+	{
+		popup.setOnDismissListener(listener);
+	}
     public void setOnIconContextItemSelectedListener(IconContextItemSelectedListener iconContextItemSelectedListener) {
         this.iconContextItemSelectedListener = iconContextItemSelectedListener;
     }
