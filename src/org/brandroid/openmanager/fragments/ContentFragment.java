@@ -99,8 +99,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public static final boolean USE_ACTIONMODE = false;
 	private static boolean mMultiSelectOn = false;
 	
-	private FileManager mFileManager;
-	private EventHandler mHandler;
 	private MultiSelectHandler mMultiSelect;
 	
 	//private LinearLayout mPathView;
@@ -122,7 +120,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private int mListScrollingState = 0;
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
-	public Boolean mShowLongDate = false; 
+	public Boolean mShowLongDate = false;
+	
+	private Bundle mBundle;
 	
 	private int mViewMode = OpenExplorer.VIEW_GRID;
 	
@@ -145,7 +145,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
-		Logger.LogVerbose("Content View Mode: " + mode);
+		//Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
 			if(FileSystemAdapter.class.equals(mContentAdapter.getClass()))
@@ -170,15 +170,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mContext = getActivity().getApplicationContext();
 		
-		OpenExplorer explorer = getExplorer();
-		mFileManager = OpenExplorer.getFileManager();
-		if(mFileManager == null)
-			mFileManager = new FileManager();
-		mHandler = OpenExplorer.getEventHandler();
-		if(mHandler == null)
-			mHandler = new EventHandler(mFileManager);
-		mHandler.setOnWorkerThreadFinishedListener(this);
-		refreshData(savedInstanceState);
+		mBundle = savedInstanceState;
+		OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
+		refreshData(mBundle);
+	}
+	@Override
+	public void onResume() {
+		super.onResume();
 	}
 	public void refreshData(Bundle savedInstanceState)
 	{
@@ -216,7 +214,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(!path.requiresThread() && path.getListLength() < 100)
 			try {
-				mData = mFileManager.getChildren(path);
+				mData = getManager().getChildren(path);
 			} catch (IOException e) {
 				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
@@ -251,7 +249,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			{
 				Logger.LogDebug("Content location restoring to " + location);
 				mPath = new OpenFile(location);
-				mData = mFileManager.getChildren(mPath);
+				mData = getManager().getChildren(mPath);
 				updateData(mData);
 			}
 			//setContentPath(path, false);
@@ -314,7 +312,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			setupGridView();
 		}
 		mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
-		Logger.LogVerbose("Check View Mode: " + mViewMode);
+		//Logger.LogVerbose("Check View Mode: " + mViewMode);
 		if(mViewMode == OpenExplorer.VIEW_GRID) {
 			mLayoutID = R.layout.grid_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.grid_width);
@@ -332,6 +330,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mGrid.setVerticalSpacing(0);
 			mGrid.setHorizontalSpacing(0);
 		}
+		if(mGrid == null) return;
+		if(mData2 == null)
+			mData2 = new ArrayList<OpenPath>();
 		mContentAdapter = new FileSystemAdapter(mContext, mLayoutID, mData2);
 		/*
 		if(OpenCursor.class.equals(mPath.getClass())) {
@@ -363,6 +364,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		else return; // only do the following the first time
 		
 		mGrid.setSelector(R.drawable.selector_blue);
+		mGrid.setDrawSelectorOnTop(true);
 		mGrid.setVisibility(View.VISIBLE);
 		mGrid.setOnItemClickListener(this);
 		mGrid.setOnScrollListener(new OnScrollListener() {
@@ -385,7 +387,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
 			//@Override
 			@SuppressWarnings("unused")
-			public boolean onItemLongClick(AdapterView<?> list, View view ,int pos, long id) {
+			public boolean onItemLongClick(AdapterView<?> list, final View view ,int pos, long id) {
 				
 				final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 				final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
@@ -401,9 +403,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						if(!name.toLowerCase().endsWith(".zip"))
 							hideItem(cmm, R.id.menu_context_unzip);
 						cm.setTitle(name);
+						cm.setOnDismissListener(new android.widget.PopupWindow.OnDismissListener() {
+							public void onDismiss() {
+								view.refreshDrawableState();
+							}
+						});
 						cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
 							public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 								executeMenu(item.getItemId(), mData2.get((Integer)info));
+								cm.dismiss();
 							}
 						});
 						cm.setInfo(pos);
@@ -537,6 +545,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
 	}
 	
+	private EventHandler getHandler()
+	{
+		return OpenExplorer.getEventHandler();
+	}
+	
+	private FileManager getManager()
+	{
+		return OpenExplorer.getFileManager();
+	}
+	
 	private OpenClipboard getClipboard() {
 		return getExplorer().getClipboard();
 	}
@@ -610,13 +628,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 			case R.id.menu_context_delete:
 				fileList.add(file);
-				mHandler.deleteFile(fileList, getActivity());
+				getHandler().deleteFile(fileList, getActivity());
 				finishMode(mode);
 				mContentAdapter.notifyDataSetChanged();
 				return true;
 				
 			case R.id.menu_context_rename:
-				mHandler.renameFile(file.getPath(), true, getActivity());
+				getHandler().renameFile(file.getPath(), true, getActivity());
 				finishMode(mode);
 				return true;
 				
@@ -641,9 +659,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				OpenClipboard cb = getClipboard();
 				if(cb.size() > 0)
 					if(cb.DeleteSource)
-						mHandler.cutFile(cb, into, getActivity());
+						getHandler().cutFile(cb, into, getActivity());
 					else
-						mHandler.copyFile(cb, into, getActivity());
+						getHandler().copyFile(cb, into, getActivity());
 				
 				cb.DeleteSource = false;
 				if(cb.ClearAfter)
@@ -670,7 +688,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 								if(which != DialogInterface.BUTTON_POSITIVE) return;
 								OpenPath zipFile = folder.getChild(dZip.getInputText());
 								Logger.LogInfo("Zipping " + fileArray.length + " items to " + zipFile.getPath());
-								mHandler.zipFile(zipFile, fileArray, getActivity());
+								getHandler().zipFile(zipFile, fileArray, getActivity());
 								finishMode(mode);
 							}
 						})
@@ -679,7 +697,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				return true;
 				
 			case R.id.menu_context_unzip:
-				mHandler.unZipFileTo(getClipboard().get(0), file, getActivity());
+				getHandler().unZipFileTo(getClipboard().get(0), file, getActivity());
 				
 				clearHoldingFiles();
 				getExplorer().updateTitle("");
@@ -705,7 +723,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	//			this is for bluetooth
 	//			files.add(path);
-	//			mHandler.sendFile(files);
+	//			getHandler().sendFile(files);
 	//			mode.finish();
 	//			return true;
 			}
@@ -786,9 +804,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		if(items == null) return;
 		updateData(items,
-				items.length < 200 && mFileManager.getSorting() != SortType.DATE_DESC,
+				items.length < 200 && getManager().getSorting() != SortType.DATE_DESC,
 				items.length < 200,
-				items.length < 200 && mFileManager.getShowHiddenFiles());
+				items.length < 200 && getManager().getShowHiddenFiles());
 	}
 	private void updateData(final OpenPath[] items, boolean doSort, boolean foldersFirst, boolean showHidden) {
 		if(!mReadyToUpdate) return;
@@ -800,7 +818,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(doSort && items != null)
 		{
-			OpenPath.Sorting = mFileManager.getSorting();
+			OpenPath.Sorting = getManager().getSorting();
 			Arrays.sort(items);
 		}
 		
@@ -862,9 +880,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						file = new OpenFile(fileName);
 					
 					if (file.isDirectory()) {
-						changePath(mFileManager.pushStack(file));
+						changePath(getManager().pushStack(file));
 					} else {
-						changePath(mFileManager.pushStack(file.getParent()));
+						changePath(getManager().pushStack(file.getParent()));
 					}						
 				}
 			});
@@ -894,7 +912,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			//changePath(mPath, false);
 			//mContentAdapter.notifyDataSetChanged();
-			//changePath(mFileManager.peekStack(), false);
+			//changePath(getManager().peekStack(), false);
 		}
 	}
 	
@@ -908,9 +926,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public void onHiddenFilesChanged(boolean state)
 	{
-		if(mFileManager == null)
-			mFileManager = new FileManager();
-		mFileManager.setShowHiddenFiles(state);
+		getManager().setShowHiddenFiles(state);
 		refreshData(null);
 	}
 
@@ -922,26 +938,22 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
-		if(mFileManager == null)
-			mFileManager = new FileManager();
-		mFileManager.setSorting(type);
+		getManager().setSorting(type);
 		refreshData(null);
 	}
 	
 	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
 	{
-		if(mFileManager == null)
-			mFileManager = new FileManager();
-		mFileManager.setSorting(sort);
+		getManager().setSorting(sort);
 		mShowThumbnails = thumbs;
-		mFileManager.setShowHiddenFiles(hidden);
+		getManager().setShowHiddenFiles(hidden);
 		refreshData(null);
 	}
 
 	//@Override
 	public void onViewChanged(int state) {
 		setViewMode(state);
-		getExplorer().setViewMode(state);
+		//getExplorer().setViewMode(state);
 		
 		View v = getView();
 		if(v != null)
@@ -995,8 +1007,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		public void notifyDataSetChanged() {
 			//Logger.LogDebug("Data set changed.");
 			try {
-				//if(mFileManager != null)
-				//	getExplorer().updateTitle(mFileManager.peekStack().getPath());
+				//if(getManager() != null)
+				//	getExplorer().updateTitle(getManager().peekStack().getPath());
 				super.notifyDataSetChanged();
 			} catch(NullPointerException npe) {
 				Logger.LogError("Null found while notifying data change.", npe);
@@ -1064,10 +1076,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		
 		private String getFilePath(String name) {
-			return mFileManager.peekStack().getChild(name).getPath();
+			return getManager().peekStack().getChild(name).getPath();
 		}
 		private String getFileDetails(OpenPath file, Boolean longDate) {
-			//OpenPath file = mFileManager.peekStack().getChild(name); 
+			//OpenPath file = getManager().peekStack().getChild(name); 
 			String deets = ""; //file.getPath() + "\t\t";
 			
 			if(file.isDirectory() && !file.requiresThread()) {
@@ -1158,7 +1170,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				}
 				if(OpenFTP.class.equals(cmd.Path.getClass()))
 					((OpenFTP)cmd.Path).getManager().disconnect();
-				mFileManager.pushStack(cmd.Path);
+				getManager().pushStack(cmd.Path);
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");
 			OpenPath[] ret2 = new OpenPath[ret.size()];
