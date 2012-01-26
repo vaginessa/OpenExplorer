@@ -82,26 +82,25 @@ public class OpenArrayAdapter extends ArrayAdapter<OpenPath> {
 		
 		BookmarkHolder mHolder = null;
 		
-		if(view == null) {
+		int mode = mViewMode == OpenExplorer.VIEW_GRID ?
+				R.layout.grid_content_layout : R.layout.list_content_layout;
+		
+		if(view == null || view.getTag() == null || !BookmarkHolder.class.equals(view.getTag()) || ((BookmarkHolder)view.getTag()).getMode() != mode) {
 			LayoutInflater in = (LayoutInflater)mContext
 									.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			
-			view = in.inflate(mViewMode == OpenExplorer.VIEW_GRID ?
-						R.layout.grid_content_layout : R.layout.list_content_layout
-					, parent, false);
+			view = in.inflate(mode, parent, false);
 			
-			mHolder = new BookmarkHolder(file, mName, view);
+			mHolder = new BookmarkHolder(file, mName, view, mode);
 			
 			view.setTag(mHolder);
 			file.setTag(mHolder);
 			
 		} else {
 			mHolder = (BookmarkHolder)view.getTag();
-			if(mHolder == null)
-				mHolder = new BookmarkHolder(file, mName, view);
 			//mHolder.cancelTask();
 		}
-
+		
 		mHolder.setInfo(getFileDetails(file, false));
 			
 		if(file.getClass().equals(OpenMediaStore.class))

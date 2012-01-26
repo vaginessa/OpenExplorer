@@ -41,19 +41,23 @@ public class BookmarkHolder {
 	private String sPath;
 	private OpenPath mFile;
 	private ThumbnailTask mTask;
+	private int mode;
 	
-	public BookmarkHolder(String path, View view) {
-		this(new OpenFile(path), getTitleFromPath(path), view);
+	public BookmarkHolder(String path, View view, int mode) {
+		this(new OpenFile(path), getTitleFromPath(path), view, mode);
 	}
-	public BookmarkHolder(OpenPath path, String title, final View view)
+	public BookmarkHolder(OpenPath path, String title, final View view, int mode)
 	{
 		mParentView = view;
 		sPath = path.getPath();
 		mFile = path;
 		ensureViews();
+		this.mode = mode;
 		//mIndicate = (ImageView)view.findViewById(R.id.)
 		setTitle(title);
 	}
+	
+	public int getMode() { return mode; }
 	
 	private void ensureViews()
 	{

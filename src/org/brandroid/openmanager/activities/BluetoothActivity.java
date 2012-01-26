@@ -487,7 +487,7 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 				
 				view = in.inflate(R.layout.grid_content_layout, parent, false);
 				
-				mHolder = new BookmarkHolder(name, view);
+				mHolder = new BookmarkHolder(name, view, R.layout.grid_content_layout);
 				
 				view.setTag(mHolder);
 				

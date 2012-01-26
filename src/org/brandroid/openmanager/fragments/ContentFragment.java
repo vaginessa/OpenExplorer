@@ -1044,15 +1044,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(getViewMode() == OpenExplorer.VIEW_GRID)
 				mWidth = mHeight = 128;
 			
-			if(view == null) {
+			int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
+					R.layout.grid_content_layout : R.layout.list_content_layout;
+			
+			if(view == null || view.getTag() == null || !BookmarkHolder.class.equals(view.getTag()) || ((BookmarkHolder)view.getTag()).getMode() != mode) {
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
-				view = in.inflate(getViewMode() == OpenExplorer.VIEW_GRID ?
-							R.layout.grid_content_layout : R.layout.list_content_layout
-						, parent, false);
+				view = in.inflate(mode, parent, false);
 				
-				mHolder = new BookmarkHolder(file, mName, view);
+				mHolder = new BookmarkHolder(file, mName, view, mode);
 				
 				view.setTag(mHolder);
 				file.setTag(mHolder);

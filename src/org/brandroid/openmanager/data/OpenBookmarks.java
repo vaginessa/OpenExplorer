@@ -598,7 +598,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			if(ret == null)
 			{
 				ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null);
-				mHolder = new BookmarkHolder(path, getPathTitle(path), ret);
+				mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 				ret.setTag(mHolder);
 			} else mHolder = (BookmarkHolder)ret.getTag();
 			

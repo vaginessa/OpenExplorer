@@ -520,12 +520,11 @@ public class DialogHandler extends DialogFragment {
 			//String file.getName();
 			String name = file.getName(); // file.substring(file.lastIndexOf("/") + 1, file.length());
 			
-			
 			if (view == null) {
 				LayoutInflater inflater = (LayoutInflater)mContext
 											.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				view = inflater.inflate(R.layout.bookmark_layout, parent, false);
-				mHolder = new BookmarkHolder(file, name, view);				
+				mHolder = new BookmarkHolder(file, name, view, 0);				
 				view.setTag(mHolder);
 				
 			} else {
