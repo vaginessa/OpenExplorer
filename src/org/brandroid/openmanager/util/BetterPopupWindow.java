@@ -223,7 +223,9 @@ public class BetterPopupWindow {
 			boolean fromBottom = anchor.getTop() > contentHeight / 2;
 
 			if(fromBottom)
-				popup.setHeight(bgHeight * 2);
+				popup.setHeight(
+						//(R.dimen.large_text_height + (8 * dp)) * 
+						mContext.getResources().getDimensionPixelSize(R.dimen.popup_height));
 				//yOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
 			if(fromRight)
 			{

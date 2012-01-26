@@ -37,7 +37,7 @@
 		android:minHeight="50dp"
 		android:maxHeight="@dimen/grid_icon_size"
 		android:baselineAlignBottom="true"
-		android:scaleType="centerCrop"
+		android:scaleType="fitCenter"
 		/>
 	<TextView
 	    android:layout_alignLeft="@+id/content_icon"

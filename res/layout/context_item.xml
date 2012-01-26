@@ -5,6 +5,5 @@
     android:layout_height="wrap_content"
     style="@style/Large"
     android:gravity="center_vertical"
-    android:paddingLeft="4dip"
-    android:paddingRight="4dip"
+    android:padding="4dip"
 />
