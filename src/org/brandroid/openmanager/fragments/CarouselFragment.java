@@ -35,7 +35,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.utils.Logger;
 
-public class CarouselFragment extends OpenFragment {
+public class CarouselFragment extends ContentFragment {
 	private static final String TAG = "CarouselTestActivity";
 	private static final int CARD_SLOTS = 56;
 	private static final int SLOTS_VISIBLE = 7;
@@ -211,6 +211,17 @@ public class CarouselFragment extends OpenFragment {
 		mBlackPaint.setColor(Color.BLACK);
 		try {
 			mPathItems = mParent.list();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void changePath(OpenPath path) {
+		// TODO Auto-generated method stub
+		try {
+			mPathItems = path.list();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

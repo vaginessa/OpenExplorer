@@ -296,10 +296,10 @@ public class OpenExplorer
 				path = mPhotoParent;
 			else
 				path = new OpenFile(Environment.getExternalStorageDirectory());
-			
 		}
+		//changePath(path, true);
 		
-		updateTitle(path.getPath());
+		//updateTitle(path.getPath());
 		mLastPath = path;
 		
 		boolean bAddToStack = true; //fragmentManager.getBackStackEntryCount() > 0;
@@ -339,7 +339,7 @@ public class OpenExplorer
 			home = new TextEditorFragment(new OpenFile(file.getPath()));
 			bAddToStack = false;
 		}
-
+		
 		if(bAddToStack)
 		{
 			if(fragmentManager.getBackStackEntryCount() == 0 ||
@@ -347,9 +347,12 @@ public class OpenExplorer
 				ft
 					.addToBackStack("path")
 					.replace(R.id.content_frag, home)
-					.setBreadCrumbTitle(mLastPath.getPath());
-		} else
+					.setBreadCrumbTitle(path.getPath());
+			else Logger.LogWarning("Damn it dog, stay!");
+		} else {
 			ft.replace(R.id.content_frag, home);
+			ft.disallowAddToBackStack();
+		}
 		//ft.addToBackStack("path");
 		//ft.setBreadCrumbTitle(path.getAbsolutePath());
 		ft.commit();
@@ -1473,14 +1476,18 @@ public class OpenExplorer
 			{
 				if(entry != null && entry.getBreadCrumbTitle() != null)
 				{
+					if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
+						mFileManager.popStack();
 					if(new OpenFile(entry.getBreadCrumbTitle().toString()).exists())
 					{
 						mLastPath = new OpenFile(entry.getBreadCrumbTitle().toString());
 						Logger.LogDebug("last path set to " + mLastPath.getPath());
 						changePath(mLastPath, false);
+						updateTitle(mLastPath.getPath());
 					}
-					updateTitle(entry.getBreadCrumbTitle().toString());
-				} else {
+				} else if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
+					goBack();
+				else {
 					Logger.LogWarning("No Breadcrumb Title");
 					updateTitle("");
 				}
@@ -1492,28 +1499,12 @@ public class OpenExplorer
 				//showToast("Press back again to exit.");
 			}
 		}
-		if(isBack && mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
+		if(isBack && mFileManager != null && mFileManager.getStack() != null)
 		{
-			goBack();
-		} else if(mSinglePane && isBack)
-		{
-			if(findViewById(R.id.list_frag) != null && findViewById(R.id.list_frag).getVisibility() == View.GONE)
-			{
-				toggleBookmarks(false);
-			} else {
-				FragmentTransaction ft = fragmentManager.beginTransaction();
-				ft.show(mFavoritesFragment);
-				ft.commit();
-			}
+			while(mFileManager.getStack().size() > i)
+				mFileManager.popStack();
+			//goBack();
 		}
-		/*
-		if(Build.VERSION.SDK_INT > 10)
-		{
-			android.app.Fragment frag = getFragmentManager().findFragmentById(R.id.content_frag);
-			if(frag != null)
-				getFragmentManager().beginTransaction().hide(frag).commit();
-		}
-		*/
 		mLastBackIndex = i;
 	}
 	
@@ -1543,7 +1534,7 @@ public class OpenExplorer
 		if(path == null) path = mLastPath;
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
-		Fragment content;
+		ContentFragment content = (ContentFragment)fragmentManager.findFragmentById(R.id.content_frag);
 		int newView = getSetting(path, "view", mViewMode);
 		mFileManager.setShowHiddenFiles(getSetting(path, "hide", true));
 		setViewMode(newView);
@@ -1555,41 +1546,45 @@ public class OpenExplorer
 			{
 				BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
 				String last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString() : "";
-				Logger.LogDebug("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
+				Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
 				if(last.equalsIgnoreCase(path.getPath()))
 					return;
 			}
 			mFileManager.pushStack(path);
 			ft.addToBackStack("path");
-		} else Logger.LogDebug("Covertly changing to " + path.getPath());
+		} else Logger.LogVerbose("Covertly changing to " + path.getPath());
 		if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB && path.getClass().equals(OpenCursor.class))
-			content = new CarouselFragment(path);
-		else {
-			if(newView == VIEW_CAROUSEL)
+		{
+			if(!CarouselFragment.class.equals(content.getClass()))
+			{
+				content = new CarouselFragment(path);
+				ft.replace(R.id.content_frag, content);
+			} else content.changePath(path);
+		} else {
+			if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
 				setViewMode(newView = VIEW_LIST);
-			content = new ContentFragment(path, mViewMode);
-			((ContentFragment)content).setSettings(
-					SortType.DATE_DESC,
-					getSetting(path, "thumbs", true),
-					getSetting(path, "hide", true)
-					);
-			
+			if(!BEFORE_HONEYCOMB && CarouselFragment.class.equals(content.getClass()))
+			{
+				content = new ContentFragment(path, mViewMode);
+				ft.replace(R.id.content_frag, content);
+			} else {
+				content.changePath(path); // the main selection
+			}
 		}
+		content.setSettings(
+			SortType.DATE_DESC,
+			getSetting(path, "thumbs", true),
+			getSetting(path, "hide", true)
+			);
 		if(OpenFile.class.equals(path.getClass()))
 			new PeekAtGrandKidsTask().execute((OpenFile)path);
-		ft.replace(R.id.content_frag, content);
+		//ft.replace(R.id.content_frag, content);
 		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
 		ft.setBreadCrumbTitle(path.getPath());
-		try {
-			ft.commit();
-			updateTitle(path.getPath());
-		} catch(RuntimeException e) {
-			Logger.LogError("Error committing FragmentTransaction", e);
-		}
-		changeViewMode(getSetting(path, "view", mViewMode), false);
-		if(!BEFORE_HONEYCOMB)
-			setLights(!path.getName().equals("Videos"));
+		ft.commit();
+		updateTitle(path.getPath());
+		changeViewMode(getSetting(path, "view", mViewMode), false); // bug fix
 		mLastPath = path;
 	}
 	public void setLights(Boolean on)

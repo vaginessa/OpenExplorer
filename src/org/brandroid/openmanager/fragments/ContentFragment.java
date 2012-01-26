@@ -889,9 +889,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						file = new OpenFile(fileName);
 					
 					if (file.isDirectory()) {
-						changePath(getManager().pushStack(file));
+						getExplorer().changePath(file, true);
 					} else {
-						changePath(getManager().pushStack(file.getParent()));
+						getExplorer().changePath(file.getParent(), true);
 					}						
 				}
 			});
@@ -925,11 +925,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 	}
 	
-	public void changePath(OpenPath path) { changePath(path, true); }
-	public void changePath(OpenPath path, Boolean addToStack) {
-		if(path == null)
-			path = new OpenFile(Environment.getExternalStorageDirectory());
-		getExplorer().changePath(path, addToStack);
+	/**
+	 * Only to be used to change the path after creation
+	 * @param path
+	 */
+	public void changePath(OpenPath path) {
+		mPath = mLastPath = path;
+		refreshData(new Bundle());
 	}
 	
 	//@Override
