@@ -187,6 +187,7 @@ public class BillingService extends Service implements ServiceConnection {
 
         @Override
         protected long run() throws RemoteException {
+        	if(mService == null) return 0;
             Bundle request = makeRequestBundle("CHECK_BILLING_SUPPORTED");
             Bundle response = mService.sendBillingRequest(request);
             int responseCode = response.getInt(Consts.BILLING_RESPONSE_RESPONSE_CODE);
@@ -222,6 +223,7 @@ public class BillingService extends Service implements ServiceConnection {
 
         @Override
         protected long run() throws RemoteException {
+        	if(mService != null) return 0;
             Bundle request = makeRequestBundle("REQUEST_PURCHASE");
             request.putString(Consts.BILLING_REQUEST_ITEM_ID, mProductId);
             // Note that the developer payload is optional.
@@ -261,6 +263,7 @@ public class BillingService extends Service implements ServiceConnection {
 
         @Override
         protected long run() throws RemoteException {
+        	if(mService == null) return 0;
             Bundle request = makeRequestBundle("CONFIRM_NOTIFICATIONS");
             request.putStringArray(Consts.BILLING_REQUEST_NOTIFY_IDS, mNotifyIds);
             Bundle response = mService.sendBillingRequest(request);
@@ -284,6 +287,7 @@ public class BillingService extends Service implements ServiceConnection {
 
         @Override
         protected long run() throws RemoteException {
+        	if(mService == null) return 0;
             mNonce = Security.generateNonce();
 
             Bundle request = makeRequestBundle("GET_PURCHASE_INFORMATION");
@@ -317,6 +321,7 @@ public class BillingService extends Service implements ServiceConnection {
 
         @Override
         protected long run() throws RemoteException {
+        	if(mService == null) return 0;
             mNonce = Security.generateNonce();
 
             Bundle request = makeRequestBundle("RESTORE_TRANSACTIONS");
