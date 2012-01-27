@@ -813,9 +813,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		if(items == null) return;
 		updateData(items,
-				items.length < 200 && getManager().getSorting() != SortType.DATE_DESC,
-				items.length < 200,
-				items.length < 200 && getManager().getShowHiddenFiles());
+				items.length < 500 && getManager().getSorting() != SortType.DATE_DESC,
+				items.length < 500,
+				items.length < 500 && getManager().getShowHiddenFiles());
 	}
 	private void updateData(final OpenPath[] items, boolean doSort, boolean foldersFirst, boolean showHidden) {
 		if(!mReadyToUpdate) return;
