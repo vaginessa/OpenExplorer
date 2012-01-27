@@ -27,6 +27,7 @@ public class IconContextMenu
 	protected final BetterPopupWindow popup;
 	private MenuBuilderNew menu;
 	protected final View anchor;
+	private int maxColumns = 1;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
@@ -46,7 +47,8 @@ public class IconContextMenu
 		for(int i = 0; i < menu.size(); i++)
 		{
 			MenuItem item = menu.getItem(i);
-			newMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle());
+			if(item.isVisible())
+				newMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle());
 		}
         //menu = newMenu;
         anchor = from;
@@ -58,7 +60,7 @@ public class IconContextMenu
 	public void setAdapter(Context context, final IconContextMenuAdapter adapter)
 	{
 		mList = new GridView(context);
-		mList.setNumColumns(2);
+		mList.setNumColumns(maxColumns);
 		mList.setAdapter(adapter);
 		mList.setOnItemClickListener(new OnItemClickListener() {
 
@@ -88,6 +90,12 @@ public class IconContextMenu
 	        .create();
 	        */
     }
+	
+	public void setMaxColumns(int cols) {
+		maxColumns = cols;
+		if(mList != null)
+			mList.setNumColumns(cols);
+	}
 	
 	public void setInfo(Object info) {
 		this.info = info;

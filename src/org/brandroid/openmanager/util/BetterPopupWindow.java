@@ -38,7 +38,7 @@ public class BetterPopupWindow {
 	private View root;
 	private Drawable background = null;
 	private final WindowManager windowManager;
-	
+	private int maxColumns = 1;
 	private View backgroundView;
 
 
@@ -204,7 +204,7 @@ public class BetterPopupWindow {
 			Logger.LogVerbose("Widths (root/bg/pop/content/arrow/anchor/offset): " +
 						rootWidth + "x" + rootHeight + "/" +
 						bgWidth + "x" + bgHeight + "/" +
-						popup.getWidth() + "x" + popup.getHeight() + "/" +
+						popup.getWidth() + "x" + popup.getHeight() + ":" + popup.getMaxAvailableHeight(anchor) + "/" +
 						widgetWidth + "x" + widgetHeight + "/" +
 						getContentWidth() + "x" + getContentHeight() + "/" +
 						//backgroundView.findViewById(R.id.indicator).getWidth() + "/" +
@@ -224,8 +224,10 @@ public class BetterPopupWindow {
 
 			if(fromBottom)
 				popup.setHeight(
+						popup.getMaxAvailableHeight(anchor) - (int)(20 * dp)
 						//(R.dimen.large_text_height + (8 * dp)) * 
-						mContext.getResources().getDimensionPixelSize(R.dimen.popup_height));
+						//mContext.getResources().getDimensionPixelSize(R.dimen.popup_height)
+						);
 				//yOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
 			if(fromRight)
 			{
@@ -257,6 +259,8 @@ public class BetterPopupWindow {
 			else
 				*/
 			this.popup.showAsDropDown(this.anchor, xOffset, yOffset);
+			//popup.getContentView().measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			//Logger.LogVerbose("New popup size: " + popup.getContentView().getWidth() + "x" + popup.getContentView().getMeasuredHeight());
 			
 			//float dp = mContext.getResources().getDimension(R.dimen.one_dp);
 			

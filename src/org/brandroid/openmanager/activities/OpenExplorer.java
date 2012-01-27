@@ -55,6 +55,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.Window;
@@ -823,8 +824,17 @@ public class OpenExplorer
 			});
 		}
 		super.onCreateOptionsMenu(menu);
-		getMenuInflater().inflate(R.menu.menu_sort, menu.findItem(R.id.menu_sort).getSubMenu());
-		getMenuInflater().inflate(R.menu.menu_view, menu.findItem(R.id.menu_view).getSubMenu());
+		if(!USE_PRETTY_MENUS)
+		{
+			MenuItem sort = menu.findItem(R.id.menu_sort);
+			try {
+				getMenuInflater().inflate(R.menu.menu_sort, sort.getSubMenu());
+			} catch(NullPointerException npe) { }
+			MenuItem view = menu.findItem(R.id.menu_view);
+			try {
+				getMenuInflater().inflate(R.menu.menu_view, view.getSubMenu());
+			} catch(NullPointerException npe) { }
+		}
 		return true;
 	}
 	
@@ -921,7 +931,7 @@ public class OpenExplorer
 			setMenuVisible(menu, false, R.id.menu_view_carousel);
 		else if(getWindowManager().getDefaultDisplay().getWidth() < 500) {
 			setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
-			setMenuVisible(menu, true, R.id.menu_menu);
+			setMenuVisible(menu, true, R.id.title_menu);
 		}
 		
 		if(!mSinglePane)
@@ -1135,7 +1145,6 @@ public class OpenExplorer
 				toggleBookmarks();
 				return true;
 				
-			case R.id.menu_menu:
 			case R.id.title_menu:
 				Logger.LogInfo("Show menu!");
 				showMenu();
@@ -1184,7 +1193,7 @@ public class OpenExplorer
 	{
 		//if(mMenuPopup == null)
 		if(showContextMenu(menuId, from) == null)
-			if(menuId == R.menu.main_menu || menuId == R.id.menu_menu)
+			if(menuId == R.menu.main_menu || menuId == R.id.title_menu)
 				openOptionsMenu();
 			else if (menuId == R.id.menu_sort)
 				showMenu(R.menu.menu_sort, from);
@@ -1208,7 +1217,7 @@ public class OpenExplorer
 				menuId = R.menu.menu_sort;
 			else if(menuId == R.id.menu_view)
 				menuId = R.menu.menu_view;
-			else if(menuId == R.id.menu_menu)
+			else if(menuId == R.id.title_menu)
 				menuId = R.menu.main_menu;
 			if(menuId == R.menu.context_file || menuId == R.menu.main_menu || menuId == R.menu.menu_sort || menuId == R.menu.menu_view)
 			{
@@ -1249,6 +1258,8 @@ public class OpenExplorer
 		IconContextMenu icm = null;
 		try {
 			icm = new IconContextMenu(this, menu, from);
+			if(menu.size() > 10)
+				icm.setMaxColumns(2);
 			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 				public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 					//showToast(item.getTitle().toString());
@@ -1553,13 +1564,10 @@ public class OpenExplorer
 			mFileManager.pushStack(path);
 			ft.addToBackStack("path");
 		} else Logger.LogVerbose("Covertly changing to " + path.getPath());
-		if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB && path.getClass().equals(OpenCursor.class))
+		if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
 		{
-			if(!CarouselFragment.class.equals(content.getClass()))
-			{
-				content = new CarouselFragment(path);
-				ft.replace(R.id.content_frag, content);
-			} else content.changePath(path);
+			content = new CarouselFragment(path);
+			ft.replace(R.id.content_frag, content);
 		} else {
 			if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
 				setViewMode(newView = VIEW_LIST);
