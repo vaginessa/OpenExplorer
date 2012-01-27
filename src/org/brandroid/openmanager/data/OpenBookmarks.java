@@ -376,7 +376,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	*/
 
 	public void onBookMarkAdd(OpenPath path) {
-		mBookmarksArray.get(BookmarkType.BOOKMARK_FAVORITE).add(path);
+		int type = getTypeInteger(BookmarkType.BOOKMARK_FAVORITE);
+		if(mBookmarksArray == null)
+			mBookmarksArray = new Hashtable<Integer, ArrayList<OpenPath>>();
+		if(mBookmarksArray.get(type) == null)
+			mBookmarksArray.put(type, new ArrayList<OpenPath>());
+		mBookmarksArray.get(type).add(path);
 		mBookmarkString = (mBookmarkString != null && mBookmarkString != "" ? mBookmarkString + ";" : "") + path.getPath();
 		mBookmarkAdapter.notifyDataSetChanged();
 	}
@@ -479,6 +484,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			public void onTextChanged(CharSequence s, int start, int before, int count) {}
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 			public void afterTextChanged(Editable s) {
+				if(server.getHost().equalsIgnoreCase(""))
+					server.setHost(s.toString());
 				server.setName(s.toString());
 			}
 		});

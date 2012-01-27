@@ -134,6 +134,7 @@ public class OpenExplorer
 	public static boolean USE_ACTION_BAR = false;
 	public static boolean IS_DEBUG_BUILD = false;
 	public static final int REQUEST_CANCEL = 101;
+	public static boolean LOW_MEMORY = false;
 	
 	private static MimeTypes mMimeTypes;
 	
@@ -152,7 +153,7 @@ public class OpenExplorer
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
-	private IconContextMenu mMenuPopup;
+	private IconContextMenu mPopupMenu, mPopupSort, mPopupView;
 	private static OnBookMarkChangeListener mBookmarkListener;
 	
 	private static final FileManager mFileManager = new FileManager();
@@ -264,6 +265,10 @@ public class OpenExplorer
 			for(int i = 0; i < mBookmarksList.getCount(); i++)
 				mBookmarksList.expandGroup(i);
 		}
+		if(BEFORE_HONEYCOMB && USE_PRETTY_MENUS)
+		{
+			mPopupMenu = new IconContextMenu(this, R.menu.main_menu, findViewById(R.id.title_menu));
+		}
 		
 		refreshCursors();
 		
@@ -374,6 +379,13 @@ public class OpenExplorer
 		/* read and display the users preferences */
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
 
+	}
+	
+	@Override
+	public void onLowMemory() {
+		super.onLowMemory();
+		LOW_MEMORY = true;
+		showToast(R.string.s_msg_low_memory);
 	}
 	
 	public void setBookmarksPopupListAdapter(ListAdapter adapter)
@@ -1195,9 +1207,9 @@ public class OpenExplorer
 		if(showContextMenu(menuId, from) == null)
 			if(menuId == R.menu.main_menu || menuId == R.id.title_menu)
 				openOptionsMenu();
-			else if (menuId == R.id.menu_sort)
+			else if (menuId == R.id.menu_sort || menuId == R.menu.menu_sort)
 				showMenu(R.menu.menu_sort, from);
-			else if(menuId == R.id.menu_view)
+			else if(menuId == R.id.menu_view || menuId == R.menu.menu_view)
 				showMenu(R.menu.menu_view, from);
 			//else
 			//	showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
@@ -1213,12 +1225,14 @@ public class OpenExplorer
 	{
 		try {
 			Logger.LogDebug("Trying to show context menu" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
-			if(menuId == R.id.menu_sort)
+			if(menuId == R.id.menu_sort || menuId == R.menu.menu_sort)
 				menuId = R.menu.menu_sort;
-			else if(menuId == R.id.menu_view)
+			else if(menuId == R.id.menu_view || menuId == R.menu.menu_view)
 				menuId = R.menu.menu_view;
-			else if(menuId == R.id.title_menu)
+			else if(menuId == R.id.title_menu || menuId == R.menu.main_menu)
 				menuId = R.menu.main_menu;
+			else
+				return null;
 			if(menuId == R.menu.context_file || menuId == R.menu.main_menu || menuId == R.menu.menu_sort || menuId == R.menu.menu_view)
 			{
 				final IconContextMenu icm = new IconContextMenu(OpenExplorer.this, menuId, from);

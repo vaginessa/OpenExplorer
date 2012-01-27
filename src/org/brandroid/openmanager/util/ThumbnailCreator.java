@@ -418,7 +418,7 @@ public class ThumbnailCreator extends Thread {
 			}
 		}
 		
-		if(bmp != null && bmp.getWidth() > mWidth)
+		if(bmp != null && bmp.getWidth() > mWidth && mWidth > 0)
 		{
 			int h = (int) Math.floor(mWidth * ((double)bmp.getHeight() / (double)bmp.getWidth())); 
 			bmp = Bitmap.createScaledBitmap(bmp, mWidth, h, false);

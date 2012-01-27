@@ -268,7 +268,12 @@ public class CarouselFragment extends ContentFragment {
 			mView.postDelayed(mAddCardRunnable, 2000);
 		}
 
-		mGlossyOverlay = BitmapFactory.decodeResource(res, R.drawable.glossy_overlay);
+		try {
+			mGlossyOverlay = BitmapFactory.decodeResource(res, R.drawable.glossy_overlay);
+		} catch(OutOfMemoryError e) {
+			Logger.LogError("Out of memory!", e);
+			mGlossyOverlay = null;
+		}
 		
 	}
 
