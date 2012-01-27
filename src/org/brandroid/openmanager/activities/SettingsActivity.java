@@ -92,8 +92,8 @@ public class SettingsActivity extends PreferenceActivity
 	public static final int MODE_SERVER = 1;
 	
 	private Preferences prefs;
-	private BillingService mBillingService;
-	private DonationObserver mDonationObserver;
+	//private BillingService mBillingService;
+	//private DonationObserver mDonationObserver;
 	private Handler mHandler;
 	
 	public void onCreate(Bundle savedInstanceState) {
@@ -143,6 +143,7 @@ public class SettingsActivity extends PreferenceActivity
 				
 				Preference preference = pm.findPreference("pref_stats");
 				if(preference != null) { // "Help improve..."
+					/*
 					preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 						public boolean onPreferenceClick(Preference preference) {
 				    		try {
@@ -165,6 +166,7 @@ public class SettingsActivity extends PreferenceActivity
 				    		return false;
 						}
 					});
+					*/
 				} else Logger.LogWarning("Couldn't find donation button");
 				
 				refreshServerList();
@@ -211,6 +213,7 @@ public class SettingsActivity extends PreferenceActivity
 		setOnChange(getPreferenceScreen(), false);
 		
 		mHandler = new Handler();
+		/*
 		mDonationObserver = new DonationObserver(mHandler);
 		mBillingService = new BillingService();
 		mBillingService.setContext(this);
@@ -219,6 +222,7 @@ public class SettingsActivity extends PreferenceActivity
         	Logger.LogWarning("Billing not supported.");
             //showDialog(DIALOG_CANNOT_CONNECT_ID);
         }
+        */
 	}
 	
 	/**
@@ -300,8 +304,7 @@ public class SettingsActivity extends PreferenceActivity
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if(mBillingService != null)
-			mBillingService.unbind();
+		//if(mBillingService != null) mBillingService.unbind();
 	}
 	
 	private void refreshServerList() {
@@ -331,13 +334,13 @@ public class SettingsActivity extends PreferenceActivity
 	@Override
 	protected void onStart() {
 		super.onStart();
-		ResponseHandler.register(mDonationObserver);
+		//ResponseHandler.register(mDonationObserver);
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		ResponseHandler.unregister(mDonationObserver);
+		//ResponseHandler.unregister(mDonationObserver);
 	}
 	
 	private void setOnChange(Preference p, Boolean bSetSummaries)
