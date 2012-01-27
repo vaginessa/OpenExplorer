@@ -15,5 +15,5 @@
   -->
 
 <resources>
-	<dimen name="list_width">300dp</dimen>    
+	<dimen name="list_width">100dp</dimen>
 </resources>

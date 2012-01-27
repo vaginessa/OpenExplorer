@@ -25,9 +25,21 @@
 	android:paddingRight="4dp"
 	android:id="@+id/layout"
 	>
+	<ProgressBar
+	    style="@android:style/Widget.ProgressBar.Horizontal"
+	    android:id="@+id/size_bar"
+	    android:alpha="0.5"
+	    android:layout_width="fill_parent"
+	    android:layout_height="32dp"
+	    android:layout_alignTop="@+id/content_icon"
+	    android:layout_alignBottom="@+id/size_layout"
+	    android:layout_alignParentRight="true"
+	    android:layout_toRightOf="@+id/content_icon"
+	    android:visibility="gone"
+	    />
 	<ImageView
 		style="@style/icon.small"
-		android:layout_marginRight="10dp"
+		android:layout_marginRight="5dp"
 		android:layout_centerVertical="true"
 		android:id="@+id/content_icon"
 		android:src="@drawable/icon"
@@ -39,6 +51,7 @@
 		android:layout_toLeftOf="@+id/eject"
 		android:layout_alignTop="@+id/icon"
 		android:layout_marginTop="4dp"
+		android:layout_marginLeft="5dp"
 		android:text="@string/s_bookmarks"
 		style="@style/Large"
 		/>
@@ -65,6 +78,7 @@
 		android:visibility="gone"
 		android:src="@drawable/indicate"
 		/>
+	
 	<RelativeLayout
 	    android:id="@+id/size_layout"
 	    android:layout_width="fill_parent"
@@ -72,23 +86,14 @@
 		android:layout_below="@+id/content_text"
 		android:layout_alignLeft="@+id/content_text"
 		android:layout_alignParentRight="true"
-		android:gravity="center"
+		android:gravity="right"
 	    >
-	    
-		<ProgressBar
-			style="@android:style/Widget.ProgressBar.Horizontal"
-			android:indeterminate="false"
-			android:layout_width="fill_parent"
-			android:layout_height="10dp"
-			android:layout_marginTop="1dp"
-			android:id="@+id/size_bar"
-			/>
-	
 		<TextView
 		    android:id="@+id/size_text"
 			style="@style/Small"
 			android:layout_alignParentRight="true"
 			android:layout_marginRight="4dp"
+		    android:visibility="gone"
 			android:text="@string/s_size" />
+		</RelativeLayout>
 	</RelativeLayout>
-</RelativeLayout>
