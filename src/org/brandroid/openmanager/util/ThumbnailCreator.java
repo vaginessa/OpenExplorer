@@ -55,6 +55,7 @@ import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -188,6 +189,8 @@ public class ThumbnailCreator extends Thread {
 				else
 					return (useLarge ? R.drawable.lg_folder : R.drawable.sm_folder);
 			}
+		} else if(file instanceof OpenCommand) {
+				return ((OpenCommand)file).getDrawableId();
 		} else if(ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
 			return (useLarge ? R.drawable.lg_doc : R.drawable.sm_doc);
 			

@@ -35,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -169,6 +170,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			ftp.setServersIndex(i);
 			checkAndAdd(BookmarkType.BOOKMARK_SERVER, ftp);
 		}
+		addBookmark(BookmarkType.BOOKMARK_SERVER, new OpenCommand(mContext.getString(R.string.s_pref_server_add), OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add));
 		if(mBookmarkAdapter != null)
 			mBookmarkAdapter.notifyDataSetChanged();
 	}
@@ -315,12 +317,24 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		OpenExplorer.setOnBookMarkAddListener(this);
 		
 	}
+	
+	private void handleCommand(int command)
+	{
+		switch(command)
+		{
+			case OpenCommand.COMMAND_ADD_SERVER:
+				ShowServerDialog(new OpenFTP(null, null), null);
+				break;
+		}
+	}
 
 	public boolean onItemLongClick(AdapterView<?> list, View v, int pos, long id) {
 		if(v.getTag() == null) return false;
 		BookmarkHolder h = (BookmarkHolder)v.getTag();
 		OpenPath path = h.getOpenPath();
-		if(OpenFTP.class.equals(path.getClass()))
+		if(path instanceof OpenCommand)
+			handleCommand(((OpenCommand)path).getCommand());
+		else if(path instanceof OpenFTP)
 			ShowServerDialog((OpenFTP)path, h);
 		else
 			ShowStandardDialog(path, h);
@@ -332,7 +346,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		OpenPath path = mBookmarkAdapter.getChild(groupPosition, childPosition);
 		if(path != null)
 		{
-			getExplorer().onChangeLocation(path);
+			if(path instanceof OpenCommand)
+				handleCommand(((OpenCommand)path).getCommand());
+			else
+				getExplorer().onChangeLocation(path);
 			return true;
 		}
 		return false;
@@ -377,6 +394,45 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final EditText mTextPath = (EditText)v.findViewById(R.id.text_path);
 		final EditText mTextName = (EditText)v.findViewById(R.id.text_name);
 		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
+		setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword);
+		if(iServersIndex > -1)
+		{
+			mHost.setText(server.getHost());
+			mUser.setText(server.getUser());
+			mPassword.setText(server.getPassword());
+			mTextPath.setText(server.getPath());
+			mTextName.setText(server.getName());
+		}
+		new AlertDialog.Builder(mContext)
+			.setView(v)
+			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : mContext.getResources().getDrawable(R.drawable.lg_ftp))
+			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+				}
+			})
+			.setNeutralButton(mContext.getString(R.string.s_remove), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					if(iServersIndex > -1)
+						servers.remove(iServersIndex);
+					getExplorer().refreshBookmarks();
+				}
+			})
+			.setPositiveButton(mContext.getString(R.string.s_update), new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					if(iServersIndex > -1)
+						servers.set(iServersIndex, server);
+					else
+						servers.add(server);
+					SettingsActivity.SaveToDefaultServers(servers, mContext);
+					getExplorer().refreshBookmarks();
+				}
+			})
+			.setTitle(server.getName())
+			.create().show();
+		return true;
+	}
+	private void setupServerDialog(final OpenServer server, final EditText mHost, final EditText mUser, final EditText mPassword, final EditText mTextPath, final EditText mTextName, final CheckBox mCheckPassword)
+	{
 		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if(isChecked)
@@ -426,41 +482,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				server.setName(s.toString());
 			}
 		});
-		if(iServersIndex > -1)
-		{
-			mHost.setText(server.getHost());
-			mUser.setText(server.getUser());
-			mPassword.setText(server.getPassword());
-			mTextPath.setText(server.getPath());
-			mTextName.setText(server.getName());
-		}
-		new AlertDialog.Builder(mContext)
-			.setView(v)
-			.setIcon(mHolder.getIconView().getDrawable())
-			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-				}
-			})
-			.setNeutralButton(mContext.getString(R.string.s_remove), new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					if(iServersIndex > -1)
-						servers.remove(iServersIndex);
-					getExplorer().refreshBookmarks();
-				}
-			})
-			.setPositiveButton(mContext.getString(R.string.s_update), new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					if(iServersIndex > -1)
-						servers.set(iServersIndex, server);
-					else
-						servers.add(server);
-					SettingsActivity.SaveToDefaultServers(servers, mContext);
-					getExplorer().refreshBookmarks();
-				}
-			})
-			.setTitle(server.getName())
-			.create().show();
-		return true;
 	}
 	public boolean ShowStandardDialog(final OpenPath mPath, final BookmarkHolder mHolder)
 	{
@@ -475,7 +496,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 						.setText(mContext.getString(R.string.s_alert_bookmark_rename));
 		mText.setText(title);
 		
-		if(mHolder.isEjectable())
+		if(mHolder != null && mHolder.isEjectable())
 		{	
 			builder.setNeutralButton(mContext.getString(R.string.s_eject), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
@@ -497,7 +518,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		
 		builder
 			.setView(v)
-			.setIcon(mHolder.getIconView().getDrawable())
+			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : null)
 			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
@@ -542,9 +563,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	public void updateSizeIndicator(OpenPath mFile, View mParentView)
 	{
 		View mSizeView = (View)mParentView.findViewById(R.id.size_layout);
-		ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
+		View size_bar = mParentView.findViewById(R.id.size_bar);
 		TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
-		if(bar == null) return;
+		if(size_bar == null) return;
 		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
 		{
 			OpenFile f = (OpenFile)mFile;
@@ -560,21 +581,40 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				if(sFree.indexOf(" ") > -1 && sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
 					sFree = sFree.substring(0, sFree.lastIndexOf(" "));
 				mSizeText.setText(sFree + "/" + sTotal);
+				mSizeText.setVisibility(View.VISIBLE);
 				
 				while(size > 100000)
 				{
 					size /= 10;
 					free /= 10;
 				}
-				bar.setMax((int)size);
-				bar.setProgress((int)(size - free));
-				if(bar.getProgress() == 0)
-					bar.setVisibility(View.GONE);
+				if(size_bar instanceof ProgressBar)
+				{
+					ProgressBar bar = (ProgressBar)size_bar;
+					bar.setMax((int)size);
+					bar.setProgress((int)(size - free));
+					if(bar.getProgress() == 0)
+						bar.setVisibility(View.GONE);
+				} else {
+					long taken = Math.min(0, size - free);
+					float percent = (float)taken / (float)size;
+					//mParentView.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+					int size_width = 250; //mParentView.getMeasuredWidth();
+					Logger.LogVerbose("Parent Width: " + size_width);
+					size_width = Math.min(0, (int) (percent * size_width));
+					size_bar.getBackground().setBounds(0,0,size_width,0);
+				}
+				size_bar.setVisibility(View.VISIBLE);
+				/*
+				
+				
+				*/
 				//Logger.LogDebug(bar.getProgress() + "?");
 				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
-			} else mSizeView.setVisibility(View.GONE);
+			} else if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
 		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
-			bar.setVisibility(View.INVISIBLE);
+			//bar.setVisibility(View.INVISIBLE);
+			if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
 			mSizeText.setText(DialogHandler.formatSize(((OpenCursor)mFile).getTotalSize()));
 		} else mSizeView.setVisibility(View.GONE);
 	}
