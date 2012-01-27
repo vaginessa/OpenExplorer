@@ -405,7 +405,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		}
 		new AlertDialog.Builder(mContext)
 			.setView(v)
-			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : mContext.getResources().getDrawable(R.drawable.lg_ftp))
+			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : mContext.getResources().getDrawable(R.drawable.sm_ftp))
 			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 				}
