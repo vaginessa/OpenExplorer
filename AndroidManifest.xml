@@ -90,6 +90,13 @@
                 android:resource="@xml/device_filter" />
 		</activity>
 		
+		<activity android:name=".activities.IncomingMessageInterstitial"
+		    android:label="File Operations Complete"
+		    android:launchMode="singleInstance"
+		    android:excludeFromRecents="true"
+		    >
+		</activity>
+		
 		<!-- activity android:name=".APKDecompiler" android:label="Decompile APK" android:icon="@drawable/apk">
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />

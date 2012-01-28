@@ -298,11 +298,19 @@ public class EventHandler {
 		}).create().show();
 	}
 	
+	public void copyFile(OpenPath source, OpenPath destPath, Context mContext) {
+		if(!destPath.isDirectory())
+			destPath = destPath.getParent();
+		new BackgroundWork(COPY_TYPE, mContext, destPath, source.getName()).execute(source);
+	}
 	public void copyFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 		
-		new BackgroundWork(COPY_TYPE, mContext, newPath).execute(array);
+		String title = array.length + " " + mContext.getString(R.string.s_files);
+		if(array.length == 1)
+			title = array[0].getPath();
+		new BackgroundWork(COPY_TYPE, mContext, newPath, title).execute(array);
 	}
 	
 	public void cutFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
@@ -351,13 +359,14 @@ public class EventHandler {
 	 * @author Joe Berria
 	 */
 	private class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> {
-		private int mType;
-		private ProgressDialog mPDialog;
 		private static final int BACKGROUND_NOTIFICATION_ID = 123;
-		private Notification mNote;
-		private Context mContext;
-		private String[] mInitParams = null;
-		private OpenPath mIntoPath;
+		private final int mType;
+		private final Context mContext;
+		private final String[] mInitParams;
+		private final OpenPath mIntoPath;
+		private final NotificationManager mNotifier;
+		private ProgressDialog mPDialog;
+		private Notification mNote = null;
 		private ArrayList<String> mSearchResults = null;
 		
 		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
@@ -365,11 +374,12 @@ public class EventHandler {
 			mContext = context;
 			mInitParams = params;
 			mIntoPath = intoPath;
+			mNotifier = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		}
 		
 		protected void onPreExecute() {
 			String title = getResourceString(mContext, R.string.s_title_executing).toString();
-			Boolean showDialog = true, showNotification = false;
+			Boolean showDialog = true, showNotification = false, isCancellable = false;
 			switch(mType) {
 				case DELETE_TYPE:
 					title = getResourceString(mContext, R.string.s_title_deleting).toString();
@@ -380,15 +390,18 @@ public class EventHandler {
 					break;
 				case COPY_TYPE:
 					title = getResourceString(mContext, R.string.s_title_copying).toString();
+					showDialog = false;
 					showNotification = true;
 					break;
 				case CUT_TYPE:
 					title = getResourceString(mContext, R.string.s_title_moving).toString();
+					showDialog = false;
 					showNotification = true;
 					break;
 				case UNZIP_TYPE:
 				case UNZIPTO_TYPE:
 					title = getResourceString(mContext, R.string.s_title_unzipping).toString();
+					showDialog = false;
 					showNotification = true;
 					break;
 				case ZIP_TYPE:
@@ -398,29 +411,48 @@ public class EventHandler {
 			}
 			if(showDialog)
 				try {
-					mPDialog = ProgressDialog.show(mContext, title, getResourceString(mContext, R.string.s_title_wait).toString());
+					mPDialog = ProgressDialog.show(mContext, title,
+							getResourceString(mContext, R.string.s_title_wait).toString(),
+							true, true,
+							new DialogInterface.OnCancelListener() {
+								public void onCancel(DialogInterface dialog) {
+									
+								}
+							});
 				} catch(Exception e) { }
 			if(showNotification)
+			{
+				boolean showProgress = true;
 				try {
 					Intent intent = new Intent(mContext, OpenExplorer.class);
 					PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OpenExplorer.REQUEST_CANCEL, intent, 0);
-					NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-					mNote = new Notification(R.drawable.icon, title, 0);
-					if(!OpenExplorer.BEFORE_HONEYCOMB)
+					mNote = new Notification(R.drawable.icon, title, System.currentTimeMillis());
+					title += " -> " + mIntoPath.getPath();
+					String subtitle = "";
+					if(mInitParams != null && mInitParams.length > 0)
+						subtitle = (mInitParams.length > 1 ? mInitParams.length + " " + mContext.getString(R.string.s_files) : mInitParams[0]);
+					if(showProgress)
 					{
-						RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.title_bar);
-						noteView.setImageViewResource(R.id.title_icon, R.drawable.icon);
-						noteView.setTextViewText(R.id.title_text, title);
-						noteView.setProgressBar(R.id.title_progress, 100, 0, true);
-						noteView.setViewVisibility(R.id.title_search, View.GONE);
-						noteView.setViewVisibility(R.id.title_path, View.GONE);
+						RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.notification);
+						noteView.setImageViewResource(android.R.id.icon, R.drawable.icon);
+						noteView.setTextViewText(android.R.id.text1, title);
+						if(subtitle == "")
+							noteView.setViewVisibility(android.R.id.text2, View.GONE);
+						else
+							noteView.setTextViewText(android.R.id.text2, subtitle);
+						noteView.setProgressBar(android.R.id.progress, 100, 0, true);
+						//noteView.setViewVisibility(R.id.title_search, View.GONE);
+						//noteView.setViewVisibility(R.id.title_path, View.GONE);
 						mNote.contentView = noteView;
 					} else {
 						mNote.tickerText = title;
 					}
 					mNote.contentIntent = pendingIntent;
 					mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
-				} catch(Exception e) { }
+				} catch(Exception e) {
+					Logger.LogWarning("Couldn't post notification", e);
+				}
+			}
 		}
 		
 		public void searchDirectory(OpenPath dir, String pattern, ArrayList<String> aList)
@@ -533,6 +565,11 @@ public class EventHandler {
 			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite())
 			{
 				OpenPath newFile = newDir.getChild(old.getName());
+				if(newFile.equals(old))
+				{
+					Logger.LogWarning("Old = new");
+					return false;
+				}
 				Logger.LogDebug("Creating File [" + newFile.getPath() + "]...");
 				if(!newDir.exists() && !newFile.mkdir())
 				{
@@ -545,10 +582,10 @@ public class EventHandler {
 
 				try {
 					Logger.LogDebug("Writing " + newFile.getPath());
+					BufferedInputStream i_stream = new BufferedInputStream(
+							   old.getInputStream());
 					BufferedOutputStream o_stream = new BufferedOutputStream(
 													newFile.getOutputStream());
-					BufferedInputStream i_stream = new BufferedInputStream(
-												   old.getInputStream());
 					
 					while((read = i_stream.read(data, 0, FileManager.BUFFER)) != -1)
 					{
@@ -659,13 +696,17 @@ public class EventHandler {
 
 			try {
 				RemoteViews noteView = mNote.contentView;
-				noteView.setProgressBar(R.id.title_progress, 1000, progA, values.length == 0);
-				noteView.notify();
-			} catch(Exception e) { }
+				noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
+				mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
+				//noteView.notify();
+				//noteView.
+			} catch(Exception e) {
+				Logger.LogWarning("Couldn't update notification progress.", e);
+			}
 		}
 
 		protected void onPostExecute(Integer result) {
-			NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+			//NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 			mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
 			
 			switch(mType) {
