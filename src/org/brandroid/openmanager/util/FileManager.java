@@ -37,13 +37,13 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
-import org.brandroid.openmanager.data.OpenComparer;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenStack;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.ftp.FTPFileComparer;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import android.os.AsyncTask;
@@ -66,7 +66,7 @@ import android.util.Log;
  *
  */
 public class FileManager {
-	public static final int BUFFER = 		2048;
+	public static final int BUFFER = 1024 * 1024;
 	
 	private boolean mShowHiddenFiles = false;
 	private SortType mSorting = SortType.ALPHA;
@@ -454,6 +454,13 @@ public class FileManager {
 		if(directory == null) return new OpenPath[0];
 		if(!directory.isDirectory()) return new OpenPath[0];
 		return directory.list();
+	}
+
+	public static SortType parseSortType(String setting) {
+		for(SortType type : SortType.values())
+			if(type.toString().equals(setting))
+				return type;
+		return SortType.ALPHA;	
 	}
 }
 

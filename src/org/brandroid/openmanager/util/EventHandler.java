@@ -444,10 +444,15 @@ public class EventHandler {
 						//noteView.setViewVisibility(R.id.title_search, View.GONE);
 						//noteView.setViewVisibility(R.id.title_path, View.GONE);
 						mNote.contentView = noteView;
+						if(!OpenExplorer.BEFORE_HONEYCOMB)
+							mNote.tickerView = noteView;
 					} else {
 						mNote.tickerText = title;
 					}
 					mNote.contentIntent = pendingIntent;
+					mNote.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
+					//mNote.flags |= Notification.FLAG_ONGOING_EVENT;
+					//mNote.flags |= Notification.FLAG_NO_CLEAR;
 					mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
 				} catch(Exception e) {
 					Logger.LogWarning("Couldn't post notification", e);
