@@ -56,6 +56,7 @@ import java.io.InputStream;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCommand;
+import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -100,7 +101,8 @@ public class ThumbnailCreator extends Thread {
 
 			if(showThumbPreviews && !file.requiresThread()) {
 
-				ThumbnailCreator.setContext(mContext);
+				if(mContext == null)
+					ThumbnailCreator.setContext(mContext);
 				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)
@@ -290,11 +292,14 @@ public class ThumbnailCreator extends Thread {
 		if(bmp == null)
 		{
 			Boolean valid = false;
-			if (file.getClass().equals(OpenMediaStore.class))
+			if (file instanceof OpenMediaStore || file instanceof OpenCursor)
 			{
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
 				opts.inSampleSize = 1;
+				opts.inPurgeable = true;
+				opts.outHeight = mHeight;
+				//opts.outWidth = mWidth;
 				//opts.outWidth = mWidth;
 				//opts.outHeight = mHeight;
 				int kind = mWidth > 96 ? MediaStore.Video.Thumbnails.MINI_KIND : MediaStore.Video.Thumbnails.MICRO_KIND;
@@ -390,19 +395,17 @@ public class ThumbnailCreator extends Thread {
 				BitmapFactory.Options options = new BitmapFactory.Options();
 				options.outWidth = mWidth;
 				options.outHeight = mHeight;
+				options.inPurgeable = true;
 										
 				if (len_kb > 500 && len_kb < 2000) {
 					options.inSampleSize = 16;
-					options.inPurgeable = true;						
 					bmp = BitmapFactory.decodeFile(file.getPath(), options);
 										
 				} else if (len_kb >= 2000) {
 					options.inSampleSize = 32;
-					options.inPurgeable = true;
 					bmp = BitmapFactory.decodeFile(file.getPath(), options);
 									
 				} else if (len_kb <= 500) {
-					options.inPurgeable = true;
 					bmp = BitmapFactory.decodeFile(file.getPath());
 					
 					if (bmp == null) 
@@ -418,11 +421,16 @@ public class ThumbnailCreator extends Thread {
 			}
 		}
 		
-		if(bmp != null && bmp.getWidth() > mWidth && mWidth > 0)
-		{
-			int h = (int) Math.floor(mWidth * ((double)bmp.getHeight() / (double)bmp.getWidth())); 
-			bmp = Bitmap.createScaledBitmap(bmp, mWidth, h, false);
-		}
+		if(bmp != null)
+			if(bmp.getHeight() > mHeight && mHeight > 0)
+			{
+				int w = (int) Math.floor(mHeight * ((double)bmp.getWidth() / (double)bmp.getHeight())); 
+				bmp = Bitmap.createScaledBitmap(bmp, w, mHeight, false);
+			} else if (bmp.getWidth() > mWidth && mWidth > 0)
+			{
+				int h = (int) Math.floor(mWidth * ((double)bmp.getHeight() / (double)bmp.getWidth())); 
+				bmp = Bitmap.createScaledBitmap(bmp, mWidth, h, false);
+			}
 		
 		if(bmp != null)
 		{
@@ -443,6 +451,7 @@ public class ThumbnailCreator extends Thread {
 	
 	private static void saveThumbnail(String file, Bitmap bmp)
 	{
+		Logger.LogVerbose("Saving thumb for " + file);
 		FileOutputStream os = null;
 		try {
 			os = mContext.openFileOutput(file, 0);
