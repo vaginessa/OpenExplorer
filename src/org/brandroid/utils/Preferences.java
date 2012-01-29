@@ -93,7 +93,7 @@ public class Preferences {
 		try {
 			
 			String ret = getPreferences(file).getString(key, defValue);
-			Logger.LogInfo("Pref GET [" + file + ":" + key + "] = " + ret);
+			//Logger.LogInfo("Pref GET [" + file + ":" + key + "] = " + ret);
 			return ret;
 		} catch(ClassCastException cce) {
 			Logger.LogWarning("Couldn't get string \"" + key + "\" from Prefs.", cce);
@@ -178,7 +178,7 @@ public class Preferences {
 	{
 		try {
 			//Logger.LogDebug("Setting " + key + " to " + value);
-			Logger.LogInfo("Pref set [" + file + ":" + key + "] = " + value);
+			//Logger.LogInfo("Pref set [" + file + ":" + key + "] = " + value);
 			SharedPreferences.Editor editor = getPreferences(file).edit();
 			editor.putString(key, value);
 			//editor.putString(key, value);

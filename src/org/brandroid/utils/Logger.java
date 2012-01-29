@@ -9,7 +9,7 @@ public class Logger
 	private static Integer[] iLastCount = new Integer[] {0,0,0,0,0};
 	private final static Boolean DO_LOG = true; // global static
 	private static Boolean bLoggingEnabled = true; // this can be set view preferences
-	public final static Integer MIN_DB_LEVEL = Log.INFO;
+	public final static Integer MIN_DB_LEVEL = Log.WARN;
 	private final static String LOG_KEY = "OpenExplorer";
 	private static LoggerDbAdapter dbLog;
 	
