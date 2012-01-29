@@ -27,7 +27,7 @@ public class IconContextMenu
 	protected final BetterPopupWindow popup;
 	private MenuBuilderNew menu;
 	protected final View anchor;
-	private int maxColumns = 1;
+	private int maxColumns = 2;
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
@@ -91,7 +91,7 @@ public class IconContextMenu
 	        */
     }
 	
-	public void setMaxColumns(int cols) {
+	public void setNumColumns(int cols) {
 		maxColumns = cols;
 		if(mList != null)
 			mList.setNumColumns(cols);

@@ -38,7 +38,6 @@ public class BetterPopupWindow {
 	private View root;
 	private Drawable background = null;
 	private final WindowManager windowManager;
-	private int maxColumns = 1;
 	private View backgroundView;
 
 
