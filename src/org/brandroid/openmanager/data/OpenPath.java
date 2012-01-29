@@ -86,13 +86,13 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 				case ALPHA:
 					return a.toLowerCase().compareTo(b.toLowerCase());
 				case SIZE_DESC:
-					return sb.compareTo(sa);
-				case SIZE:
 					return sa.compareTo(sb);
+				case SIZE:
+					return sb.compareTo(sa);
 				case DATE_DESC:
-					return fb.lastModified().compareTo(fa.lastModified());
-				case DATE:
 					return fa.lastModified().compareTo(fb.lastModified());
+				case DATE:
+					return fb.lastModified().compareTo(fa.lastModified());
 				case TYPE:
 					String ea = a.substring(a.lastIndexOf(".") + 1, a.length()).toLowerCase();
 					String eb = b.substring(b.lastIndexOf(".") + 1, b.length()).toLowerCase();
