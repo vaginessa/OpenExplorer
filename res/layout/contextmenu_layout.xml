@@ -15,7 +15,7 @@
         android:layout_height="wrap_content" >
 
         <View android:layout_gravity="bottom"
-			android:layout_height="1dp"
+			android:layout_height="@dimen/context_indicator_line_width"
 			android:layout_width="20dp"
 			android:id="@+id/space_left"
 			android:alpha="0.95"
@@ -30,7 +30,8 @@
         
         
         <View android:layout_gravity="bottom"
-			android:layout_height="1dp" android:layout_width="fill_parent"
+			android:layout_height="@dimen/context_indicator_line_width"
+			android:layout_width="fill_parent"
 			android:id="@+id/space_right"
 			android:alpha="0.95"
 			android:background="@android:color/white"
