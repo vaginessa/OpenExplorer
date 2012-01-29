@@ -140,4 +140,12 @@
     <string name="app_edit">Edit with OpenExplorer</string>
     <string name="s_menu_more">More options...</string>
     <string name="s_msg_low_memory">Low memory!</string>
+    <string name="s_clear">Clear</string>
+    <string name="s_menu_delete_all">Delete All</string>
+    <string name="s_menu_move_all">Move All</string>
+    <string name="s_menu_copy_all">Copy All</string>
+    <string name="s_menu_move">Move (Cut/Paste)</string>
+    <string name="s_confirm_delete">Are you sure that you want to delete xxx?</string>
+    <string name="s_error_same_destination">The destination directory is the same.</string>
+    <string name="s_sample_notification">Copying -> sdcard:\n3 Files</string>
 </resources>

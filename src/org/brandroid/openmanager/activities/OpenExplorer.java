@@ -27,8 +27,10 @@ import android.os.Handler;
 import android.os.StatFs;
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
@@ -135,6 +137,8 @@ public class OpenExplorer
 	public static boolean IS_DEBUG_BUILD = false;
 	public static final int REQUEST_CANCEL = 101;
 	public static boolean LOW_MEMORY = false;
+	public static final boolean SHOW_FILE_DETAILS = false;
+	private static final boolean USE_PRETTY_MENUS = !BEFORE_HONEYCOMB;
 	
 	private static MimeTypes mMimeTypes;
 	
@@ -142,6 +146,7 @@ public class OpenExplorer
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
 	private OpenClipboard mHeldFiles = new OpenClipboard();
+	private static MultiSelectHandler mMultiSelectHandler;
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
@@ -153,13 +158,10 @@ public class OpenExplorer
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
-	private IconContextMenu mPopupMenu, mPopupSort, mPopupView;
 	private static OnBookMarkChangeListener mBookmarkListener;
 	
 	private static final FileManager mFileManager = new FileManager();
 	private static final EventHandler mEvHandler = new EventHandler(mFileManager);
-	public static final boolean SHOW_FILE_DETAILS = false;
-	private static final boolean USE_PRETTY_MENUS = false;
 	
 	private FragmentManager fragmentManager;
 	
@@ -179,6 +181,8 @@ public class OpenExplorer
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
 		}
 		//requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		
+		mMultiSelectHandler = MultiSelectHandler.getInstance(this);
 		
 		getMimeTypes();
 		setupLoggingDb();
@@ -264,10 +268,6 @@ public class OpenExplorer
 			mBookmarks = new OpenBookmarks(this, mBookmarksList);
 			for(int i = 0; i < mBookmarksList.getCount(); i++)
 				mBookmarksList.expandGroup(i);
-		}
-		if(BEFORE_HONEYCOMB && USE_PRETTY_MENUS)
-		{
-			mPopupMenu = new IconContextMenu(this, R.menu.main_menu, findViewById(R.id.title_menu));
 		}
 		
 		refreshCursors();
@@ -401,6 +401,8 @@ public class OpenExplorer
 		if(mFavoritesFragment != null)
 			((BookmarkFragment)mFavoritesFragment).scanBookmarks();
 	}
+	
+	public static MultiSelectHandler getMultiSelectHandler() { return mMultiSelectHandler; }
 	
 	private void setupLoggingDb()
 	{
@@ -836,7 +838,7 @@ public class OpenExplorer
 			});
 		}
 		super.onCreateOptionsMenu(menu);
-		if(!USE_PRETTY_MENUS)
+		if(!USE_PRETTY_MENUS||!BEFORE_HONEYCOMB)
 		{
 			MenuItem sort = menu.findItem(R.id.menu_sort);
 			try {
@@ -937,6 +939,20 @@ public class OpenExplorer
 		mDlgAbout.show();
 	}
 	
+	public AlertDialog showConfirmationDialog(String msg, String title, DialogInterface.OnClickListener onYes)
+	{
+		return new AlertDialog.Builder(this)
+			.setTitle(title)
+			.setMessage(msg)
+			.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			})
+			.setPositiveButton(android.R.string.yes, onYes)
+			.show();
+	}
+	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		if(BEFORE_HONEYCOMB)
@@ -945,6 +961,9 @@ public class OpenExplorer
 			setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
 			setMenuVisible(menu, true, R.id.title_menu);
 		}
+		
+		if(menu.findItem(R.id.menu_context_unzip) != null && mMultiSelectHandler.getCount() == 0)
+			menu.findItem(R.id.menu_context_unzip).setVisible(false);
 		
 		if(!mSinglePane)
 			setMenuVisible(menu, false, R.id.menu_favorites);
@@ -1011,6 +1030,7 @@ public class OpenExplorer
 					goHome();
 
 				return true;
+				
 			
 			case R.id.menu_new_folder:
 				mEvHandler.createNewFolder(mLastPath.getPath(), this);
@@ -1022,33 +1042,28 @@ public class OpenExplorer
 				
 				if(BEFORE_HONEYCOMB)
 				{
-					getDirContentFragment(true).changeMultiSelectState(true, MultiSelectHandler.getInstance(OpenExplorer.this));
+					getDirContentFragment(true).changeMultiSelectState(true);
 				} else {
 					
 					mActionMode = startActionMode(new ActionMode.Callback() {
-						
-						MultiSelectHandler handler;
-						
 						
 						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 							return false;
 						}
 						public void onDestroyActionMode(ActionMode mode) {
-							getDirContentFragment(false).changeMultiSelectState(false, handler);
+							getDirContentFragment(false).changeMultiSelectState(false);
 							mActionMode = null;
-							handler = null;
 						}
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							handler = MultiSelectHandler.getInstance(OpenExplorer.this);
 							mode.setTitle("Multi-select Options");
 							mode.getMenuInflater().inflate(R.menu.context_file, menu);
 							setMenuVisible(menu, false, R.id.menu_context_paste, R.id.menu_context_unzip);
-							getDirContentFragment(true).changeMultiSelectState(true, handler);
+							getDirContentFragment(true).changeMultiSelectState(true);
 							return true;
 						}
 						public boolean onActionItemClicked(ActionMode mode, MenuItem item)
 						{
-							ArrayList<String>files = handler.getSelectedFiles();
+							ArrayList<OpenPath> files = getMultiSelectHandler().getSelectedFiles();
 							
 							//nothing was selected
 							if(files.size() < 1) {
@@ -1056,13 +1071,7 @@ public class OpenExplorer
 								return true;
 							}
 							
-							OpenPath file = new OpenFile(files.get(0));
-							try {
-								file = FileManager.getOpenCache(files.get(0));
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+							OpenPath file = files.get(0);
 							
 							if(mHeldFiles == null)
 								mHeldFiles = new OpenClipboard();
@@ -1070,12 +1079,7 @@ public class OpenExplorer
 							mHeldFiles.clear();
 							
 							for(int i=1; i<files.size(); i++)
-								try {
-									mHeldFiles.add(FileManager.getOpenCache(files.get(i)));
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
+									mHeldFiles.add(files.get(i));
 						
 							return getDirContentFragment(false)
 									.executeMenu(item.getItemId(), mode, file, mHeldFiles);
@@ -1161,6 +1165,32 @@ public class OpenExplorer
 				Logger.LogInfo("Show menu!");
 				showMenu();
 				return true;
+			
+			case R.id.menu_multi_all_delete:
+				showConfirmationDialog(
+						getResources().getString(R.string.s_confirm_delete).replace("xxx", mMultiSelectHandler.getCount() + " " + getResources().getString(R.string.s_files)),
+						getResources().getString(R.string.s_menu_delete_all),
+						new DialogInterface.OnClickListener() { // yes
+							public void onClick(DialogInterface dialog, int which) {
+								for(OpenPath file : getMultiSelectHandler().getSelectedFiles())
+									file.delete();
+							}
+						});
+				break;
+				
+			case R.id.menu_multi_all_clear:
+				mMultiSelectHandler.clear();
+				return true;
+
+			case R.id.menu_multi_all_copy:
+				mHeldFiles.DeleteSource = false;
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+				break;
+				
+			case R.id.menu_multi_all_move:
+				mHeldFiles.DeleteSource = true;
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+				break;
 				
 			case R.id.title_paste:
 			case R.id.title_paste_icon:
@@ -1178,6 +1208,7 @@ public class OpenExplorer
 				return true;
 		}
 		
+		return true;
 		//return super.onOptionsItemSelected(item);
 	}
 	
@@ -1207,9 +1238,9 @@ public class OpenExplorer
 		if(showContextMenu(menuId, from) == null)
 			if(menuId == R.menu.main_menu || menuId == R.id.title_menu)
 				openOptionsMenu();
-			else if (menuId == R.id.menu_sort || menuId == R.menu.menu_sort)
+			else if (menuId == R.id.menu_sort)
 				showMenu(R.menu.menu_sort, from);
-			else if(menuId == R.id.menu_view || menuId == R.menu.menu_view)
+			else if(menuId == R.id.menu_view)
 				showMenu(R.menu.menu_view, from);
 			//else
 			//	showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
@@ -1235,7 +1266,10 @@ public class OpenExplorer
 				return null;
 			if(menuId == R.menu.context_file || menuId == R.menu.main_menu || menuId == R.menu.menu_sort || menuId == R.menu.menu_view)
 			{
-				final IconContextMenu icm = new IconContextMenu(OpenExplorer.this, menuId, from);
+				Menu menu = new MenuBuilderNew(this);
+				new MenuInflater(this).inflate(menuId, menu);
+				onPrepareOptionsMenu(menu);
+				final IconContextMenu icm = new IconContextMenu(OpenExplorer.this, menu, from);
 				if(icm == null)
 					throw new NullPointerException("context menu returned null");
 				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
@@ -1273,7 +1307,7 @@ public class OpenExplorer
 		try {
 			icm = new IconContextMenu(this, menu, from);
 			if(menu.size() > 10)
-				icm.setMaxColumns(2);
+				icm.setNumColumns(2);
 			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 				public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 					//showToast(item.getTitle().toString());
@@ -1585,7 +1619,7 @@ public class OpenExplorer
 		} else {
 			if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
 				setViewMode(newView = VIEW_LIST);
-			if(!BEFORE_HONEYCOMB && CarouselFragment.class.equals(content.getClass()))
+			if(!BEFORE_HONEYCOMB && (content == null || content instanceof CarouselFragment))
 			{
 				content = new ContentFragment(path, mViewMode);
 				ft.replace(R.id.content_frag, content);
@@ -1604,7 +1638,11 @@ public class OpenExplorer
 		ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
 		ft.setBreadCrumbTitle(path.getPath());
-		ft.commit();
+		try {
+			ft.commit();
+		} catch(IllegalStateException e) {
+			Logger.LogWarning("Trying to commit after onSave", e);
+		}
 		updateTitle(path.getPath());
 		changeViewMode(getSetting(path, "view", mViewMode), false); // bug fix
 		mLastPath = path;
@@ -1697,7 +1735,7 @@ public class OpenExplorer
 						for(OpenPath kid : path.list())
 						{
 							ThumbnailCreator.generateThumb(kid, 36, 36);
-							ThumbnailCreator.generateThumb(kid, 96, 96);
+							ThumbnailCreator.generateThumb(kid, 128, 128);
 							done++;
 						}
 					} catch (IOException e) {
@@ -1708,7 +1746,7 @@ public class OpenExplorer
 					if(!ThumbnailCreator.hasContext())
 						ThumbnailCreator.setContext(getApplicationContext());
 					ThumbnailCreator.generateThumb(path, 36, 36);
-					ThumbnailCreator.generateThumb(path, 96, 96);
+					ThumbnailCreator.generateThumb(path, 128, 128);
 					done++;
 				}
 			}

@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import android.os.AsyncTask;
@@ -75,6 +76,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
@@ -84,6 +86,10 @@ import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.SlidingDrawer;
+import android.widget.SlidingDrawer.OnDrawerCloseListener;
+import android.widget.Gallery;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -100,10 +106,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public static final boolean USE_ACTIONMODE = false;
 	private static boolean mMultiSelectOn = false;
 	
-	private MultiSelectHandler mMultiSelect;
+	private static MultiSelectHandler mMultiSelect;
 	
 	//private LinearLayout mPathView;
-	private LinearLayout mMultiSelectView;
+	//private SlidingDrawer mMultiSelectDrawer;
+	//private GridView mMultiSelectView;
+	private RelativeLayout mMultiSelectLayout;
+	private Gallery mMultiSelectGallery;
 	private GridView mGrid = null;
 	private View mProgressBarLoading = null;
 	
@@ -131,16 +140,19 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		//Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		mPath = mLastPath;
+		mMultiSelect = OpenExplorer.getMultiSelectHandler();
 		//mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
 	}
 	public ContentFragment(OpenPath path)
 	{
 		mPath = mLastPath = path;
+		mMultiSelect = OpenExplorer.getMultiSelectHandler();
 		//mViewMode = getExplorer().getSetting(path, "view", mViewMode);
 	}
 	public ContentFragment(OpenPath path, int viewMode)
 	{
 		mPath = mLastPath = path;
+		mMultiSelect = OpenExplorer.getMultiSelectHandler();
 		setViewMode(viewMode);
 	}
 	
@@ -179,7 +191,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void onResume() {
 		super.onResume();
 	}
-	public void refreshData(Bundle savedInstanceState)
+	public void refreshData(Bundle savedInstanceState) { refreshData(savedInstanceState, true); }
+	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
@@ -231,7 +244,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//OpenExplorer.setOnSettingsChangeListener(this);
 		
 			//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
-			updateData(mData);
+			updateData(mData, allowSkips);
 	}
 
 	//@Override
@@ -279,8 +292,23 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 		if(mGrid == null)
 			mGrid = (GridView)v.findViewById(R.id.content_grid);
-		if(mMultiSelectView == null)
-			mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
+		
+		/*if(mMultiSelectView == null)
+			mMultiSelectView = (GridView)v.findViewById(R.id.multiselect_path);
+		if(mMultiSelectView != null)
+			setupMultiSelectView();
+		if(mMultiSelectDrawer == null)
+			mMultiSelectDrawer = (SlidingDrawer)v.findViewById(R.id.multiselect_drawer);
+		if(mMultiSelectDrawer != null)
+			mMultiSelectDrawer.setVisibility(View.GONE);
+			*/
+		if(mMultiSelectLayout == null)
+			mMultiSelectLayout = (RelativeLayout)v.findViewById(R.id.multiselect_view);
+		if(mMultiSelectGallery == null)
+			mMultiSelectGallery = (Gallery)v.findViewById(R.id.multiselect_gallery);
+		if(mMultiSelectGallery != null)
+			setupMultiSelectView();
+		
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
@@ -290,6 +318,103 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			Logger.LogError("WTF, where are they?");
 		else
 			updateGridView();
+	}
+	
+	private void setupMultiSelectView()
+	{
+		mMultiSelectGallery.setAdapter(mMultiSelect);
+		final MultiSelectHandler mMulti = mMultiSelect;
+		//final SlidingDrawer mMultiDrawer = mMultiSelectDrawer;
+		final Gallery mMultiGallery = mMultiSelectGallery;
+		final RelativeLayout mMultiLayout = mMultiSelectLayout;
+		
+		mMultiSelectLayout.findViewById(R.id.multiselect_close).setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				mMulti.clear();
+				mMultiLayout.setVisibility(View.GONE);
+			}
+		});
+		
+		if(mMulti.getCount() == 0)
+			mMultiSelectLayout.setVisibility(View.GONE);
+		else
+			mMultiSelectLayout.setVisibility(View.VISIBLE);
+		
+		mMultiGallery.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> arg0, View v,
+					int pos, long id) {
+				int ret = mMultiSelect.clearFileEntry((OpenPath)mMultiSelect.getItem(pos));
+				//int ret = mMulti.clearFileEntry(file);
+				if(mMulti.getCount() == 0)
+				{
+					mMultiLayout.setVisibility(View.GONE);
+				}
+			}
+		});
+		mMultiGallery.setOnItemLongClickListener(new OnItemLongClickListener() {
+			public boolean onItemLongClick(AdapterView<?> arg0, View v,
+					int pos, long id) {
+				final OpenPath file = (OpenPath)mMulti.getItem(pos);
+				final IconContextMenu icm = new IconContextMenu(mContext, R.menu.multiselect, v);
+				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
+						//showToast(item.getTitle().toString());
+						switch(item.getItemId())
+						{
+						case R.id.menu_multi_solo_clear:
+							mMulti.clearFileEntry(file);
+							break;
+							
+						case R.id.menu_multi_solo_copy:
+							if(file.getParent().equals(mPath))
+							{
+								getExplorer().showToast(R.string.s_error_same_destination);
+							} else {
+								ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+								files.add(file);
+								getEventHandler().copyFile(files, mPath, mContext);
+							}
+							break;
+							
+						case R.id.menu_multi_solo_move:
+							if(file.getParent().equals(mPath))
+							{
+								getExplorer().showToast(R.string.s_error_same_destination);
+							} else {
+								ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+								files.add(file);
+								getEventHandler().cutFile(files, mPath, mContext);
+							}
+							break;
+							
+						case R.id.menu_multi_solo_delete:
+							getExplorer().showConfirmationDialog(
+									getString(R.string.s_confirm_delete).replace("xxx", file.getName()),
+									getString(R.string.s_menu_delete),
+									new DialogInterface.OnClickListener() {
+										public void onClick(DialogInterface dialog, int which) {
+											file.delete();
+										}
+									});
+								
+							break;
+							
+						case R.id.menu_multi_zip:
+							getEventHandler().zipFile(mPath, mMulti.getSelectedFilesArray(), mContext);
+							break;
+							
+						default:
+							getExplorer().onClick(item.getItemId(), item, view);
+							break;
+						}
+						icm.dismiss();
+						//mMenuPopup.dismiss();
+					}
+				});
+				icm.show();
+				return true;
+			}
+		});
 	}
 
 	@Override
@@ -313,6 +438,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			setupGridView();
 		}
 		mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
+		getManager().setSorting(FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getManager().getSorting().toString())));
+		getManager().setShowHiddenFiles(!getExplorer().getSetting(mPath, "hide", true));
+		mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", true);
 		//Logger.LogVerbose("Check View Mode: " + mViewMode);
 		if(mViewMode == OpenExplorer.VIEW_GRID) {
 			mLayoutID = R.layout.grid_content_layout;
@@ -320,16 +448,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			Logger.LogVerbose("Grid Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
 			mGrid.setColumnWidth(iColWidth);
 			//mGrid.setNumColumns(getActivity().getWindowManager().getDefaultDisplay().getWidth() / iColWidth);
-			mGrid.setVerticalSpacing(10);
-			mGrid.setHorizontalSpacing(10);
 		} else {
 			mLayoutID = R.layout.list_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.list_width);
 			Logger.LogVerbose("List Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
 			mGrid.setColumnWidth(iColWidth);
 			//mGrid.setNumColumns(GridView.AUTO_FIT);
-			mGrid.setVerticalSpacing(0);
-			mGrid.setHorizontalSpacing(0);
 		}
 		if(mGrid == null) return;
 		if(mData2 == null)
@@ -397,8 +521,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE) {
 					
 					try {
-						View anchor = view.findViewById(R.id.content_context_helper);
-						if(anchor == null) anchor = view;
+						View anchor = view; //view.findViewById(R.id.content_context_helper);
+						//if(anchor == null) anchor = view;
 						//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 						//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
 						final IconContextMenu cm = new IconContextMenu(
@@ -569,6 +693,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	private void addHoldingFile(OpenPath path) {
 		getExplorer().addHoldingFile(path);
+		if(mMultiSelectOn)
+			addToMultiSelect(path);
 	}
 	private void clearHoldingFiles() { getExplorer().clearHoldingFiles(); }
 	private boolean isHoldingFiles() { return getClipboard().size() > 0; }
@@ -624,11 +750,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				}
 				break;
 			case R.id.menu_context_multi:
-				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
+				changeMultiSelectState(!mMultiSelectOn);
 				addHoldingFile(file);
 				return true;
 			case R.id.menu_multi:
-				changeMultiSelectState(!mMultiSelectOn, MultiSelectHandler.getInstance(mContext));
+				changeMultiSelectState(!mMultiSelectOn);
 				return true;
 			case R.id.menu_context_bookmark:
 				getExplorer().addBookmark(file);
@@ -758,31 +884,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		final OpenPath file = (OpenPath)list.getItemAtPosition(pos);
 		
-		
 		Logger.LogDebug("File clicked: " + file.getPath());
 		
-		//getExplorer().hideBookmarkTitles();
-		
 		if(mMultiSelectOn) {
-			View v;
-			
-			//if (mThumbnail == null)
-				v = mMultiSelect.addFile(file.getPath());
-			//else
-			//	v = mMultiSelect.addFile(file.getPath(), mThumbnail);
-			
-			if(v == null)
-				return;
-			
-			v.setOnClickListener(new View.OnClickListener() {
-				//@Override
-				public void onClick(View v) {					
-					int ret = mMultiSelect.clearFileEntry(file.getPath());
-					mMultiSelectView.removeViewAt(ret);
-				}
-			});
-			
-			mMultiSelectView.addView(v);
+			addToMultiSelect(file);
 			return;
 		}
 		
@@ -801,7 +906,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(file.requiresThread())
 			{
 				//getExplorer().showToast("Still need to handle this.");
-				getExplorer().editFile(file);
+				if(file.isTextFile())
+					getExplorer().editFile(file);
+				else
+					getEventHandler().copyFile(file, mPath, mContext);
 				return;
 			}
 			
@@ -809,13 +917,25 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 	}
 	
-	private void updateData(final OpenPath[] items)
+	private void addToMultiSelect(final OpenPath file) {
+		final View v = mMultiSelect.addFile(file);
+		
+		if(mMultiSelect.getCount() >= 1)
+			mMultiSelectLayout.setVisibility(View.VISIBLE);
+			//mMultiSelectDrawer.setVisibility(View.VISIBLE);
+		
+		
+		//mMultiSelectView.addView(v);
+	}
+	private void updateData(final OpenPath[] items) { updateData(items, true); }
+	private void updateData(final OpenPath[] items, boolean allowSkips)
 	{
 		if(items == null) return;
 		updateData(items,
-				items.length < 500 && getManager().getSorting() != SortType.DATE_DESC,
-				items.length < 500,
-				items.length < 500 && getManager().getShowHiddenFiles());
+				!allowSkips || (items.length < 500 && getManager().getSorting() != SortType.DATE_DESC),
+				!allowSkips || (items.length < 500),
+				!allowSkips || (items.length < 500 && getManager().getShowHiddenFiles())
+				);
 	}
 	private void updateData(final OpenPath[] items, boolean doSort, boolean foldersFirst, boolean showHidden) {
 		if(!mReadyToUpdate) return;
@@ -825,7 +945,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
 		
-		if(doSort && items != null)
+		if(doSort)
 		{
 			OpenPath.Sorting = getManager().getSorting();
 			Arrays.sort(items);
@@ -848,6 +968,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mContentAdapter.notifyDataSetChanged();
 		
 		mReadyToUpdate = true;
+		
+		if(mGrid != null)
+			updateGridView();
 		/*
 		mPathView.removeAllViews();
 		mBackPathIndex = 0;	
@@ -931,14 +1054,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	 */
 	public void changePath(OpenPath path) {
 		mPath = mLastPath = path;
-		refreshData(new Bundle());
+		refreshData(null, false);
 	}
 	
 	//@Override
 	public void onHiddenFilesChanged(boolean state)
 	{
 		getManager().setShowHiddenFiles(state);
-		refreshData(null);
+		refreshData(null, false);
 	}
 
 	//@Override
@@ -950,7 +1073,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public void onSortingChanged(SortType type) {
 		getManager().setSorting(type);
-		refreshData(null);
+		refreshData(null, false);
 	}
 	
 	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
@@ -958,7 +1081,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		getManager().setSorting(sort);
 		mShowThumbnails = thumbs;
 		getManager().setShowHiddenFiles(hidden);
-		refreshData(null);
+		refreshData(null, false);
 	}
 
 	//@Override
@@ -973,8 +1096,17 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//	mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 			if(mGrid == null)
 				mGrid = (GridView)v.findViewById(R.id.content_grid);
-			if(mMultiSelectView == null)
-				mMultiSelectView = (LinearLayout)v.findViewById(R.id.multiselect_path);
+
+			if(mMultiSelectLayout == null)
+				mMultiSelectLayout = (RelativeLayout)v.findViewById(R.id.multiselect_view);
+			if(mMultiSelectGallery == null)
+				mMultiSelectGallery = (Gallery)v.findViewById(R.id.multiselect_gallery);
+			if(mMultiSelectGallery != null)
+				setupMultiSelectView();
+			/*if(mMultiSelectView == null)
+				mMultiSelectView = (GridView)v.findViewById(R.id.multiselect_path);
+			if(mMultiSelectView != null)
+				setupMultiSelectView();*/
 		}
 
 		if(mGrid == null)
@@ -982,17 +1114,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		else updateGridView();
 	}
 			
-	public void changeMultiSelectState(boolean state, MultiSelectHandler handler) {
-		if(state && handler != null) {
-			mMultiSelect = handler;
-			mMultiSelectOn = state;
-			
-		} else if (!state && handler != null) {
-			mMultiSelect = handler;
-			mMultiSelect.cancelMultiSelect();
-			mMultiSelectView.removeAllViews();
-			mMultiSelectOn = state;
-		}
+	public void changeMultiSelectState(boolean multiSelectOn) {
+		mMultiSelectOn = multiSelectOn;
+		if(!multiSelectOn)
+			mMultiSelect.clear();
+		mMultiSelectLayout.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
+		//mMultiSelectDrawer.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
 	}
 	
 	
@@ -1062,6 +1189,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mHolder = (BookmarkHolder)view.getTag();
 				//mHolder.cancelTask();
 			}
+			
+			//mHolder.getIconView().measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+			//Logger.LogVerbose("Content Icon Size: " + mHolder.getIconView().getMeasuredWidth() + "x" + mHolder.getIconView().getMeasuredHeight());
 
 			//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 			mHolder.setInfo(getFileDetails(file, false));
