@@ -639,20 +639,20 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 		public View getChildView(int group, int pos,
 				boolean isLastChild, View convertView, ViewGroup parent) {
-			View ret = convertView;
+			View ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null); //convertView;
 			OpenPath path = getChild(group, pos);
 			BookmarkHolder mHolder = null;
 			if(ret == null)
 			{
-				ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null);
 				mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 				ret.setTag(mHolder);
 			} else mHolder = (BookmarkHolder)ret.getTag();
-			
+
 			if(group == 0)
 				updateSizeIndicator(path, ret);
 			else 
 				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);
+			
 			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(getChild(group, pos)));
 			ThumbnailCreator.setThumbnail(((ImageView)ret.findViewById(R.id.content_icon)), getChild(group, pos), 36, 36);
 			
@@ -698,9 +698,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				mText.setTypeface(Typeface.DEFAULT_BOLD);
 			else
 				mText.setTypeface(Typeface.DEFAULT);
+			
+			//ret.setBackgroundColor(android.R.color.background_dark);
+			//mText.setTextColor(android.R.color.secondary_text_light);
+			
 			String[] groups = getExplorer().getResources().getStringArray(R.array.bookmark_groups);
 			if(mText != null)
-				mText.setText(groups[group] + (getChildrenCount(group) > 0 ? " (" + getChildrenCount(group) + ")" : ""));
+				mText.setText(groups[group] + (getChildrenCount(group) > 0 ? " (" + (getChildrenCount(group)  - (group == BOOKMARK_SERVER ? 1 : 0)) + ")" : ""));
 			return ret;
 		}
 

@@ -5,6 +5,7 @@
     <TextView
 	    style="?android:attr/listSeparatorTextViewStyle"
 	    android:id="@android:id/title"
+	    android:textColor="@color/section_title"
 	    android:text="@string/s_pref_servers"
 	/>
     <Button
