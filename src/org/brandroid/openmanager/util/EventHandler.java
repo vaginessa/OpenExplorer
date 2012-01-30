@@ -380,20 +380,26 @@ public class EventHandler {
 		protected void onPreExecute() {
 			String title = getResourceString(mContext, R.string.s_title_executing).toString();
 			Boolean showDialog = true, showNotification = false, isCancellable = false;
+			int notifIcon = R.drawable.icon;
 			switch(mType) {
 				case DELETE_TYPE:
 					title = getResourceString(mContext, R.string.s_title_deleting).toString();
 					showDialog = false;
 					break;
 				case SEARCH_TYPE:
+					notifIcon = android.R.drawable.ic_menu_search;
 					title = getResourceString(mContext, R.string.s_title_searching).toString();
 					break;
 				case COPY_TYPE:
+					if(mIntoPath.requiresThread())
+						notifIcon = android.R.drawable.stat_sys_upload;
+					notifIcon = R.drawable.ic_menu_copy;
 					title = getResourceString(mContext, R.string.s_title_copying).toString();
 					showDialog = false;
 					showNotification = true;
 					break;
 				case CUT_TYPE:
+					notifIcon = R.drawable.ic_menu_cut;
 					title = getResourceString(mContext, R.string.s_title_moving).toString();
 					showDialog = false;
 					showNotification = true;
@@ -426,7 +432,8 @@ public class EventHandler {
 				try {
 					Intent intent = new Intent(mContext, OpenExplorer.class);
 					PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OpenExplorer.REQUEST_CANCEL, intent, 0);
-					mNote = new Notification(R.drawable.icon, title, System.currentTimeMillis());
+					mNote = new Notification(notifIcon,
+							title, System.currentTimeMillis());
 					title += " -> " + mIntoPath.getPath();
 					String subtitle = "";
 					if(mInitParams != null && mInitParams.length > 0)
