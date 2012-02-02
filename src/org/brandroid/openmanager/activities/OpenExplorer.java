@@ -79,6 +79,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
@@ -153,6 +154,7 @@ public class OpenExplorer
 	private Handler mHandler = new Handler();  // handler for the main thread
 	private int mViewMode = VIEW_LIST;
 	private long mLastCursorEnsure = 0;
+	private boolean mRunningCursorEnsure = false;
 	
 	private Fragment mFavoritesFragment;
 	private ExpandableListView mBookmarksList;
@@ -173,10 +175,11 @@ public class OpenExplorer
 	public void setViewMode(int mode) { mViewMode = mode; }
 	
 	public void onCreate(Bundle savedInstanceState) {
-		
+
 		if(BEFORE_HONEYCOMB)
+		{
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
-		else {
+		} else if(!BEFORE_HONEYCOMB) {
 			USE_ACTION_BAR = true;
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
 		}
@@ -262,7 +265,10 @@ public class OpenExplorer
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
 			mBookmarksList = new ExpandableListView(getBaseContext());
-			mBookmarksPopup = new BetterPopupWindow(this, findViewById(R.id.title_icon));
+			View anchor = findViewById(R.id.title_icon);
+			if(anchor == null)
+				anchor = findViewById(android.R.id.home);
+			mBookmarksPopup = new BetterPopupWindow(this, anchor);
 			mBookmarksPopup.setContentView(mBookmarksList);
 			//mBookmarksPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.contextmenu_opentop));
 			mBookmarks = new OpenBookmarks(this, mBookmarksList);
@@ -603,7 +609,7 @@ public class OpenExplorer
 				CursorLoader loader = new CursorLoader(getApplicationContext(),
 						Uri.parse("content://media/external/video/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						MediaStore.Video.Media.SIZE + " > 100000", null,
+						MediaStore.Video.Media.SIZE + " > 10000", null,
 						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
 				Cursor c = loader.loadInBackground();
@@ -663,13 +669,21 @@ public class OpenExplorer
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Apks.", e); }
 		}
 		//Cursor mAudioCursor = managedQuery(MediaStore.Audio, projection, selection, selectionArgs, sortOrder)
-		ensureCursorCache();
+		new Thread(new Runnable() {public void run() {
+			ensureCursorCache();
+		}}).run();
 	}
 	public void ensureCursorCache()
 	{
-		if(mLastCursorEnsure == 0 || new Date().getTime() - mLastCursorEnsure < 10000) // at least 10 seconds
+		if(mRunningCursorEnsure
+				//|| mLastCursorEnsure == 0
+				//|| new Date().getTime() - mLastCursorEnsure < 10000 // at least 10 seconds
+				)
+		{
+			Logger.LogVerbose("Skipping ensureCursorCache");
 			return;
-		mLastCursorEnsure = new Date().getTime();
+		} else Logger.LogVerbose("Running ensureCursorCache");
+		mRunningCursorEnsure = true;
 		
 		// group into blocks
 		int iTotalSize = 0;
@@ -691,7 +705,15 @@ public class OpenExplorer
 					buffer.toArray(buff);
 					buffer.clear();
 					try {
-						new EnsureCursorCacheTask().execute(buff);
+						//Logger.LogDebug("Executing Task of " + buff.length + " items");
+						/*if(!BEFORE_HONEYCOMB)
+							new EnsureCursorCacheTask().executeOnExecutor(new Executor() {
+								public void execute(Runnable command) {
+									command.run();
+								}
+							}, buff);
+						else*/
+							new EnsureCursorCacheTask().execute(buff);
 					} catch(RejectedExecutionException e) {
 						Logger.LogWarning("Couldn't ensure cache.", e);
 						return;
@@ -705,13 +727,25 @@ public class OpenExplorer
 			buffer.toArray(buff);
 			buffer.clear();
 			try {
-				new EnsureCursorCacheTask().execute(buff);
+				Logger.LogDebug("Executing Task of " + buff.length + " items");
+				/*if(!BEFORE_HONEYCOMB)
+					new EnsureCursorCacheTask().executeOnExecutor(new Executor() {
+						public void execute(Runnable command) {
+							command.run();
+						}
+					}, buff);
+				else*/
+					new EnsureCursorCacheTask().execute(buff);
 			} catch(RejectedExecutionException e) {
 				Logger.LogWarning("Couldn't ensure cache.", e);
 				return;
 			}
 		}
+
+		Logger.LogVerbose("Done with ensureCursorCache");
+		
 		mLastCursorEnsure = new Date().getTime();
+		mRunningCursorEnsure = false;
 	}
 	
 
@@ -1017,7 +1051,7 @@ public class OpenExplorer
 	public boolean onClick(int id, MenuItem item, View from)
 	{
 		super.onClick(id);
-		if(id != R.id.title_icon)
+		if(id != R.id.title_icon && id != android.R.id.home);
 			toggleBookmarks(false);
 		switch(id)
 		{

@@ -44,6 +44,7 @@ import android.widget.ImageView;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.jar.JarEntry;
@@ -76,6 +77,9 @@ public class ThumbnailCreator extends Thread {
 	
 	public static boolean useCache = true;
 	public static boolean showThumbPreviews = true; 
+	
+	private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
+	private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
 
 	public ThumbnailCreator(Context context, Handler handler) {
 		mContext = context;
@@ -96,7 +100,7 @@ public class ThumbnailCreator extends Thread {
 		else
 			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 		
-		if(file.isImageFile() || file.isVideoFile() || file.isAPKFile())
+		if(file.hasThumbnail())
 		{
 
 			if(showThumbPreviews && !file.requiresThread()) {
@@ -259,12 +263,19 @@ public class ThumbnailCreator extends Thread {
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true, mContext); }
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache) { return generateThumb(file, mWidth, mHeight, readCache, writeCache, mContext); }
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, Context context) { return generateThumb(file, mWidth, mHeight, true, true, context); }
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache, Context context)
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, boolean readCache, boolean writeCache, Context context)
 	{
 		final boolean useLarge = mWidth > 72;
 		//SoftReference<Bitmap> mThumb = null;
 		Bitmap bmp = null;
 		//final Handler mHandler = next.Handler;
+		
+		//readCache = writeCache = true;
+
+		Boolean useGeneric = false;
+		String mParent = file.getParent() != null ? file.getParent().getName() : null;
+		if(fails.containsKey(mParent) && fails.get(mParent) > 10)
+			useGeneric = true;
 		
 		if(context != null)
 		{
@@ -272,7 +283,7 @@ public class ThumbnailCreator extends Thread {
 				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), context, mWidth > 72));
 			
 			bmp = BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight));
-			if(file.requiresThread())
+			if(file.requiresThread() || useGeneric)
 				return new SoftReference<Bitmap>(bmp);
 		}
 		
@@ -289,11 +300,14 @@ public class ThumbnailCreator extends Thread {
 		if(readCache && bmp == null)
 			bmp = loadThumbnail(mCacheFilename);
 		
-		if(bmp == null)
+		if(bmp == null && !useGeneric)
 		{
 			Boolean valid = false;
-			if (file instanceof OpenMediaStore || file instanceof OpenCursor)
+			if ((file instanceof OpenMediaStore || file instanceof OpenCursor)
+					&& (!fails.containsKey(mParent) || fails.get(mParent) < 10))
 			{
+				if(!fails.containsKey(mParent))
+					fails.put(mParent, 0);
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
 				opts.inSampleSize = 1;
@@ -322,7 +336,7 @@ public class ThumbnailCreator extends Thread {
 					valid = true;
 				} else Logger.LogError("Unable to create MediaStore thumbnail.");
 			}
-			if (!valid && file.isAPKFile())
+			if (!valid && file.isAPKFile() && !useGeneric)
 			{
 				//Logger.LogInfo("Getting apk icon for " + file.getName());
 				JarFile apk = null;
@@ -389,7 +403,7 @@ public class ThumbnailCreator extends Thread {
 						Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
 					}
 				}
-			} else if (!valid && file.isImageFile()) {
+			} else if (!valid && file.isImageFile() && !useGeneric) {
 				long len_kb = file.length() / 1024;
 				
 				BitmapFactory.Options options = new BitmapFactory.Options();
@@ -409,11 +423,15 @@ public class ThumbnailCreator extends Thread {
 					bmp = BitmapFactory.decodeFile(file.getPath());
 					
 					if (bmp == null) 
+					{
 						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
+						useGeneric = true;
+					}
 					
 				}
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
+				useGeneric = true;
 				if(file.isDirectory())
 					bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_folder : R.drawable.sm_folder);
 				else
@@ -434,10 +452,11 @@ public class ThumbnailCreator extends Thread {
 		
 		if(bmp != null)
 		{
-			if(writeCache)
+			if(writeCache && !useGeneric)
 				saveThumbnail(mCacheFilename, bmp);
 			mCacheMap.put(mCacheFilename, bmp);
-		}
+		} else
+			fails.put(mParent, fails.containsKey(mParent) ? fails.get(mParent) + 1 : 1);
 		//Logger.LogDebug("Created " + bmp.getWidth() + "x" + bmp.getHeight() + " thumb (" + mWidth + "x" + mHeight + ")");
 		return new SoftReference<Bitmap>(bmp);
 	}

@@ -201,6 +201,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		return false;
 	}
 	
+	public boolean hasThumbnail() {
+		return isVideoFile() || isImageFile() || isAPKFile();
+	}
+	
 	public void setThreadUpdateCallback(OpenPathThreadUpdater updater)
 	{
 		mUpdater = updater;

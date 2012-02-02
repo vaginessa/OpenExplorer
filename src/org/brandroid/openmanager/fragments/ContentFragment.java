@@ -740,6 +740,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				{
 					try {
 						intent.setAction(Intent.ACTION_EDIT);
+						Logger.LogVerbose("Starting Intent: " + intent.toString());
 						getExplorer().startActivity(intent);
 					} catch(ActivityNotFoundException e) {
 						getExplorer().showToast(R.string.s_error_no_intents);
@@ -1179,17 +1180,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
 				view = in.inflate(mode, parent, false);
-				
-				mHolder = new BookmarkHolder(file, mName, view, mode);
-				
-				view.setTag(mHolder);
-				file.setTag(mHolder);
-				
-			} else {
-				mHolder = (BookmarkHolder)view.getTag();
-				//mHolder.cancelTask();
 			}
+
+			mHolder = new BookmarkHolder(file, mName, view, mode);
 			
+			view.setTag(mHolder);
+			file.setTag(mHolder);
 			//mHolder.getIconView().measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 			//Logger.LogVerbose("Content Icon Size: " + mHolder.getIconView().getMeasuredWidth() + "x" + mHolder.getIconView().getMeasuredHeight());
 
@@ -1207,12 +1203,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(!mHolder.getTitle().equals(mName))
 				mHolder.setTitle(mName);
 			
-			SoftReference<Bitmap> sr = file.getThumbnail(mWidth, mHeight, false, false); // ThumbnailCreator.generateThumb(file, mWidth, mHeight, false, false, getContext());
-			//Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
-			if(sr != null && sr.get() != null)
-				mHolder.getIconView().setImageBitmap(sr.get());
-			else
-				ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
+			if(!file.hasThumbnail())
+				mHolder.setIconResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
+			else {
+				SoftReference<Bitmap> sr = file.getThumbnail(mWidth, mHeight, true, false); // ThumbnailCreator.generateThumb(file, mWidth, mHeight, false, false, getContext());
+				//Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
+				if(sr != null && sr.get() != null)
+					mHolder.getIconView().setImageBitmap(sr.get());
+				else
+					ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
+			}
 			
 			return view;
 		}
