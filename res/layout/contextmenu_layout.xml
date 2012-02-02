@@ -40,7 +40,7 @@
     </LinearLayout>
     
     <LinearLayout
-        android:layout_marginTop="-4dp"
+        android:layout_marginTop="@dimen/context_top_fix"
         android:background="@drawable/contextmenu_opentop"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -61,7 +61,7 @@
 	            android:layout_marginLeft="5dp"
 	            android:layout_marginRight="5dp"
 	            android:layout_height="1dp" android:layout_width="match_parent"
-				/>"
+				/>
 	    </LinearLayout> 
 	
 	    <FrameLayout
