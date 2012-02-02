@@ -49,6 +49,10 @@ public class IntentManager
 		ret.setAction(action);
 		for(String category : categories)
 			ret.addCategory(category);
+		ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+		ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		ret.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 		//ret.putExtra(name, value)
 		//ret.set
 		
