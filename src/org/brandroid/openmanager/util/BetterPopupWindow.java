@@ -50,6 +50,10 @@ public class BetterPopupWindow {
 	public BetterPopupWindow(Context mContext, View anchor) {
 		this.mContext = mContext;
 		this.anchor = anchor;
+		if(anchor != null && anchor.findViewById(R.id.content_icon) != null)
+			anchor = anchor.findViewById(R.id.content_icon);
+		if(anchor != null && anchor.findViewById(android.R.id.icon) != null)
+			anchor = anchor.findViewById(android.R.id.icon);
 		this.popup = new PopupWindow(mContext);
 		//this.popup.setAnimationStyle(anim);
 
@@ -99,18 +103,23 @@ public class BetterPopupWindow {
 		// if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
 		// otherwise you need to set the background of the root viewgroup
 		// and set the popupwindow background to an empty BitmapDrawable
-		if(backgroundView == null)
-		{
-			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
-					yPos > windowManager.getDefaultDisplay().getHeight() / 2 ? R.layout.context_bottom : R.layout.contextmenu_layout, null);
-			((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
-		}
-		this.popup.setContentView(backgroundView);
+		changeBackground(yPos > getContentRect().centerY() ?
+				R.layout.context_bottom : R.layout.contextmenu_layout);
 		this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
 		this.popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
 		this.popup.setOutsideTouchable(true);
+	}
+	
+	private void changeBackground(int id)
+	{
+		if(backgroundView == null)
+		{
+			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(id, null);
+			((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
+		}
+		this.popup.setContentView(backgroundView);
 	}
 	
 	private void placeArrow(int arrowOffset, int rootWidth)
@@ -121,8 +130,8 @@ public class BetterPopupWindow {
 		int arrowWidth = ((ImageView)indicator).getDrawable().getIntrinsicWidth();
 		//indicator.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		//int arrowWidth = indicator.getMeasuredWidth();
-		int pos1 = Math.min(rootWidth - arrowWidth, Math.max(10, arrowOffset % rootWidth));
-		int pos2 = Math.min(rootWidth - arrowWidth, Math.max(10, (rootWidth + arrowOffset) % rootWidth));
+		int pos1 = Math.min(rootWidth - arrowWidth, Math.max(0, arrowOffset % rootWidth));
+		int pos2 = Math.min(rootWidth - arrowWidth, Math.max(0, (rootWidth + arrowOffset) % rootWidth));
 		Logger.LogVerbose("Arrow: " + arrowOffset + ", " + rootWidth + " -> " + pos1 + " / " + pos2);
 		if(arrowOffset >= 0)
 		{
@@ -169,6 +178,7 @@ public class BetterPopupWindow {
 
 		if(anchor == null)
 		{
+			Logger.LogWarning("Anchor is null");
 			xOffset = (windowManager.getDefaultDisplay().getWidth() / 2) - (popup.getWidth() / 2);
 			if(popup.getHeight() > 0)
 				yOffset = (windowManager.getDefaultDisplay().getHeight() / 2) + (popup.getHeight() / 2);
@@ -199,31 +209,35 @@ public class BetterPopupWindow {
 			backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 			int bgWidth = backgroundView.getMeasuredWidth(),
 				bgHeight = backgroundView.getMeasuredHeight();
+			
+			int ancLeft = anchor.getLeft(),
+				ancTop = anchor.getTop();
 
-			Logger.LogVerbose("Widths (root/bg/pop/content/arrow/anchor/offset): " +
-						rootWidth + "x" + rootHeight + "/" +
-						bgWidth + "x" + bgHeight + "/" +
-						popup.getWidth() + "x" + popup.getHeight() + ":" + popup.getMaxAvailableHeight(anchor) + "/" +
-						widgetWidth + "x" + widgetHeight + "/" +
-						getContentWidth() + "x" + getContentHeight() + "/" +
+			Logger.LogVerbose("Widths: " +
+						"root=" + rootWidth + "x" + rootHeight + "/" +
+						"bg=" + bgWidth + "x" + bgHeight + "/" +
+						"pop=" + popup.getWidth() + "x" + popup.getHeight() + ":" + popup.getMaxAvailableHeight(anchor) + "/" +
+						"widg=" + widgetWidth + "x" + widgetHeight + "/" +
+						"cont=" + getContentRect() + "/" +
 						//backgroundView.findViewById(R.id.indicator).getWidth() + "/" +
-						anchor.getLeft() + "," + anchor.getTop() + "/" +
-						xOffset + "," + yOffset
+						"anch=" + ancLeft + "," + ancTop + "/" +
+						"off=" + xOffset + "," + yOffset
 						);
 			
 			float dp = mContext.getResources().getDimension(R.dimen.one_dp);
 			
 			//anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 			//arrowOffset = anchor.getMeasuredWidth() / 2;
-			arrowOffset = (int) (20 * dp);
+			arrowOffset = 0;
 
 			//anchor.getLocationOnScreen(anchorPos);
-			boolean fromRight = anchor.getLeft() > contentWidth / 2;
-			boolean fromBottom = anchor.getTop() > contentHeight / 2;
+			boolean fromRight = anchor.getLeft() > getContentRect().centerX();
+			boolean fromBottom = anchor.getTop() > getContentRect().centerY();
+			//if(!fromBottom && pop)
 
 			if(fromBottom)
 				popup.setHeight(
-						popup.getMaxAvailableHeight(anchor) - (int)(20 * dp)
+						popup.getMaxAvailableHeight(anchor)
 						//(R.dimen.large_text_height + (8 * dp)) * 
 						//mContext.getResources().getDimensionPixelSize(R.dimen.popup_height)
 						);
@@ -234,15 +248,24 @@ public class BetterPopupWindow {
 				xOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
 				xOffset += anchor.getWidth();
 				arrowOffset *= -1;
+				if(anchor.getWidth() > 50 && anchor.getWidth() < windowWidth / 2)
+					arrowOffset -= anchor.getWidth() / 3;
 				//arrowOffset = -1 * (anchor.getWidth() / 2);
 				//arrowOffset += 10;
 			} else {
+				if(anchor.getWidth() > 50 && anchor.getWidth() < windowWidth / 2)
+				{
+					arrowOffset = anchor.getWidth() / 2;
+					xOffset -= anchor.getWidth() / 4;
+				}
+				else if(anchor.getWidth() > 20)
+					arrowOffset += 20;
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
 			}
 	
 			
 			//int rootWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
-			placeArrow(arrowOffset, popup.getWidth() - (int)(30f * dp));
+			placeArrow(arrowOffset, popup.getWidth());
 			
 
 			if(fromBottom)
@@ -271,14 +294,25 @@ public class BetterPopupWindow {
 	{
 		if(anchor == null) return null;
 		View root = anchor;
-		while(root != null)
-		{	
-			root = (View)root.getParent();
+		while(root != null && root.getParent() != null)
+		{
+			if(root.getParent() != null && root.getParent() instanceof View)
+				root = (View)root.getParent();
+			else break;
 			if(root.getId() == R.id.content_frag) break;
 			if(GridView.class.equals(root.getClass())) break;
 			if(root.getId() == R.id.view_root) break;
 		}
 		return root;
+	}
+	private Rect getContentRect()
+	{
+		Rect ret = new Rect();
+		if(anchor == null)
+			windowManager.getDefaultDisplay().getRectSize(ret);
+		else if(getContentView() != null)
+			getContentView().getDrawingRect(ret);
+		return ret;
 	}
 	private int getContentWidth()
 	{
