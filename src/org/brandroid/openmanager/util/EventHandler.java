@@ -368,6 +368,7 @@ public class EventHandler {
 		private ProgressDialog mPDialog;
 		private Notification mNote = null;
 		private ArrayList<String> mSearchResults = null;
+		private boolean isDownload = false;
 		
 		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
 			mType = type;
@@ -505,6 +506,11 @@ public class EventHandler {
 					/// TODO: Add existing file check 
 					for(OpenPath file : params)
 					{
+						if(file.requiresThread())
+						{
+							isDownload = true;
+							this.publishProgress();
+						}
 						try {
 							if(copyToDirectory(file, mIntoPath, 0))
 								ret++;
@@ -517,6 +523,11 @@ public class EventHandler {
 					for(OpenPath file : params)
 					{
 						try {
+							if(file.requiresThread())
+							{
+								isDownload = true;
+								this.publishProgress();
+							}
 							if(copyToDirectory(file, mIntoPath, 0))
 							{
 								ret++;
@@ -592,11 +603,14 @@ public class EventHandler {
 				int size = (int)old.length();
 				int pos = 0;
 
+				BufferedInputStream i_stream = null;
+				BufferedOutputStream o_stream = null;
+				boolean success = false;
 				try {
 					Logger.LogDebug("Writing " + newFile.getPath());
-					BufferedInputStream i_stream = new BufferedInputStream(
+					i_stream = new BufferedInputStream(
 							   old.getInputStream());
-					BufferedOutputStream o_stream = new BufferedOutputStream(
+					o_stream = new BufferedOutputStream(
 													newFile.getOutputStream());
 					
 					while((read = i_stream.read(data, 0, FileManager.BUFFER)) != -1)
@@ -610,16 +624,19 @@ public class EventHandler {
 					i_stream.close();
 					o_stream.close();
 					
-					return true;
+					success = true;
 					
 				} catch (FileNotFoundException e) {
 					Logger.LogError("Couldn't find file to copy.", e);
-					return false;
-					
 				} catch (IOException e) {
 					Logger.LogError("IOException copying file.", e);
-					return false;
+				} finally {
+					if(o_stream != null)
+						o_stream.close();
+					if(i_stream != null)
+						i_stream.close();
 				}
+				return success;
 				
 			} else if(!newDir.canWrite())
 			{
@@ -708,7 +725,10 @@ public class EventHandler {
 
 			try {
 				RemoteViews noteView = mNote.contentView;
-				noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
+				if(values.length == 0 && isDownload)
+					noteView.setImageViewResource(android.R.id.icon, android.R.drawable.stat_sys_download);
+				else
+					noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
 				mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
 				//noteView.notify();
 				//noteView.
