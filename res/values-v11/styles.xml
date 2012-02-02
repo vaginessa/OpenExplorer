@@ -16,7 +16,9 @@
 
 <resources>
 
-    <style name="AppTheme" parent="android:style/Theme.Holo">
+    <style name="AppTheme" parent="@android:style/Theme.Holo">
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowFullscreen">true</item>
         
     </style>
     <style name="AppThemeCustom" parent="android:style/Theme.Holo">
