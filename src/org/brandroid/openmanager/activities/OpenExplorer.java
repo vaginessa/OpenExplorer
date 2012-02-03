@@ -1141,6 +1141,10 @@ public class OpenExplorer
 			setMenuVisible(menu, true, R.id.title_menu);
 		}
 		
+		setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", true), R.id.menu_view_fullscreen);
+		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // honeycomb
+			setMenuVisible(menu, false, R.id.menu_view_fullscreen);
+		
 		if(menu.findItem(R.id.menu_context_unzip) != null && mMultiSelectHandler.getCount() == 0)
 			menu.findItem(R.id.menu_context_unzip).setVisible(false);
 		
@@ -1164,6 +1168,9 @@ public class OpenExplorer
 			setMenuChecked(menu, true, R.id.menu_view_list, R.id.menu_view_grid, R.id.menu_view_carousel);
 		else if(mViewMode == VIEW_CAROUSEL)
 			setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
+		
+		setMenuChecked(menu, getFileManager().getShowHiddenFiles(), R.id.menu_view_hidden);
+		setMenuChecked(menu, getSetting(mLastPath, "thumbs", true), R.id.menu_view_thumbs);
 		
 		if(RootManager.Default.isRoot())
 			setMenuChecked(menu, true, R.id.menu_root);
@@ -1213,6 +1220,11 @@ public class OpenExplorer
 			
 			case R.id.menu_new_folder:
 				mEvHandler.createNewFolder(mLastPath.getPath(), this);
+				return true;
+				
+			case R.id.menu_view_fullscreen:
+				getPreferences().setSetting("global", "pref_fullscreen", item.isChecked());
+				goHome();
 				return true;
 				
 			case R.id.menu_multi:

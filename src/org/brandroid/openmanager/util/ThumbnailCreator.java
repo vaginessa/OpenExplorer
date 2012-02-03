@@ -102,7 +102,6 @@ public class ThumbnailCreator extends Thread {
 		
 		if(file.hasThumbnail())
 		{
-
 			if(showThumbPreviews && !file.requiresThread()) {
 
 				if(mContext == null)
@@ -111,15 +110,28 @@ public class ThumbnailCreator extends Thread {
 				
 				if(thumb == null)
 				{	
+					mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 					ThumbnailTask task = new ThumbnailTask();
+					ThumbnailStruct struct = new ThumbnailStruct(file, mImage, mWidth, mHeight);
+					/*
 					BookmarkHolder mHolder = null;
-					if(file.getTag() != null && file.getTag().getClass().equals(BookmarkHolder.class))
+					if(file.getTag() != null)
 					{
-						mHolder = ((BookmarkHolder)file.getTag());
-						mHolder.setTask(task);
+						if(file.getTag() instanceof BookmarkHolder)
+						{
+							mHolder = ((BookmarkHolder)file.getTag());
+							mHolder.setTask(task);
+							struct = new ThumbnailStruct(file, mHolder, mWidth, mHeight);
+						} else if(file.getTag() instanceof ImageView)
+						{
+							struct = new ThumbnailStruct(file, (ImageView)file.getTag(), mWidth, mHeight);
+						}
 					}
+					*/
+					
 					try {
-						task.execute(new ThumbnailStruct(file, mHolder, mWidth, mHeight));
+						if(struct != null)
+							task.execute(struct);
 					} catch(RejectedExecutionException rej) {
 						Logger.LogError("Couldn't generate thumbnail because Thread pool was full.", rej);
 					}
@@ -238,15 +250,24 @@ public class ThumbnailCreator extends Thread {
 	
 	public static void setContext(Context c) { mContext = c; }
 	
+	public static boolean hasThumbnailCached(OpenPath file, int w, int h)
+	{
+		return mCacheMap.containsKey(getCacheFilename(file.getPath(), w, h));
+	}
+	public static Bitmap getThumbnailCache(OpenPath file, int w, int h)
+	{
+		return getThumbnailCache(getCacheFilename(file.getPath(), w, h), w, h);
+	}
 	public static Bitmap getThumbnailCache(String name, int w, int h) {
 		String cacheName = getCacheFilename(name, w, h);
-		if(mCacheMap.get(cacheName) != null)
-			return mCacheMap.get(cacheName);
-		else {
+		if(!mCacheMap.containsKey(cacheName))
+		{
 			File f = mContext.getFileStreamPath(cacheName);
 			if(f.exists())
-				return BitmapFactory.decodeFile(f.getPath());
+				mCacheMap.put(cacheName, BitmapFactory.decodeFile(f.getPath()));
 		}
+		if(mCacheMap.containsKey(cacheName))
+			return mCacheMap.get(cacheName);
 		return null;
 	}
 	private static void putThumbnailCache(String cacheName, Bitmap value)

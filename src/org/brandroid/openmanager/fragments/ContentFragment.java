@@ -53,6 +53,8 @@ import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Properties;
+
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -90,6 +92,7 @@ import android.widget.RelativeLayout;
 import android.widget.SlidingDrawer;
 import android.widget.SlidingDrawer.OnDrawerCloseListener;
 import android.widget.Gallery;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -217,8 +220,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mShowThumbnails = true;
 		}
 
-		if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
-			mShowThumbnails = true;
+		//if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
+		//	mShowThumbnails = true;
 		
 		if(getActivity() != null && getActivity().getWindow() != null)
 			mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
@@ -1133,7 +1136,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
     	private final int MG = KB * KB;
     	private final int GB = MG * KB;
     	
-		private BookmarkHolder mHolder;
 		private String mName;
 		private ThumbnailCreator mThumbnail;
 		
@@ -1175,42 +1177,58 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
 					R.layout.grid_content_layout : R.layout.list_content_layout;
 			
-			if(view == null || view.getTag() == null || !BookmarkHolder.class.equals(view.getTag()) || ((BookmarkHolder)view.getTag()).getMode() != mode) {
+			if(view == null
+						//|| view.getTag() == null
+						//|| !BookmarkHolder.class.equals(view.getTag())
+						//|| ((BookmarkHolder)view.getTag()).getMode() != mode
+						) {
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
 				view = in.inflate(mode, parent, false);
-				mHolder = new BookmarkHolder(file, mName, view, mode);
-				view.setTag(mHolder);
-				file.setTag(mHolder);
-			} else mHolder = (BookmarkHolder)view.getTag();
+				//mHolder = new BookmarkHolder(file, mName, view, mode);
+				//view.setTag(mHolder);
+				//file.setTag(mHolder);
+			} //else mHolder = (BookmarkHolder)view.getTag();
 
 			//mHolder.getIconView().measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 			//Logger.LogVerbose("Content Icon Size: " + mHolder.getIconView().getMeasuredWidth() + "x" + mHolder.getIconView().getMeasuredHeight());
 
 			//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			mHolder.setInfo(getFileDetails(file, false));
-				
-			if(file.getClass().equals(OpenMediaStore.class))
+			//mHolder.setInfo(getFileDetails(file, false));
+			TextView mInfo = (TextView)view.findViewById(R.id.content_info);
+			if(mInfo != null)
+				mInfo.setText(getFileDetails(file, false));
+			
+			TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
+			if(mPathView != null)
 			{
-				mHolder.setPath(file.getPath());
-				mHolder.showPath(true);
-			}
-			else
-				mHolder.showPath(false);
-			
-			if(!mHolder.getTitle().equals(mName))
-				mHolder.setTitle(mName);
-			
-			if(!file.hasThumbnail())
-				mHolder.setIconResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-			else {
-				SoftReference<Bitmap> sr = file.getThumbnail(mWidth, mHeight, true, false); // ThumbnailCreator.generateThumb(file, mWidth, mHeight, false, false, getContext());
-				//Bitmap b = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
-				if(sr != null && sr.get() != null)
-					mHolder.getIconView().setImageBitmap(sr.get());
+				if(file.getClass().equals(OpenMediaStore.class))
+				{
+					mPathView.setText(file.getPath());
+					mPathView.setVisibility(View.VISIBLE);
+					//mHolder.setPath(file.getPath());
+					//mHolder.showPath(true);
+				}
 				else
-					ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, mWidth, mHeight);
+					mPathView.setVisibility(View.GONE);
+					//mHolder.showPath(false);
+			}
+			
+			TextView mNameView = (TextView)view.findViewById(R.id.content_text);
+			if(mNameView != null)
+				mNameView.setText(mName);
+			//if(!mHolder.getTitle().equals(mName))
+			//	mHolder.setTitle(mName);
+			ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+			
+			if(mIcon != null)
+			{
+				if(!mShowThumbnails||!file.hasThumbnail())
+					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
+				else {
+					ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
+				}
 			}
 			
 			return view;

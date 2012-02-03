@@ -201,6 +201,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		return false;
 	}
 	
+	/**
+	 * Indicates the potential existence of a dynamic thumbnail (videos, photos, & apk files)
+	 * @return boolean indicating whether a dynamic thumbnail exists
+	 */
 	public boolean hasThumbnail() {
 		return isVideoFile() || isImageFile() || isAPKFile();
 	}

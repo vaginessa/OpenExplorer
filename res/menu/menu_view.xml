@@ -26,4 +26,8 @@
 		android:checkable="true"
 		android:checked="true"
 		android:title="@string/s_menu_thumbs" />
+	<item
+	    android:id="@+id/menu_view_fullscreen"
+	    android:checkable="true"
+	    android:title="@string/s_pref_fullscreen" />
 </menu>
