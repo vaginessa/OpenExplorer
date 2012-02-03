@@ -16,6 +16,7 @@
 		<CheckBoxPreference
 			android:key="pref_thumbnail"
 			android:title="@string/s_pref_thumbs"
+			android:defaultValue="true"
 			android:summary="@string/s_pref_thumbs_summary"/>
 		<ListPreference
 			android:key="pref_view"
@@ -31,6 +32,13 @@
 		    android:entries="@array/starts"
 		    android:entryValues="@array/start_value"
 		    android:dialogTitle="@string/s_pref_start" />
+		<CheckBoxPreference
+		    android:key="pref_fullscreen"
+		    android:title="@string/s_pref_fullscreen"
+		    android:summaryOn="@string/s_pref_fullscreen_summary_on"
+		    android:summaryOff="@string/s_pref_fullscreen_summary_off"
+		    android:defaultValue="true"
+		    />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/s_pref_sort">
 		<ListPreference
@@ -53,7 +61,7 @@
 	            android:key="pref_stats"
 	            android:title="@string/s_pref_stats_title"
 	            android:summary="@string/s_pref_stats_summary"
-	            android:defaultValue="true"
+	            android:defaultValue="false"
 	            />
 	    </PreferenceCategory>
 		

@@ -5,18 +5,42 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
+import org.brandroid.utils.Logger;
+
 import android.database.Cursor;
 import android.net.Uri;
+import android.view.View;
+import android.widget.TextView;
 
 public class OpenCursor extends OpenPath
 {
 	private static final long serialVersionUID = -8828123354531942575L;
 	//private Cursor mCursor;
-	private OpenMediaStore[] mChildren;
-	private String mName;
+	private OpenMediaStore[] mChildren = new OpenMediaStore[0];
+	private final String mName;
 	private Long mTotalSize = 0l;
+	private boolean loaded = false;
+	private TextView mBookmarkText = null;
 	
-	public OpenCursor(Cursor c, String name)
+	public OpenCursor(String name)
+	{
+		mName = name;
+		loaded = false;
+	}
+	
+	public boolean isLoaded() { return loaded; }
+	
+	public void setContentCountTextView(TextView tv)
+	{
+		mBookmarkText = tv;
+		if(loaded)
+		{
+			tv.setVisibility(View.VISIBLE);
+			tv.setText("(" + mChildren.length + ")");
+		} else tv.setVisibility(View.GONE);
+	}
+	
+	public void setCursor(Cursor c)
 	{
 		//mCursor = c;
 		if(c == null) return;
@@ -34,7 +58,10 @@ public class OpenCursor extends OpenPath
 		}
 		mChildren = new OpenMediaStore[kids.size()];
 		mChildren = kids.toArray(mChildren);
-		mName = name;
+		if(mBookmarkText != null)
+			mBookmarkText.setText("(" + mChildren.length + ")");
+		Logger.LogInfo(getName() + " found " + mChildren.length);
+		loaded = true;
 	}
 
 	@Override

@@ -34,6 +34,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
@@ -44,6 +45,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -123,9 +125,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		//mBookmarksArray.clear();
 		clearBookmarks();
 		
-		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, getExplorer().getVideoParent());
-		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, getExplorer().getPhotoParent());
-		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, getExplorer().getMusicParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getVideoParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/"));
 		
@@ -216,6 +218,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			paths = mBookmarksArray.get(iType);
 		paths.add(path);
 		mBookmarksArray.put(iType, paths);
+		mBookmarkAdapter.notifyDataSetChanged();
+	}
+	
+	public void refresh()
+	{
+		mBookmarkAdapter.notifyDataSetChanged();
 	}
 	
 	private void clearBookmarks()
@@ -226,10 +234,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 	public String getPathTitle(OpenPath path)
 	{
-		String ret = getSetting("title_" + path.getAbsolutePath(), getPathTitleDefault(path));
-		if(OpenCursor.class.equals(path.getClass()) || OpenMediaStore.class.equals(path.getClass()))
-			ret += " (" + path.length() + ")";
-		return ret;
+		return getSetting("title_" + path.getAbsolutePath(), getPathTitleDefault(path));
 	}
 	
 	public void setPathTitle(OpenPath path, String title)
@@ -329,18 +334,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 
 	public boolean onItemLongClick(AdapterView<?> list, View v, int pos, long id) {
-		if(v.getTag() == null) return false;
-		BookmarkHolder h = (BookmarkHolder)v.getTag();
-		OpenPath path = h.getOpenPath();
-		if(path instanceof OpenCommand)
-			handleCommand(((OpenCommand)path).getCommand());
-		else if(path instanceof OpenFTP)
-			ShowServerDialog((OpenFTP)path, h);
-		else
-			ShowStandardDialog(path, h);
-		return true;
+		Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.toString());
+		return onLongClick(v);
 	}
-
+	
 	public boolean onChildClick(ExpandableListView parent, View v,
 			int groupPosition, int childPosition, long id) {
 		OpenPath path = mBookmarkAdapter.getChild(groupPosition, childPosition);
@@ -647,7 +644,17 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 				ret.setTag(mHolder);
 			} else mHolder = (BookmarkHolder)ret.getTag();
-
+			
+			TextView mCountText = (TextView)ret.findViewById(R.id.content_count);
+			if(mCountText != null)
+			{
+				if(path instanceof OpenCursor)
+				{
+					((OpenCursor)path).setContentCountTextView(mCountText);
+				} else mCountText.setVisibility(View.GONE);
+			}
+				
+			
 			if(group == 0)
 				updateSizeIndicator(path, ret);
 			else 
@@ -729,6 +736,27 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 	public BookmarkAdapter getListAdapter() {
 		return mBookmarkAdapter;
+	}
+
+	public boolean onLongClick(View v) {
+		if(v.getTag() == null) {
+			//((ExpandableListAdapter)list.getAdapter()).get
+			Logger.LogWarning("No tag set on long click in OpenBookmarks.");
+			return false;
+		}
+		Logger.LogInfo("Long click detected in OpenBookmarks");
+		return onLongClick((BookmarkHolder)v.getTag());
+	}
+	public boolean onLongClick(BookmarkHolder h)
+	{
+		OpenPath path = h.getOpenPath();
+		if(path instanceof OpenCommand)
+			handleCommand(((OpenCommand)path).getCommand());
+		else if(path instanceof OpenFTP)
+			ShowServerDialog((OpenFTP)path, h);
+		else
+			ShowStandardDialog(path, h);
+		return true;
 	}
 
 }

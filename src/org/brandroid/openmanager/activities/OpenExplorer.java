@@ -28,6 +28,7 @@ import android.os.StatFs;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.LoaderManager.LoaderCallbacks;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -48,6 +49,8 @@ import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.content.Loader.OnLoadCompleteListener;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.ActionMode;
@@ -61,6 +64,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
@@ -88,6 +92,7 @@ import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenBookmarks;
+import org.brandroid.openmanager.data.OpenBookmarks.BookmarkType;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -155,6 +160,7 @@ public class OpenExplorer
 	private int mViewMode = VIEW_LIST;
 	private long mLastCursorEnsure = 0;
 	private boolean mRunningCursorEnsure = false;
+	private static int mLoadingCount = 0;
 	
 	private Fragment mFavoritesFragment;
 	private ExpandableListView mBookmarksList;
@@ -167,7 +173,11 @@ public class OpenExplorer
 	
 	private FragmentManager fragmentManager;
 	
-	private OpenCursor mPhotoParent, mVideoParent, mMusicParent, mApkParent;
+	private final static OpenCursor
+			mPhotoParent = new OpenCursor("Photos"),
+			mVideoParent = new OpenCursor("Videos"),
+			mMusicParent = new OpenCursor("Music"),
+			mApkParent = new OpenCursor("Apps");
 	
 	private Boolean mSinglePane = false;
 	
@@ -176,12 +186,21 @@ public class OpenExplorer
 	
 	public void onCreate(Bundle savedInstanceState) {
 
+		if(getPreferences().getBoolean("global", "pref_fullscreen", true))
+		{
+			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		}
+
 		if(BEFORE_HONEYCOMB)
 		{
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		} else if(!BEFORE_HONEYCOMB) {
 			USE_ACTION_BAR = true;
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
+			if(Build.VERSION.SDK_INT >= 14)
+				getActionBar().setHomeButtonEnabled(true);
+			getActionBar().setDisplayUseLogoEnabled(true);
 		}
 		//requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		
@@ -217,6 +236,11 @@ public class OpenExplorer
 		setContentView(R.layout.main_fragments);
 
 		ThumbnailCreator.setContext(this);
+		
+		Logger.LogDebug("Refreshing cursors");
+		
+		refreshCursors();
+		
 
 		try {
 			if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
@@ -261,6 +285,8 @@ public class OpenExplorer
 		
 		if(mFavoritesFragment == null)
 			mFavoritesFragment = new BookmarkFragment();
+		
+		Logger.LogDebug("Setting up bookmarks");
 
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
@@ -275,8 +301,7 @@ public class OpenExplorer
 			for(int i = 0; i < mBookmarksList.getCount(); i++)
 				mBookmarksList.expandGroup(i);
 		}
-		
-		refreshCursors();
+		Logger.LogDebug("Setting up last path");
 		
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
@@ -414,7 +439,7 @@ public class OpenExplorer
 	{
 		if(Logger.isLoggingEnabled())
 		{
-			if(getPreferences().getBoolean("global", "pref_stats", true))
+			if(getPreferences().getBoolean("global", "pref_stats", false))
 			{
 				if(!Logger.hasDb())
 					Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
@@ -596,85 +621,205 @@ public class OpenExplorer
 		updateClipboard();
 	}
 	
-	public OpenCursor getPhotoParent() { if(mPhotoParent == null) refreshCursors(); return mPhotoParent; }
-	public OpenCursor getVideoParent() { if(mVideoParent == null) refreshCursors(); return mVideoParent; }
-	public OpenCursor getMusicParent() { if(mMusicParent == null) refreshCursors(); return mMusicParent; }
+	public static final OpenCursor getPhotoParent() {
+		//if(mPhotoParent == null) refreshCursors();
+		return mPhotoParent;
+	}
+	public static final OpenCursor getVideoParent() {
+		//if(mVideoParent == null) refreshCursors();
+		return mVideoParent;
+	}
+	public static final OpenCursor getMusicParent() {
+		//if(mMusicParent == null) refreshCursors();
+		return mMusicParent;
+	}
 	
-	private void refreshCursors()
+	private class LoadMediaStore extends CursorLoader
 	{
-		if(mVideoParent == null)
+		public int which = 0;
+
+		public LoadMediaStore(Context context, Uri uri, String[] projection,
+				String selection, String[] selectionArgs, String sortOrder) {
+			super(context, uri, projection, selection, selectionArgs, sortOrder);
+		}
+		
+		@Override
+		protected void onStopLoading() {
+			super.onStopLoading();
+			Logger.LogDebug("LoadMediaStore onStopLoading");
+		}
+		
+		@Override
+		protected void onAbandon() {
+			super.onAbandon();
+			Logger.LogDebug("LoadMediaStore onAbandon");
+		}
+		
+		@Override
+		public void onCanceled(Cursor cursor) {
+			super.onCanceled(cursor);
+			Logger.LogDebug("LoadMediaStore onCancelled");
+		}
+		
+		@Override
+		protected void onStartLoading() {
+			super.onStartLoading();
+			Logger.LogDebug("LoadMediaStore onStartLoading");
+		}
+
+		@Override
+		public Cursor loadInBackground() {
+			// TODO Auto-generated method stub
+			Cursor c = super.loadInBackground();
+			if(c == null) {
+				Logger.LogWarning("Cursor was null :(");
+				return c;
+			}
+			if(which == 0 && mVideoParent == null)
+			{
+				Logger.LogInfo("We got videos");
+				mVideoParent.setCursor(c);
+				ensureCache(mVideoParent);
+			} else if(which == 1 && mPhotoParent == null) {
+				Logger.LogInfo("We got photos");
+				mPhotoParent.setCursor(c);
+				ensureCache(mPhotoParent);
+			} else if(which == 2 && mMusicParent == null) {
+				Logger.LogInfo("We got music");
+				mMusicParent.setCursor(c);
+			} else if(which == 3)
+			{
+				Logger.LogInfo("We got apps");
+				mApkParent.setCursor(c);
+				ensureCache(mApkParent);
+			}
+			c.close();
+			return c;
+		}
+
+		public LoadMediaStore setCursorType(int type) { which = type; return this; }
+	}
+	
+
+	
+	private void ensureCache(OpenCursor parent)
+	{
+		int done = 0;
+		for(OpenPath kid : parent.list())
 		{
+			ThumbnailCreator.generateThumb(kid, 36, 36);
+			ThumbnailCreator.generateThumb(kid, 128, 128);
+			done++;
+		}
+		Logger.LogInfo("ensureCache on " + parent.getName() + " = " + done + "/" + parent.list().length);
+	}
+	
+	private boolean findCursors()
+	{
+		if(mVideoParent.isLoaded())
+			Logger.LogDebug("Videos should be found");
+		else
+		{
+			Logger.LogDebug("Finding videos");
 			//if(!IS_DEBUG_BUILD)
 			try {
-				CursorLoader loader = new CursorLoader(getApplicationContext(),
+				CursorLoader loader = new CursorLoader(
+				//new LoadMediaStore(
+						getApplicationContext(),
 						Uri.parse("content://media/external/video/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Video.Media.SIZE + " > 10000", null,
 						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
-						MediaStore.Video.Media.DATE_MODIFIED + " DESC");
+						MediaStore.Video.Media.DATE_MODIFIED + " DESC"
+						//).setCursorType(0).forceLoad();
+						);
 				Cursor c = loader.loadInBackground();
 				if(c != null)
 				{
-					mVideoParent = new OpenCursor(c, "Videos");
+					mVideoParent.setCursor(c);
 					c.close();
 				}
+				//*/
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
 		}
-		if(mPhotoParent == null)
+		if(!mPhotoParent.isLoaded())
 		{
+			Logger.LogDebug("Finding Photos");
 			try {
-				CursorLoader loader = new CursorLoader(getApplicationContext(),
+				CursorLoader loader = new CursorLoader(
+				//new LoadMediaStore(
+						getApplicationContext(),
 						Uri.parse("content://media/external/images/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Images.Media.SIZE + " > 10000", null,
-						MediaStore.Images.Media.DATE_ADDED + " DESC");
+						MediaStore.Images.Media.DATE_ADDED + " DESC"
+						//).setCursorType(1).forceLoad();
+						);
 				Cursor c = loader.loadInBackground();
 				if(c != null)
 				{
-					mPhotoParent = new OpenCursor(c, "Photos");
+					mPhotoParent.setCursor(c);
 					c.close();
 				}
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
-		if(mMusicParent == null)
+		if(!mMusicParent.isLoaded())
 		{
+			Logger.LogDebug("Finding Music");
 			try {
-				CursorLoader loader = new CursorLoader(getApplicationContext(),
+				CursorLoader loader = new CursorLoader(
+				//new LoadMediaStore(
+						getApplicationContext(),
 						Uri.parse("content://media/external/audio/media"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						MediaStore.Audio.Media.SIZE + " > 10000", null,
-						MediaStore.Audio.Media.DATE_ADDED + " DESC");
+						MediaStore.Audio.Media.DATE_ADDED + " DESC"
+						//).setCursorType(2).forceLoad();
+						);
 				Cursor c = loader.loadInBackground();
 				if(c != null)
 				{
-					mMusicParent = new OpenCursor(c, "Music");
+					mMusicParent.setCursor(c);
 					c.close();
 				}
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't query music.", e); }
 		}
-		if(mApkParent == null && Build.VERSION.SDK_INT > 10)
+		if(!mApkParent.isLoaded() && Build.VERSION.SDK_INT > 10)
 		{
+			Logger.LogDebug("Finding APKs");
 			try {
-				CursorLoader loader = new CursorLoader(getApplicationContext(),
+				CursorLoader loader = new CursorLoader(
+				//new LoadMediaStore(
+						getApplicationContext(),
 						MediaStore.Files.getContentUri(Environment.getExternalStorageDirectory().getPath()),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						"_size > 10000 AND _data LIKE '%apk'", null,
-						"date modified DESC");
+						"date modified DESC"
+						//).setCursorType(3).forceLoad();
+						);
 				Cursor c = loader.loadInBackground();
 				if(c != null)
 				{
-					mApkParent = new OpenCursor(c, "Apps");
+					mApkParent.setCursor(c);
 					c.close();
 				}
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Apks.", e); }
 		}
-		//Cursor mAudioCursor = managedQuery(MediaStore.Audio, projection, selection, selectionArgs, sortOrder)
+		return true;
+	}
+	private void refreshCursors()
+	{
+		if(findCursors())
+			return;
+		/*
 		new Thread(new Runnable() {public void run() {
 			ensureCursorCache();
 		}}).run();
+		*/
 	}
 	public void ensureCursorCache()
 	{
+		//findCursors();
 		if(mRunningCursorEnsure
 				//|| mLastCursorEnsure == 0
 				//|| new Date().getTime() - mLastCursorEnsure < 10000 // at least 10 seconds
@@ -1358,6 +1503,7 @@ public class OpenExplorer
 	
 	@Override
 	public boolean onSearchRequested() {
+		if(USE_ACTION_BAR) return false;
 		mEvHandler.startSearch(mLastPath, this);
 		//showToast("Sorry, not working yet.");
 		return super.onSearchRequested();

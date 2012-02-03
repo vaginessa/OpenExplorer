@@ -90,7 +90,7 @@
     <string name="s_title_wait">Please wait…</string>
     <string name="s_alert_confirm_delete">Deleting xxx cannot be undone. Are you sure you want to continue?</string>
     <string name="s_alert_rename">Please type the new name this file</string>
-    <string name="s_alert_newfolder">Type the name of the folder you would like to create.</string>
+    <string name="s_alert_newfolder">Type the name of the new folder:</string>
     <string name="s_alert_unzip">Would you like to unzip xxx here or some other folder?</string>
     <string name="s_button_unzip_here">Unzip here</string>
     <string name="s_button_unzip_else">Unzip elsewhere…</string>
@@ -148,4 +148,7 @@
     <string name="s_confirm_delete">Are you sure that you want to delete xxx?</string>
     <string name="s_error_same_destination">The destination directory is the same.</string>
     <string name="s_sample_notification">Copying -> sdcard:\n3 Files</string>
+    <string name="s_pref_fullscreen">Use Full Screen</string>
+    <string name="s_pref_fullscreen_summary_on">Hide Notification Bar</string>
+    <string name="s_pref_fullscreen_summary_off">Show Notification Bar</string>
 </resources>

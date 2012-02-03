@@ -1180,12 +1180,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
 				view = in.inflate(mode, parent, false);
-			}
+				mHolder = new BookmarkHolder(file, mName, view, mode);
+				view.setTag(mHolder);
+				file.setTag(mHolder);
+			} else mHolder = (BookmarkHolder)view.getTag();
 
-			mHolder = new BookmarkHolder(file, mName, view, mode);
-			
-			view.setTag(mHolder);
-			file.setTag(mHolder);
 			//mHolder.getIconView().measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 			//Logger.LogVerbose("Content Icon Size: " + mHolder.getIconView().getMeasuredWidth() + "x" + mHolder.getIconView().getMeasuredHeight());
 
