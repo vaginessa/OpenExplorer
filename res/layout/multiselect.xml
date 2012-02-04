@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/multiselect_view"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:background="@android:drawable/alert_dark_frame"
+	android:orientation="horizontal"
+	android:layout_alignParentTop="true" >
+
+	<ImageView
+		android:focusable="false"
+		android:id="@+id/multiselect_image"
+		android:src="@drawable/ic_multiselect"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		/>
+	<Gallery
+		android:id="@+id/multiselect_gallery"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:minHeight="@dimen/list_icon_size"
+		android:gravity="left"
+		android:spacing="2dp"
+		android:unselectedAlpha="0.9"
+		android:animateLayoutChanges="true"	
+		android:descendantFocusability="afterDescendants"
+		android:layout_toRightOf="@+id/multiselect_image"
+		android:layout_toLeftOf="@+id/multiselect_close"
+		/>
+	<ImageView
+		android:focusable="true"
+		android:id="@+id/multiselect_close"
+		android:src="@android:drawable/btn_dialog"
+		android:layout_alignParentRight="true"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		/>
+</RelativeLayout>
