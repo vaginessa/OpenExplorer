@@ -22,6 +22,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
     
+    
+    
 	<ViewStub android:layout="@layout/title_bar" android:id="@+id/title_stub" android:inflatedId="@+id/title_bar"
 	      android:layout_width="fill_parent" android:layout_height="wrap_content"
 	      />
@@ -39,13 +41,13 @@
 	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
 	       	/>
-	    		    	
-	    <FrameLayout
-	    	android:id="@+id/content_frag"
-	    	android:layout_height="match_parent"
-	    	android:layout_width="match_parent"
-	    	android:layout_weight="1"
-	    	/>
+	    
+	    <include
+	        layout="@layout/content_fragment"
+	        android:id="@+id/content_frag"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        />
 	    
 	</LinearLayout>
 </LinearLayout>
