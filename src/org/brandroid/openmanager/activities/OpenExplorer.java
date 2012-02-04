@@ -186,11 +186,11 @@ public class OpenExplorer
 	
 	public void onCreate(Bundle savedInstanceState) {
 
-		if(getPreferences().getBoolean("global", "pref_fullscreen", true))
+		if(getPreferences().getBoolean("global", "pref_fullscreen", false))
 		{
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		}
+		} //else getWindow().addFlags(WindowManager.LayoutParams.FLAG
 
 		if(BEFORE_HONEYCOMB)
 		{
@@ -262,7 +262,7 @@ public class OpenExplorer
 			if(USE_ACTION_BAR && findViewById(R.id.title_bar) != null)
 				findViewById(R.id.title_bar).setVisibility(View.GONE);
 		} else {
-			setTheme(android.R.style.Theme_Black);
+			setTheme(android.R.style.Theme_Black_NoTitleBar);
 		}
 		if(BEFORE_HONEYCOMB || !USE_ACTION_BAR)
 		{
@@ -1178,21 +1178,6 @@ public class OpenExplorer
 		return super.onPrepareOptionsMenu(menu);
 	}
 	
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		toggleBookmarks(false);
-		switch(keyCode)
-		{
-			case KeyEvent.KEYCODE_DPAD_RIGHT:
-				//fragmentManager.findFragmentById(R.id.content_frag).getView().requestFocus();
-				break;
-			case KeyEvent.KEYCODE_DPAD_LEFT:
-				//fragmentManager.findFragmentById(R.id.list_frag).getView().requestFocus();
-				break;
-		}
-		return super.onKeyDown(keyCode, event);
-	}
-	
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		if(item.isCheckable())
@@ -1222,11 +1207,6 @@ public class OpenExplorer
 				mEvHandler.createNewFolder(mLastPath.getPath(), this);
 				return true;
 				
-			case R.id.menu_view_fullscreen:
-				getPreferences().setSetting("global", "pref_fullscreen", item.isChecked());
-				goHome();
-				return true;
-				
 			case R.id.menu_multi:
 				if(mActionMode != null)
 					return false;
@@ -1246,7 +1226,7 @@ public class OpenExplorer
 							mActionMode = null;
 						}
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							mode.setTitle("Multi-select Options");
+							mode.setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
 							mode.getMenuInflater().inflate(R.menu.context_file, menu);
 							setMenuVisible(menu, false, R.id.menu_context_paste, R.id.menu_context_unzip);
 							getDirContentFragment(true).changeMultiSelectState(true);
@@ -1284,13 +1264,6 @@ public class OpenExplorer
 					showMenu(R.menu.menu_sort, from);
 				return true;
 				
-			case R.id.menu_view:
-				//if(BEFORE_HONEYCOMB)
-				//	showMenu(item.getSubMenu(), from);
-				if(!USE_ACTION_BAR)
-					showMenu(R.menu.menu_view, from);
-				return true;
-				
 			case R.id.menu_sort_name_asc:	setSorting(FileManager.SortType.ALPHA); return true; 
 			case R.id.menu_sort_name_desc:	setSorting(FileManager.SortType.ALPHA_DESC); return true; 
 			case R.id.menu_sort_date_asc: 	setSorting(FileManager.SortType.DATE); return true;
@@ -1298,7 +1271,20 @@ public class OpenExplorer
 			case R.id.menu_sort_size_asc: 	setSorting(FileManager.SortType.SIZE); return true; 
 			case R.id.menu_sort_size_desc: 	setSorting(FileManager.SortType.SIZE_DESC); return true; 
 			case R.id.menu_sort_type: 		setSorting(FileManager.SortType.TYPE); return true;
+
 			
+			case R.id.menu_view:
+				//if(BEFORE_HONEYCOMB)
+				//	showMenu(item.getSubMenu(), from);
+				if(!USE_ACTION_BAR)
+					showMenu(R.menu.menu_view, from);
+				return true;
+				
+			case R.id.menu_view_fullscreen:
+				getPreferences().setSetting("global", "pref_fullscreen", item.isChecked());
+				goHome();
+				return true;
+				
 			case R.id.menu_view_grid:
 				changeViewMode(VIEW_GRID, true);
 				return true;
