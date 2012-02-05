@@ -25,10 +25,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
-import android.app.ActionBar;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -42,6 +39,7 @@ import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.LayerDrawable;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -49,18 +47,12 @@ import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.content.Loader.OnLoadCompleteListener;
-import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.ActionMode;
-import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.Window;
@@ -68,9 +60,14 @@ import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -83,7 +80,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
@@ -92,8 +88,8 @@ import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenBookmarks;
-import org.brandroid.openmanager.data.OpenBookmarks.BookmarkType;
 import org.brandroid.openmanager.data.OpenClipboard;
+import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
@@ -117,7 +113,6 @@ import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.MultiSelectHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
@@ -151,18 +146,17 @@ public class OpenExplorer
 	private Preferences mPreferences = null;
 	private SearchView mSearchView;
 	private ActionMode mActionMode;
-	private OpenClipboard mHeldFiles = new OpenClipboard();
-	private static MultiSelectHandler mMultiSelectHandler;
+	private static OpenClipboard mClipboard;
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
 	private Handler mHandler = new Handler();  // handler for the main thread
 	private int mViewMode = VIEW_LIST;
-	private long mLastCursorEnsure = 0;
-	private boolean mRunningCursorEnsure = false;
+	private static long mLastCursorEnsure = 0;
+	private static boolean mRunningCursorEnsure = false;
 	private static int mLoadingCount = 0;
 	
-	private Fragment mFavoritesFragment;
+	private Fragment mFavoritesFragment, mMultiSelectFragment;
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
@@ -204,7 +198,42 @@ public class OpenExplorer
 		}
 		//requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		
-		mMultiSelectHandler = MultiSelectHandler.getInstance(this);
+		//mMultiSelectHandler = MultiSelectHandler.getInstance(this);
+		mClipboard = new OpenClipboard(this);
+		mClipboard.setClipboardUpdateListener(new OnClipboardUpdateListener() {
+			public void onClipboardUpdate() {
+				View pb = findViewById(R.id.title_paste);
+				if(pb != null)
+				{
+					pb.setVisibility(View.VISIBLE);
+					if(pb.findViewById(R.id.title_paste_text) != null)
+						((TextView)pb.findViewById(R.id.title_paste_text))
+							.setText(""+getClipboard().size());
+					if(pb.findViewById(R.id.title_paste_icon) != null)
+					{
+						((ImageView)pb.findViewById(R.id.title_paste_icon))
+							.setImageResource(getClipboard().isMultiselect() ?
+									R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_paste
+									);
+						if(getClipboard().isMultiselect())
+							((LayerDrawable)((ImageView)pb.findViewById(R.id.title_paste_icon)).getDrawable())
+								.getDrawable(1).setAlpha(127);
+					}
+				} else if(!BEFORE_HONEYCOMB)
+					invalidateOptionsMenu();
+				getDirContentFragment(false).notifyDataSetChanged();
+			}
+			
+			public void onClipboardClear()
+			{
+				View pb = findViewById(R.id.title_paste);
+				if(pb != null)
+					pb.setVisibility(View.GONE);
+				else if(!BEFORE_HONEYCOMB)
+					invalidateOptionsMenu();
+				getDirContentFragment(false).notifyDataSetChanged();
+			}
+		});
 		
 		getMimeTypes();
 		setupLoggingDb();
@@ -286,7 +315,15 @@ public class OpenExplorer
 		if(mFavoritesFragment == null)
 			mFavoritesFragment = new BookmarkFragment();
 		
-		Logger.LogDebug("Setting up bookmarks");
+		if(findViewById(R.id.multiselect_view) != null)
+		{
+			//fragmentManager.beginTransaction()
+			//	.replace(R.id.multiselect_view, new MultiSelectFragment())
+			//	.commit();
+			//findViewById(R.id.multiselect_view).setVisibility(visibility)
+		}
+		
+		//Logger.LogVerbose("Setting up bookmarks");
 
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
@@ -301,7 +338,7 @@ public class OpenExplorer
 			for(int i = 0; i < mBookmarksList.getCount(); i++)
 				mBookmarksList.expandGroup(i);
 		}
-		Logger.LogDebug("Setting up last path");
+		//Logger.LogVerbose("Setting up last path");
 		
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
@@ -432,8 +469,6 @@ public class OpenExplorer
 		if(mFavoritesFragment != null)
 			((BookmarkFragment)mFavoritesFragment).scanBookmarks();
 	}
-	
-	public static MultiSelectHandler getMultiSelectHandler() { return mMultiSelectHandler; }
 	
 	private void setupLoggingDb()
 	{
@@ -589,8 +624,8 @@ public class OpenExplorer
 			unregisterReceiver(storageReceiver);
 	}
 	
-	public OpenClipboard getClipboard() {
-		return mHeldFiles;
+	public static OpenClipboard getClipboard() {
+		return mClipboard;
 	}
 	public void updateClipboard()
 	{
@@ -600,22 +635,22 @@ public class OpenExplorer
 			if(paste_view != null)
 			{
 				TextView paste_text = (TextView)findViewById(R.id.title_paste_text);
-				if(mHeldFiles.size() > 0)
+				if(mClipboard.size() > 0)
 				{
 					paste_view.setVisibility(View.VISIBLE);
-					paste_text.setText("("+mHeldFiles.size()+")");
+					paste_text.setText("("+mClipboard.size()+")");
 				} else paste_view.setVisibility(View.GONE);
 			}
 		}
 	}
 	public void addHoldingFile(OpenPath path) { 
-		mHeldFiles.add(path);
+		mClipboard.add(path);
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		updateClipboard();
 	}
 	public void clearHoldingFiles() {
-		mHeldFiles.clear();
+		mClipboard.clear();
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		updateClipboard();
@@ -1141,21 +1176,30 @@ public class OpenExplorer
 			setMenuVisible(menu, true, R.id.title_menu);
 		}
 		
+		setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+		
 		setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", true), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // honeycomb
 			setMenuVisible(menu, false, R.id.menu_view_fullscreen);
 		
-		if(menu.findItem(R.id.menu_context_unzip) != null && mMultiSelectHandler.getCount() == 0)
+		if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
 			menu.findItem(R.id.menu_context_unzip).setVisible(false);
 		
 		if(!mSinglePane)
 			setMenuVisible(menu, false, R.id.menu_favorites);
 		
-		if(mHeldFiles == null || mHeldFiles.size() == 0)
+		if(mClipboard == null || mClipboard.size() == 0)
+		{
 			setMenuVisible(menu, false, R.id.menu_paste);
-		else {
+		} else {
 			MenuItem mPaste = menu.findItem(R.id.menu_paste);
 			mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
+			if(getClipboard().isMultiselect())
+			{
+				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
+				d.getDrawable(1).setAlpha(127);
+				menu.findItem(R.id.menu_paste).setIcon(d);
+			}
 			//if()
 			//mPaste.setIcon();
 			//mPaste.setIcon(R.drawable.bluetooth);
@@ -1208,12 +1252,17 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_multi:
-				if(mActionMode != null)
-					return false;
+				if(getClipboard().isMultiselect())
+				{
+					getClipboard().stopMultiselect();
+					if(!BEFORE_HONEYCOMB && mActionMode != null)
+						((ActionMode)mActionMode).finish();
+					return true;
+				}
 				
 				if(BEFORE_HONEYCOMB)
 				{
-					getDirContentFragment(true).changeMultiSelectState(true);
+					getClipboard().startMultiselect();
 				} else {
 					
 					mActionMode = startActionMode(new ActionMode.Callback() {
@@ -1222,7 +1271,7 @@ public class OpenExplorer
 							return false;
 						}
 						public void onDestroyActionMode(ActionMode mode) {
-							getDirContentFragment(false).changeMultiSelectState(false);
+							getClipboard().clear();
 							mActionMode = null;
 						}
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -1234,26 +1283,17 @@ public class OpenExplorer
 						}
 						public boolean onActionItemClicked(ActionMode mode, MenuItem item)
 						{
-							ArrayList<OpenPath> files = getMultiSelectHandler().getSelectedFiles();
-							
-							//nothing was selected
-							if(files.size() < 1) {
+							if(getClipboard().size() < 1)
+							{
 								mode.finish();
 								return true;
 							}
+							OpenPath file = getClipboard().get(0); //getMultiSelectHandler().getSelectedFiles();
 							
-							OpenPath file = files.get(0);
-							
-							if(mHeldFiles == null)
-								mHeldFiles = new OpenClipboard();
-							
-							mHeldFiles.clear();
-							
-							for(int i=1; i<files.size(); i++)
-									mHeldFiles.add(files.get(i));
+							getClipboard().clear();
 						
 							return getDirContentFragment(false)
-									.executeMenu(item.getItemId(), mode, file, mHeldFiles);
+									.executeMenu(item.getItemId(), mode, file, mClipboard);
 						}
 					});
 				}
@@ -1345,36 +1385,39 @@ public class OpenExplorer
 			
 			case R.id.menu_multi_all_delete:
 				showConfirmationDialog(
-						getResources().getString(R.string.s_confirm_delete).replace("xxx", mMultiSelectHandler.getCount() + " " + getResources().getString(R.string.s_files)),
+						getResources().getString(R.string.s_confirm_delete).replace("xxx", getClipboard().getCount() + " " + getResources().getString(R.string.s_files)),
 						getResources().getString(R.string.s_menu_delete_all),
 						new DialogInterface.OnClickListener() { // yes
 							public void onClick(DialogInterface dialog, int which) {
-								for(OpenPath file : getMultiSelectHandler().getSelectedFiles())
+								for(OpenPath file : getClipboard().getAll())
 									file.delete();
 							}
 						});
 				break;
 				
 			case R.id.menu_multi_all_clear:
-				mMultiSelectHandler.clear();
+				getClipboard().clear();
 				return true;
 
 			case R.id.menu_multi_all_copy:
-				mHeldFiles.DeleteSource = false;
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+				mClipboard.DeleteSource = false;
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
 				break;
 				
 			case R.id.menu_multi_all_move:
-				mHeldFiles.DeleteSource = true;
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+				mClipboard.DeleteSource = true;
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
 				break;
 				
 			case R.id.title_paste:
 			case R.id.title_paste_icon:
 			case R.id.title_paste_text:
 			case R.id.menu_paste:
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mHeldFiles);
+				showClipboardDropdown(id);
 				return true;
+				
+				//getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
+				//return true;
 				
 			case R.id.menu_about:
 				showAboutDialog();
@@ -1387,6 +1430,50 @@ public class OpenExplorer
 		
 		return true;
 		//return super.onOptionsItemSelected(item);
+	}
+	
+	private void showClipboardDropdown(int menuId)
+	{
+		View anchor = findViewById(menuId);
+		
+		final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
+		View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+				.inflate(R.layout.multiselect, null);
+		GridView cmds = (GridView)root.findViewById(R.id.multiselect_command_grid);
+		ListView items = (ListView)root.findViewById(R.id.multiselect_item_list);
+		items.setAdapter(mClipboard);
+		items.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
+				OpenPath file = mClipboard.get(pos);
+				if(file.getParent().equals(mLastPath))
+					mClipboard.remove(pos);
+				else
+					getEventHandler().copyFile(file, mLastPath, OpenExplorer.this);
+			}
+		});
+		final Menu menu = IconContextMenu.newMenu(this, R.menu.multiselect);
+		setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+		final IconContextMenuAdapter cmdAdapter = new IconContextMenuAdapter(this, menu);
+		cmds.setAdapter(cmdAdapter);
+		cmds.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
+				MenuItem item = menu.getItem(pos);
+				onClick(item.getItemId(), item, view);
+				clipdrop.dismiss();
+			}
+		});
+		
+		float w = getResources().getDimension(R.dimen.popup_width) * (3 / 2);
+		if(w > getWindow().getWindowManager().getDefaultDisplay().getWidth())
+			w = getWindow().getWindowManager().getDefaultDisplay().getWidth() - 20;
+		clipdrop.setPopupWidth((int)w);
+		clipdrop.setContentView(root);
+		
+		clipdrop.showLikePopDownMenu();
+		//dropdown.setAdapter(this, new IconContextMenuAdapter(context, menu))
+		//BetterPopupWindow win = new BetterPopupWindow(this, anchor);
+		//ListView list = ((LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.multiselect, null);
+		//win.setContentView(root)
 	}
 	
 	private void setShowThumbnails(boolean checked) {
@@ -1446,7 +1533,7 @@ public class OpenExplorer
 				Menu menu = new MenuBuilderNew(this);
 				new MenuInflater(this).inflate(menuId, menu);
 				onPrepareOptionsMenu(menu);
-				final IconContextMenu icm = new IconContextMenu(OpenExplorer.this, menu, from);
+				final IconContextMenu icm = new IconContextMenu(OpenExplorer.this, menu, from, null, null);
 				if(icm == null)
 					throw new NullPointerException("context menu returned null");
 				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
@@ -1482,7 +1569,7 @@ public class OpenExplorer
 		Logger.LogDebug("Trying to show context menu " + menu.toString() + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 		IconContextMenu icm = null;
 		try {
-			icm = new IconContextMenu(this, menu, from);
+			icm = new IconContextMenu(this, menu, from, null, null);
 			if(menu.size() > 10)
 				icm.setNumColumns(2);
 			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
@@ -2033,6 +2120,10 @@ public class OpenExplorer
 			return null;
 		}
 		
+	}
+
+	public OpenPath getLastPath() {
+		return mLastPath;
 	}
 }
 

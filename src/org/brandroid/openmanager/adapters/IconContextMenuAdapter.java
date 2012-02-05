@@ -31,9 +31,14 @@ public class IconContextMenuAdapter extends BaseAdapter {
 	public MenuItem getItem(int position) {
 		if(position < menu.size() && position >= 0)
 			return menu.getItem(position);
-		else return null;
+		else
+			return null;
 	}
 
+	public MenuItem findItem(int id) {
+		return menu.findItem(id);
+	}
+	
 	//@Override
 	public long getItemId(int position) {
 		return getItem(position).getItemId();
@@ -45,8 +50,6 @@ public class IconContextMenuAdapter extends BaseAdapter {
         if(item == null)
         	return convertView;
         
-        if(!item.isVisible()) return null;
-        
         TextView res = (TextView)convertView;
         if (res == null) {
        		res = (TextView)LayoutInflater.from(context).inflate(
@@ -54,6 +57,13 @@ public class IconContextMenuAdapter extends BaseAdapter {
        				R.layout.context_item
        				, null);
         }
+        
+        if(!item.isVisible())
+        	res.setVisibility(View.GONE);
+        if(!item.isEnabled())
+        	res.setEnabled(false);
+        else
+        	res.setEnabled(true);
         
         if(CheckedTextView.class.equals(res.getClass()))
         {

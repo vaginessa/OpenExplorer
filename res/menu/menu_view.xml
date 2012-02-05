@@ -4,6 +4,7 @@
 		android:id="@+id/menu_multi"
 		android:icon="@drawable/multiselect"
 		android:showAsAction="ifRoom"
+		android:checkable="true"
 		android:title="@string/s_menu_multi" />
 	<group android:checkableBehavior="single">
 		<item

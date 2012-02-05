@@ -2,6 +2,7 @@ package org.brandroid.openmanager.adapters;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilderNew;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -10,9 +11,12 @@ import android.content.DialogInterface.OnDismissListener;
 import android.graphics.Rect;
 import android.view.*;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
 
 public class IconContextMenu
@@ -22,9 +26,10 @@ public class IconContextMenu
 		void onIconContextItemSelected(MenuItem item, Object info, View view);
 	}
 	
-	private GridView mList;
+	private GridView mGrid;
 	//private Dialog dialog;
 	protected final BetterPopupWindow popup;
+	protected final ViewGroup root;
 	private MenuBuilderNew menu;
 	protected final View anchor;
 	private int maxColumns = 2;
@@ -32,8 +37,8 @@ public class IconContextMenu
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
 
-    public IconContextMenu(Context context, int menuId, View from) {
-    	this(context, newMenu(context, menuId), from);
+    public IconContextMenu(Context context, int menuId, View from, View head, View foot) {
+    	this(context, newMenu(context, menuId), from, head, foot);
     }
     
     public static MenuBuilderNew newMenu(Context context, int menuId) {
@@ -42,7 +47,7 @@ public class IconContextMenu
     	return menu;
     }
 
-	public IconContextMenu(Context context, Menu menu, final View from) {
+	public IconContextMenu(Context context, Menu menu, final View from, final View head, final View foot) {
 		MenuBuilderNew newMenu = new MenuBuilderNew(context);
 		for(int i = 0; i < menu.size(); i++)
 		{
@@ -50,19 +55,29 @@ public class IconContextMenu
 			if(item.isVisible())
 				newMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle());
 		}
+		root = (ViewGroup) ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.paste_layout, null);
+		//root.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         //menu = newMenu;
         anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         popup = new BetterPopupWindow(context, anchor);
+        mGrid = new GridView(context);
+        mGrid.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        mGrid.setNumColumns(maxColumns);
+        if(head != null)
+        	root.addView(head);
+		root.addView(mGrid);
+		if(foot != null)
+			root.addView(foot);
+        popup.setContentView(root);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
 	}
 	
 	public void setAdapter(Context context, final IconContextMenuAdapter adapter)
 	{
-		mList = new GridView(context);
-		mList.setNumColumns(maxColumns);
-		mList.setAdapter(adapter);
-		mList.setOnItemClickListener(new OnItemClickListener() {
+		mGrid.setAdapter(adapter);
+		Logger.LogInfo("mGrid Adapter set");
+		mGrid.setOnItemClickListener(new OnItemClickListener() {
 
 			public void onItemClick(AdapterView<?> arg0, View v, int pos, long id) {
 				if(iconContextItemSelectedListener != null)
@@ -70,13 +85,14 @@ public class IconContextMenu
 					iconContextItemSelectedListener.onIconContextItemSelected(
 							adapter.getItem(pos), info, v);
 				}
-					
 			}
 			
 		} );
 		
+		
+		//root.
 		//popup.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.contextmenu_top_right));
-		popup.setContentView(mList);
+		//popup.setContentView(mList);
 		/*this.dialog = new AlertDialog.Builder(context)
 	        .setAdapter(adapter, new DialogInterface.OnClickListener() {
 		        //@Override
@@ -93,8 +109,8 @@ public class IconContextMenu
 	
 	public void setNumColumns(int cols) {
 		maxColumns = cols;
-		if(mList != null)
-			mList.setNumColumns(cols);
+		if(mGrid != null)
+			mGrid.setNumColumns(cols);
 	}
 	
 	public void setInfo(Object info) {
@@ -138,6 +154,15 @@ public class IconContextMenu
     {
     	popup.dismiss();
     }
+
+    public void addView(View v)
+    {
+    	Logger.LogInfo("View added to IconContextMenu");
+    	root.addView(v);
+    }
+	public void addView(View v, int index) {
+		root.addView(v, index);
+	}
 
     
     /*

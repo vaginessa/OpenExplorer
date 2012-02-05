@@ -1,36 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-	<group android:id="@+id/menu_multi_group_all">
-	    <item android:id="@+id/menu_multi_all_delete"
-	        android:title="@string/s_menu_delete_all"
-	        android:icon="@drawable/ic_menu_delete" />
-	    <item android:id="@+id/menu_multi_all_copy"
-	        android:title="@string/s_menu_copy_all"
-	        android:icon="@drawable/ic_menu_copy" />
-	    <item android:id="@+id/menu_multi_all_move"
-	        android:title="@string/s_menu_move_all"
-	        android:icon="@drawable/ic_menu_cut" />
-	    <item android:id="@+id/menu_multi_zip"
-	        android:title="@string/s_menu_zip"
-	        android:icon="@drawable/ic_zip" />
-	    <item android:id="@+id/menu_multi_all_clear"
-	        android:title="@string/s_clear"
-	        android:icon="@drawable/ic_menu_close_clear_cancel"
-	        />
-	</group>
-	<group android:id="@+id/menu_multi_group_solo">
-	    <item android:id="@+id/menu_multi_solo_copy"
-	        android:title="@string/s_menu_copy"
-	        android:icon="@drawable/ic_menu_paste" />
-	    <item android:id="@+id/menu_multi_solo_move"
-	        android:title="@string/s_menu_move"
-	        android:icon="@drawable/ic_menu_cut" />
-	    <item android:id="@+id/menu_multi_solo_delete"
-	        android:title="@string/s_menu_delete"
-	        android:icon="@drawable/ic_menu_delete" />
-	    <item android:id="@+id/menu_multi_solo_clear"
-	        android:title="@string/s_clear"
-	        android:icon="@drawable/ic_menu_close_clear_cancel"
-	        />
-	</group>
+	<item android:id="@+id/menu_multi_all_delete"
+	    android:title="@string/s_menu_delete_all"
+	    android:icon="@drawable/ic_menu_delete_all" />
+	<item android:id="@+id/menu_multi_all_copy"
+	    android:title="@string/s_menu_copy_all"
+	    android:icon="@drawable/ic_menu_copy" />
+	<item android:id="@+id/menu_multi_all_move"
+	    android:title="@string/s_menu_move_all"
+	    android:icon="@drawable/ic_menu_cut" />
+	<item android:id="@+id/menu_context_zip"
+	    android:title="@string/s_menu_zip"
+	    android:icon="@drawable/ic_zip" />
+	<item android:id="@+id/menu_multi_all_clear"
+	    android:title="@string/s_clear"
+	    android:icon="@drawable/ic_menu_close_clear_cancel"
+	    />
+	<item android:id="@+id/menu_multi"
+	    android:title="@string/s_menu_multi"
+	    android:icon="@drawable/ic_multiselect"
+	    android:checkable="true" />
 </menu>

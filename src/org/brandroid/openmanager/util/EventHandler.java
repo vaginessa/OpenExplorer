@@ -39,6 +39,7 @@ import android.widget.TextView;
 import android.net.Uri;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
@@ -111,7 +112,7 @@ public class EventHandler {
 		return ret;
 	}
 
-	public void deleteFile(final ArrayList<OpenPath> path, final Context mContext) {
+	public void deleteFile(final List<OpenPath> path, final Context mContext) {
 		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		String name;
@@ -247,7 +248,7 @@ public class EventHandler {
 		.setIcon(R.drawable.lg_folder).create().show();
 	}
 	
-	public void sendFile(final ArrayList<OpenPath> path, final Context mContext) {
+	public void sendFile(final List<OpenPath> path, final Context mContext) {
 		String name;
 		CharSequence[] list = {"Bluetooth", "Email"};
 		final OpenPath[] files = new OpenPath[path.size()];
@@ -303,7 +304,7 @@ public class EventHandler {
 			destPath = destPath.getParent();
 		new BackgroundWork(COPY_TYPE, mContext, destPath, source.getName()).execute(source);
 	}
-	public void copyFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
+	public void copyFile(List<OpenPath> files, OpenPath newPath, Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 		
@@ -313,7 +314,7 @@ public class EventHandler {
 		new BackgroundWork(COPY_TYPE, mContext, newPath, title).execute(array);
 	}
 	
-	public void cutFile(ArrayList<OpenPath> files, OpenPath newPath, Context mContext) {
+	public void cutFile(List<OpenPath> files, OpenPath newPath, Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 		
@@ -324,6 +325,10 @@ public class EventHandler {
 		new BackgroundWork(SEARCH_TYPE, mContext, dir, query).execute();
 	}
 	
+	public void zipFile(OpenPath into, List<OpenPath> files, Context mContext)
+	{
+		zipFile(into, files.subList(0, files.size()), mContext);
+	}
 	public void zipFile(OpenPath into, OpenPath[] files, Context mContext) {
 		new BackgroundWork(ZIP_TYPE, mContext, into).execute(files);
 	}

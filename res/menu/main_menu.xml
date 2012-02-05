@@ -8,7 +8,7 @@
   	    android:title="@string/s_menu_favorites" />
     <item
 		android:id="@+id/menu_paste"
-		android:title="@string/s_menu_paste"
+		android:title="@string/s_menu_multi"
     	android:showAsAction="always|withText"
     	android:icon="@drawable/ic_menu_paste" />
 	<item

@@ -20,13 +20,10 @@ package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.OpenArrayAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenClipboard;
-import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
@@ -35,40 +32,31 @@ import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
-import org.brandroid.openmanager.util.MultiSelectHandler;
-import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.ThumbnailStruct;
 import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuBuilderNew;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Properties;
-
+import java.util.List;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.R.anim;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -78,26 +66,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.SlidingDrawer;
-import android.widget.SlidingDrawer.OnDrawerCloseListener;
-import android.widget.Gallery;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.GridView;
-import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -107,15 +86,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 															OnWorkerThreadFinishedListener{
 	
 	public static final boolean USE_ACTIONMODE = false;
-	private static boolean mMultiSelectOn = false;
 	
-	private static MultiSelectHandler mMultiSelect;
-	
+	//private static MultiSelectHandler mMultiSelect;
 	//private LinearLayout mPathView;
 	//private SlidingDrawer mMultiSelectDrawer;
 	//private GridView mMultiSelectView;
-	private RelativeLayout mMultiSelectLayout;
-	private Gallery mMultiSelectGallery;
 	private GridView mGrid = null;
 	private View mProgressBarLoading = null;
 	
@@ -143,19 +118,19 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		//Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		mPath = mLastPath;
-		mMultiSelect = OpenExplorer.getMultiSelectHandler();
+		//mMultiSelect = OpenExplorer.getMultiSelectHandler();
 		//mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
 	}
 	public ContentFragment(OpenPath path)
 	{
 		mPath = mLastPath = path;
-		mMultiSelect = OpenExplorer.getMultiSelectHandler();
+		//mMultiSelect = OpenExplorer.getMultiSelectHandler();
 		//mViewMode = getExplorer().getSetting(path, "view", mViewMode);
 	}
 	public ContentFragment(OpenPath path, int viewMode)
 	{
 		mPath = mLastPath = path;
-		mMultiSelect = OpenExplorer.getMultiSelectHandler();
+		//mMultiSelect = OpenExplorer.getMultiSelectHandler();
 		setViewMode(viewMode);
 	}
 	
@@ -193,6 +168,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	@Override
 	public void onResume() {
 		super.onResume();
+	}
+	
+	public void notifyDataSetChanged() {
+		mContentAdapter.notifyDataSetChanged();
 	}
 	public void refreshData(Bundle savedInstanceState) { refreshData(savedInstanceState, true); }
 	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
@@ -296,22 +275,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mGrid == null)
 			mGrid = (GridView)v.findViewById(R.id.content_grid);
 		
-		/*if(mMultiSelectView == null)
-			mMultiSelectView = (GridView)v.findViewById(R.id.multiselect_path);
-		if(mMultiSelectView != null)
-			setupMultiSelectView();
-		if(mMultiSelectDrawer == null)
-			mMultiSelectDrawer = (SlidingDrawer)v.findViewById(R.id.multiselect_drawer);
-		if(mMultiSelectDrawer != null)
-			mMultiSelectDrawer.setVisibility(View.GONE);
-			*/
-		if(mMultiSelectLayout == null)
-			mMultiSelectLayout = (RelativeLayout)v.findViewById(R.id.multiselect_view);
-		if(mMultiSelectGallery == null)
-			mMultiSelectGallery = (Gallery)v.findViewById(R.id.multiselect_gallery);
-		if(mMultiSelectGallery != null)
-			setupMultiSelectView();
-		
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
@@ -321,103 +284,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			Logger.LogError("WTF, where are they?");
 		else
 			updateGridView();
-	}
-	
-	private void setupMultiSelectView()
-	{
-		mMultiSelectGallery.setAdapter(mMultiSelect);
-		final MultiSelectHandler mMulti = mMultiSelect;
-		//final SlidingDrawer mMultiDrawer = mMultiSelectDrawer;
-		final Gallery mMultiGallery = mMultiSelectGallery;
-		final RelativeLayout mMultiLayout = mMultiSelectLayout;
-		
-		mMultiSelectLayout.findViewById(R.id.multiselect_close).setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				mMulti.clear();
-				mMultiLayout.setVisibility(View.GONE);
-			}
-		});
-		
-		if(mMulti.getCount() == 0)
-			mMultiSelectLayout.setVisibility(View.GONE);
-		else
-			mMultiSelectLayout.setVisibility(View.VISIBLE);
-		
-		mMultiGallery.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView<?> arg0, View v,
-					int pos, long id) {
-				int ret = mMultiSelect.clearFileEntry((OpenPath)mMultiSelect.getItem(pos));
-				//int ret = mMulti.clearFileEntry(file);
-				if(mMulti.getCount() == 0)
-				{
-					mMultiLayout.setVisibility(View.GONE);
-				}
-			}
-		});
-		mMultiGallery.setOnItemLongClickListener(new OnItemLongClickListener() {
-			public boolean onItemLongClick(AdapterView<?> arg0, View v,
-					int pos, long id) {
-				final OpenPath file = (OpenPath)mMulti.getItem(pos);
-				final IconContextMenu icm = new IconContextMenu(mContext, R.menu.multiselect, v);
-				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
-					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
-						//showToast(item.getTitle().toString());
-						switch(item.getItemId())
-						{
-						case R.id.menu_multi_solo_clear:
-							mMulti.clearFileEntry(file);
-							break;
-							
-						case R.id.menu_multi_solo_copy:
-							if(file.getParent().equals(mPath))
-							{
-								getExplorer().showToast(R.string.s_error_same_destination);
-							} else {
-								ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-								files.add(file);
-								getEventHandler().copyFile(files, mPath, mContext);
-							}
-							break;
-							
-						case R.id.menu_multi_solo_move:
-							if(file.getParent().equals(mPath))
-							{
-								getExplorer().showToast(R.string.s_error_same_destination);
-							} else {
-								ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-								files.add(file);
-								getEventHandler().cutFile(files, mPath, mContext);
-							}
-							break;
-							
-						case R.id.menu_multi_solo_delete:
-							getExplorer().showConfirmationDialog(
-									getString(R.string.s_confirm_delete).replace("xxx", file.getName()),
-									getString(R.string.s_menu_delete),
-									new DialogInterface.OnClickListener() {
-										public void onClick(DialogInterface dialog, int which) {
-											file.delete();
-										}
-									});
-								
-							break;
-							
-						case R.id.menu_multi_zip:
-							getEventHandler().zipFile(mPath, mMulti.getSelectedFilesArray(), mContext);
-							break;
-							
-						default:
-							getExplorer().onClick(item.getItemId(), item, view);
-							break;
-						}
-						icm.dismiss();
-						//mMenuPopup.dismiss();
-					}
-				});
-				icm.show();
-				return true;
-			}
-		});
 	}
 
 	@Override
@@ -529,7 +395,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 						//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
 						final IconContextMenu cm = new IconContextMenu(
-								mContext, R.menu.context_file, view);
+								mContext, R.menu.context_file, view, null, null);
 						Menu cmm = cm.getMenu();
 						if(getClipboard().size() > 0)
 							hideItem(cmm, R.id.menu_context_multi);
@@ -561,7 +427,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 				if(!OpenExplorer.BEFORE_HONEYCOMB)
 				{
-					if(!file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
+					if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
 						mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
 							//@Override
 							public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -603,7 +469,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					return true;
 				}
 				
-				if(file.isDirectory() && mActionMode == null && !mMultiSelectOn) {
+				if(file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
 					if(!OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE)
 					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
 						
@@ -621,7 +487,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						//@Override
 						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 							mode.getMenuInflater().inflate(R.menu.context_file, menu);
-							menu.findItem(R.id.menu_context_paste).setEnabled(isHoldingFiles());
+							menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
 							//menu.findItem(R.id.menu_context_unzip).setEnabled(mHoldingZip);
 				        	
 				        	mActionModeSelected = true;
@@ -691,24 +557,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		return OpenExplorer.getFileManager();
 	}
 	
-	private OpenClipboard getClipboard() {
-		return getExplorer().getClipboard();
-	}
-	private void addHoldingFile(OpenPath path) {
-		getExplorer().addHoldingFile(path);
-		if(mMultiSelectOn)
-			addToMultiSelect(path);
-	}
-	private void clearHoldingFiles() { getExplorer().clearHoldingFiles(); }
-	private boolean isHoldingFiles() { return getClipboard().size() > 0; }
-	
 	private void finishMode(Object mode)
 	{
 		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null && mode instanceof ActionMode)
 			((ActionMode)mode).finish();
 	}
-	
-	public EventHandler getEventHandler() { return getExplorer().getEventHandler(); }
 	
 	public boolean executeMenu(final int id, OpenPath file)
 	{
@@ -720,7 +573,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		files.add(file);
 		return executeMenu(id, mode, file, null);
 	}
-	public boolean executeMenu(final int id, final Object mode, final OpenPath file, ArrayList<OpenPath> fileList)
+	public boolean executeMenu(final int id, final Object mode, final OpenPath file, List<OpenPath> fileList)
 	{
 		final String path = file != null ? file.getPath() : null;
 		final OpenPath folder = file != null ? file.getParent() : null;
@@ -754,11 +607,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				}
 				break;
 			case R.id.menu_context_multi:
-				changeMultiSelectState(!mMultiSelectOn);
-				addHoldingFile(file);
+				changeMultiSelectState(!getClipboard().isMultiselect());
+				getClipboard().add(file);
 				return true;
+				
 			case R.id.menu_multi:
-				changeMultiSelectState(!mMultiSelectOn);
+				changeMultiSelectState(!getClipboard().isMultiselect());
+				getClipboard().add(file);
 				return true;
 			case R.id.menu_context_bookmark:
 				getExplorer().addBookmark(file);
@@ -784,7 +639,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				else
 					getClipboard().DeleteSource = false;
 
-				addHoldingFile(file);
+				getClipboard().add(file);
 				return false;
 
 			case R.id.menu_context_paste:
@@ -804,13 +659,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 				cb.DeleteSource = false;
 				if(cb.ClearAfter)
-					clearHoldingFiles();
+					getClipboard().clear();
 				getExplorer().updateTitle(path);
 				finishMode(mode);
 				return true;
 				
 			case R.id.menu_context_zip:
-				addHoldingFile(file);
+				getClipboard().add(file);
 				final String def = getClipboard().size() == 1 ?
 						file.getName() + ".zip" :
 						file.getParent().getName() + ".zip";
@@ -838,7 +693,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			case R.id.menu_context_unzip:
 				getHandler().unZipFileTo(getClipboard().get(0), file, getActivity());
 				
-				clearHoldingFiles();
+				getClipboard().clear();
 				getExplorer().updateTitle("");
 				return true;
 			
@@ -876,7 +731,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
 		new MenuInflater(mContext).inflate(R.menu.context_file, menu);
-		menu.findItem(R.id.menu_context_paste).setEnabled(isHoldingFiles());
+		menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
 		if(!mLastPath.isFile() || !IntentManager.isIntentAvailable(mLastPath, getExplorer()))
 		{
 			menu.findItem(R.id.menu_context_edit).setVisible(false);
@@ -890,8 +745,17 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		Logger.LogDebug("File clicked: " + file.getPath());
 		
-		if(mMultiSelectOn) {
-			addToMultiSelect(file);
+		if(getClipboard().isMultiselect()) {
+			if(getClipboard().contains(file))
+			{
+				getClipboard().remove(file);
+				if(getClipboard().size() == 0)
+					getClipboard().stopMultiselect();
+				mContentAdapter.notifyDataSetChanged();
+			} else {
+				addToMultiSelect(file);
+				((TextView)view.findViewById(R.id.content_text)).setTextAppearance(mContext, R.style.Text_Highlight);
+			}
 			return;
 		}
 		
@@ -921,15 +785,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 	}
 	
-	private void addToMultiSelect(final OpenPath file) {
-		final View v = mMultiSelect.addFile(file);
-		
-		if(mMultiSelect.getCount() >= 1)
-			mMultiSelectLayout.setVisibility(View.VISIBLE);
-			//mMultiSelectDrawer.setVisibility(View.VISIBLE);
-		
-		
-		//mMultiSelectView.addView(v);
+	private void addToMultiSelect(final OpenPath file)
+	{
+		getClipboard().add(file);
 	}
 	private void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items, boolean allowSkips)
@@ -1028,7 +886,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		} else if(type == EventHandler.UNZIPTO_TYPE && results != null) {
 			String name = new OpenFile(results.get(0)).getName();
 			
-			addHoldingFile(new OpenFile(results.get(0)));
+			getClipboard().add(new OpenFile(results.get(0)));
 			getExplorer().updateTitle("Holding " + name);
 			
 		} else {
@@ -1100,13 +958,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//	mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 			if(mGrid == null)
 				mGrid = (GridView)v.findViewById(R.id.content_grid);
-
-			if(mMultiSelectLayout == null)
-				mMultiSelectLayout = (RelativeLayout)v.findViewById(R.id.multiselect_view);
-			if(mMultiSelectGallery == null)
-				mMultiSelectGallery = (Gallery)v.findViewById(R.id.multiselect_gallery);
-			if(mMultiSelectGallery != null)
-				setupMultiSelectView();
 			/*if(mMultiSelectView == null)
 				mMultiSelectView = (GridView)v.findViewById(R.id.multiselect_path);
 			if(mMultiSelectView != null)
@@ -1119,10 +970,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 			
 	public void changeMultiSelectState(boolean multiSelectOn) {
-		mMultiSelectOn = multiSelectOn;
+		if(multiSelectOn)
+			getClipboard().startMultiselect();
 		if(!multiSelectOn)
-			mMultiSelect.clear();
-		mMultiSelectLayout.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
+			getClipboard().stopMultiselect();
 		//mMultiSelectDrawer.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
 	}
 	
@@ -1218,6 +1069,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			TextView mNameView = (TextView)view.findViewById(R.id.content_text);
 			if(mNameView != null)
 				mNameView.setText(mName);
+
+			if(getClipboard().contains(file))
+				mNameView.setTextAppearance(mContext, R.style.Text_Highlight);
+			else
+				mNameView.setTextAppearance(mContext,  R.style.Large);
+			
 			//if(!mHolder.getTitle().equals(mName))
 			//	mHolder.setTitle(mName);
 			ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);

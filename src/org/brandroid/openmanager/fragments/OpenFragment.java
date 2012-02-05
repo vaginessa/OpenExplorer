@@ -1,6 +1,9 @@
 package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenClipboard;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
 import android.os.Bundle;
@@ -22,6 +25,11 @@ public class OpenFragment
 	}
 	
 	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
+	public static EventHandler getEventHandler() { return OpenExplorer.getEventHandler(); }
+	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
+	protected OpenClipboard getClipboard() {
+		return OpenExplorer.getClipboard();
+	}
 	
 	public void onClick(View v) {
 		Logger.LogDebug("View onClick(" + v.getId() + ") - " + v.toString());

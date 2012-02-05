@@ -19,7 +19,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
     android:orientation="vertical" >
 	
     <ViewStub android:layout="@layout/title_bar" android:id="@+id/title_stub" android:inflatedId="@+id/title_bar"
@@ -31,13 +30,23 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent">
 	    
-	    <FrameLayout
-	    	android:id="@+id/content_frag"
-	    	android:layout_alignParentTop="true"
-	    	android:layout_alignParentLeft="true"
-	    	android:layout_height="match_parent"
-	    	android:layout_width="match_parent"
-	    	/>
+	    <LinearLayout
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:orientation="vertical" >
+		    
+		    <FrameLayout
+		        android:id="@+id/multiselect_view"
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content" />
+		    
+		    <FrameLayout
+			    	android:id="@+id/content_frag"
+			    	android:layout_height="match_parent"
+			    	android:layout_width="match_parent"
+			    	/>
+		
+		</LinearLayout>
 
 	</RelativeLayout>
 </LinearLayout>

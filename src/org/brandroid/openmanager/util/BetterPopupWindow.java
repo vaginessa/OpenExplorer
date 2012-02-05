@@ -56,6 +56,7 @@ public class BetterPopupWindow {
 			anchor = anchor.findViewById(android.R.id.icon);
 		this.popup = new PopupWindow(mContext);
 		//this.popup.setAnimationStyle(anim);
+		this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
 
 
 		// when a touch even happens outside of the window
@@ -73,6 +74,11 @@ public class BetterPopupWindow {
 
 		this.windowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
 		onCreate();
+	}
+	
+	public void setPopupWidth(int w)
+	{
+		popup.setWidth(w);
 	}
 
 
@@ -103,23 +109,21 @@ public class BetterPopupWindow {
 		// if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
 		// otherwise you need to set the background of the root viewgroup
 		// and set the popupwindow background to an empty BitmapDrawable
-		changeBackground(yPos > getContentRect().centerY() ?
-				R.layout.context_bottom : R.layout.contextmenu_layout);
-		this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
+		int layout = yPos > getContentRect().centerY() ?
+				R.layout.context_bottom : R.layout.contextmenu_layout;
+		
+		if(backgroundView == null)
+		{
+			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+					.inflate(layout, null);
+			((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
+		}
+		this.popup.setContentView(backgroundView);
+		
 		this.popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
 		this.popup.setOutsideTouchable(true);
-	}
-	
-	private void changeBackground(int id)
-	{
-		if(backgroundView == null)
-		{
-			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(id, null);
-			((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
-		}
-		this.popup.setContentView(backgroundView);
 	}
 	
 	private void placeArrow(int arrowOffset, int rootWidth)
@@ -193,22 +197,43 @@ public class BetterPopupWindow {
 			int arrowOffset = 20;
 			int windowWidth = getWindowWidth(),
 				contentWidth = getContentWidth(),
-				contentHeight = getContentHeight();
-			FrameLayout widget = (FrameLayout) backgroundView.findViewById(android.R.id.widget_frame);
-			widget.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-			int widgetWidth = widget.getMeasuredWidth();
-			int widgetHeight = widget.getMeasuredHeight();
+				contentHeight = getContentHeight(),
+				widgetWidth = contentWidth,
+				widgetHeight = contentHeight,
+				rootWidth = contentWidth,
+				rootHeight = contentHeight,
+				bgWidth = contentWidth,
+				bgHeight = contentHeight;
+			ViewGroup widget = (ViewGroup) backgroundView.findViewById(android.R.id.widget_frame);
+			if(widget != null)
+			{
+				try {
+				widget.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+				widgetWidth = widget.getMeasuredWidth();
+				widgetHeight = widget.getMeasuredHeight();
+				} catch(Exception e) {
+					Logger.LogError("Error while measuring widget", e);
+				}
+			}
 			if(popup.getMaxAvailableHeight(anchor) < widgetHeight)
 				popup.setHeight(widgetHeight + 20);
-			root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			int rootWidth = root.getMeasuredWidth(),
+			try {
+				root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+				rootWidth = root.getMeasuredWidth();
 				rootHeight = root.getMeasuredHeight();
-			if(rootWidth > getWindowWidth())
-				rootWidth = widgetWidth;
+				if(rootWidth > getWindowWidth())
+					rootWidth = widgetWidth;
+			} catch(Exception e) {
+				Logger.LogError("Error measuring root", e);
+			}
 			
-			backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			int bgWidth = backgroundView.getMeasuredWidth(),
+			try {
+				backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+				bgWidth = backgroundView.getMeasuredWidth();
 				bgHeight = backgroundView.getMeasuredHeight();
+			} catch(Exception e) {
+				Logger.LogError("Error measuring background", e);
+			}
 			
 			int ancLeft = anchor.getLeft(),
 				ancTop = anchor.getTop();

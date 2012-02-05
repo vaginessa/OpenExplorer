@@ -42,6 +42,7 @@
 		android:id="@+id/content_text"
 		android:text="Filename"
 		android:layout_toRightOf="@+id/content_icon"
+		android:background="@android:color/transparent"
 		style="@style/Large" />
 	<TextView
 		android:id="@+id/content_fullpath"
