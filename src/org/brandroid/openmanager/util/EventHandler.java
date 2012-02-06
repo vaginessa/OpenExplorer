@@ -593,7 +593,7 @@ public class EventHandler {
 			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite())
 			{
 				OpenPath newFile = newDir.getChild(old.getName());
-				if(newFile.equals(old))
+				if(newFile.getPath().equals(old.getPath()))
 				{
 					Logger.LogWarning("Old = new");
 					return false;
