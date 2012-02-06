@@ -794,7 +794,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		if(items == null) return;
 		updateData(items,
-				!allowSkips || (items.length < 500 && getManager().getSorting() != SortType.DATE_DESC),
+				!allowSkips || (items.length < 500),
 				!allowSkips || (items.length < 500),
 				!allowSkips || (items.length < 500 && getManager().getShowHiddenFiles())
 				);
@@ -1100,7 +1100,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
-					deets = file.list().length + " items";
+					deets = file.getChildCount() + " items";
+					//deets = file.list().length + " items";
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

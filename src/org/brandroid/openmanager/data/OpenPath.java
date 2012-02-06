@@ -39,6 +39,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public abstract OpenPath getChild(String name);
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
+	public int getChildCount() throws IOException {
+		return list().length;
+	}
 	public abstract Boolean isDirectory();
 	public abstract Boolean isFile();
 	public abstract Boolean isHidden();
@@ -53,6 +56,13 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public abstract Boolean mkdir();
 	public abstract InputStream getInputStream() throws IOException;
 	public abstract OutputStream getOutputStream() throws IOException;
+	@Override
+	public boolean equals(Object o) {
+		if(o instanceof OpenPath)
+			return getAbsolutePath().equals(((OpenPath)o).getAbsolutePath());
+		else
+			return super.equals(o);
+	}
 	public Object getTag() { return mTag; }
 	public void setTag(Object o) { mTag = o; }
 	public int getListLength() { return -1; }

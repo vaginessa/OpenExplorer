@@ -120,20 +120,63 @@ public class OpenFile extends OpenPath
 	}
 
 	@Override
-	public OpenPath getParent() {
+	public OpenFile getParent() {
 		if(mFile.getParent() == null)
 			return null;
 		return new OpenFile(mFile.getParent());
 	}
 
 	@Override
-	public OpenPath[] listFiles() { return listFiles(false); }
+	public OpenFile[] listFiles() { return listFiles(false); }
 	
-	public OpenPath[] listFiles(boolean grandPeek) {
+	/*
+	@Override
+	public int getChildCount() throws IOException {
+		Logger.LogDebug("Trying to get child count for " + mFile.getPath() + " view NoRoot");
+		StringBuilder lines = RootManager.Default.executeNoRoot("ls " + mFile.getPath() + " | wc -l"); 
+		if(lines == null || lines.length() == 0) return super.getChildCount();
+		Logger.LogDebug("Return value: " + lines.toString());
+		try {
+			return Integer.parseInt(lines.toString());
+		} catch(Exception e) { return super.getChildCount(); }
+	}
+	*/
+	
+	private OpenFile[] listFilesNative(File file)
+	{
+		Logger.LogDebug("Trying to list " + mFile.getPath() + " via NoRoot");
+		StringBuilder sbfiles = RootManager.Default.executeNoRoot("ls " + mFile.getPath());
+		if(sbfiles != null)
+		{
+			String[] files = sbfiles.toString().split("\n");
+			OpenFile[] mChildren = new OpenFile[files.length];
+			int i = 0;
+			for(String s : files)
+			{
+				mChildren[i++] = new OpenFile(getPath() + "/" + s);
+			}
+			return mChildren;
+		}
+		return getOpenPaths(file.listFiles());
+	}
+	
+	private OpenFile[] getOpenPaths(File[] files)
+	{
+		if(files == null) return new OpenFile[0];
+		OpenFile[] ret = new OpenFile[files.length];
+		for(int i=0; i < files.length; i++)
+			ret[i] = new OpenFile(files[i]);
+		return ret;
+	}
+	
+	public OpenFile[] listFiles(boolean grandPeek) {
 		if(mChildren == null)
 		{
-			File[] arr = mFile.listFiles();
-			if((arr == null || arr.length == 0) && isDirectory())
+			if(!grandPeek)
+				mChildren = getOpenPaths(mFile.listFiles());
+			else
+				mChildren = listFilesNative(mFile);
+			if((mChildren == null || mChildren.length == 0) && isDirectory())
 			{
 				if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
 				{
@@ -153,15 +196,11 @@ public class OpenFile extends OpenPath
 					}
 				}
 			}
-			if((arr == null || arr.length == 0) && !isDirectory() && mFile.getParentFile() != null)
-				arr = mFile.getParentFile().listFiles();
+			if((mChildren == null || mChildren.length == 0) && !isDirectory() && mFile.getParentFile() != null)
+				mChildren = getParent().listFiles(grandPeek);
 			
-			if(arr == null)
+			if(mChildren == null)
 				return new OpenFile[0];
-			
-			mChildren = new OpenFile[arr.length];
-			for(int i = 0; i < arr.length; i++)
-				mChildren[i] = new OpenFile(arr[i]);
 		}
 
 		if(grandPeek && !bGrandPeeked && mChildren != null && mChildren.length > 0)
