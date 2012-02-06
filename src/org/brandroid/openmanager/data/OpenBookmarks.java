@@ -328,7 +328,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		switch(command)
 		{
 			case OpenCommand.COMMAND_ADD_SERVER:
-				ShowServerDialog(new OpenFTP(null, null), null);
+				ShowServerDialog(new OpenFTP(null, null), null, true);
 				break;
 		}
 	}
@@ -383,7 +383,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		mBookmarkAdapter.notifyDataSetChanged();
 	}
 
-	public boolean ShowServerDialog(final OpenFTP mPath, final BookmarkHolder mHolder)
+	public boolean ShowServerDialog(final OpenFTP mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
 	{
 		final OpenServers servers = SettingsActivity.LoadDefaultServers(mContext);
 		final int iServersIndex = mPath.getServersIndex();
@@ -396,6 +396,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final EditText mTextPath = (EditText)v.findViewById(R.id.text_path);
 		final EditText mTextName = (EditText)v.findViewById(R.id.text_name);
 		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
+		if(!allowShowPass)
+			mCheckPassword.setVisibility(View.GONE);
 		setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword);
 		if(iServersIndex > -1)
 		{
@@ -435,6 +437,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 	private void setupServerDialog(final OpenServer server, final EditText mHost, final EditText mUser, final EditText mPassword, final EditText mTextPath, final EditText mTextName, final CheckBox mCheckPassword)
 	{
+		if(mCheckPassword.getVisibility() == View.VISIBLE)
 		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if(isChecked)
@@ -452,7 +455,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 			public void afterTextChanged(Editable s) {
 				if(server.getName().equals(server.getHost()) || server.getName().equals("New Server") || server.getName().equals(""))
+				{
 					server.setName(s.toString());
+					mHost.setText(s);
+				}
 				server.setHost(s.toString());
 			}
 		});
@@ -482,7 +488,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 			public void afterTextChanged(Editable s) {
 				if(server.getHost().equalsIgnoreCase(""))
+				{
 					server.setHost(s.toString());
+					mHost.setText(s);
+				}
 				server.setName(s.toString());
 			}
 		});
@@ -753,7 +762,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(path instanceof OpenCommand)
 			handleCommand(((OpenCommand)path).getCommand());
 		else if(path instanceof OpenFTP)
-			ShowServerDialog((OpenFTP)path, h);
+			ShowServerDialog((OpenFTP)path, h, false);
 		else
 			ShowStandardDialog(path, h);
 		return true;
