@@ -79,14 +79,6 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 		super.onCreate(savedInstanceState);
 	}
 	
-	
-	
-	@Override
-	public void onPause() {
-		super.onPause();
-		//mBookmarks.saveBookmarks();
-	}
-	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -95,15 +87,14 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 	}
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
-		super.onViewCreated(view, savedInstanceState);
 		expandAll();
+		super.onViewCreated(view, savedInstanceState);
 	}
 	
 	public ExpandableListView getListView() { return (ExpandableListView) getView().findViewById(android.R.id.list); }
 	public void setListAdapter(ExpandableListAdapter adapter) { getListView().setAdapter(adapter); }
 	
 	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
 		
 		//Logger.LogDebug("Bookmark Fragment Created");
 
@@ -114,6 +105,7 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 		setListAdapter(adapter);
 		registerForContextMenu(lv);
 		expandAll();
+		super.onActivityCreated(savedInstanceState);
 	}
 	
 	public void expandAll()
