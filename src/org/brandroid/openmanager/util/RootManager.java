@@ -1,6 +1,6 @@
 /*
     Open Explorer, an open source file explorer & text editor
-    Copyright (C) 2011 Brandon Bowles <brandroid64@gmail.com>
+    Copyright (C) 2011, 2012 Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,19 +33,23 @@ public class RootManager
 {
 	private static boolean rootRequested = false;
 	private static boolean rootEnabled = false;
+	private static final boolean singleProcess = false; 
+	private Process myProcess = null; 
 	
 	public static RootManager Default = new RootManager();
 	
 	@Override
 	protected void finalize() throws Throwable {
-		super.finalize();
 		exitRoot();
+		super.finalize();
 	}
 	
 	public Process getSuProcess() throws IOException
 	{
 		if(!isRoot()) return null;
-		return Runtime.getRuntime().exec("su -c sh");
+		if(myProcess == null || !singleProcess)
+			myProcess = Runtime.getRuntime().exec("su -c sh");
+		return myProcess;
 	}
 	public boolean isRoot()
 	{
@@ -57,16 +61,43 @@ public class RootManager
 	{
 		rootEnabled = false;
 		rootRequested = false;
-		Process suProcess = null;
-		if(suProcess != null) // exit su
+		if(myProcess != null) // exit su
 		{
 			try {
-				DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
+				DataOutputStream os = new DataOutputStream(myProcess.getOutputStream());
 				os.writeBytes("exit\n");
 				os.flush();
 				os.close();
 			} catch(Exception e) { }
 		}
+	}
+	public StringBuilder executeNoRoot(String cmd)
+	{
+		StringBuilder ret = new StringBuilder();
+		DataInputStream is = null;
+		try {
+			Process proc = Runtime.getRuntime().exec(cmd);
+			is = new DataInputStream(proc.getInputStream());
+			
+			if(is != null)
+			{
+				int retVal = proc.waitFor();
+				String line = null;
+				while((line = is.readLine()) != null)
+					ret.append(line + "\n");
+			}
+		} catch(Exception e) {
+			Logger.LogError("Exception while executeNoRoot", e);
+		} finally {
+			if(is != null)
+				try {
+					is.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		return ret;
 	}
 	public HashSet<String> execute(String... commands)
 	{
@@ -92,6 +123,7 @@ public class RootManager
 					os.flush();
 				}
 				
+				// app crash if this doesn't happen
 				os.writeBytes("exit\n");
 				os.flush();
 				
