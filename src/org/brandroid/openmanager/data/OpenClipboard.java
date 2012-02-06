@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.data;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -7,9 +8,12 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 
+import android.text.ClipboardManager;
+import android.content.ClipData;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -37,22 +41,69 @@ public class OpenClipboard
 		public void onClipboardClear();
 	}
 	
+	@SuppressWarnings("deprecation")
+	private void onClipboardUpdate()
+	{
+		if(listener != null)
+		{
+			if(list.size() == 0)
+				listener.onClipboardClear();
+			else
+				listener.onClipboardUpdate();
+		}
+		if(list.size() > 0)
+		{
+			ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+			StringBuilder clipText = new StringBuilder();
+			for(int i = 0; i < size(); i++)
+				clipText.append(get(i).getAbsolutePath() + "\n");
+			clip.setText(clipText);
+			if(!OpenExplorer.BEFORE_HONEYCOMB)
+			{
+				ClipData data = ClipData.newPlainText("files", clipText);
+				((android.content.ClipboardManager)clip).setPrimaryClip(data);
+			}
+		}
+	}
+	
 	public OpenClipboard(Context context)
 	{
 		super();
 		list = new ArrayList<OpenPath>();
 		this.mContext = context;
+		readSystemClipboard();
+	}
+	
+	private void readSystemClipboard()
+	{
+		ClipboardManager sysboard = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+		CharSequence clipText = sysboard.getText();
+		if(clipText != null)
+		{
+			for(String s : clipText.toString().split("\n"))
+				if(s != null && new File(s).exists())
+					add(new OpenFile(s));
+		}
+		else if(clipText == null && !OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			ClipData data = ((android.content.ClipboardManager)sysboard).getPrimaryClip();
+			for(int i = 0; i < data.getItemCount(); i++)
+			{
+				String txt = data.getItemAt(i).coerceToText(mContext).toString();
+				for(String s : txt.split("\n"))
+					if(s != null && new File(s).exists())
+						add(new OpenFile(s));
+			}
+		}
 	}
 	
 	public void startMultiselect() {
 		mMultiselect = true; 
-		if(listener != null)
-			listener.onClipboardUpdate();
+		onClipboardUpdate();
 	}
 	public void stopMultiselect() {
 		mMultiselect = false;
-		if(listener != null)
-			listener.onClipboardUpdate();
+		onClipboardUpdate();
 	}
 	public boolean isMultiselect() { return mMultiselect; }
 	
@@ -118,17 +169,19 @@ public class OpenClipboard
 		if(list.contains(path))
 			ret = false;
 		ret = list.add(path);
-		if(listener != null)
-			listener.onClipboardUpdate();
+		onClipboardUpdate();
 		return ret;
 	}
 
 	public void add(int index, OpenPath path) {
 		list.add(index, path);
+		onClipboardUpdate();
 	}
 
 	public boolean addAll(Collection<? extends OpenPath> collection) {
-		return list.addAll(collection);
+		boolean ret = list.addAll(collection);
+		onClipboardUpdate();
+		return ret;
 	}
 
 	public boolean addAll(int index, Collection<? extends OpenPath> collection) {
@@ -137,9 +190,8 @@ public class OpenClipboard
 
 	public void clear() {
 		list.clear();
-		if(listener != null)
-			listener.onClipboardClear();
 		stopMultiselect();
+		onClipboardUpdate();
 	}
 
 	public boolean contains(Object path) {
@@ -172,22 +224,19 @@ public class OpenClipboard
 
 	public OpenPath remove(int location) {
 		OpenPath ret = list.remove(location);
-		if(list.size() == 0 && listener != null)
-			listener.onClipboardClear();
+		onClipboardUpdate();
 		return ret;
 	}
 
 	public boolean remove(Object path) {
 		boolean ret = list.remove(path);
-		if(list.size() == 0 && listener != null)
-			listener.onClipboardClear();
+		onClipboardUpdate();
 		return ret;
 	}
 
 	public boolean removeAll(Collection<?> paths) {
 		boolean ret = list.removeAll(paths);
-		if(list.size() == 0 && listener != null)
-			listener.onClipboardClear();
+		onClipboardUpdate();
 		return ret;
 	}
 
@@ -196,7 +245,9 @@ public class OpenClipboard
 	}
 
 	public OpenPath set(int index, OpenPath path) {
-		return list.set(index, path);
+		OpenPath ret = list.set(index, path);
+		onClipboardUpdate();
+		return ret;
 	}
 
 	public int size() {
