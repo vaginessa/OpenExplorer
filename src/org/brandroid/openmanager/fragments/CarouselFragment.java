@@ -57,7 +57,11 @@ public class CarouselFragment extends ContentFragment {
 	
 	private OpenPath[] mPathItems;
 	
-	public int size() { return mPathItems.length; }
+	public int size() {
+		if(mPathItems != null)
+			return mPathItems.length;
+		else return 0;
+	}
 	
 	class LocalCarouselViewHelper extends CarouselViewHelper {
 		private static final int PIXEL_BORDER = 3;

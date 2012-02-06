@@ -1757,10 +1757,10 @@ public class OpenExplorer
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
 		if(mLastPath == null || mLastPath.equals("")) return;
 		Logger.LogDebug("Saving instance last path = " + mLastPath.getPath());
 		outState.putString("last", mLastPath.getPath());
+		super.onSaveInstanceState(outState);
 	}
 	
 	public void pushFragment(Object o)
@@ -1858,7 +1858,7 @@ public class OpenExplorer
 		if(path == null) path = mLastPath;
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
-		ContentFragment content = (ContentFragment)fragmentManager.findFragmentById(R.id.content_frag);
+		Fragment content = fragmentManager.findFragmentById(R.id.content_frag);
 		int newView = getSetting(path, "view", mViewMode);
 		mFileManager.setShowHiddenFiles(getSetting(path, "hide", true));
 		setViewMode(newView);
@@ -1888,11 +1888,12 @@ public class OpenExplorer
 			{
 				content = new ContentFragment(path, mViewMode);
 				ft.replace(R.id.content_frag, content);
-			} else {
-				content.changePath(path); // the main selection
+			} else if(content instanceof ContentFragment) {
+				((ContentFragment)content).changePath(path); // the main selection
 			}
 		}
-		content.setSettings(
+		if(content instanceof ContentFragment)
+		((ContentFragment)content).setSettings(
 			SortType.DATE_DESC,
 			getSetting(path, "thumbs", true),
 			getSetting(path, "hide", true)

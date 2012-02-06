@@ -46,15 +46,15 @@ public class OpenFragment
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 		Logger.LogDebug("<-onCreate - " + getClassName());
 		//CONTENT_FRAGMENT_FREE = false;
+		super.onCreate(savedInstanceState);
 	}
 	
 	@Override
 	public void onDestroy() {
-		super.onDestroy();
 		Logger.LogDebug("->onDestroy - " + getClassName());
+		super.onDestroy();
 	}
 	
 	/*

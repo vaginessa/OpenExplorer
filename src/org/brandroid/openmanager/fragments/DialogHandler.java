@@ -128,9 +128,9 @@ public class DialogHandler extends DialogFragment {
 	}
 	
 	@Override
-	public void onSaveInstanceState(Bundle arg0) {
-		super.onSaveInstanceState(arg0);
-		arg0.putString("path", mPath.getPath());
+	public void onSaveInstanceState(Bundle bundle) {
+		bundle.putString("path", mPath.getPath());
+		super.onSaveInstanceState(bundle);
 	}
 	
 	public void setHoldingFileList(ArrayList<OpenPath> list) {
