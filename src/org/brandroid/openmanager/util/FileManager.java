@@ -145,20 +145,21 @@ public class FileManager {
 	 * @return
 	 */
 	public int copyToDirectory(String old, String newDir) {
-		File old_file = new File(old);
-		File temp_dir = new File(newDir);
-		byte[] data = new byte[BUFFER];
+		final File old_file = new File(old);
+		final File temp_dir = new File(newDir);
+		final byte[] data = new byte[BUFFER];
 		int read = 0;
 		
 		if(old_file.isFile() && temp_dir.isDirectory() && temp_dir.canWrite()){
 			String file_name = old.substring(old.lastIndexOf("/"), old.length());
 			File cp_file = new File(newDir + file_name);
+			if(cp_file.equals(old_file)) return 0;
 
 			try {
-				BufferedOutputStream o_stream = new BufferedOutputStream(
-												new FileOutputStream(cp_file));
 				BufferedInputStream i_stream = new BufferedInputStream(
 											   new FileInputStream(old_file));
+				BufferedOutputStream o_stream = new BufferedOutputStream(
+						new FileOutputStream(cp_file));
 				
 				while((read = i_stream.read(data, 0, BUFFER)) != -1)
 					o_stream.write(data, 0, read);
