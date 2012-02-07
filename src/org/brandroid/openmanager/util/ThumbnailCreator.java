@@ -86,7 +86,7 @@ public class ThumbnailCreator extends Thread {
 		mHandler = handler;
 	}
 	
-	public static boolean setThumbnail(ImageView mImage, OpenPath file, int mWidth, int mHeight)
+	public static boolean setThumbnail(final ImageView mImage, OpenPath file, int mWidth, int mHeight)
 	{
 		final String mName = file.getName();
 		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
@@ -96,8 +96,13 @@ public class ThumbnailCreator extends Thread {
 		final Context mContext = mImage.getContext();
 		
 		if(!file.isDirectory() && file.isTextFile())
-			mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
-		else
+		{
+			mImage.post(new Runnable() {
+				public void run() {
+					mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
+				}
+			});
+		} else
 			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 		
 		if(file.hasThumbnail())
@@ -113,6 +118,8 @@ public class ThumbnailCreator extends Thread {
 					mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 					ThumbnailTask task = new ThumbnailTask();
 					ThumbnailStruct struct = new ThumbnailStruct(file, mImage, mWidth, mHeight);
+					if(mImage.getTag() != null && mImage.getTag() instanceof ThumbnailTask)
+						((ThumbnailTask)mImage.getTag()).cancel(true);
 					/*
 					BookmarkHolder mHolder = null;
 					if(file.getTag() != null)
@@ -130,6 +137,7 @@ public class ThumbnailCreator extends Thread {
 					*/
 					
 					try {
+						mImage.setTag(task);
 						if(struct != null)
 							task.execute(struct);
 					} catch(RejectedExecutionException rej) {

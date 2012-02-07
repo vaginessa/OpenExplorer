@@ -57,6 +57,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -972,7 +974,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void changeMultiSelectState(boolean multiSelectOn) {
 		if(multiSelectOn)
 			getClipboard().startMultiselect();
-		if(!multiSelectOn)
+		else
 			getClipboard().stopMultiselect();
 		//mMultiSelectDrawer.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
 	}
@@ -1075,12 +1077,21 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			else
 				mNameView.setTextAppearance(mContext,  R.style.Large);
 			
+			if(file.isHidden())
+				setAlpha(0.5f, mNameView, mPathView, mInfo);
+			else
+				setAlpha(1.0f, mNameView, mPathView, mInfo);
+							
 			//if(!mHolder.getTitle().equals(mName))
 			//	mHolder.setTitle(mName);
 			ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
 			
 			if(mIcon != null)
 			{
+				if(file.isHidden())
+					mIcon.setAlpha(100);
+				else
+					mIcon.setAlpha(255);
 				if(!mShowThumbnails||!file.hasThumbnail())
 					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 				else {

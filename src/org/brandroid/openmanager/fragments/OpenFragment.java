@@ -11,6 +11,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 public class OpenFragment
 			extends Fragment
@@ -22,6 +24,27 @@ public class OpenFragment
 	public String getClassName()
 	{
 		return this.getClass().getSimpleName();
+	}
+	
+	public static void setAlpha(float alpha, View... views)
+	{
+		for(View kid : views)
+			setAlpha(kid, alpha);
+	}
+	public static void setAlpha(View v, float alpha)
+	{
+		if(v == null) return;
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+			v.setAlpha(alpha);
+		else if(v instanceof ImageView)
+			((ImageView)v).setAlpha((int)(255 * alpha));
+		else if(v instanceof TextView)
+			((TextView)v).setTextColor(((TextView)v).getTextColors().withAlpha((int)(255 * alpha)));
+	}
+	public static void setAlpha(float alpha, View root, int... ids)
+	{
+		for(int id : ids)
+			setAlpha(root.findViewById(id), alpha);
 	}
 	
 	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }

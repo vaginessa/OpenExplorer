@@ -18,58 +18,18 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
-import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenBookmarks;
-import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenFTP;
-import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.ftp.FTPManager;
-import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
-import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
-import android.database.DataSetObserver;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextWatcher;
-import android.text.method.PasswordTransformationMethod;
-import android.text.method.SingleLineTransformationMethod;
-import android.app.AlertDialog;
+import android.os.Parcelable;
+import android.support.v4.view.PagerAdapter;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.EditText;
-import android.widget.ArrayAdapter;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.io.File;
 
 public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeListener {
 	
