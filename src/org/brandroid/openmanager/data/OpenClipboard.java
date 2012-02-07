@@ -77,24 +77,28 @@ public class OpenClipboard
 	private void readSystemClipboard()
 	{
 		ClipboardManager sysboard = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			ClipData data = ((android.content.ClipboardManager)sysboard).getPrimaryClip();
+			if(data != null)
+			{
+				for(int i = 0; i < data.getItemCount(); i++)
+				{
+					String txt = data.getItemAt(i).coerceToText(mContext).toString();
+					for(String s : txt.split("\n"))
+						if(s != null && new File(s).exists())
+							add(new OpenFile(s));
+				}
+				return;
+			}
+		}
 		CharSequence clipText = sysboard.getText();
 		if(clipText != null)
 		{
 			for(String s : clipText.toString().split("\n"))
 				if(s != null && new File(s).exists())
 					add(new OpenFile(s));
-		}
-		else if(clipText == null && !OpenExplorer.BEFORE_HONEYCOMB)
-		{
-			ClipData data = ((android.content.ClipboardManager)sysboard).getPrimaryClip();
-			for(int i = 0; i < data.getItemCount(); i++)
-			{
-				String txt = data.getItemAt(i).coerceToText(mContext).toString();
-				for(String s : txt.split("\n"))
-					if(s != null && new File(s).exists())
-						add(new OpenFile(s));
-			}
-		}
+		} 
 	}
 	
 	public void startMultiselect() {
