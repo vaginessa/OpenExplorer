@@ -10,7 +10,9 @@
 		android:id="@+id/menu_paste"
 		android:title="@string/s_menu_multi"
     	android:showAsAction="always|withText"
-    	android:icon="@drawable/ic_menu_paste" />
+    	android:icon="@drawable/ic_menu_paste">
+    	<menu />
+    </item>
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@android:drawable/ic_menu_search"
@@ -30,7 +32,6 @@
 		android:id="@+id/menu_sort"
 		android:icon="@android:drawable/ic_menu_sort_by_size"
 		android:showAsAction="ifRoom"
-		android:actionProviderClass="org.brandroid.openmanager.util.SortActionProvider"
 		android:title="@string/s_menu_sort">
 		<!-- include menu_sort.xml -->
 		<menu />
