@@ -9,20 +9,27 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
+import android.inputmethodservice.InputMethodService.InputMethodImpl;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -55,10 +62,40 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		super.onCreate(savedInstanceState);
 		if(savedInstanceState != null && savedInstanceState.containsKey("edit_path"))
 		{
-			mPath = new OpenFile(savedInstanceState.getString("edit_path"));
-			Logger.LogDebug("load text editor @" + mPath.getPath());
+			String path = savedInstanceState.getString("edit_path");
+			mPath = new OpenFile(path);
+			Logger.LogDebug("load text editor (" + path + ")");
 			if(savedInstanceState.containsKey("edit_data"))
 				mData = savedInstanceState.getString("edit_data");
+			if(savedInstanceState.containsKey("edit_server"))
+			{
+				int serverIndex = savedInstanceState.getInt("edit_server");
+				Logger.LogDebug("Loading server #" + serverIndex);
+				if(serverIndex > -1)
+				{
+					OpenServers servers = SettingsActivity.LoadDefaultServers(getActivity());
+					if(serverIndex < servers.size())
+					{
+						OpenServer server = servers.get(serverIndex);
+						FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath()); 
+						Logger.LogDebug("Found server - " + server.getName());
+						mPath = new OpenFTP(mPath.getPath(), null, man);
+					}
+				}
+			} else if (path.indexOf("ftp:/") > -1)
+			{
+				path = path.substring(path.lastIndexOf("/", path.indexOf(":/") + 2) + 1);
+				String host = path.substring(0, path.indexOf("/"));
+				OpenServers servers = SettingsActivity.LoadDefaultServers(getActivity());
+				for(int i=0; i < servers.size(); i++)
+					if(servers.get(i).getHost().equals(host))
+					{
+						OpenServer server = servers.get(i);
+						FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
+						Logger.LogDebug("Searched & Found server - " + server.getName());
+						mPath = new OpenFTP(mPath.getPath(), null, man);
+					}
+			}
 		}
 	}
 	
@@ -110,9 +147,14 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		Logger.LogInfo("saveInstanceState @ TextEditor");
+		Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
 		outState.putString("edit_path", mPath.getPath());
 		outState.putString("edit_data", mData);
+		if(mPath instanceof OpenFTP && ((OpenFTP)mPath).getServersIndex() > -1)
+		{
+			Logger.LogDebug("Saving server #" + ((OpenFTP)mPath).getServersIndex());
+			outState.putInt("edit_server", ((OpenFTP)mPath).getServersIndex());
+		} else Logger.LogDebug("No server #");
 	}
 	
 	public void save()
@@ -138,7 +180,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 				getFragmentManager().popBackStack();
 				break;
 			case R.id.btn_toggle_keyboard:
-				((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(0, 0);
+				//if(((InputMethodManager)getActivity()).getInputMethodList().
+				((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(mEditText, 0);
 				break;
 		}
 	}
@@ -273,7 +316,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			if(mProgress != null)
 				mProgress.setVisibility(View.GONE);
 			if(mPathLabel != null)
-				mPathLabel.setText(mPath.getPath());
+				mPathLabel.setText(mPath.getName());
 			setEnabled(true, mEditText, mSave, mCancel);
 			mData = result;
 		}
