@@ -19,6 +19,7 @@
 package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
@@ -205,9 +206,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//	mShowThumbnails = true;
 		
 		if(getActivity() != null && getActivity().getWindow() != null)
-			mShowLongDate = getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
-					&& mPath != null
-					&& OpenFile.class.equals(mPath.getClass());
+			mShowLongDate = getResources().getBoolean(R.bool.show_long_date) //getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
+					&& mPath != null;
 
 		
 		if(!path.requiresThread() && path.getListLength() < 100)
@@ -218,6 +218,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			}
 		else {
 			mData2.clear();
+			mData = new OpenPath[0];
 			if(mContentAdapter != null)
 				mContentAdapter.notifyDataSetChanged();
 			if(mProgressBarLoading != null)
@@ -590,20 +591,29 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		switch(id)
 		{
 			case R.id.menu_context_view:
-				IntentManager.startIntent(file, getExplorer());
+				Intent vintent = IntentManager.getIntent(file, getExplorer(), Intent.ACTION_VIEW);
+				if(vintent != null)
+					getActivity().startActivity(vintent);
+				else {
+					getExplorer().showToast(R.string.s_error_no_intents);
+					getExplorer().editFile(file);
+				}
 				break;
 			case R.id.menu_context_edit:
-				Intent intent = IntentManager.getIntent(file, getExplorer());
+				Intent intent = IntentManager.getIntent(file, getExplorer(), Intent.ACTION_EDIT);
 				if(intent != null)
 				{
-					try {
-						intent.setAction(Intent.ACTION_EDIT);
-						Logger.LogVerbose("Starting Intent: " + intent.toString());
-						getExplorer().startActivity(intent);
-					} catch(ActivityNotFoundException e) {
-						getExplorer().showToast(R.string.s_error_no_intents);
+					if(intent.getPackage().equals(getActivity().getPackageName()))
 						getExplorer().editFile(file);
-					}
+					else
+						try {
+							intent.setAction(Intent.ACTION_EDIT);
+							Logger.LogVerbose("Starting Intent: " + intent.toString());
+							getExplorer().startActivity(intent);
+						} catch(ActivityNotFoundException e) {
+							getExplorer().showToast(R.string.s_error_no_intents);
+							getExplorer().editFile(file);
+						}
 				} else {
 					getExplorer().editFile(file);
 				}
@@ -778,13 +788,33 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				//getExplorer().showToast("Still need to handle this.");
 				if(file.isTextFile())
 					getExplorer().editFile(file);
-				else
-					getEventHandler().copyFile(file, mPath, mContext);
+				else {
+					showCopyFromNetworkDialog(file);
+					//getEventHandler().copyFile(file, mPath, mContext);
+				}
 				return;
 			}
 			
 			IntentManager.startIntent(file, getExplorer(), true);
 		}
+	}
+	
+	private void showCopyFromNetworkDialog(OpenPath source)
+	{
+		/// TODO Implement Copy From Network
+		getExplorer().showToast("Not yet implemented (" + source.getMimeType() + ")");
+		return;
+		/*
+		final View view = FolderPickerActivity.createPickerView(mContext);
+		new DialogBuilder(mContext)
+			.setTitle("Choose a folder to copy " + source.getName() + " into:")
+			.setView(view)
+			.setPositiveButton(android.R.string.ok, new OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					
+				}
+			});
+			*/
 	}
 	
 	private void addToMultiSelect(final OpenPath file)
@@ -1092,9 +1122,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mIcon.setAlpha(100);
 				else
 					mIcon.setAlpha(255);
-				if(!mShowThumbnails||!file.hasThumbnail())
-					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-				else {
+				if(file.isTextFile())
+					mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), mContext, mWidth > 72));
+				else if(!mShowThumbnails||!file.hasThumbnail())
+					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));				else {
 					ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
 				}
 			}
@@ -1111,19 +1142,17 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
-					deets = file.getChildCount() + " items";
+					deets = file.getChildCount() + " " + getString(R.string.s_files) + " | ";
 					//deets = file.list().length + " items";
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			} else {
-				deets = DialogHandler.formatSize(file.length());
+			} else if(file.isFile()) {
+				deets = DialogHandler.formatSize(file.length()) + " | ";
 			}
 			
-			deets += " | ";
-			
-			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd");
+			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy");
 			deets += df.format(file.lastModified());
 			
 			/*

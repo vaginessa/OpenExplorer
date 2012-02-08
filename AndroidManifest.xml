@@ -32,7 +32,9 @@
 	<!-- ONLY USE FOR GOOGLE TV:  
 	<uses-permission android:name="android.permission.READ_LOGS" />
 	-->
+	<!-- Not using donations for now:
 	<uses-permission android:name="com.android.vending.BILLING" />
+	-->
 
 	<uses-feature android:name="android.hardware.bluetooth" android:required="false" />
 	<uses-feature android:name="android.hardware.faketouch" android:required="false" />

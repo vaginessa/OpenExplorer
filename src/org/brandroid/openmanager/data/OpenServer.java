@@ -10,10 +10,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.SingleLineTransformationMethod;
+import android.view.View;
+import android.view.View.OnFocusChangeListener;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 
 public class OpenServer
 {
-	private String mName, mHost, mPath, mUser, mPassword;
+	private String mName = "",
+				mHost = "",
+				mPath = "",
+				mUser = "",
+				mPassword = "";
 	//private Hashtable<String, String> mData = new Hashtable<String, String>();
 	
 	public OpenServer() {
@@ -144,5 +159,65 @@ public class OpenServer
 		if(key.equals("user")) return getUser();
 		if(key.equals("password")) return getPassword();
 		return null;
+	}
+	
+	public static void setupServerDialog(final OpenServer server, final EditText mHost,
+			final EditText mUser, final EditText mPassword, final EditText mTextPath,
+			final EditText mTextName, final CheckBox mCheckPassword)
+	{
+		mHost.setOnFocusChangeListener(new OnFocusChangeListener() {
+			public void onFocusChange(View v, boolean hasFocus) {
+				if(!hasFocus && server.getName() == "")
+					mTextName.setText(mHost.getText());
+			}
+		});
+		if(mCheckPassword.getVisibility() == View.VISIBLE)
+		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if(isChecked)
+				{
+					mPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+					mPassword.setTransformationMethod(new SingleLineTransformationMethod());
+				} else {
+					mPassword.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+					mPassword.setTransformationMethod(new PasswordTransformationMethod());
+				}
+			}
+		});
+		mHost.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setHost(s.toString());
+			}
+		});
+		mUser.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setUser(s.toString());
+			}
+		});
+		mPassword.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setPassword(s.toString());
+			}
+		});
+		mTextPath.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setPath(s.toString());
+			}
+		});
+		mTextName.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			public void afterTextChanged(Editable s) {
+				server.setName(s.toString());
+			}
+		});
 	}
 }

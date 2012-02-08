@@ -51,18 +51,15 @@ public class OpenClipboard
 			else
 				listener.onClipboardUpdate();
 		}
-		if(list.size() > 0)
+		ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+		StringBuilder clipText = new StringBuilder();
+		for(int i = 0; i < size(); i++)
+			clipText.append(get(i).getAbsolutePath() + "\n");
+		clip.setText(clipText);
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
 		{
-			ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-			StringBuilder clipText = new StringBuilder();
-			for(int i = 0; i < size(); i++)
-				clipText.append(get(i).getAbsolutePath() + "\n");
-			clip.setText(clipText);
-			if(!OpenExplorer.BEFORE_HONEYCOMB)
-			{
-				ClipData data = ClipData.newPlainText("files", clipText);
-				((android.content.ClipboardManager)clip).setPrimaryClip(data);
-			}
+			ClipData data = ClipData.newPlainText("files", clipText);
+			((android.content.ClipboardManager)clip).setPrimaryClip(data);
 		}
 	}
 	
@@ -92,13 +89,15 @@ public class OpenClipboard
 				return;
 			}
 		}
+		/*
 		CharSequence clipText = sysboard.getText();
 		if(clipText != null)
 		{
 			for(String s : clipText.toString().split("\n"))
 				if(s != null && new File(s).exists())
 					add(new OpenFile(s));
-		} 
+		}
+		*/
 	}
 	
 	public void startMultiselect() {

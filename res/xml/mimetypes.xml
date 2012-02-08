@@ -46,10 +46,13 @@
 	<!-- Web browser types -->
 	<type extension=".htm" mimetype="text/html" />
 	<type extension=".html" mimetype="text/html" />
+	<type extension=".aspx" mimetype="text/html" />
+	<type extension=".ascx" mimetype="text/html" />
 	<type extension=".php" mimetype="text/php " /> <!-- NOT IN WEBKIT -->
 	
 	<!-- Text types -->
 	<type extension=".txt" mimetype="text/plain" />
+	<type extension=".cs" mimetype="text/plain" />
 	<type extension=".csv" mimetype="text/comma-separated-values" />
 	<type extension=".xml" mimetype="text/xml" />
 	
