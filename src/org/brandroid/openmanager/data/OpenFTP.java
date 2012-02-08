@@ -28,9 +28,9 @@ import android.net.Uri;
 
 public class OpenFTP extends OpenPath
 {
-	private FTPFile mFile = new FTPFile();
-	private FTPManager mManager;
-	private ArrayList<OpenFTP> mChildren = null; 
+	private FTPFile mFile;
+	private final FTPManager mManager;
+	private final ArrayList<OpenFTP> mChildren; 
 	private int mServersIndex = -1;
 	
 	public OpenFTP(String path, FTPFile[] children, FTPManager man)
@@ -48,7 +48,11 @@ public class OpenFTP extends OpenPath
 			for(FTPFile f : children)
 				mChildren.add(new OpenFTP(f, new FTPManager(man, base + f.getName())));
 	}
-	public OpenFTP(FTPFile file, FTPManager man) { mFile = file; mManager = man; }
+	public OpenFTP(FTPFile file, FTPManager man) {
+		mFile = file;
+		mManager = man;
+		mChildren = new ArrayList<OpenFTP>();
+	}
 	
 	public FTPFile getFile() { return mFile; }
 	public FTPManager getManager() { return mManager; }
@@ -64,8 +68,9 @@ public class OpenFTP extends OpenPath
 	public String getPath() { return getPath(false); }
 	public String getPath(boolean bIncludeUser) {
 		return mManager.getPath(bIncludeUser);
-		//return mFile.getRawListing();
 	}
+	
+	public String getHost() { return mManager.getHost(); }
 
 	@Override
 	public long length() {
@@ -74,18 +79,20 @@ public class OpenFTP extends OpenPath
 
 	@Override
 	public OpenFTP getParent() {
-		return null;
+		String newPath = getPath();
+		newPath = newPath.substring(0, newPath.lastIndexOf("/", newPath.length() - 1));
+		return new OpenFTP(newPath, null, new FTPManager(getManager(), newPath));
 		//return new OpenFile(mFile.get());
 	}
 
 	@Override
 	public OpenPath[] listFiles() throws IOException {
-		if(mChildren != null && mChildren.size() > 0)
+		if(mChildren.size() > 0)
 		{
 			OpenPath[] ret = new OpenPath[mChildren.size()];
 			mChildren.toArray(ret);
 			return ret;
-		} else mChildren = new ArrayList<OpenFTP>();
+		}
 		FTPFile[] arr = mManager.listFiles(getThreadUpdateCallback());
 		if(arr == null)
 			return null;
@@ -94,6 +101,8 @@ public class OpenFTP extends OpenPath
 		String base = getPath();
 		if(base.indexOf("//") > -1)
 			base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
+		else if(base.indexOf(":/") > -1)
+			base = base.substring(base.indexOf("/", base.indexOf(":/") + 2) + 1);
 		if(!base.endsWith("/"))
 			base += "/";
 		for(int i = 0; i < arr.length; i++)
@@ -106,7 +115,7 @@ public class OpenFTP extends OpenPath
 
 	@Override
 	public Boolean isDirectory() {
-		if(mChildren != null)
+		if(mChildren != null && mChildren.size() > 0)
 			return true;
 		String path = getPath();
 		if(path.endsWith("/")) return true;
@@ -176,7 +185,9 @@ public class OpenFTP extends OpenPath
 		String path = getPath();
 		if(!path.endsWith(name))
 			path += (path.endsWith("/") ? "" : "/") + name;
-		return new OpenFTP(path, null, new FTPManager(mManager, path));
+		OpenFTP ret = new OpenFTP(path, null, new FTPManager(mManager, path));
+		ret.setServersIndex(mServersIndex);
+		return ret;
 	}
 	@Override
 	public Boolean isFile() {
@@ -238,7 +249,7 @@ public class OpenFTP extends OpenPath
 		mManager.setBasePath(path);
 		mFile = new FTPFile();
 		mFile.setName(path);
-		mChildren = new ArrayList<OpenFTP>();
+		mChildren.clear();
 	}
 	
 	public int getServersIndex() { return mServersIndex; }

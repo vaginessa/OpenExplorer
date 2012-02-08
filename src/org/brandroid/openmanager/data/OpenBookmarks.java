@@ -398,7 +398,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
 		if(!allowShowPass)
 			mCheckPassword.setVisibility(View.GONE);
-		setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword);
+		OpenServer.setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword);
 		if(iServersIndex > -1)
 		{
 			mHost.setText(server.getHost());
@@ -407,17 +407,19 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			mTextPath.setText(server.getPath());
 			mTextName.setText(server.getName());
 		}
-		new AlertDialog.Builder(mContext)
+		final AlertDialog dialog = new AlertDialog.Builder(mContext)
 			.setView(v)
 			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : mContext.getResources().getDrawable(R.drawable.sm_ftp))
 			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
 				}
 			})
 			.setNeutralButton(mContext.getString(R.string.s_remove), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					if(iServersIndex > -1)
 						servers.remove(iServersIndex);
+					dialog.dismiss();
 					getExplorer().refreshBookmarks();
 				}
 			})
@@ -428,74 +430,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					else
 						servers.add(server);
 					SettingsActivity.SaveToDefaultServers(servers, mContext);
+					dialog.dismiss();
 					getExplorer().refreshBookmarks();
 				}
 			})
 			.setTitle(server.getName())
-			.create().show();
+			.create();
+		dialog.show();
 		return true;
 	}
-	private void setupServerDialog(final OpenServer server, final EditText mHost, final EditText mUser, final EditText mPassword, final EditText mTextPath, final EditText mTextName, final CheckBox mCheckPassword)
-	{
-		if(mCheckPassword.getVisibility() == View.VISIBLE)
-		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if(isChecked)
-				{
-					mPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-					mPassword.setTransformationMethod(new SingleLineTransformationMethod());
-				} else {
-					mPassword.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-					mPassword.setTransformationMethod(new PasswordTransformationMethod());
-				}
-			}
-		});
-		mHost.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-			public void afterTextChanged(Editable s) {
-				if(server.getName().equals(server.getHost()) || server.getName().equals("New Server") || server.getName().equals(""))
-				{
-					server.setName(s.toString());
-					mHost.setText(s);
-				}
-				server.setHost(s.toString());
-			}
-		});
-		mUser.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-			public void afterTextChanged(Editable s) {
-				server.setUser(s.toString());
-			}
-		});
-		mPassword.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-			public void afterTextChanged(Editable s) {
-				server.setPassword(s.toString());
-			}
-		});
-		mTextPath.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-			public void afterTextChanged(Editable s) {
-				server.setPath(s.toString());
-			}
-		});
-		mTextName.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-			public void afterTextChanged(Editable s) {
-				if(server.getHost().equalsIgnoreCase(""))
-				{
-					server.setHost(s.toString());
-					mHost.setText(s);
-				}
-				server.setName(s.toString());
-			}
-		});
-	}
+	
 	public boolean ShowStandardDialog(final OpenPath mPath, final BookmarkHolder mHolder)
 	{
 		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
