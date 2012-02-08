@@ -12,6 +12,7 @@ import java.lang.ref.SoftReference;
 import java.util.Comparator;
 
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
@@ -169,8 +170,13 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public static boolean isTextFile(String file) {
 		if(file.indexOf(".") == -1) return false;
 		String ext = file.substring(file.lastIndexOf(".") + 1);
-		if(ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("php")
-				|| ext.equalsIgnoreCase("html") || ext.equalsIgnoreCase("htm")
+		if(MimeTypes.Default != null)
+			if(MimeTypes.Default.getMimeType(file).startsWith("text/"))
+				return true;
+		if(ext.equalsIgnoreCase("txt")
+				|| ext.equalsIgnoreCase("php")
+				|| ext.equalsIgnoreCase("html")
+				|| ext.equalsIgnoreCase("htm")
 				|| ext.equalsIgnoreCase("xml"))
 			return true;
 		return false;
@@ -179,7 +185,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public boolean isImageFile() { return isImageFile(getName()); }
 	public static boolean isImageFile(String file) {
 		String ext = file.substring(file.lastIndexOf(".") + 1);
-		
+		if(MimeTypes.Default != null)
+			if(MimeTypes.Default.getMimeType(file).startsWith("image/"))
+				return true;
 		if (ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("jpg") ||
 			ext.equalsIgnoreCase("jpeg")|| ext.equalsIgnoreCase("gif") ||
 			ext.equalsIgnoreCase("tiff")|| ext.equalsIgnoreCase("tif"))
@@ -201,6 +209,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public boolean isVideoFile() { return isVideoFile(getName()); }
 	public static boolean isVideoFile(String path)
 	{
+		if(MimeTypes.Default != null)
+			if(MimeTypes.Default.getMimeType(path).startsWith("video/"))
+				return true;
+		
 		String ext = path.substring(path.lastIndexOf(".") + 1);
 		if(ext.equalsIgnoreCase("mp4") || 
 			  ext.equalsIgnoreCase("3gp") || 
@@ -229,6 +241,12 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	{
 		public void update(int progress, int total);
 		public void update(String status);
+	}
+
+	public String getMimeType() {
+		if(MimeTypes.Default != null)
+			return MimeTypes.Default.getMimeType(getPath());
+		return "*/*";
 	}
 	
 }

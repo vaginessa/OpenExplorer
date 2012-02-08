@@ -242,8 +242,10 @@ public class ThumbnailCreator extends Thread {
 			return (useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
 		else if(file.isVideoFile())
 			return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
-		else if(OpenFTP.class.equals(file.getClass()) && file.isDirectory())
+		else if(file instanceof OpenFTP && file.isDirectory())
 			return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
+		else if(file.isTextFile())
+			return (useLarge ? R.drawable.lg_file : R.drawable.sm_file);
 		else
 			return (useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
 	}

@@ -25,6 +25,8 @@ public class MimeTypes {
 
 	private Map<String, String> mMimeTypes;
 	private Map<String, Integer> mIcons;
+	
+	public static MimeTypes Default = null;
 
 	public MimeTypes() {
 		mMimeTypes = new HashMap<String,String>();
