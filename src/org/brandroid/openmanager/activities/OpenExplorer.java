@@ -76,6 +76,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,6 +84,7 @@ import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
@@ -383,6 +385,28 @@ public class OpenExplorer
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		Fragment home = new ContentFragment(mLastPath, mViewMode);
 		
+		if(savedInstanceState != null)
+			if(savedInstanceState.containsKey("edit_path"))
+			{
+				//Logger.LogDebug("textEditor restore @ " + savedInstanceState.getString("edit_path"));
+				home = new TextEditorFragment();
+				OpenPath editPath = null;
+				String sPath = savedInstanceState.getString("edit_path");
+				if(sPath.startsWith("/"))
+					editPath = new OpenFile(savedInstanceState.getString("edit_path"));
+				else if(sPath.indexOf("ftp:/") > -1)
+					try {
+						editPath = new OpenFTP(sPath, null, new FTPManager(sPath));
+					} catch (MalformedURLException e) {
+						Logger.LogError("MalformedURLException for edit restore", e);
+					}
+				if(editPath != null)
+				{
+					home = new TextEditorFragment(editPath);
+					path = mLastPath = editPath.getParent();
+				}
+			} else Logger.LogDebug("Nothing being edited");
+
 		Logger.LogDebug("Creating with " + path.getPath());
 		if(OpenFile.class.equals(path.getClass()))
 			new PeekAtGrandKidsTask().execute((OpenFile)path);
@@ -394,15 +418,7 @@ public class OpenExplorer
 				.commit();
 			//ft.replace(R.id.list_frag, mFavoritesFragment);
 		}
-		
-		if(savedInstanceState != null)
-			if(savedInstanceState.containsKey("edit_path"))
-			{
-				//Logger.LogDebug("textEditor restore @ " + savedInstanceState.getString("edit_path"));
-				home = new TextEditorFragment(new OpenFile(savedInstanceState.getString("edit_path")));
-				bAddToStack = false;
-			}
-		
+				
 		Intent intent = getIntent();
 		if(intent != null && intent.getAction() != null &&
 				(intent.getAction().equals(Intent.ACTION_EDIT) ||
@@ -712,19 +728,19 @@ public class OpenExplorer
 			}
 			if(which == 0 && mVideoParent == null)
 			{
-				Logger.LogInfo("We got videos");
+				//Logger.LogInfo("We got videos");
 				mVideoParent.setCursor(c);
 				ensureCache(mVideoParent);
 			} else if(which == 1 && mPhotoParent == null) {
-				Logger.LogInfo("We got photos");
+				//Logger.LogInfo("We got photos");
 				mPhotoParent.setCursor(c);
 				ensureCache(mPhotoParent);
 			} else if(which == 2 && mMusicParent == null) {
-				Logger.LogInfo("We got music");
+				//Logger.LogInfo("We got music");
 				mMusicParent.setCursor(c);
 			} else if(which == 3)
 			{
-				Logger.LogInfo("We got apps");
+				//Logger.LogInfo("We got apps");
 				mApkParent.setCursor(c);
 				ensureCache(mApkParent);
 			}
@@ -752,10 +768,11 @@ public class OpenExplorer
 	private boolean findCursors()
 	{
 		if(mVideoParent.isLoaded())
-			Logger.LogDebug("Videos should be found");
-		else
 		{
-			Logger.LogDebug("Finding videos");
+			//Logger.LogDebug("Videos should be found");
+		}else
+		{
+			//Logger.LogDebug("Finding videos");
 			//if(!IS_DEBUG_BUILD)
 			try {
 				CursorLoader loader = new CursorLoader(
@@ -779,7 +796,7 @@ public class OpenExplorer
 		}
 		if(!mPhotoParent.isLoaded())
 		{
-			Logger.LogDebug("Finding Photos");
+			//Logger.LogDebug("Finding Photos");
 			try {
 				CursorLoader loader = new CursorLoader(
 				//new LoadMediaStore(
@@ -800,7 +817,7 @@ public class OpenExplorer
 		}
 		if(!mMusicParent.isLoaded())
 		{
-			Logger.LogDebug("Finding Music");
+			//Logger.LogDebug("Finding Music");
 			try {
 				CursorLoader loader = new CursorLoader(
 				//new LoadMediaStore(
@@ -821,7 +838,7 @@ public class OpenExplorer
 		}
 		if(!mApkParent.isLoaded() && Build.VERSION.SDK_INT > 10)
 		{
-			Logger.LogDebug("Finding APKs");
+			//Logger.LogDebug("Finding APKs");
 			try {
 				CursorLoader loader = new CursorLoader(
 				//new LoadMediaStore(
@@ -1021,7 +1038,7 @@ public class OpenExplorer
 		TextEditorFragment editor = new TextEditorFragment(path);
 		fragmentManager.beginTransaction()
 			.replace(R.id.content_frag, editor)
-			.addToBackStack(null)
+			//.addToBackStack(null)
 			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 			.commit();
 		//addTab(editor, path.getName(), true);
@@ -1638,6 +1655,7 @@ public class OpenExplorer
 	public static MimeTypes getMimeTypes(Context c)
 	{
 		if(mMimeTypes != null) return mMimeTypes;
+		if(MimeTypes.Default != null) return MimeTypes.Default;
 		MimeTypeParser mtp = null;
 		try {
 			mtp = new MimeTypeParser(c, c.getPackageName());
@@ -1656,6 +1674,7 @@ public class OpenExplorer
 			Logger.LogError("PreselectedChannelsActivity: IOException", e);
 			throw new RuntimeException("PreselectedChannelsActivity: IOException");
 		}
+		MimeTypes.Default = mMimeTypes;
 		return mMimeTypes;
 	}
 	
@@ -1860,7 +1879,7 @@ public class OpenExplorer
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		Fragment content = fragmentManager.findFragmentById(R.id.content_frag);
 		int newView = getSetting(path, "view", mViewMode);
-		mFileManager.setShowHiddenFiles(getSetting(path, "hide", true));
+		mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		setViewMode(newView);
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		if(addToStack)
