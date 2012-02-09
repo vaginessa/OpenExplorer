@@ -66,6 +66,7 @@ import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
+import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
@@ -285,7 +286,7 @@ public class OpenExplorer
 		if(fragmentManager == null)
 		{
 			fragmentManager = getSupportFragmentManager();
-			fragmentManager.addOnBackStackChangedListener(this);
+			//fragmentManager.addOnBackStackChangedListener(this);
 		}
 		
 		if(mFavoritesFragment == null)
@@ -358,28 +359,6 @@ public class OpenExplorer
 		
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 		mContentFragment = new ContentFragment(mLastPath, mViewMode);
-		
-		if(savedInstanceState != null)
-			if(savedInstanceState.containsKey("edit_path"))
-			{
-				//Logger.LogDebug("textEditor restore @ " + savedInstanceState.getString("edit_path"));
-				home = new TextEditorFragment();
-				OpenPath editPath = null;
-				String sPath = savedInstanceState.getString("edit_path");
-				if(sPath.startsWith("/"))
-					editPath = new OpenFile(savedInstanceState.getString("edit_path"));
-				else if(sPath.indexOf("ftp:/") > -1)
-					try {
-						editPath = new OpenFTP(sPath, null, new FTPManager(sPath));
-					} catch (MalformedURLException e) {
-						Logger.LogError("MalformedURLException for edit restore", e);
-					}
-				if(editPath != null)
-				{
-					home = new TextEditorFragment(editPath);
-					path = mLastPath = editPath.getParent();
-				}
-			} else Logger.LogDebug("Nothing being edited");
 
 		Logger.LogDebug("Creating with " + path.getPath());
 		if(OpenFile.class.equals(path.getClass()))
@@ -404,7 +383,7 @@ public class OpenExplorer
 			bAddToStack = false;
 		}
 		
-		mViewPager = (ViewPager)findViewById(R.id.content_frag_pager);
+		mViewPager = (ViewPager)findViewById(R.id.content_pager);
 		if(mViewPager != null)
 		{
 			mViewPagerAdapter = new MyFragAdapter(fragmentManager);
@@ -1922,8 +1901,14 @@ public class OpenExplorer
 		mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		setViewMode(newView);
 		if(mViewPager != null)
-			mViewPagerAdapter.add(content);
-		else {
+		{
+			if(!addToStack)
+			{
+				mViewPagerAdapter.clear();
+				mContentFragment = content;
+			} else
+				mViewPagerAdapter.add(content);
+		} else {
 			FragmentTransaction ft = fragmentManager.beginTransaction();
 			ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 			ft.setBreadCrumbTitle(path.getPath());
