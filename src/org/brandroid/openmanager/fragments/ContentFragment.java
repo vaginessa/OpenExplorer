@@ -116,27 +116,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private Bundle mBundle;
 	
 	private int mViewMode = OpenExplorer.VIEW_GRID;
-	
-	public ContentFragment()
+
+	public static ContentFragment newInstance(OpenPath path, int mode)
 	{
-		//Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
-		mPath = mLastPath;
-		//mMultiSelect = OpenExplorer.getMultiSelectHandler();
-		//mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
+		ContentFragment ret = new ContentFragment();
+		Bundle args = new Bundle();
+		args.putString("last", path.getPath());
+		args.putInt("view", mode);
+		ret.setArguments(args);
+		return ret;
 	}
-	public ContentFragment(OpenPath path)
-	{
-		mPath = mLastPath = path;
-		//mMultiSelect = OpenExplorer.getMultiSelectHandler();
-		//mViewMode = getExplorer().getSetting(path, "view", mViewMode);
-	}
-	public ContentFragment(OpenPath path, int viewMode)
-	{
-		mPath = mLastPath = path;
-		//mMultiSelect = OpenExplorer.getMultiSelectHandler();
-		setViewMode(viewMode);
-	}
-	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
 		//Logger.LogVerbose("Content View Mode: " + mode);
@@ -157,7 +146,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		super.onCreate(savedInstanceState);
 		
 		if(savedInstanceState != null && savedInstanceState.containsKey("last"))
+		{
 			mPath = mLastPath = new OpenFile(savedInstanceState.getString("last"));
+			mViewMode = savedInstanceState.getInt("view");
+		} else if(getArguments() != null && getArguments().containsKey("last"))
+		{
+			mPath = mLastPath = new OpenFile(getArguments().getString("last"));
+			mViewMode = getArguments().getInt("view");
+		}
 		
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
@@ -261,6 +257,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
+		outState.putString("last", mLastPath.getPath());
+		outState.putInt("view", mViewMode);
 		/*
 		if(mPath != null && mPath.getPath() != null)
 		{
@@ -1308,6 +1306,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			super.setIcon(icon);
 			return this;
 		}
+	}
+	public OpenPath getPath() {
+		return mPath;
 	}
 }
 

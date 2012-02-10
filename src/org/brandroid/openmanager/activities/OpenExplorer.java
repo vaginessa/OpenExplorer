@@ -91,6 +91,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.MyPagerAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
@@ -164,11 +165,12 @@ public class OpenExplorer
 	private static int mLoadingCount = 0;
 	private Boolean mSinglePane = false;
 	private Boolean mSinglePanePager = true;
+	private Boolean mCreated = false;
 	
 	private static Fragment mFavoritesFragment = null,
 			mContentFragment = null;
 	private ViewPager mViewPager;
-	private static MyFragAdapter mViewPagerAdapter;
+	private static MyPagerAdapter mViewPagerAdapter;
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
@@ -283,12 +285,6 @@ public class OpenExplorer
 		else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			mSinglePane = true;
 		
-		if(fragmentManager == null)
-		{
-			fragmentManager = getSupportFragmentManager();
-			//fragmentManager.addOnBackStackChangedListener(this);
-		}
-		
 		if(mFavoritesFragment == null)
 			mFavoritesFragment = new BookmarkFragment();
 		
@@ -356,9 +352,26 @@ public class OpenExplorer
 		boolean bAddToStack = true; //fragmentManager.getBackStackEntryCount() > 0;
 
 		mViewMode = getSetting(path, "view", mViewMode);
+
+		mViewPager = (ViewPager)findViewById(R.id.content_pager);
+
+		mContentFragment = ContentFragment.newInstance(mLastPath, mViewMode);
 		
+		if(fragmentManager == null)
+		{
+			fragmentManager = getSupportFragmentManager();
+			//fragmentManager.addOnBackStackChangedListener(this);
+
+			if(mViewPager != null)
+			{
+				mViewPagerAdapter = new MyPagerAdapter(fragmentManager);
+				mViewPagerAdapter.add(mFavoritesFragment);
+				mViewPagerAdapter.add(mContentFragment);
+				mViewPager.setAdapter(mViewPagerAdapter);
+			}
+		}
+
 		FragmentTransaction ft = fragmentManager.beginTransaction();
-		mContentFragment = new ContentFragment(mLastPath, mViewMode);
 
 		Logger.LogDebug("Creating with " + path.getPath());
 		if(OpenFile.class.equals(path.getClass()))
@@ -381,13 +394,6 @@ public class OpenExplorer
 			Logger.LogInfo("Editing " + file.toString());
 			mContentFragment = new TextEditorFragment(new OpenFile(file.getPath()));
 			bAddToStack = false;
-		}
-		
-		mViewPager = (ViewPager)findViewById(R.id.content_pager);
-		if(mViewPager != null)
-		{
-			mViewPagerAdapter = new MyFragAdapter(fragmentManager);
-			mViewPager.setAdapter(mViewPagerAdapter);
 		}
 		
 		if(findViewById(R.id.content_frag) != null)
@@ -936,7 +942,7 @@ public class OpenExplorer
 				{
 					FragmentTransaction ft = fragmentManager.beginTransaction();
 					if(mFavoritesFragment.isVisible())
-						ft.replace(R.id.content_frag, new ContentFragment(mLastPath, mViewMode));
+						ft.replace(R.id.content_frag, ContentFragment.newInstance(mLastPath, mViewMode));
 					else
 						ft.replace(R.id.content_frag, mFavoritesFragment);
 		
@@ -971,17 +977,24 @@ public class OpenExplorer
 	{
 		Logger.LogDebug("getDirContentFragment");
 		Fragment ret = fragmentManager.findFragmentById(R.id.content_frag);
+		if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter.getLastItem() instanceof ContentFragment)
+			ret = ((ContentFragment)mViewPagerAdapter.getLastItem());
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
 		{
 			Logger.LogWarning("Do I need to create a new ContentFragment?");
-   			ret = new ContentFragment(mLastPath, getSetting(mLastPath, "view", mViewMode));
+   			ret = ContentFragment.newInstance(mLastPath, getSetting(mLastPath, "view", mViewMode));
+   			mViewPagerAdapter.add(ret);
 		}
 		if(activate && !ret.isVisible())
 		{
-			Logger.LogDebug("Activating content fragment");
-			fragmentManager.beginTransaction()
-				.replace(R.id.content_frag, ret)
-				.commit();
+			if(mViewPager != null)
+				mViewPager.setCurrentItem(mViewPagerAdapter.getItemPosition(ret));
+			else {
+				Logger.LogDebug("Activating content fragment");
+				fragmentManager.beginTransaction()
+					.replace(R.id.content_frag, ret)
+					.commit();
+			}
 		}
 		
    		return (ContentFragment)ret;
@@ -1654,7 +1667,7 @@ public class OpenExplorer
 			invalidateOptionsMenu();
 		} else if (oldView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB) { // if we need to transition from carousel
 			fragmentManager.beginTransaction()
-				.replace(R.id.content_frag, new ContentFragment(mLastPath, mViewMode))
+				.replace(R.id.content_frag, ContentFragment.newInstance(mLastPath, mViewMode))
 				.setBreadCrumbTitle(mLastPath.getAbsolutePath())
 				//.addToBackStack(null)
 				.commit();
@@ -1896,18 +1909,23 @@ public class OpenExplorer
 		if(path == null) path = mLastPath;
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
-		Fragment content = new ContentFragment(path);
 		int newView = getSetting(path, "view", mViewMode);
 		mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		setViewMode(newView);
+		Fragment content = ContentFragment.newInstance(path, newView);
 		if(mViewPager != null)
 		{
-			if(!addToStack)
+			Fragment last = mViewPagerAdapter.getItem(mViewPagerAdapter.getCount() - 1);
+			if(!(last instanceof ContentFragment) ||
+					((ContentFragment)last).getPath() == null ||
+					!path.getPath().contains(((ContentFragment)last).getPath().getPath())
+					)
 			{
 				mViewPagerAdapter.clear();
-				mContentFragment = content;
-			} else
-				mViewPagerAdapter.add(content);
+				mViewPagerAdapter.add(mFavoritesFragment);
+			}
+			mViewPagerAdapter.add(content);
+			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 		} else {
 			FragmentTransaction ft = fragmentManager.beginTransaction();
 			ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
@@ -1935,7 +1953,7 @@ public class OpenExplorer
 					setViewMode(newView = VIEW_LIST);
 				if(!BEFORE_HONEYCOMB && (content == null || content instanceof CarouselFragment))
 				{
-					content = new ContentFragment(path, mViewMode);
+					content = ContentFragment.newInstance(path, mViewMode);
 					ft.replace(R.id.content_frag, content);
 				} else if(content instanceof ContentFragment) {
 					((ContentFragment)content).changePath(path); // the main selection
@@ -2039,52 +2057,6 @@ public class OpenExplorer
 	}
 	
 
-	public static class MyFragAdapter extends FragmentPagerAdapter
-	{
-		private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
-
-		public MyFragAdapter(FragmentManager fm) {
-			super(fm);
-		}
-
-		@Override
-		public Fragment getItem(int pos) {
-			if(pos == 0)
-				return mFavoritesFragment;
-			else if(pos == 1)
-				return mContentFragment;
-			else if(pos < mExtraFrags.size() - 2)
-				return mExtraFrags.get(pos - 2);
-			else return null;
-		}
-
-		@Override
-		public int getCount() {
-			return 2 + mExtraFrags.size();
-		}
-		
-		public boolean add(Fragment frag)
-		{
-			boolean ret = mExtraFrags.add(frag);
-			notifyDataSetChanged();
-			return ret;
-		}
-		
-		public boolean remove(Fragment frag)
-		{
-			boolean ret = mExtraFrags.remove(frag);
-			notifyDataSetChanged();
-			return ret;
-		}
-		
-		public void clear()
-		{
-			mExtraFrags.clear();
-			notifyDataSetChanged();
-		}
-		
-	}
-	
 	public class EnsureCursorCacheTask extends AsyncTask<OpenPath, Void, Void>
 	{
 		@Override

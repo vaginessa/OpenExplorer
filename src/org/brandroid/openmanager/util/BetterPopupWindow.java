@@ -7,6 +7,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -334,8 +335,12 @@ public class BetterPopupWindow {
 	{
 		Rect ret = new Rect();
 		if(anchor == null)
-			windowManager.getDefaultDisplay().getRectSize(ret);
-		else if(getContentView() != null)
+		{
+			if(Build.VERSION.SDK_INT >= 13)
+				windowManager.getDefaultDisplay().getRectSize(ret);
+			else
+				ret = new Rect(0, 0, windowManager.getDefaultDisplay().getWidth(), windowManager.getDefaultDisplay().getHeight());
+		} else if(getContentView() != null)
 			getContentView().getDrawingRect(ret);
 		return ret;
 	}
