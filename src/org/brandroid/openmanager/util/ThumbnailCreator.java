@@ -501,7 +501,7 @@ public class ThumbnailCreator extends Thread {
 	
 	private static void saveThumbnail(String file, Bitmap bmp)
 	{
-		Logger.LogVerbose("Saving thumb for " + file);
+		//Logger.LogVerbose("Saving thumb for " + file);
 		FileOutputStream os = null;
 		try {
 			os = mContext.openFileOutput(file, 0);

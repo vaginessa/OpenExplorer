@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.text.Editable;
@@ -120,6 +121,15 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	
 	public void scanBookmarks()
 	{
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				scanBookmarksInner();
+			}
+		}).run();
+	}
+	private void scanBookmarksInner()
+	{
 		Logger.LogDebug("Scanning bookmarks...");
 		OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
 		//mBookmarksArray.clear();
@@ -129,16 +139,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
 		
-		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/"));
+		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
 		
-		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage);
+		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("Download"));
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/external_sd")))
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/external_sd").setRoot()))
 			mHasExternal = true;
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/sdcard-ext")))
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/sdcard-ext").setRoot()))
 			mHasExternal = true;
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/Removable/MicroSD")))
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/Removable/MicroSD").setRoot()))
 			mHasExternal = true;
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
 		for(String sItem : df.keySet())
@@ -152,13 +162,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				mAllDataSize += file.getTotalSpace();
 			//if(!file.getFile().canWrite()) continue;
 			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
-			checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file);
+			checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
 		}
 		if (mBookmarkString.length() > 0) {
 			String[] l = mBookmarkString.split(";");
 			
 			for(String s : l)
-				checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
+				checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s).setRoot());
 		}
 		
 		OpenServers servers = SettingsActivity.LoadDefaultServers(getExplorer());

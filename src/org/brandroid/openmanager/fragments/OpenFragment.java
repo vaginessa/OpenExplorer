@@ -69,15 +69,34 @@ public class OpenFragment
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Logger.LogDebug("<-onCreate - " + getClassName());
+		Logger.LogDebug("<-- onCreate - " + getClassName());
 		//CONTENT_FRAGMENT_FREE = false;
 		super.onCreate(savedInstanceState);
 	}
 	
 	@Override
 	public void onDestroy() {
-		Logger.LogDebug("->onDestroy - " + getClassName());
+		Logger.LogDebug("--> onDestroy - " + getClassName());
 		super.onDestroy();
+	}
+	
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		Logger.LogDebug("<-- onActivityCreated - " + getClassName());
+		super.onActivityCreated(savedInstanceState);
+	}
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		Logger.LogDebug("<-- onCreateView - " + getClassName());
+		return super.onCreateView(inflater, container, savedInstanceState);
+	}
+	
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		Logger.LogDebug("<-- onViewCreated - " + getClassName());
+		super.onViewCreated(view, savedInstanceState);
 	}
 	
 	/*

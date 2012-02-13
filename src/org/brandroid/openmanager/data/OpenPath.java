@@ -38,6 +38,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public abstract long length();
 	public abstract OpenPath getParent();
 	public abstract OpenPath getChild(String name);
+	public OpenPath getChild(int index) throws IOException { return ((OpenPath[])list())[index]; }
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
 	public int getChildCount() throws IOException {

@@ -31,7 +31,7 @@ import android.widget.ExpandableListView;
 
 public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeListener {
 	
-	private OpenBookmarks mBookmarks;
+	private static OpenBookmarks mBookmarks;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -57,7 +57,8 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 		//Logger.LogDebug("Bookmark Fragment Created");
 
 		final ExpandableListView lv = getListView();
-		mBookmarks = new OpenBookmarks(getExplorer(), lv);
+		if(mBookmarks == null)
+			mBookmarks = new OpenBookmarks(getExplorer(), lv);
 		mBookmarks.setupListView(lv);
 		final ExpandableListAdapter adapter = mBookmarks.getListAdapter();
 		setListAdapter(adapter);

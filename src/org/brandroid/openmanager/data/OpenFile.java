@@ -33,9 +33,18 @@ public class OpenFile extends OpenPath
 	private File mFile;
 	private OpenFile[] mChildren = null;
 	private boolean bGrandPeeked = false;
+	private String mRoot = null;
 	
 	public OpenFile(File f) { mFile = f; }
 	public OpenFile(String path) { mFile = new File(path); }
+	
+	public OpenFile setRoot() {
+		mRoot = mFile.getPath();
+		return this;
+	}
+	public void setRoot(String root) {
+		mRoot = root;
+	}
 	
 	public File getFile() { return mFile; }
 
@@ -121,6 +130,16 @@ public class OpenFile extends OpenPath
 
 	@Override
 	public OpenFile getParent() {
+		return getParent(mRoot);
+	}
+	
+	public OpenFile getParent(String root)
+	{
+		if(root != null && root != "")
+		{
+			if(getPath().indexOf(root) == -1) return null;
+			if(getPath().equals(root)) return null;
+		}
 		if(mFile.getParent() == null)
 			return null;
 		return new OpenFile(mFile.getParent());
@@ -271,7 +290,10 @@ public class OpenFile extends OpenPath
 		File base = getFile();
 		if(!base.isDirectory())
 			base = base.getParentFile();
-		return new OpenFile(new File(base, name));
+		OpenFile ret = new OpenFile(new File(base, name));
+		if(mRoot != null)
+			ret.setRoot(mRoot);
+		return ret;
 	}
 	@Override
 	public Boolean isFile() {
