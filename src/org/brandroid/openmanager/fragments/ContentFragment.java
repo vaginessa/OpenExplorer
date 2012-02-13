@@ -23,6 +23,7 @@ import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.OpenPathAdapter;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -46,6 +47,7 @@ import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -116,16 +118,57 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private Bundle mBundle;
 	
 	private int mViewMode = OpenExplorer.VIEW_GRID;
+	
+	private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 
-	public static ContentFragment newInstance(OpenPath path, int mode)
+	public ContentFragment() {
+		
+	}
+	public ContentFragment(OpenPath path)
 	{
-		ContentFragment ret = new ContentFragment();
+		mPath = mLastPath = path;
+	}
+	public ContentFragment(OpenPath path, int view)
+	{
+		mPath = mLastPath = path;
+		mViewMode = view;
+	}
+	public static ContentFragment getInstance(OpenPath path, int mode)
+	{
+		ContentFragment ret = new ContentFragment(path, mode);
+		/*
 		Bundle args = new Bundle();
 		args.putString("last", path.getPath());
 		args.putInt("view", mode);
 		ret.setArguments(args);
+		*/
+		Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
 		return ret;
 	}
+	public static ContentFragment getInstance(OpenPath path)
+	{
+		if(instances == null)
+			instances = new Hashtable<OpenPath, ContentFragment>();
+		if(path == null)
+		{
+			Logger.LogWarning("Why is path null?");
+			return new ContentFragment();
+		}
+		if(!instances.containsKey(path))
+		{
+			ContentFragment ret = new ContentFragment(path);
+			/*
+			Bundle args = new Bundle();
+			args.putString("last", path.getPath());
+			ret.setArguments(args);
+			*/
+			//return ret;
+			instances.put(path, ret);
+		} 
+		Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
+		return instances.get(path);
+	}
+	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
 		//Logger.LogVerbose("Content View Mode: " + mode);
@@ -135,6 +178,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			{
 				mGrid.setAdapter(null);
 				mContentAdapter = new FileSystemAdapter(mContext, mViewMode, mData2);
+				//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
 				mGrid.setAdapter(mContentAdapter);
 			}
 		}
@@ -145,22 +189,32 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		if(savedInstanceState != null && savedInstanceState.containsKey("last"))
+		if(savedInstanceState != null)
+			mBundle = savedInstanceState;
+		else if(getArguments() != null)
+			mBundle = getArguments();
+		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || mPath.getPath().equals(mBundle.getString("last"))))
 		{
-			mPath = mLastPath = new OpenFile(savedInstanceState.getString("last"));
-			mViewMode = savedInstanceState.getInt("view");
-		} else if(getArguments() != null && getArguments().containsKey("last"))
-		{
-			mPath = mLastPath = new OpenFile(getArguments().getString("last"));
-			mViewMode = getArguments().getInt("view");
+			String last = mBundle.getString("last");
+			if(last.startsWith("/"))
+				mPath = mLastPath = new OpenFile(last).setRoot();
+			else if(last.equalsIgnoreCase("Photos"))
+				mPath = mLastPath = OpenExplorer.getPhotoParent();
+			else if(last.equalsIgnoreCase("Videos"))
+				mPath = mLastPath = OpenExplorer.getVideoParent();
+			else if(last.equalsIgnoreCase("Music"))
+				mPath = mLastPath = OpenExplorer.getMusicParent();
+			else
+				mPath = mLastPath = new OpenFile(last);
 		}
+		if(mBundle != null && mBundle.containsKey("view"))
+			mViewMode = mBundle.getInt("view");
 		
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		
 		mContext = getActivity().getApplicationContext();
 		
-		mBundle = savedInstanceState;
 		OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		refreshData(mBundle);
 	}
@@ -190,6 +244,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				path = new OpenFile(Environment.getExternalStorageDirectory());
 		}
 		
+		if(path instanceof OpenFile && !path.getPath().startsWith("/"))
+		{
+			if(path.getPath().equals("Photos"))
+				path = OpenExplorer.getPhotoParent();
+			if(path.getPath().equals("Videos"))
+				path = OpenExplorer.getVideoParent();
+		}
+		
 		mActionModeSelected = false;
 		try {
 			mShowThumbnails = getExplorer()
@@ -206,7 +268,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					&& mPath != null;
 
 		
-		if(!path.requiresThread() && path.getListLength() < 100)
+		if(!path.requiresThread() && path.getListLength() < 300)
 			try {
 				mData = getManager().getChildren(path);
 			} catch (IOException e) {
@@ -235,6 +297,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(View.GONE);
+		super.onCreateView(inflater, container, savedInstanceState);
 		//v.setBackgroundResource(R.color.lightgray);
 		
 		/*
@@ -328,6 +391,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mGrid == null) return;
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
+		//mContentAdapter = new OpenPathAdapter(mPath, getViewMode(), getExplorer());
 		mContentAdapter = new FileSystemAdapter(mContext, mLayoutID, mData2);
 		/*
 		if(OpenCursor.class.equals(mPath.getClass())) {
@@ -354,9 +418,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	public void setupGridView()
 	{
-		if(mGrid.getTag() == null)
-			mGrid.setTag(true);
-		else return; // only do the following the first time
+		//if(mGrid.getTag() == null)
+		//	mGrid.setTag(true);
+		//else return; // only do the following the first time
 		
 		mGrid.setSelector(R.drawable.selector_blue);
 		mGrid.setDrawSelectorOnTop(true);
@@ -601,7 +665,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				Intent intent = IntentManager.getIntent(file, getExplorer(), Intent.ACTION_EDIT);
 				if(intent != null)
 				{
-					if(intent.getPackage().equals(getActivity().getPackageName()))
+					if(intent.getPackage() != null && intent.getPackage().equals(getActivity().getPackageName()))
 						getExplorer().editFile(file);
 					else
 						try {
@@ -1017,17 +1081,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
     	private final int MG = KB * KB;
     	private final int GB = MG * KB;
     	
-		private String mName;
-		private ThumbnailCreator mThumbnail;
-		
 		public FileSystemAdapter(Context context, int layout, ArrayList<OpenPath> data) {
 			super(context, layout, data);
-			mThumbnail = new ThumbnailCreator(mContext, handler);
 		}
 		
 		@Override
 		public void notifyDataSetChanged() {
-			//Logger.LogDebug("Data set changed.");
+			//Logger.LogDebug("Data set changed for FileSystemAdapter - Size = " + getCount() + ". (" + mPath.getPath() + ")");
 			try {
 				//if(getManager() != null)
 				//	getExplorer().updateTitle(getManager().peekStack().getPath());

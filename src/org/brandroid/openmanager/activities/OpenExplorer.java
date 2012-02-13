@@ -48,7 +48,9 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -95,6 +97,7 @@ import org.brandroid.openmanager.adapters.MyPagerAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
+import org.brandroid.openmanager.adapters.OpenPathPagerAdapter;
 import org.brandroid.openmanager.data.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
@@ -170,7 +173,7 @@ public class OpenExplorer
 	private static Fragment mFavoritesFragment = null,
 			mContentFragment = null;
 	private ViewPager mViewPager;
-	private static MyPagerAdapter mViewPagerAdapter;
+	private static OpenPathPagerAdapter mViewPagerAdapter;
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
@@ -323,7 +326,7 @@ public class OpenExplorer
 			{
 				String last = savedInstanceState.getString("last");
 				if(last.startsWith("/"))
-					path = new OpenFile(last);
+					path = new OpenFile(last).setRoot();
 				else if(last.indexOf(":/") > -1)
 					path = new OpenFTP(last, null, new FTPManager());
 				else if(last.equals("Videos"))
@@ -336,13 +339,13 @@ public class OpenExplorer
 					path = new OpenFile(last);
 			}
 			else if("/".equals(start))
-				path = new OpenFile("/");
+				path = new OpenFile("/").setRoot();
 			else if("Videos".equals(start) && mVideoParent != null && mVideoParent.length() > 0)
 				path = mVideoParent;
 			else if("Photos".equals(start) && mPhotoParent != null && mPhotoParent.length() > 0)
 				path = mPhotoParent;
 			else
-				path = new OpenFile(Environment.getExternalStorageDirectory());
+				path = new OpenFile(Environment.getExternalStorageDirectory()).setRoot();
 		}
 		//changePath(path, true);
 		
@@ -355,21 +358,47 @@ public class OpenExplorer
 
 		mViewPager = (ViewPager)findViewById(R.id.content_pager);
 
-		mContentFragment = ContentFragment.newInstance(mLastPath, mViewMode);
+		mContentFragment = ContentFragment.getInstance(mLastPath, mViewMode);
 		
 		if(fragmentManager == null)
 		{
 			fragmentManager = getSupportFragmentManager();
-			//fragmentManager.addOnBackStackChangedListener(this);
+			fragmentManager.addOnBackStackChangedListener(this);
+		}
 
 			if(mViewPager != null)
 			{
-				mViewPagerAdapter = new MyPagerAdapter(fragmentManager);
-				mViewPagerAdapter.add(mFavoritesFragment);
-				mViewPagerAdapter.add(mContentFragment);
+				mViewPagerAdapter = new OpenPathPagerAdapter(fragmentManager);
+				if(findViewById(R.id.list_frag) == null)
+					mViewPagerAdapter.setFirstFragment(mFavoritesFragment);
+				else
+					mViewPagerAdapter.setFirstFragment(null);
+				mViewPagerAdapter.setPath(mLastPath);
+				mViewPager.setOnPageChangeListener(new OnPageChangeListener() {
+					@Override
+					public void onPageSelected(int page) {
+						//Logger.LogVerbose("Pager change to #" + page + " - " +
+						//			mViewPagerAdapter.getPageTitle(page));
+						updateTitle(mViewPagerAdapter.getPageTitle(page).toString());
+					}
+					
+					@Override
+					public void onPageScrolled(int arg0, float arg1, int arg2) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void onPageScrollStateChanged(int arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+				//mViewPagerAdapter.add(mFavoritesFragment);
+				//mViewPagerAdapter.add(mContentFragment);
 				mViewPager.setAdapter(mViewPagerAdapter);
 			}
-		}
+		//}
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 
@@ -942,7 +971,7 @@ public class OpenExplorer
 				{
 					FragmentTransaction ft = fragmentManager.beginTransaction();
 					if(mFavoritesFragment.isVisible())
-						ft.replace(R.id.content_frag, ContentFragment.newInstance(mLastPath, mViewMode));
+						ft.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode));
 					else
 						ft.replace(R.id.content_frag, mFavoritesFragment);
 		
@@ -982,8 +1011,10 @@ public class OpenExplorer
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
 		{
 			Logger.LogWarning("Do I need to create a new ContentFragment?");
-   			ret = ContentFragment.newInstance(mLastPath, getSetting(mLastPath, "view", mViewMode));
-   			mViewPagerAdapter.add(ret);
+   			//ret = ContentFragment.newInstance(mLastPath, getSetting(mLastPath, "view", mViewMode));
+   			//mViewPagerAdapter.add(ret);
+			mViewPagerAdapter.setPath(mLastPath);
+			ret = mViewPagerAdapter.getLastItem();
 		}
 		if(activate && !ret.isVisible())
 		{
@@ -993,7 +1024,7 @@ public class OpenExplorer
 				Logger.LogDebug("Activating content fragment");
 				fragmentManager.beginTransaction()
 					.replace(R.id.content_frag, ret)
-					.commit();
+					.commitAllowingStateLoss();
 			}
 		}
 		
@@ -1667,7 +1698,7 @@ public class OpenExplorer
 			invalidateOptionsMenu();
 		} else if (oldView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB) { // if we need to transition from carousel
 			fragmentManager.beginTransaction()
-				.replace(R.id.content_frag, ContentFragment.newInstance(mLastPath, mViewMode))
+				.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode))
 				.setBreadCrumbTitle(mLastPath.getAbsolutePath())
 				//.addToBackStack(null)
 				.commit();
@@ -1798,20 +1829,12 @@ public class OpenExplorer
 					else if("Photos".equals(start))
 						changePath(mPhotoParent, true);
 					else if("External".equals(start))
-						changePath(new OpenFile(Environment.getExternalStorageDirectory()), true);
+						changePath(new OpenFile(Environment.getExternalStorageDirectory()).setRoot(), true);
 					else
-						changePath(new OpenFile("/"), true);
+						changePath(new OpenFile("/").setRoot(), true);
 				}
 			}
 		}
-	}
-	
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		if(mLastPath == null || mLastPath.equals("")) return;
-		Logger.LogDebug("Saving instance last path = " + mLastPath.getPath());
-		outState.putString("last", mLastPath.getPath());
-		super.onSaveInstanceState(outState);
 	}
 	
 	public void pushFragment(Object o)
@@ -1912,8 +1935,8 @@ public class OpenExplorer
 		int newView = getSetting(path, "view", mViewMode);
 		mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		setViewMode(newView);
-		Fragment content = ContentFragment.newInstance(path, newView);
-		if(mViewPager != null)
+		Fragment content = ContentFragment.getInstance(path, newView);
+		if(mViewPager != null && mViewPager.isShown())
 		{
 			Fragment last = mViewPagerAdapter.getItem(mViewPagerAdapter.getCount() - 1);
 			if(!(last instanceof ContentFragment) ||
@@ -1921,11 +1944,28 @@ public class OpenExplorer
 					!path.getPath().contains(((ContentFragment)last).getPath().getPath())
 					)
 			{
-				mViewPagerAdapter.clear();
-				mViewPagerAdapter.add(mFavoritesFragment);
+				//mViewPagerAdapter.clear();
+				//mViewPagerAdapter.add(mFavoritesFragment);
 			}
-			mViewPagerAdapter.add(content);
+			//mViewPagerAdapter.add(content);
+			//mViewPagerAdapter.setPath(path);
+			//mViewPager.setAdapter(null);
+			mViewPagerAdapter = new OpenPathPagerAdapter(getSupportFragmentManager())
+										.setPath(path);
+			if(findViewById(R.id.list_frag) == null)
+				mViewPagerAdapter.setFirstFragment(mFavoritesFragment);
+			else
+				mViewPagerAdapter.setFirstFragment(null);
+			mViewPager.setAdapter(mViewPagerAdapter);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+			if(addToStack)
+			{
+				fragmentManager
+					.beginTransaction()
+					.setBreadCrumbTitle(path.getPath())
+					.addToBackStack("path")
+					.commit();
+			}
 		} else {
 			FragmentTransaction ft = fragmentManager.beginTransaction();
 			ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
@@ -1953,10 +1993,11 @@ public class OpenExplorer
 					setViewMode(newView = VIEW_LIST);
 				if(!BEFORE_HONEYCOMB && (content == null || content instanceof CarouselFragment))
 				{
-					content = ContentFragment.newInstance(path, mViewMode);
+					content = ContentFragment.getInstance(path, mViewMode);
 					ft.replace(R.id.content_frag, content);
 				} else if(content instanceof ContentFragment) {
-					((ContentFragment)content).changePath(path); // the main selection
+					//((ContentFragment)content).changePath(path); // the main selection
+					ft.replace(R.id.content_frag, content);
 				}
 			}
 			try {
@@ -1964,6 +2005,8 @@ public class OpenExplorer
 			} catch(IllegalStateException e) {
 				Logger.LogWarning("Trying to commit after onSave", e);
 			}
+			updateTitle(path.getPath());
+			changeViewMode(getSetting(path, "view", mViewMode), false); // bug fix
 		}
 		if(content instanceof ContentFragment)
 		((ContentFragment)content).setSettings(
@@ -1971,14 +2014,12 @@ public class OpenExplorer
 			getSetting(path, "thumbs", true),
 			getSetting(path, "hide", true)
 			);
-		if(OpenFile.class.equals(path.getClass()))
+		if(path instanceof OpenFile)
 			new PeekAtGrandKidsTask().execute((OpenFile)path);
 		//ft.replace(R.id.content_frag, content);
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
 		
-		updateTitle(path.getPath());
-		changeViewMode(getSetting(path, "view", mViewMode), false); // bug fix
 		mLastPath = path;
 	}
 	public void setLights(Boolean on)

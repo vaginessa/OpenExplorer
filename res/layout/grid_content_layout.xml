@@ -30,7 +30,7 @@
 		android:layout_width="match_parent"
 		android:maxHeight="@dimen/grid_icon_size"
 		android:baselineAlignBottom="true"
-		android:scaleType="centerCrop"
+		android:scaleType="fitCenter"
 		/>
 	<TextView
 		android:id="@+id/content_text"
