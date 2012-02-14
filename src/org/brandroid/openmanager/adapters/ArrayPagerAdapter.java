@@ -8,11 +8,13 @@ import org.brandroid.utils.Logger;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 
-public class MyPagerAdapter extends android.support.v4.app.FragmentPagerAdapter {
+public class ArrayPagerAdapter extends FragmentStatePagerAdapter {
 	private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
 
-	public MyPagerAdapter(FragmentManager fm) {
+	public ArrayPagerAdapter(FragmentManager fm) {
 		super(fm);
 	}
 	
@@ -42,20 +44,30 @@ public class MyPagerAdapter extends android.support.v4.app.FragmentPagerAdapter 
 	{
 		if(frag == null) return false;
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
-		return mExtraFrags.add(frag);
-		//notifyDataSetChanged();
-		//return ret;
+		boolean ret = mExtraFrags.add(frag);
+		notifyDataSetChanged();
+		return ret;
+	}
+	public void add(int index, Fragment frag)
+	{
+		if(frag == null) return;
+		mExtraFrags.add(index, frag);
+		notifyDataSetChanged();
 	}
 	
 	public boolean remove(Fragment frag)
 	{
-		return mExtraFrags.remove(frag);
-		//notifyDataSetChanged();
-		//return ret;
+		boolean ret = mExtraFrags.remove(frag);
+		notifyDataSetChanged();
+		return ret;
 	}
 	
 	public void clear()
 	{
 		mExtraFrags.clear();
+	}
+
+	public List<Fragment> getFragments() {
+		return mExtraFrags;
 	}
 }

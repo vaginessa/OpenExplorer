@@ -54,6 +54,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -100,7 +101,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private View mProgressBarLoading = null;
 	
 	private OpenPath mPath = null;
-	private static OpenPath mLastPath = null;
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private Context mContext;
@@ -113,6 +113,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private int mListScrollingState = 0;
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
+	private int mListScrollY = 0;
 	public Boolean mShowLongDate = false;
 	
 	private Bundle mBundle;
@@ -124,24 +125,22 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public ContentFragment() {
 		
 	}
-	public ContentFragment(OpenPath path)
+	private ContentFragment(OpenPath path)
 	{
-		mPath = mLastPath = path;
+		mPath = path;
 	}
-	public ContentFragment(OpenPath path, int view)
+	private ContentFragment(OpenPath path, int view)
 	{
-		mPath = mLastPath = path;
+		mPath = path;
 		mViewMode = view;
 	}
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
 		ContentFragment ret = new ContentFragment(path, mode);
-		/*
 		Bundle args = new Bundle();
 		args.putString("last", path.getPath());
 		args.putInt("view", mode);
 		ret.setArguments(args);
-		*/
 		Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
 		return ret;
 	}
@@ -157,14 +156,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(!instances.containsKey(path))
 		{
 			ContentFragment ret = new ContentFragment(path);
-			/*
 			Bundle args = new Bundle();
 			args.putString("last", path.getPath());
 			ret.setArguments(args);
-			*/
 			//return ret;
 			instances.put(path, ret);
-		} 
+		}
 		Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
 		return instances.get(path);
 	}
@@ -197,26 +194,43 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		{
 			String last = mBundle.getString("last");
 			if(last.startsWith("/"))
-				mPath = mLastPath = new OpenFile(last).setRoot();
+				mPath = new OpenFile(last).setRoot();
 			else if(last.equalsIgnoreCase("Photos"))
-				mPath = mLastPath = OpenExplorer.getPhotoParent();
+				mPath = OpenExplorer.getPhotoParent();
 			else if(last.equalsIgnoreCase("Videos"))
-				mPath = mLastPath = OpenExplorer.getVideoParent();
+				mPath = OpenExplorer.getVideoParent();
 			else if(last.equalsIgnoreCase("Music"))
-				mPath = mLastPath = OpenExplorer.getMusicParent();
+				mPath = OpenExplorer.getMusicParent();
 			else
-				mPath = mLastPath = new OpenFile(last);
+				mPath = new OpenFile(last);
 		}
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
 		
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
+		else Logger.LogDebug("Creating ContentFragment @ " + mPath.getPath());
 		
 		mContext = getActivity().getApplicationContext();
 		
 		OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		refreshData(mBundle);
+		
+
+		if(mGrid != null)
+		{
+			if(mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0)
+			{
+				Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
+				mGrid.scrollTo(0, mBundle.getInt("scroll"));
+			} else if(mBundle.containsKey("grid"))
+				mGrid.onRestoreInstanceState(mBundle.getParcelable("grid"));
+			if(mBundle.containsKey("first"))
+			{
+				Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
+				mGrid.setSelection(mBundle.getInt("first"));
+			}
+		}
 	}
 	@Override
 	public void onResume() {
@@ -235,7 +249,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mData2.clear();
 		
 		OpenPath path = mPath;
-		if(path == null) path = mLastPath;
+		if(path == null) path = mPath;
 		if(path == null)
 		{
 			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
@@ -288,11 +302,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 			//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 			updateData(mData, allowSkips);
+			
+			//if(mGrid != null && savedInstanceState.containsKey("first"))
+			
 	}
 
 	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
+		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
@@ -320,8 +338,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putString("last", mLastPath.getPath());
+		outState.putString("last", mPath.getPath());
 		outState.putInt("view", mViewMode);
+		outState.putInt("first", mListVisibleStartIndex);
+		outState.putInt("scroll", mListScrollY);
+		outState.putParcelable("grid", mGrid.onSaveInstanceState());
 		/*
 		if(mPath != null && mPath.getPath() != null)
 		{
@@ -336,8 +357,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		super.onViewCreated(v, savedInstanceState);
 		
 		//mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
-		if(mGrid == null)
-			mGrid = (GridView)v.findViewById(R.id.content_grid);
+		//if(mGrid == null)
+		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
@@ -392,6 +413,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
 		//mContentAdapter = new OpenPathAdapter(mPath, getViewMode(), getExplorer());
+		//Logger.LogDebug("Setting up grid w/ " + mData2.size() + " items");
 		mContentAdapter = new FileSystemAdapter(mContext, mLayoutID, mData2);
 		/*
 		if(OpenCursor.class.equals(mPath.getClass())) {
@@ -429,6 +451,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
+				mListScrollY = view.getScrollY();
 				if(scrollState == 0)
 					onScrollStopped(view);
 			}
@@ -806,7 +829,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
 		new MenuInflater(mContext).inflate(R.menu.context_file, menu);
 		menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
-		if(!mLastPath.isFile() || !IntentManager.isIntentAvailable(mLastPath, getExplorer()))
+		if(!mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
 		{
 			menu.findItem(R.id.menu_context_edit).setVisible(false);
 			menu.findItem(R.id.menu_context_view).setVisible(false);
@@ -1009,7 +1032,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	 * @param path
 	 */
 	public void changePath(OpenPath path) {
-		mPath = mLastPath = path;
+		mPath = path;
 		refreshData(null, false);
 	}
 	

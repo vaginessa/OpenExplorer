@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -51,6 +52,10 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -76,6 +81,7 @@ import android.widget.ListView;
 import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -93,7 +99,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.adapters.MyPagerAdapter;
+import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
@@ -173,7 +179,7 @@ public class OpenExplorer
 	private static Fragment mFavoritesFragment = null,
 			mContentFragment = null;
 	private ViewPager mViewPager;
-	private static OpenPathPagerAdapter mViewPagerAdapter;
+	private static PagerAdapter mViewPagerAdapter;
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
@@ -207,9 +213,17 @@ public class OpenExplorer
 		} else if(!BEFORE_HONEYCOMB) {
 			USE_ACTION_BAR = true;
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
+			ActionBar ab = getActionBar();
 			if(Build.VERSION.SDK_INT >= 14)
-				getActionBar().setHomeButtonEnabled(true);
-			getActionBar().setDisplayUseLogoEnabled(true);
+				ab.setHomeButtonEnabled(true);
+			ab.setDisplayUseLogoEnabled(true);
+			/*
+			ab.setCustomView(R.layout.title_bar);
+			ab.setDisplayShowCustomEnabled(true);
+			ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
+			ab.getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
+			ab.getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
+			*/
 		}
 		//requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		
@@ -368,18 +382,24 @@ public class OpenExplorer
 
 			if(mViewPager != null)
 			{
+				mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
+				((ArrayPagerAdapter)mViewPagerAdapter).add(ContentFragment.getInstance(path));
+				/*
 				mViewPagerAdapter = new OpenPathPagerAdapter(fragmentManager);
-				if(findViewById(R.id.list_frag) == null)
-					mViewPagerAdapter.setFirstFragment(mFavoritesFragment);
+				if(getResources().getBoolean(R.bool.add_bookmarks_to_pager) && findViewById(R.id.list_frag) == null)
+					((OpenPathPagerAdapter)mViewPagerAdapter).setFirstFragment(mFavoritesFragment);
 				else
-					mViewPagerAdapter.setFirstFragment(null);
-				mViewPagerAdapter.setPath(mLastPath);
+					((OpenPathPagerAdapter)mViewPagerAdapter).setFirstFragment(null);
+				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
+				*/
+				updatePagerTitle(0);
 				mViewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
 					public void onPageSelected(int page) {
 						//Logger.LogVerbose("Pager change to #" + page + " - " +
 						//			mViewPagerAdapter.getPageTitle(page));
-						updateTitle(mViewPagerAdapter.getPageTitle(page).toString());
+						//updateTitle(mViewPagerAdapter.getPageTitle(page).toString());
+						updatePagerTitle(page);
 					}
 					
 					@Override
@@ -462,6 +482,105 @@ public class OpenExplorer
 		/* read and display the users preferences */
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
 
+	}
+	
+	@SuppressWarnings("unused")
+	public void updatePagerTitle(int page)
+	{
+		TextView tvLeft = null; // (TextView)findViewById(R.id.title_left);
+		TextView tvRight = null; //(TextView)findViewById(R.id.title_right);
+		if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
+		{
+			OpenPath sel = ((OpenPathPagerAdapter)mViewPagerAdapter).getPath(page);
+			if(sel == null)
+			{
+				if(((OpenPathPagerAdapter)mViewPagerAdapter).getItem(page) instanceof BookmarkFragment)
+					updateTitle(getString(R.string.s_bookmarks));
+				else updateTitle("");
+				if(tvLeft != null)
+					tvLeft.setVisibility(View.GONE);
+				if(tvRight != null)
+					tvRight.setVisibility(View.GONE);
+				return;
+			}
+			String title = sel.getPath();
+			if(sel instanceof OpenFile)
+			{
+				OpenPath full = ((OpenPathPagerAdapter)mViewPagerAdapter).getPath();
+				OpenPath par = sel.getParent();
+				if(tvLeft != null)
+				{
+					if(par == null)
+						tvLeft.setVisibility(View.GONE);
+					else {
+						tvLeft.setVisibility(View.VISIBLE);
+						tvLeft.setText(par.getPath());
+						title = title.substring(par.getPath().length());
+					}
+				}
+				if(tvRight != null)
+				{
+					if(sel.equals(full))
+						tvRight.setVisibility(View.GONE);
+					else {
+						tvRight.setVisibility(View.VISIBLE);
+						tvRight.setText(full.getPath().substring(sel.getPath().length()));
+						if(tvLeft == null || !tvLeft.isShown() || !tvLeft.getText().toString().endsWith("/"))
+							title = "/" + sel.getName();
+						else
+							title = sel.getName();
+					}
+				}
+			} else {
+				if(tvLeft != null)
+					tvLeft.setVisibility(View.GONE);
+				if(tvRight != null)
+					tvRight.setVisibility(View.GONE);
+			}
+			updateTitle(title);
+		} else if (mViewPagerAdapter instanceof ArrayPagerAdapter)
+		{
+			String left = "";
+			SpannableStringBuilder ssb = new SpannableStringBuilder();
+			for(int i = 0; i < page; i++)
+			{
+				Fragment f = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(i);
+				if(f instanceof ContentFragment)
+				{
+					OpenPath p = ((ContentFragment)f).getPath();
+					if(!p.getPath().endsWith("/"))
+						left += "/";
+					left += p.getName();
+				}
+			}
+			SpannableString srLeft = new SpannableString(left);
+			srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
+			ssb.append(srLeft);
+			//ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
+			Fragment curr = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(page);
+			if(curr instanceof ContentFragment)
+			{
+				OpenPath pCurr = ((ContentFragment)curr).getPath();
+				ssb.append((pCurr instanceof OpenFile && !pCurr.getPath().endsWith("/") ? "/" : "") +
+						pCurr.getName());
+			}
+			String right = "";
+			for(int i = page + 1; i < mViewPagerAdapter.getCount(); i++)
+			{
+				Fragment f = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(i);
+				if(f instanceof ContentFragment)
+				{
+					OpenPath p = ((ContentFragment)f).getPath();
+					if(!p.getPath().endsWith("/"))
+						right += "/";
+					right += p.getName();
+				}
+			}
+			SpannableString srRight = new SpannableString(right);
+			srRight.setSpan(new ForegroundColorSpan(Color.GRAY), 0, right.length(), Spanned.SPAN_COMPOSING);
+			ssb.append(srRight);
+			updateTitle(ssb);
+		}
 	}
 	
 	@Override
@@ -1006,15 +1125,19 @@ public class OpenExplorer
 	{
 		Logger.LogDebug("getDirContentFragment");
 		Fragment ret = fragmentManager.findFragmentById(R.id.content_frag);
-		if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter.getLastItem() instanceof ContentFragment)
-			ret = ((ContentFragment)mViewPagerAdapter.getLastItem());
+		if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
+			ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
 		{
 			Logger.LogWarning("Do I need to create a new ContentFragment?");
    			//ret = ContentFragment.newInstance(mLastPath, getSetting(mLastPath, "view", mViewMode));
    			//mViewPagerAdapter.add(ret);
-			mViewPagerAdapter.setPath(mLastPath);
-			ret = mViewPagerAdapter.getLastItem();
+			if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
+			{
+				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
+				ret = ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem();
+			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)
+				ret = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(mViewPager.getCurrentItem());
 		}
 		if(activate && !ret.isVisible())
 		{
@@ -1031,18 +1154,23 @@ public class OpenExplorer
    		return (ContentFragment)ret;
 	}
 	
-	public void updateTitle(String s)
+	public void updateTitle(CharSequence cs)
 	{
 		TextView title = (TextView)findViewById(R.id.title_path);
 		if(title == null && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
 			title = (TextView)getActionBar().getCustomView().findViewById(R.id.title_path);
 		//if(BEFORE_HONEYCOMB || !USE_ACTION_BAR || getActionBar() == null)
 		if(title != null && title.getVisibility() != View.GONE)
-			title.setText(s);
+			title.setText(cs, BufferType.SPANNABLE);
 		else if(!BEFORE_HONEYCOMB && USE_ACTION_BAR && getActionBar() != null)
-			getActionBar().setSubtitle(s);
+			getActionBar().setSubtitle(cs);
 		else
-			setTitle(getResources().getString(R.string.app_title) + (s.equals("") ? "" : " - " + s));
+		{
+			SpannableStringBuilder sb = new SpannableStringBuilder(getResources().getString(R.string.app_title));
+			sb.append(cs.equals("") ? "" : " - ");
+			sb.append(cs);
+			setTitle(cs);
+		}
 	}
 	
 	public void editFile(OpenPath path)
@@ -1938,26 +2066,29 @@ public class OpenExplorer
 		Fragment content = ContentFragment.getInstance(path, newView);
 		if(mViewPager != null && mViewPager.isShown())
 		{
-			Fragment last = mViewPagerAdapter.getItem(mViewPagerAdapter.getCount() - 1);
-			if(!(last instanceof ContentFragment) ||
-					((ContentFragment)last).getPath() == null ||
-					!path.getPath().contains(((ContentFragment)last).getPath().getPath())
-					)
-			{
-				//mViewPagerAdapter.clear();
-				//mViewPagerAdapter.add(mFavoritesFragment);
-			}
 			//mViewPagerAdapter.add(content);
 			//mViewPagerAdapter.setPath(path);
 			//mViewPager.setAdapter(null);
+			/*
 			mViewPagerAdapter = new OpenPathPagerAdapter(getSupportFragmentManager())
 										.setPath(path);
-			if(findViewById(R.id.list_frag) == null)
+			if(getResources().getBoolean(R.bool.add_bookmarks_to_pager) && (findViewById(R.id.list_frag) == null || !findViewById(R.id.list_frag).isShown()))
 				mViewPagerAdapter.setFirstFragment(mFavoritesFragment);
 			else
 				mViewPagerAdapter.setFirstFragment(null);
+				*/
+			ArrayPagerAdapter newAdapter = new ArrayPagerAdapter(fragmentManager);
+			newAdapter.add(ContentFragment.getInstance(path, newView));
+			OpenPath tmp = path.getParent();
+			while(tmp != null)
+			{
+				newAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+				tmp = tmp.getParent();
+			}
+			mViewPagerAdapter = newAdapter;
 			mViewPager.setAdapter(mViewPagerAdapter);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+			updatePagerTitle(mViewPagerAdapter.getCount() - 1);
 			if(addToStack)
 			{
 				fragmentManager

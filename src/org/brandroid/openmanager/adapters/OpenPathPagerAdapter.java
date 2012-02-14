@@ -53,7 +53,7 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 			position++;
 		}
 		OpenPath tmp = mPath;
-		for(int i=position; i<getCount(); i++)
+		for(int i=position; i<getCount() - 1; i++)
 		{
 			if(tmp.getParent() != null)
 				tmp = tmp.getParent();
@@ -89,6 +89,20 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 			//return 
 			return ContentFragment.getInstance(tmp);
 		}
+	}
+	
+	public OpenPath getPath() { return mPath; }
+	public OpenPath getPath(int pos) {
+		if(pos == getCount() - 1)
+			return mPath;
+		if(pos == 0 && mFirst != null)
+			return null;
+		OpenPath tmp = mPath;
+		for(int i = getCount() - 1; i > pos; i--)
+			if(tmp.getParent() != null)
+				tmp = tmp.getParent();
+			else break;
+		return tmp;
 	}
 	
 	@Override

@@ -28,6 +28,7 @@
 	    android:layout_marginTop="1dp"
 	    android:layout_alignParentTop="true"
 	    android:layout_toRightOf="@+id/title_icon"
+	    android:layout_toLeftOf="@+id/title_paste"
 	    android:gravity="left|center_vertical"
 	    android:text="@string/app_name" />
 	
@@ -50,8 +51,9 @@
 	    android:layout_marginTop="5dp"
 	    android:layout_below="@+id/title_text"
 	    android:layout_toRightOf="@+id/title_icon"
+	    android:layout_toLeftOf="@+id/title_paste"
 	    android:gravity="left|center_vertical"
-	    android:text="/mnt/sdcard"
+	    android:text="/sdcard"
 	    />
 	
     <RelativeLayout
