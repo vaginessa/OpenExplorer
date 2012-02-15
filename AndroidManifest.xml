@@ -111,12 +111,12 @@
 			</intent-filter>
 		</activity -->
 
-		<activity android:name=".activities.SettingsActivity" android:label="Preferences" />
+		<activity android:name=".activities.SettingsActivity" android:label="@string/s_menu_prefs_global" />
 
 		<activity android:name=".activities.BluetoothActivity" android:label="Bluetooth"
 			android:theme="@android:style/Theme.Dialog" />
 		
-		<activity android:name=".activities.ServerActivity" android:label="Servers"
+		<activity android:name=".activities.ServerActivity" android:label="@string/s_pref_servers"
 		    android:theme="@android:style/Theme.Dialog" />
 		
 		<activity android:name=".activities.SplashActivity"

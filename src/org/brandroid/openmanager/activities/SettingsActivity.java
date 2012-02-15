@@ -61,6 +61,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
@@ -353,12 +354,18 @@ public class SettingsActivity extends PreferenceActivity
 		}
 		p.setOnPreferenceChangeListener(this);
 		
-		if(bSetSummaries && p.getClass().equals(EditTextPreference.class))
-			if(((EditTextPreference)p).getText() != null && !"".equals(((EditTextPreference)p).getText()))
+		if(bSetSummaries)
+			if(p instanceof EditTextPreference)
 			{
-				String txt = ((EditTextPreference)p).getText();
-				p.setSummary(txt);
-				p.setDefaultValue(txt);
+				if(((EditTextPreference)p).getText() != null && !"".equals(((EditTextPreference)p).getText()))
+				{
+					String txt = ((EditTextPreference)p).getText();
+					p.setSummary(txt);
+					p.setDefaultValue(txt);
+				}
+			} else if (p instanceof ListPreference)
+			{
+				((ListPreference)p).setSummary(((ListPreference)p).getValue());
 			}
 		
 	}
@@ -421,7 +428,6 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
     		Preference preference) {
-    	super.onPreferenceTreeClick(preferenceScreen, preference);
     	if(preference.getKey().equals("pref_global"))
     	{
     		Intent intentGlobal = new Intent(this, SettingsActivity.class);
@@ -434,7 +440,12 @@ public class SettingsActivity extends PreferenceActivity
     		intentServer.putExtra("mode", MODE_SERVER);
     		startActivityForResult(intentServer, MODE_SERVER);
     		return true;
-    	} else if(preference.getKey().startsWith("server_modify")) {
+    	} else if(preference.getKey().equals("pref_start"))
+    	{
+    		OpenExplorer.showSplashIntent(this, new Preferences(this).getSetting("global", "pref_start", "External"));
+    		return true;
+    	}
+    	else if(preference.getKey().startsWith("server_modify")) {
     		Intent intentServer = new Intent(this, SettingsActivity.class);
     		intentServer.putExtra("path", preference.getKey());
     		intentServer.putExtra("mode", MODE_SERVER);
@@ -464,6 +475,7 @@ public class SettingsActivity extends PreferenceActivity
     		setResult(RESULT_FIRST_USER, getIntent());
     		finish();
     	}
+    	super.onPreferenceTreeClick(preferenceScreen, preference);
     	return false;
     }
 

@@ -26,7 +26,9 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -43,6 +45,7 @@ import android.graphics.Color;
 import android.graphics.drawable.LayerDrawable;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -64,6 +67,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
@@ -85,6 +89,7 @@ import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -168,7 +173,7 @@ public class OpenExplorer
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
 	private Handler mHandler = new Handler();  // handler for the main thread
-	private int mViewMode = VIEW_LIST;
+	//private int mViewMode = VIEW_LIST;
 	private static long mLastCursorEnsure = 0;
 	private static boolean mRunningCursorEnsure = false;
 	private static int mLoadingCount = 0;
@@ -180,6 +185,7 @@ public class OpenExplorer
 			mContentFragment = null;
 	private ViewPager mViewPager;
 	private static PagerAdapter mViewPagerAdapter;
+	private static boolean mViewPagerEnabled = false; 
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
@@ -196,8 +202,7 @@ public class OpenExplorer
 			mMusicParent = new OpenCursor("Music"),
 			mApkParent = new OpenCursor("Apps");
 	
-	public int getViewMode() { return mViewMode; }
-	public void setViewMode(int mode) { mViewMode = mode; }
+	public boolean isViewPagerEnabled() { return mViewPagerEnabled; }
 	
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -206,6 +211,7 @@ public class OpenExplorer
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		} //else getWindow().addFlags(WindowManager.LayoutParams.FLAG
+		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", false);
 
 		if(BEFORE_HONEYCOMB)
 		{
@@ -227,6 +233,8 @@ public class OpenExplorer
 		}
 		//requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		
+		showWarnings();
+		
 		//mMultiSelectHandler = MultiSelectHandler.getInstance(this);
 		mClipboard = new OpenClipboard(this);
 		mClipboard.setClipboardUpdateListener(this);
@@ -241,14 +249,13 @@ public class OpenExplorer
 		else if(!BEFORE_HONEYCOMB)
 		{
 			USE_ACTION_BAR = true;
-			/*
 			getActionBar().setCustomView(R.layout.title_bar);
 			getActionBar().setDisplayShowCustomEnabled(true);
-			//getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE);
+			getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
 			getActionBar().getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
 			getActionBar().getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
 			getActionBar().getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
-			*/
+			//*/
 		}
 		
 		try {
@@ -332,34 +339,28 @@ public class OpenExplorer
 		
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
-		{
-			
+		{	
 			String start = getPreferences().getString("global", "pref_start", "Videos");
 	
 			if(savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals(""))
-			{
-				String last = savedInstanceState.getString("last");
-				if(last.startsWith("/"))
-					path = new OpenFile(last).setRoot();
-				else if(last.indexOf(":/") > -1)
-					path = new OpenFTP(last, null, new FTPManager());
-				else if(last.equals("Videos"))
-					path = mVideoParent;
-				else if(last.equals("Photos"))
-					path = mPhotoParent;
-				else if(last.equals("Music"))
-					path = mMusicParent;
-				else
-					path = new OpenFile(last);
-			}
-			else if("/".equals(start))
-				path = new OpenFile("/").setRoot();
-			else if("Videos".equals(start) && mVideoParent != null && mVideoParent.length() > 0)
+				start = savedInstanceState.getString("last");
+
+			if(start.startsWith("/"))
+				path = new OpenFile(start).setRoot();
+			else if(start.indexOf(":/") > -1)
+				path = new OpenFTP(start, null, new FTPManager());
+			else if(start.equals("Videos"))
 				path = mVideoParent;
-			else if("Photos".equals(start) && mPhotoParent != null && mPhotoParent.length() > 0)
+			else if(start.equals("Photos"))
 				path = mPhotoParent;
+			else if(start.equals("Music"))
+				path = mMusicParent;
+			else if(start.equals("External"))
+				path = OpenFile.getExternalMemoryDrive(true).setRoot();
+			else if(start.equals("Internal"))
+				path = OpenFile.getInternalMemoryDrive().setRoot();
 			else
-				path = new OpenFile(Environment.getExternalStorageDirectory()).setRoot();
+				path = new OpenFile(start);
 		}
 		//changePath(path, true);
 		
@@ -368,9 +369,18 @@ public class OpenExplorer
 		
 		boolean bAddToStack = true; //fragmentManager.getBackStackEntryCount() > 0;
 
-		mViewMode = getSetting(path, "view", mViewMode);
+		int mViewMode = getSetting(path, "view", 0);
 
-		mViewPager = (ViewPager)findViewById(R.id.content_pager);
+		mViewPager = ((ViewPager)findViewById(R.id.content_pager));
+		if(mViewPagerEnabled && mViewPager != null)
+		{
+			if(findViewById(R.id.content_frag) != null)
+				findViewById(R.id.content_frag).setVisibility(View.GONE);
+			//mViewPager = new ViewPager(getApplicationContext());
+			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
+			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
+		} else
+			mViewPager = null; //(ViewPager)findViewById(R.id.content_pager);
 
 		mContentFragment = ContentFragment.getInstance(mLastPath, mViewMode);
 		
@@ -445,7 +455,7 @@ public class OpenExplorer
 			bAddToStack = false;
 		}
 		
-		if(findViewById(R.id.content_frag) != null)
+		if(findViewById(R.id.content_frag) != null && findViewById(R.id.content_frag).isShown())
 		{
 			if(bAddToStack)
 			{
@@ -460,6 +470,11 @@ public class OpenExplorer
 				ft.replace(R.id.content_frag, mContentFragment);
 				ft.disallowAddToBackStack();
 			}
+		} else if(mViewPager != null && mViewPagerAdapter != null)
+		{
+			if(mViewPagerAdapter instanceof ArrayPagerAdapter)
+				((ArrayPagerAdapter)mViewPagerAdapter).add(mContentFragment);
+			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
 		}
 	
 		//ft.addToBackStack("path");
@@ -473,15 +488,54 @@ public class OpenExplorer
 		
 
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
-		{
-			intent = new Intent(this, SplashActivity.class);
-			intent.putExtra("start", mLastPath.getPath());
-			startActivityForResult(intent, REQ_SPLASH);
-		}
+			showSplashIntent(this, getPreferences().getString("global", "pref_start", "External"));
 		
 		/* read and display the users preferences */
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
 
+	}
+	
+	private void showWarnings()
+	{
+		if(!getPreferences().getBoolean("warn", "pager", false))
+		{
+			new AlertDialog.Builder(this)
+				.setTitle(R.string.s_warn_pager_title)
+				.setMessage(getString(R.string.s_warn_pager) + "\n" + getString(R.string.s_warn_confirm))
+				.setPositiveButton(android.R.string.yes, new Dialog.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							getPreferences().setSetting("global", "pref_pagers", true);
+							getPreferences().setSetting("warn", "pager", true);
+						}
+					})
+				.setNegativeButton(android.R.string.no, null)
+				.setNeutralButton(R.string.s_warn_disable, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							getPreferences().setSetting("warn", "pager", true);
+							getPreferences().setSetting("global", "pref_pagers", false);
+							goHome();
+							finish();
+						}
+					})
+				.create()
+				.show();
+		}
+	}
+	
+	public static void showSplashIntent(Context context, String start)
+	{
+		Intent intent = new Intent(context, SplashActivity.class);
+		intent.putExtra("start", start);
+		if(context instanceof OpenExplorer)
+			((OpenExplorer)context).startActivityForResult(intent, REQ_SPLASH);
+		else if(context instanceof Activity)
+			((Activity)context).startActivityForResult(intent, REQ_SPLASH);
+		else if(context instanceof FragmentActivity)
+			((FragmentActivity)context).startActivityForResult(intent, REQ_SPLASH);
+		else
+			context.startActivity(intent);
 	}
 	
 	@SuppressWarnings("unused")
@@ -686,7 +740,7 @@ public class OpenExplorer
 					StatFs sf = new StatFs(path);
 					if(sf.getBlockCount() == 0)
 						throw new Exception("No blocks");
-					showToast("New USB! " + getVolumeName(path) + " @ " + DialogHandler.formatSize((long)sf.getBlockSize() * (long)sf.getAvailableBlocks()));
+					showToast(getResources().getString(R.string.s_alert_new_media) + " " + getVolumeName(path) + " @ " + DialogHandler.formatSize((long)sf.getBlockSize() * (long)sf.getAvailableBlocks()));
 					refreshBookmarks();
 				} catch(Throwable e)
 				{
@@ -961,7 +1015,7 @@ public class OpenExplorer
 				CursorLoader loader = new CursorLoader(
 				//new LoadMediaStore(
 						getApplicationContext(),
-						MediaStore.Files.getContentUri(Environment.getExternalStorageDirectory().getPath()),
+						MediaStore.Files.getContentUri("/mnt"),
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 						"_size > 10000 AND _data LIKE '%apk'", null,
 						"date modified DESC"
@@ -1086,11 +1140,11 @@ public class OpenExplorer
 				if(mFavoritesFragment == null)
 					mFavoritesFragment = new BookmarkFragment();
 				
-				if(findViewById(R.id.content_frag) != null)
+				if(mViewPager != null && findViewById(R.id.content_frag) != null)
 				{
 					FragmentTransaction ft = fragmentManager.beginTransaction();
 					if(mFavoritesFragment.isVisible())
-						ft.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode));
+						ft.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, getSetting(mLastPath, "view", 0)));
 					else
 						ft.replace(R.id.content_frag, mFavoritesFragment);
 		
@@ -1124,9 +1178,11 @@ public class OpenExplorer
 	public ContentFragment getDirContentFragment(Boolean activate)
 	{
 		Logger.LogDebug("getDirContentFragment");
-		Fragment ret = fragmentManager.findFragmentById(R.id.content_frag);
+		Fragment ret = null;
 		if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 			ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
+		if(ret == null)
+			ret = fragmentManager.findFragmentById(R.id.content_frag);
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
 		{
 			Logger.LogWarning("Do I need to create a new ContentFragment?");
@@ -1138,6 +1194,15 @@ public class OpenExplorer
 				ret = ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem();
 			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)
 				ret = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(mViewPager.getCurrentItem());
+		}
+		if(ret == null)
+		{
+			ret = ContentFragment.getInstance(mLastPath, getSetting(mLastPath, "view", 0));
+			if(mViewPager != null)
+			{
+				if(mViewPagerAdapter instanceof ArrayPagerAdapter)
+					((ArrayPagerAdapter)mViewPagerAdapter).set(mViewPager.getCurrentItem(), ret);
+			}
 		}
 		if(activate && !ret.isVisible())
 		{
@@ -1176,11 +1241,14 @@ public class OpenExplorer
 	public void editFile(OpenPath path)
 	{
 		TextEditorFragment editor = new TextEditorFragment(path);
-		fragmentManager.beginTransaction()
-			.replace(R.id.content_frag, editor)
-			//.addToBackStack(null)
-			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-			.commit();
+		if(mViewPagerAdapter != null && mViewPagerAdapter instanceof ArrayPagerAdapter)
+			((ArrayPagerAdapter)mViewPagerAdapter).add(editor);
+		else
+			fragmentManager.beginTransaction()
+				.replace(R.id.content_frag, editor)
+				//.addToBackStack(null)
+				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+				.commit();
 		//addTab(editor, path.getName(), true);
 	}
 	
@@ -1407,6 +1475,7 @@ public class OpenExplorer
 			mPaste.setVisible(true);
 		}
 		
+		int mViewMode = getSetting(getDirContentFragment(false).getPath(), "view", 0);
 		if(mViewMode == VIEW_GRID)
 			setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
 		else if(mViewMode == VIEW_LIST)
@@ -1803,6 +1872,7 @@ public class OpenExplorer
 	}
 	
 	public void changeViewMode(int newView, boolean doSet) {
+		int mViewMode = getSetting(mLastPath, "view", 0);
 		if(mViewMode == newView) {
 			Logger.LogWarning("changeViewMode called unnecessarily! " + newView + " = " + mViewMode);
 			return;
@@ -1811,7 +1881,7 @@ public class OpenExplorer
 		int oldView = mViewMode;
 		if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
 			newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
-		setViewMode(newView);
+		//setViewMode(newView);
 		if(doSet)
 			setSetting(mLastPath, "view", newView);
 		if(!mSinglePane)
@@ -1957,28 +2027,15 @@ public class OpenExplorer
 					else if("Photos".equals(start))
 						changePath(mPhotoParent, true);
 					else if("External".equals(start))
-						changePath(new OpenFile(Environment.getExternalStorageDirectory()).setRoot(), true);
+						changePath(OpenFile.getExternalMemoryDrive(true).setRoot(), true);
+					else if("Internal".equals(start))
+						changePath(OpenFile.getInternalMemoryDrive().setRoot(), true);
 					else
 						changePath(new OpenFile("/").setRoot(), true);
 				}
 			}
 		}
 	}
-	
-	public void pushFragment(Object o)
-	{
-		if(Build.VERSION.SDK_INT > 10 && o.getClass().equals(android.app.Fragment.class))
-			getFragmentManager().beginTransaction()
-				.replace(R.id.content_frag, ((android.app.Fragment)o))
-				.addToBackStack(null)
-				.commit();
-		else
-			getSupportFragmentManager().beginTransaction()
-				.replace(R.id.content_frag, (Fragment)o)
-				.addToBackStack(null)
-				.commit();
-	}
-
 
 	public void goBack()
 	{
@@ -2060,9 +2117,9 @@ public class OpenExplorer
 		if(path == null) path = mLastPath;
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
-		int newView = getSetting(path, "view", mViewMode);
+		int newView = getSetting(path, "view", 0);
 		mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
-		setViewMode(newView);
+		//setViewMode(newView);
 		Fragment content = ContentFragment.getInstance(path, newView);
 		if(mViewPager != null && mViewPager.isShown())
 		{
@@ -2099,7 +2156,7 @@ public class OpenExplorer
 			}
 		} else {
 			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+			//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 			ft.setBreadCrumbTitle(path.getPath());
 			if(addToStack)
 			{
@@ -2121,14 +2178,18 @@ public class OpenExplorer
 				ft.replace(R.id.content_frag, content);
 			} else {
 				if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
-					setViewMode(newView = VIEW_LIST);
+					newView = VIEW_LIST;
 				if(!BEFORE_HONEYCOMB && (content == null || content instanceof CarouselFragment))
 				{
-					content = ContentFragment.getInstance(path, mViewMode);
+					content = ContentFragment.getInstance(path, getSetting(path, "view", 0));
 					ft.replace(R.id.content_frag, content);
 				} else if(content instanceof ContentFragment) {
 					//((ContentFragment)content).changePath(path); // the main selection
-					ft.replace(R.id.content_frag, content);
+					//ft.replace(R.id.content_frag, content);
+					if(mContentFragment.isVisible())
+						((ContentFragment)mContentFragment).changePath(path);
+					else
+						ft.replace(R.id.content_frag, content);
 				}
 			}
 			try {
@@ -2137,7 +2198,7 @@ public class OpenExplorer
 				Logger.LogWarning("Trying to commit after onSave", e);
 			}
 			updateTitle(path.getPath());
-			changeViewMode(getSetting(path, "view", mViewMode), false); // bug fix
+			changeViewMode(getSetting(path, "view", 0), false); // bug fix
 		}
 		if(content instanceof ContentFragment)
 		((ContentFragment)content).setSettings(
