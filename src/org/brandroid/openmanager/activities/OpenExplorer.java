@@ -260,7 +260,7 @@ public class OpenExplorer
 		
 		setContentView(R.layout.main_fragments);
 
-		ThumbnailCreator.setContext(this);
+		ThumbnailCreator.setContext(getApplicationContext());
 		
 		Logger.LogDebug("Refreshing cursors");
 		
@@ -317,7 +317,7 @@ public class OpenExplorer
 
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
-			mBookmarksList = new ExpandableListView(getBaseContext());
+			mBookmarksList = new ExpandableListView(getApplicationContext());
 			View anchor = findViewById(R.id.title_icon);
 			if(anchor == null)
 				anchor = findViewById(android.R.id.home);
