@@ -4,10 +4,13 @@ import java.lang.ref.SoftReference;
 
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.views.RemoteImageView;
+import org.brandroid.utils.ImageUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageView;
 
 
@@ -18,7 +21,7 @@ public class ThumbnailStruct
 	public int Width = 0, Height = 0;
 	//public BookmarkHolder Holder;
 	private SoftReference<Bitmap> mBitmap; 
-	public final ImageView ImageView; 
+	public final View ImageView; 
 	//public Handler Handler;
 	public ThumbnailStruct(OpenPath path, BookmarkHolder holder, int width, int height)
 	{
@@ -29,6 +32,13 @@ public class ThumbnailStruct
 		Width = width;
 		Height = height;
 	}
+	public ThumbnailStruct(OpenPath path, RemoteImageView view, int width, int height)
+	{
+		File = path;
+		ImageView = view;
+		Width = width;
+		Height = height;
+	}
 	public ThumbnailStruct(OpenPath path, ImageView view, int width, int height)
 	{
 		File = path;
@@ -36,6 +46,7 @@ public class ThumbnailStruct
 		Width = width;
 		Height = height;
 	}
+	
 	public void setBitmap(SoftReference<Bitmap> thumb)
 	{
 		mBitmap = thumb;
@@ -48,7 +59,7 @@ public class ThumbnailStruct
 			bd.setGravity(Gravity.CENTER);
 			//if(Holder != null) Holder.setIconDrawable(bd, this);
 			//ImageView.setImageDrawable(bd);
-			ThumbnailCreator.fadeToDrawable(ImageView, bd);
+			ImageUtils.fadeToDrawable(ImageView, bd);
 		}
 	}
 }

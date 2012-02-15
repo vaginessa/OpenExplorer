@@ -11,6 +11,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
@@ -128,7 +129,7 @@ public class OpenPathAdapter extends BaseAdapter
 						
 		//if(!mHolder.getTitle().equals(mName))
 		//	mHolder.setTitle(mName);
-		ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+		RemoteImageView mIcon = (RemoteImageView)view.findViewById(R.id.content_icon);
 		
 		if(mIcon != null)
 		{
@@ -139,7 +140,8 @@ public class OpenPathAdapter extends BaseAdapter
 			if(file.isTextFile())
 				mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), mContext, mWidth > 72));
 			else if(!mShowThumbnails||!file.hasThumbnail())
-				mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));				else {
+				mIcon.setImageDrawable(mContext.getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
+			else {
 				ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
 			}
 		}

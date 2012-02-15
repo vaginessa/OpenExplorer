@@ -23,7 +23,7 @@
 	android:layout_height="wrap_content"
 	android:gravity="center_horizontal"
 	>
-	<ImageView
+	<org.brandroid.openmanager.views.RemoteImageView
 		android:id="@+id/content_icon"
 		style="@style/icon.grid"
 		android:layout_height="@dimen/grid_icon_size"

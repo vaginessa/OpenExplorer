@@ -14,6 +14,7 @@ import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
+import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import android.animation.Animator;
@@ -623,8 +624,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			else 
 				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);
 			
+			ImageView mIcon = (ImageView)ret.findViewById(R.id.bookmark_icon);
+			
 			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(getChild(group, pos)));
-			ThumbnailCreator.setThumbnail(((ImageView)ret.findViewById(R.id.content_icon)), getChild(group, pos), 36, 36);
+			ThumbnailCreator.setThumbnail(mIcon, getChild(group, pos), 36, 36);
 			
             return ret;
 		}

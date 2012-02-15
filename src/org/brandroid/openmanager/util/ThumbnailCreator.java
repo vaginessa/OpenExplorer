@@ -26,33 +26,23 @@ import android.graphics.Paint.Align;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.TransitionDrawable;
-import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.view.Gravity;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.io.File;
@@ -61,19 +51,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.ftp.FTPManager;
-import org.brandroid.utils.BitmapUtils;
+import org.brandroid.openmanager.views.RemoteImageView;
+import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.LruCache;
 
 public class ThumbnailCreator extends Thread {
 	private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
@@ -90,6 +76,10 @@ public class ThumbnailCreator extends Thread {
 	
 	public static boolean setThumbnail(final ImageView mImage, OpenPath file, int mWidth, int mHeight)
 	{
+		if(mImage instanceof RemoteImageView)
+		{
+			return setThumbnail((RemoteImageView)mImage, file, mWidth, mHeight);
+		}
 		final String mName = file.getName();
 		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 		final String sPath2 = mName.toLowerCase();
@@ -116,27 +106,12 @@ public class ThumbnailCreator extends Thread {
 				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)
-				{	
+				{
 					mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 					ThumbnailTask task = new ThumbnailTask();
 					ThumbnailStruct struct = new ThumbnailStruct(file, mImage, mWidth, mHeight);
 					if(mImage.getTag() != null && mImage.getTag() instanceof ThumbnailTask)
 						((ThumbnailTask)mImage.getTag()).cancel(true);
-					/*
-					BookmarkHolder mHolder = null;
-					if(file.getTag() != null)
-					{
-						if(file.getTag() instanceof BookmarkHolder)
-						{
-							mHolder = ((BookmarkHolder)file.getTag());
-							mHolder.setTask(task);
-							struct = new ThumbnailStruct(file, mHolder, mWidth, mHeight);
-						} else if(file.getTag() instanceof ImageView)
-						{
-							struct = new ThumbnailStruct(file, (ImageView)file.getTag(), mWidth, mHeight);
-						}
-					}
-					*/
 					
 					try {
 						mImage.setTag(task);
@@ -150,7 +125,7 @@ public class ThumbnailCreator extends Thread {
 				{
 					BitmapDrawable bd = new BitmapDrawable(thumb);
 					bd.setGravity(Gravity.CENTER);
-					fadeToDrawable(mImage, bd);
+					ImageUtils.fadeToDrawable(mImage, bd);
 				}
 			
 			}
@@ -158,25 +133,63 @@ public class ThumbnailCreator extends Thread {
 		}
 		return false;
 	}
-	
-	public static void fadeToDrawable(final ImageView mImage, final Drawable dest)
+	public static boolean setThumbnail(final RemoteImageView mImage, OpenPath file, int mWidth, int mHeight)
 	{
-		/*
-		if(!OpenExplorer.BEFORE_HONEYCOMB)
+		final String mName = file.getName();
+		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
+		final String sPath2 = mName.toLowerCase();
+		final boolean useLarge = mWidth > 72;
+		
+		final Context mContext = mImage.getContext().getApplicationContext();
+		
+		if(!file.isDirectory() && file.isTextFile())
 		{
-			Drawable od = mImage.getDrawable();
-			dest.setAlpha(0);
-			LayerDrawable ld = new LayerDrawable(new Drawable[]{od,dest});
-			mImage.setImageDrawable(ld);
-			ObjectAnimator.ofFloat(od, "alpha", 1.0f, 0.0f).setDuration(100).start();
-			ObjectAnimator.ofFloat(dest, "alpha", 0.0f, 1.0f).setDuration(100).start();
-		} else {
-			*/
-			TransitionDrawable td = new TransitionDrawable(new Drawable[]{mImage.getDrawable(),dest});
-			td.setCrossFadeEnabled(true);
-			mImage.setImageDrawable(td);
-			td.startTransition(100);
-		//}
+			mImage.post(new Runnable() {
+				public void run() {
+					mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
+				}
+			});
+		} else
+			mImage.setImageDrawable(mContext.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight)));
+		
+		if(file.hasThumbnail())
+		{
+			if(showThumbPreviews && !file.requiresThread()) {
+
+				if(mContext == null)
+					ThumbnailCreator.setContext(mContext);
+				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
+				
+				if(thumb == null)
+				{
+					mImage.setImageDrawable(mContext.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight)));
+					mImage.setImageFromFile(file, mWidth, mHeight);
+					/*
+					ThumbnailTask task = new ThumbnailTask();
+					ThumbnailStruct struct = new ThumbnailStruct(file, mImage, mWidth, mHeight);
+					if(mImage.getTag() != null && mImage.getTag() instanceof ThumbnailTask)
+						((ThumbnailTask)mImage.getTag()).cancel(true);
+					
+					try {
+						mImage.setTag(task);
+						if(struct != null)
+							task.execute(struct);
+					} catch(RejectedExecutionException rej) {
+						Logger.LogError("Couldn't generate thumbnail because Thread pool was full.", rej);
+					}
+					*/
+				}
+				if(thumb != null)
+				{
+					BitmapDrawable bd = new BitmapDrawable(thumb);
+					bd.setGravity(Gravity.CENTER);
+					ImageUtils.fadeToDrawable(mImage, bd);
+				}
+			
+			}
+			
+		}
+		return false;
 	}
 	
 	public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge)

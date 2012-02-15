@@ -11,6 +11,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.RemoteImageView;
 
 import android.text.ClipboardManager;
 import android.content.ClipData;
@@ -146,7 +147,7 @@ public class OpenClipboard
 		
 		final OpenPath file = (OpenPath)getItem(position);
 		
-		ImageView image = (ImageView)ret.findViewById(R.id.content_icon);
+		RemoteImageView image = (RemoteImageView)ret.findViewById(R.id.content_icon);
 		TextView text = (TextView)ret.findViewById(R.id.content_text);
 		TextView pathView = (TextView)ret.findViewById(R.id.content_fullpath);
 		

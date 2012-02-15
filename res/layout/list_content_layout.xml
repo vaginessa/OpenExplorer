@@ -25,7 +25,7 @@
 	android:paddingTop="2dip"
 	android:paddingBottom="2dip">
 	
-	<ImageView
+	<org.brandroid.openmanager.views.RemoteImageView
 		android:id="@+id/content_icon"
 		style="@style/icon.small"
 		android:layout_alignParentTop="true"

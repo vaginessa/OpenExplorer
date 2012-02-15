@@ -31,23 +31,23 @@
 	    android:alpha="0.5"
 	    android:layout_width="fill_parent"
 	    android:layout_height="32dp"
-	    android:layout_alignTop="@+id/content_icon"
+	    android:layout_alignTop="@+id/bookmark_icon"
 	    android:layout_alignBottom="@+id/size_layout"
 	    android:layout_alignParentRight="true"
-	    android:layout_toRightOf="@+id/content_icon"
+	    android:layout_toRightOf="@+id/bookmark_icon"
 	    android:visibility="gone"
 	    />
 	<ImageView
 		style="@style/icon.small"
 		android:layout_marginRight="5dp"
 		android:layout_centerVertical="true"
-		android:id="@+id/content_icon"
+		android:id="@+id/bookmark_icon"
 		android:src="@drawable/icon"
 		/>
 	<TextView
 		android:id="@+id/content_text"
 		android:layout_alignWithParentIfMissing="true"
-		android:layout_toRightOf="@+id/content_icon"
+		android:layout_toRightOf="@+id/bookmark_icon"
 		android:layout_alignTop="@+id/icon"
 		android:layout_marginTop="4dp"
 		android:layout_marginLeft="5dp"

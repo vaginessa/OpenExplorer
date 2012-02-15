@@ -22,6 +22,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailStruct;
 import org.brandroid.openmanager.util.ThumbnailTask;
+import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
 
@@ -34,7 +35,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class BookmarkHolder {
-	private ImageView mIcon, mEject, mIndicate;
+	private RemoteImageView mIcon;
+	private ImageView mEject, mIndicate;
 	private TextView mMainText, mInfo, mPath, mSizeText;
 	private View mParentView;
 	private String sTitle;
@@ -62,7 +64,7 @@ public class BookmarkHolder {
 	private void ensureViews()
 	{
 		if(mIcon == null)
-			mIcon = (ImageView)mParentView.findViewById(R.id.content_icon);
+			mIcon = (RemoteImageView)mParentView.findViewById(R.id.content_icon);
 		if(mMainText == null)
 			mMainText = (TextView)mParentView.findViewById(R.id.content_text);
 		if(mIndicate == null)
@@ -86,8 +88,8 @@ public class BookmarkHolder {
 	
 	public OpenPath getOpenPath() { return mFile; } 
 	
-	public ImageView getIconView() { ensureViews(); return mIcon; }
-	public void setIconResource(int res) { ensureViews(); if(mIcon != null) mIcon.setImageResource(res); }
+	public RemoteImageView getIconView() { ensureViews(); return mIcon; }
+	public void setIconResource(int res) { ensureViews(); if(mIcon != null) mIcon.setImageDrawable(mParentView.getResources().getDrawable(res)); }
 	public void setIconDrawable(Drawable d, ThumbnailStruct ts) {
 		OpenPath file = ts.File;
 		if(!file.getPath().equals(mFile.getPath())) {

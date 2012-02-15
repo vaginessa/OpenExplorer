@@ -39,6 +39,7 @@ import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListene
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.ThumbnailStruct;
 import org.brandroid.openmanager.util.ThumbnailTask;
+import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +74,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -452,8 +454,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
 				mListScrollY = view.getScrollY();
-				if(scrollState == 0)
-					onScrollStopped(view);
+				//if(scrollState == 0)
+				//	onScrollStopped(view);
 			}
 			
 			public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
@@ -605,7 +607,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			registerForContextMenu(mGrid);
 	}
 	
-	
+	/*
 	protected void onScrollStopped(AbsListView view)
 	{
 		boolean skipThis = true;
@@ -634,6 +636,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		new ThumbnailTask().execute(thumbs);
 		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
 	}
+	*/
 	
 	private EventHandler getHandler()
 	{
@@ -1196,6 +1199,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//if(!mHolder.getTitle().equals(mName))
 			//	mHolder.setTitle(mName);
 			ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+			//RemoteImageView mIcon = (RemoteImageView)view.findViewById(R.id.content_icon);
 			
 			if(mIcon != null)
 			{
@@ -1206,7 +1210,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(file.isTextFile())
 					mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), mContext, mWidth > 72));
 				else if(!mShowThumbnails||!file.hasThumbnail())
-					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));				else {
+					mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
+				else {
 					ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
 				}
 			}
