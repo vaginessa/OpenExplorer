@@ -26,8 +26,12 @@ import android.graphics.Paint.Align;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.TransitionDrawable;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -39,6 +43,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.view.Gravity;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import java.lang.ref.SoftReference;
@@ -55,6 +61,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -80,11 +87,6 @@ public class ThumbnailCreator extends Thread {
 	
 	private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
 	private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
-
-	public ThumbnailCreator(Context context, Handler handler) {
-		mContext = context;
-		mHandler = handler;
-	}
 	
 	public static boolean setThumbnail(final ImageView mImage, OpenPath file, int mWidth, int mHeight)
 	{
@@ -93,7 +95,7 @@ public class ThumbnailCreator extends Thread {
 		final String sPath2 = mName.toLowerCase();
 		final boolean useLarge = mWidth > 72;
 		
-		final Context mContext = mImage.getContext();
+		final Context mContext = mImage.getContext().getApplicationContext();
 		
 		if(!file.isDirectory() && file.isTextFile())
 		{
@@ -148,13 +150,33 @@ public class ThumbnailCreator extends Thread {
 				{
 					BitmapDrawable bd = new BitmapDrawable(thumb);
 					bd.setGravity(Gravity.CENTER);
-					mImage.setImageDrawable(bd);
+					fadeToDrawable(mImage, bd);
 				}
 			
 			}
 			
 		}
 		return false;
+	}
+	
+	public static void fadeToDrawable(final ImageView mImage, final Drawable dest)
+	{
+		/*
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			Drawable od = mImage.getDrawable();
+			dest.setAlpha(0);
+			LayerDrawable ld = new LayerDrawable(new Drawable[]{od,dest});
+			mImage.setImageDrawable(ld);
+			ObjectAnimator.ofFloat(od, "alpha", 1.0f, 0.0f).setDuration(100).start();
+			ObjectAnimator.ofFloat(dest, "alpha", 0.0f, 1.0f).setDuration(100).start();
+		} else {
+			*/
+			TransitionDrawable td = new TransitionDrawable(new Drawable[]{mImage.getDrawable(),dest});
+			td.setCrossFadeEnabled(true);
+			mImage.setImageDrawable(td);
+			td.startTransition(100);
+		//}
 	}
 	
 	public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge)

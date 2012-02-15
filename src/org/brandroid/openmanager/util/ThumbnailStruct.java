@@ -47,7 +47,8 @@ public class ThumbnailStruct
 			BitmapDrawable bd = new BitmapDrawable(mBitmap.get());
 			bd.setGravity(Gravity.CENTER);
 			//if(Holder != null) Holder.setIconDrawable(bd, this);
-			ImageView.setImageDrawable(bd);
+			//ImageView.setImageDrawable(bd);
+			ThumbnailCreator.fadeToDrawable(ImageView, bd);
 		}
 	}
 }
