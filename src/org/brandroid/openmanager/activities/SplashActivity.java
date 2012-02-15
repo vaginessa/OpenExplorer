@@ -1,6 +1,8 @@
 package org.brandroid.openmanager.activities;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.utils.Preferences;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -23,8 +25,12 @@ public class SplashActivity extends Activity implements OnClickListener
 		
 		findViewById(R.id.pref_start_videos).setOnClickListener(this);
 		findViewById(R.id.pref_start_photos).setOnClickListener(this);
+		findViewById(R.id.pref_start_internal).setOnClickListener(this);
 		findViewById(R.id.pref_start_external).setOnClickListener(this);
 		findViewById(R.id.pref_start_root).setOnClickListener(this);
+		
+		if(OpenFile.getExternalMemoryDrive(false) == null)
+			findViewById(R.id.pref_start_external).setEnabled(false);
 		
 		Intent intent = getIntent();
 		if(intent != null)
@@ -38,6 +44,8 @@ public class SplashActivity extends Activity implements OnClickListener
 					((RadioButton)findViewById(R.id.pref_start_photos)).setChecked(true);
 				else if("/".equals(start))
 					((RadioButton)findViewById(R.id.pref_start_root)).setChecked(true);
+				else if("Internal".equals(start))
+					((RadioButton)findViewById(R.id.pref_start_internal)).setChecked(true);
 				else
 					((RadioButton)findViewById(R.id.pref_start_external)).setChecked(true);
 			}
@@ -48,21 +56,32 @@ public class SplashActivity extends Activity implements OnClickListener
 		Intent intent = getIntent();
 		if(intent == null)
 			intent = new Intent();
+		Preferences prefs = new Preferences(this);
+		String start = prefs.getSetting("global", "pref_start", "");
 		switch(v.getId())
 		{
 		case R.id.pref_start_videos:
-			intent.putExtra("start", "Videos");
+			//intent.putExtra("start", "Videos");
+			start = "Videos";
 			break;
 		case R.id.pref_start_photos:
-			intent.putExtra("start", "Photos");
+			//intent.putExtra("start", "Photos");
+			start = "Photos";
+			break;
+		case R.id.pref_start_internal:
+			//intent.putExtra("start", "Internal");
+			start = "Internal";
 			break;
 		case R.id.pref_start_external:
-			intent.putExtra("start", "External");
+			//intent.putExtra("start", "External");
+			start = "External";
 			break;
 		case R.id.pref_start_root:
-			intent.putExtra("start", "Root");
+			//intent.putExtra("start", "Root");
+			start = "Root";
 			break;
 		}
+		new Preferences(this).setSetting("global", "pref_start", start);
 		setResult(RESULT_OK, intent);
 		finish();
 	}

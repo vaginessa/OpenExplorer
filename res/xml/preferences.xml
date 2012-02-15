@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-		android:title="Settings">
+		android:title="@string/s_menu_prefs_global">
 	
 	<PreferenceCategory android:key="servers" android:title="@string/s_pref_servers">
     	<PreferenceScreen android:key="server_add"
@@ -25,7 +25,7 @@
 			android:entries="@array/view"
 			android:entryValues="@array/view_value"
 			android:dialogTitle="@string/s_pref_view" />
-		<ListPreference
+		<PreferenceScreen
 		    android:key="pref_start"
 		    android:title="@string/s_pref_start"
 		    android:summary="@string/s_pref_start_summary"
@@ -38,6 +38,13 @@
 		    android:summaryOn="@string/s_pref_fullscreen_summary_on"
 		    android:summaryOff="@string/s_pref_fullscreen_summary_off"
 		    android:defaultValue="true"
+		    />
+		<CheckBoxPreference
+		    android:key="pref_pagers"
+		    android:title="@string/s_pref_pagers" 
+		    android:summaryOn="@string/s_pref_pagers_summary_on"
+		    android:summaryOff="@string/s_pref_pagers_summary_off"
+		    android:defaultValue="false"
 		    />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/s_pref_sort">

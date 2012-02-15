@@ -179,6 +179,22 @@ public class OpenFile extends OpenPath
 		return getOpenPaths(file.listFiles());
 	}
 	
+	public static OpenFile getExternalMemoryDrive(boolean fallbackToInternal) // sd
+	{
+		for(File kid : new File("/mnt").listFiles())
+			if(kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead() && kid.list().length > 0)
+				return new OpenFile(kid);
+		if(!fallbackToInternal)
+			return null;
+		else
+			return getInternalMemoryDrive();
+	}
+	public static OpenFile getInternalMemoryDrive() // internal
+	{
+		return new OpenFile(Environment.getExternalStorageDirectory());
+	}
+	
+	
 	private OpenFile[] getOpenPaths(File[] files)
 	{
 		if(files == null) return new OpenFile[0];

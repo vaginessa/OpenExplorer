@@ -74,6 +74,8 @@ public class OpenFragment
 		super.onCreate(savedInstanceState);
 	}
 	
+	/*
+	 * 
 	@Override
 	public void onDestroy() {
 		Logger.LogDebug("--> onDestroy - " + getClassName());
@@ -99,7 +101,6 @@ public class OpenFragment
 		super.onViewCreated(view, savedInstanceState);
 	}
 	
-	/*
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {

@@ -125,7 +125,7 @@
     <string name="s_pref_start_summary">Indicates which folder OpenExplorer starts in</string>
     <string name="s_custom">Custom…</string>
     <string name="s_text_intro_top">Welcome to OpenExplorer Beta!</string>
-    <string name="s_text_intro_body">The goal of OpenExplorer is to make you more productive within the Android filesystem and in the cloud. Whether you need to manage videos or photos from multiple locations or manage your webserver remotely via FTP, OpenExplorer can suit your needs.\n\nPlease select your starting path:</string>
+    <string name="s_text_intro_body">The goal of OpenExplorer is to make you more productive within the filesystem and in the cloud. Whether you need to manage videos or photos from multiple locations or manage your webserver remotely via FTP, OpenExplorer can suit your needs.\n\nPlease select your starting path:</string>
     <string name="s_info_num_folders">Number of folders: </string>
     <string name="s_info_num_files">Number of files: </string>
     <string name="s_info_last_modified">Last Modified: </string>
@@ -146,8 +146,16 @@
     <string name="s_menu_copy_all">Copy Here</string>
     <string name="s_confirm_delete">Are you sure that you want to delete xxx?</string>
     <string name="s_error_same_destination">The destination directory is the same.</string>
-    <string name="s_sample_notification">Copying -> sdcard:\n3 Files</string>
-    <string name="s_pref_fullscreen">Use Full Screen</string>
+    <string name="s_sample_notification">Copying -> sdcard: \n 3 Files</string>
+    <string name="s_pref_fullscreen">Full Screen</string>
     <string name="s_pref_fullscreen_summary_on">Hide Notification Bar</string>
     <string name="s_pref_fullscreen_summary_off">Show Notification Bar</string>
+    <string name="s_pref_pagers">View Pagers</string>
+    <string name="s_pref_pagers_summary_on">Horizontal Swiping = Directory Navigation</string>
+    <string name="s_pref_pagers_summary_off">Horizontal Swiping Disabled</string>
+    <string name="s_alert_new_media">New Media Inserted!</string>
+    <string name="s_warn_pager_title">New Feature: View Pagers</string>
+    <string name="s_warn_pager">Swipe left to right to go up a directory and right to left to go back. This should make it easier to navigate. Try it out (on external media)!</string>
+    <string name="s_warn_confirm">Do you understand?</string>
+    <string name="s_warn_disable">Disable</string>
 </resources>

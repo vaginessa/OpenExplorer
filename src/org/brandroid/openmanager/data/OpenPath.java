@@ -166,6 +166,17 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		return 1 + getParent().getDepth();
 	}
 
+	public OpenPath[] getHierarchy()
+	{
+		OpenPath[] ret = new OpenPath[getDepth()];
+		OpenPath tmp = this;
+		for(int i = ret.length - 1; i >= 0; i--)
+		{
+			ret[i] = tmp;
+			tmp = tmp.getParent();
+		}
+		return ret;
+	}
 
 	public boolean isTextFile() { return isTextFile(getName()); }
 	public static boolean isTextFile(String file) {
