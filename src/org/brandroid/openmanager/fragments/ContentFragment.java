@@ -180,7 +180,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			}
 		}
 	}
-	private int getViewMode() { return getExplorer().getViewMode(); }
+	private int getViewMode() { return getExplorer().getSetting(mPath, "view", 0); }
 	
 	//@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -338,11 +338,15 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putString("last", mPath.getPath());
 		outState.putInt("view", mViewMode);
-		outState.putInt("first", mListVisibleStartIndex);
-		outState.putInt("scroll", mListScrollY);
-		outState.putParcelable("grid", mGrid.onSaveInstanceState());
+		if(mPath != null)
+			outState.putString("last", mPath.getPath());
+		if(mListVisibleStartIndex > 0)
+			outState.putInt("first", mListVisibleStartIndex);
+		if(mListScrollY > 0)
+			outState.putInt("scroll", mListScrollY);
+		if(mGrid != null)
+			outState.putParcelable("grid", mGrid.onSaveInstanceState());
 		/*
 		if(mPath != null && mPath.getPath() != null)
 		{

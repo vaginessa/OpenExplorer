@@ -3,6 +3,7 @@ package org.brandroid.openmanager.adapters;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.utils.Logger;
 
@@ -40,9 +41,19 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter {
 			return super.getPageTitle(position);
 	}
 	
+	public boolean checkForContentFragmentWithPath(OpenPath path)
+	{
+		for(Fragment f : mExtraFrags)
+			if(f instanceof ContentFragment && ((ContentFragment)f).getPath().equals(path))
+				return true;
+		return false;
+	}
+	
 	public boolean add(Fragment frag)
 	{
 		if(frag == null) return false;
+		if(mExtraFrags.contains(frag)) return false;
+		if(frag instanceof ContentFragment && checkForContentFragmentWithPath(((ContentFragment)frag).getPath()))
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
 		boolean ret = mExtraFrags.add(frag);
 		notifyDataSetChanged();
@@ -69,5 +80,9 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter {
 
 	public List<Fragment> getFragments() {
 		return mExtraFrags;
+	}
+
+	public void set(int index, Fragment frag) {
+		mExtraFrags.set(index, frag);
 	}
 }
