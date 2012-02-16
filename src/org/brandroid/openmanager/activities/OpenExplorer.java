@@ -136,10 +136,14 @@ import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.Preferences;
+import com.viewpagerindicator.PageIndicator;
+import com.viewpagerindicator.TitlePageIndicator;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
@@ -183,7 +187,7 @@ public class OpenExplorer
 	
 	private static Fragment mFavoritesFragment = null,
 			mContentFragment = null;
-	private ViewPager mViewPager;
+	private OpenViewPager mViewPager;
 	private static PagerAdapter mViewPagerAdapter;
 	private static boolean mViewPagerEnabled = false; 
 	private ExpandableListView mBookmarksList;
@@ -315,14 +319,6 @@ public class OpenExplorer
 		if(mFavoritesFragment == null)
 			mFavoritesFragment = new BookmarkFragment();
 		
-		if(findViewById(R.id.multiselect_view) != null)
-		{
-			//fragmentManager.beginTransaction()
-			//	.replace(R.id.multiselect_view, new MultiSelectFragment())
-			//	.commit();
-			//findViewById(R.id.multiselect_view).setVisibility(visibility)
-		}
-		
 		//Logger.LogVerbose("Setting up bookmarks");
 
 		if(mSinglePane || !USE_ACTION_BAR)
@@ -374,11 +370,17 @@ public class OpenExplorer
 
 		int mViewMode = getSetting(path, "view", 0);
 
-		mViewPager = ((ViewPager)findViewById(R.id.content_pager));
+		if(mViewPagerEnabled && findViewById(R.id.content_pager_frame_stub) != null)
+			((ViewStub)findViewById(R.id.content_pager_frame_stub)).inflate();
+		
+		mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
 		if(mViewPagerEnabled && mViewPager != null)
 		{
 			if(findViewById(R.id.content_frag) != null)
 				findViewById(R.id.content_frag).setVisibility(View.GONE);
+			PageIndicator indicator = (PageIndicator)findViewById(R.id.content_pager_indicator);
+			if(indicator != null)
+				mViewPager.setIndicator(indicator);
 			//mViewPager = new ViewPager(getApplicationContext());
 			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
 			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
@@ -397,6 +399,8 @@ public class OpenExplorer
 			{
 				mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				((ArrayPagerAdapter)mViewPagerAdapter).add(ContentFragment.getInstance(path));
+				if(findViewById(R.id.title_underline) != null)
+					findViewById(R.id.title_underline).setVisibility(View.GONE);
 				/*
 				mViewPagerAdapter = new OpenPathPagerAdapter(fragmentManager);
 				if(getResources().getBoolean(R.bool.add_bookmarks_to_pager) && findViewById(R.id.list_frag) == null)
@@ -406,6 +410,7 @@ public class OpenExplorer
 				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
 				*/
 				updatePagerTitle(0);
+				setViewPageAdapter(mViewPagerAdapter);
 				mViewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
 					public void onPageSelected(int page) {
@@ -429,7 +434,8 @@ public class OpenExplorer
 				});
 				//mViewPagerAdapter.add(mFavoritesFragment);
 				//mViewPagerAdapter.add(mContentFragment);
-				mViewPager.setAdapter(mViewPagerAdapter);
+				
+
 			}
 		//}
 
@@ -501,6 +507,14 @@ public class OpenExplorer
 		/* read and display the users preferences */
 		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
 
+	}
+	
+	private void setViewPageAdapter(PagerAdapter adapter)
+	{
+		if(mViewPager != null)
+		{
+			mViewPager.setAdapter(adapter);
+		}
 	}
 	
 	private void showWarnings()
@@ -2151,7 +2165,7 @@ public class OpenExplorer
 				tmp = tmp.getParent();
 			}
 			mViewPagerAdapter = newAdapter;
-			mViewPager.setAdapter(mViewPagerAdapter);
+			setViewPageAdapter(mViewPagerAdapter);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 			updatePagerTitle(mViewPagerAdapter.getCount() - 1);
 			if(addToStack)

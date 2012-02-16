@@ -6,13 +6,14 @@ import java.util.List;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.utils.Logger;
+import com.viewpagerindicator.TitleProvider;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
-public class ArrayPagerAdapter extends FragmentStatePagerAdapter {
+public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements TitleProvider {
 	private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
 
 	public ArrayPagerAdapter(FragmentManager fm) {
@@ -36,7 +37,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter {
 	@Override
 	public CharSequence getPageTitle(int position) {
 		if(getItem(position) instanceof ContentFragment)
-			return ((ContentFragment)getItem(position)).getPath().getName();
+			return "/" + ((ContentFragment)getItem(position)).getPath().getName();
 		else
 			return super.getPageTitle(position);
 	}
@@ -84,5 +85,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter {
 
 	public void set(int index, Fragment frag) {
 		mExtraFrags.set(index, frag);
+	}
+
+	@Override
+	public String getTitle(int position) {
+		return getPageTitle(position).toString();
 	}
 }

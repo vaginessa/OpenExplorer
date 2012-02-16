@@ -152,19 +152,12 @@
 	    	android:layout_width="match_parent"
 	    	/>
 
-	<android.support.v4.view.ViewPager
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:id="@+id/content_pager"
-	    />
-	
-	    <!-- 
-	<android.support.v4.view.ViewPager
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:id="@+id/content_pager"
-	    android:layout_weight="1"
-	    />
-	    -->
+
+	    <ViewStub
+	        android:id="@+id/content_pager_frame_stub"
+	        android:layout="@layout/viewpager"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        />
 	</LinearLayout>
 </RelativeLayout>
