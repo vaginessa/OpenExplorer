@@ -23,6 +23,8 @@ public class Preferences {
 	private static Preferences preferences;
 	private static Context mContext;
 	private static Hashtable<String, SharedPreferences> mStorageHash = new Hashtable<String, SharedPreferences>();
+	public static boolean Pref_Intents_Internal = true;
+	public static boolean Pref_Text_Internal = true;
 	
 	public Preferences(Context context)
 	{

@@ -158,4 +158,8 @@
     <string name="s_warn_pager">Swipe left to right to go up a directory and right to left to go back. This should make it easier to navigate. Try it out (on external media)!</string>
     <string name="s_warn_confirm">Do you understand?</string>
     <string name="s_warn_disable">Disable</string>
+    <string name="s_pref_intent_internal">Internal Intents</string>
+    <string name="s_pref_intent_internal_on">Use OpenExplorer Intent Manager</string>
+    <string name="s_pref_intent_internal_off">Use System Intent Manager</string>
+    <string name="s_pref_text_internal">Use Internal Text Editor</string>
 </resources>

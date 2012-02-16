@@ -212,6 +212,9 @@ public class OpenExplorer
 								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		} //else getWindow().addFlags(WindowManager.LayoutParams.FLAG
 		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", false);
+		
+		Preferences.Pref_Intents_Internal = getPreferences().getBoolean("global", "pref_intent_internal", true);
+		Preferences.Pref_Text_Internal = getPreferences().getBoolean("global", "pref_text_internal", true);
 
 		if(BEFORE_HONEYCOMB)
 		{
@@ -475,6 +478,11 @@ public class OpenExplorer
 			if(mViewPagerAdapter instanceof ArrayPagerAdapter)
 				((ArrayPagerAdapter)mViewPagerAdapter).add(mContentFragment);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
+			if(bAddToStack)
+			{
+				ft.addToBackStack("path");
+				ft.setBreadCrumbTitle(path.getPath());
+			}
 		}
 	
 		//ft.addToBackStack("path");
@@ -482,7 +490,7 @@ public class OpenExplorer
 		ft.commit();
 		
 		updateTitle(mLastPath.getPath());
-				
+		
 		//mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		handleMediaReceiver();
 		

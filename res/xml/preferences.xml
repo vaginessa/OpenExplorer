@@ -65,6 +65,18 @@
 	            android:defaultValue="false"
 	            />
 	        <CheckBoxPreference
+	            android:key="pref_intent_internal"
+	            android:title="@string/s_pref_intent_internal"
+	            android:summaryOn="@string/s_pref_intent_internal_on"
+	            android:summaryOff="@string/s_pref_intent_internal_off"
+	            android:defaultValue="true" 
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_text_internal"
+	            android:title="@string/s_pref_text_internal"
+	            android:defaultValue="true" 
+	            />
+	        <CheckBoxPreference
 	            android:key="pref_stats"
 	            android:title="@string/s_pref_stats_title"
 	            android:summary="@string/s_pref_stats_summary"
