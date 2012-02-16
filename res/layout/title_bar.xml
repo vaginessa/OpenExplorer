@@ -49,12 +49,12 @@
 	    android:id="@+id/title_path"
 	    style="@style/Small"
 	    android:layout_marginTop="@dimen/large_text_height"
-	    android:layout_alignParentBottom="true"
-		android:layout_alignTop="@+id/title_text"
+	    android:layout_alignTop="@+id/title_text"
 	    android:layout_toRightOf="@+id/title_icon"
 	    android:layout_toLeftOf="@+id/title_paste"
+	    android:lines="2"
 	    android:gravity="left|center_vertical"
-	    android:text="/sdcard"
+	    android:text="/mnt/sdcard"
 	    />
 	
     <RelativeLayout
