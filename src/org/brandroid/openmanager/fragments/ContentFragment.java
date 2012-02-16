@@ -41,6 +41,8 @@ import org.brandroid.openmanager.util.ThumbnailStruct;
 import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -143,7 +145,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		args.putString("last", path.getPath());
 		args.putInt("view", mode);
 		ret.setArguments(args);
-		Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
+		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
 		return ret;
 	}
 	public static ContentFragment getInstance(OpenPath path)
@@ -164,7 +166,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//return ret;
 			instances.put(path, ret);
 		}
-		Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
+		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
 		return instances.get(path);
 	}
 	
@@ -885,9 +887,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					//getEventHandler().copyFile(file, mPath, mContext);
 				}
 				return;
-			}
-			
-			IntentManager.startIntent(file, getExplorer(), true);
+			} else if(file.isTextFile() && Preferences.Pref_Text_Internal)
+				getExplorer().editFile(file);
+			else
+				IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal);
 		}
 	}
 	

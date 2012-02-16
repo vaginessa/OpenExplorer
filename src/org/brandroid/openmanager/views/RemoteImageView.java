@@ -71,9 +71,9 @@ public class RemoteImageView extends ImageView
     
     public void setImageFromFile(OpenPath path, int mWidth, int mHeight)
     {
-
+    	Logger.LogDebug("RemoteImageView.setImageFromFile(" + path.getPath() + ", " + mWidth + ", " + mHeight);
         fCallback = new OurCallback(this);
-        Cache.get().getImage(path, mWidth, mHeight, fCallback);
+        Cache.get().getImage(path, mWidth, mHeight, fCallback).start();
     }
 
 

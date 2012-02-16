@@ -76,10 +76,10 @@ public class ThumbnailCreator extends Thread {
 	
 	public static boolean setThumbnail(final ImageView mImage, OpenPath file, int mWidth, int mHeight)
 	{
-		if(mImage instanceof RemoteImageView)
-		{
-			return setThumbnail((RemoteImageView)mImage, file, mWidth, mHeight);
-		}
+		//if(mImage instanceof RemoteImageView)
+		//{
+		//	return setThumbnail((RemoteImageView)mImage, file, mWidth, mHeight);
+		//}
 		final String mName = file.getName();
 		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 		final String sPath2 = mName.toLowerCase();

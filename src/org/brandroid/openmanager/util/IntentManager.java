@@ -9,6 +9,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.OpenIntentChooser.IntentSelectedListener;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -71,7 +72,7 @@ public class IntentManager
 		return ret;
 	}
 
-	public static boolean startIntent(OpenPath file, Context activity) { return startIntent(file, activity, false); } 
+	public static boolean startIntent(OpenPath file, Context activity) { return startIntent(file, activity, Preferences.Pref_Intents_Internal); } 
 	public static boolean startIntent(final OpenPath file, final Context activity, boolean bInnerChooser)
 	{
 		if(!isIntentAvailable(file, activity))

@@ -66,8 +66,8 @@ public class Cache
     {
         public void run()
         {
-            
-            for (;;) {
+        	
+            //for (;;) {
                 /*
                  * Dequeue next request
                  */
@@ -105,7 +105,7 @@ public class Cache
 	            		});
             		} else Logger.LogWarning("***Image was null! " + qq.path);
             		return;
-            	} // else Logger.LogWarning("***Couldn't find image!");
+            	} else Logger.LogWarning("***Couldn't find image!");
 
                 /*
                  * Read the network
@@ -150,7 +150,7 @@ public class Cache
                         }
                     });
                 }
-            }
+           // }
 
 //            httpClient.getConnectionManager().shutdown();
         }
@@ -162,10 +162,17 @@ public class Cache
     private Cache()
     {
         fHandler = new Handler();
-        fQueue = new LinkedList();
-        Thread th = new Thread(new NetworkThread());
-        th.setDaemon(true);
-        th.start();
+        fQueue = new LinkedList<QueueItem>();
+        
+        //mThread.start();
+    }
+    
+    public void start() {
+		Thread mThread = new Thread(new NetworkThread());
+        mThread.setDaemon(true);
+        try {
+        	mThread.start();
+        } catch(IllegalThreadStateException e) { }
     }
 
     /**
@@ -182,12 +189,13 @@ public class Cache
      * @param path
      * @param callback
      */
-    public void getImage(OpenPath path, int w, int h, Callback callback)
+    public Cache getImage(OpenPath path, int w, int h, Callback callback)
     {
         synchronized(fQueue) {
             fQueue.addFirst(new QueueItem(path,w,h,callback));
             fQueue.notify();
         }
+        return this;
     }
 
     /**
