@@ -478,7 +478,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
 						mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
 					if(Build.VERSION.SDK_INT >= 12)
-						v.animate().alpha(0).setDuration(200).setListener(getDefaultAnimatorListener());
+						v.animate().alpha(0).setDuration(200).setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
+							public void onAnimationEnd(Animator animation) {
+								scanBookmarks();
+							}});
 					else
 						v.setVisibility(View.GONE);
 				}
@@ -510,7 +513,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		{
 			getExplorer().showToast(mContext.getString(R.string.s_alert_remove_safe));
 			viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
-				.setListener(getDefaultAnimatorListener());
+				.setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
+					public void onAnimationEnd(Animator animation) {
+						scanBookmarks();
+					}});
 		} else
 			getExplorer().showToast(mContext.getString(R.string.s_alert_remove_error));
 	}
@@ -518,16 +524,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	public String getBookMarkNameString() {
 		return mBookmarkString;
 	}
-	
 
-	public AnimatorEndListen getDefaultAnimatorListener()
-	{
-		return new AnimatorEndListen(){
-			public void onAnimationEnd(Animator animation) {
-				scanBookmarks();
-			}};
-	}
-	
 	public void updateSizeIndicator(OpenPath mFile, View mParentView)
 	{
 		View mSizeView = (View)mParentView.findViewById(R.id.size_layout);
@@ -690,14 +687,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		}
 
 		
-	}
-	
-	public class AnimatorEndListen implements AnimatorListener
-	{
-		public void onAnimationCancel(Animator animation) { }
-		public void onAnimationEnd(Animator animation) { }
-		public void onAnimationRepeat(Animator animation) { }
-		public void onAnimationStart(Animator animation) { }	
 	}
 
 	public BookmarkAdapter getListAdapter() {
