@@ -120,6 +120,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
 	private int mListScrollY = 0;
+	public static float DP_RATIO = 1;
+	public static int mGridImageSize = 128;
+	public static int mListImageSize = 36;
 	public Boolean mShowLongDate = false;
 	
 	private Bundle mBundle;
@@ -196,6 +199,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
+		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
+		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
 		if(savedInstanceState != null)
 			mBundle = savedInstanceState;
 		else if(getArguments() != null)
@@ -1155,10 +1161,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			final OpenPath file = super.getItem(position);
 			final String mName = file.getName();
 			
-			int mWidth = 36;
+			int mWidth = mListImageSize;
 			int mHeight = mWidth;
 			if(getViewMode() == OpenExplorer.VIEW_GRID)
-				mWidth = mHeight = 128;
+				mWidth = mHeight = mGridImageSize;
 			
 			int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
 					R.layout.grid_content_layout : R.layout.list_content_layout;

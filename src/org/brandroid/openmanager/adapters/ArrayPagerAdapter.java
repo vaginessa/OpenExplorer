@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.adapters;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,6 +85,26 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 	{
 		boolean ret = mExtraFrags.remove(frag);
 		notifyDataSetChanged();
+		return ret;
+	}
+	
+	public <T> List<T> getItemsOfType(Type c)
+	{
+		List<T> ret = new ArrayList<T>();
+		for(Fragment f : mExtraFrags)
+			if(f.getClass().equals(c))
+				ret.add((T)f);
+		return ret;
+	}
+	public int removeOfType(Class c)
+	{
+		int ret = 0;
+		for(int i = getCount() - 1; i >= 0; i--)
+		{
+			Fragment f = getItem(i);
+			if(f.getClass().equals(c))
+				mExtraFrags.remove(i);
+		}
 		return ret;
 	}
 	

@@ -261,4 +261,28 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		return "*/*";
 	}
 	
+	public OpenPath[] getAncestors(boolean zeroCurrent)
+	{
+		OpenPath[] ret = new OpenPath[getDepth()];
+		OpenPath tmp = this;
+		int i = 0;
+		while(tmp != null)
+		{
+			i++;
+			ret[zeroCurrent ? i - 1 : ret.length - i] = tmp;
+			tmp = tmp.getParent();
+		}
+		return ret;
+	}
+	public OpenPath getCommonDenominator(OpenPath other)
+	{
+		OpenPath[] myAncestors = getAncestors(true);
+		for(int i = 0; i < myAncestors.length; i++)
+		{
+			OpenPath mine = myAncestors[i];
+			if(other.getPath().contains(mine.getPath()))
+				return mine;
+		}
+		return null;
+	}
 }

@@ -195,7 +195,7 @@ public class OpenExplorer
 	private static Fragment mFavoritesFragment = null,
 			mContentFragment = null;
 	private OpenViewPager mViewPager;
-	private static PagerAdapter mViewPagerAdapter;
+	private static ArrayPagerAdapter mViewPagerAdapter;
 	private static boolean mViewPagerEnabled = false; 
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
@@ -414,7 +414,7 @@ public class OpenExplorer
 			if(mViewPager != null)
 			{
 				mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-				((ArrayPagerAdapter)mViewPagerAdapter).add(ContentFragment.getInstance(path));
+				mViewPagerAdapter.add(ContentFragment.getInstance(path));
 				if(findViewById(R.id.title_underline) != null)
 					findViewById(R.id.title_underline).setVisibility(View.GONE);
 				/*
@@ -500,7 +500,7 @@ public class OpenExplorer
 		} else if(mViewPager != null && mViewPagerAdapter != null)
 		{
 			if(mViewPagerAdapter instanceof ArrayPagerAdapter)
-				((ArrayPagerAdapter)mViewPagerAdapter).add(mContentFragment);
+				mViewPagerAdapter.add(mContentFragment);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
 			if(bAddToStack)
 			{
@@ -527,40 +527,43 @@ public class OpenExplorer
 
 	}
 	
-	public void setViewVisibility(final boolean visible, int... ids) {
+	public void setViewVisibility(final boolean visible, final boolean allowAnimation, int... ids) {
 		for(int id : ids)
 		{
 			final View v = findViewById(id);
 			if(v != null && visible != (v.getVisibility() == View.VISIBLE))
 			{
-				Animation anim;
-				if(visible)
-					anim = AnimationUtils.makeInAnimation(getApplicationContext(), false);
-				else
-					anim = AnimationUtils.makeOutAnimation(getApplicationContext(), false);
-				anim.setAnimationListener(new Animation.AnimationListener() {
-					@Override
-					public void onAnimationStart(Animation animation) {
-						if(visible)
-							v.setVisibility(View.VISIBLE);
-					}
-					
-					@Override
-					public void onAnimationRepeat(Animation animation) {
-						// TODO Auto-generated method stub
+				if(allowAnimation)
+				{
+					Animation anim;
+					if(visible)
+						anim = AnimationUtils.makeInAnimation(getApplicationContext(), false);
+					else
+						anim = AnimationUtils.makeOutAnimation(getApplicationContext(), false);
+					anim.setAnimationListener(new Animation.AnimationListener() {
+						@Override
+						public void onAnimationStart(Animation animation) {
+							if(visible)
+								v.setVisibility(View.VISIBLE);
+						}
 						
-					}
-					
-					@Override
-					public void onAnimationEnd(Animation animation) {
-						if(!visible)
-							v.setVisibility(View.GONE);
-						else
-							v.setVisibility(View.VISIBLE);
-					}
-				});
-				v.startAnimation(anim);
-				//v.setVisibility(visible ? View.VISIBLE : View.GONE);
+						@Override
+						public void onAnimationRepeat(Animation animation) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void onAnimationEnd(Animation animation) {
+							if(!visible)
+								v.setVisibility(View.GONE);
+							else
+								v.setVisibility(View.VISIBLE);
+						}
+					});
+					v.startAnimation(anim);
+				} else
+					v.setVisibility(visible ? View.VISIBLE : View.GONE);
 			}
 		}
 	}
@@ -621,7 +624,7 @@ public class OpenExplorer
 	{
 		TextView tvLeft = null; // (TextView)findViewById(R.id.title_left);
 		TextView tvRight = null; //(TextView)findViewById(R.id.title_right);
-		if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
+		/*if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
 		{
 			OpenPath sel = ((OpenPathPagerAdapter)mViewPagerAdapter).getPath(page);
 			if(sel == null)
@@ -671,12 +674,12 @@ public class OpenExplorer
 			}
 			updateTitle(title);
 		} else if (mViewPagerAdapter instanceof ArrayPagerAdapter)
-		{
+		{*/
 			String left = "";
 			SpannableStringBuilder ssb = new SpannableStringBuilder();
 			for(int i = 0; i < page; i++)
 			{
-				Fragment f = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(i);
+				Fragment f = mViewPagerAdapter.getItem(i);
 				if(f instanceof ContentFragment)
 				{
 					OpenPath p = ((ContentFragment)f).getPath();
@@ -689,7 +692,7 @@ public class OpenExplorer
 			srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
 			ssb.append(srLeft);
 			//ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
-			Fragment curr = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(page);
+			Fragment curr = mViewPagerAdapter.getItem(page);
 			if(curr instanceof ContentFragment)
 			{
 				OpenPath pCurr = ((ContentFragment)curr).getPath();
@@ -699,7 +702,7 @@ public class OpenExplorer
 			String right = "";
 			for(int i = page + 1; i < mViewPagerAdapter.getCount(); i++)
 			{
-				Fragment f = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(i);
+				Fragment f = mViewPagerAdapter.getItem(i);
 				if(f instanceof ContentFragment)
 				{
 					OpenPath p = ((ContentFragment)f).getPath();
@@ -712,7 +715,7 @@ public class OpenExplorer
 			srRight.setSpan(new ForegroundColorSpan(Color.GRAY), 0, right.length(), Spanned.SPAN_COMPOSING);
 			ssb.append(srRight);
 			updateTitle(ssb);
-		}
+		//}
 	}
 	
 	@Override
@@ -1257,8 +1260,8 @@ public class OpenExplorer
 	{
 		Logger.LogDebug("getDirContentFragment");
 		Fragment ret = null;
-		if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
-			ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
+		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
+		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
 		if(ret == null)
 			ret = fragmentManager.findFragmentById(R.id.content_frag);
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
@@ -1266,20 +1269,20 @@ public class OpenExplorer
 			Logger.LogWarning("Do I need to create a new ContentFragment?");
    			//ret = ContentFragment.newInstance(mLastPath, getSetting(mLastPath, "view", mViewMode));
    			//mViewPagerAdapter.add(ret);
-			if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
+			/*if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
 			{
 				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
 				ret = ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem();
-			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)
-				ret = ((ArrayPagerAdapter)mViewPagerAdapter).getItem(mViewPager.getCurrentItem());
+			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)*/
+				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
 		}
 		if(ret == null)
 		{
 			ret = ContentFragment.getInstance(mLastPath, getSetting(mLastPath, "view", 0));
 			if(mViewPager != null)
 			{
-				if(mViewPagerAdapter instanceof ArrayPagerAdapter)
-					((ArrayPagerAdapter)mViewPagerAdapter).set(mViewPager.getCurrentItem(), ret);
+				//if(mViewPagerAdapter instanceof ArrayPagerAdapter)
+					mViewPagerAdapter.set(mViewPager.getCurrentItem(), ret);
 			}
 		}
 		if(activate && !ret.isVisible())
@@ -1321,7 +1324,7 @@ public class OpenExplorer
 		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null && mViewPagerAdapter instanceof ArrayPagerAdapter)
 		{
-			((ArrayPagerAdapter)mViewPagerAdapter).add(editor);
+			mViewPagerAdapter.add(editor);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 		} else
 			fragmentManager.beginTransaction()
@@ -2216,15 +2219,17 @@ public class OpenExplorer
 			else
 				mViewPagerAdapter.setFirstFragment(null);
 				*/
-			ArrayPagerAdapter newAdapter = new ArrayPagerAdapter(fragmentManager);
-			newAdapter.add(ContentFragment.getInstance(path, newView));
+			//ArrayPagerAdapter newAdapter = new ArrayPagerAdapter(fragmentManager);
+			// switch from /mnt/sdcard-ext/Pictures to /mnt/sdcard-ext/download
+			mViewPagerAdapter.removeOfType(ContentFragment.class);
+			mViewPagerAdapter.add(0, content);
 			OpenPath tmp = path.getParent();
 			while(tmp != null)
 			{
-				newAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+				mViewPagerAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
 				tmp = tmp.getParent();
 			}
-			mViewPagerAdapter = newAdapter;
+			//mViewPagerAdapter = newAdapter;
 			setViewPageAdapter(mViewPagerAdapter);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 			updatePagerTitle(mViewPagerAdapter.getCount() - 1);
@@ -2552,9 +2557,13 @@ public class OpenExplorer
 	public void onPageIndicatorChange() {
 		Logger.LogVerbose("onPageIndicatorChange");
 		if(mViewPagerAdapter == null || mViewPagerAdapter.getCount() < 2)
-			setViewVisibility(false, R.id.content_pager_indicator_frame);
-		else
-			setViewVisibility(true, R.id.content_pager_indicator_frame);
+		{
+			setViewVisibility(false, true, R.id.content_pager_indicator_frame);
+			setViewVisibility(true, false, R.id.title_underline);
+		} else {
+			setViewVisibility(true, true, R.id.content_pager_indicator_frame);
+			setViewVisibility(false, false, R.id.title_underline);
+		}
 	}
 }
 

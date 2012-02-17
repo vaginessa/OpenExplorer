@@ -94,7 +94,7 @@ public class ThumbnailCreator extends Thread {
 					mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
 				}
 			});
-		} else
+		} else //if(mImage.getDrawable() == null)
 			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 		
 		if(file.hasThumbnail())
@@ -323,7 +323,7 @@ public class ThumbnailCreator extends Thread {
 	
 	private static String getCacheFilename(String path, int w, int h)
 	{
-		return w + "x" + h + "_" + path.replaceAll("[^A-Za-z0-9]", "-") + ".png";
+		return w + "x" + h + "_" + path.replaceAll("[^A-Za-z0-9]", "-") + ".jpg";
 	}
 	
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true, mContext); }
@@ -376,12 +376,13 @@ public class ThumbnailCreator extends Thread {
 					fails.put(mParent, 0);
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
-				opts.inSampleSize = 1;
+				if(file.length() > 2000)
+					opts.inSampleSize = 8;
+				else
+					opts.inSampleSize = 1;
 				opts.inPurgeable = true;
 				opts.outHeight = mHeight;
 				//opts.outWidth = mWidth;
-				//opts.outWidth = mWidth;
-				//opts.outHeight = mHeight;
 				int kind = mWidth > 96 ? MediaStore.Video.Thumbnails.MINI_KIND : MediaStore.Video.Thumbnails.MICRO_KIND;
 				try {
 					if(om.getParent().getName().equals("Photos"))
@@ -540,7 +541,7 @@ public class ThumbnailCreator extends Thread {
 		FileOutputStream os = null;
 		try {
 			os = mContext.openFileOutput(file, 0);
-			bmp.compress(CompressFormat.PNG, 100, os);
+			bmp.compress(CompressFormat.JPEG, 98, os);
 		} catch(IOException e) {
 			Logger.LogError("Unable to save thumbnail for " + file, e);
 		} finally {
