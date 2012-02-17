@@ -3,8 +3,10 @@ package org.brandroid.openmanager.adapters;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 import com.viewpagerindicator.TitleProvider;
 
@@ -36,10 +38,17 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 	
 	@Override
 	public CharSequence getPageTitle(int position) {
-		if(getItem(position) instanceof ContentFragment)
-			return "/" + ((ContentFragment)getItem(position)).getPath().getName();
-		else
+		Fragment f = getItem(position);
+		OpenPath path = null;
+		if(f instanceof ContentFragment)
+			path = ((ContentFragment)f).getPath();
+		else if(f instanceof TextEditorFragment)
+			path = ((TextEditorFragment)f).getPath();
+		if(path == null)
 			return super.getPageTitle(position);
+		else if(path instanceof OpenFile && path.isDirectory())
+			return "/" + path.getName();
+		else return path.getName();
 	}
 	
 	public boolean checkForContentFragmentWithPath(OpenPath path)
@@ -55,6 +64,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 		if(frag == null) return false;
 		if(mExtraFrags.contains(frag)) return false;
 		if(frag instanceof ContentFragment && checkForContentFragmentWithPath(((ContentFragment)frag).getPath()))
+			return false;
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
 		boolean ret = mExtraFrags.add(frag);
 		notifyDataSetChanged();
@@ -63,6 +73,9 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 	public void add(int index, Fragment frag)
 	{
 		if(frag == null) return;
+		if(mExtraFrags.contains(frag)) return;
+		if(frag instanceof ContentFragment && checkForContentFragmentWithPath(((ContentFragment)frag).getPath()))
+			return;
 		mExtraFrags.add(index, frag);
 		notifyDataSetChanged();
 	}
@@ -89,6 +102,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 
 	@Override
 	public String getTitle(int position) {
+		if(getPageTitle(position) == null) return "";
 		return getPageTitle(position).toString();
 	}
 }

@@ -25,6 +25,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
+import android.animation.Animator;
+import android.animation.LayoutTransition;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -38,6 +40,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
+import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -72,7 +75,9 @@ import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -104,6 +109,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.AnimatorEndListener;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
@@ -137,6 +143,7 @@ import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.OpenViewPager;
+import org.brandroid.openmanager.views.OpenViewPager.OnPageIndicatorChangeListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilderNew;
@@ -150,7 +157,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 public class OpenExplorer
 		extends OpenFragmentActivity
-		implements OnBackStackChangedListener, OnClipboardUpdateListener
+		implements OnBackStackChangedListener, OnClipboardUpdateListener, OnPageIndicatorChangeListener
 	{	
 
 	private static final int PREF_CODE =		0x6;
@@ -378,6 +385,15 @@ public class OpenExplorer
 		{
 			if(findViewById(R.id.content_frag) != null)
 				findViewById(R.id.content_frag).setVisibility(View.GONE);
+			mViewPager.setOnPageIndicatorChangeListener(this);
+			FrameLayout indicator_frame = (FrameLayout)findViewById(R.id.content_pager_indicator_frame);
+			try {
+				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
+				indicator_frame.setAnimation(AnimationUtils.makeInAnimation(getApplicationContext(), false));
+			} catch(Resources.NotFoundException e)
+			{
+				Logger.LogError("Couldn't load pager animation.", e);
+			}
 			PageIndicator indicator = (PageIndicator)findViewById(R.id.content_pager_indicator);
 			if(indicator != null)
 				mViewPager.setIndicator(indicator);
@@ -411,6 +427,7 @@ public class OpenExplorer
 				*/
 				updatePagerTitle(0);
 				setViewPageAdapter(mViewPagerAdapter);
+				
 				mViewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
 					public void onPageSelected(int page) {
@@ -418,6 +435,7 @@ public class OpenExplorer
 						//			mViewPagerAdapter.getPageTitle(page));
 						//updateTitle(mViewPagerAdapter.getPageTitle(page).toString());
 						updatePagerTitle(page);
+						//if(mViewPagerAdapter.getCount() == 1 && mV)
 					}
 					
 					@Override
@@ -509,6 +527,44 @@ public class OpenExplorer
 
 	}
 	
+	public void setViewVisibility(final boolean visible, int... ids) {
+		for(int id : ids)
+		{
+			final View v = findViewById(id);
+			if(v != null && visible != (v.getVisibility() == View.VISIBLE))
+			{
+				Animation anim;
+				if(visible)
+					anim = AnimationUtils.makeInAnimation(getApplicationContext(), false);
+				else
+					anim = AnimationUtils.makeOutAnimation(getApplicationContext(), false);
+				anim.setAnimationListener(new Animation.AnimationListener() {
+					@Override
+					public void onAnimationStart(Animation animation) {
+						if(visible)
+							v.setVisibility(View.VISIBLE);
+					}
+					
+					@Override
+					public void onAnimationRepeat(Animation animation) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void onAnimationEnd(Animation animation) {
+						if(!visible)
+							v.setVisibility(View.GONE);
+						else
+							v.setVisibility(View.VISIBLE);
+					}
+				});
+				v.startAnimation(anim);
+				//v.setVisibility(visible ? View.VISIBLE : View.GONE);
+			}
+		}
+	}
+
 	private void setViewPageAdapter(PagerAdapter adapter)
 	{
 		if(mViewPager != null)
@@ -1264,8 +1320,10 @@ public class OpenExplorer
 	{
 		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null && mViewPagerAdapter instanceof ArrayPagerAdapter)
+		{
 			((ArrayPagerAdapter)mViewPagerAdapter).add(editor);
-		else
+			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+		} else
 			fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, editor)
 				//.addToBackStack(null)
@@ -1430,7 +1488,9 @@ public class OpenExplorer
 			}
 		}
 		
-		switch(getFileManager().getSorting())
+		ContentFragment frag = getDirContentFragment(false);
+		
+		switch(frag.getSorting())
 		{
 		case ALPHA:
 			setMenuChecked(menu, true, R.id.menu_sort_name_asc);
@@ -1497,7 +1557,7 @@ public class OpenExplorer
 			mPaste.setVisible(true);
 		}
 		
-		int mViewMode = getSetting(getDirContentFragment(false).getPath(), "view", 0);
+		int mViewMode = frag.getViewMode();
 		if(mViewMode == VIEW_GRID)
 			setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
 		else if(mViewMode == VIEW_LIST)
@@ -1505,8 +1565,8 @@ public class OpenExplorer
 		else if(mViewMode == VIEW_CAROUSEL)
 			setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
 		
-		setMenuChecked(menu, getFileManager().getShowHiddenFiles(), R.id.menu_view_hidden);
-		setMenuChecked(menu, getSetting(mLastPath, "thumbs", true), R.id.menu_view_thumbs);
+		setMenuChecked(menu, frag.getShowHiddenFiles(), R.id.menu_view_hidden);
+		setMenuChecked(menu, frag.getShowThumbnails(), R.id.menu_view_thumbs);
 		
 		if(RootManager.Default.isRoot())
 			setMenuChecked(menu, true, R.id.menu_root);
@@ -1782,7 +1842,7 @@ public class OpenExplorer
 	}
 	private void setSorting(SortType sort) {
 		setSetting(mLastPath, "sort", sort.toString());
-		getFileManager().setSorting(sort);
+		//getFileManager().setSorting(sort);
 		getDirContentFragment(true).onSortingChanged(sort);
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
@@ -2140,7 +2200,7 @@ public class OpenExplorer
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
-		mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
+		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);
 		Fragment content = ContentFragment.getInstance(path, newView);
 		if(mViewPager != null && mViewPager.isShown())
@@ -2486,6 +2546,15 @@ public class OpenExplorer
 		else if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		getDirContentFragment(false).notifyDataSetChanged();
+	}
+
+	@Override
+	public void onPageIndicatorChange() {
+		Logger.LogVerbose("onPageIndicatorChange");
+		if(mViewPagerAdapter == null || mViewPagerAdapter.getCount() < 2)
+			setViewVisibility(false, R.id.content_pager_indicator_frame);
+		else
+			setViewVisibility(true, R.id.content_pager_indicator_frame);
 	}
 }
 

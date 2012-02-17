@@ -130,4 +130,9 @@
             <item name="@android:windowExitAnimation">@anim/shrink_to_bottomright</item>
     </style>
     
+    <style name="Animations.SlideUp">
+        <item name="@android:windowEnterAnimation">@anim/slide_down_in</item>
+        <item name="@android:windowExitAnimation">@anim/slide_up_out</item>
+    </style>
+    
 </resources>

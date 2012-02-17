@@ -113,6 +113,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private boolean mActionModeSelected;
 	private boolean mShowThumbnails = true;
 	private boolean mReadyToUpdate = true;
+	private boolean mShowHiddenFiles = false;
+	private SortType mSorting = SortType.ALPHA;
 	private int mMenuContextItemIndex = -1;
 	private int mListScrollingState = 0;
 	private int mListVisibleStartIndex = 0;
@@ -172,7 +174,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
-		//Logger.LogVerbose("Content View Mode: " + mode);
+		Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
 			if(FileSystemAdapter.class.equals(mContentAdapter.getClass()))
@@ -184,7 +186,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			}
 		}
 	}
-	private int getViewMode() { return getExplorer().getSetting(mPath, "view", 0); }
+	public int getViewMode() {
+		if(getExplorer() != null && mPath != null)
+			return getExplorer().getSetting(mPath, "view", 0);
+		else return 0;
+	}
 	
 	//@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -399,12 +405,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			((ViewGroup)getView()).addView(mGrid);
 			setupGridView();
 		}
-		mViewMode = getExplorer().getSetting(mPath, "view", mViewMode);
-		getManager().setSorting(FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getManager().getSorting().toString())));
-		getManager().setShowHiddenFiles(!getExplorer().getSetting(mPath, "hide", true));
+		mViewMode = getViewMode();
+		mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", mSorting.toString()));
+		//getManager().setSorting();
+		mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", true);
+		//getManager().setShowHiddenFiles();
 		mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", true);
 		//Logger.LogVerbose("Check View Mode: " + mViewMode);
-		if(mViewMode == OpenExplorer.VIEW_GRID) {
+		if(getViewMode() == OpenExplorer.VIEW_GRID) {
 			mLayoutID = R.layout.grid_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.grid_width);
 			Logger.LogVerbose("Grid Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
@@ -923,7 +931,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		updateData(items,
 				!allowSkips || (items.length < 500),
 				!allowSkips || (items.length < 500),
-				!allowSkips || (items.length < 500 && getManager().getShowHiddenFiles())
+				!allowSkips || (items.length < 500 && mShowHiddenFiles) //getManager().getShowHiddenFiles())
 				);
 	}
 	private void updateData(final OpenPath[] items, boolean doSort, boolean foldersFirst, boolean showHidden) {
@@ -936,7 +944,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(doSort)
 		{
-			OpenPath.Sorting = getManager().getSorting();
+			OpenPath.Sorting = mSorting; //getManager().getSorting();
 			Arrays.sort(items);
 		}
 		
@@ -1049,7 +1057,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public void onHiddenFilesChanged(boolean state)
 	{
-		getManager().setShowHiddenFiles(state);
+		mShowHiddenFiles = state;
+		//getManager().setShowHiddenFiles(state);
 		refreshData(null, false);
 	}
 
@@ -1061,15 +1070,18 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
-		getManager().setSorting(type);
+		mSorting = type;
+		//getManager().setSorting(type);
 		refreshData(null, false);
 	}
 	
 	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
 	{
-		getManager().setSorting(sort);
+		mSorting = sort;
+		//getManager().setSorting(sort);
 		mShowThumbnails = thumbs;
-		getManager().setShowHiddenFiles(hidden);
+		mShowHiddenFiles = hidden;
+		//getManager().setShowHiddenFiles(hidden);
 		refreshData(null, false);
 	}
 
@@ -1404,6 +1416,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	public OpenPath getPath() {
 		return mPath;
+	}
+	public SortType getSorting() {
+		// TODO Auto-generated method stub
+		return mSorting;
+	}
+	public boolean getShowHiddenFiles() {
+		return mShowHiddenFiles;
+	}
+	public boolean getShowThumbnails() {
+		return mShowThumbnails;
 	}
 }
 

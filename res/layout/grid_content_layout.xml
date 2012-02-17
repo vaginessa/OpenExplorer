@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
@@ -30,14 +30,16 @@
 		android:layout_width="match_parent"
 		android:maxHeight="@dimen/grid_icon_size"
 		android:baselineAlignBottom="true"
-		android:scaleType="fitCenter"
+		android:scaleType="centerCrop"
 		/>
 	<TextView
 		android:id="@+id/content_text"
-		android:gravity="top|center_horizontal"
-		style="@style/Mid"
+		android:gravity="bottom|center_horizontal"
+		style="@style/Small"
+		android:layout_width="match_parent"
 		android:layout_marginLeft="5dp"
 		android:layout_marginRight="5dp"
-		android:ellipsize="none"
-		android:lines="2" />
-</LinearLayout>
+		android:layout_below="@+id/content_icon"
+		android:ellipsize="end"
+		/>
+</RelativeLayout>

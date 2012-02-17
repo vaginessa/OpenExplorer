@@ -117,26 +117,6 @@ public class FileManager {
 	}
 
 	
-	/**
-	 * This will determine if hidden files and folders will be visible to the
-	 * user.
-	 * @param choice	true if user is veiwing hidden files, false otherwise
-	 */
-	public void setShowHiddenFiles(boolean choice) {
-		Logger.LogInfo("Show hidden = " + choice);
-		mShowHiddenFiles = choice;
-	}
-	
-	public boolean getShowHiddenFiles() { return mShowHiddenFiles; }
-	
-	
-	public void setSorting(SortType type)
-	{
-		mSorting = type;
-	}
-	
-	public SortType getSorting() { return mSorting; }
-	
 	
 	/**
 	 * 

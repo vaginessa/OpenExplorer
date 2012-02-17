@@ -5,11 +5,17 @@
        android:id="@+id/content_pager_frame"
        android:orientation="vertical"
        >
-	<com.viewpagerindicator.TitlePageIndicator
-		android:id="@+id/content_pager_indicator"
+    <FrameLayout
+        android:id="@+id/content_pager_indicator_frame"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
-		/>
+		>
+		<com.viewpagerindicator.TitlePageIndicator
+			android:id="@+id/content_pager_indicator"
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			/>
+	</FrameLayout>
     
 	<org.brandroid.openmanager.views.OpenViewPager
 	    android:id="@+id/content_pager"

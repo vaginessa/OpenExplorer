@@ -13,6 +13,7 @@ import java.net.URL;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
@@ -25,6 +26,7 @@ import android.content.Context;
 import android.inputmethodservice.InputMethodService.InputMethodImpl;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -55,21 +57,27 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 	public TextEditorFragment(OpenPath path)
 	{
 		mPath = path;
+		Bundle b = new Bundle();
+		b.putString("edit_path", path.getPath().toString());
+		setArguments(b);
 	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		if(savedInstanceState != null && savedInstanceState.containsKey("edit_path"))
+		Bundle bundle = savedInstanceState;
+		if(savedInstanceState == null && getArguments() != null)
+			bundle = getArguments();
+		if(bundle != null && bundle.containsKey("edit_path"))
 		{
-			String path = savedInstanceState.getString("edit_path");
+			String path = bundle.getString("edit_path");
 			mPath = new OpenFile(path);
 			Logger.LogDebug("load text editor (" + path + ")");
-			if(savedInstanceState.containsKey("edit_data"))
-				mData = savedInstanceState.getString("edit_data");
-			if(savedInstanceState.containsKey("edit_server"))
+			if(bundle.containsKey("edit_data"))
+				mData = bundle.getString("edit_data");
+			if(bundle.containsKey("edit_server"))
 			{
-				int serverIndex = savedInstanceState.getInt("edit_server");
+				int serverIndex = bundle.getInt("edit_server");
 				Logger.LogDebug("Loading server #" + serverIndex);
 				if(serverIndex > -1)
 				{
@@ -177,7 +185,16 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 				break;
 			case R.id.btn_cancel:
 				cancelTask();
-				getFragmentManager().popBackStack();
+				if(getExplorer().isViewPagerEnabled())
+				{
+					ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
+					ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
+					if(pager.getCurrentItem() > 0)
+						pager.setCurrentItem(pager.getCurrentItem() - 1);
+					adapter.remove(this);
+					pager.invalidate();
+				} else
+					getFragmentManager().popBackStack();
 				break;
 			case R.id.btn_toggle_keyboard:
 				//if(((InputMethodManager)getActivity()).getInputMethodList().
@@ -320,5 +337,10 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			setEnabled(true, mEditText, mSave, mCancel);
 			mData = result;
 		}
+	}
+
+	public OpenPath getPath() {
+		// TODO Auto-generated method stub
+		return mPath;
 	}
 }
