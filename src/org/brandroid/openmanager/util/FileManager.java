@@ -439,7 +439,7 @@ public class FileManager {
 
 	public static SortType parseSortType(String setting) {
 		for(SortType type : SortType.values())
-			if(type.toString().equals(setting))
+			if(type.toString().equalsIgnoreCase(setting))
 				return type;
 		return SortType.ALPHA;	
 	}

@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -104,7 +105,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private GridView mGrid = null;
 	private View mProgressBarLoading = null;
 	
-	private OpenPath mPath = null;
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private Context mContext;
@@ -191,8 +191,21 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	public int getViewMode() {
 		if(getExplorer() != null && mPath != null)
-			return getExplorer().getSetting(mPath, "view", 0);
-		else return 0;
+			return getExplorer().getSetting(mPath, "view", getGlobalViewMode());
+		else return getGlobalViewMode();
+	}
+	public int getGlobalViewMode() {
+		if(getExplorer() != null)
+		{
+			String pref = getExplorer().getSetting(mPath, "pref_view", "list");
+			if(pref == "list")
+				return OpenExplorer.VIEW_LIST;
+			if(pref == "grid")
+				return OpenExplorer.VIEW_GRID;
+			if(pref == "carousel")
+				return OpenExplorer.VIEW_CAROUSEL;
+		}
+		return OpenExplorer.VIEW_LIST;
 	}
 	
 	//@Override
@@ -229,7 +242,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mContext = getActivity().getApplicationContext();
 		
-		OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
+		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		refreshData(mBundle);
 		
 
@@ -265,7 +278,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mData2.clear();
 		
 		OpenPath path = mPath;
-		if(path == null) path = mPath;
 		if(path == null)
 		{
 			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
@@ -281,11 +293,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(path.getPath().equals("Videos"))
 				path = OpenExplorer.getVideoParent();
 		}
+		mPath = path;
 		
 		mActionModeSelected = false;
 		try {
 			mShowThumbnails = getExplorer()
-								.getSetting(mPath, "thumbs", true);
+								.getSetting(path, "thumbs", true);
 		} catch(NullPointerException npe) {
 			mShowThumbnails = true;
 		}
@@ -298,7 +311,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					&& mPath != null;
 
 		
-		if(!path.requiresThread() && path.getListLength() < 300)
+		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
 				mData = getManager().getChildren(path);
 			} catch (IOException e) {
@@ -311,6 +324,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mContentAdapter.notifyDataSetChanged();
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.VISIBLE);
+			Logger.LogVerbose("Running FileIOTask");
 			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 		}
 		
@@ -412,11 +426,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			setupGridView();
 		}
 		mViewMode = getViewMode();
-		mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", mSorting.toString()));
-		//getManager().setSorting();
-		mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", true);
-		//getManager().setShowHiddenFiles();
-		mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", true);
+		mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
+		mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hiddenFiles", true));
+		mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", getExplorer().getPreferences().getSetting("global", "pref_thumbnail", true));
+		
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
+			getExplorer().invalidateOptionsMenu();
+		
 		//Logger.LogVerbose("Check View Mode: " + mViewMode);
 		if(getViewMode() == OpenExplorer.VIEW_GRID) {
 			mLayoutID = R.layout.grid_content_layout;
@@ -950,6 +966,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(doSort)
 		{
+			Logger.LogVerbose("~Sorting by " + mSorting.toString());
 			OpenPath.Sorting = mSorting; //getManager().getSorting();
 			Arrays.sort(items);
 		}
@@ -1061,33 +1078,48 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	
 	//@Override
-	public void onHiddenFilesChanged(boolean state)
+	public void onHiddenFilesChanged(boolean toShow)
 	{
-		mShowHiddenFiles = state;
+		setShowHiddenFiles(!toShow);
 		//getManager().setShowHiddenFiles(state);
 		refreshData(null, false);
 	}
 
 	//@Override
 	public void onThumbnailChanged(boolean state) {
-		mShowThumbnails = state;
+		setShowThumbnails(state);
 		refreshData(null);
 	}
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
-		mSorting = type;
+		setSorting(type);
 		//getManager().setSorting(type);
 		refreshData(null, false);
+	}
+	public void setShowHiddenFiles(boolean hide)
+	{
+		mShowHiddenFiles = !hide;
+		getExplorer().setSetting(mPath, "hide", hide);
+	}
+	
+	public void setSorting(SortType type)
+	{
+		mSorting = type;
+		getExplorer().setSetting(mPath, "sort", type.toString());
+	}
+	
+	public void setShowThumbnails(boolean thumbs)
+	{
+		mShowThumbnails = thumbs;
+		getExplorer().setSetting(mPath, "thumbs", thumbs);
 	}
 	
 	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
 	{
-		mSorting = sort;
-		//getManager().setSorting(sort);
-		mShowThumbnails = thumbs;
-		mShowHiddenFiles = hidden;
-		//getManager().setShowHiddenFiles(hidden);
+		setSorting(sort);
+		setShowThumbnails(thumbs);
+		setShowHiddenFiles(hidden);
 		refreshData(null, false);
 	}
 
@@ -1419,9 +1451,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			super.setIcon(icon);
 			return this;
 		}
-	}
-	public OpenPath getPath() {
-		return mPath;
 	}
 	public SortType getSorting() {
 		// TODO Auto-generated method stub

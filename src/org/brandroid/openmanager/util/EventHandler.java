@@ -188,7 +188,8 @@ public class EventHandler {
 					
 					if(name.length() > 0) {
 						mFileMang.renameTarget(path, name);
-						mThreadListener.onWorkerThreadComplete(RENAME_TYPE, null);
+						if(mThreadListener != null)
+							mThreadListener.onWorkerThreadComplete(RENAME_TYPE, null);
 					} else {
 						dialog.dismiss();
 					}
@@ -347,7 +348,8 @@ public class EventHandler {
 					public void onClick(DialogInterface dialog, int which) {
 						ArrayList<String> l = new ArrayList<String>();
 						l.add(file.getPath());
-						mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
+						if(mThreadListener != null)
+							mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
 					}
 			 	})
 			.create()
@@ -751,7 +753,8 @@ public class EventHandler {
 			case DELETE_TYPE:		
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, null);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, null);
 				
 				if(result == 0)
 					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_deleted), Toast.LENGTH_SHORT).show();
@@ -765,13 +768,15 @@ public class EventHandler {
 			case SEARCH_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, mSearchResults);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, mSearchResults);
 				break;
 				
 			case COPY_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, null);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, null);
 				
 				if(result == null || result == 0)
 					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_copied), Toast.LENGTH_SHORT).show();
@@ -783,7 +788,8 @@ public class EventHandler {
 			case CUT_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, null);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, null);
 
 				if(result == null || result == 0)
 					Toast.makeText(mContext, getResourceString(mContext, R.string.s_msg_none, R.string.s_msg_moved), Toast.LENGTH_SHORT).show();
@@ -797,19 +803,22 @@ public class EventHandler {
 			case UNZIPTO_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, null);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, null);
 				break;
 				
 			case UNZIP_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, null);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, null);
 				break;
 				
 			case ZIP_TYPE:
 				if(mPDialog != null)
 					mPDialog.dismiss();
-				mThreadListener.onWorkerThreadComplete(mType, null);
+				if(mThreadListener != null)
+					mThreadListener.onWorkerThreadComplete(mType, null);
 				break;
 			}
 		}
