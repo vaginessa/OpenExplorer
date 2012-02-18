@@ -60,6 +60,21 @@
 	
 	    <PreferenceCategory android:title="@string/s_pref_advanced">
 	        <CheckBoxPreference
+	            android:key="pref_show_root"
+	            android:title="@string/s_pref_show_root"
+	            android:defaultValue="true"
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_show_internal"
+	            android:title="@string/s_pref_show_internal"
+	            android:defaultValue="true"
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_show_external"
+	            android:title="@string/s_pref_show_external"
+	            android:defaultValue="true"
+	            />
+	        <CheckBoxPreference
 	            android:key="pref_root"
 	            android:title="@string/s_menu_root"
 	            android:defaultValue="false"
