@@ -121,7 +121,7 @@ public class DialogHandler extends DialogFragment {
 		switch(mDialogType) {
 		case HOLDINGFILE_DIALOG:  	return createHoldingFileDialog();
 		case SEARCHRESULT_DIALOG: 	return createSearchResultDialog(inflater);
-		case FILEINFO_DIALOG:		return createFileInfoDialog(inflater);
+		case FILEINFO_DIALOG:		return createFileInfoDialog(inflater, mPath);
 		}
 
 		return super.onCreateView(inflater, container, savedInstanceState);
@@ -344,15 +344,17 @@ public class DialogHandler extends DialogFragment {
 		return v;
 	}
 	
-	private View createFileInfoDialog(LayoutInflater inflater) {
+	public static View createFileInfoDialog(LayoutInflater inflater, OpenPath mPath) {
 		View v = inflater.inflate(R.layout.info_layout, null);
 		v.setBackgroundColor(0xcc000000);
+		/*
 		v.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
 				getDialog().hide();
 				return false;
 			}
 		});
+		*/
 		
 		try {
 			populateFileInfoViews(v, mPath);
@@ -381,7 +383,7 @@ public class DialogHandler extends DialogFragment {
 		return ssize;
 	}
 	
-	private void populateFileInfoViews(View v, OpenPath file) throws IOException {
+	public static void populateFileInfoViews(View v, OpenPath file) throws IOException {
 			
 		String apath = file.getPath();
 		Date date = new Date(file.lastModified());
@@ -412,11 +414,11 @@ public class DialogHandler extends DialogFragment {
 			((ImageView)v.findViewById(R.id.info_icon)).setImageDrawable(getFileIcon(file, false));
 	}
 	
-	private Drawable getFileIcon(OpenPath file, boolean largeSize) {
+	public static Drawable getFileIcon(OpenPath file, boolean largeSize) {
 		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96).get());
 	}
 	
-	private class CountAllFilesTask extends AsyncTask<OpenFile, Integer, String[]>
+	public static class CountAllFilesTask extends AsyncTask<OpenFile, Integer, String[]>
 	{
 		private TextView mTextFiles, mTextDirs, mTextSize;
 		private int firstDirs = 0, firstFiles = 0;

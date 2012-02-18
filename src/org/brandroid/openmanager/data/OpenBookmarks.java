@@ -8,6 +8,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
@@ -283,7 +284,18 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			if(((OpenCursor)path).length() == 0)
 				return false;
 		try {
-			if(getSetting("hide_" + path.getAbsolutePath(), false))
+			if(path.getPath().equals("/"))
+			{
+				if(!getExplorer().getPreferences().getSetting("global", "pref_show_root", !getSetting("hide_" + path.getAbsolutePath(), false)))
+					return false;
+			} else if(OpenFile.getInternalMemoryDrive().equals(path))
+			{
+				if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", !getSetting("hide_" + path.getAbsolutePath(), false)))
+					return false;
+			} else if(OpenFile.getExternalMemoryDrive(true).equals(path)) {
+				if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", !getSetting("hide_" + path.getAbsolutePath(), false)))
+					return false;
+			} else if(getSetting("hide_" + path.getAbsolutePath(), false))
 				return false;
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
@@ -345,7 +357,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 
 	public boolean onItemLongClick(AdapterView<?> list, View v, int pos, long id) {
-		Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.toString());
+		Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.getTag() + "!)");
 		return onLongClick(v);
 	}
 	
@@ -420,7 +432,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		}
 		final AlertDialog dialog = new AlertDialog.Builder(mContext)
 			.setView(v)
-			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : mContext.getResources().getDrawable(R.drawable.sm_ftp))
+			.setIcon(mHolder != null && mHolder.getIcon() != null ? mHolder.getIcon() : mContext.getResources().getDrawable(R.drawable.sm_ftp))
 			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
@@ -474,7 +486,14 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		} else
 			builder.setNeutralButton(mContext.getString(R.string.s_remove), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					setSetting("hide_" + mPath.getAbsolutePath(), true);
+					if(mPath.getPath().equals("/"))
+						getExplorer().getPreferences().setSetting("global", "pref_show_root", false);
+					else if(mPath.equals(OpenFile.getInternalMemoryDrive()))
+						getExplorer().getPreferences().setSetting("global", "pref_show_internal", false);
+					else if(mPath.equals(OpenFile.getExternalMemoryDrive(true)))
+						getExplorer().getPreferences().setSetting("global", "pref_show_external", false);
+					else
+						setSetting("hide_" + mPath.getAbsolutePath(), true);
 					if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
 						mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
 					if(Build.VERSION.SDK_INT >= 12)
@@ -489,7 +508,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		
 		builder
 			.setView(v)
-			.setIcon(mHolder != null ? mHolder.getIconView().getDrawable() : null)
+			.setIcon(mHolder != null ? mHolder.getIcon() : null)
 			.setNegativeButton(mContext.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
@@ -597,15 +616,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 		public View getChildView(int group, int pos,
 				boolean isLastChild, View convertView, ViewGroup parent) {
-			View ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null); //convertView;
+			View ret = convertView;
 			OpenPath path = getChild(group, pos);
 			BookmarkHolder mHolder = null;
 			if(ret == null)
 			{
-				mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
-				ret.setTag(mHolder);
-			} else mHolder = (BookmarkHolder)ret.getTag();
-			
+				ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null); //convertView;
+			}
+			mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
+			ret.setTag(mHolder);
+		
 			TextView mCountText = (TextView)ret.findViewById(R.id.content_count);
 			if(mCountText != null)
 			{
