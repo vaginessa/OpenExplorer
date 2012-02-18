@@ -8,37 +8,41 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import com.viewpagerindicator.TitleProvider;
 
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
-public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements TitleProvider {
+public class ArrayPagerAdapter extends FragmentStatePagerAdapter
+		implements TitleProvider {
 	private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
 
 	public ArrayPagerAdapter(FragmentManager fm) {
 		super(fm);
 	}
-	
+
 	@Override
 	public Fragment getItem(int pos) {
 		if(pos < getCount())
 			return mExtraFrags.get(pos);
 		else return null;
 	}
-	
+
 	public Fragment getLastItem() {
 		return mExtraFrags.get(getCount() - 1);
 	}
-	
+
 	@Override
 	public int getCount() {
 		return mExtraFrags.size();
 	}
-	
+
 	@Override
 	public CharSequence getPageTitle(int position) {
 		Fragment f = getItem(position);
@@ -56,66 +60,69 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 		else return path.getName();
 	}
 	
-	public boolean checkForContentFragmentWithPath(OpenPath path)
-	{
-		for(Fragment f : mExtraFrags)
-			if(f instanceof ContentFragment && ((ContentFragment)f).getPath().equals(path))
+	public boolean checkForContentFragmentWithPath(OpenPath path) {
+		for (Fragment f : mExtraFrags)
+			if (f instanceof ContentFragment
+					&& ((ContentFragment) f).getPath().equals(path))
 				return true;
 		return false;
 	}
-	
-	public boolean add(Fragment frag)
-	{
-		if(frag == null) return false;
-		if(mExtraFrags.contains(frag)) return false;
-		if(frag instanceof ContentFragment && checkForContentFragmentWithPath(((ContentFragment)frag).getPath()))
+
+	public boolean add(Fragment frag) {
+		if (frag == null)
+			return false;
+		if (mExtraFrags.contains(frag))
+			return false;
+		if (frag instanceof ContentFragment
+				&& checkForContentFragmentWithPath(((ContentFragment) frag)
+						.getPath()))
 			return false;
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
 		boolean ret = mExtraFrags.add(frag);
 		notifyDataSetChanged();
 		return ret;
 	}
-	public void add(int index, Fragment frag)
-	{
-		if(frag == null) return;
-		if(mExtraFrags.contains(frag)) return;
-		if(frag instanceof ContentFragment && checkForContentFragmentWithPath(((ContentFragment)frag).getPath()))
+
+	public void add(int index, Fragment frag) {
+		if (frag == null)
+			return;
+		if (mExtraFrags.contains(frag))
+			return;
+		if (frag instanceof ContentFragment
+				&& checkForContentFragmentWithPath(((ContentFragment) frag)
+						.getPath()))
 			return;
 		mExtraFrags.add(index, frag);
 		try {
 			notifyDataSetChanged();
 		} catch(IllegalStateException eew) { }
 	}
-	
-	public boolean remove(Fragment frag)
-	{
+
+	public boolean remove(Fragment frag) {
 		boolean ret = mExtraFrags.remove(frag);
 		notifyDataSetChanged();
 		return ret;
 	}
-	
-	public <T> List<T> getItemsOfType(Type c)
-	{
+
+	public <T> List<T> getItemsOfType(Type c) {
 		List<T> ret = new ArrayList<T>();
-		for(Fragment f : mExtraFrags)
-			if(f.getClass().equals(c))
-				ret.add((T)f);
+		for (Fragment f : mExtraFrags)
+			if (f.getClass().equals(c))
+				ret.add((T) f);
 		return ret;
 	}
-	public int removeOfType(Class c)
-	{
+
+	public int removeOfType(Class c) {
 		int ret = 0;
-		for(int i = getCount() - 1; i >= 0; i--)
-		{
+		for (int i = getCount() - 1; i >= 0; i--) {
 			Fragment f = getItem(i);
-			if(f.getClass().equals(c))
+			if (f.getClass().equals(c))
 				mExtraFrags.remove(i);
 		}
 		return ret;
 	}
-	
-	public void clear()
-	{
+
+	public void clear() {
 		mExtraFrags.clear();
 	}
 
@@ -131,7 +138,8 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 
 	@Override
 	public String getTitle(int position) {
-		if(getPageTitle(position) == null) return "";
+		if (getPageTitle(position) == null)
+			return "";
 		return getPageTitle(position).toString();
 	}
 
@@ -140,5 +148,16 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 			if(getItem(i).getClass().equals(class1))
 				return i;
 		return 0;
+	}
+
+	@Override
+	public Drawable[] getIcons(int position) {
+		Fragment f = getItem(position);
+		if(f == null) return null;
+		if (f instanceof TextEditorFragment)
+			return new Drawable[]{new BitmapDrawable(ThumbnailCreator.getFileExtIcon(
+					((TextEditorFragment) f).getPath().getExtension(), f
+							.getActivity().getApplicationContext(), false))};
+		return null;
 	}
 }
