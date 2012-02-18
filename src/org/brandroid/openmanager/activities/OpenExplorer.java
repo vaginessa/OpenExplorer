@@ -45,6 +45,7 @@ import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -100,6 +101,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.acl.LastOwnerException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -133,6 +135,7 @@ import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenChromeClient;
@@ -157,7 +160,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 public class OpenExplorer
 		extends OpenFragmentActivity
-		implements OnBackStackChangedListener, OnClipboardUpdateListener, OnPageIndicatorChangeListener
+		implements OnBackStackChangedListener, OnClipboardUpdateListener,
+			OnPageIndicatorChangeListener, OnWorkerThreadFinishedListener
 	{	
 
 	private static final int PREF_CODE =		0x6;
@@ -249,6 +253,8 @@ public class OpenExplorer
 		
 		showWarnings();
 		
+		mEvHandler.setOnWorkerThreadFinishedListener(this);
+		
 		//mMultiSelectHandler = MultiSelectHandler.getInstance(this);
 		mClipboard = new OpenClipboard(this);
 		mClipboard.setClipboardUpdateListener(this);
@@ -323,7 +329,7 @@ public class OpenExplorer
 		else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			mSinglePane = true;
 		
-		if(mFavoritesFragment == null)
+		//if(mFavoritesFragment == null)
 			mFavoritesFragment = new BookmarkFragment();
 		
 		//Logger.LogVerbose("Setting up bookmarks");
@@ -624,98 +630,47 @@ public class OpenExplorer
 	{
 		TextView tvLeft = null; // (TextView)findViewById(R.id.title_left);
 		TextView tvRight = null; //(TextView)findViewById(R.id.title_right);
-		/*if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
+		String left = "";
+		SpannableStringBuilder ssb = new SpannableStringBuilder();
+		for(int i = 0; i < page; i++)
 		{
-			OpenPath sel = ((OpenPathPagerAdapter)mViewPagerAdapter).getPath(page);
-			if(sel == null)
+			Fragment f = mViewPagerAdapter.getItem(i);
+			if(f instanceof ContentFragment)
 			{
-				if(((OpenPathPagerAdapter)mViewPagerAdapter).getItem(page) instanceof BookmarkFragment)
-					updateTitle(getString(R.string.s_bookmarks));
-				else updateTitle("");
-				if(tvLeft != null)
-					tvLeft.setVisibility(View.GONE);
-				if(tvRight != null)
-					tvRight.setVisibility(View.GONE);
-				return;
+				OpenPath p = ((ContentFragment)f).getPath();
+				left += p.getName();
+				if(p.isDirectory() && !left.endsWith("/"))
+					left += "/";
 			}
-			String title = sel.getPath();
-			if(sel instanceof OpenFile)
+		}
+		SpannableString srLeft = new SpannableString(left);
+		srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
+		ssb.append(srLeft);
+		//ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
+		Fragment curr = mViewPagerAdapter.getItem(page);
+		if(curr instanceof ContentFragment)
+		{
+			OpenPath pCurr = ((ContentFragment)curr).getPath();
+			ssb.append(pCurr.getName());
+			if(pCurr.isDirectory())
+				ssb.append("/");
+		}
+		String right = "";
+		for(int i = page + 1; i < mViewPagerAdapter.getCount(); i++)
+		{
+			Fragment f = mViewPagerAdapter.getItem(i);
+			if(f instanceof ContentFragment)
 			{
-				OpenPath full = ((OpenPathPagerAdapter)mViewPagerAdapter).getPath();
-				OpenPath par = sel.getParent();
-				if(tvLeft != null)
-				{
-					if(par == null)
-						tvLeft.setVisibility(View.GONE);
-					else {
-						tvLeft.setVisibility(View.VISIBLE);
-						tvLeft.setText(par.getPath());
-						title = title.substring(par.getPath().length());
-					}
-				}
-				if(tvRight != null)
-				{
-					if(sel.equals(full))
-						tvRight.setVisibility(View.GONE);
-					else {
-						tvRight.setVisibility(View.VISIBLE);
-						tvRight.setText(full.getPath().substring(sel.getPath().length()));
-						if(tvLeft == null || !tvLeft.isShown() || !tvLeft.getText().toString().endsWith("/"))
-							title = "/" + sel.getName();
-						else
-							title = sel.getName();
-					}
-				}
-			} else {
-				if(tvLeft != null)
-					tvLeft.setVisibility(View.GONE);
-				if(tvRight != null)
-					tvRight.setVisibility(View.GONE);
+				OpenPath p = ((ContentFragment)f).getPath();
+				right += p.getName();
+				if(p.isDirectory() && !right.endsWith("/"))
+					right += "/";
 			}
-			updateTitle(title);
-		} else if (mViewPagerAdapter instanceof ArrayPagerAdapter)
-		{*/
-			String left = "";
-			SpannableStringBuilder ssb = new SpannableStringBuilder();
-			for(int i = 0; i < page; i++)
-			{
-				Fragment f = mViewPagerAdapter.getItem(i);
-				if(f instanceof ContentFragment)
-				{
-					OpenPath p = ((ContentFragment)f).getPath();
-					if(!p.getPath().endsWith("/"))
-						left += "/";
-					left += p.getName();
-				}
-			}
-			SpannableString srLeft = new SpannableString(left);
-			srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
-			ssb.append(srLeft);
-			//ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
-			Fragment curr = mViewPagerAdapter.getItem(page);
-			if(curr instanceof ContentFragment)
-			{
-				OpenPath pCurr = ((ContentFragment)curr).getPath();
-				ssb.append((pCurr instanceof OpenFile && !pCurr.getPath().endsWith("/") ? "/" : "") +
-						pCurr.getName());
-			}
-			String right = "";
-			for(int i = page + 1; i < mViewPagerAdapter.getCount(); i++)
-			{
-				Fragment f = mViewPagerAdapter.getItem(i);
-				if(f instanceof ContentFragment)
-				{
-					OpenPath p = ((ContentFragment)f).getPath();
-					if(!p.getPath().endsWith("/"))
-						right += "/";
-					right += p.getName();
-				}
-			}
-			SpannableString srRight = new SpannableString(right);
-			srRight.setSpan(new ForegroundColorSpan(Color.GRAY), 0, right.length(), Spanned.SPAN_COMPOSING);
-			ssb.append(srRight);
-			updateTitle(ssb);
-		//}
+		}
+		SpannableString srRight = new SpannableString(right);
+		srRight.setSpan(new ForegroundColorSpan(Color.GRAY), 0, right.length(), Spanned.SPAN_COMPOSING);
+		ssb.append(srRight);
+		updateTitle(ssb);
 	}
 	
 	@Override
@@ -1258,10 +1213,12 @@ public class OpenExplorer
 	}
 	public ContentFragment getDirContentFragment(Boolean activate)
 	{
-		Logger.LogDebug("getDirContentFragment");
+		//Logger.LogDebug("getDirContentFragment");
 		Fragment ret = null;
 		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
+		if(mViewPagerAdapter != null)
+			ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
 		if(ret == null)
 			ret = fragmentManager.findFragmentById(R.id.content_frag);
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
@@ -1339,6 +1296,7 @@ public class OpenExplorer
 	{
 		Intent intent = new Intent(this, OpenExplorer.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		intent.putExtra("last", mLastPath.getPath());
 		startActivity(intent);
 	}
 	
@@ -1836,15 +1794,15 @@ public class OpenExplorer
 	}
 	
 	private void setShowThumbnails(boolean checked) {
-		setSetting(mLastPath, "thumbs", checked);
+		//setSetting(mLastPath, "thumbs", checked);
 		getDirContentFragment(true).onThumbnailChanged(checked);
 	}
 	private void setShowHiddenFiles(boolean checked) {
-		setSetting(mLastPath, "hide", checked);
+		//setSetting(mLastPath, "hide", checked);
 		getDirContentFragment(true).onHiddenFilesChanged(checked);
 	}
 	private void setSorting(SortType sort) {
-		setSetting(mLastPath, "sort", sort.toString());
+		//setSetting(mLastPath, "sort", sort.toString());
 		//getFileManager().setSorting(sort);
 		getDirContentFragment(true).onSortingChanged(sort);
 		if(!BEFORE_HONEYCOMB)
@@ -1971,20 +1929,45 @@ public class OpenExplorer
 			setSetting(mLastPath, "view", newView);
 		if(!mSinglePane)
 		{
+			if(oldView == VIEW_CAROUSEL && mViewPagerEnabled)
+			{
+				setViewVisibility(false, false, R.id.content_frag);
+				setViewVisibility(true, false, R.id.content_pager_frame);
+				changePath(mLastPath, false);
+			} else if(newView == VIEW_CAROUSEL && mViewPagerEnabled)
+			{
+				setViewVisibility(false, false, R.id.content_pager_frame);
+				setViewVisibility(true, false, R.id.content_frag);
+				changePath(mLastPath, false);
+			}
 			getDirContentFragment(true).onViewChanged(newView);
 		} else if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
 		{
+			Logger.LogDebug("Switching to carousel!");
+			if(mViewPagerEnabled)
+			{
+				setViewVisibility(false, false, R.id.content_pager_frame_stub, R.id.content_pager);
+				setViewVisibility(true, false, R.id.content_frag);
+			}
 			fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, new CarouselFragment(mLastPath))
 				.setBreadCrumbTitle(mLastPath.getAbsolutePath())
 				.commit();
 			invalidateOptionsMenu();
 		} else if (oldView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB) { // if we need to transition from carousel
-			fragmentManager.beginTransaction()
+			if(mViewPagerEnabled)
+			{
+				setViewVisibility(true, false, R.id.content_frag);
+				setViewVisibility(false, false, R.id.content_pager_frame_stub, R.id.content_pager);
+				changePath(mLastPath, false);
+			} else {
+				fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode))
 				.setBreadCrumbTitle(mLastPath.getAbsolutePath())
 				//.addToBackStack(null)
 				.commit();
+			}
+			
 			invalidateOptionsMenu();
 		} else {
 			getDirContentFragment(true).onViewChanged(newView);
@@ -2203,10 +2186,14 @@ public class OpenExplorer
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
+		boolean isNew = !mLastPath.equals(path);
+		int oldView = getSetting(mLastPath, "view", 0);
+		mLastPath = path;
 		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);
 		Fragment content = ContentFragment.getInstance(path, newView);
-		if(mViewPager != null && mViewPager.isShown())
+		if(mViewPager != null && mViewPagerEnabled &&
+				(BEFORE_HONEYCOMB || newView != VIEW_CAROUSEL))
 		{
 			//mViewPagerAdapter.add(content);
 			//mViewPagerAdapter.setPath(path);
@@ -2221,27 +2208,35 @@ public class OpenExplorer
 				*/
 			//ArrayPagerAdapter newAdapter = new ArrayPagerAdapter(fragmentManager);
 			// switch from /mnt/sdcard-ext/Pictures to /mnt/sdcard-ext/download
+			setViewVisibility(true, false, R.id.content_pager_frame);
+			setViewVisibility(false, false, R.id.content_frag);
 			mViewPagerAdapter.removeOfType(ContentFragment.class);
 			mViewPagerAdapter.add(0, content);
-			OpenPath tmp = path.getParent();
-			while(tmp != null)
+			if(!path.requiresThread())
 			{
-				mViewPagerAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
-				tmp = tmp.getParent();
+				OpenPath tmp = path.getParent();
+				while(tmp != null)
+				{
+					mViewPagerAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+					tmp = tmp.getParent();
+				}
 			}
 			//mViewPagerAdapter = newAdapter;
 			setViewPageAdapter(mViewPagerAdapter);
-			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
-			updatePagerTitle(mViewPagerAdapter.getCount() - 1);
+			int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
+			mViewPager.setCurrentItem(index, true);
+			updatePagerTitle(index);
 			if(addToStack)
 			{
 				fragmentManager
 					.beginTransaction()
 					.setBreadCrumbTitle(path.getPath())
 					.addToBackStack("path")
-					.commit();
+					.commitAllowingStateLoss();
 			}
 		} else {
+			setViewVisibility(false, false, R.id.content_pager_frame);
+			setViewVisibility(true, false, R.id.content_frag);
 			FragmentTransaction ft = fragmentManager.beginTransaction();
 			//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 			ft.setBreadCrumbTitle(path.getPath());
@@ -2287,19 +2282,18 @@ public class OpenExplorer
 			updateTitle(path.getPath());
 			changeViewMode(getSetting(path, "view", 0), false); // bug fix
 		}
-		if(content instanceof ContentFragment)
+		/*if(content instanceof ContentFragment)
 		((ContentFragment)content).setSettings(
 			SortType.DATE_DESC,
 			getSetting(path, "thumbs", true),
 			getSetting(path, "hide", true)
-			);
+			);*/
 		if(path instanceof OpenFile)
 			new PeekAtGrandKidsTask().execute((OpenFile)path);
 		//ft.replace(R.id.content_frag, content);
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
 		
-		mLastPath = path;
 	}
 	public void setLights(Boolean on)
 	{
@@ -2413,9 +2407,15 @@ public class OpenExplorer
 
 
 	public void showFileInfo(OpenPath path) {
-		DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
-		dialogInfo.setFilePath(path.getPath());
-		dialogInfo.show(fragmentManager, "info");
+		new AlertDialog.Builder(this)
+			.setView(DialogHandler.createFileInfoDialog(getLayoutInflater(), path))
+			.setTitle(path.getName())
+			.setIcon(new BitmapDrawable(path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize).get()))
+			.create()
+			.show();
+		//DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
+		//dialogInfo.setFilePath(path.getPath());
+		//dialogInfo.show(fragmentManager, "info");
 	}
 
 	public void setOnClicks(int... ids)
@@ -2564,6 +2564,13 @@ public class OpenExplorer
 			setViewVisibility(true, true, R.id.content_pager_indicator_frame);
 			setViewVisibility(false, false, R.id.title_underline);
 		}
+	}
+
+	@Override
+	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
+		ContentFragment frag = getDirContentFragment(true);
+		if(frag != null)
+			frag.onWorkerThreadComplete(type, results);
 	}
 }
 

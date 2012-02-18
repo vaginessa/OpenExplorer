@@ -66,7 +66,7 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 	public Fragment getItem(int pos) {
 		if(pos == getCount() - 1 && mPath.isTextFile())
 		{
-			Logger.LogVerbose("Getting TextEdtor Fragment.");
+			Logger.LogVerbose("Getting TextEditor Fragment.");
 			return new TextEditorFragment(mPath);
 		} else {
 			if(mFirst != null)

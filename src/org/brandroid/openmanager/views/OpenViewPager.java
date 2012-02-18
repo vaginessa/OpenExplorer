@@ -5,8 +5,12 @@ import java.util.List;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.utils.Logger;
 
 import com.viewpagerindicator.PageIndicator;
+import com.viewpagerindicator.TabPageIndicator;
+import com.viewpagerindicator.TitlePageIndicator;
+import com.viewpagerindicator.TitlePageIndicator.IndicatorStyle;
 
 import android.content.Context;
 import android.support.v4.app.Fragment;
@@ -55,8 +59,10 @@ public class OpenViewPager extends ViewPager
 	
 	@Override
 	public void setAdapter(PagerAdapter a) {
-		super.setAdapter(a);
-		setIndicator(mIndicator);
+		try {
+			super.setAdapter(a);
+			setIndicator(mIndicator);
+		} catch(Exception e) { Logger.LogError("Couldn't set ViewPager adapter.", e); }
 	}
 	
 	@Override
@@ -67,6 +73,16 @@ public class OpenViewPager extends ViewPager
 
 	public void setIndicator(PageIndicator indicator)
 	{
+
+		final float density = getResources().getDisplayMetrics().density;
+		if(indicator instanceof TitlePageIndicator)
+		{
+		} else if (indicator instanceof TabPageIndicator)
+		{
+			//((TabPageIndicator)indicator).set
+			//((TabPageIndicator)indicator).set
+		}
+		
 		mIndicator = indicator;
 		if(mIndicatorListener != null)
 			mIndicatorListener.onPageIndicatorChange();

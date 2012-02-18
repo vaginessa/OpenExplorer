@@ -25,7 +25,9 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 	
 	@Override
 	public Fragment getItem(int pos) {
-		return mExtraFrags.get(pos);
+		if(pos < getCount())
+			return mExtraFrags.get(pos);
+		else return null;
 	}
 	
 	public Fragment getLastItem() {
@@ -44,11 +46,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 		if(f instanceof ContentFragment)
 			path = ((ContentFragment)f).getPath();
 		else if(f instanceof TextEditorFragment)
-			path = ((TextEditorFragment)f).getPath();
+			return ((TextEditorFragment)f).getPath().getName();
+		
 		if(path == null)
 			return super.getPageTitle(position);
 		else if(path instanceof OpenFile && path.isDirectory())
-			return "/" + path.getName();
+			return path.getName() + "/";
+		
 		else return path.getName();
 	}
 	
@@ -78,7 +82,9 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 		if(frag instanceof ContentFragment && checkForContentFragmentWithPath(((ContentFragment)frag).getPath()))
 			return;
 		mExtraFrags.add(index, frag);
-		notifyDataSetChanged();
+		try {
+			notifyDataSetChanged();
+		} catch(IllegalStateException eew) { }
 	}
 	
 	public boolean remove(Fragment frag)
@@ -118,12 +124,21 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements Titl
 	}
 
 	public void set(int index, Fragment frag) {
-		mExtraFrags.set(index, frag);
+		if(index < getCount())
+			mExtraFrags.set(index, frag);
+		else mExtraFrags.add(frag);
 	}
 
 	@Override
 	public String getTitle(int position) {
 		if(getPageTitle(position) == null) return "";
 		return getPageTitle(position).toString();
+	}
+
+	public int getLastPositionOfType(Class class1) {
+		for(int i = getCount() - 1; i > 0; i--)
+			if(getItem(i).getClass().equals(class1))
+				return i;
+		return 0;
 	}
 }
