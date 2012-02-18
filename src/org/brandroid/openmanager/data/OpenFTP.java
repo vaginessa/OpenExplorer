@@ -40,8 +40,10 @@ public class OpenFTP extends OpenPath
 		mFile.setName(path);
 		mChildren = new ArrayList<OpenFTP>();
 		String base = path;
-		if(base.indexOf("//") > -1)
+		base = base.replace("://", ":/").replace(":/", "://");
+		if(base.indexOf("//") > -1 && base.indexOf("/", base.indexOf("//") + 2) > -1)
 			base = base.substring(base.indexOf("/", base.indexOf("//") + 2));
+		else base = "";
 		if(!base.endsWith("/"))
 			base += "/";
 		if(children != null)
@@ -81,6 +83,8 @@ public class OpenFTP extends OpenPath
 	public OpenFTP getParent() {
 		String newPath = getPath();
 		newPath = newPath.substring(0, newPath.lastIndexOf("/", newPath.length() - 1));
+		if(newPath.equals("") || newPath.equals("/"))
+			return null;
 		return new OpenFTP(newPath, null, new FTPManager(getManager(), newPath));
 		//return new OpenFile(mFile.get());
 	}

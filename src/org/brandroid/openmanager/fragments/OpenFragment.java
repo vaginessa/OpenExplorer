@@ -2,6 +2,7 @@ package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenClipboard;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
@@ -20,11 +21,14 @@ public class OpenFragment
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
+	protected OpenPath mPath;
 	
 	public String getClassName()
 	{
 		return this.getClass().getSimpleName();
 	}
+	
+	public OpenPath getPath() { return mPath; }
 	
 	public static void setAlpha(float alpha, View... views)
 	{

@@ -280,7 +280,7 @@ public class ThumbnailCreator extends Thread {
 				  ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
 			return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
 		} else if(file.isImageFile())
-			return (useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
+			return (useLarge ? R.drawable.lg_photo_50 : R.drawable.sm_photo_50);
 		else if(file.isAPKFile())
 			return (useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
 		else if(file.isVideoFile())
@@ -376,10 +376,7 @@ public class ThumbnailCreator extends Thread {
 					fails.put(mParent, 0);
 				OpenMediaStore om = (OpenMediaStore)file;
 				BitmapFactory.Options opts = new BitmapFactory.Options();
-				if(file.length() > 2000)
-					opts.inSampleSize = 8;
-				else
-					opts.inSampleSize = 1;
+				opts.inSampleSize = 1;
 				opts.inPurgeable = true;
 				opts.outHeight = mHeight;
 				//opts.outWidth = mWidth;
