@@ -238,9 +238,12 @@ public class OpenExplorer
 			USE_ACTION_BAR = true;
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
 			ActionBar ab = getActionBar();
-			if(Build.VERSION.SDK_INT >= 14)
-				ab.setHomeButtonEnabled(true);
-			ab.setDisplayUseLogoEnabled(true);
+			if(ab != null)
+			{
+				if(Build.VERSION.SDK_INT >= 14)
+					ab.setHomeButtonEnabled(true);
+				ab.setDisplayUseLogoEnabled(true);
+			} else USE_ACTION_BAR = false;
 			/*
 			ab.setCustomView(R.layout.title_bar);
 			ab.setDisplayShowCustomEnabled(true);
@@ -274,7 +277,7 @@ public class OpenExplorer
 			getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
 			getActionBar().getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
 			getActionBar().getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
-			getActionBar().getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
+			//getActionBar().getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
 			//*/
 		}
 		
@@ -310,9 +313,10 @@ public class OpenExplorer
 		
 		if(!BEFORE_HONEYCOMB)
 		{
-			setTheme(android.R.style.Theme_Holo);
-			if(USE_ACTION_BAR && findViewById(R.id.title_bar) != null)
-				findViewById(R.id.title_bar).setVisibility(View.GONE);
+			//setTheme(android.R.style.Theme_Holo);
+			setViewVisibility(false, false, R.id.title_underline);
+			//if(USE_ACTION_BAR)
+			//	setViewVisibility(false, false, R.id.title_bar, R.id.title_underline, R.id.title_underline_2);
 		} else {
 			setTheme(android.R.style.Theme_Black_NoTitleBar);
 		}
@@ -389,10 +393,10 @@ public class OpenExplorer
 		mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
 		if(mViewPagerEnabled && mViewPager != null)
 		{
-			if(findViewById(R.id.content_frag) != null)
-				findViewById(R.id.content_frag).setVisibility(View.GONE);
+			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
+			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
 			mViewPager.setOnPageIndicatorChangeListener(this);
-			FrameLayout indicator_frame = (FrameLayout)findViewById(R.id.content_pager_indicator_frame);
+			ViewGroup indicator_frame = (ViewGroup)findViewById(R.id.content_pager_indicator);
 			try {
 				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
 				indicator_frame.setAnimation(AnimationUtils.makeInAnimation(getApplicationContext(), false));
@@ -406,8 +410,11 @@ public class OpenExplorer
 			//mViewPager = new ViewPager(getApplicationContext());
 			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
 			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
-		} else
+		} else {
 			mViewPager = null; //(ViewPager)findViewById(R.id.content_pager);
+			setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
+			setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
+		}
 
 		mContentFragment = ContentFragment.getInstance(mLastPath, mViewMode);
 		
@@ -417,12 +424,12 @@ public class OpenExplorer
 			fragmentManager.addOnBackStackChangedListener(this);
 		}
 
-			if(mViewPager != null)
+			if(mViewPager != null && mViewPagerEnabled)
 			{
 				mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-				mViewPagerAdapter.add(ContentFragment.getInstance(path));
-				if(findViewById(R.id.title_underline) != null)
-					findViewById(R.id.title_underline).setVisibility(View.GONE);
+				mViewPagerAdapter.add(ContentFragment.getInstance(path, getSetting(path, "view", 0)));
+				//if(findViewById(R.id.title_underline) != null)
+				//	findViewById(R.id.title_underline).setVisibility(View.GONE);
 				/*
 				mViewPagerAdapter = new OpenPathPagerAdapter(fragmentManager);
 				if(getResources().getBoolean(R.bool.add_bookmarks_to_pager) && findViewById(R.id.list_frag) == null)
@@ -488,7 +495,7 @@ public class OpenExplorer
 			bAddToStack = false;
 		}
 		
-		if(findViewById(R.id.content_frag) != null && findViewById(R.id.content_frag).isShown())
+		if(findViewById(R.id.content_frag) != null && !mViewPagerEnabled)
 		{
 			if(bAddToStack)
 			{
@@ -505,8 +512,7 @@ public class OpenExplorer
 			}
 		} else if(mViewPager != null && mViewPagerAdapter != null)
 		{
-			if(mViewPagerAdapter instanceof ArrayPagerAdapter)
-				mViewPagerAdapter.add(mContentFragment);
+			mViewPagerAdapter.add(mContentFragment);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
 			if(bAddToStack)
 			{
@@ -1231,6 +1237,7 @@ public class OpenExplorer
 				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
 				ret = ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem();
 			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)*/
+			if(mViewPagerAdapter != null)
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
 		}
 		if(ret == null)
@@ -2224,15 +2231,20 @@ public class OpenExplorer
 			//mViewPagerAdapter = newAdapter;
 			setViewPageAdapter(mViewPagerAdapter);
 			int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
-			mViewPager.setCurrentItem(index, true);
+			if(mViewPager.getCurrentItem() != index) // crash fix
+				mViewPager.setCurrentItem(index, true);
 			updatePagerTitle(index);
 			if(addToStack)
 			{
-				fragmentManager
-					.beginTransaction()
-					.setBreadCrumbTitle(path.getPath())
-					.addToBackStack("path")
-					.commitAllowingStateLoss();
+				try {
+					fragmentManager
+						.beginTransaction()
+						.setBreadCrumbTitle(path.getPath())
+						.addToBackStack("path")
+						.commit();
+				} catch(IllegalStateException e) {
+					Logger.LogError("Couldn't add frag to stack", e);
+				}
 			}
 		} else {
 			setViewVisibility(false, false, R.id.content_pager_frame);
@@ -2556,14 +2568,17 @@ public class OpenExplorer
 	@Override
 	public void onPageIndicatorChange() {
 		Logger.LogVerbose("onPageIndicatorChange");
+		/*
 		if(mViewPagerAdapter == null || mViewPagerAdapter.getCount() < 2)
 		{
-			setViewVisibility(false, true, R.id.content_pager_indicator_frame);
-			setViewVisibility(true, false, R.id.title_underline);
+			setViewVisibility(false, true, R.id.content_pager_indicator);
+			setViewVisibility(true, false, R.id.title_text, R.id.title_path);
+			//setViewVisibility(true, false, R.id.title_underline);
 		} else {
-			setViewVisibility(true, true, R.id.content_pager_indicator_frame);
+			setViewVisibility(true, true, R.id.content_pager_indicator);
 			setViewVisibility(false, false, R.id.title_underline);
 		}
+		*/
 	}
 
 	@Override

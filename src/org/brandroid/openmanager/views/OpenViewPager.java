@@ -24,6 +24,11 @@ public class OpenViewPager extends ViewPager
 	private PageIndicator mIndicator = null;
 	private List<OnPageChangeListener> mListeners = new ArrayList<OnPageChangeListener>();
 	private OnPageIndicatorChangeListener mIndicatorListener = null;
+	
+	public interface OnPageIndicatorChangeListener
+	{
+		public void onPageIndicatorChange();
+	}
 
 	public OpenViewPager(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -72,33 +77,18 @@ public class OpenViewPager extends ViewPager
 	}
 
 	public void setIndicator(PageIndicator indicator)
-	{
-
-		final float density = getResources().getDisplayMetrics().density;
-		if(indicator instanceof TitlePageIndicator)
-		{
-		} else if (indicator instanceof TabPageIndicator)
-		{
-			//((TabPageIndicator)indicator).set
-			//((TabPageIndicator)indicator).set
-		}
-		
+	{	
 		mIndicator = indicator;
+		if(mIndicator != null)
+			if(getAdapter() != null)
+			{
+				mIndicator.setViewPager(this);
+				mIndicator.notifyDataSetChanged();
+			}
 		if(mIndicatorListener != null)
 			mIndicatorListener.onPageIndicatorChange();
-		if(mIndicator == null) return;
-		if(getAdapter() != null)
-		{
-			mIndicator.setViewPager(this);
-			mIndicator.notifyDataSetChanged();
-		}
 	}
 	
-	public interface OnPageIndicatorChangeListener
-	{
-		public void onPageIndicatorChange();
-	}
-
 	public Fragment getCurrentFragment() {
 		// TODO Auto-generated method stub
 		return ((ArrayPagerAdapter)getAdapter()).getItem(getCurrentItem());

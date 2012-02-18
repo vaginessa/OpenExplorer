@@ -118,7 +118,7 @@ public class OpenPathAdapter extends BaseAdapter
 			mNameView.setText(mName);
 
 		if(OpenExplorer.getClipboard().contains(file))
-			mNameView.setTextAppearance(mContext, R.style.Text_Highlight);
+			mNameView.setTextAppearance(mContext, R.style.Highlight);
 		else
 			mNameView.setTextAppearance(mContext,  R.style.Large);
 		

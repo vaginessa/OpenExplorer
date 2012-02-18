@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-	android:layout_height="@dimen/actionbar_compat_height"
+	android:layout_height="wrap_content"
     >
     
     <View android:background="@color/blue"
@@ -12,7 +12,7 @@
         />
     
 	<ImageButton
-	    android:src="@drawable/ic_menu_home"
+	    android:src="@drawable/ic_launcher"
 	    android:id="@+id/title_icon"
 	    android:padding="0dp"
 	    android:layout_marginLeft="5dp"
@@ -56,6 +56,15 @@
 	    android:gravity="left|center_vertical"
 	    android:text="/mnt/sdcard"
 	    />
+
+	<com.viewpagerindicator.TabPageIndicator
+		android:id="@+id/content_pager_indicator"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_toRightOf="@+id/title_icon"
+		android:layout_toLeftOf="@+id/title_paste"
+		android:layout_alignParentBottom="true"
+		/>
 	
     <RelativeLayout
         android:id="@+id/title_paste"

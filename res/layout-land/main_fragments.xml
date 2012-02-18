@@ -2,162 +2,165 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/view_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
->
-	<RelativeLayout
-	    android:id="@+id/title_bar"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent" 
-	    >
-	    
-	    
-    <View android:background="@color/blue"
-        android:layout_height="1dp"
-        android:layout_width="match_parent"
-        android:layout_below="@+id/title_text"
-        />
-		
-		<TextView
-		    android:id="@+id/title_text"
-		    style="@style/Large"
-		    android:layout_toRightOf="@+id/title_buttons"
-		    android:layout_marginLeft="2dp"
-		    android:gravity="left|center_horizontal"
-		    android:text="@string/app_title" />
-		
-		<TextView
-		    android:id="@+id/title_path"
-		    style="@style/Small"
-		    android:layout_marginTop="2dp"
-		    android:layout_marginLeft="5dp"
-		    android:layout_toRightOf="@+id/title_text"
-		    android:gravity="left|center_vertical"
-		    android:text="/mnt/sdcard"
-		    android:layout_alignBaseline="@+id/title_text"
-		    />
+    android:layout_height="match_parent" >
     
-	<RelativeLayout
-	    android:id="@+id/title_buttons"
-	    
-	    android:layout_width="@dimen/actionbar_compat_height"
-		android:layout_height="match_parent"
-	    android:background="@android:drawable/title_bar_tall"
-	    >
-	    
-		<ImageButton
-		    android:src="@drawable/ic_menu_home"
-		    android:id="@+id/title_icon"
-		    android:padding="0dp"
-		    style="@style/ActionBarCompatHomeItem"
-		    android:clickable="true"
-		    android:longClickable="true"
-		    android:layout_width="@dimen/actionbar_compat_button_home_width"
-		    android:layout_height="@dimen/actionbar_compat_height"
-			/>
-		
-		<ProgressBar
-		    android:id="@+id/title_progress"
-		    style="@android:style/Widget.ProgressBar.Small"
-		    android:layout_width="fill_parent"
-		    android:layout_height="10dp"
-		    android:layout_below="@+id/title_icon"
-		    android:indeterminate="true"
-		    android:visibility="gone"
-		    android:layout_marginTop="2dp"
-		    />
-		
-	    <RelativeLayout
-	        android:id="@+id/title_paste"
-	        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/title_bar"
+        android:layout_toRightOf="@+id/title_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+	>
+
+	    <com.viewpagerindicator.TabPageIndicator
+	        android:id="@+id/content_pager_indicator"
+	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
-		    android:layout_above="@+id/title_menu"
-		    android:visibility="gone"
+	        />
+
+	    <LinearLayout
+	        android:id="@+id/title_bar_inner"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal"
 	        >
-	        <ImageView
-	            android:id="@+id/title_paste_icon"
-		        android:src="@drawable/ic_menu_paste"
-		        android:clickable="true"
-		        style="@style/ActionBarCompatHomeItem"
-			    android:layout_width="@dimen/actionbar_compat_button_width"
-			    android:layout_height="@dimen/actionbar_compat_height"
-				android:layout_alignParentTop="true"
-			    android:padding="0dp"
-	        />
 	        <TextView
-	            android:id="@+id/title_paste_text"
-	            android:layout_width="@dimen/actionbar_compat_button_width"
-	            android:layout_height="@dimen/actionbar_compat_height" 
-	            android:layout_alignBottom="@+id/title_paste_icon"
+	            android:id="@+id/title_text"
+	            style="@style/Large"
+	            android:layout_marginLeft="2dp"
+	            android:gravity="left|center_horizontal"
+	            android:text="@string/app_title" />
+	
+	        <TextView
+	            android:id="@+id/title_path"
 	            style="@style/Small"
-	            android:text="1"
-	            android:gravity="center"
-	            android:textColor="@color/black"
-	        />
-	    </RelativeLayout>
-		
-	    <ImageButton
-	        android:id="@+id/title_search"
-	        android:src="@drawable/ic_action_search"
-	        android:clickable="true"
-	        android:layout_above="@+id/title_menu"
-	        style="@style/ActionBarCompatHomeItem"
-		    android:layout_width="@dimen/actionbar_compat_button_width"
-		    android:layout_height="@dimen/actionbar_compat_height"
-		    android:padding="0dp"
-		    android:visibility="gone"
-	        />
-	    
-	    <ImageButton
-	        android:id="@+id/title_menu"
-	        android:src="@drawable/ic_menu_moreoverflow"
-	        android:clickable="true"
-	        android:layout_alignParentBottom="true"
-	        style="@style/ActionBarCompatHomeItem"
-		    android:layout_width="@dimen/actionbar_compat_button_width"
-		    android:layout_height="@dimen/actionbar_compat_height"
-	        />
-	    
-	</RelativeLayout>
-	</RelativeLayout>
-   
-	<LinearLayout
-		android:id="@+id/frag_holder"
-	    android:orientation="horizontal"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:layout_marginTop="@dimen/large_text_height"
-	    android:layout_marginLeft="@dimen/actionbar_compat_height"
-	    android:baselineAligned="false">
-	    
-	    <RelativeLayout
-	        android:layout_height="match_parent"
-	        android:layout_width="match_parent"
-	        android:layout_weight="3">
-		    <FrameLayout android:id="@+id/list_frag"
-		        android:layout_weight="3"
-		        android:layout_width="match_parent"
-		        android:layout_height="match_parent"
-	        	/>
-		    <FrameLayout
-		        android:id="@+id/main_buttons"
-		        android:layout_alignParentBottom="true"
-		        android:layout_height="wrap_content"
-		        android:layout_width="match_parent"
-		        />
-	    </RelativeLayout>
-	    		    	
-	    <FrameLayout
-	    	android:id="@+id/content_frag"
-	    	android:layout_height="match_parent"
-	    	android:layout_width="match_parent"
-	    	/>
+	            android:layout_alignBaseline="@+id/title_text"
+	            android:layout_marginLeft="5dp"
+	            android:layout_marginTop="2dp"
+	            android:layout_toRightOf="@+id/title_text"
+	            android:gravity="left|center_vertical"
+	            android:text="/mnt/sdcard" />
+	    </LinearLayout>
+
+        <View
+            android:id="@+id/title_underline_2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/blue" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/title_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        >
+
+        <View
+            android:id="@+id/title_underline"
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:layout_toRightOf="@+id/title_icon"
+            android:background="@color/blue" />
+        
+        <ImageButton
+            android:id="@+id/title_icon"
+            style="@style/ActionBarCompatHomeItem"
+            android:layout_width="@dimen/actionbar_compat_button_home_width"
+            android:layout_height="@dimen/actionbar_compat_height"
+            android:clickable="true"
+            android:longClickable="true"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:src="@drawable/icon" />
+
+        <ProgressBar
+            android:id="@+id/title_progress"
+            style="@android:style/Widget.ProgressBar.Small"
+            android:layout_width="fill_parent"
+            android:layout_height="10dp"
+            android:layout_below="@+id/title_icon"
+            android:layout_marginTop="2dp"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+        <RelativeLayout
+            android:id="@+id/title_paste"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/title_search"
+            android:visibility="gone"
+            >
+
+            <ImageView
+                android:id="@+id/title_paste_icon"
+                style="@style/ActionBarCompatHomeItem"
+                android:layout_width="@dimen/actionbar_compat_button_width"
+                android:layout_height="@dimen/actionbar_compat_height"
+                android:layout_alignParentTop="true"
+                android:clickable="true"
+                android:padding="0dp"
+                android:src="@drawable/ic_menu_paste" />
+
+            <TextView
+                android:id="@+id/title_paste_text"
+                style="@style/Small"
+                android:layout_width="@dimen/actionbar_compat_button_width"
+                android:layout_height="@dimen/actionbar_compat_height"
+                android:layout_alignBottom="@+id/title_paste_icon"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="@color/black" />
+        </RelativeLayout>
+
+        <ImageButton
+            android:id="@+id/title_search"
+            style="@style/ActionBarCompatHomeItem"
+            android:layout_width="@dimen/actionbar_compat_button_width"
+            android:layout_height="@dimen/actionbar_compat_height"
+            android:layout_above="@+id/title_menu"
+            android:clickable="true"
+            android:padding="0dp"
+            android:src="@android:drawable/ic_menu_search"
+            />
+
+        <ImageButton
+            android:id="@+id/title_menu"
+            style="@style/ActionBarCompatHomeItem"
+            android:layout_width="@dimen/actionbar_compat_button_width"
+            android:layout_height="@dimen/actionbar_compat_height"
+            android:layout_alignParentBottom="true"
+            android:clickable="true"
+            android:src="@drawable/ic_menu_moreoverflow" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/frag_holder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+		android:layout_toRightOf="@+id/title_buttons"
+		android:layout_below="@+id/title_bar"
+        android:baselineAligned="false"
+        android:orientation="horizontal" >
+
+        <FrameLayout
+            android:id="@+id/list_frag"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
 
-	    <ViewStub
-	        android:id="@+id/content_pager_frame_stub"
-	        android:layout="@layout/viewpager"
-	        android:layout_width="match_parent"
-	        android:layout_height="match_parent"
-	        />
-	</LinearLayout>
+        <FrameLayout
+            android:id="@+id/content_frag"
+            android:layout_weight="3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+
+        <ViewStub
+            android:id="@+id/content_pager_frame_stub"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:layout="@layout/viewpager" />
+    </LinearLayout>
+
 </RelativeLayout>

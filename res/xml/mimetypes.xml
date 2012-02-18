@@ -55,6 +55,8 @@
 	<type extension=".cs" mimetype="text/plain" />
 	<type extension=".csv" mimetype="text/comma-separated-values" />
 	<type extension=".xml" mimetype="text/xml" />
+	<type extension=".json" mimetype="text/javascript" />
+	<type extension=".js" mimetype="text/javascript" />
 	
 	<!-- Android specific -->
 	<type extension=".apk" mimetype="application/vnd.android.package-archive" />

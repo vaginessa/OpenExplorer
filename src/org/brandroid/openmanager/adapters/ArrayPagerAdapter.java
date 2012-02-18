@@ -74,8 +74,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		if (mExtraFrags.contains(frag))
 			return false;
 		if (frag instanceof ContentFragment
-				&& checkForContentFragmentWithPath(((ContentFragment) frag)
-						.getPath()))
+				&& checkForContentFragmentWithPath(((ContentFragment) frag).getPath()))
 			return false;
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
 		boolean ret = mExtraFrags.add(frag);
@@ -153,11 +152,11 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	@Override
 	public Drawable[] getIcons(int position) {
 		Fragment f = getItem(position);
-		if(f == null) return null;
+		if(f == null) return new Drawable[0];
 		if (f instanceof TextEditorFragment)
 			return new Drawable[]{new BitmapDrawable(ThumbnailCreator.getFileExtIcon(
 					((TextEditorFragment) f).getPath().getExtension(), f
 							.getActivity().getApplicationContext(), false))};
-		return null;
+		return new Drawable[0];
 	}
 }

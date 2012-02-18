@@ -890,7 +890,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mContentAdapter.notifyDataSetChanged();
 			} else {
 				addToMultiSelect(file);
-				((TextView)view.findViewById(R.id.content_text)).setTextAppearance(mContext, R.style.Text_Highlight);
+				((TextView)view.findViewById(R.id.content_text)).setTextAppearance(mContext, R.style.Highlight);
 			}
 			return;
 		}
@@ -1244,7 +1244,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mNameView.setText(mName);
 
 			if(getClipboard().contains(file))
-				mNameView.setTextAppearance(mContext, R.style.Text_Highlight);
+				mNameView.setTextAppearance(mContext, R.style.Highlight);
 			else
 				mNameView.setTextAppearance(mContext,  R.style.Large);
 			
