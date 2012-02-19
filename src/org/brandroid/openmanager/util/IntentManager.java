@@ -144,6 +144,9 @@ public class IntentManager
 			} catch(ActivityNotFoundException e) {
 				Logger.LogWarning("Couldn't launch intent for " + file.getPath(), e);
 				return false;
+			} catch(SecurityException e) {
+				Logger.LogError("No permissions?!", e);
+				return false;
 			}
 			return true;
 		}

@@ -22,11 +22,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
-import android.animation.Animator;
-import android.animation.LayoutTransition;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -52,13 +49,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -69,7 +63,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -78,45 +71,35 @@ import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.LayoutAnimationController;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ExpandableListView;
-import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.acl.LastOwnerException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.adapters.AnimatorEndListener;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
-import org.brandroid.openmanager.adapters.OpenPathPagerAdapter;
 import org.brandroid.openmanager.data.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
@@ -152,8 +135,6 @@ import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.Preferences;
 import com.viewpagerindicator.PageIndicator;
-import com.viewpagerindicator.TitlePageIndicator;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
@@ -243,43 +224,25 @@ public class OpenExplorer
 				if(Build.VERSION.SDK_INT >= 14)
 					ab.setHomeButtonEnabled(true);
 				ab.setDisplayUseLogoEnabled(true);
+				ab.setCustomView(R.layout.title_bar);
+				ab.setDisplayShowCustomEnabled(true);
+				ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
+				ab.getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
+				ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
 			} else USE_ACTION_BAR = false;
-			/*
-			ab.setCustomView(R.layout.title_bar);
-			ab.setDisplayShowCustomEnabled(true);
-			ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
-			ab.getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
-			ab.getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
-			*/
 		}
-		//requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		
+		getMimeTypes();
+		setupLoggingDb();
 		
 		showWarnings();
 		
 		mEvHandler.setOnWorkerThreadFinishedListener(this);
 		
-		//mMultiSelectHandler = MultiSelectHandler.getInstance(this);
 		mClipboard = new OpenClipboard(this);
 		mClipboard.setClipboardUpdateListener(this);
 		
-		getMimeTypes();
-		setupLoggingDb();
-		
 		super.onCreate(savedInstanceState);
-		
-		if(!BEFORE_HONEYCOMB && getActionBar() == null)
-			USE_ACTION_BAR = false;
-		else if(!BEFORE_HONEYCOMB)
-		{
-			USE_ACTION_BAR = true;
-			getActionBar().setCustomView(R.layout.title_bar);
-			getActionBar().setDisplayShowCustomEnabled(true);
-			getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
-			getActionBar().getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
-			getActionBar().getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
-			//getActionBar().getCustomView().findViewById(R.id.title_underline).setVisibility(View.GONE);
-			//*/
-		}
 		
 		try {
 			Signature[] sigs = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures;
@@ -295,7 +258,6 @@ public class OpenExplorer
 		Logger.LogDebug("Refreshing cursors");
 		
 		refreshCursors();
-		
 
 		try {
 			if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
@@ -313,7 +275,6 @@ public class OpenExplorer
 		
 		if(!BEFORE_HONEYCOMB)
 		{
-			//setTheme(android.R.style.Theme_Holo);
 			setViewVisibility(false, false, R.id.title_underline);
 			//if(USE_ACTION_BAR)
 			//	setViewVisibility(false, false, R.id.title_bar, R.id.title_underline, R.id.title_underline_2);
@@ -333,10 +294,7 @@ public class OpenExplorer
 		else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			mSinglePane = true;
 		
-		//if(mFavoritesFragment == null)
-			mFavoritesFragment = new BookmarkFragment();
-		
-		//Logger.LogVerbose("Setting up bookmarks");
+		mFavoritesFragment = new BookmarkFragment();
 
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
@@ -346,12 +304,10 @@ public class OpenExplorer
 				anchor = findViewById(android.R.id.home);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
 			mBookmarksPopup.setContentView(mBookmarksList);
-			//mBookmarksPopup.setBackgroundDrawable(getResources().getDrawable(R.drawable.contextmenu_opentop));
 			mBookmarks = new OpenBookmarks(this, mBookmarksList);
 			for(int i = 0; i < mBookmarksList.getCount(); i++)
 				mBookmarksList.expandGroup(i);
 		}
-		//Logger.LogVerbose("Setting up last path");
 		
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
@@ -362,7 +318,7 @@ public class OpenExplorer
 				start = savedInstanceState.getString("last");
 
 			if(start.startsWith("/"))
-				path = new OpenFile(start).setRoot();
+				path = new OpenFile(start);
 			else if(start.indexOf(":/") > -1)
 				path = new OpenFTP(start, null, new FTPManager());
 			else if(start.equals("Videos"))
@@ -372,18 +328,23 @@ public class OpenExplorer
 			else if(start.equals("Music"))
 				path = mMusicParent;
 			else if(start.equals("External"))
-				path = OpenFile.getExternalMemoryDrive(true).setRoot();
+				path = OpenFile.getExternalMemoryDrive(false);
 			else if(start.equals("Internal"))
-				path = OpenFile.getInternalMemoryDrive().setRoot();
+				path = OpenFile.getInternalMemoryDrive();
 			else
 				path = new OpenFile(start);
+			if(path == null || !path.exists())
+				path = OpenFile.getInternalMemoryDrive();
+			if(path == null || !path.exists())
+				path = new OpenFile("/");
 		}
-		//changePath(path, true);
 		
-		//updateTitle(path.getPath());
+		if(checkForNoMedia(path))
+			showToast(R.string.s_error_no_media, Toast.LENGTH_LONG);
+		
 		mLastPath = path;
 		
-		boolean bAddToStack = true; //fragmentManager.getBackStackEntryCount() > 0;
+		boolean bAddToStack = true;
 
 		int mViewMode = getSetting(path, "view", 0);
 
@@ -411,6 +372,7 @@ public class OpenExplorer
 			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
 			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
 		} else {
+			mViewPagerEnabled = false;
 			mViewPager = null; //(ViewPager)findViewById(R.id.content_pager);
 			setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
 			setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
@@ -424,51 +386,13 @@ public class OpenExplorer
 			fragmentManager.addOnBackStackChangedListener(this);
 		}
 
-			if(mViewPager != null && mViewPagerEnabled)
-			{
-				mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-				mViewPagerAdapter.add(ContentFragment.getInstance(path, getSetting(path, "view", 0)));
-				//if(findViewById(R.id.title_underline) != null)
-				//	findViewById(R.id.title_underline).setVisibility(View.GONE);
-				/*
-				mViewPagerAdapter = new OpenPathPagerAdapter(fragmentManager);
-				if(getResources().getBoolean(R.bool.add_bookmarks_to_pager) && findViewById(R.id.list_frag) == null)
-					((OpenPathPagerAdapter)mViewPagerAdapter).setFirstFragment(mFavoritesFragment);
-				else
-					((OpenPathPagerAdapter)mViewPagerAdapter).setFirstFragment(null);
-				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
-				*/
-				updatePagerTitle(0);
-				setViewPageAdapter(mViewPagerAdapter);
-				
-				mViewPager.setOnPageChangeListener(new OnPageChangeListener() {
-					@Override
-					public void onPageSelected(int page) {
-						//Logger.LogVerbose("Pager change to #" + page + " - " +
-						//			mViewPagerAdapter.getPageTitle(page));
-						//updateTitle(mViewPagerAdapter.getPageTitle(page).toString());
-						updatePagerTitle(page);
-						//if(mViewPagerAdapter.getCount() == 1 && mV)
-					}
-					
-					@Override
-					public void onPageScrolled(int arg0, float arg1, int arg2) {
-						// TODO Auto-generated method stub
-						
-					}
-					
-					@Override
-					public void onPageScrollStateChanged(int arg0) {
-						// TODO Auto-generated method stub
-						
-					}
-				});
-				//mViewPagerAdapter.add(mFavoritesFragment);
-				//mViewPagerAdapter.add(mContentFragment);
-				
-
-			}
-		//}
+		if(mViewPager != null && mViewPagerEnabled)
+		{
+			Logger.LogVerbose("Setting up ViewPager");
+			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
+			mViewPagerAdapter.add(mContentFragment);
+			setViewPageAdapter(mViewPagerAdapter);
+		}
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 
@@ -481,7 +405,6 @@ public class OpenExplorer
 			fragmentManager.beginTransaction()
 				.replace(R.id.list_frag, mFavoritesFragment)
 				.commit();
-			//ft.replace(R.id.list_frag, mFavoritesFragment);
 		}
 				
 		Intent intent = getIntent();
@@ -512,7 +435,7 @@ public class OpenExplorer
 			}
 		} else if(mViewPager != null && mViewPagerAdapter != null)
 		{
-			mViewPagerAdapter.add(mContentFragment);
+			//mViewPagerAdapter.add(mContentFragment);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
 			if(bAddToStack)
 			{
@@ -520,25 +443,37 @@ public class OpenExplorer
 				ft.setBreadCrumbTitle(path.getPath());
 			}
 		}
-	
-		//ft.addToBackStack("path");
-		//ft.setBreadCrumbTitle(path.getAbsolutePath());
+
 		ft.commit();
 		
 		updateTitle(mLastPath.getPath());
 		
-		//mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		handleMediaReceiver();
-		
 
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "External"));
-		
-		/* read and display the users preferences */
-		//mSettingsListener.onSortingChanged(mPreferences.getString(SettingsActivity.PREF_SORT_KEY, "type"));
-
 	}
 	
+	private boolean checkForNoMedia(OpenPath defPath)
+	{
+		if(defPath == null) return true;
+		if(defPath instanceof OpenFile)
+		{
+			StatFs sf = new StatFs(defPath.getPath());
+			if(sf.getBlockCount() == 0)
+				return true;
+			else return false;
+		} else {
+			try {
+				return defPath.list() == null || defPath.list().length == 0;
+			} catch(IOException e)
+			{
+				Logger.LogError("Error Checking for Media.", e);
+				return true;
+			}
+		}
+	}
+
 	public void setViewVisibility(final boolean visible, final boolean allowAnimation, int... ids) {
 		for(int id : ids)
 		{
@@ -784,6 +719,8 @@ public class OpenExplorer
 						throw new Exception("No blocks");
 					showToast(getResources().getString(R.string.s_alert_new_media) + " " + getVolumeName(path) + " @ " + DialogHandler.formatSize((long)sf.getBlockSize() * (long)sf.getAvailableBlocks()));
 					refreshBookmarks();
+					if(mLastPath.getPath().equals(path))
+						goHome();
 				} catch(Throwable e)
 				{
 					Logger.LogWarning("Couldn't read " + path);
@@ -801,10 +738,6 @@ public class OpenExplorer
 				String action = intent.getAction();
 				String data = intent.getDataString();
 				final String path = data.replace("file://", "");
-				//Logger.LogInfo("Received " + intent.toString());
-				//Bundle extras = intent.getExtras();
-				//showToast(data.replace("file://", "").replace("/mnt/", "") + " " +
-				//		action.replace("android.intent.action.", "").replace("MEDIA_", ""));
 				if(action.equals(Intent.ACTION_MEDIA_MOUNTED))
 					handleRefreshMedia(path, true, 10);
 				else
@@ -2168,22 +2101,19 @@ public class OpenExplorer
 	
 	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
 	public void showToast(final String message)  {
-		Logger.LogInfo("Made toast: " + message);
 		showToast(message, Toast.LENGTH_SHORT);
 	}
 	public void showToast(final int iStringResource) { showToast(getResources().getString(iStringResource)); }
 	public void showToast(final String message, final int toastLength)  {
+		Logger.LogInfo("Made toast: " + message);
 		runOnUiThread(new Runnable() {
 			public void run() {
 				Toast.makeText(getBaseContext(), message, toastLength).show();
 			}
 		});
 	}
-
-	
-	public void killBadFragments()
-	{
-		
+	public void showToast(final int resId, final int length)  {
+		showToast(getString(resId), length);
 	}
 
 	public void changePath(OpenPath path, Boolean addToStack)

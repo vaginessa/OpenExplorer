@@ -46,8 +46,9 @@
 	
 	<string-array name="server_types">
 	    <item>FTP</item>
-	    <item>Dropbox</item>
-	    <item>Box.net</item>
+	    <item>Dropbox (Coming Soon!)</item>
+	    <item>Box.net (Comming Soon!)</item>
+	    <item>Windows/Samba (Comming Soon!)</item>
 	</string-array>
 	
 	<string-array name="bookmark_groups">
