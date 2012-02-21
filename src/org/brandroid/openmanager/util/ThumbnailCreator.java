@@ -60,9 +60,11 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 
 public class ThumbnailCreator extends Thread {
-	private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
+	//private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
+	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>(200);
 	private Handler mHandler;
 	
 	private static Context mContext;

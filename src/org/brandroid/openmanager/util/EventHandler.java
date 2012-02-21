@@ -633,6 +633,8 @@ public class EventHandler {
 					
 					success = true;
 					
+				} catch (NullPointerException e) {
+					Logger.LogError("Null pointer trying to copy file.", e);
 				} catch (FileNotFoundException e) {
 					Logger.LogError("Couldn't find file to copy.", e);
 				} catch (IOException e) {
