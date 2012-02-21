@@ -52,6 +52,8 @@ import android.support.v4.app.FragmentManager.BackStackEntry;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.content.Loader.OnLoadCompleteListener;
 import android.support.v4.view.PagerAdapter;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -939,7 +941,8 @@ public class OpenExplorer
 					c.close();
 				}
 				//*/
-			} catch(IllegalStateException e) { Logger.LogError("Couldn't query videos.", e); }
+			} catch(Exception e) { Logger.LogError("Couldn't query videos.", e); }
+			Logger.LogDebug("Done looking for videos");
 		}
 		if(!mPhotoParent.isLoaded())
 		{
@@ -954,12 +957,27 @@ public class OpenExplorer
 						MediaStore.Images.Media.DATE_ADDED + " DESC"
 						//).setCursorType(1).forceLoad();
 						);
+				/*
+				loader.registerListener(1, new OnLoadCompleteListener<Cursor>() {
+					@Override
+					public void onLoadComplete(Loader<Cursor> arg0, Cursor cursor) {
+						Logger.LogVerbose("PhotoLoader onLoadComplete");
+						if(cursor != null)
+						{
+							mPhotoParent.setCursor(cursor);
+							cursor.close();
+						} else Logger.LogWarning("Bad Photo Cursor");
+					}
+				});
+				loader.startLoading();
+				*/
 				Cursor c = loader.loadInBackground();
 				if(c != null)
 				{
 					mPhotoParent.setCursor(c);
 					c.close();
 				}
+				
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
 		if(!mMusicParent.isLoaded())
@@ -1200,14 +1218,14 @@ public class OpenExplorer
 	public void updateTitle(CharSequence cs)
 	{
 		TextView title = (TextView)findViewById(R.id.title_path);
-		if(title == null && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
+		if((title == null || !title.isShown()) && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
 			title = (TextView)getActionBar().getCustomView().findViewById(R.id.title_path);
 		//if(BEFORE_HONEYCOMB || !USE_ACTION_BAR || getActionBar() == null)
 		if(title != null && title.getVisibility() != View.GONE)
 			title.setText(cs, BufferType.SPANNABLE);
-		else if(!BEFORE_HONEYCOMB && USE_ACTION_BAR && getActionBar() != null)
+		if(!BEFORE_HONEYCOMB && USE_ACTION_BAR && getActionBar() != null && (title == null || !title.isShown()))
 			getActionBar().setSubtitle(cs);
-		else
+		//else
 		{
 			SpannableStringBuilder sb = new SpannableStringBuilder(getResources().getString(R.string.app_title));
 			sb.append(cs.equals("") ? "" : " - ");
@@ -1242,7 +1260,6 @@ public class OpenExplorer
 	
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
-		onPrepareOptionsMenu(menu);
 		if(!BEFORE_HONEYCOMB && USE_ACTION_BAR)
 		{
 			mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
@@ -1257,7 +1274,6 @@ public class OpenExplorer
 				}
 			});
 		}
-		super.onCreateOptionsMenu(menu);
 		if(!USE_PRETTY_MENUS||!BEFORE_HONEYCOMB)
 		{
 			MenuItem sort = menu.findItem(R.id.menu_sort);
@@ -1273,6 +1289,8 @@ public class OpenExplorer
 				getMenuInflater().inflate(R.menu.multiselect, paste.getSubMenu());
 			} catch(NullPointerException npe) { }
 		}
+		onPrepareOptionsMenu(menu);
+		super.onCreateOptionsMenu(menu);
 		return true;
 	}
 	
@@ -1459,6 +1477,7 @@ public class OpenExplorer
 		}
 		
 		int mViewMode = frag.getViewMode();
+		setMenuChecked(menu, true, 0, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
 		if(mViewMode == VIEW_GRID)
 			setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
 		else if(mViewMode == VIEW_LIST)
@@ -1881,6 +1900,8 @@ public class OpenExplorer
 				changePath(mLastPath, false);
 			}
 			getDirContentFragment(true).onViewChanged(newView);
+			if(!BEFORE_HONEYCOMB)
+				invalidateOptionsMenu();
 		} else if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
 		{
 			Logger.LogDebug("Switching to carousel!");
@@ -1893,6 +1914,7 @@ public class OpenExplorer
 				.replace(R.id.content_frag, new CarouselFragment(mLastPath))
 				.setBreadCrumbTitle(mLastPath.getAbsolutePath())
 				.commit();
+			updateTitle(mLastPath.getPath());
 			invalidateOptionsMenu();
 		} else if (oldView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB) { // if we need to transition from carousel
 			if(mViewPagerEnabled)
@@ -1902,10 +1924,11 @@ public class OpenExplorer
 				changePath(mLastPath, false);
 			} else {
 				fragmentManager.beginTransaction()
-				.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode))
-				.setBreadCrumbTitle(mLastPath.getAbsolutePath())
-				//.addToBackStack(null)
-				.commit();
+					.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode))
+					.setBreadCrumbTitle(mLastPath.getAbsolutePath())
+					//.addToBackStack(null)
+					.commit();
+				updateTitle(mLastPath.getPath());
 			}
 			
 			invalidateOptionsMenu();
@@ -2182,6 +2205,7 @@ public class OpenExplorer
 			FragmentTransaction ft = fragmentManager.beginTransaction();
 			//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 			ft.setBreadCrumbTitle(path.getPath());
+			updateTitle(path.getPath());
 			if(addToStack)
 			{
 				int bsCount = fragmentManager.getBackStackEntryCount();
@@ -2200,6 +2224,7 @@ public class OpenExplorer
 			{
 				content = new CarouselFragment(path);
 				ft.replace(R.id.content_frag, content);
+				updateTitle(path.getPath());
 			} else {
 				if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
 					newView = VIEW_LIST;
@@ -2216,6 +2241,12 @@ public class OpenExplorer
 						ft.replace(R.id.content_frag, content);
 				}
 			}
+			if(mViewPagerAdapter != null)
+			{
+				mViewPagerAdapter.clear();
+				mViewPagerAdapter.add(getDirContentFragment(false));
+				setViewPageAdapter(mViewPagerAdapter);
+			}
 			try {
 				ft.commit();
 			} catch(IllegalStateException e) {
@@ -2224,6 +2255,8 @@ public class OpenExplorer
 			updateTitle(path.getPath());
 			changeViewMode(getSetting(path, "view", 0), false); // bug fix
 		}
+		if(!BEFORE_HONEYCOMB)
+			invalidateOptionsMenu();
 		/*if(content instanceof ContentFragment)
 		((ContentFragment)content).setSettings(
 			SortType.DATE_DESC,

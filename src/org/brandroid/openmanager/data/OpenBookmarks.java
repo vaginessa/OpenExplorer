@@ -8,52 +8,35 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
-import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
-import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import android.animation.Animator;
-import android.animation.Animator.AnimatorListener;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextWatcher;
-import android.text.method.PasswordTransformationMethod;
-import android.text.method.SingleLineTransformationMethod;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 
@@ -66,7 +49,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	//private ImageView mLastIndicater = null;
 	private BookmarkAdapter mBookmarkAdapter;
 	private String mBookmarkString;
-	private Boolean mHasExternal = false;
+	private Boolean mHasExternal = false, mHasInternal = false;
 	private Boolean mShowTitles = true;
 	private Long mAllDataSize = 0l;
 	private SharedPreferences mPrefs;
@@ -144,11 +127,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("Download"));
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/external_sd").setRoot()))
-			mHasExternal = true;
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/mnt/sdcard-ext").setRoot()))
-			mHasExternal = true;
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/Removable/MicroSD").setRoot()))
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getInternalMemoryDrive()))
+			mHasInternal = true;
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getExternalMemoryDrive(false)))
 			mHasExternal = true;
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
 		for(String sItem : df.keySet())
@@ -616,13 +597,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 		public View getChildView(int group, int pos,
 				boolean isLastChild, View convertView, ViewGroup parent) {
-			View ret = convertView;
+			View ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null); //convertView;;
 			OpenPath path = getChild(group, pos);
 			BookmarkHolder mHolder = null;
-			if(ret == null)
-			{
-				ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null); //convertView;
-			}
 			mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 			ret.setTag(mHolder);
 		

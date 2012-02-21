@@ -217,6 +217,7 @@ public class CarouselFragment extends ContentFragment {
 		{
 			Logger.LogError("Who is making me?", new Exception("WTF!"));
 		}
+		//getExplorer().updateTitle(mParent.getPath());
 		mBlackPaint.setColor(Color.BLACK);
 		try {
 			mPathItems = mParent.list();
@@ -227,8 +228,13 @@ public class CarouselFragment extends ContentFragment {
 	}
 	
 	@Override
+	public int getViewMode() {
+		return OpenExplorer.VIEW_CAROUSEL;
+	}
+	
+	@Override
 	public void changePath(OpenPath path) {
-		// TODO Auto-generated method stub
+		super.changePath(path);
 		try {
 			mPathItems = path.list();
 		} catch (IOException e) {
