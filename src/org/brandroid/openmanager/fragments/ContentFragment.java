@@ -66,6 +66,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.content.res.Resources.NotFoundException;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.ActionMode;
@@ -267,7 +268,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	
 	public void notifyDataSetChanged() {
-		mContentAdapter.notifyDataSetChanged();
+		if(mContentAdapter != null)
+			mContentAdapter.notifyDataSetChanged();
 	}
 	public void refreshData(Bundle savedInstanceState) { refreshData(savedInstanceState, true); }
 	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
@@ -437,13 +439,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(getViewMode() == OpenExplorer.VIEW_GRID) {
 			mLayoutID = R.layout.grid_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.grid_width);
-			Logger.LogVerbose("Grid Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
+			//Logger.LogVerbose("Grid Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
 			mGrid.setColumnWidth(iColWidth);
 			//mGrid.setNumColumns(getActivity().getWindowManager().getDefaultDisplay().getWidth() / iColWidth);
 		} else {
 			mLayoutID = R.layout.list_content_layout;
 			int iColWidth = getResources().getDimensionPixelSize(R.dimen.list_width);
-			Logger.LogVerbose("List Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
+			//Logger.LogVerbose("List Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
 			mGrid.setColumnWidth(iColWidth);
 			//mGrid.setNumColumns(GridView.AUTO_FIT);
 		}
@@ -966,7 +968,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(doSort)
 		{
-			Logger.LogVerbose("~Sorting by " + mSorting.toString());
+			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
 			OpenPath.Sorting = mSorting; //getManager().getSorting();
 			Arrays.sort(items);
 		}
@@ -1267,8 +1269,20 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(file.isTextFile())
 					mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), mContext, mWidth > 72));
 				else if(!mShowThumbnails||!file.hasThumbnail())
-					mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
-				else {
+				{
+					if(file.isDirectory())
+					{
+						boolean bCountHidden = !getExplorer().getSetting(file, "hide", true);
+						try {
+							if(file.getChildCount(bCountHidden) > 0)
+								mIcon.setImageDrawable(getResources().getDrawable(mWidth > 72 ? R.drawable.lg_folder_full : R.drawable.sm_folder_full));
+							else
+								mIcon.setImageDrawable(getResources().getDrawable(mWidth > 72 ? R.drawable.lg_folder : R.drawable.sm_folder));
+						} catch (Exception e) {
+							mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
+						}
+					} else mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));					
+				} else {
 					ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
 				}
 			}
@@ -1285,7 +1299,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
-					deets = file.getChildCount() + " " + getString(R.string.s_files) + " | ";
+					boolean bCountHidden = !getExplorer().getSetting(file, "hide", true);
+					deets = file.getChildCount(bCountHidden) + " " + getString(R.string.s_files) + " | ";
 					//deets = file.list().length + " items";
 				} catch (IOException e) {
 					// TODO Auto-generated catch block

@@ -60,6 +60,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
+import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -99,6 +100,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
@@ -144,7 +146,8 @@ import org.xmlpull.v1.XmlPullParserException;
 public class OpenExplorer
 		extends OpenFragmentActivity
 		implements OnBackStackChangedListener, OnClipboardUpdateListener,
-			OnPageIndicatorChangeListener, OnWorkerThreadFinishedListener
+			OnPageIndicatorChangeListener, OnWorkerThreadFinishedListener,
+			OnPageTitleClickListener
 	{	
 
 	private static final int PREF_CODE =		0x6;
@@ -183,7 +186,7 @@ public class OpenExplorer
 			mContentFragment = null;
 	private OpenViewPager mViewPager;
 	private static ArrayPagerAdapter mViewPagerAdapter;
-	private static boolean mViewPagerEnabled = false; 
+	private static boolean mViewPagerEnabled = true; 
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
 	private BetterPopupWindow mBookmarksPopup;
@@ -226,11 +229,15 @@ public class OpenExplorer
 				if(Build.VERSION.SDK_INT >= 14)
 					ab.setHomeButtonEnabled(true);
 				ab.setDisplayUseLogoEnabled(true);
-				ab.setCustomView(R.layout.title_bar);
-				ab.setDisplayShowCustomEnabled(true);
-				ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
-				ab.getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
-				ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
+				try {
+					ab.setCustomView(R.layout.title_bar);
+					ab.setDisplayShowCustomEnabled(true);
+					ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
+					ab.getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
+					ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
+				} catch(InflateException e) {
+					Logger.LogWarning("Couldn't set up ActionBar custom view", e);
+				}
 			} else USE_ACTION_BAR = false;
 		}
 		
@@ -362,7 +369,8 @@ public class OpenExplorer
 			ViewGroup indicator_frame = (ViewGroup)findViewById(R.id.content_pager_indicator);
 			try {
 				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
-				indicator_frame.setAnimation(AnimationUtils.makeInAnimation(getApplicationContext(), false));
+				if(indicator_frame != null)
+					indicator_frame.setAnimation(AnimationUtils.makeInAnimation(getApplicationContext(), false));
 			} catch(Resources.NotFoundException e)
 			{
 				Logger.LogError("Couldn't load pager animation.", e);
@@ -392,6 +400,7 @@ public class OpenExplorer
 		{
 			Logger.LogVerbose("Setting up ViewPager");
 			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
+			mViewPagerAdapter.setOnPageTitleClickListener(this);
 			mViewPagerAdapter.add(mContentFragment);
 			setViewPageAdapter(mViewPagerAdapter);
 		}
@@ -537,6 +546,8 @@ public class OpenExplorer
 						public void onClick(DialogInterface dialog, int which) {
 							getPreferences().setSetting("global", "pref_pagers", true);
 							getPreferences().setSetting("warn", "pager", true);
+							goHome();
+							finish();
 						}
 					})
 				.setNegativeButton(android.R.string.no, null)
@@ -1334,6 +1345,8 @@ public class OpenExplorer
 			sVersionInfo += pi.versionName;
 			if(!pi.versionName.contains(""+pi.versionCode))
 				sVersionInfo += " (" + pi.versionCode + ")";
+			if(OpenExplorer.IS_DEBUG_BUILD)
+				sVersionInfo += " *debug*";
 		} catch (NameNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2139,10 +2152,13 @@ public class OpenExplorer
 		showToast(getString(resId), length);
 	}
 
-	public void changePath(OpenPath path, Boolean addToStack)
+	public void changePath(OpenPath path) { changePath(path, true, false); }
+	public void changePath(OpenPath path, Boolean addToStack) { changePath(path, addToStack, false); }
+	public void changePath(OpenPath path, Boolean addToStack, Boolean force)
 	{
 		toggleBookmarks(false);
 		if(path == null) path = mLastPath;
+		if(!force)
 		if(!addToStack && path.getPath().equals("/")) return;
 		//if(mLastPath.equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
@@ -2493,7 +2509,7 @@ public class OpenExplorer
 	
 	public void onClipboardUpdate() {
 		View pb = findViewById(R.id.title_paste);
-		if(pb != null)
+		if(pb != null && BEFORE_HONEYCOMB)
 		{
 			pb.setVisibility(View.VISIBLE);
 			if(pb.findViewById(R.id.title_paste_text) != null)
@@ -2509,7 +2525,8 @@ public class OpenExplorer
 					((LayerDrawable)((ImageView)pb.findViewById(R.id.title_paste_icon)).getDrawable())
 						.getDrawable(1).setAlpha(127);
 			}
-		} else if(!BEFORE_HONEYCOMB)
+		}
+		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		if(!BEFORE_HONEYCOMB && USE_ACTION_BAR && mActionMode != null)
 		{
@@ -2526,6 +2543,12 @@ public class OpenExplorer
 		else if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		getDirContentFragment(false).notifyDataSetChanged();
+	}
+
+	@Override
+	public boolean onPageTitleLongClick(int position, View view) {
+		/// TODO Find Siblings and show in dropdown
+		return false;
 	}
 
 	@Override

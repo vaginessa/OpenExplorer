@@ -11,6 +11,7 @@ import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import com.viewpagerindicator.TitleProvider;
+import com.viewpagerindicator.TabPageIndicator.TabView;
 
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -18,13 +19,31 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.view.Gravity;
+import android.view.TextureView;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.TextView;
 
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider {
 	private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
+	private OnPageTitleClickListener mListener = null;
 
 	public ArrayPagerAdapter(FragmentManager fm) {
 		super(fm);
+	}
+	
+	public interface OnPageTitleClickListener
+	{
+		public boolean onPageTitleLongClick(int position, View view);
+	}
+	
+	public void setOnPageTitleClickListener(OnPageTitleClickListener l)
+	{
+		mListener = l;
 	}
 
 	@Override
@@ -158,5 +177,20 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 					((TextEditorFragment) f).getPath().getExtension(), f
 							.getActivity().getApplicationContext(), false))};
 		return new Drawable[0];
+	}
+
+	@Override
+	public boolean modifyTab(TabView tab, final int position) {
+		if(mListener != null)
+		{
+			tab.setOnLongClickListener(new OnLongClickListener() {
+				@Override
+				public boolean onLongClick(View v) {
+					return mListener.onPageTitleLongClick(position, v);
+				}
+			});
+			tab.setLongClickable(true);
+		}
+		return true;
 	}
 }

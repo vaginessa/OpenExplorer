@@ -41,8 +41,16 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 	public OpenPath getChild(int index) throws IOException { return ((OpenPath[])list())[index]; }
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
-	public int getChildCount() throws IOException {
-		return list().length;
+	public int getChildCount(boolean countHidden) throws IOException {
+		if(countHidden)
+			return list().length;
+		else {
+			int ret = 0;
+			for(OpenPath kid : list())
+				if(!kid.isHidden())
+					ret++;
+			return ret;
+		}
 	}
 	public abstract Boolean isDirectory();
 	public abstract Boolean isFile();

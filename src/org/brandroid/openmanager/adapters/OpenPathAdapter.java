@@ -28,6 +28,7 @@ public class OpenPathAdapter extends BaseAdapter
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public final Context mContext;
 	public boolean mShowThumbnails = true;
+	public boolean mShowHidden = false;
 	
 	public OpenPathAdapter(OpenPath path, int view, Context context) {
 		mPath = path;
@@ -37,7 +38,7 @@ public class OpenPathAdapter extends BaseAdapter
 	@Override
 	public int getCount() {
 		try {
-			return mPath.getChildCount();
+			return mPath.getChildCount(mShowHidden);
 		} catch (IOException e) {
 			Logger.LogError("Error getting OpenPathAdapter.getCount()", e);
 			return 0;
@@ -155,7 +156,7 @@ public class OpenPathAdapter extends BaseAdapter
 		
 		if(file.isDirectory() && !file.requiresThread()) {
 			try {
-				deets = file.getChildCount() + " " + mContext.getResources().getString(R.string.s_files) + " | ";
+				deets = file.getChildCount(mShowHidden) + " " + mContext.getResources().getString(R.string.s_files) + " | ";
 				//deets = file.list().length + " items";
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
