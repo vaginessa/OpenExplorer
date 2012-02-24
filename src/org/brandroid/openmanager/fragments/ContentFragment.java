@@ -315,7 +315,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
-				mData = getManager().getChildren(path);
+				mData = path.list();
 			} catch (IOException e) {
 				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
@@ -958,14 +958,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				!allowSkips || (items.length < 500 && mShowHiddenFiles) //getManager().getShowHiddenFiles())
 				);
 	}
-	private void updateData(final OpenPath[] items, boolean doSort, boolean foldersFirst, boolean showHidden) {
+	private void updateData(final OpenPath[] items, final boolean doSort, final boolean foldersFirst, final boolean showHidden) {
 		if(!mReadyToUpdate) return;
 		if(items == null) return;
 		mReadyToUpdate = false;
 		
-		if(mProgressBarLoading != null)
-			mProgressBarLoading.setVisibility(View.GONE);
-		
+		//new Thread(new Runnable(){public void run() {
+				
 		if(doSort)
 		{
 			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
@@ -974,17 +973,24 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		
 		mData2.clear();
+		
 		int folder_index = 0;
 		if(items != null)
 		for(OpenPath f : items)
 		{
-			if(!showHidden && f.isHidden())
-				continue;
+			if(!showHidden && f.isHidden()) continue;
+			if(!f.exists()) continue;
+			if(f.isFile() && !(f.length() >= 0)) continue;
 			if(foldersFirst && f.isDirectory())
 				mData2.add(folder_index++, f);
 			else
 				mData2.add(f);
 		}
+		
+
+		if(mProgressBarLoading != null)
+			mProgressBarLoading.setVisibility(View.GONE);
+		
 		//Logger.LogDebug("mData has " + mData2.size());
 		if(mContentAdapter != null)
 			mContentAdapter.notifyDataSetChanged();
@@ -997,6 +1003,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mPathView.removeAllViews();
 		mBackPathIndex = 0;	
 		 */
+		//if(getView() != null) getView().invalidate();
+		
+		//}}).run();
 	}
 	
 	/*
@@ -1007,6 +1016,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	//@Override
 	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
 		
+		Logger.LogVerbose("Need to refresh!");
 		if(type == EventHandler.SEARCH_TYPE) {
 			if(results == null || results.size() < 1) {
 				Toast.makeText(mContext, "Sorry, zero items found", Toast.LENGTH_LONG).show();
@@ -1037,7 +1047,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						getExplorer().changePath(file, true);
 					} else {
 						getExplorer().changePath(file.getParent(), true);
-					}						
+					}
 				}
 			});
 			
@@ -1055,8 +1065,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				try {
 					updateData(mPath.list());
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Logger.LogWarning("Couldn't update data after thread completion", e);
 				}
 			else {
 				if(mProgressBarLoading == null)
@@ -1065,7 +1074,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			}
 			
 			//changePath(mPath, false);
-			//mContentAdapter.notifyDataSetChanged();
+			if(mContentAdapter != null)
+				mContentAdapter.notifyDataSetChanged();
+			
+			refreshData(null, false);
 			//changePath(getManager().peekStack(), false);
 		}
 	}

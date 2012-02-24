@@ -339,14 +339,15 @@ public class FileManager {
 	 * The full path name of the file to delete.
 	 * 
 	 * @param path name
-	 * @return
+	 * @return Number of Files deleted
 	 */
 	public int deleteTarget(OpenPath target) {
 		
-		if(target.exists() && target.isFile() && target.canWrite()) {
-			target.delete();
-			return 0;
-		}
+		int ret = 0;
+		
+		if(target.exists() && target.isFile() && target.canWrite())
+			if(target.delete())
+				ret++;
 		
 		else if(target.exists() && target.isDirectory() && target.canRead()) {
 			OpenPath[] file_list = null;
@@ -358,8 +359,8 @@ public class FileManager {
 			}
 			
 			if(file_list != null && file_list.length == 0) {
-				target.delete();
-				return 0;
+				if(target.delete())
+					ret++;
 				
 			} else if(file_list != null && file_list.length > 0) {
 				
@@ -367,16 +368,17 @@ public class FileManager {
 				{
 					OpenPath f = file_list[i];
 					if(f.isDirectory())
-						deleteTarget(f);
+						ret += deleteTarget(f);
 					else if(f.isFile())
-						f.delete();
+						if(f.delete())
+							ret++;
 				}
 			}
 			if(target.exists())
 				if(target.delete())
-					return 0;
+					ret++;
 		}	
-		return -1;
+		return ret;
 	}
 		
 	/**

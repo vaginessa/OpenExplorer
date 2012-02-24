@@ -1,7 +1,5 @@
 package org.brandroid.openmanager.data;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -9,8 +7,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
-import java.util.Comparator;
-
+import java.util.NavigableSet;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -18,13 +15,12 @@ import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.view.View;
 
-public abstract class OpenPath implements Serializable, Parcelable, Comparable<OpenPath>
+public abstract class OpenPath
+	implements Serializable, Parcelable, Comparable<OpenPath>
 {
 	public static SortType Sorting = SortType.DATE_DESC;
 	
@@ -300,6 +296,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		}
 		return null;
 	}
+	
 	
 	@Override
 	public String toString() {

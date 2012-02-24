@@ -17,7 +17,7 @@ public class OpenPathList extends ListView
 	public OpenPathList(OpenPath path, Context context)
 	{
 		super(context);
-		mPathParent = path;
+		setPath(path);
 	}
 	public OpenPathList(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -27,6 +27,7 @@ public class OpenPathList extends ListView
 	{
 		mPathParent = path;
 		mAdapter = new OpenPathAdapter(mPathParent, R.layout.list_content_layout, getContext());
+		setAdapter(mAdapter);
 		invalidateViews();
 	}
 	
