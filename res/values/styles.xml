@@ -61,8 +61,8 @@
         <item name="android:ellipsize">none</item>
         <item name="android:paddingLeft">6dip</item>
         <item name="android:paddingRight">6dip</item>
-        <item name="android:paddingTop">4dp</item>
-        <item name="android:paddingBottom">8dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
     <style name="MyTabPageIndicator.Text" parent="Widget">
         <item name="android:textAppearance">@style/TextAppearance.MyTabPageIndicator</item>
