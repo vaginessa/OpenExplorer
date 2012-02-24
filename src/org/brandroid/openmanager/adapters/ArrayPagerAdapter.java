@@ -123,7 +123,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return ret;
 	}
 
-	public <T> List<T> getItemsOfType(Type c) {
+	public <T extends Fragment> List<T> getItemsOfType(T c) {
 		List<T> ret = new ArrayList<T>();
 		for (Fragment f : mExtraFrags)
 			if (f.getClass().equals(c))

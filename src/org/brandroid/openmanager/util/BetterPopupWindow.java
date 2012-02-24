@@ -1,5 +1,7 @@
 package org.brandroid.openmanager.util;
 
+import java.lang.ref.SoftReference;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.utils.Logger;
 
@@ -34,12 +36,13 @@ import android.widget.TextView;
  */
 public class BetterPopupWindow {
 	private Context mContext;
-	protected final View anchor;
+	protected View anchor;
 	private final PopupWindow popup;
 	private View root;
 	private Drawable background = null;
 	private final WindowManager windowManager;
 	private View backgroundView;
+	private int anchorOffset = 0;
 
 
 	/**
@@ -179,8 +182,8 @@ public class BetterPopupWindow {
 	}
 
 	public void showLikePopDownMenu(int xOffset, int yOffset) {
-		this.preShow(anchor != null ? anchor.getLeft() : xOffset,
-				anchor != null ? anchor.getTop() : yOffset);
+		this.preShow((anchor != null ? anchor.getLeft() : 0) + xOffset,
+				(anchor != null ? anchor.getTop() : 0) + yOffset);
 
 		if(anchor == null)
 		{
@@ -289,6 +292,8 @@ public class BetterPopupWindow {
 					arrowOffset += 20;
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
 			}
+			
+			arrowOffset += anchorOffset;
 	
 			
 			//int rootWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
@@ -316,8 +321,10 @@ public class BetterPopupWindow {
 			//*/
 		}
 	}
+	
+	public void setAnchorOffset(int amount) { anchorOffset = amount; } 
 
-	private View getContentView()
+	public View getContentView()
 	{
 		if(anchor == null) return null;
 		View root = anchor;
@@ -474,5 +481,9 @@ public class BetterPopupWindow {
 			backgroundView.findViewById(R.id.contextmenu_title).setVisibility(View.VISIBLE);
 			((TextView)backgroundView.findViewById(android.R.id.title)).setText(stringId);
 		}
+	}
+
+	public synchronized void setAnchor(View view) {
+		anchor = view;
 	}
 }

@@ -68,6 +68,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
@@ -84,6 +85,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
@@ -198,7 +200,8 @@ public class OpenExplorer
 	private static boolean mViewPagerEnabled = true; 
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
-	private BetterPopupWindow mBookmarksPopup;
+	private OpenPathList mSiblingList = null;
+	private BetterPopupWindow mBookmarksPopup, mSiblingPopup;
 	private static OnBookMarkChangeListener mBookmarkListener;
 	
 	private static final FileManager mFileManager = new FileManager();
@@ -2574,39 +2577,39 @@ public class OpenExplorer
 					arr.add(kid);
 			OpenPath[] siblings = new OpenPath[arr.size()];
 			siblings = arr.toArray(new OpenPath[0]);
+			ArrayList<OpenPath> siblingArray = new ArrayList<OpenPath>();
+			siblingArray.addAll(arr);
+			OpenPath foster = new OpenPathArray(siblings);
 			Logger.LogVerbose("Siblings of " + path.getPath() + ": " + siblings.length);
-			ListView lv = new ListView(this);
-			//ArrayAdapter<OpenPath> adapter = new ArrayAdapter<OpenPath>(getApplicationContext(), android.R.layout.simple_list_item_1, siblings);
-			//OpenPathAdapter adapter = new OpenPathAdapter(new OpenPathArray(siblings), R.layout.list_content_layout, this);
-			OpenArrayAdapter adapter = new OpenArrayAdapter(this, R.layout.list_content_layout, siblings);
-			lv.setAdapter(adapter);
-			lv.setSelector(R.drawable.selector_blue);
-			lv.setDrawSelectorOnTop(true);
-			int pos = adapter.getPosition(path);
-			if(pos > -1)
+			Context mContext = this;
+			View anchor = new View(mContext);
+			int[] offset = new int[2];
+			titleView.getLocationInWindow(offset);
+			int offsetX = offset[0];
+			anchor = findViewById(R.id.content_pager_indicator);
+			if(anchor != null)
+				offsetX -= anchor.getLeft();
+			if(mSiblingList == null)
 			{
-				lv.setSelection(pos);
-				View v = adapter.getView(pos, null, lv);
-				if(v != null)
-				{
-					if(v.findViewById(R.id.content_text) != null)
-						((TextView)v.findViewById(R.id.content_text))
-							.setTextColor(Color.GREEN);
-					else
-						Logger.LogWarning("Couldn't find current text view");
-				} else Logger.LogWarning("Current View was null");
-			} else Logger.LogWarning("Couldn't find current path");
-			final BetterPopupWindow menu = new BetterPopupWindow(this, titleView);
-			menu.setContentView(lv);
-			lv.setOnItemClickListener(new OnItemClickListener() {
-				@Override
-				public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
-					OpenPath path = (OpenPath)((BaseAdapter)arg0.getAdapter()).getItem(pos);
-					changePath(path, true);
-					menu.dismiss();
-				}
-			});
-			menu.showLikePopDownMenu();
+				mSiblingPopup = new BetterPopupWindow(mContext, anchor);
+				mSiblingList = new OpenPathList(foster, mContext);
+				mSiblingList.setOnItemClickListener(new OnItemClickListener() {
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
+						final OpenPath path = (OpenPath)((BaseAdapter)arg0.getAdapter()).getItem(pos);
+						changePath(path, false);
+						mSiblingPopup.dismiss();
+					}
+				});
+				mSiblingPopup.setContentView(mSiblingList);
+			}
+			else {
+				mSiblingPopup.setAnchor(anchor);
+				//mSiblingPopup.setAnchor(titleView);
+				mSiblingList.setPath(foster);
+			}
+			mSiblingPopup.setAnchorOffset(offsetX);
+			mSiblingPopup.showLikePopDownMenu();
 			return true;
 		} catch (Exception e) {
 			Logger.LogError("Couldn't show sibling dropdown", e);
@@ -2632,6 +2635,12 @@ public class OpenExplorer
 
 	@Override
 	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
+		try {
+			Thread.sleep(50);
+			Logger.LogVerbose("Time to wake up!");
+		} catch (InterruptedException e) {
+			Logger.LogWarning("Woken up too early!");
+		}
 		ContentFragment frag = getDirContentFragment(true);
 		if(frag != null)
 			frag.onWorkerThreadComplete(type, results);
