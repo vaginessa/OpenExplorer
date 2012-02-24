@@ -77,6 +77,8 @@ import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ExpandableListView;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -93,8 +95,11 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
 
@@ -104,6 +109,8 @@ import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickList
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
+import org.brandroid.openmanager.adapters.OpenArrayAdapter;
+import org.brandroid.openmanager.adapters.OpenPathAdapter;
 import org.brandroid.openmanager.data.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
@@ -112,6 +119,7 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -132,6 +140,7 @@ import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.openmanager.views.OpenViewPager.OnPageIndicatorChangeListener;
 import org.brandroid.utils.Logger;
@@ -458,6 +467,8 @@ public class OpenExplorer
 		ft.commit();
 		
 		updateTitle(mLastPath.getPath());
+		if(!BEFORE_HONEYCOMB)
+			invalidateOptionsMenu();
 		
 		handleMediaReceiver();
 
@@ -827,9 +838,9 @@ public class OpenExplorer
 	}
 	public void clearHoldingFiles() {
 		mClipboard.clear();
+		updateClipboard();
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
-		updateClipboard();
 	}
 	
 	public static final OpenCursor getPhotoParent() {
@@ -2187,7 +2198,12 @@ public class OpenExplorer
 			setViewVisibility(true, false, R.id.content_pager_frame);
 			setViewVisibility(false, false, R.id.content_frag);
 			mViewPagerAdapter.removeOfType(ContentFragment.class);
-			mViewPagerAdapter.add(0, content);
+			try {
+				mViewPagerAdapter.add(0, content);
+			} catch(IllegalStateException e)
+			{
+				Logger.LogWarning("Fragment already active?", e); // crash fix
+			}
 			if(!path.requiresThread())
 			{
 				OpenPath tmp = path.getParent();
@@ -2546,8 +2562,55 @@ public class OpenExplorer
 	}
 
 	@Override
-	public boolean onPageTitleLongClick(int position, View view) {
-		/// TODO Find Siblings and show in dropdown
+	public boolean onPageTitleLongClick(int position, View titleView) {
+		try {
+			OpenFile path = (OpenFile)((ContentFragment)mViewPagerAdapter.getItem(position)).getPath();
+			OpenPath parent = path.getParent();
+			if(parent == null) parent = new OpenPathArray(new OpenPath[]{path});
+			OpenPath.Sorting = SortType.ALPHA;
+			SortedSet<OpenPath> arr = new TreeSet<OpenPath>();
+			for(OpenPath kid : parent.list())
+				if(path.equals(kid) || kid.isDirectory())
+					arr.add(kid);
+			OpenPath[] siblings = new OpenPath[arr.size()];
+			siblings = arr.toArray(new OpenPath[0]);
+			Logger.LogVerbose("Siblings of " + path.getPath() + ": " + siblings.length);
+			ListView lv = new ListView(this);
+			//ArrayAdapter<OpenPath> adapter = new ArrayAdapter<OpenPath>(getApplicationContext(), android.R.layout.simple_list_item_1, siblings);
+			//OpenPathAdapter adapter = new OpenPathAdapter(new OpenPathArray(siblings), R.layout.list_content_layout, this);
+			OpenArrayAdapter adapter = new OpenArrayAdapter(this, R.layout.list_content_layout, siblings);
+			lv.setAdapter(adapter);
+			lv.setSelector(R.drawable.selector_blue);
+			lv.setDrawSelectorOnTop(true);
+			int pos = adapter.getPosition(path);
+			if(pos > -1)
+			{
+				lv.setSelection(pos);
+				View v = adapter.getView(pos, null, lv);
+				if(v != null)
+				{
+					if(v.findViewById(R.id.content_text) != null)
+						((TextView)v.findViewById(R.id.content_text))
+							.setTextColor(Color.GREEN);
+					else
+						Logger.LogWarning("Couldn't find current text view");
+				} else Logger.LogWarning("Current View was null");
+			} else Logger.LogWarning("Couldn't find current path");
+			final BetterPopupWindow menu = new BetterPopupWindow(this, titleView);
+			menu.setContentView(lv);
+			lv.setOnItemClickListener(new OnItemClickListener() {
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
+					OpenPath path = (OpenPath)((BaseAdapter)arg0.getAdapter()).getItem(pos);
+					changePath(path, true);
+					menu.dismiss();
+				}
+			});
+			menu.showLikePopDownMenu();
+			return true;
+		} catch (Exception e) {
+			Logger.LogError("Couldn't show sibling dropdown", e);
+		}
 		return false;
 	}
 

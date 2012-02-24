@@ -5,6 +5,7 @@ import java.lang.ref.SoftReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -36,8 +37,12 @@ public class OpenArrayAdapter extends ArrayAdapter<OpenPath> {
 	private int mViewMode = OpenExplorer.VIEW_LIST;
 	
 	public void setViewMode(int mode) { mViewMode = mode; }
-	
-	public OpenArrayAdapter(Context context, int layout, ArrayList<OpenPath> data) {
+
+	public OpenArrayAdapter(Context context, int layout, List<OpenPath> data) {
+		super(context, layout, data);
+		mContext = context;
+	}
+	public OpenArrayAdapter(Context context, int layout, OpenPath[] data) {
 		super(context, layout, data);
 		mContext = context;
 	}

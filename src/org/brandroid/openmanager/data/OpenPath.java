@@ -269,6 +269,13 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 		return "*/*";
 	}
 	
+	public OpenPath[] getSiblings() throws IOException
+	{
+		OpenPath parent = getParent();
+		if(parent == null) return new OpenPath[]{this};
+		return parent.list();
+	}
+	
 	public OpenPath[] getAncestors(boolean zeroCurrent)
 	{
 		OpenPath[] ret = new OpenPath[getDepth()];
@@ -292,5 +299,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 				return mine;
 		}
 		return null;
+	}
+	
+	@Override
+	public String toString() {
+		return getName();
 	}
 }

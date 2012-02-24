@@ -342,7 +342,9 @@ public class ThumbnailCreator extends Thread {
 
 		Boolean useGeneric = false;
 		String mParent = file.getParent() != null ? file.getParent().getName() : null;
-		if(fails.containsKey(mParent) && fails.get(mParent) > 10)
+		if(fails == null)
+			fails = new Hashtable<String, Integer>();
+		if(mParent != null && (fails.containsKey(mParent) && fails.get(mParent) > 10))
 			useGeneric = true;
 		
 		if(context != null)

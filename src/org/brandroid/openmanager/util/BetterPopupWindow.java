@@ -158,9 +158,10 @@ public class BetterPopupWindow {
 		this.background = background;
 	}
 
-	public void setContentView(View root) {
+	public BetterPopupWindow setContentView(View root) {
 		this.root = root;
 		this.popup.setContentView(root);
+		return this;
 	}
 
 	public void setContentView(int layoutResID) {
