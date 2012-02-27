@@ -1114,7 +1114,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void setShowHiddenFiles(boolean hide)
 	{
 		mShowHiddenFiles = !hide;
-		getExplorer().setSetting(mPath, "hide", hide);
+		if(getExplorer() != null)
+			getExplorer().setSetting(mPath, "hide", hide);
 	}
 	
 	public void setSorting(SortType type)
