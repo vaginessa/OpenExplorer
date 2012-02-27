@@ -53,6 +53,7 @@
 		android:id="@+id/content_info"
 		android:layout_alignParentRight="true"
 		android:layout_below="@+id/content_text"
+		android:layout_toRightOf="@+id/content_icon"
 		android:gravity="right"
 		android:layout_marginLeft="4dp"
 		android:text="0 B"

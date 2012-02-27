@@ -320,9 +320,15 @@ public class OpenExplorer
 		if(mSinglePane || !USE_ACTION_BAR)
 		{
 			mBookmarksList = new ExpandableListView(getApplicationContext());
-			View anchor = findViewById(R.id.title_icon);
+			View anchor = null;
+			if(anchor == null)
+				anchor = findViewById(R.id.title_icon);
 			if(anchor == null)
 				anchor = findViewById(android.R.id.home);
+			if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
+				anchor = getActionBar().getCustomView();
+			if(anchor == null)
+				anchor = findViewById(R.id.title_bar);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
 			mBookmarksPopup.setContentView(mBookmarksList);
 			mBookmarks = new OpenBookmarks(this, mBookmarksList);
@@ -1213,7 +1219,7 @@ public class OpenExplorer
 				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
 				ret = ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem();
 			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)*/
-			if(mViewPagerAdapter != null)
+			if(mViewPagerAdapter != null && mViewPager != null)
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
 		}
 		if(ret == null)
@@ -2564,6 +2570,7 @@ public class OpenExplorer
 		getDirContentFragment(false).notifyDataSetChanged();
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	public boolean onPageTitleLongClick(int position, View titleView) {
 		try {
@@ -2573,36 +2580,50 @@ public class OpenExplorer
 			OpenPath.Sorting = SortType.ALPHA;
 			SortedSet<OpenPath> arr = new TreeSet<OpenPath>();
 			for(OpenPath kid : parent.list())
-				if(path.equals(kid) || kid.isDirectory())
+				if((path.equals(kid) || kid.isDirectory()) && !kid.isHidden())
 					arr.add(kid);
 			OpenPath[] siblings = new OpenPath[arr.size()];
 			siblings = arr.toArray(new OpenPath[0]);
 			ArrayList<OpenPath> siblingArray = new ArrayList<OpenPath>();
 			siblingArray.addAll(arr);
 			OpenPath foster = new OpenPathArray(siblings);
-			Logger.LogVerbose("Siblings of " + path.getPath() + ": " + siblings.length);
+			//Logger.LogVerbose("Siblings of " + path.getPath() + ": " + siblings.length);
 			Context mContext = this;
 			View anchor = findViewById(R.id.title_bar);
 			int[] offset = new int[2];
 			titleView.getLocationInWindow(offset);
 			int offsetX = offset[0];
-			if(!BEFORE_HONEYCOMB)
+			int arrowLeft = 0;
+			//if(!BEFORE_HONEYCOMB||BEFORE_HONEYCOMB)
 			{
 				anchor = titleView;
-				Logger.LogVerbose("Is this the width? " + offsetX);
-			} else if(findViewById(R.id.content_pager_indicator) != null)
+				offsetX = 0;
+				//Logger.LogVerbose("Is this the width? " + offsetX);
+			}
+			if(anchor == null && findViewById(R.id.content_pager_indicator) != null)
+			{
+				offsetX = titleView.getLeft();
+				arrowLeft += titleView.getWidth() / 2;
+				Logger.LogDebug("Using Pager Indicator as Sibling anchor (" + offsetX + ")");
 				anchor = findViewById(R.id.content_pager_indicator);
-			if(anchor != null)
-				offsetX -= anchor.getLeft();
+				//if(anchor != null)
+				//	offsetX -= anchor.getLeft();
+			}
 			if(mSiblingList == null)
 			{
 				mSiblingPopup = new BetterPopupWindow(mContext, anchor);
+				//mSiblingPopup.USE_INDICATOR = false;
 				mSiblingList = new OpenPathList(foster, mContext);
 				mSiblingList.setOnItemClickListener(new OnItemClickListener() {
 					@Override
 					public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
 						final OpenPath path = (OpenPath)((BaseAdapter)arg0.getAdapter()).getItem(pos);
-						changePath(path, false);
+						mSiblingPopup.setOnDismissListener(new OnDismissListener() {
+							@Override
+							public void onDismiss() {
+								changePath(path, false);
+							}
+						});
 						mSiblingPopup.dismiss();
 					}
 				});
@@ -2613,8 +2634,8 @@ public class OpenExplorer
 				//mSiblingPopup.setAnchor(titleView);
 				mSiblingList.setPath(foster);
 			}
-			mSiblingPopup.setAnchorOffset(offsetX);
-			mSiblingPopup.showLikePopDownMenu();
+			mSiblingPopup.setAnchorOffset(arrowLeft);
+			mSiblingPopup.showLikePopDownMenu(offsetX,0);
 			return true;
 		} catch (Exception e) {
 			Logger.LogError("Couldn't show sibling dropdown", e);
