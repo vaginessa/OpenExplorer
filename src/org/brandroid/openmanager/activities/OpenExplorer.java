@@ -2582,11 +2582,16 @@ public class OpenExplorer
 			OpenPath foster = new OpenPathArray(siblings);
 			Logger.LogVerbose("Siblings of " + path.getPath() + ": " + siblings.length);
 			Context mContext = this;
-			View anchor = new View(mContext);
+			View anchor = findViewById(R.id.title_bar);
 			int[] offset = new int[2];
 			titleView.getLocationInWindow(offset);
 			int offsetX = offset[0];
-			anchor = findViewById(R.id.content_pager_indicator);
+			if(!BEFORE_HONEYCOMB)
+			{
+				anchor = titleView;
+				Logger.LogVerbose("Is this the width? " + offsetX);
+			} else if(findViewById(R.id.content_pager_indicator) != null)
+				anchor = findViewById(R.id.content_pager_indicator);
 			if(anchor != null)
 				offsetX -= anchor.getLeft();
 			if(mSiblingList == null)
