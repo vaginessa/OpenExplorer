@@ -48,7 +48,13 @@ public class RootManager
 	{
 		if(!isRoot()) return null;
 		if(myProcess == null || !singleProcess)
-			myProcess = Runtime.getRuntime().exec("su -c sh");
+		{
+			myProcess = new ProcessBuilder()
+							.command("su", "-c sh")
+							.redirectErrorStream(true)
+							.start();
+			//myProcess = Runtime.getRuntime().exec("su -c sh");
+		}
 		return myProcess;
 	}
 	public boolean isRoot()
@@ -68,6 +74,7 @@ public class RootManager
 				os.writeBytes("exit\n");
 				os.flush();
 				os.close();
+				myProcess.destroy();
 			} catch(Exception e) { }
 		}
 	}
@@ -76,7 +83,7 @@ public class RootManager
 		StringBuilder ret = new StringBuilder();
 		DataInputStream is = null;
 		try {
-			Process proc = Runtime.getRuntime().exec(cmd);
+			Process proc = new ProcessBuilder(cmd).start();
 			is = new DataInputStream(proc.getInputStream());
 			
 			if(is != null)
@@ -167,7 +174,7 @@ public class RootManager
 		if(rootRequested) return rootEnabled;
 		try
 		{
-			Process suProcess = Runtime.getRuntime().exec("su");
+			Process suProcess = myProcess != null ? myProcess : Runtime.getRuntime().exec("su");
 			
 			DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
 			DataInputStream osRes = new DataInputStream(suProcess.getInputStream());
