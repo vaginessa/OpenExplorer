@@ -28,12 +28,16 @@ import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenSCP;
+import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
@@ -42,6 +46,8 @@ import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+
+import com.jcraft.jsch.UserInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -1368,25 +1374,36 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			{
 				if(cmd.Path.requiresThread())
 				{
-					OpenFTP file = null;
-					try {
-						file = (OpenFTP)FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
+					OpenPath cachePath = null; 
 					OpenPath[] list = null;
 					try {
-						if(file != null)
-							list = file.list();
-					} catch (IOException e) {
-						list = null;
+						cachePath = FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
+						if(cachePath != null)
+							list = cachePath.list();
+					} catch (IOException e2) {
+						Logger.LogError("Couldn't get Cache", e2);
 					}
+					if(cachePath == null)
+						cachePath = cmd.Path;
+					if(cachePath instanceof OpenNetworkPath && ((OpenNetworkPath)cachePath).getUserInfo() == null)
+					{
+						Uri uri = Uri.parse(cmd.Path.getPath());
+						UserInfo info = new SimpleUserInfo(uri, getExplorer());
+						((OpenNetworkPath)cachePath).setUserInfo(info);
+					}
+					if(list == null)
+						try {
+							list = cachePath.list();
+							FileManager.setOpenCache(cachePath.getPath(), cachePath);
+						} catch (IOException e) {
+							Logger.LogError("Couldn't list from cachePath", e);
+						}
 					if(list != null) {
 						for(OpenPath f : list)
 							ret.add(f);
 					} else {
-						getExplorer().showToast(R.string.s_error_ftp);
+						if(getExplorer() != null)
+							getExplorer().showToast(R.string.s_error_ftp);
 					}
 				} else {
 					try {

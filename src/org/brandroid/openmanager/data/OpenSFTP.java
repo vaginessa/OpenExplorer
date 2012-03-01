@@ -3,37 +3,69 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.UserInfo;
 
 import android.net.Uri;
 
-public class OpenSCP extends OpenNetworkPath
+public class OpenSFTP extends OpenNetworkPath
 {
 	private long filesize = 0l;
 	private boolean isConnected = false;
 	private Session mSession = null;
-	private Channel mChannel = null;
+	private ChannelSftp mChannel = null;
 	private InputStream in = null;
 	private OutputStream out = null;
 	private final String mHost, mUser, mRemotePath;
 	private UserInfo mUserInfo = null;
+	private SftpATTRS mAttrs = null;
+	public int Timeout = 30000;
 	
-	public OpenSCP(String host, String user, String path, UserInfo info)
+	public OpenSFTP(String fullPath)
+	{
+		Uri uri = Uri.parse(fullPath);
+		mHost = uri.getHost();
+		mUser = uri.getUserInfo();
+		mRemotePath = uri.getPath();
+	}
+	public OpenSFTP(Uri uri)
+	{
+		mHost = uri.getHost();
+		mUser = uri.getUserInfo();
+		mRemotePath = uri.getPath();
+	}
+	public OpenSFTP(String host, String user, String path, UserInfo info)
 	{
 		mHost = host;
 		mUser = user;
 		mRemotePath = path;
 		mUserInfo = info;
 	}
+	public OpenSFTP(OpenSFTP parent, LsEntry child)
+	{
+		mHost = parent.getHost();
+		mUser = parent.getUser();
+		mRemotePath = child.getLongname();
+		mAttrs = child.getAttrs();
+	}
 	
+	public String getHost() { return mHost; }
+	public String getUser() { return mUser; }
+	public String getRemotePath() { return mRemotePath; }
 	public UserInfo getUserInfo() { return mUserInfo; }
 	public UserInfo setUserInfo(UserInfo info)
 	{
@@ -53,7 +85,7 @@ public class OpenSCP extends OpenNetworkPath
 
 	@Override
 	public String getPath() {
-		return "scp://" + mUser + "@" + mHost + mRemotePath;
+		return "sftp://" + mUser + "@" + mHost + mRemotePath;
 	}
 
 	@Override
@@ -87,7 +119,27 @@ public class OpenSCP extends OpenNetworkPath
 
 	@Override
 	public OpenPath[] listFiles() throws IOException {
-		return new OpenPath[0];
+		List<OpenPath> kids = new ArrayList<OpenPath>(); 
+		try {
+			connect();
+			Logger.LogDebug("Listing Files!");
+			Vector vv = mChannel.ls(".");
+			for(Object o : vv)
+			{
+				if(o instanceof LsEntry)
+				{
+					LsEntry item = (LsEntry)o;
+					kids.add(new OpenSFTP(this, item));
+				}
+			}
+		} catch (SftpException e) {
+			Logger.LogError("SftpException during listFiles", e);
+			throw new IOException("SftpException during listFiles", e);
+		} catch (JSchException e) {
+			Logger.LogError("JSchException during listFiles", e);
+			throw new IOException("JSchException during listFiles", e);
+		}
+		return kids.toArray(new OpenSFTP[0]);
 	}
 
 	@Override
@@ -171,22 +223,27 @@ public class OpenSCP extends OpenNetworkPath
 	@Override
 	public void connect() throws JSchException
 	{
-		connect("scp -f " + mRemotePath);
-	}
-	public void connect(String command) throws JSchException
-	{
+		Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
+		if(mSession != null && mSession.isConnected() && mChannel != null && mChannel.isConnected())
+			return;
 		disconnect();
+		//Logger.LogDebug("Ready for new connection");
 		JSch jsch = new JSch();
 		//try {
 			mSession = jsch.getSession(mUser, mHost, 22);
 			mSession.setUserInfo(mUserInfo);
+			mSession.setTimeout(Timeout);
+			Logger.LogDebug("Connecting session...");
 			mSession.connect();
 			
+			Logger.LogDebug("Session achieved. Opening Channel...");
 			//String command = "scp -f " + mRemotePath;
-			mChannel = mSession.openChannel("exec");
-			((ChannelExec)mChannel).setCommand(command);
+			mChannel = (ChannelSftp)mSession.openChannel("sftp");
+			//((ChannelSftp)mChannel);
 			
 			mChannel.connect();
+			
+			Logger.LogDebug("Channel open! Ready for action!");
 			
 			isConnected = true;
 		//} catch (JSchException e) {
@@ -201,7 +258,7 @@ public class OpenSCP extends OpenNetworkPath
 			return in;
 
 		try {
-			connect("scp -f " + mRemotePath);
+			connect();
 			
 			out = mChannel.getOutputStream();
 			in = mChannel.getInputStream();
@@ -242,7 +299,7 @@ public class OpenSCP extends OpenNetworkPath
 			return out;
 
 		try {
-			connect("scp -p -t " + mRemotePath);
+			connect();
 			
 			out = mChannel.getOutputStream();
 			in = mChannel.getInputStream();

@@ -80,6 +80,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -122,6 +123,8 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
+import org.brandroid.openmanager.data.OpenSCP;
+import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -141,6 +144,7 @@ import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
@@ -149,6 +153,9 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.Preferences;
+
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.UserInfo;
 import com.viewpagerindicator.PageIndicator;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -244,9 +251,12 @@ public class OpenExplorer
 				try {
 					ab.setCustomView(R.layout.title_bar);
 					ab.setDisplayShowCustomEnabled(true);
-					ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
+					ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+					ViewGroup cv = (ViewGroup)ab.getCustomView();
 					ab.getCustomView().findViewById(R.id.title_menu).setVisibility(View.GONE);
-					ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
+					if(cv.findViewById(R.id.title_paste) != null)
+						cv.removeView(cv.findViewById(R.id.title_paste));
+					//ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
 				} catch(InflateException e) {
 					Logger.LogWarning("Couldn't set up ActionBar custom view", e);
 				}
@@ -307,8 +317,8 @@ public class OpenExplorer
 			ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
 			if(mTitleStub != null)
 				mTitleStub.inflate();
-			setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text);
 		}
+		setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text);
 		
 		if(findViewById(R.id.list_frag) == null)
 			mSinglePane = true;
@@ -346,7 +356,7 @@ public class OpenExplorer
 
 			if(start.startsWith("/"))
 				path = new OpenFile(start);
-			else if(start.indexOf(":/") > -1)
+			else if(start.startsWith("ftp:/"))
 				path = new OpenFTP(start, null, new FTPManager());
 			else if(start.equals("Videos"))
 				path = mVideoParent;
@@ -670,6 +680,37 @@ public class OpenExplorer
 	
 	private void setupLoggingDb()
 	{
+		JSch.setLogger(new com.jcraft.jsch.Logger() {
+			@Override
+			public void log(int level, String message) {
+				switch(level)
+				{
+					case com.jcraft.jsch.Logger.DEBUG:
+						Logger.LogDebug("JSCH - " + message);
+						break;
+					case com.jcraft.jsch.Logger.INFO:
+						Logger.LogInfo("JSCH - " + message);
+						break;
+					case com.jcraft.jsch.Logger.WARN:
+						Logger.LogWarning("JSCH - " + message);
+						break;
+					case com.jcraft.jsch.Logger.ERROR:
+						Logger.LogError("JSCH - " + message);
+						break;
+					case com.jcraft.jsch.Logger.FATAL:
+						Logger.LogError("JSCH - " + message);
+						break;
+					default:
+						Logger.LogDebug("JSCH (" + level + ") - " + message);
+						break;
+				}		
+			}
+			
+			@Override
+			public boolean isEnabled(int level) {
+				return true;
+			}
+		});
 		if(Logger.isLoggingEnabled())
 		{
 			if(getPreferences().getBoolean("global", "pref_stats", false))
@@ -678,6 +719,7 @@ public class OpenExplorer
 					Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
 			} else
 				Logger.setLoggingEnabled(false);
+			
 		}
 	}
 	
@@ -1199,7 +1241,8 @@ public class OpenExplorer
 			((BookmarkFragment)mFavoritesFragment).scanBookmarks();
 		}
 	}
-	public ContentFragment getDirContentFragment(Boolean activate)
+	public ContentFragment getDirContentFragment(Boolean activate) { return getDirContentFragment(activate, mLastPath); }
+	public ContentFragment getDirContentFragment(Boolean activate, OpenPath path)
 	{
 		//Logger.LogDebug("getDirContentFragment");
 		Fragment ret = null;
@@ -1224,7 +1267,7 @@ public class OpenExplorer
 		}
 		if(ret == null)
 		{
-			ret = ContentFragment.getInstance(mLastPath, getSetting(mLastPath, "view", 0));
+			ret = ContentFragment.getInstance(path, getSetting(path, "view", 0));
 			if(mViewPager != null)
 			{
 				//if(mViewPagerAdapter instanceof ArrayPagerAdapter)
@@ -1291,6 +1334,8 @@ public class OpenExplorer
 	
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
+		if(IS_DEBUG_BUILD)
+			setMenuVisible(menu, true, R.id.menu_debug);
 		if(!BEFORE_HONEYCOMB && USE_ACTION_BAR)
 		{
 			mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
@@ -1534,6 +1579,10 @@ public class OpenExplorer
 		
 		return onClick(item.getItemId(), item, null);
 	}
+	private void debugTest()
+	{
+	}
+
 	public boolean onClick(int id, MenuItem item, View from)
 	{
 		super.onClick(id);
@@ -1541,6 +1590,9 @@ public class OpenExplorer
 			toggleBookmarks(false);
 		switch(id)
 		{
+			case R.id.menu_debug:
+				debugTest();
+				break;
 			case R.id.title_icon:
 			case android.R.id.home:
 			
@@ -2285,7 +2337,7 @@ public class OpenExplorer
 			if(mViewPagerAdapter != null)
 			{
 				mViewPagerAdapter.clear();
-				mViewPagerAdapter.add(getDirContentFragment(false));
+				mViewPagerAdapter.add(getDirContentFragment(false, path));
 				setViewPageAdapter(mViewPagerAdapter);
 			}
 			try {

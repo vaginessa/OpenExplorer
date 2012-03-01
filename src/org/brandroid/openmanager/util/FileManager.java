@@ -40,12 +40,15 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenSCP;
+import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenStack;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.ftp.FTPFileComparer;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
@@ -406,6 +409,8 @@ public class FileManager {
 	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles) throws IOException
 	{
 		//Logger.LogDebug("Checking cache for " + path);
+		if(mOpenCache == null)
+			mOpenCache = new Hashtable<String, OpenPath>();
 		OpenPath ret = mOpenCache.get(path);
 		if(ret == null)
 		{
@@ -415,13 +420,23 @@ public class FileManager {
 				FTPFile file = new FTPFile();
 				file.setName(path.substring(path.lastIndexOf("/")+1));
 				ret = new OpenFTP(file, man);
-				if(bGetNetworkedFiles)
-					ret.listFiles();
+			} else if(path.indexOf("scp:/") > -1)
+			{
+				Uri uri = Uri.parse(path);
+				ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
+			} else if(path.indexOf("sftp:/") > -1)
+			{
+				Uri uri = Uri.parse(path);
+				ret = new OpenSFTP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
 			}
+			if(ret != null && bGetNetworkedFiles)
+				ret.listFiles();
+			if(ret != null)
+				setOpenCache(path, ret);
 		}
-		if(ret == null)
-			ret = setOpenCache(path, new OpenFile(path));
-		else setOpenCache(path, ret);
+		//if(ret == null)
+		//	ret = setOpenCache(path, new OpenFile(path));
+		//else setOpenCache(path, ret);
 		return ret;
 	}
 	
