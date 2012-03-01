@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
 	android:layout_height="wrap_content"
 	android:layout_gravity="bottom|left"
+	android:gravity="bottom|center"
     >
     
     <View android:background="@color/blue"
@@ -15,8 +16,10 @@
 	<ImageButton
 	    android:src="@drawable/ic_launcher"
 	    android:id="@+id/title_icon"
-	    android:padding="0dp"
+	    android:padding="5dp"
+	    android:scaleType="centerCrop"
 	    android:layout_marginLeft="5dp"
+	    android:layout_marginRight="5dp"
 	    style="@style/ActionBarCompatHomeItem"
 	    android:clickable="true"
 	    android:layout_width="@dimen/actionbar_compat_button_home_width"
@@ -60,11 +63,11 @@
 
 	<com.viewpagerindicator.TabPageIndicator
 		android:id="@+id/content_pager_indicator"
-		android:layout_height="wrap_content"
+		android:layout_height="match_parent"
 		android:layout_width="fill_parent"
 		android:layout_toRightOf="@+id/title_icon"
 		android:layout_toLeftOf="@+id/title_paste"
-		android:layout_alignBottom="@+id/title_underline"
+		android:layout_alignBottom="@+id/title_icon"
 		/>
 	
     <RelativeLayout
