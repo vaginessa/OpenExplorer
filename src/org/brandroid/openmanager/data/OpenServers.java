@@ -19,6 +19,7 @@ public class OpenServers
 {
 	private static final long serialVersionUID = 6279070404986957630L;
 	private ArrayList<OpenServer> mData = new ArrayList<OpenServer>(); 
+	public static OpenServers DefaultServers = null;
 
 	public OpenServers() { mData = new ArrayList<OpenServer>(); }
 	public OpenServers(JSONArray arr, String decryptPW)

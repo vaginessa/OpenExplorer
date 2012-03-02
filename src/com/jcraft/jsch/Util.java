@@ -30,7 +30,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.jcraft.jsch;
 import java.net.Socket;
 
-class Util{
+public class Util{
 
   private static final byte[] b64 =Util.str2byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
   private static byte val(byte foo){
@@ -40,7 +40,7 @@ class Util{
     }
     return 0;
   }
-  static byte[] fromBase64(byte[] buf, int start, int length){
+  public static byte[] fromBase64(byte[] buf, int start, int length){
     byte[] foo=new byte[length];
     int j=0;
     for (int i=start;i<start+length;i+=4){
@@ -55,7 +55,7 @@ class Util{
     System.arraycopy(foo, 0, bar, 0, j);
     return bar;
   }
-  static byte[] toBase64(byte[] buf, int start, int length){
+  public static byte[] toBase64(byte[] buf, int start, int length){
 
     byte[] tmp=new byte[length*2];
     int i,j,k;
@@ -98,7 +98,7 @@ class Util{
 //    return sun.misc.BASE64Encoder().encode(buf);
   }
 
-  static String[] split(String foo, String split){
+  public static String[] split(String foo, String split){
     if(foo==null)
       return null;
     byte[] buf=Util.str2byte(foo);
@@ -121,7 +121,7 @@ class Util{
     }
     return result;
   }
-  static boolean glob(byte[] pattern, byte[] name){
+  public static boolean glob(byte[] pattern, byte[] name){
     return glob0(pattern, 0, name, 0);
   }
   static private boolean glob0(byte[] pattern, int pattern_index,
@@ -249,7 +249,7 @@ class Util{
     return false;
   }
 
-  static String quote(String path){
+  public static String quote(String path){
     byte[] _path=str2byte(path);
     int count=0;
     for(int i=0;i<_path.length; i++){
@@ -270,14 +270,14 @@ class Util{
     return byte2str(_path2);
   }
 
-  static String unquote(String path){
+  public static String unquote(String path){
     byte[] foo=str2byte(path);
     byte[] bar=unquote(foo);
     if(foo.length==bar.length)
       return path;
     return byte2str(bar);
   }
-  static byte[] unquote(byte[] path){
+  public static byte[] unquote(byte[] path){
     int pathlen=path.length;
     int i=0;
     while(i<pathlen){
@@ -301,7 +301,7 @@ class Util{
   private static String[] chars={
     "0","1","2","3","4","5","6","7","8","9", "a","b","c","d","e","f"
   };
-  static String getFingerPrint(HASH hash, byte[] data){
+  public static String getFingerPrint(HASH hash, byte[] data){
     try{
       hash.init();
       hash.update(data, 0, data.length);
@@ -321,14 +321,14 @@ class Util{
       return "???";
     }
   }
-  static boolean array_equals(byte[] foo, byte bar[]){
+  public static boolean array_equals(byte[] foo, byte bar[]){
     int i=foo.length;
     if(i!=bar.length) return false;
     for(int j=0; j<i; j++){ if(foo[j]!=bar[j]) return false; }
     //try{while(true){i--; if(foo[i]!=bar[i])return false;}}catch(Exception e){}
     return true;
   }
-  static Socket createSocket(String host, int port, int timeout) throws JSchException{
+  public static Socket createSocket(String host, int port, int timeout) throws JSchException{
     Socket socket=null;
     if(timeout==0){
       try{
@@ -388,7 +388,7 @@ class Util{
     return socket;
   } 
 
-  static byte[] str2byte(String str, String encoding){
+  public static byte[] str2byte(String str, String encoding){
     if(str==null) 
       return null;
     try{ return str.getBytes(encoding); }
@@ -397,26 +397,26 @@ class Util{
     }
   }
 
-  static byte[] str2byte(String str){
+  public static byte[] str2byte(String str){
     return str2byte(str, "UTF-8");
   }
 
-  static String byte2str(byte[] str, String encoding){
+  public static String byte2str(byte[] str, String encoding){
     return byte2str(str, 0, str.length, encoding);
   }
 
-  static String byte2str(byte[] str, int s, int l, String encoding){
+  public static String byte2str(byte[] str, int s, int l, String encoding){
     try{ return new String(str, s, l, encoding); }
     catch(java.io.UnsupportedEncodingException e){
       return new String(str, s, l);
     }
   }
 
-  static String byte2str(byte[] str){
+  public static String byte2str(byte[] str){
     return byte2str(str, 0, str.length, "UTF-8");
   }
 
-  static String byte2str(byte[] str, int s, int l){
+  public static String byte2str(byte[] str, int s, int l){
     return byte2str(str, s, l, "UTF-8");
   }
 
@@ -442,14 +442,14 @@ class Util{
     return bar;
   }
   */
-  static void bzero(byte[] foo){
+  public static void bzero(byte[] foo){
     if(foo==null)
       return;
     for(int i=0; i<foo.length; i++)
       foo[i]=0;
   }
 
-  static String diffString(String str, String[] not_available){
+  public static String diffString(String str, String[] not_available){
     String[] stra=Util.split(str, ",");
     String result=null;
     loop:

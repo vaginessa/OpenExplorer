@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.Channel;
@@ -31,38 +32,50 @@ public class OpenSFTP extends OpenNetworkPath
 	private InputStream in = null;
 	private OutputStream out = null;
 	private final String mHost, mUser, mRemotePath;
-	private UserInfo mUserInfo = null;
+	private int mPort = 22;
+	private UserInfo mUserInfo = FileManager.DefaultUserInfo;
 	private SftpATTRS mAttrs = null;
-	public int Timeout = 30000;
+	public int Timeout = 20000;
+	public final JSch jsch;
 	
-	public OpenSFTP(String fullPath)
+	public OpenSFTP(JSch jsch, String fullPath)
 	{
+		this.jsch = jsch;
 		Uri uri = Uri.parse(fullPath);
 		mHost = uri.getHost();
 		mUser = uri.getUserInfo();
 		mRemotePath = uri.getPath();
+		if(uri.getPort() > 0)
+			mPort = uri.getPort();
 	}
-	public OpenSFTP(Uri uri)
+	public OpenSFTP(JSch jsch, Uri uri)
 	{
+		this.jsch = jsch;
 		mHost = uri.getHost();
 		mUser = uri.getUserInfo();
 		mRemotePath = uri.getPath();
+		if(uri.getPort() > 0)
+			mPort = uri.getPort();
 	}
-	public OpenSFTP(String host, String user, String path, UserInfo info)
+	public OpenSFTP(JSch jsch, String host, String user, String path, UserInfo info)
 	{
+		this.jsch = jsch;
 		mHost = host;
 		mUser = user;
 		mRemotePath = path;
 		mUserInfo = info;
 	}
-	public OpenSFTP(OpenSFTP parent, LsEntry child)
+	public OpenSFTP(JSch jsch, OpenSFTP parent, LsEntry child)
 	{
+		this.jsch = jsch;
 		mHost = parent.getHost();
 		mUser = parent.getUser();
-		mRemotePath = child.getLongname();
+		mRemotePath = child.getFilename();
 		mAttrs = child.getAttrs();
 	}
 	
+	public int getPort() { return mPort; }
+	public void setPort(int port) { mPort = port; }
 	public String getHost() { return mHost; }
 	public String getUser() { return mUser; }
 	public String getRemotePath() { return mRemotePath; }
@@ -82,6 +95,11 @@ public class OpenSFTP extends OpenNetworkPath
 			ret = mRemotePath;
 		return ret;
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 
 	@Override
 	public String getPath() {
@@ -95,6 +113,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public void setPath(String path) {
+		//throw new T("Can't setPath on Networked Paths");
 	}
 
 	@Override
@@ -122,14 +141,13 @@ public class OpenSFTP extends OpenNetworkPath
 		List<OpenPath> kids = new ArrayList<OpenPath>(); 
 		try {
 			connect();
-			Logger.LogDebug("Listing Files!");
 			Vector vv = mChannel.ls(".");
 			for(Object o : vv)
 			{
 				if(o instanceof LsEntry)
 				{
 					LsEntry item = (LsEntry)o;
-					kids.add(new OpenSFTP(this, item));
+					kids.add(new OpenSFTP(jsch, this, item));
 				}
 			}
 		} catch (SftpException e) {
@@ -144,7 +162,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Boolean isDirectory() {
-		return false;
+		return mAttrs != null ? mAttrs.isDir() : true;
 	}
 
 	@Override
@@ -164,22 +182,22 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Long lastModified() {
-		return null;
+		return mAttrs != null ? (long)mAttrs.getMTime() : null;
 	}
 
 	@Override
 	public Boolean canRead() {
-		return false;
+		return mAttrs != null && (mAttrs.getPermissions() & SftpATTRS.S_IRUSR) != 0;
 	}
 
 	@Override
 	public Boolean canWrite() {
-		return false;
+		return mAttrs != null && (mAttrs.getPermissions() & SftpATTRS.S_IWUSR) != 0;
 	}
 
 	@Override
 	public Boolean canExecute() {
-		return false;
+		return mAttrs != null && (mAttrs.getPermissions() & SftpATTRS.S_IXUSR) != 0;
 	}
 
 	@Override
@@ -228,7 +246,7 @@ public class OpenSFTP extends OpenNetworkPath
 			return;
 		disconnect();
 		//Logger.LogDebug("Ready for new connection");
-		JSch jsch = new JSch();
+		//JSch jsch = new JSch();
 		//try {
 			mSession = jsch.getSession(mUser, mHost, 22);
 			mSession.setUserInfo(mUserInfo);

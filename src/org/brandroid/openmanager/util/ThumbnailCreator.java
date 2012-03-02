@@ -56,6 +56,7 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
@@ -288,6 +289,8 @@ public class ThumbnailCreator extends Thread {
 		else if(file.isVideoFile())
 			return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
 		else if(file instanceof OpenFTP && file.isDirectory())
+			return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
+		else if(file instanceof OpenNetworkPath && file.isDirectory())
 			return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
 		else if(file.isTextFile())
 			return (useLarge ? R.drawable.lg_file : R.drawable.sm_file);

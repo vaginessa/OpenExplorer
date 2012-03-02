@@ -168,4 +168,7 @@
     <string name="s_pref_show_external">Show External Media</string>
     <string name="s_error_no_media">It looks like there is no media inserted. Please disable USB sharing or re-insert media.</string>
     <string name="s_prompt_password">Enter Password</string>
+    <string name="s_add">Add</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
 </resources>

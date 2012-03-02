@@ -48,6 +48,9 @@ import org.brandroid.openmanager.ftp.FTPFileComparer;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.UserInfo;
+
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -77,6 +80,8 @@ public class FileManager {
 	private ArrayList<OpenPath> mDirContent;
 	private OpenStack mPathStack;
 	private static Hashtable<String, OpenPath> mOpenCache = new Hashtable<String, OpenPath>();
+	public static JSch DefaultJSch = new JSch();
+	public static UserInfo DefaultUserInfo;
 	
 	public static enum SortType {
 		NONE,
@@ -427,7 +432,7 @@ public class FileManager {
 			} else if(path.indexOf("sftp:/") > -1)
 			{
 				Uri uri = Uri.parse(path);
-				ret = new OpenSFTP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
+				ret = new OpenSFTP(DefaultJSch, uri);
 			}
 			if(ret != null && bGetNetworkedFiles)
 				ret.listFiles();

@@ -11,7 +11,9 @@ import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.utils.Logger;
@@ -27,6 +29,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager.BadTokenException;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
@@ -36,6 +39,7 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
@@ -156,12 +160,23 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		for(int i = 0; i < servers.size(); i++)
 		{
 			OpenServer server = servers.get(i);
-			FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
-			FTPFile file = new FTPFile();
-			file.setName(server.getName());
-			OpenFTP ftp = new OpenFTP(file, man);
-			ftp.setServersIndex(i);
-			checkAndAdd(BookmarkType.BOOKMARK_SERVER, ftp);
+			if(server.getType().equalsIgnoreCase("ftp"))
+			{
+				FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
+				FTPFile file = new FTPFile();
+				file.setName(server.getName());
+				OpenFTP ftp = new OpenFTP(file, man);
+				ftp.setServersIndex(i);
+				checkAndAdd(BookmarkType.BOOKMARK_SERVER, ftp);
+			} else if(server.getType().equalsIgnoreCase("sftp"))
+			{
+				SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+				info.setPassword(server.getPassword());
+				OpenSFTP sftp = new OpenSFTP(FileManager.DefaultJSch,
+						server.getHost(), server.getUser(), server.getPath(),
+						info);
+				checkAndAdd(BookmarkType.BOOKMARK_SERVER, sftp);
+			}
 		}
 		addBookmark(BookmarkType.BOOKMARK_SERVER, new OpenCommand(getExplorer().getString(R.string.s_pref_server_add), OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add));
 		if(mBookmarkAdapter != null)
@@ -280,7 +295,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				return false;
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
-		if(OpenCursor.class.equals(path.getClass()) || OpenFTP.class.equals(path.getClass()) || path.exists())
+		if(OpenCursor.class.equals(path.getClass()) ||
+				OpenFTP.class.equals(path.getClass()) ||
+				path instanceof OpenNetworkPath ||
+				path.exists())
 		{
 			addBookmark(type, path);
 			return true;
@@ -400,9 +418,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final EditText mTextPath = (EditText)v.findViewById(R.id.text_path);
 		final EditText mTextName = (EditText)v.findViewById(R.id.text_name);
 		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
+		final Spinner mTypeSpinner = (Spinner)v.findViewById(R.id.server_type);
 		if(!allowShowPass)
 			mCheckPassword.setVisibility(View.GONE);
-		OpenServer.setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword);
+		OpenServer.setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword, mTypeSpinner);
+		int addStrId = R.string.s_update;
 		if(iServersIndex > -1)
 		{
 			mHost.setText(server.getHost());
@@ -410,7 +430,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			mPassword.setText(server.getPassword());
 			mTextPath.setText(server.getPath());
 			mTextName.setText(server.getName());
-		}
+			String[] types = mTypeSpinner.getResources().getStringArray(R.array.server_types_values);
+			int pos = 0;
+			for(int i=0; i<types.length; i++)
+				if(types[i].equals(server.getType()))
+				{
+					pos = i;
+					break;
+				}
+			mTypeSpinner.setSelection(pos);
+		} else addStrId = R.string.s_add;
 		final AlertDialog dialog = new AlertDialog.Builder(getExplorer())
 			.setView(v)
 			.setIcon(mHolder != null && mHolder.getIcon() != null ? mHolder.getIcon() : getExplorer().getResources().getDrawable(R.drawable.sm_ftp))
@@ -427,20 +456,25 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					getExplorer().refreshBookmarks();
 				}
 			})
-			.setPositiveButton(getExplorer().getString(R.string.s_update), new DialogInterface.OnClickListener() {
+			.setPositiveButton(getExplorer().getString(addStrId), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					if(iServersIndex > -1)
 						servers.set(iServersIndex, server);
 					else
 						servers.add(server);
 					SettingsActivity.SaveToDefaultServers(servers, getExplorer());
-					dialog.dismiss();
 					getExplorer().refreshBookmarks();
+					dialog.dismiss();
 				}
 			})
 			.setTitle(server.getName())
 			.create();
-		dialog.show();
+		try {
+			dialog.show();
+		} catch(BadTokenException e) {
+			Logger.LogError("Couldn't show dialog.", e);
+			return false;
+		}
 		return true;
 	}
 	
@@ -704,7 +738,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		OpenPath path = h.getOpenPath();
 		if(path instanceof OpenCommand)
 			handleCommand(((OpenCommand)path).getCommand());
-		else if(path instanceof OpenFTP)
+		else if(path instanceof OpenFTP || path instanceof OpenNetworkPath)
 			ShowServerDialog((OpenFTP)path, h, false);
 		else
 			ShowStandardDialog(path, h);

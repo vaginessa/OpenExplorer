@@ -48,24 +48,24 @@ import java.util.Date;
 */
 public class SftpATTRS {
 
-  static final int S_ISUID = 04000; // set user ID on execution
-  static final int S_ISGID = 02000; // set group ID on execution
-  static final int S_ISVTX = 01000; // sticky bit   ****** NOT DOCUMENTED *****
+  public static final int S_ISUID = 04000; // set user ID on execution
+  public static final int S_ISGID = 02000; // set group ID on execution
+  public static final int S_ISVTX = 01000; // sticky bit   ****** NOT DOCUMENTED *****
 
-  static final int S_IRUSR = 00400; // read by owner
-  static final int S_IWUSR = 00200; // write by owner
-  static final int S_IXUSR = 00100; // execute/search by owner
-  static final int S_IREAD = 00400; // read by owner
-  static final int S_IWRITE= 00200; // write by owner
-  static final int S_IEXEC = 00100; // execute/search by owner
+  public static final int S_IRUSR = 00400; // read by owner
+  public static final int S_IWUSR = 00200; // write by owner
+  public static final int S_IXUSR = 00100; // execute/search by owner
+  public static final int S_IREAD = 00400; // read by owner
+  public static final int S_IWRITE= 00200; // write by owner
+  public static final int S_IEXEC = 00100; // execute/search by owner
 
-  static final int S_IRGRP = 00040; // read by group
-  static final int S_IWGRP = 00020; // write by group
-  static final int S_IXGRP = 00010; // execute/search by group
+  public static final int S_IRGRP = 00040; // read by group
+  public static final int S_IWGRP = 00020; // write by group
+  public static final int S_IXGRP = 00010; // execute/search by group
 
-  static final int S_IROTH = 00004; // read by others
-  static final int S_IWOTH = 00002; // write by others
-  static final int S_IXOTH = 00001; // execute/search by others
+  public static final int S_IROTH = 00004; // read by others
+  public static final int S_IWOTH = 00002; // write by others
+  public static final int S_IXOTH = 00001; // execute/search by others
 
   private static final int pmask = 0xFFF;
 
@@ -123,8 +123,8 @@ public class SftpATTRS {
   public static final int SSH_FILEXFER_ATTR_ACMODTIME=    0x00000008;
   public static final int SSH_FILEXFER_ATTR_EXTENDED=     0x80000000;
 
-  static final int S_IFDIR=0x4000;
-  static final int S_IFLNK=0xa000;
+  public static final int S_IFDIR=0x4000;
+  public static final int S_IFLNK=0xa000;
 
   int flags=0;
   long size;

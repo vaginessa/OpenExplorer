@@ -59,6 +59,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -333,7 +334,20 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.VISIBLE);
 			Logger.LogVerbose("Running FileIOTask");
-			new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+			final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+			new Thread(new Runnable(){
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(30000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if(task.getStatus() == Status.RUNNING)
+						task.cancel(false);
+				}
+			}).start();
 		}
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
@@ -1329,8 +1343,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				deets = DialogHandler.formatSize(file.length()) + " | ";
 			}
 			
-			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy");
-			deets += df.format(file.lastModified());
+			Long last = file.lastModified();
+			if(last != null)
+			{
+				DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy");
+				deets += df.format(file.lastModified());
+			}
 			
 			/*
 			
@@ -1366,8 +1384,29 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	public class FileIOTask extends AsyncTask<FileIOCommand, Integer, OpenPath[]>
 	{
+		private FileIOCommand[] params = null;
+		
+		@Override
+		protected void onCancelled() {
+			if(params != null)
+				for(FileIOCommand cmd : params)
+				{
+					OpenPath path = cmd.Path;
+					if(path instanceof OpenNetworkPath)
+						((OpenNetworkPath)path).disconnect();
+					else if(path instanceof OpenFTP)
+						((OpenFTP)path).getManager().disconnect();
+				}
+		}
+		
+		@Override
+		protected void onCancelled(OpenPath[] result) {
+			onCancelled();
+		}
+		
 		@Override
 		protected OpenPath[] doInBackground(FileIOCommand... params) {
+			this.params = params;
 			publishProgress(0);
 			ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
 			for(FileIOCommand cmd : params)
@@ -1385,12 +1424,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					}
 					if(cachePath == null)
 						cachePath = cmd.Path;
+					/*
 					if(cachePath instanceof OpenNetworkPath && ((OpenNetworkPath)cachePath).getUserInfo() == null)
 					{
 						Uri uri = Uri.parse(cmd.Path.getPath());
 						UserInfo info = new SimpleUserInfo(uri, getExplorer());
 						((OpenNetworkPath)cachePath).setUserInfo(info);
 					}
+					*/
 					if(list == null)
 						try {
 							list = cachePath.list();
@@ -1413,8 +1454,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						Logger.LogError("IOException listing children inside FileIOTask", e);
 					}
 				}
-				if(OpenFTP.class.equals(cmd.Path.getClass()))
+				if(cmd.Path instanceof OpenFTP)
 					((OpenFTP)cmd.Path).getManager().disconnect();
+				else if(cmd.Path instanceof OpenNetworkPath)
+					((OpenNetworkPath)cmd.Path).disconnect();
 				getManager().pushStack(cmd.Path);
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");
@@ -1445,6 +1488,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.GONE);
 			else Logger.LogDebug("Ending FileIOTask");
+			//onCancelled(result);
 			//mData2.clear();
 			updateData(result);
 		}

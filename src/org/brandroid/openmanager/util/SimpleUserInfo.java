@@ -3,6 +3,7 @@ package org.brandroid.openmanager.util;
 import org.brandroid.utils.Logger;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenServers;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -19,13 +20,13 @@ import com.jcraft.jsch.UserInfo;
 
 public class SimpleUserInfo implements UserInfo
 {
-	private final Uri mUri;
+	//private final Uri mUri;
 	private final Activity mActivity;
 	private String mPassword = null;
 	
-	public SimpleUserInfo(Uri uri, Activity activity)
+	public SimpleUserInfo(Activity activity)
 	{
-		mUri = uri;
+		//mUri = uri;
 		mActivity = activity;
 	}
 
@@ -87,9 +88,7 @@ public class SimpleUserInfo implements UserInfo
 
 	@Override
 	public boolean promptYesNo(final String message) {
-		final boolean[] result = new boolean[2];
-		result[0] = false;
-		final Thread t = Thread.currentThread();
+		final boolean[] result = new boolean[]{false,false};
 		mActivity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -99,28 +98,17 @@ public class SimpleUserInfo implements UserInfo
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							result[0] = result[1] = true;
-							//t.notify();
 						}
 					})
 					.setNegativeButton(android.R.string.no, new OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							result[0] = true;
 							result[1] = false;
-							//t.notify();
+							result[0] = true;
 						}
 					})
 					.create();
 				dlg.show();
-				try {
-					//t.wait();
-					//Thread.currentThread().
-					//Thread.currentThread().wait();
-					//dlg.wait();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-				//	e.printStackTrace();
-				}
 			}
 		});
 		while(!result[0]){}

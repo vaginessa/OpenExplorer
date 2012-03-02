@@ -30,25 +30,13 @@
 		<item>list</item>
 	</string-array>
 	
-	<string-array name="starts">
-	    <item>@string/s_videos</item>
-	    <item>@string/s_photos</item>
-	    <item>@string/s_external</item>
-	    <item>/</item>
-	</string-array>
-	
-	<string-array name="start_value">
-	    <item>Videos</item>
-	    <item>Photos</item>
-	    <item>External</item>
-	    <item>/</item>
-	</string-array>
-	
 	<string-array name="server_types">
+	    <item>@string/s_server_ftp</item>
+	    <item>@string/s_server_sftp</item>
+	</string-array>
+	<string-array name="server_types_values">
 	    <item>FTP</item>
-	    <item>Dropbox (Coming Soon!)</item>
-	    <item>Box.net (Comming Soon!)</item>
-	    <item>Windows/Samba (Comming Soon!)</item>
+	    <item>SFTP</item>
 	</string-array>
 	
 	<string-array name="bookmark_groups">

@@ -3,6 +3,7 @@ package org.brandroid.openmanager.data;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
@@ -17,14 +18,18 @@ import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.Spinner;
 
 public class OpenServer
 {
 	private String mName = "",
+				mType = "ftp",
 				mHost = "",
 				mPath = "",
 				mUser = "",
@@ -40,6 +45,7 @@ public class OpenServer
 		mHost = obj.optString("host");
 		mPath = obj.optString("dir");
 		mUser = obj.optString("user");
+		mType = obj.optString("type", mType);
 		mPassword = obj.optString("password");
 		if(decryptPW != null && decryptPW != "")
 			try {
@@ -74,6 +80,7 @@ public class OpenServer
 			ret.put("name", getName());
 			ret.put("host", getHost());
 			ret.put("user", getUser());
+			ret.put("type", getType());
 			if(encryptPW && context != null)
 				try {
 					ret.put("password", SimpleCrypto.encrypt(SettingsActivity.GetSignatureKey(context), getPassword()));
@@ -93,6 +100,9 @@ public class OpenServer
 			}*/
 		return ret;
 	}
+	public String getType() {
+		return mType;
+	}
 	public OpenServer setSetting(String key, String value)
 	{
 		if(key.equalsIgnoreCase("name"))
@@ -105,6 +115,8 @@ public class OpenServer
 			mPassword = value;
 		else if(key.equalsIgnoreCase("dir"))
 			mPath = value;
+		else if(key.equalsIgnoreCase("type"))
+			mType = value;
 		/*else if(key != null && value != null) {
 			if(mData == null)
 				mData = new Hashtable<String, String>();
@@ -151,6 +163,10 @@ public class OpenServer
 		mName = name;
 		return this;
 	}
+	public OpenServer setType(String type) {
+		mType = type;
+		return this;
+	}
 	public String getString(String key) {
 		if(key.equals("name")) return getName();
 		if(key.equals("host")) return getHost();
@@ -158,18 +174,31 @@ public class OpenServer
 		if(key.equals("path")) return getPath();
 		if(key.equals("user")) return getUser();
 		if(key.equals("password")) return getPassword();
+		if(key.equals("type")) return getType();
 		return null;
 	}
 	
 	public static void setupServerDialog(final OpenServer server, final EditText mHost,
 			final EditText mUser, final EditText mPassword, final EditText mTextPath,
-			final EditText mTextName, final CheckBox mCheckPassword)
+			final EditText mTextName, final CheckBox mCheckPassword,
+			final Spinner mTypeSpinner)
 	{
 		mHost.setOnFocusChangeListener(new OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
 				if(!hasFocus && server.getName() == "")
 					mTextName.setText(mHost.getText());
 			}
+		});
+		mTypeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
+				String[] types = arg0.getResources().getStringArray(R.array.server_types_values);
+				if(position >= types.length || position < 0) return;
+				String type = types[position];
+				server.setType(type);
+			}
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0) { }
 		});
 		if(mCheckPassword.getVisibility() == View.VISIBLE)
 		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {

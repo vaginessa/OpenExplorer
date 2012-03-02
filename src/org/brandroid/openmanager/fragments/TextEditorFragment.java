@@ -16,6 +16,7 @@ import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
@@ -93,7 +94,12 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			} else if (path.indexOf("ftp:/") > -1)
 			{
 				path = path.substring(path.lastIndexOf("/", path.indexOf(":/") + 2) + 1);
-				String host = path.substring(0, path.indexOf("/"));
+				String host = path;
+				if(path.indexOf("/") > -1)
+				{
+					host = path.substring(0, path.indexOf("/"));
+					path = path.substring(path.indexOf("/"));
+				}
 				OpenServers servers = SettingsActivity.LoadDefaultServers(getActivity());
 				for(int i=0; i < servers.size(); i++)
 					if(servers.get(i).getHost().equals(host))
@@ -290,6 +296,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 					}
 					if(OpenFTP.class.equals(mPath.getClass()))
 						((OpenFTP)mPath).getManager().disconnect();
+					else if(mPath instanceof OpenNetworkPath)
+						((OpenNetworkPath)mPath).disconnect();
 				}
 				return sb.toString();
 			}
@@ -314,6 +322,21 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 				}
 				
 				//return FTPManager.getData(path);
+			} else if(path.indexOf("sftp:/") > -1)
+			{
+				try {
+					BufferedInputStream in = (BufferedInputStream)mPath.getInputStream();
+					byte[] buffer = new byte[4096];
+					StringBuilder sb = new StringBuilder();
+					while(in.read(buffer) > 0)
+					{
+						for(byte b : buffer)
+							sb.append((char)b);
+					}
+					return sb.toString();
+				} catch(IOException e) {
+					Logger.LogError("Couldn't read from SFTP - " + path, e);
+				}
 			}
 			return null;
 		}

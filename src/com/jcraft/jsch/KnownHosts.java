@@ -47,7 +47,7 @@ class KnownHosts implements HostKeyRepository{
 
   private MAC hmacsha1=null;
 
-  KnownHosts(JSch jsch){
+  protected KnownHosts(JSch jsch){
     super();
     this.jsch=jsch;
     pool=new java.util.Vector();

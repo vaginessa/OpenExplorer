@@ -144,6 +144,7 @@ import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.OpenPathList;
@@ -155,6 +156,7 @@ import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.Preferences;
 
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 import com.viewpagerindicator.PageIndicator;
 import org.json.JSONException;
@@ -284,6 +286,16 @@ public class OpenExplorer
 		
 		setContentView(R.layout.main_fragments);
 
+		FileManager.DefaultUserInfo = new SimpleUserInfo(this);
+		try {
+			FileManager.DefaultJSch.setHostKeyRepository(
+					new SimpleHostKeyRepo(
+						FileManager.DefaultJSch,
+						FileManager.DefaultUserInfo,
+						Preferences.getPreferences(getApplicationContext(), "hosts")));
+		} catch (JSchException e) {
+			Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
+		}
 		ThumbnailCreator.setContext(getApplicationContext());
 		
 		Logger.LogDebug("Refreshing cursors");
@@ -358,6 +370,8 @@ public class OpenExplorer
 				path = new OpenFile(start);
 			else if(start.startsWith("ftp:/"))
 				path = new OpenFTP(start, null, new FTPManager());
+			else if(start.startsWith("sftp:/"))
+				path = new OpenSFTP(FileManager.DefaultJSch, start);
 			else if(start.equals("Videos"))
 				path = mVideoParent;
 			else if(start.equals("Photos"))
@@ -1230,16 +1244,21 @@ public class OpenExplorer
 	
 	public void refreshBookmarks()
 	{
+		Logger.LogVerbose("refreshBookmarks()");
 		refreshCursors();
-		if(mFavoritesFragment == null)
+		if(mFavoritesFragment != null)
 		{
-			mFavoritesFragment = new BookmarkFragment();
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.replace(R.id.list_frag, mFavoritesFragment);
-			ft.commit();
-		} else {
 			((BookmarkFragment)mFavoritesFragment).scanBookmarks();
+		} else {
+			
 		}
+		if(mBookmarks != null)
+		{
+			mBookmarks.scanBookmarks();
+			mBookmarks.refresh();
+		}
+		if(mBookmarksList != null)
+			mBookmarksList.invalidate();
 	}
 	public ContentFragment getDirContentFragment(Boolean activate) { return getDirContentFragment(activate, mLastPath); }
 	public ContentFragment getDirContentFragment(Boolean activate, OpenPath path)
@@ -1581,6 +1600,19 @@ public class OpenExplorer
 	}
 	private void debugTest()
 	{
+		Uri uri = Uri.parse("sftp://alex@10.1.37.164/");
+		OpenSFTP path = new OpenSFTP(FileManager.DefaultJSch, uri);
+		//path.setPort(22);
+		//info.setPassword("BestSearch");
+		/*
+		new Thread(new Runnable(){
+			public void run() {
+				info.promptYesNo("Did this work?");
+			}
+		}).start();
+		*/
+		//path.setUserInfo(FileManager.DefaultUserInfo);
+		changePath(path);
 	}
 
 	public boolean onClick(int id, MenuItem item, View from)

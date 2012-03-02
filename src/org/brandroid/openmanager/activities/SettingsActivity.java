@@ -539,9 +539,15 @@ public class SettingsActivity extends PreferenceActivity
 			}
 		}
 	}
-	public OpenServers LoadDefaultServers() { return LoadDefaultServers(getApplicationContext()); }
+	public OpenServers LoadDefaultServers() {
+		if(OpenServers.DefaultServers == null)
+			OpenServers.DefaultServers = LoadDefaultServers(getApplicationContext());
+		return OpenServers.DefaultServers;
+	}
 	public static OpenServers LoadDefaultServers(Context context)
 	{
+		if(OpenServers.DefaultServers != null)
+			return OpenServers.DefaultServers;
 		File f = new File(context.getFilesDir().getPath(), "servers.json");
 		Reader r = null;
 		try {
@@ -561,7 +567,8 @@ public class SettingsActivity extends PreferenceActivity
 				if(sb.length() == 0)
 					return new OpenServers();
 				String data = sb.toString();
-				return new OpenServers(new JSONArray(data), GetSignatureKey(context));
+				OpenServers.DefaultServers = new OpenServers(new JSONArray(data), GetSignatureKey(context));
+				return OpenServers.DefaultServers;
 			}
 		} catch (IOException e) {
 			Logger.LogError("Error loading default server list.", e);
