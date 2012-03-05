@@ -3,6 +3,9 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.brandroid.utils.Logger;
+
+import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
@@ -10,14 +13,20 @@ public abstract class OpenNetworkPath extends OpenPath
 {
 	protected UserInfo mUserInfo;
 	private int mServersIndex = -1;
+	public static final JSch DefaultJSch = new JSch();
 	
 	@Override
 	public Boolean requiresThread() {
 		return true;
 	}
 	
-	public abstract void connect() throws JSchException;
-	public abstract void disconnect();
+	public void connect() throws JSchException
+	{
+		Logger.LogVerbose("Connecting OpenNetworkPath");
+	}
+	public void disconnect() {
+		Logger.LogVerbose("Disconnecting OpenNetworkPath");
+	}
 	
 	public UserInfo getUserInfo() { return mUserInfo; }
 	public UserInfo setUserInfo(UserInfo info) { mUserInfo = info; return mUserInfo; }

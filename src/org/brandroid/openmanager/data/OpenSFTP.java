@@ -37,11 +37,10 @@ public class OpenSFTP extends OpenNetworkPath
 	private SftpATTRS mAttrs = null;
 	private String mName = null;
 	public int Timeout = 20000;
-	public final JSch jsch;
 	
-	public OpenSFTP(JSch jsch, String fullPath)
+	public OpenSFTP(String fullPath)
 	{
-		this.jsch = jsch;
+		//this.jsch = jsch;
 		Uri uri = Uri.parse(fullPath);
 		mHost = uri.getHost();
 		mUser = uri.getUserInfo();
@@ -49,29 +48,30 @@ public class OpenSFTP extends OpenNetworkPath
 		if(uri.getPort() > 0)
 			mPort = uri.getPort();
 	}
-	public OpenSFTP(JSch jsch, Uri uri)
+	public OpenSFTP(Uri uri)
 	{
-		this.jsch = jsch;
+		//this.jsch = jsch;
 		mHost = uri.getHost();
 		mUser = uri.getUserInfo();
 		mRemotePath = uri.getPath();
 		if(uri.getPort() > 0)
 			mPort = uri.getPort();
 	}
-	public OpenSFTP(JSch jsch, String host, String user, String path, UserInfo info)
+	public OpenSFTP(String host, String user, String path, UserInfo info)
 	{
-		this.jsch = jsch;
+		//this.jsch = jsch;
 		mHost = host;
 		mUser = user;
 		mRemotePath = path;
 		mUserInfo = info;
 	}
-	public OpenSFTP(JSch jsch, OpenSFTP parent, LsEntry child)
+	public OpenSFTP(OpenSFTP parent, LsEntry child)
 	{
-		this.jsch = jsch;
+		//this.jsch = jsch;
 		mHost = parent.getHost();
 		mUser = parent.getUser();
-		mRemotePath = child.getFilename();
+		mRemotePath = (child.getFilename().startsWith("/") ? "" : "/") +
+				child.getFilename();
 		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
 		mAttrs = child.getAttrs();
 	}
@@ -153,7 +153,7 @@ public class OpenSFTP extends OpenNetworkPath
 				if(o instanceof LsEntry)
 				{
 					LsEntry item = (LsEntry)o;
-					kids.add(new OpenSFTP(jsch, this, item));
+					kids.add(new OpenSFTP(this, item));
 				}
 			}
 		} catch (SftpException e) {
@@ -229,6 +229,8 @@ public class OpenSFTP extends OpenNetworkPath
 	@Override
 	public void disconnect()
 	{
+		if(mChannel == null && mSession == null) return;
+		super.disconnect();
 		if(mChannel != null)
 			mChannel.disconnect();
 		if(mSession != null)
@@ -247,16 +249,17 @@ public class OpenSFTP extends OpenNetworkPath
 	@Override
 	public void connect() throws JSchException
 	{
-		Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
 		if(mSession != null && mSession.isConnected() && mChannel != null && mChannel.isConnected())
 			return;
-		disconnect();
+		super.connect();
+		Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
+		//disconnect();
 		//Logger.LogDebug("Ready for new connection");
 		//JSch jsch = new JSch();
 		//try {
 		if(mSession == null || !mSession.isConnected())
 		{
-			mSession = jsch.getSession(mUser, mHost, 22);
+			mSession = DefaultJSch.getSession(mUser, mHost, 22);
 			mSession.setUserInfo(mUserInfo);
 			mSession.setTimeout(Timeout);
 			Logger.LogDebug("Connecting session...");

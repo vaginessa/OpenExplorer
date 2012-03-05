@@ -40,7 +40,7 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.bookmarks_fragment, null);
+		return inflater.inflate(R.layout.bookmarks_fragment, container, false);
 		//return super.onCreateView(inflater, container, savedInstanceState);
 	}
 	@Override
@@ -59,7 +59,7 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 		final ExpandableListView lv = getListView();
 		if(mBookmarks == null)
 			mBookmarks = new OpenBookmarks(getExplorer(), lv);
-		mBookmarks.setupListView(lv);
+		//mBookmarks.setupListView(lv); //redundant?
 		final ExpandableListAdapter adapter = mBookmarks.getListAdapter();
 		setListAdapter(adapter);
 		registerForContextMenu(lv);

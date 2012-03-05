@@ -80,7 +80,6 @@ public class FileManager {
 	private ArrayList<OpenPath> mDirContent;
 	private OpenStack mPathStack;
 	private static Hashtable<String, OpenPath> mOpenCache = new Hashtable<String, OpenPath>();
-	public static JSch DefaultJSch = new JSch();
 	public static UserInfo DefaultUserInfo;
 	
 	public static enum SortType {
@@ -432,7 +431,7 @@ public class FileManager {
 			} else if(path.indexOf("sftp:/") > -1)
 			{
 				Uri uri = Uri.parse(path);
-				ret = new OpenSFTP(DefaultJSch, uri);
+				ret = new OpenSFTP(uri);
 			}
 			if(ret != null && bGetNetworkedFiles)
 				ret.listFiles();

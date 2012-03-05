@@ -172,7 +172,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			{
 				SimpleUserInfo info = new SimpleUserInfo(getExplorer());
 				info.setPassword(server.getPassword());
-				OpenSFTP sftp = new OpenSFTP(FileManager.DefaultJSch,
+				OpenSFTP sftp = new OpenSFTP(
 						server.getHost(), server.getUser(), server.getPath(),
 						info);
 				sftp.setName(server.getName());
@@ -547,8 +547,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				}
 			})
 			.setTitle(getExplorer().getString(R.string.s_title_bookmark_prefix) + " " + title)
-			.create()
-			.show();
+			.create();
+		try {
+			builder.show();
+		} catch(BadTokenException e) {
+			Logger.LogWarning("Couldn't show AlertDialog. Bad token?", e);
+		}
 		return true;
 	}
 

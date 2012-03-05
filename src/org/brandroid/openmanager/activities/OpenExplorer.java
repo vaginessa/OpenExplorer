@@ -288,9 +288,9 @@ public class OpenExplorer
 
 		FileManager.DefaultUserInfo = new SimpleUserInfo(this);
 		try {
-			FileManager.DefaultJSch.setHostKeyRepository(
+			OpenSFTP.DefaultJSch.setHostKeyRepository(
 					new SimpleHostKeyRepo(
-						FileManager.DefaultJSch,
+						OpenSFTP.DefaultJSch,
 						FileManager.DefaultUserInfo,
 						Preferences.getPreferences(getApplicationContext(), "hosts")));
 		} catch (JSchException e) {
@@ -371,7 +371,7 @@ public class OpenExplorer
 			else if(start.startsWith("ftp:/"))
 				path = new OpenFTP(start, null, new FTPManager());
 			else if(start.startsWith("sftp:/"))
-				path = new OpenSFTP(FileManager.DefaultJSch, start);
+				path = new OpenSFTP(start);
 			else if(start.equals("Videos"))
 				path = mVideoParent;
 			else if(start.equals("Photos"))
@@ -1601,7 +1601,7 @@ public class OpenExplorer
 	private void debugTest()
 	{
 		Uri uri = Uri.parse("sftp://alex@10.1.37.164/");
-		OpenSFTP path = new OpenSFTP(FileManager.DefaultJSch, uri);
+		OpenSFTP path = new OpenSFTP(uri);
 		//path.setPort(22);
 		//info.setPassword("BestSearch");
 		/*
