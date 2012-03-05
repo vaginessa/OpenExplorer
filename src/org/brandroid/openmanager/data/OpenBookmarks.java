@@ -175,6 +175,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				OpenSFTP sftp = new OpenSFTP(FileManager.DefaultJSch,
 						server.getHost(), server.getUser(), server.getPath(),
 						info);
+				sftp.setName(server.getName());
+				sftp.setServersIndex(i);
+				if(server.getPort() > 0)
+					sftp.setPort(server.getPort());
 				checkAndAdd(BookmarkType.BOOKMARK_SERVER, sftp);
 			}
 		}
@@ -407,8 +411,15 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 	public boolean ShowServerDialog(final OpenFTP mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
 	{
+		return ShowServerDialog(mPath.getServersIndex(), mHolder, allowShowPass);
+	}
+	public boolean ShowServerDialog(final OpenNetworkPath mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
+	{
+		return ShowServerDialog(mPath.getServersIndex(), mHolder, allowShowPass);
+	}
+	public boolean ShowServerDialog(final int iServersIndex, final BookmarkHolder mHolder, final boolean allowShowPass)
+	{
 		final OpenServers servers = SettingsActivity.LoadDefaultServers(getExplorer());
-		final int iServersIndex = mPath.getServersIndex();
 		final OpenServer server = iServersIndex > -1 ? servers.get(iServersIndex) : new OpenServer().setName("New Server");
 		LayoutInflater inflater = (LayoutInflater)getExplorer().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		final View v = inflater.inflate(R.layout.server, null);
@@ -419,9 +430,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final EditText mTextName = (EditText)v.findViewById(R.id.text_name);
 		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
 		final Spinner mTypeSpinner = (Spinner)v.findViewById(R.id.server_type);
+		final EditText mTextPort = (EditText)v.findViewById(R.id.text_port);
 		if(!allowShowPass)
 			mCheckPassword.setVisibility(View.GONE);
-		OpenServer.setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword, mTypeSpinner);
+		OpenServer.setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword, mTypeSpinner, mTextPort);
 		int addStrId = R.string.s_update;
 		if(iServersIndex > -1)
 		{
@@ -738,8 +750,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		OpenPath path = h.getOpenPath();
 		if(path instanceof OpenCommand)
 			handleCommand(((OpenCommand)path).getCommand());
-		else if(path instanceof OpenFTP || path instanceof OpenNetworkPath)
+		else if(path instanceof OpenFTP)
 			ShowServerDialog((OpenFTP)path, h, false);
+		else if(path instanceof OpenNetworkPath)
+			ShowServerDialog((OpenNetworkPath)path, h, false);
 		else
 			ShowStandardDialog(path, h);
 		return true;

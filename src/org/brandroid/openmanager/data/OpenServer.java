@@ -34,6 +34,7 @@ public class OpenServer
 				mPath = "",
 				mUser = "",
 				mPassword = "";
+	private int mPort = 0;
 	//private Hashtable<String, String> mData = new Hashtable<String, String>();
 	
 	public OpenServer() {
@@ -47,6 +48,7 @@ public class OpenServer
 		mUser = obj.optString("user");
 		mType = obj.optString("type", mType);
 		mPassword = obj.optString("password");
+		mPort = obj.optInt("port", mPort);
 		if(decryptPW != null && decryptPW != "")
 			try {
 				mPassword = SimpleCrypto.decrypt(decryptPW, mPassword);
@@ -117,6 +119,8 @@ public class OpenServer
 			mPath = value;
 		else if(key.equalsIgnoreCase("type"))
 			mType = value;
+		else if(key.equalsIgnoreCase("port"))
+			mPort = Integer.parseInt(value);
 		/*else if(key != null && value != null) {
 			if(mData == null)
 				mData = new Hashtable<String, String>();
@@ -167,6 +171,10 @@ public class OpenServer
 		mType = type;
 		return this;
 	}
+	public OpenServer setPort(int port) {
+		mPort = port;
+		return this;
+	}
 	public String getString(String key) {
 		if(key.equals("name")) return getName();
 		if(key.equals("host")) return getHost();
@@ -175,13 +183,14 @@ public class OpenServer
 		if(key.equals("user")) return getUser();
 		if(key.equals("password")) return getPassword();
 		if(key.equals("type")) return getType();
+		if(key.equals("port")) return ""+getPort();
 		return null;
 	}
 	
 	public static void setupServerDialog(final OpenServer server, final EditText mHost,
 			final EditText mUser, final EditText mPassword, final EditText mTextPath,
 			final EditText mTextName, final CheckBox mCheckPassword,
-			final Spinner mTypeSpinner)
+			final Spinner mTypeSpinner, final EditText mTextPort)
 	{
 		mHost.setOnFocusChangeListener(new OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
@@ -248,5 +257,15 @@ public class OpenServer
 				server.setName(s.toString());
 			}
 		});
+		mTextPort.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) { }
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+			public void afterTextChanged(Editable s) {
+				server.setPort(Integer.parseInt(s.toString()));
+			}
+		});
+	}
+	public int getPort() {
+		return mPort;
 	}
 }

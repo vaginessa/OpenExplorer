@@ -35,6 +35,7 @@ public class OpenSFTP extends OpenNetworkPath
 	private int mPort = 22;
 	private UserInfo mUserInfo = FileManager.DefaultUserInfo;
 	private SftpATTRS mAttrs = null;
+	private String mName = null;
 	public int Timeout = 20000;
 	public final JSch jsch;
 	
@@ -71,8 +72,11 @@ public class OpenSFTP extends OpenNetworkPath
 		mHost = parent.getHost();
 		mUser = parent.getUser();
 		mRemotePath = child.getFilename();
+		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
 		mAttrs = child.getAttrs();
 	}
+	
+	public void setName(String name) { mName = name; } 
 	
 	public int getPort() { return mPort; }
 	public void setPort(int port) { mPort = port; }
@@ -88,6 +92,8 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public String getName() {
+		if(mName != null && !mName.equals(""))
+			return mName;
 		if(mRemotePath.equals("") || mRemotePath.equals("/"))
 			return mHost;
 		String ret = mRemotePath.substring(mRemotePath.lastIndexOf("/", mRemotePath.length() - 1) + 1);
@@ -172,7 +178,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Boolean isHidden() {
-		return false;
+		return getName().startsWith(".");
 	}
 
 	@Override
@@ -248,22 +254,24 @@ public class OpenSFTP extends OpenNetworkPath
 		//Logger.LogDebug("Ready for new connection");
 		//JSch jsch = new JSch();
 		//try {
+		if(mSession == null || !mSession.isConnected())
+		{
 			mSession = jsch.getSession(mUser, mHost, 22);
 			mSession.setUserInfo(mUserInfo);
 			mSession.setTimeout(Timeout);
 			Logger.LogDebug("Connecting session...");
 			mSession.connect();
-			
-			Logger.LogDebug("Session achieved. Opening Channel...");
-			//String command = "scp -f " + mRemotePath;
-			mChannel = (ChannelSftp)mSession.openChannel("sftp");
-			//((ChannelSftp)mChannel);
-			
-			mChannel.connect();
-			
-			Logger.LogDebug("Channel open! Ready for action!");
-			
-			isConnected = true;
+		}
+		Logger.LogDebug("Session achieved. Opening Channel...");
+		//String command = "scp -f " + mRemotePath;
+		mChannel = (ChannelSftp)mSession.openChannel("sftp");
+		//((ChannelSftp)mChannel);
+		
+		mChannel.connect();
+		
+		Logger.LogDebug("Channel open! Ready for action!");
+		
+		isConnected = true;
 		//} catch (JSchException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();

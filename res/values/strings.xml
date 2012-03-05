@@ -171,4 +171,5 @@
     <string name="s_add">Add</string>
     <string name="s_server_ftp">FTP</string>
     <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">Port</string>
 </resources>

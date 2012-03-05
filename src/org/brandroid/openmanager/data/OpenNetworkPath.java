@@ -9,6 +9,7 @@ import com.jcraft.jsch.UserInfo;
 public abstract class OpenNetworkPath extends OpenPath
 {
 	protected UserInfo mUserInfo;
+	private int mServersIndex = -1;
 	
 	@Override
 	public Boolean requiresThread() {
@@ -49,4 +50,9 @@ public abstract class OpenNetworkPath extends OpenPath
 	    }
 	    return b;
 	  }
+
+	public int getServersIndex() {
+		return mServersIndex;
+	}
+	public void setServersIndex(int index) { mServersIndex = index; }
 }
