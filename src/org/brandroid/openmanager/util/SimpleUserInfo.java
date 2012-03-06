@@ -11,8 +11,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
+import android.text.InputType;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.SingleLineTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -41,6 +47,10 @@ public class SimpleUserInfo implements UserInfo
 	}
 	
 	public void setPassword(String password) { mPassword = password; }
+	@Override
+	public void resetPassword() {
+		mPassword = null;
+	}
 
 	@Override
 	public boolean promptPassword(final String message) {
@@ -55,6 +65,19 @@ public class SimpleUserInfo implements UserInfo
 				TextView tv = (TextView)view.findViewById(android.R.id.message);
 				tv.setText(message);
 				final EditText text1 = ((EditText)view.findViewById(android.R.id.text1));
+				final CheckBox checkpw = (CheckBox)view.findViewById(android.R.id.checkbox);
+				checkpw.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					if(isChecked)
+					{
+						text1.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+						text1.setTransformationMethod(new SingleLineTransformationMethod());
+					} else {
+						text1.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+						text1.setTransformationMethod(new PasswordTransformationMethod());
+					}
+				}});
+				
 				AlertDialog dlg = new AlertDialog.Builder(mActivity)
 					.setTitle(R.string.s_prompt_password)
 					.setView(view)

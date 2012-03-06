@@ -10,11 +10,8 @@ import java.util.Vector;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
-import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
@@ -26,17 +23,17 @@ import android.net.Uri;
 public class OpenSFTP extends OpenNetworkPath
 {
 	private long filesize = 0l;
-	private boolean isConnected = false;
 	private Session mSession = null;
 	private ChannelSftp mChannel = null;
 	private InputStream in = null;
 	private OutputStream out = null;
 	private final String mHost, mUser, mRemotePath;
 	private int mPort = 22;
-	private UserInfo mUserInfo = FileManager.DefaultUserInfo;
 	private SftpATTRS mAttrs = null;
 	private String mName = null;
+	protected OpenSFTP mParent = null;
 	public int Timeout = 20000;
+	private Vector<OpenSFTP> mChildren = null;
 	
 	public OpenSFTP(String fullPath)
 	{
@@ -47,6 +44,7 @@ public class OpenSFTP extends OpenNetworkPath
 		mRemotePath = uri.getPath();
 		if(uri.getPort() > 0)
 			mPort = uri.getPort();
+		mUserInfo = FileManager.DefaultUserInfo;
 	}
 	public OpenSFTP(Uri uri)
 	{
@@ -68,8 +66,10 @@ public class OpenSFTP extends OpenNetworkPath
 	public OpenSFTP(OpenSFTP parent, LsEntry child)
 	{
 		//this.jsch = jsch;
+		mUserInfo = parent.getUserInfo();
 		mHost = parent.getHost();
 		mUser = parent.getUser();
+		mParent = parent;
 		mRemotePath = (child.getFilename().startsWith("/") ? "" : "/") +
 				child.getFilename();
 		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
@@ -83,12 +83,6 @@ public class OpenSFTP extends OpenNetworkPath
 	public String getHost() { return mHost; }
 	public String getUser() { return mUser; }
 	public String getRemotePath() { return mRemotePath; }
-	public UserInfo getUserInfo() { return mUserInfo; }
-	public UserInfo setUserInfo(UserInfo info)
-	{
-		mUserInfo = info;
-		return info;
-	}
 
 	@Override
 	public String getName() {
@@ -109,7 +103,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public String getPath() {
-		return "sftp://" + mUser + "@" + mHost + mRemotePath;
+		return "sftp://" + mUser + "@" + mHost + ":" + getPort() + (mRemotePath.startsWith("/") ? "" : "/") + mRemotePath;
 	}
 
 	@Override
@@ -129,9 +123,9 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public OpenPath getParent() {
-		return null;
+		return mParent;
 	}
-
+	
 	@Override
 	public OpenPath getChild(String name) {
 		return null;
@@ -144,17 +138,18 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public OpenPath[] listFiles() throws IOException {
-		List<OpenPath> kids = new ArrayList<OpenPath>(); 
+		if(mChildren != null)
+			return mChildren.toArray(new OpenSFTP[mChildren.size()]);
+		mChildren = new Vector<OpenSFTP>(); 
 		try {
 			connect();
-			Vector vv = mChannel.ls(".");
-			for(Object o : vv)
+			String lsPath = mRemotePath;
+			if(lsPath.equals(""))
+				lsPath = ".";
+			Vector<LsEntry> vv = mChannel.ls(lsPath);
+			for(LsEntry item : vv)
 			{
-				if(o instanceof LsEntry)
-				{
-					LsEntry item = (LsEntry)o;
-					kids.add(new OpenSFTP(this, item));
-				}
+				mChildren.add(new OpenSFTP(this, item));
 			}
 		} catch (SftpException e) {
 			Logger.LogError("SftpException during listFiles", e);
@@ -163,7 +158,7 @@ public class OpenSFTP extends OpenNetworkPath
 			Logger.LogError("JSchException during listFiles", e);
 			throw new IOException("JSchException during listFiles", e);
 		}
-		return kids.toArray(new OpenSFTP[0]);
+		return mChildren.toArray(new OpenSFTP[mChildren.size()]);
 	}
 
 	@Override
@@ -243,15 +238,17 @@ public class OpenSFTP extends OpenNetworkPath
 			if(out != null)
 				out.close();
 		} catch (IOException e) { }
-		isConnected = false;
 	}
 	
 	@Override
 	public void connect() throws JSchException
 	{
-		if(mSession != null && mSession.isConnected() && mChannel != null && mChannel.isConnected())
-			return;
 		super.connect();
+		if(mSession != null && mSession.isConnected() && mChannel != null && mChannel.isConnected())
+		{
+			Logger.LogInfo("No need for new OpenSFTP connection @ " + getName());
+			return;
+		}
 		Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
 		//disconnect();
 		//Logger.LogDebug("Ready for new connection");
@@ -260,7 +257,10 @@ public class OpenSFTP extends OpenNetworkPath
 		if(mSession == null || !mSession.isConnected())
 		{
 			mSession = DefaultJSch.getSession(mUser, mHost, 22);
-			mSession.setUserInfo(mUserInfo);
+			if(mUserInfo != null)
+				mSession.setUserInfo(mUserInfo);
+			else
+				Logger.LogWarning("No User Info!");
 			mSession.setTimeout(Timeout);
 			Logger.LogDebug("Connecting session...");
 			mSession.connect();
@@ -273,8 +273,6 @@ public class OpenSFTP extends OpenNetworkPath
 		mChannel.connect();
 		
 		Logger.LogDebug("Channel open! Ready for action!");
-		
-		isConnected = true;
 		//} catch (JSchException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();

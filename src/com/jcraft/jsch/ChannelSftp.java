@@ -39,7 +39,6 @@ public class ChannelSftp extends ChannelSession{
   static private final int LOCAL_WINDOW_SIZE_MAX=(64*LOCAL_MAXIMUM_PACKET_SIZE);
 
   private static final byte SSH_FXP_INIT=               1;
-  private static final byte SSH_FXP_VERSION=            2;
   private static final byte SSH_FXP_OPEN=               3;
   private static final byte SSH_FXP_CLOSE=              4;
   private static final byte SSH_FXP_READ=               5;
@@ -47,7 +46,6 @@ public class ChannelSftp extends ChannelSession{
   private static final byte SSH_FXP_LSTAT=              7;
   private static final byte SSH_FXP_FSTAT=              8;
   private static final byte SSH_FXP_SETSTAT=            9;
-  private static final byte SSH_FXP_FSETSTAT=          10;
   private static final byte SSH_FXP_OPENDIR=           11;
   private static final byte SSH_FXP_READDIR=           12;
   private static final byte SSH_FXP_REMOVE=            13;
@@ -63,23 +61,11 @@ public class ChannelSftp extends ChannelSession{
   private static final byte SSH_FXP_DATA=             103;
   private static final byte SSH_FXP_NAME=             104;
   private static final byte SSH_FXP_ATTRS=            105;
-  private static final byte SSH_FXP_EXTENDED=         (byte)200;
-  private static final byte SSH_FXP_EXTENDED_REPLY=   (byte)201;
-
   // pflags
   private static final int SSH_FXF_READ=           0x00000001;
   private static final int SSH_FXF_WRITE=          0x00000002;
-  private static final int SSH_FXF_APPEND=         0x00000004;
   private static final int SSH_FXF_CREAT=          0x00000008;
   private static final int SSH_FXF_TRUNC=          0x00000010;
-  private static final int SSH_FXF_EXCL=           0x00000020;
-
-  private static final int SSH_FILEXFER_ATTR_SIZE=         0x00000001;
-  private static final int SSH_FILEXFER_ATTR_UIDGID=       0x00000002;
-  private static final int SSH_FILEXFER_ATTR_PERMISSIONS=  0x00000004;
-  private static final int SSH_FILEXFER_ATTR_ACMODTIME=    0x00000008;
-  private static final int SSH_FILEXFER_ATTR_EXTENDED=     0x80000000;
-
   public static final int SSH_FX_OK=                            0;
   public static final int SSH_FX_EOF=                           1;
   public static final int SSH_FX_NO_SUCH_FILE=                  2;
@@ -131,7 +117,6 @@ public class ChannelSftp extends ChannelSession{
   public static final int RESUME=1;
   public static final int APPEND=2;
 
-  private boolean interactive=false;
   private int seq=1;
   private int[] ackid=new int[1];
 
@@ -229,11 +214,7 @@ public class ChannelSftp extends ChannelSession{
       obuf=new Buffer(rmpsize);
       opacket=new Packet(obuf);
 
-      int i=0;
       int length;
-      int type;
-      byte[] str;
-
       // send SSH_FXP_INIT
       sendINIT();
 
@@ -245,7 +226,6 @@ public class ChannelSftp extends ChannelSession{
         throw new SftpException(SSH_FX_FAILURE, 
                                 "Received message is too long: " + length);
       }
-      type=header.type;             // 2 -> SSH_FXP_VERSION
       server_version=header.rid;
       //System.err.println("SFTP protocol server-version="+server_version);
       if(length>0){
@@ -1253,8 +1233,6 @@ public class ChannelSftp extends ChannelSession{
              header=header(buf, header);
              rest_length=header.length;
              int type=header.type;
-             int id=header.rid;
-
              if(type!=SSH_FXP_STATUS && type!=SSH_FXP_DATA){ 
                throw new IOException("error");
              }
@@ -1347,14 +1325,14 @@ public class ChannelSftp extends ChannelSession{
      }
    }
 
-   public java.util.Vector ls(String path) throws SftpException{
+   public java.util.Vector<LsEntry> ls(String path) throws SftpException{
      //System.out.println("ls: "+path);
      try{
        ((MyPipedInputStream)io_in).updateReadSide();
 
        path=remoteAbsolutePath(path);
        byte[] pattern=null;
-       java.util.Vector v=new java.util.Vector();
+       java.util.Vector<LsEntry> v=new java.util.Vector<LsEntry>();
 
        int foo=path.lastIndexOf('/');
        String dir=path.substring(0, ((foo==0)?1:foo));
@@ -1438,9 +1416,6 @@ public class ChannelSftp extends ChannelSession{
          buf.rewind();
          fill(buf.buffer, 0, 4); length-=4;
          int count=buf.getInt();
-
-         byte[] str;
-         int flags;
 
          buf.reset();
          while(count>0){
@@ -1555,7 +1530,7 @@ public class ChannelSftp extends ChannelSession{
          for(int i=0; i<count; i++){
            filename=buf.getString();
            if(server_version<=3){
-             byte[] longname=buf.getString();
+             buf.getString();
            }
            SftpATTRS.getATTR(buf);
          }
@@ -2027,9 +2002,9 @@ public class ChannelSftp extends ChannelSession{
     while(i-->0){
       str=buf.getString();  // absolute path;
       if(server_version<=3){
-        byte[] lname=buf.getString();  // long filename
+        buf.getString();
       }
-      SftpATTRS attr=SftpATTRS.getATTR(buf);  // dummy attribute
+      SftpATTRS.getATTR(buf);
     }
     return str;
   }
@@ -2359,9 +2334,6 @@ public class ChannelSftp extends ChannelSession{
       fill(buf.buffer, 0, 4); length-=4;
       int count=buf.getInt();
 
-      byte[] str;
-      int flags;
-
       buf.reset();
       while(count>0){
 	if(length>0){
@@ -2376,9 +2348,9 @@ public class ChannelSftp extends ChannelSession{
 	byte[] filename=buf.getString();
 	//System.err.println("filename: "+new String(filename));
         if(server_version<=3){
-          str=buf.getString();  // longname
+          buf.getString();
         }
-	SftpATTRS attrs=SftpATTRS.getATTR(buf);
+	SftpATTRS.getATTR(buf);
 
         byte[] _filename=filename;
         String f=null;
@@ -2550,7 +2522,7 @@ public class ChannelSftp extends ChannelSession{
   }
   private Header header(Buffer buf, Header header) throws IOException{
     buf.rewind();
-    int i=fill(buf.buffer, 0, 9);
+    fill(buf.buffer, 0, 9);
     header.length=buf.getInt()-5;
     header.type=buf.getByte()&0xff;
     header.rid=buf.getInt();  

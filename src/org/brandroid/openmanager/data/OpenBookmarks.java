@@ -423,35 +423,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final OpenServer server = iServersIndex > -1 ? servers.get(iServersIndex) : new OpenServer().setName("New Server");
 		LayoutInflater inflater = (LayoutInflater)getExplorer().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		final View v = inflater.inflate(R.layout.server, null);
-		final EditText mHost = (EditText)v.findViewById(R.id.text_server);
-		final EditText mUser = (EditText)v.findViewById(R.id.text_user);
-		final EditText mPassword = (EditText)v.findViewById(R.id.text_password);
-		final EditText mTextPath = (EditText)v.findViewById(R.id.text_path);
-		final EditText mTextName = (EditText)v.findViewById(R.id.text_name);
-		final CheckBox mCheckPassword = (CheckBox)v.findViewById(R.id.check_password);
-		final Spinner mTypeSpinner = (Spinner)v.findViewById(R.id.server_type);
-		final EditText mTextPort = (EditText)v.findViewById(R.id.text_port);
-		if(!allowShowPass)
-			mCheckPassword.setVisibility(View.GONE);
-		OpenServer.setupServerDialog(server, mHost, mUser, mPassword, mTextPath, mTextName, mCheckPassword, mTypeSpinner, mTextPort);
-		int addStrId = R.string.s_update;
-		if(iServersIndex > -1)
-		{
-			mHost.setText(server.getHost());
-			mUser.setText(server.getUser());
-			mPassword.setText(server.getPassword());
-			mTextPath.setText(server.getPath());
-			mTextName.setText(server.getName());
-			String[] types = mTypeSpinner.getResources().getStringArray(R.array.server_types_values);
-			int pos = 0;
-			for(int i=0; i<types.length; i++)
-				if(types[i].equals(server.getType()))
-				{
-					pos = i;
-					break;
-				}
-			mTypeSpinner.setSelection(pos);
-		} else addStrId = R.string.s_add;
+		OpenServer.setupServerDialog(server, iServersIndex, v);
+		int addStrId = iServersIndex >= 0 ? R.string.s_update : R.string.s_add;
 		final AlertDialog dialog = new AlertDialog.Builder(getExplorer())
 			.setView(v)
 			.setIcon(mHolder != null && mHolder.getIcon() != null ? mHolder.getIcon() : getExplorer().getResources().getDrawable(R.drawable.sm_ftp))

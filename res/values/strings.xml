@@ -172,4 +172,6 @@
     <string name="s_server_ftp">FTP</string>
     <string name="s_server_sftp">SFTP</string>
     <string name="s_pref_server_port">Port</string>
+    <string name="s_about_buildtime">Build Date</string>
+    <string name="s_default">Default</string>
 </resources>

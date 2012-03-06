@@ -3,183 +3,166 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="5dp"
-    android:scrollbars="vertical"
-    android:scrollbarStyle="outsideOverlay"
     android:scrollbarAlwaysDrawVerticalTrack="true"
-    >
+    android:scrollbarStyle="outsideOverlay"
+    android:scrollbars="vertical" >
+
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        >
-        
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" 
-            >
-            
-        <LinearLayout
+        android:orientation="vertical" >
+
+        <RelativeLayout
+            android:id="@+id/RelativeLayout1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/s_pref_server_host" />
-	
-	    <EditText
-	        android:id="@+id/text_server"
-	        android:singleLine="true"
-	        android:inputType="textUri|textNoSuggestions"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content" >
-	        
-	        <requestFocus />
-	    </EditText>
-	    
-	    </LinearLayout>
-	    
-	    <LinearLayout
-	        android:orientation="vertical"
-	        android:layout_weight="1"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content" 
-	        >
-	        
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:inputType="textUri"
-	        android:text="@string/s_pref_server_path" />
-	
-	    <EditText
-	        android:id="@+id/text_path"
-	        android:singleLine="true"
-	        android:inputType="textNoSuggestions|text|textWebEditText"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content" />
-	    
-	    </LinearLayout>
-	    </LinearLayout>
-	
-        <LinearLayout
-            android:orientation="horizontal"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/TextView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:text="@string/s_pref_server_type" />
+
+            <Spinner
+                android:id="@+id/server_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_below="@+id/TextView1"
+                android:layout_toLeftOf="@+id/text_port"
+                android:entries="@array/server_types"
+                android:prompt="@string/s_pref_server_type"
+                android:spinnerMode="dropdown" />
+
+            <TextView
+                android:id="@+id/TextView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignLeft="@+id/text_port"
+                android:text="@string/s_pref_server_port" />
+
+            <EditText
+                android:id="@+id/text_port"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="3"
+                android:layout_alignTop="@+id/server_type"
+                android:layout_toLeftOf="@+id/check_port"
+                android:inputType="number"
+                />
+
+            <CheckBox
+                android:id="@+id/check_port"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/TextView1"
+                android:layout_gravity="top"
+                android:layout_marginTop="1dp"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="@string/s_default"
+                android:layout_alignBaseline="@+id/text_port"
+                android:textAppearance="@style/Small" />
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/s_pref_server_host" />
+
+        <EditText
+            android:id="@+id/text_server"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-	    
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_weight="1"
-		    android:layout_width="match_parent"
-		    android:layout_height="wrap_content">
-	    
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/s_pref_server_user" />
-	
-	    <EditText
-	        android:id="@+id/text_user"
-	        android:inputType="textNoSuggestions"
-	        android:singleLine="true"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content" />
-	    
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/s_pref_server_port" />
-	    
-	    <EditText
-	        android:id="@+id/text_port"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-	        android:inputType="number"
-	        android:text="22"
-	        />
-	    
-	    </LinearLayout>
-	    
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_weight="1"
-		    android:layout_width="match_parent"
-		    android:layout_height="wrap_content">
-	
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/s_pref_server_password" />
-	
-	    <EditText
-	        android:id="@+id/text_password"
-	        android:singleLine="true"
-	        android:inputType="textPassword"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content" />
-	
-	    <CheckBox
-	        android:id="@+id/check_password"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:textAppearance="@style/Small"
-	        android:text="@string/s_show_password" />
-		
-	    </LinearLayout>
-	    </LinearLayout>
-	    
-        
-        <LinearLayout
-            android:orientation="horizontal"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/s_pref_server_host"
+            android:inputType="textUri|textNoSuggestions"
+            android:singleLine="true" >
+
+            <requestFocus />
+
+        </EditText>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/s_pref_server_path" />
+
+        <EditText
+            android:id="@+id/text_path"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-	    
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_weight="1"
-		    android:layout_width="match_parent"
-		    android:layout_height="wrap_content">
-        
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/s_pref_server_name" />
-	
-	    <EditText
-	        android:id="@+id/text_name"
-	        android:singleLine="true"
-	        android:inputType="textNoSuggestions"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content" />
-	
-        </LinearLayout>
-        
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_weight="1"
-		    android:layout_width="match_parent"
-		    android:layout_height="wrap_content">
-		
-	    <TextView
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/s_pref_server_type"
-	        />
-	    
-	    <Spinner
-	        android:id="@+id/server_type"
-	        android:prompt="@string/s_pref_server_type"
-	        android:spinnerMode="dropdown"
-	        android:entries="@array/server_types"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-	        />
-	    
-	    </LinearLayout>
-	    </LinearLayout>
-	
-	</LinearLayout>
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/s_pref_server_path"
+            android:inputType="textNoSuggestions|text|textWebEditText"
+            android:singleLine="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/s_pref_server_user" />
+
+        <EditText
+            android:id="@+id/text_user"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/s_pref_server_user"
+            android:inputType="text|textWebEmailAddress"
+            android:singleLine="true" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/label_password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/s_pref_server_password" />
+
+            <EditText
+                android:id="@+id/text_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/label_password"
+                android:layout_toLeftOf="@+id/check_password"
+                android:hint="@string/s_pref_server_password"
+                android:ems="10"
+                android:inputType="textPassword"
+                android:singleLine="true" />
+
+            <CheckBox
+                android:id="@+id/check_password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/text_password"
+                android:layout_alignParentRight="true"
+                android:lines="1"
+                android:text="@string/s_show_password"
+                android:textAppearance="@style/Small" />
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/s_pref_server_name" />
+
+        <EditText
+            android:id="@+id/text_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/s_pref_server_name"
+            android:inputType="textNoSuggestions"
+            android:singleLine="true" />
+
+    </LinearLayout>
+
 </ScrollView>

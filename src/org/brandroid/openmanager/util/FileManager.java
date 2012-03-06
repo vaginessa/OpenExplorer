@@ -408,6 +408,7 @@ public class FileManager {
 		return ascii_address;
 	 }
 	
+	public static boolean hasOpenCache(String path) { return mOpenCache != null && mOpenCache.containsKey(path); }
 	public static OpenPath getOpenCache(String path) throws IOException { return getOpenCache(path, false); }
 	
 	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles) throws IOException

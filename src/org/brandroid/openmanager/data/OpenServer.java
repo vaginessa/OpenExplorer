@@ -187,14 +187,45 @@ public class OpenServer
 		return null;
 	}
 	
-	public static void setupServerDialog(final OpenServer server, final EditText mHost,
-			final EditText mUser, final EditText mPassword, final EditText mTextPath,
-			final EditText mTextName, final CheckBox mCheckPassword,
-			final Spinner mTypeSpinner, final EditText mTextPort)
+	public static void setupServerDialog(final OpenServer server, final int iServersIndex,
+			final View parentView)
 	{
+		final EditText mHost = (EditText)parentView.findViewById(R.id.text_server);
+		final EditText mUser = (EditText)parentView.findViewById(R.id.text_user);
+		final EditText mPassword = (EditText)parentView.findViewById(R.id.text_password);
+		final EditText mTextPath = (EditText)parentView.findViewById(R.id.text_path);
+		final EditText mTextName = (EditText)parentView.findViewById(R.id.text_name);
+		final CheckBox mCheckPassword = (CheckBox)parentView.findViewById(R.id.check_password);
+		final Spinner mTypeSpinner = (Spinner)parentView.findViewById(R.id.server_type);
+		final EditText mTextPort = (EditText)parentView.findViewById(R.id.text_port);
+		final CheckBox mCheckPort = (CheckBox)parentView.findViewById(R.id.check_port);
+		if(iServersIndex > -1)
+		{
+			//mCheckPassword.setVisibility(View.GONE);
+			mHost.setText(server.getHost());
+			mUser.setText(server.getUser());
+			mPassword.setText(server.getPassword());
+			mTextPath.setText(server.getPath());
+			mTextName.setText(server.getName());
+			if(server.getPort() > 0)
+			{
+				mCheckPort.setChecked(false);
+				mTextPort.setText(""+server.getPort());
+			} else mCheckPort.setChecked(true);
+			String[] types = mTypeSpinner.getResources().getStringArray(R.array.server_types_values);
+			int pos = 0;
+			for(int i=0; i<types.length; i++)
+				if(types[i].equals(server.getType()))
+				{
+					pos = i;
+					break;
+				}
+			mTypeSpinner.setSelection(pos);
+		}
+
 		mHost.setOnFocusChangeListener(new OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
-				if(!hasFocus && server.getName() == "")
+				if(!hasFocus && server.getName().equals(""))
 					mTextName.setText(mHost.getText());
 			}
 		});
@@ -210,18 +241,18 @@ public class OpenServer
 			public void onNothingSelected(AdapterView<?> arg0) { }
 		});
 		if(mCheckPassword.getVisibility() == View.VISIBLE)
-		mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if(isChecked)
-				{
-					mPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-					mPassword.setTransformationMethod(new SingleLineTransformationMethod());
-				} else {
-					mPassword.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-					mPassword.setTransformationMethod(new PasswordTransformationMethod());
+			mCheckPassword.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					if(isChecked)
+					{
+						mPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+						mPassword.setTransformationMethod(new SingleLineTransformationMethod());
+					} else {
+						mPassword.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+						mPassword.setTransformationMethod(new PasswordTransformationMethod());
+					}
 				}
-			}
-		});
+			});
 		mHost.addTextChangedListener(new TextWatcher() {
 			public void onTextChanged(CharSequence s, int start, int before, int count) {}
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -257,11 +288,25 @@ public class OpenServer
 				server.setName(s.toString());
 			}
 		});
+		mTextPort.setEnabled(!mCheckPort.isChecked());
+		if(!mCheckPort.isChecked())
+			mCheckPort.setText("");
 		mTextPort.addTextChangedListener(new TextWatcher() {
 			public void onTextChanged(CharSequence s, int start, int before, int count) { }
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 			public void afterTextChanged(Editable s) {
-				server.setPort(Integer.parseInt(s.toString()));
+				if(!s.toString().equals("") && !s.toString().matches("[^0-9]"))
+					server.setPort(Integer.parseInt(s.toString()));
+			}
+		});
+		mCheckPort.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				mTextPort.setEnabled(!isChecked);
+				if(!isChecked)
+					server.setPort(-1);
+				else
+					server.setPort(Integer.parseInt(mTextPort.getText().toString()));
 			}
 		});
 	}

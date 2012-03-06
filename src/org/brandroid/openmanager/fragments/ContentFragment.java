@@ -33,6 +33,8 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
@@ -448,6 +450,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			setupGridView();
 		}
 		mViewMode = getViewMode();
+		if(getExplorer() == null) return;
 		mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
 		mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hiddenFiles", true));
 		mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", getExplorer().getPreferences().getSetting("global", "pref_thumbnail", true));
@@ -929,7 +932,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 		} else if (!file.isDirectory() && !mActionModeSelected) {
 			
-			if(file.requiresThread())
+			if(file.requiresThread() && FileManager.hasOpenCache(file.getAbsolutePath()))
 			{
 				//getExplorer().showToast("Still need to handle this.");
 				if(file.isTextFile())
@@ -1081,8 +1084,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 		} else {
 			Logger.LogDebug("Worker thread complete?");
-			if(!mPath.requiresThread())
+			if(!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
 				try {
+					if(mPath.requiresThread())
+						mPath = FileManager.getOpenCache(mPath.getAbsolutePath());
 					updateData(mPath.list());
 				} catch (IOException e) {
 					Logger.LogWarning("Couldn't update data after thread completion", e);
@@ -1424,14 +1429,18 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					}
 					if(cachePath == null)
 						cachePath = cmd.Path;
-					/*
-					if(cachePath instanceof OpenNetworkPath && ((OpenNetworkPath)cachePath).getUserInfo() == null)
+					if(cachePath instanceof OpenNetworkPath
+							&& ((OpenNetworkPath)cachePath).getUserInfo() == null
+							)
 					{
 						Uri uri = Uri.parse(cmd.Path.getPath());
-						UserInfo info = new SimpleUserInfo(uri, getExplorer());
+						SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+						int si = ((OpenNetworkPath)cachePath).getServersIndex();
+						OpenServer server = OpenServers.DefaultServers.get(si);
+						if(server.getPassword() != null && server.getPassword() != "")
+							info.setPassword(server.getPassword());
 						((OpenNetworkPath)cachePath).setUserInfo(info);
 					}
-					*/
 					if(list == null)
 						try {
 							list = cachePath.list();
@@ -1456,8 +1465,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				}
 				if(cmd.Path instanceof OpenFTP)
 					((OpenFTP)cmd.Path).getManager().disconnect();
-				else if(cmd.Path instanceof OpenNetworkPath)
-					((OpenNetworkPath)cmd.Path).disconnect();
+				//else if(cmd.Path instanceof OpenNetworkPath)
+				//	((OpenNetworkPath)cmd.Path).disconnect();
 				getManager().pushStack(cmd.Path);
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");

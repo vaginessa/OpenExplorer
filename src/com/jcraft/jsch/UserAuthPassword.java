@@ -154,6 +154,7 @@ class UserAuthPassword extends UserAuth{
 	  continue loop;
         }
 	if(command==SSH_MSG_USERAUTH_FAILURE){
+		userinfo.resetPassword();
 	  buf.getInt(); buf.getByte(); buf.getByte(); 
 	  byte[] foo=buf.getString();
 	  int partial_success=buf.getByte();

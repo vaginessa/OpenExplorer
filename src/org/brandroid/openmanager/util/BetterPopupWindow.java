@@ -122,7 +122,8 @@ public class BetterPopupWindow {
 		{
 			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
 					.inflate(layout, null);
-			((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
+			if(this.root.getParent() == null)
+				((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
 		}
 		this.popup.setContentView(backgroundView);
 		
