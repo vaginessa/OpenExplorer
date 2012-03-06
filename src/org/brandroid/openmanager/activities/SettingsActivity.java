@@ -195,7 +195,7 @@ public class SettingsActivity extends PreferenceActivity
 				setTitle(getTitle() + " - " + path);
 				Preference p;
 				if(server != null)
-					for(String s : new String[]{"name","host","user","password","dir"})
+					for(String s : new String[]{"name","host","user","password","dir","port"})
 						if((p = getPreferenceManager().findPreference("server_" + s)) != null)
 						{
 							String val = server.getString(s);

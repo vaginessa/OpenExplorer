@@ -119,6 +119,7 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
@@ -287,6 +288,7 @@ public class OpenExplorer
 						OpenSFTP.DefaultJSch,
 						FileManager.DefaultUserInfo,
 						Preferences.getPreferences(getApplicationContext(), "hosts")));
+			OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
 		} catch (JSchException e) {
 			Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
 		}
@@ -427,6 +429,9 @@ public class OpenExplorer
 		}
 
 		ft.commit();
+		
+		initBookmarkDropdown();
+		initPager();
 		
 		updateTitle(mLastPath.getPath());
 		if(!BEFORE_HONEYCOMB)
@@ -685,8 +690,6 @@ public class OpenExplorer
 		setupLoggingDb();
 		submitStats();
 		refreshCursors();
-		initBookmarkDropdown();
-		initPager();
 		mBookmarks.scanBookmarks();
 	}
 	
@@ -710,7 +713,7 @@ public class OpenExplorer
 						Logger.LogError("JSCH - " + message);
 						break;
 					case com.jcraft.jsch.Logger.FATAL:
-						Logger.LogError("JSCH - " + message);
+						Logger.LogError("JSCH (FATAL) - " + message);
 						break;
 					default:
 						Logger.LogDebug("JSCH (" + level + ") - " + message);
@@ -729,9 +732,8 @@ public class OpenExplorer
 			{
 				if(!Logger.hasDb())
 					Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
-			} else
+			} else if(!IS_DEBUG_BUILD)
 				Logger.setLoggingEnabled(false);
-			
 		}
 	}
 	

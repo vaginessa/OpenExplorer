@@ -222,6 +222,8 @@ public class ThumbnailCreator extends Thread {
 		final boolean useLarge = mWidth > 72;
 		
 		if(file.isDirectory()) {
+			if(file instanceof OpenNetworkPath)
+				return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
 			if(file.requiresThread())
 				return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
 			if(file.getAbsolutePath().equals("/") && mName.equals(""))
@@ -291,7 +293,7 @@ public class ThumbnailCreator extends Thread {
 		else if(file instanceof OpenFTP && file.isDirectory())
 			return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
 		else if(file instanceof OpenNetworkPath && file.isDirectory())
-			return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
+			return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
 		else if(file.isTextFile())
 			return (useLarge ? R.drawable.lg_file : R.drawable.sm_file);
 		else

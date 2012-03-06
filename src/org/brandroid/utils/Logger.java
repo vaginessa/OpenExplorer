@@ -138,13 +138,13 @@ public class Logger
 	}
 	public static void LogInfo(String msg)
 	{
-		//if(CheckLastLog(msg, Log.INFO)) return;
+		if(CheckLastLog(msg, Log.INFO)) return;
 		LogToDB(Log.INFO, msg, "");
 		Log.i(LOG_KEY, msg);
 	}
 	public static void LogInfo(String msg, String stack)
 	{
-		//if(CheckLastLog(msg, Log.INFO)) return;
+		if(CheckLastLog(msg, Log.INFO)) return;
 		LogToDB(Log.DEBUG, msg, stack);
 		Log.d(LOG_KEY, msg);
 	}
@@ -166,13 +166,13 @@ public class Logger
 	}
 	public static void LogDebug(String msg)
 	{
-		//if(CheckLastLog(msg, Log.DEBUG)) return;
+		if(CheckLastLog(msg, Log.DEBUG)) return;
 		LogToDB(Log.DEBUG, msg, "");
 		Log.d(LOG_KEY, msg);
 	}
 	public static void LogDebug(String msg, String stack)
 	{
-		//if(CheckLastLog(msg, Log.DEBUG)) return;
+		if(CheckLastLog(msg, Log.DEBUG)) return;
 		LogToDB(Log.DEBUG, msg, stack);
 		Log.d(LOG_KEY, msg);
 	}
@@ -195,7 +195,7 @@ public class Logger
 	
 	public static void LogVerbose(String msg)
 	{
-		//if(CheckLastLog(msg, Log.VERBOSE)) return;
+		if(CheckLastLog(msg, Log.VERBOSE)) return;
 		LogToDB(Log.VERBOSE, msg, "");
 		Log.v(LOG_KEY, msg);
 	}

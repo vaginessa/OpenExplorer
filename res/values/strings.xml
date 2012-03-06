@@ -174,4 +174,6 @@
     <string name="s_pref_server_port">Port</string>
     <string name="s_about_buildtime">Build Date</string>
     <string name="s_default">Default</string>
+    <string name="s_pref_timeout">Timeout</string>
+    <string name="s_pref_timeout_summary">Timeout in Seconds</string>
 </resources>

@@ -27,6 +27,10 @@
 	    android:title="@string/s_pref_server_name"
 	    android:summary="@string/s_pref_server_name_summary"
 	    />
+	<EditTextPreference
+	    android:key="server_port"
+	    android:title="@string/s_pref_server_port" 
+	    />
 	<PreferenceScreen
 	    android:key="server_update"
 	    android:title="@string/s_pref_server_update"

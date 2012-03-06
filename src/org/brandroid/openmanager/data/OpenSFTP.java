@@ -22,6 +22,10 @@ import android.net.Uri;
 
 public class OpenSFTP extends OpenNetworkPath
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3263112609308933024L;
 	private long filesize = 0l;
 	private Session mSession = null;
 	private ChannelSftp mChannel = null;
@@ -32,7 +36,6 @@ public class OpenSFTP extends OpenNetworkPath
 	private SftpATTRS mAttrs = null;
 	private String mName = null;
 	protected OpenSFTP mParent = null;
-	public int Timeout = 20000;
 	private Vector<OpenSFTP> mChildren = null;
 	
 	public OpenSFTP(String fullPath)
@@ -70,12 +73,22 @@ public class OpenSFTP extends OpenNetworkPath
 		mHost = parent.getHost();
 		mUser = parent.getUser();
 		mParent = parent;
-		mRemotePath = (child.getFilename().startsWith("/") ? "" : "/") +
-				child.getFilename();
-		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
 		mAttrs = child.getAttrs();
+		Uri pUri = mParent.getUri();
+		String name = child.getFilename();
+		name = name.substring(name.lastIndexOf("/") + 1);
+		Uri myUri = Uri.withAppendedPath(pUri, name);
+		//Logger.LogDebug("Name: [" + name + "] Parent Uri: [" + pUri.toString() + "] Child Uri: [" + myUri.toString() + "] Path: [" + myUri.getPath() + "]");
+		mRemotePath = myUri.getPath();
+		mSession = parent.mSession;
+		mChannel = parent.mChannel;
+		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
 	}
 	
+	/**
+	 * This does not change the actual path of the underlying object, just what is displayed to the user.
+	 * @param name New title for OpenPath object
+	 */
 	public void setName(String name) { mName = name; } 
 	
 	public int getPort() { return mPort; }
@@ -130,6 +143,12 @@ public class OpenSFTP extends OpenNetworkPath
 	public OpenPath getChild(String name) {
 		return null;
 	}
+	
+	@Override
+	public int getChildCount(boolean countHidden) throws IOException {
+		if(mChildren == null) return 0;
+		return super.getChildCount(countHidden);
+	}
 
 	@Override
 	public OpenPath[] list() throws IOException {
@@ -146,9 +165,14 @@ public class OpenSFTP extends OpenNetworkPath
 			String lsPath = mRemotePath;
 			if(lsPath.equals(""))
 				lsPath = ".";
+			Logger.LogVerbose("ls " + lsPath);
 			Vector<LsEntry> vv = mChannel.ls(lsPath);
 			for(LsEntry item : vv)
 			{
+				String name = item.getFilename();
+				name = name.substring(name.lastIndexOf("/") + 1);
+				if(name.equals(".")) continue;
+				if(name.equals("..")) continue;
 				mChildren.add(new OpenSFTP(this, item));
 			}
 		} catch (SftpException e) {
@@ -178,7 +202,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Uri getUri() {
-		return null;
+		return Uri.parse("sftp://" + mHost + (mPort > 0 ? ":" + mPort : "") + (!mRemotePath.startsWith("/") ? "/" : "") + mRemotePath);
 	}
 
 	@Override
@@ -243,13 +267,13 @@ public class OpenSFTP extends OpenNetworkPath
 	@Override
 	public void connect() throws JSchException
 	{
-		super.connect();
 		if(mSession != null && mSession.isConnected() && mChannel != null && mChannel.isConnected())
 		{
-			Logger.LogInfo("No need for new OpenSFTP connection @ " + getName());
+			//Logger.LogInfo("No need for new OpenSFTP connection @ " + getName());
 			return;
 		}
-		Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
+		super.connect();
+		//Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
 		//disconnect();
 		//Logger.LogDebug("Ready for new connection");
 		//JSch jsch = new JSch();

@@ -11,9 +11,14 @@ import com.jcraft.jsch.UserInfo;
 
 public abstract class OpenNetworkPath extends OpenPath
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3829590216951441869L;
 	protected UserInfo mUserInfo;
 	private int mServersIndex = -1;
 	public static final JSch DefaultJSch = new JSch();
+	public static int Timeout = 20000;
 	
 	@Override
 	public Boolean requiresThread() {

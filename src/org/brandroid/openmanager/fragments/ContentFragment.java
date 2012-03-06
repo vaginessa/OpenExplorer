@@ -18,6 +18,7 @@
 
 package org.brandroid.openmanager.fragments;
 
+import org.apache.http.entity.FileEntity;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -49,6 +50,7 @@ import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
 import java.io.File;
@@ -240,8 +242,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mPath = OpenExplorer.getVideoParent();
 			else if(last.equalsIgnoreCase("Music"))
 				mPath = OpenExplorer.getMusicParent();
-			else
-				mPath = new OpenFile(last);
+			else {
+				try {
+					mPath = FileManager.getOpenCache(last, false);
+				} catch (IOException e) {
+					Logger.LogWarning("Couldn't get Cache in Fragment", e);
+					if(last.startsWith("sftp:/"))
+						mPath = new OpenSFTP(last);
+					mPath = new OpenFile(last);
+				}
+			}
 		}
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
@@ -255,7 +265,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		refreshData(mBundle);
 		
-
 		if(mGrid != null)
 		{
 			if(mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0)
@@ -1436,8 +1445,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						Uri uri = Uri.parse(cmd.Path.getPath());
 						SimpleUserInfo info = new SimpleUserInfo(getExplorer());
 						int si = ((OpenNetworkPath)cachePath).getServersIndex();
-						OpenServer server = OpenServers.DefaultServers.get(si);
-						if(server.getPassword() != null && server.getPassword() != "")
+						OpenServer server = null; 
+						if(si > -1)
+							server = OpenServers.DefaultServers.get(si);
+						if(server != null && server.getPassword() != null && server.getPassword() != "")
 							info.setPassword(server.getPassword());
 						((OpenNetworkPath)cachePath).setUserInfo(info);
 					}
@@ -1446,7 +1457,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							list = cachePath.list();
 							FileManager.setOpenCache(cachePath.getPath(), cachePath);
 						} catch (IOException e) {
-							Logger.LogError("Couldn't list from cachePath", e);
+							Logger.LogWarning("Couldn't list from cachePath", e);
 						}
 					if(list != null) {
 						for(OpenPath f : list)

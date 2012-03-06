@@ -419,23 +419,25 @@ public class FileManager {
 		OpenPath ret = mOpenCache.get(path);
 		if(ret == null)
 		{
-			if(path.indexOf("ftp:/") > -1)
+			if(path.startsWith("ftp:/"))
 			{
 				FTPManager man = new FTPManager(path);
 				FTPFile file = new FTPFile();
 				file.setName(path.substring(path.lastIndexOf("/")+1));
 				ret = new OpenFTP(file, man);
-			} else if(path.indexOf("scp:/") > -1)
+			} else if(path.startsWith("scp:/"))
 			{
 				Uri uri = Uri.parse(path);
 				ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
-			} else if(path.indexOf("sftp:/") > -1)
+			} else if(path.startsWith("sftp:/"))
 			{
 				Uri uri = Uri.parse(path);
 				ret = new OpenSFTP(uri);
 			}
 			if(ret != null && bGetNetworkedFiles)
+			{
 				ret.listFiles();
+			}
 			if(ret != null)
 				setOpenCache(path, ret);
 		}
