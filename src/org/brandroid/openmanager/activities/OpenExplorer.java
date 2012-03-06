@@ -339,25 +339,6 @@ public class OpenExplorer
 		
 		mFavoritesFragment = new BookmarkFragment();
 
-		if(mSinglePane || !USE_ACTION_BAR)
-		{
-			mBookmarksList = new ExpandableListView(getApplicationContext());
-			View anchor = null;
-			if(anchor == null)
-				anchor = findViewById(R.id.title_icon);
-			if(anchor == null)
-				anchor = findViewById(android.R.id.home);
-			if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
-				anchor = getActionBar().getCustomView();
-			if(anchor == null)
-				anchor = findViewById(R.id.title_bar);
-			mBookmarksPopup = new BetterPopupWindow(this, anchor);
-			mBookmarksPopup.setContentView(mBookmarksList);
-			mBookmarks = new OpenBookmarks(this, mBookmarksList);
-			for(int i = 0; i < mBookmarksList.getCount(); i++)
-				mBookmarksList.expandGroup(i);
-		}
-		
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
 		{	
@@ -402,49 +383,12 @@ public class OpenExplorer
 		if(mViewPagerEnabled && findViewById(R.id.content_pager_frame_stub) != null)
 			((ViewStub)findViewById(R.id.content_pager_frame_stub)).inflate();
 		
-		mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
-		if(mViewPagerEnabled && mViewPager != null)
-		{
-			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
-			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
-			mViewPager.setOnPageIndicatorChangeListener(this);
-			ViewGroup indicator_frame = (ViewGroup)findViewById(R.id.content_pager_indicator);
-			try {
-				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
-				if(indicator_frame != null)
-					indicator_frame.setAnimation(AnimationUtils.makeInAnimation(getApplicationContext(), false));
-			} catch(Resources.NotFoundException e)
-			{
-				Logger.LogError("Couldn't load pager animation.", e);
-			}
-			PageIndicator indicator = (PageIndicator)findViewById(R.id.content_pager_indicator);
-			if(indicator != null)
-				mViewPager.setIndicator(indicator);
-			//mViewPager = new ViewPager(getApplicationContext());
-			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
-			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
-		} else {
-			mViewPagerEnabled = false;
-			mViewPager = null; //(ViewPager)findViewById(R.id.content_pager);
-			setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
-			setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
-		}
-
 		mContentFragment = ContentFragment.getInstance(mLastPath, mViewMode);
 		
 		if(fragmentManager == null)
 		{
 			fragmentManager = getSupportFragmentManager();
 			fragmentManager.addOnBackStackChangedListener(this);
-		}
-
-		if(mViewPager != null && mViewPagerEnabled)
-		{
-			Logger.LogVerbose("Setting up ViewPager");
-			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-			mViewPagerAdapter.setOnPageTitleClickListener(this);
-			mViewPagerAdapter.add(mContentFragment);
-			setViewPageAdapter(mViewPagerAdapter);
 		}
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -455,9 +399,9 @@ public class OpenExplorer
 
 		if(!mSinglePane && mFavoritesFragment != null)
 		{
-			fragmentManager.beginTransaction()
-				.replace(R.id.list_frag, mFavoritesFragment)
-				.commit();
+			//fragmentManager.beginTransaction()
+			//	.replace(R.id.list_frag, mFavoritesFragment)
+			//	.commit();
 		}
 				
 		Intent intent = getIntent();
@@ -507,6 +451,71 @@ public class OpenExplorer
 
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "External"));
+	}
+	
+	private void initBookmarkDropdown()
+	{
+		mBookmarksList = new ExpandableListView(getApplicationContext());
+		if(mSinglePane || !USE_ACTION_BAR)
+		{	
+			View anchor = null;
+			if(anchor == null)
+				anchor = findViewById(R.id.title_icon);
+			if(anchor == null)
+				anchor = findViewById(android.R.id.home);
+			if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
+				anchor = getActionBar().getCustomView();
+			if(anchor == null)
+				anchor = findViewById(R.id.title_bar);
+			mBookmarksPopup = new BetterPopupWindow(this, anchor);
+			mBookmarksPopup.setContentView(mBookmarksList);
+		} else if(findViewById(R.id.list_frag) != null) {
+			((ViewGroup)findViewById(R.id.list_frag)).addView(mBookmarksList);
+		}
+		mBookmarks = new OpenBookmarks(this, mBookmarksList);
+		for(int i = 0; i < mBookmarksList.getCount(); i++)
+			mBookmarksList.expandGroup(i);
+	}
+	
+	private void initPager()
+	{
+		mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
+		if(mViewPagerEnabled && mViewPager != null)
+		{
+			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
+			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
+			mViewPager.setOnPageIndicatorChangeListener(this);
+			ViewGroup indicator_frame = (ViewGroup)findViewById(R.id.content_pager_indicator);
+			try {
+				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
+				if(indicator_frame != null)
+					indicator_frame.setAnimation(AnimationUtils.makeInAnimation(getApplicationContext(), false));
+			} catch(Resources.NotFoundException e)
+			{
+				Logger.LogError("Couldn't load pager animation.", e);
+			}
+			PageIndicator indicator = (PageIndicator)findViewById(R.id.content_pager_indicator);
+			if(indicator != null)
+				mViewPager.setIndicator(indicator);
+			//mViewPager = new ViewPager(getApplicationContext());
+			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
+			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
+		} else {
+			mViewPagerEnabled = false;
+			mViewPager = null; //(ViewPager)findViewById(R.id.content_pager);
+			setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
+			setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
+		}
+
+		if(mViewPager != null && mViewPagerEnabled)
+		{
+			Logger.LogVerbose("Setting up ViewPager");
+			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
+			mViewPagerAdapter.setOnPageTitleClickListener(this);
+			mViewPagerAdapter.add(mContentFragment);
+			setViewPageAdapter(mViewPagerAdapter);
+		}
+
 	}
 	
 	private boolean checkForNoMedia(OpenPath defPath)
@@ -688,6 +697,8 @@ public class OpenExplorer
 		super.onStart();
 		setupLoggingDb();
 		submitStats();
+		initBookmarkDropdown();
+		initPager();
 		if(mFavoritesFragment != null)
 			((BookmarkFragment)mFavoritesFragment).scanBookmarks();
 	}
@@ -2290,7 +2301,8 @@ public class OpenExplorer
 			// switch from /mnt/sdcard-ext/Pictures to /mnt/sdcard-ext/download
 			setViewVisibility(true, false, R.id.content_pager_frame);
 			setViewVisibility(false, false, R.id.content_frag);
-			mViewPagerAdapter.removeOfType(ContentFragment.class);
+			//mViewPagerAdapter.removeOfType(ContentFragment.class);
+			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 			try {
 				mViewPagerAdapter.add(0, content);
 			} catch(IllegalStateException e)

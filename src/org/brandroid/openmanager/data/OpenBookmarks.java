@@ -715,6 +715,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				mText.setTypeface(Typeface.DEFAULT_BOLD);
 			else
 				mText.setTypeface(Typeface.DEFAULT);
+			mText.setBackgroundDrawable(null);
 			
 			//ret.setBackgroundColor(android.R.color.background_dark);
 			//mText.setTextColor(android.R.color.secondary_text_light);
