@@ -1,5 +1,7 @@
 package org.brandroid.utils;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -24,6 +26,7 @@ public class Logger
 	public static void setLoggingEnabled(Boolean enable) { bLoggingEnabled = enable; }
 	private static boolean CheckLastLog(String msg, int level)
 	{
+		if(OpenExplorer.IS_DEBUG_BUILD) return false;
 		if(!isLoggingEnabled()) return true;
 		level -= 2;
 		if(level < 0 || level > 4) return false;

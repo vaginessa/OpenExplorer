@@ -79,6 +79,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ExpandableListView;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -325,8 +326,11 @@ public class OpenExplorer
 			ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
 			if(mTitleStub != null)
 				mTitleStub.inflate();
+			ViewStub mBaseStub = (ViewStub)findViewById(R.id.base_stub);
+			if(mBaseStub != null)
+				mBaseStub.inflate();
 		}
-		setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text);
+		setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text, R.id.title_sort, R.id.title_view, R.id.title_up);
 		
 		if(findViewById(R.id.list_frag) == null)
 			mSinglePane = true;
@@ -459,6 +463,8 @@ public class OpenExplorer
 				anchor = findViewById(android.R.id.home);
 			if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
 				anchor = getActionBar().getCustomView();
+			if(anchor == null)
+				anchor = findViewById(R.id.base_bar);
 			if(anchor == null)
 				anchor = findViewById(R.id.title_bar);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
@@ -1665,7 +1671,7 @@ public class OpenExplorer
 			case R.id.menu_sort_size_desc: 	setSorting(FileManager.SortType.SIZE_DESC); return true; 
 			case R.id.menu_sort_type: 		setSorting(FileManager.SortType.TYPE); return true;
 
-			
+			case R.id.title_view:
 			case R.id.menu_view:
 				//if(BEFORE_HONEYCOMB)
 				//	showMenu(item.getSubMenu(), from);
@@ -2585,6 +2591,13 @@ public class OpenExplorer
 	
 	public void onClipboardUpdate() {
 		View pb = findViewById(R.id.title_paste);
+		if(pb == null && BEFORE_HONEYCOMB && findViewById(R.id.base_row) != null)
+		{
+			pb = new ImageButton(this);
+			((ImageButton)pb).setImageResource(R.drawable.ic_menu_paste);
+			((ViewGroup)findViewById(R.id.base_row)).addView(pb);
+			pb.setOnClickListener(this);
+		}
 		if(pb != null && BEFORE_HONEYCOMB)
 		{
 			pb.setVisibility(View.VISIBLE);

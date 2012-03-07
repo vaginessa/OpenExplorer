@@ -16,11 +16,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/view_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    >
     
     
     
@@ -29,10 +29,12 @@
 	      />
    
 	<LinearLayout
+	    android:layout_below="@+id/title_stub"
+	    android:layout_above="@+id/base_stub"
 		android:id="@+id/frag_holder"
 	    android:orientation="horizontal"
 	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
+	    android:layout_height="0dp"
 	    android:baselineAligned="false">
 	    
 	    
@@ -64,4 +66,13 @@
 	
 	    
 	</LinearLayout>
-</LinearLayout>
+	
+	<ViewStub
+	    android:layout_alignParentBottom="true"
+	    android:layout="@layout/base_bar"
+		android:id="@+id/base_stub"
+	    android:inflatedId="@+id/base_bar"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    />
+</RelativeLayout>
