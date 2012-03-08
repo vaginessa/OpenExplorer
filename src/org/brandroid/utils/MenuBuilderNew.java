@@ -61,7 +61,6 @@ public class MenuBuilderNew implements Menu {
 
     private final Context mContext;
     private final Resources mResources;
-    private MenuAdapter mAdapter;
 
     /**
      * Whether the shortcuts should be qwerty-accessible. Use isQwertyMode()
@@ -70,11 +69,11 @@ public class MenuBuilderNew implements Menu {
     private boolean mQwertyMode;
         
     /** Contains all of the items for this menu */
-    private ArrayList<MenuItemImpl> mItems;
+    private ArrayList<MenuItemImplNew> mItems;
 
     /** Contains only the items that are currently visible.  This will be created/refreshed from
      * {@link #getVisibleItems()} */
-    private ArrayList<MenuItemImpl> mVisibleItems;
+    private ArrayList<MenuItemImplNew> mVisibleItems;
     /**
      * Whether or not the items (or any one item's shown state) has changed since it was last
      * fetched from {@link #getVisibleItems()}
@@ -115,7 +114,7 @@ public class MenuBuilderNew implements Menu {
      * Called by menu items to execute their associated action
      */
     public interface ItemInvoker {
-        public boolean invokeItem(MenuItemImpl item);
+        public boolean invokeItem(MenuItemImplNew item);
     }
 
     public MenuBuilderNew(Context context) {
@@ -124,9 +123,9 @@ public class MenuBuilderNew implements Menu {
         mContext = context;
         mResources = context.getResources();
         
-        mItems = new ArrayList<MenuItemImpl>();
+        mItems = new ArrayList<MenuItemImplNew>();
         
-        mVisibleItems = new ArrayList<MenuItemImpl>();
+        mVisibleItems = new ArrayList<MenuItemImplNew>();
         mIsVisibleItemsStale = true;
     }
     
@@ -144,7 +143,7 @@ public class MenuBuilderNew implements Menu {
     private MenuItem addInternal(int group, int id, int categoryOrder, CharSequence title) {
         final int ordering = getOrdering(categoryOrder);
         
-        final MenuItemImpl item = new MenuItemImpl(this, group, id, categoryOrder, ordering, title);
+        final MenuItemImplNew item = new MenuItemImplNew(this, group, id, categoryOrder, ordering, title);
 
         if (mCurrentMenuInfo != null) {
             // Pass along the current menu info
@@ -189,7 +188,7 @@ public class MenuBuilderNew implements Menu {
 
     //@Override
 	public SubMenu addSubMenu(int group, int id, int categoryOrder, CharSequence title) {
-		return ((MenuItemImpl)addInternal(group, id, categoryOrder, title))
+		return ((MenuItemImplNew)addInternal(group, id, categoryOrder, title))
 				.setSubMenu(new MenuSubMenuImpl(this, group, id, categoryOrder, 0, title));
     }
 
@@ -275,7 +274,7 @@ public class MenuBuilderNew implements Menu {
         
         final int N = mItems.size();
         for (int i = 0; i < N; i++) {
-            MenuItemImpl curItem = mItems.get(i);
+            MenuItemImplNew curItem = mItems.get(i);
             if (curItem.getGroupId() == group) {
                 if (!curItem.isExclusiveCheckable()) continue;
                 if (!curItem.isCheckable()) continue;
@@ -291,7 +290,7 @@ public class MenuBuilderNew implements Menu {
         final int N = mItems.size();
        
         for (int i = 0; i < N; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.getGroupId() == group) {
                 item.setExclusiveCheckable(exclusive);
                 item.setCheckable(checkable);
@@ -308,7 +307,7 @@ public class MenuBuilderNew implements Menu {
         
         boolean changedAtLeastOneItem = false;
         for (int i = 0; i < N; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.getGroupId() == group) {
                 if (item.setVisibleInt(visible)) changedAtLeastOneItem = true;
             }
@@ -322,7 +321,7 @@ public class MenuBuilderNew implements Menu {
         final int N = mItems.size();
 
         for (int i = 0; i < N; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.getGroupId() == group) {
                 item.setEnabled(enabled);
             }
@@ -334,7 +333,7 @@ public class MenuBuilderNew implements Menu {
         final int size = size();
 
         for (int i = 0; i < size; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.isVisible()) {
                 return true;
             }
@@ -347,7 +346,7 @@ public class MenuBuilderNew implements Menu {
 	public MenuItem findItem(int id) {
         final int size = size();
         for (int i = 0; i < size; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.getItemId() == id) {
                 return item;
             } else if (item.hasSubMenu()) {
@@ -366,7 +365,7 @@ public class MenuBuilderNew implements Menu {
         final int size = size();
 
         for (int i = 0; i < size; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.getItemId() == id) {
                 return i;
             }
@@ -387,7 +386,7 @@ public class MenuBuilderNew implements Menu {
         }
         
         for (int i = start; i < size; i++) {
-            final MenuItemImpl item = mItems.get(i);
+            final MenuItemImplNew item = mItems.get(i);
             
             if (item.getGroupId() == group) {
                 return i;
@@ -400,7 +399,7 @@ public class MenuBuilderNew implements Menu {
     public void hideItem(int itemId)
     {
     	for (int i = size() - 1; i >= 0; i--) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.getItemId() == itemId) {
                 mItems.remove(i);
             }
@@ -435,9 +434,9 @@ public class MenuBuilderNew implements Menu {
      * On the other hand, if two (or more) shortcuts corresponds to the same key,
      * we have to only return the exact match.
      */
-    MenuItemImpl findItemWithShortcutForKey(int keyCode, KeyEvent event) {
+    MenuItemImplNew findItemWithShortcutForKey(int keyCode, KeyEvent event) {
         // Get all items that can be associated directly or indirectly with the keyCode
-        List<MenuItemImpl> items = findItemsWithShortcutForKey(keyCode, event);
+        List<MenuItemImplNew> items = findItemsWithShortcutForKey(keyCode, event);
 
         if (items == null) {
             return null;
@@ -456,7 +455,7 @@ public class MenuBuilderNew implements Menu {
         final boolean qwerty = isQwertyMode();
         // If we found more than one item associated with the key,
         // we have to return the exact match
-        for (MenuItemImpl item : items) {
+        for (MenuItemImplNew item : items) {
             final char shortcutChar = qwerty ? item.getAlphabeticShortcut() : item.getNumericShortcut();
             if ((shortcutChar == possibleChars.meta[0] &&
                     (metaState & KeyEvent.META_ALT_ON) == 0)
@@ -528,9 +527,9 @@ public class MenuBuilderNew implements Menu {
         return mResources;
     }
 
-    private static int findInsertIndex(ArrayList<MenuItemImpl> items, int ordering) {
+    private static int findInsertIndex(ArrayList<MenuItemImplNew> items, int ordering) {
         for (int i = items.size() - 1; i >= 0; i--) {
-            MenuItemImpl item = items.get(i);
+            MenuItemImplNew item = items.get(i);
             if (item.getOrdering() <= ordering) {
                 return i + 1;
             }
@@ -541,7 +540,7 @@ public class MenuBuilderNew implements Menu {
     
     //@Override
 	public boolean performShortcut(int keyCode, KeyEvent event, int flags) {
-        final MenuItemImpl item = findItemWithShortcutForKey(keyCode, event);
+        final MenuItemImplNew item = findItemWithShortcutForKey(keyCode, event);
 
         boolean handled = false;
         
@@ -562,7 +561,7 @@ public class MenuBuilderNew implements Menu {
      * (the ALT-enabled char corresponds to the shortcut) associated
      * with the keyCode.
      */
-    List<MenuItemImpl> findItemsWithShortcutForKey(int keyCode, KeyEvent event) {
+    List<MenuItemImplNew> findItemsWithShortcutForKey(int keyCode, KeyEvent event) {
         final boolean qwerty = isQwertyMode();
         final int metaState = event.getMetaState();
         final KeyCharacterMap.KeyData possibleChars = new KeyCharacterMap.KeyData();
@@ -573,13 +572,13 @@ public class MenuBuilderNew implements Menu {
             return null;
         }
 
-        Vector<MenuItemImpl> items = new Vector<MenuItemImpl>();
+        Vector<MenuItemImplNew> items = new Vector<MenuItemImplNew>();
         // Look for an item whose shortcut is this key.
         final int N = mItems.size();
         for (int i = 0; i < N; i++) {
-            MenuItemImpl item = mItems.get(i);
+            MenuItemImplNew item = mItems.get(i);
             if (item.hasSubMenu()) {
-                List<MenuItemImpl> subMenuItems = ((MenuBuilderNew)item.getSubMenu())
+                List<MenuItemImplNew> subMenuItems = ((MenuBuilderNew)item.getSubMenu())
                     .findItemsWithShortcutForKey(keyCode, event);
                 items.addAll(subMenuItems);
             }
@@ -605,7 +604,7 @@ public class MenuBuilderNew implements Menu {
     }
 
     public boolean performItemAction(MenuItem item, int flags) {
-        MenuItemImpl itemImpl = (MenuItemImpl) item;
+        MenuItemImplNew itemImpl = (MenuItemImplNew) item;
         
         if (itemImpl == null || !itemImpl.isEnabled()) {
             return false;
@@ -651,22 +650,22 @@ public class MenuBuilderNew implements Menu {
     }
 
     /**
-     * Called by {@link MenuItemImpl} when its visible flag is changed.
+     * Called by {@link MenuItemImplNew} when its visible flag is changed.
      * @param item The item that has gone through a visibility change.
      */
-    void onItemVisibleChanged(MenuItemImpl item) {
+    void onItemVisibleChanged(MenuItemImplNew item) {
         // Notify of items being changed
         onItemsChanged(false);
     }
     
-    ArrayList<MenuItemImpl> getVisibleItems() {
+    ArrayList<MenuItemImplNew> getVisibleItems() {
         if (!mIsVisibleItemsStale) return mVisibleItems;
         
         // Refresh the visible items
         mVisibleItems.clear();
         
         final int itemsSize = mItems.size(); 
-        MenuItemImpl item;
+        MenuItemImplNew item;
         for (int i = 0; i < itemsSize; i++) {
             item = mItems.get(i);
             if (item.isVisible()) mVisibleItems.add(item);
@@ -681,48 +680,17 @@ public class MenuBuilderNew implements Menu {
 		return mContext;
 	}
 
-	public View buildView()
-	{
-		ListView ret = new ListView(mContext);
-		mAdapter = new MenuAdapter();
-		ret.setAdapter(mAdapter);
-		return ret;
-	}
-	
-	private class MenuAdapter extends BaseAdapter
-	{
+    /**
+     * Gets the root menu (if this is a submenu, find its root menu).
+     * @return The root menu.
+     */
+    public MenuBuilderNew getRootMenu() {
+        return this;
+    }
 
-		public int getCount() {
-			// TODO Auto-generated method stub
-			return getVisibleItems().size();
-		}
 
-		public Object getItem(int arg0) {
-			// TODO Auto-generated method stub
-			return null;
-		}
+    boolean dispatchMenuItemSelected(MenuBuilderNew menu, MenuItem item) {
+        return false; //mCallback != null && mCallback.onMenuItemSelected(menu, item);
+    }
 
-		public long getItemId(int arg0) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		public View getView(int pos, View pre, ViewGroup parent) {
-			View view = pre;
-			if(view == null)
-			{
-				LayoutInflater in = (LayoutInflater)mContext
-						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-				view = in.inflate(R.layout.bookmark_layout, parent, false);
-			}
-			MenuItemImpl item = getVisibleItems().get(pos); 
-			TextView txt = (TextView)view.findViewById(R.id.content_text);
-			ImageView img = (ImageView)view.findViewById(R.id.content_icon);
-			txt.setText(item.getTitle());
-			img.setImageDrawable(item.getIcon());
-			return view;
-		}
-		
-	}
 }

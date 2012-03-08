@@ -1,8 +1,11 @@
 package org.brandroid.openmanager.adapters;
 
+import java.util.Hashtable;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuBuilderNew;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,9 +33,11 @@ public class IconContextMenu
 	//private Dialog dialog;
 	protected final BetterPopupWindow popup;
 	protected final ViewGroup root;
-	private MenuBuilderNew menu;
-	protected final View anchor;
+	private MenuBuilder menu;
+	protected View anchor;
 	private int maxColumns = 2;
+	private int mWidth = 0;
+	private static Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>(); 
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
@@ -41,38 +46,44 @@ public class IconContextMenu
     	this(context, newMenu(context, menuId), from, head, foot);
     }
     
-    public static MenuBuilderNew newMenu(Context context, int menuId) {
-    	MenuBuilderNew menu = new MenuBuilderNew(context);
+    public static MenuBuilder newMenu(Context context, int menuId) {
+    	MenuBuilder menu = new MenuBuilder(context);
     	new MenuInflater(context).inflate(menuId, menu);
     	return menu;
     }
 
-	public IconContextMenu(Context context, Menu menu, final View from, final View head, final View foot) {
-		MenuBuilderNew newMenu = new MenuBuilderNew(context);
-		for(int i = 0; i < menu.size(); i++)
-		{
-			MenuItem item = menu.getItem(i);
-			if(item.isVisible())
-				newMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle());
-		}
+	public IconContextMenu(Context context, MenuBuilder menu, final View from, final View head, final View foot) {
 		root = (ViewGroup) ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.paste_layout, null);
 		//root.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         //menu = newMenu;
+		this.menu = menu;
         anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         popup = new BetterPopupWindow(context, anchor);
         mGrid = new GridView(context);
         mGrid.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         mGrid.setNumColumns(maxColumns);
+        setAdapter(context, new IconContextMenuAdapter(context, menu));
+        if(mWidth == 0)
+        {
+        	//mGrid.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        	//mWidth = mGrid.getMeasuredWidth();
+        }
+        if(mWidth == 0)
+        	mWidth = context.getResources().getDimensionPixelSize(R.dimen.popup_width);
+        if(mWidth > 0)
+        	popup.setPopupWidth(mWidth);
         if(head != null)
         	root.addView(head);
 		root.addView(mGrid);
 		if(foot != null)
 			root.addView(foot);
         popup.setContentView(root);
-        setAdapter(context, new IconContextMenuAdapter(context, menu));
+        //if(mWidth > 0)
+        //	popup.setPopupWidth(mWidth);
 	}
 	
+	private IconContextMenuAdapter getAdapter() { return (IconContextMenuAdapter) mGrid.getAdapter(); }
 	public void setAdapter(Context context, final IconContextMenuAdapter adapter)
 	{
 		mGrid.setAdapter(adapter);
@@ -121,7 +132,7 @@ public class IconContextMenu
 		return info;
 	}
 	
-	public MenuBuilderNew getMenu() {
+	public MenuBuilder getMenu() {
 		return menu;
 	}
 	
@@ -162,6 +173,40 @@ public class IconContextMenu
     }
 	public void addView(View v, int index) {
 		root.addView(v, index);
+	}
+	
+	public void setPopupWidth(int w)
+	{
+		mWidth = w;
+		if(popup != null)
+			popup.setPopupWidth(w);
+	}
+
+	public static IconContextMenu getInstance(Context c, int menuId,
+			View from, View top, View bottom) {
+		if(!mInstances.containsKey(menuId))
+			mInstances.put(menuId, new IconContextMenu(c, menuId, from, top, bottom));
+		IconContextMenu ret = mInstances.get(menuId);
+		ret.setAnchor(from);
+		return ret;
+	}
+
+	public static void clearInstances() {
+		mInstances.clear();
+		
+	}
+
+	public void setMenu(MenuBuilder newMenu) {
+		getAdapter().setMenu(newMenu);
+	}
+
+	public void setAnchor(View from) {
+		this.anchor = from;
+		popup.setAnchor(from);
+	}
+
+	public void setTextLayout(int layoutId) {
+		getAdapter().setTextLayout(layoutId);
 	}
 
     

@@ -15,12 +15,12 @@ public class MenuSubMenuImpl extends MenuBuilderNew implements SubMenu
 
 	public MenuSubMenuImpl(Context context) {
 		super(context);
-		mItem = new MenuItemImpl(this, 0,0,0, 0, "pewp");
+		mItem = new MenuItemImplNew(this, 0,0,0, 0, "pewp");
 	}
 	public MenuSubMenuImpl(MenuBuilderNew menu, int group, int id, int categoryOrder, int ordering, CharSequence title)
 	{
 		super(menu.getContext());
-		mItem = new MenuItemImpl(menu, group, id, categoryOrder, ordering, title);
+		mItem = new MenuItemImplNew(menu, group, id, categoryOrder, ordering, title);
 	}
 
 	public void clearHeader() {

@@ -556,6 +556,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
 						final IconContextMenu cm = new IconContextMenu(
 								mContext, R.menu.context_file, view, null, null);
+						cm.setAnchor(anchor);
 						Menu cmm = cm.getMenu();
 						if(getClipboard().size() > 0)
 							hideItem(cmm, R.id.menu_context_multi);
@@ -576,6 +577,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							}
 						});
 						cm.setInfo(pos);
+						cm.setTextLayout(R.layout.context_item);
 						cm.show(); //r.left, r.top);
 					} catch(Exception e) {
 						Logger.LogWarning("Couldn't show Iconified menu.", e);
@@ -670,7 +672,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 			private void hideItem(Menu menu, int itemId) {
 				if(menu != null && menu.findItem(itemId) != null)
-					menu.findItem(itemId).setVisible(false);
+					menu.removeItem(itemId); //findItem(itemId).setVisible(false);
 			}
 		});
 		if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE)

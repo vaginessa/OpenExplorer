@@ -59,6 +59,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
+import android.view.ContextMenu;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -151,6 +152,7 @@ import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.openmanager.views.OpenViewPager.OnPageIndicatorChangeListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.Preferences;
 
@@ -206,6 +208,8 @@ public class OpenExplorer
 	private OpenPathList mSiblingList = null;
 	private BetterPopupWindow mBookmarksPopup, mSiblingPopup;
 	private static OnBookMarkChangeListener mBookmarkListener;
+	
+	private IconContextMenu mContextMenu = null;
 	
 	private static final FileManager mFileManager = new FileManager();
 	private static final EventHandler mEvHandler = new EventHandler(mFileManager);
@@ -331,6 +335,7 @@ public class OpenExplorer
 				mBaseStub.inflate();
 		}
 		setOnClicks(R.id.title_icon, R.id.title_search, R.id.title_menu, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text, R.id.title_sort, R.id.title_view, R.id.title_up);
+		IconContextMenu.clearInstances();
 		
 		if(findViewById(R.id.list_frag) == null)
 			mSinglePane = true;
@@ -1374,9 +1379,10 @@ public class OpenExplorer
 
 	public static void setMenuVisible(Menu menu, boolean visible, int... ids)
 	{
+		if(menu == null) return;
 		for(int id : ids)
 			if(menu.findItem(id) != null)
-				menu.findItem(id).setVisible(visible);
+				menu.removeItem(id); //findItem(id).setVisible(visible);
 	}
 	public static void setMenuShowAsAction(Menu menu, int show, int... ids)
 	{
@@ -1517,6 +1523,9 @@ public class OpenExplorer
 			break;
 		}
 		
+		if(BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
+			menu.findItem(R.id.menu_multi).setIcon(null);
+		
 		setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
 		
 		setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", true), R.id.menu_view_fullscreen);
@@ -1534,7 +1543,8 @@ public class OpenExplorer
 			setMenuVisible(menu, false, R.id.menu_paste);
 		} else {
 			MenuItem mPaste = menu.findItem(R.id.menu_paste);
-			mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
+			if(mPaste != null && getClipboard() != null)
+				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
 			if(getClipboard().isMultiselect())
 			{
 				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
@@ -1556,7 +1566,8 @@ public class OpenExplorer
 			//if()
 			//mPaste.setIcon();
 			//mPaste.setIcon(R.drawable.bluetooth);
-			mPaste.setVisible(true);
+			if(mPaste != null)
+				mPaste.setVisible(true);
 		}
 		
 		int mViewMode = frag.getViewMode();
@@ -1658,6 +1669,10 @@ public class OpenExplorer
 				}
 				return true;
 				
+			case R.id.title_sort:
+				showMenu(R.menu.menu_sort_flat, from);
+				return true;
+				
 			case R.id.menu_sort:
 				if(!USE_ACTION_BAR)
 					showMenu(R.menu.menu_sort, from);
@@ -1672,6 +1687,9 @@ public class OpenExplorer
 			case R.id.menu_sort_type: 		setSorting(FileManager.SortType.TYPE); return true;
 
 			case R.id.title_view:
+				showMenu(R.menu.menu_view_flat, from);
+				return true;
+				
 			case R.id.menu_view:
 				//if(BEFORE_HONEYCOMB)
 				//	showMenu(item.getSubMenu(), from);
@@ -1738,8 +1756,9 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.title_menu:
-				Logger.LogInfo("Show menu!");
-				showMenu();
+				showMenu(R.menu.main_menu, from);
+				//Logger.LogInfo("Show menu!");
+				//showMenu();
 				return true;
 			
 			case R.id.menu_multi_all_delete:
@@ -1875,7 +1894,7 @@ public class OpenExplorer
 			//else
 			//	showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
 	}
-	public void showMenu(Menu menu, final View from)
+	public void showMenu(MenuBuilder menu, final View from)
 	{
 		if(from != null){
 			if(showContextMenu(menu, from) == null)
@@ -1885,23 +1904,36 @@ public class OpenExplorer
 	public IconContextMenu showContextMenu(int menuId, final View from)
 	{
 		try {
-			Logger.LogDebug("Trying to show context menu" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 			if(menuId == R.id.menu_sort || menuId == R.menu.menu_sort)
 				menuId = R.menu.menu_sort;
 			else if(menuId == R.id.menu_view || menuId == R.menu.menu_view)
 				menuId = R.menu.menu_view;
 			else if(menuId == R.id.title_menu || menuId == R.menu.main_menu)
 				menuId = R.menu.main_menu;
+			else if(menuId == R.id.title_sort || menuId == R.menu.menu_sort_flat)
+				menuId = R.menu.menu_sort_flat;
+			else if(menuId == R.id.title_view || menuId == R.menu.menu_view_flat)
+				menuId = R.menu.menu_view_flat;
 			else
 				return null;
-			if(menuId == R.menu.context_file || menuId == R.menu.main_menu || menuId == R.menu.menu_sort || menuId == R.menu.menu_view)
+			Logger.LogDebug("Trying to show context menu #" + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
+			if(menuId == R.menu.context_file || menuId == R.menu.main_menu || menuId == R.menu.menu_sort || menuId == R.menu.menu_view || menuId == R.menu.menu_sort_flat || menuId == R.menu.menu_view_flat)
 			{
-				Menu menu = new MenuBuilderNew(this);
-				new MenuInflater(this).inflate(menuId, menu);
-				onPrepareOptionsMenu(menu);
-				final IconContextMenu icm = new IconContextMenu(OpenExplorer.this, menu, from, null, null);
+				final IconContextMenu icm = IconContextMenu.getInstance(getApplicationContext(),
+						menuId, from, null, null);
 				if(icm == null)
 					throw new NullPointerException("context menu returned null");
+				//MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
+				MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
+				onPrepareOptionsMenu(menu);
+				icm.setMenu(menu);
+				icm.setAnchor(from);
+				if(menuId != R.menu.context_file)
+				{
+					icm.setNumColumns(1);
+					//icm.setPopupWidth(getResources().getDimensionPixelSize(R.dimen.popup_width) / 2);
+				} else
+					icm.setTextLayout(R.layout.context_item);
 				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 						//showToast(item.getTitle().toString());
@@ -1911,17 +1943,19 @@ public class OpenExplorer
 							showMenu(R.menu.menu_view, view);
 						else
 							onClick(item.getItemId(), item, view);
-						//icm.dismiss();
+						icm.dismiss();
 						//mMenuPopup.dismiss();
 					}
 				});
-				if(menuId == R.menu.menu_sort)
+				if(menuId == R.menu.menu_sort || menuId == R.menu.menu_sort_flat)
 					icm.setTitle(R.string.s_menu_sort);
-				else if(menuId == R.menu.menu_view)
+				else if(menuId == R.menu.menu_view || menuId == R.menu.menu_view_flat)
 					icm.setTitle(R.string.s_view);
 				icm.show();
 				return icm;
-			} else return showContextMenu(menuId, null);
+			} else {
+				showMenu(menuId, from);
+			}
 		} catch(Exception e) {
 			Logger.LogWarning("Couldn't show icon context menu" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".", e);
 			if(from != null)
@@ -1930,7 +1964,7 @@ public class OpenExplorer
 		Logger.LogInfo("Not sure what happend with " + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 		return null;
 	}
-	public IconContextMenu showContextMenu(Menu menu, final View from)
+	public IconContextMenu showContextMenu(MenuBuilder menu, final View from)
 	{
 		Logger.LogDebug("Trying to show context menu " + menu.toString() + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 		IconContextMenu icm = null;

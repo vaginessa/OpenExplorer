@@ -94,7 +94,7 @@ public class RootManager
 					ret.append(line + "\n");
 			}
 		} catch(Exception e) {
-			Logger.LogError("Exception while executeNoRoot", e);
+			Logger.LogWarning("Exception while executeNoRoot. " + e.getMessage());
 		} finally {
 			if(is != null)
 				try {

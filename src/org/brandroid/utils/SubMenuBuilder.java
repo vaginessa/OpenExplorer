@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.brandroid.utils;
 
 import android.content.Context;
@@ -22,42 +6,40 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.view.Window.Callback;
 
 /**
  * The model for a sub menu, which is an extension of the menu.  Most methods are proxied to
  * the parent menu.
  */
-public class SubMenuBuilder extends MenuBuilderNew implements SubMenu {
-    private MenuBuilderNew mParentMenu;
+public class SubMenuBuilder extends MenuBuilder implements SubMenu {
+    private MenuBuilder mParentMenu;
     private MenuItemImpl mItem;
     
-    public SubMenuBuilder(Context context, MenuBuilderNew parentMenu, MenuItemImpl item) {
+    public SubMenuBuilder(Context context, MenuBuilder parentMenu, MenuItemImpl item) {
         super(context);
 
         mParentMenu = parentMenu;
         mItem = item;
     }
 
-    //@Override
+    @Override
     public void setQwertyMode(boolean isQwerty) {
         mParentMenu.setQwertyMode(isQwerty);
     }
 
-    //@Override
+    @Override
     public boolean isQwertyMode() {
         return mParentMenu.isQwertyMode();
     }
     
-    //@Override
+    @Override
     public void setShortcutsVisible(boolean shortcutsVisible) {
-        // TODO mParentMenu.setShortcutsVisible(shortcutsVisible);
+        mParentMenu.setShortcutsVisible(shortcutsVisible);
     }
 
-    //@Override
+    @Override
     public boolean isShortcutsVisible() {
-    	// TODO return mParentMenu.isShortcutsVisible();
-    	return false;
+        return mParentMenu.isShortcutsVisible();
     }
 
     public Menu getParentMenu() {
@@ -68,21 +50,20 @@ public class SubMenuBuilder extends MenuBuilderNew implements SubMenu {
         return mItem;
     }
 
-    //@Override
+    @Override
     public void setCallback(Callback callback) {
-    	// TODO mParentMenu.setCallback(callback);
+        mParentMenu.setCallback(callback);
     }
 
-    //@Override
-    public MenuBuilderNew getRootMenu() {
+    @Override
+    public MenuBuilder getRootMenu() {
         return mParentMenu;
     }
 
-    //@Override
-    boolean dispatchMenuItemSelected(MenuBuilderNew menu, MenuItem item) {
-    	// TODO return super.dispatchMenuItemSelected(menu, item) ||
-                //mParentMenu.dispatchMenuItemSelected(menu, item);
-    	return false;
+    @Override
+    boolean dispatchMenuItemSelected(MenuBuilder menu, MenuItem item) {
+        return super.dispatchMenuItemSelected(menu, item) ||
+                mParentMenu.dispatchMenuItemSelected(menu, item);
     }
 
     public SubMenu setIcon(Drawable icon) {
@@ -96,46 +77,41 @@ public class SubMenuBuilder extends MenuBuilderNew implements SubMenu {
     }
 
     public SubMenu setHeaderIcon(Drawable icon) {
-    	return null; // TODO return (SubMenu)super.setHeaderIconInt(icon);
+        return (SubMenu) super.setHeaderIconInt(icon);
     }
 
     public SubMenu setHeaderIcon(int iconRes) {
-    	return null; // TODO return (SubMenu) super.setHeaderIconInt(iconRes);
+        return (SubMenu) super.setHeaderIconInt(iconRes);
     }
 
     public SubMenu setHeaderTitle(CharSequence title) {
-    	return null; // TODO return (SubMenu) super.setHeaderTitleInt(title);
+        return (SubMenu) super.setHeaderTitleInt(title);
     }
 
     public SubMenu setHeaderTitle(int titleRes) {
-    	return null; // TODO return (SubMenu) super.setHeaderTitleInt(titleRes);
+        return (SubMenu) super.setHeaderTitleInt(titleRes);
     }
 
     public SubMenu setHeaderView(View view) {
-    	return null; // TODO return (SubMenu) super.setHeaderViewInt(view);
+        return (SubMenu) super.setHeaderViewInt(view);
     }
 
-    //@Override
+    @Override
     public boolean expandItemActionView(MenuItemImpl item) {
-    	return false; // TODO return mParentMenu.expandItemActionView(item);
+        return mParentMenu.expandItemActionView(item);
     }
 
-    //@Override
+    @Override
     public boolean collapseItemActionView(MenuItemImpl item) {
-    	return false; // TODO return mParentMenu.collapseItemActionView(item);
+        return mParentMenu.collapseItemActionView(item);
     }
 
-    //@Override
+    @Override
     public String getActionViewStatesKey() {
         final int itemId = mItem != null ? mItem.getItemId() : 0;
         if (itemId == 0) {
             return null;
         }
-        return null; // TODO return super.getActionViewStatesKey() + ":" + itemId;
+        return super.getActionViewStatesKey() + ":" + itemId;
     }
-
-	public void clearHeader() {
-		// TODO Auto-generated method stub
-		
-	}
 }

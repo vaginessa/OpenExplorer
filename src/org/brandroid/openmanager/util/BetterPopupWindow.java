@@ -62,7 +62,7 @@ public class BetterPopupWindow {
 			anchor = anchor.findViewById(android.R.id.icon);
 		this.popup = new PopupWindow(mContext);
 		//this.popup.setAnimationStyle(anim);
-		this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
+		//this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
 
 
 		// when a touch even happens outside of the window
@@ -120,6 +120,7 @@ public class BetterPopupWindow {
 		
 		if(backgroundView == null)
 		{
+			
 			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
 					.inflate(layout, null);
 			if(this.root.getParent() == null)
@@ -128,6 +129,7 @@ public class BetterPopupWindow {
 		this.popup.setContentView(backgroundView);
 		
 		this.popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+		//this.popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
 		this.popup.setOutsideTouchable(true);
@@ -151,7 +153,9 @@ public class BetterPopupWindow {
 		//int arrowWidth = indicator.getMeasuredWidth();
 		//if(arrowOffset > 0)
 		//	arrowOffset = (rootWidth / 2) - (arrowWidth / 2);
-		int pos1 = Math.min(rootWidth - arrowWidth, Math.max(0, arrowOffset % rootWidth));
+		int pos1 = arrowOffset;
+		if(rootWidth > 0)
+			pos1 = Math.min(rootWidth - arrowWidth, Math.max(0, arrowOffset));
 		int pos2 = Math.min(rootWidth - arrowWidth, (rootWidth + arrowOffset) - arrowWidth);
 		Logger.LogVerbose("Arrow (offset, width -> pos1 / pos2): " + arrowOffset + ", " + rootWidth + " -> " + pos1 + " / " + pos2);
 		if(arrowOffset >= 0)
@@ -195,8 +199,8 @@ public class BetterPopupWindow {
 	}
 
 	public void showLikePopDownMenu(int xOffset, int yOffset) {
-		this.preShow((anchor != null ? anchor.getLeft() : 0) + xOffset,
-				(anchor != null ? anchor.getTop() : 0) + yOffset);
+		this.preShow((anchor != null ? getAbsoluteLeft(anchor) : 0) + xOffset,
+				(anchor != null ? getAbsoluteTop(anchor) : 0) + yOffset);
 
 		if(anchor == null)
 		{
@@ -255,8 +259,8 @@ public class BetterPopupWindow {
 				Logger.LogError("Error measuring background", e);
 			}
 			
-			int ancLeft = anchor.getLeft(),
-				ancTop = anchor.getTop();
+			int ancLeft = getAbsoluteLeft(anchor),
+				ancTop = getAbsoluteTop(anchor);
 			
 			int padLeft = 0;
 			if(backgroundView.findViewById(R.id.indicator_line) != null)
@@ -280,57 +284,40 @@ public class BetterPopupWindow {
 			arrowOffset = (int) (dp * 10);
 
 			//anchor.getLocationOnScreen(anchorPos);
-			boolean fromRight = anchor.getLeft() + popup.getWidth() > getWindowRect().right;
-			boolean fromBottom = anchor.getTop() + popup.getHeight() > getWindowRect().bottom;
+			boolean fromRight = ancLeft + xOffset > getWindowRect().centerX();
+			boolean fromBottom = ancTop + yOffset > getWindowRect().centerY();
 			//if(!fromBottom && pop)
 
 			if(fromBottom)
 				popup.setHeight(
 						popup.getMaxAvailableHeight(anchor)
-						//(R.dimen.large_text_height + (8 * dp)) * 
-						//mContext.getResources().getDimensionPixelSize(R.dimen.popup_height)
 						);
-				//yOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
 			if(fromRight)
 			{
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
-				//Rect aRect = new Rect();
-				//anchor.getWindowVisibleDisplayFrame(aRect);
-				//arrowOffset = (aRect.right - (anchor.getWidth() / 2)); // - (getAvailableWidth() - popup.getWidth());
-				/*
-				xOffset -= mContext.getResources().getDimensionPixelSize(R.dimen.popup_width);
-				xOffset += anchor.getWidth();
-				arrowOffset *= -1;
-				if(anchor.getWidth() > 50 && anchor.getWidth() < windowWidth / 2)
-					arrowOffset -= anchor.getWidth() / 3;
-				*/
-				//arrowOffset = -1 * (anchor.getWidth() / 2);
-				//arrowOffset += 10;
 			} else {
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
 			}
-			if(popup.getWidth() + ancLeft > availWidth)
-				arrowOffset = ancLeft + (availWidth - popup.getWidth());
+
+			arrowOffset = ancLeft;
+			if(ancLeft > anchor.getWidth() / 2 && anchor.getWidth() < getWindowRect().centerX())
+				arrowOffset -= anchor.getWidth() / 2;
 			
-			arrowOffset += (Math.min(popup.getWidth(), anchor.getWidth()) / 2);
-			
-			arrowOffset -= 30;
-			
-			View vind = backgroundView.findViewById(R.id.indicator);
-			if(vind != null)
-				arrowOffset -= (vind.getWidth() / 2);
+			//View vind = backgroundView.findViewById(R.id.indicator);
+			//if(vind != null) arrowOffset -= (vind.getWidth() / 2);
 			//arrowOffset -= 10 * mContext.getResources().getDimension(R.dimen.one_dp);
 			
-			if(fromRight && arrowOffset > 50 && OpenExplorer.BEFORE_HONEYCOMB) //arrowOffset *= -1;
-				arrowOffset -= 50;
+			//if(fromRight && arrowOffset > 50 && OpenExplorer.BEFORE_HONEYCOMB) //arrowOffset *= -1;
+			//	arrowOffset -= 50 * dp;
 			
 			//arrowOffset = anchorOffset;
-	
 			
+			if(popup.getWidth() == 0)
+				popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
+	
 			int popWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
 			placeArrow(arrowOffset, popWidth);
 			
-
 			if(fromBottom)
 			{
 				//backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
@@ -353,6 +340,32 @@ public class BetterPopupWindow {
 		}
 	}
 	
+	private int getAbsoluteTop(View v) {
+		try {
+			int[] ret = new int[2];
+			v.getLocationOnScreen(ret);
+			return ret[1];
+		} catch(Exception e) {
+			int ret = v.getTop();
+			if(v.getParent() != null && v.getParent() instanceof View)
+				ret += getAbsoluteTop((View)v.getParent());
+			return ret;
+		}
+	}
+
+	private int getAbsoluteLeft(View v) {
+		try {
+			int[] ret = new int[2];
+			v.getLocationOnScreen(ret);
+			return ret[0];
+		} catch(Exception e) {
+			int ret = v.getLeft();
+			if(v.getParent() != null && v.getParent() instanceof View)
+				ret += getAbsoluteLeft((View)v.getParent());
+			return ret;
+		}
+	}
+
 	public View getContentView()
 	{
 		return root;
@@ -426,7 +439,7 @@ public class BetterPopupWindow {
 	 * Displays like a QuickAction from the anchor view.
 	 */
 	public void showLikeQuickAction() {
-		this.showLikeQuickAction(0, 0, anchor != null ? anchor.getLeft() : 20);
+		this.showLikeQuickAction(0, 0, anchor != null ? getAbsoluteLeft(anchor) : 20);
 	}
 	private View setViewWidth(View v, int w)
 	{

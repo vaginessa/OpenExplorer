@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.adapters;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.utils.MenuBuilder;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,28 +16,51 @@ import android.widget.*;
 
 public class IconContextMenuAdapter extends BaseAdapter {
 	private Context context;
-    private Menu menu;
+    private MenuBuilder myMenu;
+    private boolean hasIcons = false;
+    private boolean hasChecks = false;
+    private int textLayoutId = android.R.layout.simple_list_item_multiple_choice;
     
     public IconContextMenuAdapter(Context context, Menu menu) {
 		this.context = context;
-		this.menu = menu;
+		myMenu = new MenuBuilder(context);
+		setMenu(menu);
 	}
+    
+    public void setMenu(Menu menu)
+    {
+    	myMenu.clear();
+    	for(int i=0; i<menu.size(); i++)
+    	{
+    		MenuItem item = menu.getItem(i);
+    		if(!item.isVisible()) continue;
+    		if(item.getIcon() != null) hasIcons = true;
+    		if(item.isCheckable() || item.isChecked()) hasChecks = true;
+    		myMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle())
+    			.setIcon(item.getIcon());
+    	}
+    	notifyDataSetChanged();
+    }
+    public void setTextLayout(int layoutId) {
+    	textLayoutId = layoutId;
+    	notifyDataSetChanged();
+    }
 
 	//@Override
 	public int getCount() {
-		return menu.size();
+		return myMenu.size();
 	}
 	
 	//@Override
 	public MenuItem getItem(int position) {
-		if(position < menu.size() && position >= 0)
-			return menu.getItem(position);
+		if(position < myMenu.size() && position >= 0)
+			return myMenu.getItem(position);
 		else
 			return null;
 	}
 
 	public MenuItem findItem(int id) {
-		return menu.findItem(id);
+		return myMenu.findItem(id);
 	}
 	
 	//@Override
@@ -47,16 +71,14 @@ public class IconContextMenuAdapter extends BaseAdapter {
     //@Override
     public View getView(int position, View convertView, ViewGroup parent) {
         MenuItem item = getItem(position);
-        if(item == null)
-        	return convertView;
-        
+        //if(item == null)
+        //	return convertView;
         TextView res = (TextView)convertView;
-        if (res == null) {
+        //if (res == null) {
        		res = (TextView)LayoutInflater.from(context).inflate(
-       				//android.R.layout.simple_list_item_multiple_choice
-       				R.layout.context_item
-       				, null);
-        }
+       				textLayoutId
+       				, parent, false);
+        //}
         
         if(!item.isVisible())
         	res.setVisibility(View.GONE);
@@ -65,12 +87,15 @@ public class IconContextMenuAdapter extends BaseAdapter {
         else
         	res.setEnabled(true);
         
-        if(CheckedTextView.class.equals(res.getClass()))
+        Drawable check = null;
+        if(res instanceof CheckedTextView)
         {
-	        if(item.isCheckable())
+	        if(item.isCheckable() || item.isChecked())
 	        	((CheckedTextView)res).setChecked(item.isChecked());
-	        else ((CheckedTextView)res).setCheckMarkDrawable(null);
-        }
+	        else if(!item.isCheckable())
+	        	((CheckedTextView)res).setCheckMarkDrawable(null);
+        } else if(item.isChecked())
+        	check = res.getResources().getDrawable(android.R.drawable.checkbox_on_background);
         
         //res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
         //res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
@@ -78,12 +103,12 @@ public class IconContextMenuAdapter extends BaseAdapter {
         Drawable icon = item.getIcon();
         if(icon == null)
         	icon = new ColorDrawable(android.R.color.white);
-        if(BitmapDrawable.class.equals(icon.getClass()))
+        if(icon instanceof BitmapDrawable)
         	((BitmapDrawable)icon).setGravity(Gravity.CENTER);
         
         res.setTag(item);
         res.setText(item.getTitle());
-        res.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
+        res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);
               
         return res;
     }
