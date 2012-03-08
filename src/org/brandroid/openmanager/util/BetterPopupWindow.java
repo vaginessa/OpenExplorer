@@ -145,7 +145,7 @@ public class BetterPopupWindow {
 		}
 		int arrowWidth = 30;
 		if(indicator != null)
-			arrowWidth = ((ImageView)indicator).getDrawable().getIntrinsicWidth();
+			arrowWidth = ((ImageView)indicator).getDrawable().getIntrinsicWidth() * 2;
 		//indicator.setMinimumHeight(((ImageView)indicator).getDrawable().getIntrinsicHeight());
 		//indicator.setMinimumWidth(((ImageView)indicator).getDrawable().getIntrinsicWidth());
 		
@@ -155,9 +155,9 @@ public class BetterPopupWindow {
 		//	arrowOffset = (rootWidth / 2) - (arrowWidth / 2);
 		int pos1 = arrowOffset;
 		if(rootWidth > 0)
-			pos1 = Math.min(rootWidth - arrowWidth, Math.max(0, arrowOffset));
+			pos1 = Math.min(rootWidth - arrowWidth, Math.max(arrowWidth / 2, arrowOffset));
 		int pos2 = Math.min(rootWidth - arrowWidth, (rootWidth + arrowOffset) - arrowWidth);
-		Logger.LogVerbose("Arrow (offset, width -> pos1 / pos2): " + arrowOffset + ", " + rootWidth + " -> " + pos1 + " / " + pos2);
+		Logger.LogVerbose("Arrow (offset, width, arrow -> pos1 / pos2): " + arrowOffset + ", " + rootWidth + ", " + arrowWidth + " -> " + pos1 + " / " + pos2);
 		if(arrowOffset >= 0)
 		{
 			//indicator.setLeft(arrowOffset);
@@ -281,7 +281,7 @@ public class BetterPopupWindow {
 			
 			//anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 			//arrowOffset = anchor.getMeasuredWidth() / 2;
-			arrowOffset = (int) (dp * 10);
+			arrowOffset = (int) (dp * 16);
 
 			//anchor.getLocationOnScreen(anchorPos);
 			boolean fromRight = ancLeft + xOffset > getWindowRect().centerX();
@@ -299,31 +299,26 @@ public class BetterPopupWindow {
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
 			}
 
-			arrowOffset = ancLeft;
-			if(ancLeft > anchor.getWidth() / 2 && anchor.getWidth() < getWindowRect().centerX())
-				arrowOffset -= anchor.getWidth() / 2;
-			
-			//View vind = backgroundView.findViewById(R.id.indicator);
-			//if(vind != null) arrowOffset -= (vind.getWidth() / 2);
-			//arrowOffset -= 10 * mContext.getResources().getDimension(R.dimen.one_dp);
-			
-			//if(fromRight && arrowOffset > 50 && OpenExplorer.BEFORE_HONEYCOMB) //arrowOffset *= -1;
-			//	arrowOffset -= 50 * dp;
-			
-			//arrowOffset = anchorOffset;
-			
 			if(popup.getWidth() == 0)
 				popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
 	
 			int popWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
-			placeArrow(arrowOffset, popWidth);
-			
-			if(fromBottom)
+			int popLeft = ancLeft;
+			if(popLeft + popWidth > getWindowWidth())
 			{
-				//backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
-				//backgroundView.setBackgroundDrawable(R.drawable.contextmenu_bottom);
-				//yOffset += anchor.getHeight();
-			}
+				popLeft = getWindowWidth() - popWidth;
+				arrowOffset = (ancLeft + (anchor.getWidth() / 2)) - popLeft;
+			} else arrowOffset = Math.min(anchor.getWidth() / 2, popWidth / 2);
+			
+			arrowOffset -= (int)(16 * mContext.getResources().getDimension(R.dimen.one_dp));
+			
+			//arrowOffset = ancLeft - popLeft;
+			//if(ancLeft > anchor.getWidth() / 2 && anchor.getWidth() < getWindowRect().centerX())
+			//	arrowOffset += anchor.getWidth() / 2;
+			
+			Logger.LogDebug("Some More: pop(w/l)=(" + popWidth + "/" + popLeft + "),arr=" + arrowOffset);
+			
+			placeArrow(arrowOffset, popWidth);
 			
 			/*
 			if(this.anchor.getY() > windowManager.getDefaultDisplay().getHeight() / 2)
@@ -343,7 +338,7 @@ public class BetterPopupWindow {
 	private int getAbsoluteTop(View v) {
 		try {
 			int[] ret = new int[2];
-			v.getLocationOnScreen(ret);
+			v.getLocationInWindow(ret);
 			return ret[1];
 		} catch(Exception e) {
 			int ret = v.getTop();
@@ -529,6 +524,7 @@ public class BetterPopupWindow {
 		{
 			backgroundView.findViewById(R.id.contextmenu_title).setVisibility(View.VISIBLE);
 			((TextView)backgroundView.findViewById(android.R.id.title)).setText(stringId);
+			backgroundView.invalidate();
 		}
 	}
 

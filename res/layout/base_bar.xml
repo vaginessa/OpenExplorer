@@ -3,11 +3,11 @@
     android:id="@+id/base_bar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:stretchColumns="*" >
+    >
 
     <View android:layout_height="1dp" android:layout_width="match_parent" android:background="@color/blue" />
         <TableRow android:gravity="center" android:id="@+id/base_row">
-    
+    <!--  
     <ImageButton
         android:id="@+id/title_search"
         android:src="@android:drawable/ic_menu_search"
@@ -57,5 +57,6 @@
 	    android:layout_height="@dimen/actionbar_compat_height"
 	    android:layout_alignParentRight="true"
         />
+        -->
     </TableRow>
 </TableLayout>

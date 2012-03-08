@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+	android:src="@android:drawable/ic_menu_search"
+    android:clickable="true"
+    android:contentDescription="@string/app_name"
+    style="@style/ActionBarCompatHomeItem"
+	android:layout_width="@dimen/actionbar_compat_button_width"
+	android:layout_height="@dimen/actionbar_compat_height"
+	android:padding="0dp"
+    />

@@ -509,6 +509,9 @@ public final class MenuItemImpl implements MenuItem {
         return mMenu.getOptionalIconsVisible();
     }
     
+    public int getShowAsAction() { return mShowAsAction; }
+    public int getFlags() { return mFlags; }
+    
     public boolean isActionButton() {
         return (mFlags & IS_ACTION) == IS_ACTION;
     }
