@@ -30,7 +30,8 @@
 		android:layout_height="wrap_content"
 		android:layout_width="match_parent"
 		android:baselineAlignBottom="true"
-		android:scaleType="centerCrop"
+		android:src="@drawable/lg_folder_full"
+		android:scaleType="center"
 		android:layout_gravity="bottom|center_horizontal"
 		android:layout_above="@+id/content_text"
 		/>
@@ -42,7 +43,7 @@
 		android:layout_marginLeft="5dp"
 		android:layout_marginRight="5dp"
 		android:layout_alignParentBottom="true"
-		android:lines="3"
+		android:lines="1"
 		android:ellipsize="end"
 		/>
 </LinearLayout>

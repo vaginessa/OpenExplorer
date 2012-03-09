@@ -58,6 +58,12 @@
 		</menu>
 	</item>
 	<item
+		android:id="@+id/menu_up"
+		android:icon="@drawable/ic_up"
+		android:showAsAction="always"
+		android:visible="false"
+		android:title="@string/s_menu_up" />
+	<item
 		android:id="@+id/menu_new_folder"
 		android:icon="@drawable/ic_menu_add"
 		android:showAsAction="ifRoom"

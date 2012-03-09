@@ -7,7 +7,17 @@
 
     <View android:layout_height="1dp" android:layout_width="match_parent" android:background="@color/blue" />
         <TableRow android:gravity="center" android:id="@+id/base_row">
-    <!--  
+           <!--  
+    <ImageButton
+                android:id="@+id/title_up"
+                android:src="@drawable/ic_up"
+		        android:clickable="true"
+		        style="@style/ActionBarCompatHomeItem"
+		        android:contentDescription="Go up"
+			    android:layout_width="@dimen/actionbar_compat_button_width"
+			    android:layout_height="@dimen/actionbar_compat_height"
+			    android:padding="0dp"
+			    />
     <ImageButton
         android:id="@+id/title_search"
         android:src="@android:drawable/ic_menu_search"

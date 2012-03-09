@@ -37,7 +37,10 @@ public class IconContextMenuAdapter extends BaseAdapter {
     		if(item.getIcon() != null) hasIcons = true;
     		if(item.isCheckable() || item.isChecked()) hasChecks = true;
     		myMenu.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle())
-    			.setIcon(item.getIcon());
+    			.setIcon(item.getIcon())
+    			.setCheckable(item.isCheckable())
+    			.setChecked(item.isChecked())
+    			.setEnabled(item.isEnabled());
     	}
     	notifyDataSetChanged();
     }
@@ -87,15 +90,27 @@ public class IconContextMenuAdapter extends BaseAdapter {
         else
         	res.setEnabled(true);
         
+        int checkId = android.R.drawable.checkbox_off_background;
+        if(item.isCheckable() || item.isChecked())
+        	checkId = item.isChecked() ?
+        			android.R.drawable.checkbox_on_background :
+        			android.R.drawable.checkbox_off_background;
         Drawable check = null;
         if(res instanceof CheckedTextView)
         {
+        	if(item.getTitle().toString().indexOf("View") > -1 || item.getTitle().toString().indexOf("Sort") > -1)
+        		((CheckedTextView)res).setCheckMarkDrawable(android.R.drawable.btn_radio);
+        	checkId = 0;
 	        if(item.isCheckable() || item.isChecked())
+	        {
 	        	((CheckedTextView)res).setChecked(item.isChecked());
-	        else if(!item.isCheckable())
+	        } else {
 	        	((CheckedTextView)res).setCheckMarkDrawable(null);
-        } else if(item.isChecked())
-        	check = res.getResources().getDrawable(android.R.drawable.checkbox_on_background);
+	        }
+        } else if(checkId > 0)
+        	check = res.getResources().getDrawable(checkId);
+        
+        //else if(item.isChecked())
         
         //res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
         //res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));

@@ -516,8 +516,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//	mGrid.setTag(true);
 		//else return; // only do the following the first time
 		
-		mGrid.setSelector(R.drawable.selector_blue);
-		mGrid.setDrawSelectorOnTop(true);
+		//mGrid.setSelector(R.drawable.selector_blue);
+		//mGrid.setDrawSelectorOnTop(true);
 		mGrid.setVisibility(View.VISIBLE);
 		mGrid.setOnItemClickListener(this);
 		mGrid.setOnScrollListener(new OnScrollListener() {
@@ -543,6 +543,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			@SuppressWarnings("unused")
 			public boolean onItemLongClick(AdapterView<?> list, final View view ,int pos, long id) {
 				mMenuContextItemIndex = pos;
+				//view.setBackgroundResource(R.drawable.selector_blue);
+				//list.setSelection(pos);
 				//if(list.showContextMenu()) return true;
 				
 				final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
@@ -1256,7 +1258,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						//|| view.getTag() == null
 						//|| !BookmarkHolder.class.equals(view.getTag())
 						//|| ((BookmarkHolder)view.getTag()).getMode() != mode
-						) {
+						)
+			{
 				LayoutInflater in = (LayoutInflater)mContext
 										.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				
@@ -1311,6 +1314,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			if(mIcon != null)
 			{
+				mIcon.invalidate();
 				if(file.isHidden())
 					mIcon.setAlpha(100);
 				else

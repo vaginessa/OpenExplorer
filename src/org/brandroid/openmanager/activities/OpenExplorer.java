@@ -1566,7 +1566,7 @@ public class OpenExplorer
 						btn.setId(item.getItemId());
 						btn.setOnClickListener(this);
 						tr.addView(btn);
-						menu.getItem(i).setVisible(false);
+						//menu.getItem(i).setVisible(false);
 					} else Logger.LogWarning(item.getTitle() + " should not show. " + item.getShowAsAction() + " :: " + item.getFlags());
 				}
 			}
