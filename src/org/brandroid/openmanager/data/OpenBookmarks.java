@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager.BadTokenException;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -39,6 +40,7 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ExpandableListView.OnChildClickListener;
@@ -56,6 +58,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	private Boolean mHasExternal = false, mHasInternal = false;
 	private Boolean mShowTitles = true;
 	private Long mAllDataSize = 0l;
+	private Long mLargestDataSize = 0l;
 	private SharedPreferences mPrefs;
 	private final OpenExplorer mExplorer;
 	public static final int BOOKMARK_DRIVE = 0;
@@ -135,7 +138,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			mHasInternal = true;
 		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getExternalMemoryDrive(false)))
 			mHasExternal = true;
-		Hashtable<String, DFInfo> df = DFInfo.LoadDF();
+		Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
+		mAllDataSize = 0l;
 		for(String sItem : df.keySet())
 		{
 			if(sItem.toLowerCase().startsWith("/dev")) continue;
@@ -143,8 +147,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			if(sItem.toLowerCase().indexOf("vendor") > -1) continue;
 			OpenFile file = new OpenFile(sItem);
 			if(file.isHidden()) continue;
+			//Logger.LogInfo("DF: " + )
 			if(file.getTotalSpace() > 0)
+			{
 				mAllDataSize += file.getTotalSpace();
+				mLargestDataSize = Math.max(mLargestDataSize, file.getTotalSpace());
+			}
 			//if(!file.getFile().canWrite()) continue;
 			//if(sItem.toLowerCase().indexOf("asec") > -1) continue;
 			checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
@@ -220,16 +228,33 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		return false;
 	}
 	
-	private void addBookmark(BookmarkType type, OpenPath path)
+	public void addBookmark(BookmarkType type, OpenPath path)
 	{
 		int iType = getTypeInteger(type);
 		ArrayList<OpenPath> paths = new ArrayList<OpenPath>();
 		if(mBookmarksArray.containsKey(iType))
 			paths = mBookmarksArray.get(iType);
-		paths.add(path);
-		mBookmarksArray.put(iType, paths);
-		if(mBookmarkAdapter != null)
-			mBookmarkAdapter.notifyDataSetChanged();
+		if(!paths.contains(paths))
+		{
+			paths.add(path);
+			mBookmarksArray.put(iType, paths);
+			if(mBookmarkAdapter != null)
+				mBookmarkAdapter.notifyDataSetChanged();
+		}
+	}
+	public void addBookmark(BookmarkType type, OpenPath path, int index)
+	{
+		int iType = getTypeInteger(type);
+		ArrayList<OpenPath> paths = new ArrayList<OpenPath>();
+		if(mBookmarksArray.containsKey(iType))
+			paths = mBookmarksArray.get(iType);
+		if(!paths.contains(path))
+		{
+			paths.add(Math.max(paths.size() - 1, index), path);
+			mBookmarksArray.put(iType, paths);
+			if(mBookmarkAdapter != null)
+				mBookmarkAdapter.notifyDataSetChanged();
+		}
 	}
 	
 	public void refresh()
@@ -280,9 +305,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	private boolean checkAndAdd(BookmarkType type, OpenPath path)
 	{
 		if(path == null) return false;
-		if(OpenCursor.class.equals(path.getClass()))
-			if(((OpenCursor)path).length() == 0)
-				return false;
 		try {
 			if(path.getPath().equals("/"))
 			{
@@ -554,6 +576,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		View size_bar = mParentView.findViewById(R.id.size_bar);
 		TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
 		if(size_bar == null) return;
+		int total_width = size_bar.getWidth();
+		if(total_width == 0)
+			total_width = mParentView.getWidth();
+		if(total_width == 0 && mParentView.getRootView().findViewById(R.id.list_frag) != null)
+			total_width = mParentView.getRootView().findViewById(R.id.list_frag).getWidth();
+		if(total_width == 0)
+			total_width = 400;
 		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
 		{
 			OpenFile f = (OpenFile)mFile;
@@ -576,6 +605,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					size /= 10;
 					free /= 10;
 				}
+				float total_percent = ((float)f.getTotalSpace() / (float)Math.max(f.getTotalSpace(),mLargestDataSize));
+				int percent_width = (int) (total_percent * total_width);
+				Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " + f.getTotalSpace() + " Percent: " + total_percent + " Width: " + percent_width + " / " + total_width);
 				if(size_bar instanceof ProgressBar)
 				{
 					ProgressBar bar = (ProgressBar)size_bar;
@@ -583,6 +615,14 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					bar.setProgress((int)(size - free));
 					if(bar.getProgress() == 0)
 						bar.setVisibility(View.GONE);
+					else if(percent_width > 0) {
+						bar.setVisibility(View.VISIBLE);
+						RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)bar.getLayoutParams();
+						//lp.rightMargin = total_width - percent_width;
+						lp.width = percent_width;
+						//bar.setLayoutParams(lp);
+						bar.requestLayout();
+					}
 				} else {
 					long taken = Math.min(0, size - free);
 					float percent = (float)taken / (float)size;
@@ -592,13 +632,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					size_width = Math.min(0, (int) (percent * size_width));
 					size_bar.getBackground().setBounds(0,0,size_width,0);
 				}
-				size_bar.setVisibility(View.VISIBLE);
-				/*
-				
-				
-				*/
-				//Logger.LogDebug(bar.getProgress() + "?");
-				//else Logger.LogInfo(f.getPath() + " has " + bar.getProgress() + " / " + bar.getMax());
 			} else if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
 		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
 			//bar.setVisibility(View.INVISIBLE);

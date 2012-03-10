@@ -151,15 +151,15 @@ public class IconContextMenu
 		popup.setTitle(stringId);
 	}
 
-    public void show()
+    public boolean show()
     {
     	//popup.showLikeQuickAction();
-    	popup.showLikePopDownMenu();
+    	return popup.showLikePopDownMenu();
     }
-    public void show(int left, int top)
+    public boolean show(int left, int top)
     {
     	//popup.showLikeQuickAction();
-    	popup.showLikePopDownMenu(left, top);
+    	return popup.showLikePopDownMenu(left, top);
     }
     public void dismiss()
     {

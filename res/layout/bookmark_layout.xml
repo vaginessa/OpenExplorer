@@ -33,7 +33,6 @@
 	    android:layout_height="32dp"
 	    android:layout_alignTop="@+id/bookmark_icon"
 	    android:layout_alignBottom="@+id/size_layout"
-	    android:layout_alignParentRight="true"
 	    android:layout_toRightOf="@+id/bookmark_icon"
 	    android:visibility="gone"
 	    />

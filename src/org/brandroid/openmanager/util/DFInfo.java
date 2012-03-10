@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import org.brandroid.utils.Logger;
@@ -21,6 +22,7 @@ public class DFInfo
 	public int getUsed() { return mUsed; }
 	public int getFree() { return mFree; }
 	public int getBlockSize() { return mBlocksize; }
+	private static Hashtable<String, DFInfo> mDefault = null;
 	
 	public class CannotReadException extends Exception {
 		public CannotReadException(String string) {
@@ -55,12 +57,13 @@ public class DFInfo
 			return (int)Math.floor(sz);
 		} catch(Exception e) { Logger.LogError("Unable to get size from [" + s + "]", e); return -1; }
 	}
-	public static Hashtable<String, DFInfo> LoadDF()
+	public static Hashtable<String, DFInfo> LoadDF() { return LoadDF(false); }
+	public static Hashtable<String, DFInfo> LoadDF(boolean force)
 	{
-		//if(mDefault != null) return mDefault;
+		if(mDefault != null && !force) return mDefault;
 		Process dfProc = null;
 		DataInputStream is = null;
-		Hashtable<String, DFInfo> ret = new Hashtable<String, DFInfo>();
+		mDefault = new Hashtable<String, DFInfo>();
 		try {
 			Boolean handled = false;
 			/*
@@ -90,8 +93,8 @@ public class DFInfo
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					//Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
-					ret.put(slParts[0], item);
+					Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					mDefault.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 				catch(CannotReadException e) { } 
 			}
@@ -105,7 +108,7 @@ public class DFInfo
 				Logger.LogWarning("DF: Couldn't close drive size input stream.", e);
 			}
 		}
-		return ret;
+		return mDefault;
 	}
 	
 }

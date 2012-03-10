@@ -56,6 +56,8 @@
 	    android:stretchMode="columnWidth"
 	    android:verticalSpacing="4dp"
 	    android:listSelector="@drawable/selector"
+	    android:drawSelectorOnTop="true"
+	    android:scrollingCache="false"
 	    >
 	</GridView>
          

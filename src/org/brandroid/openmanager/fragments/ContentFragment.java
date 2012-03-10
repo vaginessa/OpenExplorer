@@ -580,13 +580,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						});
 						cm.setInfo(pos);
 						cm.setTextLayout(R.layout.context_item);
-						cm.show(); //r.left, r.top);
+						if(!cm.show()) //r.left, r.top);
+							return list.showContextMenu();
+						else return true;
 					} catch(Exception e) {
 						Logger.LogWarning("Couldn't show Iconified menu.", e);
 						return list.showContextMenu();
 					}
-					
-					return true;
 				}
 				
 				if(!OpenExplorer.BEFORE_HONEYCOMB)

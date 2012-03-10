@@ -21,7 +21,7 @@
 	android:orientation="vertical"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
-	android:paddingBottom="10dp"
+	android:layout_marginBottom="20dp"
 	android:gravity="bottom|center_horizontal"
 	>
 	<org.brandroid.openmanager.views.RemoteImageView
@@ -43,7 +43,7 @@
 		android:layout_marginLeft="5dp"
 		android:layout_marginRight="5dp"
 		android:layout_alignParentBottom="true"
-		android:lines="1"
-		android:ellipsize="end"
+		android:lines="3"
+		android:ellipsize="none"
 		/>
 </LinearLayout>

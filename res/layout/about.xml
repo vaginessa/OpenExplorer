@@ -32,7 +32,7 @@
 	                android:gravity="left"
 	                android:id="@+id/about_version"
 	                android:text="@string/app_name"
-	                android:layout_weight="3"
+	                android:layout_weight="4"
 	                />
 	        </TableRow>
 	        
@@ -51,7 +51,7 @@
 	                android:gravity="left"
 	                android:id="@+id/about_buildtime"
 	                android:text="@string/s_about_buildtime"
-	                android:layout_weight="3"
+	                android:layout_weight="4"
 	                />
 	        </TableRow>
 	
@@ -68,7 +68,7 @@
 	                style="@style/Mid"
 	                android:gravity="left"
 	                android:text="Brandon Bowles (US)"
-	                android:layout_weight="3"
+	                android:layout_weight="4"
 	                />
 	        </TableRow>
 	        
@@ -87,7 +87,7 @@
 	                android:id="@+id/about_email"
 	                android:text="Brandroid64@gmail.com"
 	                android:clickable="true"
-	                android:layout_weight="3"
+	                android:layout_weight="4"
 	                />
 	        </TableRow>
 	
@@ -106,7 +106,7 @@
 	                android:id="@+id/about_site"
 	                android:text="brandroid.org"
 	                android:clickable="true"
-	                android:layout_weight="3"
+	                android:layout_weight="4"
 	                />
 	        </TableRow>
 	        
@@ -116,6 +116,7 @@
 	            <TextView
 	                style="@style/Small"
 	                android:gravity="right"
+                	android:id="@+id/about_recent_status_label"
 	                android:text="@string/s_about_recent"
 	                android:layout_weight="1"
 	                />
@@ -124,7 +125,7 @@
 	                android:id="@+id/about_recent_status"
 	                android:gravity="left"
 	                android:text="@string/s_status_loading"
-	                android:layout_weight="3"
+	                android:layout_weight="4"
 	                />
 	        </TableRow>
 	    </TableLayout>
@@ -136,7 +137,7 @@
    		    android:gravity="center"
    		    >
     		<Button
-    		    style="@style/Mid"
+    		    android:textAppearance="@style/Mid"
     		    android:gravity="center"
 			    android:id="@+id/about_email_btn"
 			    android:text="@string/s_about_email"
@@ -145,11 +146,11 @@
 			    android:lines="1"
 			    />
 			<Button
-			    style="@style/Mid"
+			    android:textAppearance="@style/Mid"
     		    android:gravity="center"
 			    android:id="@+id/about_site_btn"
 			    android:text="@string/s_view"
-			    android:layout_width="wrap_content"
+			    android:layout_width="match_parent"
 			    android:layout_height="wrap_content" 
 			    android:lines="1"
 			    />
@@ -159,6 +160,6 @@
         android:id="@+id/about_recent"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="3"
+        android:layout_weight="4"
         />
  </LinearLayout>
