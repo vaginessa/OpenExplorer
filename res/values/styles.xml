@@ -82,7 +82,7 @@
     <style name="ActionBarCompatItemBase">
         <!-- layout_width/height must be set in code -->
         <item name="android:scaleType">center</item>
-        <item name="android:background">@drawable/selector</item>
+        <item name="android:background">@drawable/list_selector_background</item>
     </style>
 
     <style name="ActionBarCompatProgressIndicator" parent="android:style/Widget.ProgressBar.Large">
@@ -98,6 +98,7 @@
         <item name="android:paddingRight">6dp</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">marquee</item>
+        <item name="android:longClickable">false</item>
     </style>
 
     <style name="ActionBarCompatTitle" parent="style/ActionBarCompatTitleBase">
@@ -108,6 +109,7 @@
     </style>
 
     <style name="ActionBarCompatHomeItem" parent="style/ActionBarCompatItemBase">
+        <item name="android:longClickable">true</item>
     </style>
 
     <style name="SlideDialog" parent="@android:style/Theme.Dialog">

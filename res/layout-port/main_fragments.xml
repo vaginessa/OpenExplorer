@@ -26,16 +26,16 @@
         />
     
 	    <FrameLayout
-	        android:layout_below="@+id/title_bar"
-	        android:layout_above="@+id/base_bar"
 	    	android:id="@+id/content_frag"
+	        android:layout_below="@id/title_bar"
+	        android:layout_above="@id/base_bar"
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent"
 	    	/>
 
 	    <ViewStub
-	        android:layout_below="@+id/title_bar"
-	        android:layout_above="@+id/base_bar"
+	        android:layout_below="@id/title_bar"
+	        android:layout_above="@id/base_bar"
 	        android:id="@+id/content_pager_frame_stub"
 	        android:layout="@layout/viewpager"
 	        android:layout_width="match_parent"

@@ -35,7 +35,7 @@ import java.util.Vector;
 public class JSch{
   public static final String VERSION  = "0.1.46";
 
-  static java.util.Hashtable config=new java.util.Hashtable();
+  static java.util.Hashtable<String, String> config=new java.util.Hashtable<String, String>();
   static{
 //  config.put("kex", "diffie-hellman-group-exchange-sha1");
     config.put("kex", "diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1");

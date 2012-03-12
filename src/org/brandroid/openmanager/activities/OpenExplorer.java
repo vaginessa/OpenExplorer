@@ -249,6 +249,7 @@ public class OpenExplorer
 		if(BEFORE_HONEYCOMB)
 		{
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
+			USE_ACTION_BAR = false;
 		} else if(!BEFORE_HONEYCOMB) {
 			USE_ACTION_BAR = true;
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
@@ -1495,13 +1496,14 @@ public class OpenExplorer
 		if(findViewById(R.id.base_row) != null)
 		{
 			TableLayout tbl = (TableLayout)findViewById(R.id.base_bar);
-			tbl.setStretchAllColumns(false);
-			TableRow tr = (TableRow)findViewById(R.id.base_row);
+			if(tbl != null)
+				tbl.setStretchAllColumns(false);
+			ViewGroup tr = (ViewGroup)findViewById(R.id.base_row);
 			int i = -1;
 			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (int)(16 * getResources().getDimension(R.dimen.one_dp));
-			int tblWidth = tbl.getWidth();
+			int tblWidth = tr.getWidth();
 			if(tblWidth == 0)
-				tblWidth = getWindowManager().getDefaultDisplay().getWidth();
+				tblWidth = 400;
 			while(++i < menu.size())
 			{
 				if((tr.getChildCount() + 1) * btnWidth > tblWidth)
@@ -1515,7 +1517,7 @@ public class OpenExplorer
 					MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
 					if(item.getMenuInfo() != null)
 						Logger.LogVerbose("INFO: " + item.getMenuInfo().toString());
-					if(item.isVisible())
+					if(item.isVisible() && !item.isCheckable())
 					{
 						ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
 						btn.setImageDrawable(item.getIcon());
@@ -1527,9 +1529,12 @@ public class OpenExplorer
 				}
 			}
 			Logger.LogDebug("Added " + tr.getChildCount() + " children to Base Bar.");
-			if(tr.getChildCount() < 1)
-				tbl.setVisibility(View.GONE);
-			else tbl.setStretchAllColumns(true);
+			if(tbl != null)
+			{
+				if(tr.getChildCount() < 1)
+					tbl.setVisibility(View.GONE);
+				else tbl.setStretchAllColumns(true);
+			}
 		} else Logger.LogWarning("No Base Row!?");
 	}
 	

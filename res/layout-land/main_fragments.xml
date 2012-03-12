@@ -34,10 +34,8 @@
 	        <TextView
 	            android:id="@+id/title_path"
 	            style="@style/Small"
-	            android:layout_alignBaseline="@+id/title_text"
 	            android:layout_marginLeft="5dp"
 	            android:layout_marginTop="2dp"
-	            android:layout_toRightOf="@+id/title_text"
 	            android:gravity="left|center_vertical"
 	            android:text="/mnt/sdcard" />
 	    </LinearLayout>
@@ -87,7 +85,7 @@
             android:id="@+id/title_paste"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/title_search"
+            android:layout_above="@id/base_row"
             android:visibility="gone"
             >
 
@@ -112,25 +110,15 @@
                 android:textColor="@color/black" />
         </RelativeLayout>
 
-        <ImageButton
-            android:id="@+id/title_search"
-            style="@style/ActionBarCompatHomeItem"
-            android:layout_width="@dimen/actionbar_compat_button_width"
-            android:layout_height="@dimen/actionbar_compat_height"
-            android:layout_above="@+id/title_menu"
-            android:clickable="true"
-            android:padding="0dp"
-            android:src="@android:drawable/ic_menu_search"
-            />
-
-        <ImageButton
-            android:id="@+id/title_menu"
-            style="@style/ActionBarCompatHomeItem"
-            android:layout_width="@dimen/actionbar_compat_button_width"
-            android:layout_height="@dimen/actionbar_compat_height"
+        <LinearLayout
+            android:id="@id/base_row"
+            android:orientation="vertical"
+            android:layout_below="@+id/title_icon"
             android:layout_alignParentBottom="true"
-            android:clickable="true"
-            android:src="@drawable/ic_menu_moreoverflow" />
+            android:layout_width="@dimen/actionbar_compat_button_width"
+            android:layout_height="wrap_content"
+            android:gravity="bottom|center"
+            />
     </RelativeLayout>
 
     <LinearLayout

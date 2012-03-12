@@ -65,7 +65,7 @@
 		android:title="@string/s_menu_up" />
 	<item
 		android:id="@+id/menu_new_folder"
-		android:icon="@drawable/ic_menu_add"
+		android:icon="@drawable/ic_menu_new_folder"
 		android:showAsAction="ifRoom"
 		android:title="@string/s_menu_new_folder" />
 	<item
@@ -82,7 +82,7 @@
 	<item
 		android:id="@+id/menu_settings_folder"
 		android:showAsAction="never"
-		android:icon="@android:drawable/ic_menu_preferences"
+		android:icon="@drawable/ic_pref_folder"
 		android:title="@string/s_menu_prefs_folder" />
 	<item
 		android:id="@+id/menu_settings"

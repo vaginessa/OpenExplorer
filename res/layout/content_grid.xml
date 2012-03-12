@@ -10,7 +10,7 @@
 	android:stretchMode="columnWidth"
 	android:gravity="center"
 	android:fastScrollEnabled="true"
-	android:listSelector="@drawable/selector"
-	android:drawSelectorOnTop="true"
+	android:listSelector="@drawable/list_selector_background"
+	android:drawSelectorOnTop="false"
 	/>
 
