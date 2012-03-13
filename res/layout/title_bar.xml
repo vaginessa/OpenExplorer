@@ -64,11 +64,11 @@
 
 	<com.viewpagerindicator.TabPageIndicator
 		android:id="@+id/content_pager_indicator"
-		android:layout_height="match_parent"
+		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
 		android:layout_toRightOf="@+id/title_icon"
 		android:layout_alignParentRight="true"
-		android:layout_alignBottom="@+id/title_icon"
+		android:layout_alignParentBottom="true"
 		/>
     
 </RelativeLayout>

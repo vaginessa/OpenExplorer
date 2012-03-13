@@ -505,7 +505,7 @@ public class OpenExplorer
 			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
 			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
 			mViewPager.setOnPageIndicatorChangeListener(this);
-			ViewGroup indicator_frame = (ViewGroup)findViewById(R.id.content_pager_indicator);
+			View indicator_frame = findViewById(R.id.content_pager_indicator);
 			try {
 				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
 				if(indicator_frame != null)
@@ -1506,7 +1506,7 @@ public class OpenExplorer
 				tblWidth = 400;
 			while(++i < menu.size())
 			{
-				if((tr.getChildCount() + 1) * btnWidth > tblWidth)
+				if((tr.getChildCount() + 1) * btnWidth > tblWidth || tr.getChildCount() == 4)
 				{
 					Logger.LogInfo("Base bar full after #" + i + "!");
 					break;
