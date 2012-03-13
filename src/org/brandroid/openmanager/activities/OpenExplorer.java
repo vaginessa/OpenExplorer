@@ -44,6 +44,7 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -62,6 +63,7 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
 import android.view.ContextMenu;
+import android.view.Gravity;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -347,7 +349,7 @@ public class OpenExplorer
 				mBaseStub.inflate();
 		}
 		setOnClicks(
-				R.id.title_icon, R.id.title_search, R.id.title_menu,
+				R.id.title_icon, R.id.title_menu,
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
@@ -378,9 +380,9 @@ public class OpenExplorer
 				path = mPhotoParent;
 			else if(start.equals("Music"))
 				path = mMusicParent;
-			else if(start.equals("External"))
+			else if(start.equals("External") && !checkForNoMedia(OpenFile.getExternalMemoryDrive(false)))
 				path = OpenFile.getExternalMemoryDrive(false);
-			else if(start.equals("Internal"))
+			else if(start.equals("Internal") || start.equals("External"))
 				path = OpenFile.getInternalMemoryDrive();
 			else
 				path = new OpenFile(start);
@@ -1491,6 +1493,14 @@ public class OpenExplorer
 	}
 	
 	private static int[] mMenuOptionsToHide = new int[]{R.id.menu_favorites};
+	public static int getVisibleChildCount(ViewGroup parent)
+	{
+		int ret = 0;
+		for(int i=0; i<parent.getChildCount(); i++)
+			if(parent.getChildAt(i).getVisibility() != View.GONE)
+				ret++;
+		return ret;
+	}
 	public void handleBaseBarButtons(Menu menu)
 	{
 		if(findViewById(R.id.base_row) != null)
@@ -1503,10 +1513,10 @@ public class OpenExplorer
 			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (int)(16 * getResources().getDimension(R.dimen.one_dp));
 			int tblWidth = tr.getWidth();
 			if(tblWidth == 0)
-				tblWidth = 400;
+				tblWidth = btnWidth * 4;
 			while(++i < menu.size())
 			{
-				if((tr.getChildCount() + 1) * btnWidth > tblWidth || tr.getChildCount() == 4)
+				if(tr.getChildCount() * btnWidth > tblWidth)
 				{
 					Logger.LogInfo("Base bar full after #" + i + "!");
 					break;
@@ -1517,10 +1527,15 @@ public class OpenExplorer
 					MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
 					if(item.getMenuInfo() != null)
 						Logger.LogVerbose("INFO: " + item.getMenuInfo().toString());
-					if(item.isVisible() && !item.isCheckable())
+					if(!item.isCheckable())
 					{
 						ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
-						btn.setImageDrawable(item.getIcon());
+						if(!item.isVisible())
+							btn.setVisibility(View.GONE);
+						Drawable d = item.getIcon();
+						if(d instanceof BitmapDrawable)
+							((BitmapDrawable)d).setGravity(Gravity.CENTER);
+						btn.setImageDrawable(d);
 						btn.setId(item.getItemId());
 						btn.setOnClickListener(this);
 						tr.addView(btn);
@@ -1610,7 +1625,8 @@ public class OpenExplorer
 			{
 				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
 				d.getDrawable(1).setAlpha(127);
-				menu.findItem(R.id.menu_paste).setIcon(d);
+				if(menu.findItem(R.id.menu_paste) != null)
+					menu.findItem(R.id.menu_paste).setIcon(d);
 			}
 			/*
 			if(!BEFORE_HONEYCOMB)
@@ -1817,7 +1833,6 @@ public class OpenExplorer
 				showPreferences(mLastPath);
 				return true;
 				
-			case R.id.title_search:
 			case R.id.menu_search:
 				return onSearchRequested();
 
@@ -1892,13 +1907,16 @@ public class OpenExplorer
 		View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
 				.inflate(R.layout.multiselect, null);
 		GridView cmds = (GridView)root.findViewById(R.id.multiselect_command_grid);
-		ListView items = (ListView)root.findViewById(R.id.multiselect_item_list);
+		final ListView items = (ListView)root.findViewById(R.id.multiselect_item_list);
 		items.setAdapter(mClipboard);
 		items.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 				OpenPath file = mClipboard.get(pos);
 				//if(file.getParent().equals(mLastPath))
 					mClipboard.remove(pos);
+					items.invalidate();
+					if(mClipboard.getCount() == 0)
+						clipdrop.dismiss();
 				//else
 					//getEventHandler().copyFile(file, mLastPath, OpenExplorer.this);
 			}
@@ -2695,9 +2713,12 @@ public class OpenExplorer
 	
 	public void onClipboardUpdate() {
 		View pb = findViewById(R.id.title_paste);
+		if(pb == null && findViewById(R.id.menu_paste) != null)
+			pb = findViewById(R.id.menu_paste);
 		if(pb == null && BEFORE_HONEYCOMB && findViewById(R.id.base_row) != null)
 		{
-			pb = new ImageButton(this);
+			pb = getLayoutInflater().inflate(R.layout.toolbar_button, null);
+			pb.setId(R.id.title_paste);
 			((ImageButton)pb).setImageResource(R.drawable.ic_menu_paste);
 			((ViewGroup)findViewById(R.id.base_row)).addView(pb);
 			pb.setOnClickListener(this);

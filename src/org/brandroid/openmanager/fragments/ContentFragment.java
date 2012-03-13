@@ -1096,7 +1096,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			getExplorer().updateTitle("Holding " + name);
 			
 		} else {
-			Logger.LogDebug("Worker thread complete?");
+			Logger.LogDebug("Worker thread complete (" + type + ")?");
 			if(!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
 				try {
 					if(mPath.requiresThread())

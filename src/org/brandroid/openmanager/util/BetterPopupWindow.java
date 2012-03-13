@@ -296,40 +296,37 @@ public class BetterPopupWindow {
 			if(spaceVertical < bgHeight)
 			{
 				popup.setHeight(bgHeight);
-				if(spaceHorizontal > spaceVertical * 1.5f) // Go Horizontal
-				{
-					return false;
-				}
-				if(spaceHorizontal > spaceVertical * 1.5f) // Go Horizontal
-				{
-					int gravity = Gravity.TOP | Gravity.LEFT;
-					/*fromRight ? Gravity.RIGHT : Gravity.LEFT;
-					if(fromBottom)
-						gravity |= Gravity.TOP;
-					else {
-						gravity |= Gravity.BOTTOM;
-						yOffset = getWindowHeight();
-					}*/
-					xOffset = fromRight ? ancLeft - popup.getWidth() : ancLeft + anchor.getWidth();
-					yOffset = 0;
-					//if(ancTop > getWindowHeight() * (3f / 4f))
-						//popup.setHeight((int) (getWindowHeight() * (9f / 10f)));
-					if(backgroundView.findViewById(R.id.indicator) != null)
-						backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
-					anchor = getAnchorRoot();
-					ancLeft = getAbsoluteLeft(anchor);
-					ancTop = getAbsoluteTop(anchor);
-					yOffset = getWindowHeight() - popup.getHeight();
-					Logger.LogInfo("Switching to absolute popup! " +
-							"anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/" +
-							"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
-							"off=" + xOffset + "," + yOffset + "/" +
-							"pop=" + popup.getWidth() + "x" + popup.getHeight());
-					backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-					
-					popup.showAtLocation(anchor, gravity, xOffset, yOffset);
-					return true;
-				}
+			}
+			if(spaceHorizontal > spaceVertical * 1.2f && spaceHorizontal < bgHeight * 4) // Go Horizontal
+			{
+				popup.setHeight(getAvailableHeight());
+				int gravity = Gravity.TOP | Gravity.LEFT;
+				/*fromRight ? Gravity.RIGHT : Gravity.LEFT;
+				if(fromBottom)
+					gravity |= Gravity.TOP;
+				else {
+					gravity |= Gravity.BOTTOM;
+					yOffset = getWindowHeight();
+				}*/
+				xOffset = fromRight ? ancLeft - popup.getWidth() : ancLeft + anchor.getWidth();
+				yOffset = 0;
+				//if(ancTop > getWindowHeight() * (3f / 4f))
+					//popup.setHeight((int) (getWindowHeight() * (9f / 10f)));
+				if(backgroundView.findViewById(R.id.indicator) != null)
+					backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
+				anchor = getAnchorRoot();
+				ancLeft = getAbsoluteLeft(anchor);
+				ancTop = getAbsoluteTop(anchor);
+				yOffset = getWindowHeight() - popup.getHeight();
+				Logger.LogInfo("Switching to absolute popup! " +
+						"anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/" +
+						"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
+						"off=" + xOffset + "," + yOffset + "/" +
+						"pop=" + popup.getWidth() + "x" + popup.getHeight());
+				backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+				
+				popup.showAtLocation(anchor, gravity, xOffset, yOffset);
+				return true;
 			}
 			
 			if(!popup.isAboveAnchor() && bgHeight + ancTop + anchor.getHeight() > getWindowHeight())

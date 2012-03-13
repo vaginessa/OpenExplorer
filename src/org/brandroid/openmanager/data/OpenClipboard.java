@@ -45,6 +45,7 @@ public class OpenClipboard
 	@SuppressWarnings("deprecation")
 	private void onClipboardUpdate()
 	{
+		super.notifyDataSetChanged();
 		if(listener != null)
 		{
 			if(list.size() == 0)

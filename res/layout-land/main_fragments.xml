@@ -63,7 +63,7 @@
         <ImageButton
             android:id="@+id/title_icon"
             style="@style/ActionBarCompatHomeItem"
-            android:layout_width="@dimen/actionbar_compat_button_home_width"
+            android:layout_width="@dimen/actionbar_compat_button_width"
             android:layout_height="@dimen/actionbar_compat_height"
             android:clickable="true"
             android:longClickable="true"
@@ -85,8 +85,9 @@
             android:id="@+id/title_paste"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@id/base_row"
-            android:visibility="gone"
+            android:layout_below="@id/title_icon"
+            android:gravity="center"
+            android:visibility="invisible"
             >
 
             <ImageView
@@ -113,7 +114,7 @@
         <LinearLayout
             android:id="@id/base_row"
             android:orientation="vertical"
-            android:layout_below="@+id/title_icon"
+            android:layout_below="@+id/title_paste"
             android:layout_alignParentBottom="true"
             android:layout_width="@dimen/actionbar_compat_button_width"
             android:layout_height="wrap_content"

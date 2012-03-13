@@ -2,16 +2,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
 	android:layout_height="wrap_content"
+	android:orientation="horizontal"
 	android:layout_gravity="bottom|left"
 	android:gravity="bottom|left"
     >
     
-    <View android:background="@color/blue"
-        android:layout_height="1dp"
-        android:layout_width="match_parent"
-        android:layout_below="@+id/title_icon"
-        android:id="@+id/title_underline"
-        />
     
 	<ImageButton
 	    android:src="@drawable/ic_launcher"
@@ -25,14 +20,13 @@
 	    android:layout_width="@dimen/actionbar_compat_button_home_width"
 	    android:layout_height="@dimen/actionbar_compat_height"
 		/>
-
+	
 	<TextView
 	    android:id="@+id/title_text"
 	    style="@style/Large"
 	    android:layout_marginTop="1dp"
 	    android:layout_alignParentTop="true"
-	    android:layout_toRightOf="@+id/title_icon"
-	    android:layout_toLeftOf="@id/base_row"
+	    android:layout_toRightOf="@id/title_icon"
 		android:gravity="left|center_vertical"
 	    android:text="@string/app_name" />
 	
@@ -43,7 +37,6 @@
 	    android:layout_height="10dp"
 	    android:layout_alignLeft="@+id/title_text"
 	    android:layout_alignTop="@+id/title_path"
-	    android:layout_toLeftOf="@id/base_row"
 	    android:indeterminate="true"
 	    android:visibility="gone"
 	    android:layout_marginTop="2dp"
@@ -54,9 +47,8 @@
 	    style="@style/Small"
 	    android:layout_marginTop="@dimen/large_text_height"
 	    android:layout_alignTop="@+id/title_text"
-	    android:layout_toRightOf="@+id/title_icon"
-	    android:layout_toLeftOf="@id/base_row"
-		android:lines="2"
+	    android:layout_toRightOf="@id/title_icon"
+	    android:lines="2"
 	    android:gravity="left|center_vertical"
 	    android:text="/mnt/sdcard"
 	    />
@@ -64,16 +56,9 @@
 	<com.viewpagerindicator.TabPageIndicator
 		android:id="@+id/content_pager_indicator"
 	    android:layout_height="@dimen/actionbar_compat_height"
-		android:layout_width="fill_parent"
-		android:layout_toRightOf="@+id/title_icon"
-		android:layout_toLeftOf="@id/base_row"
+		android:layout_width="wrap_content"
+		android:layout_toRightOf="@id/title_icon"
+		android:layout_alignParentBottom="true"
 		/>
-	
-	<LinearLayout android:id="@id/base_row"
-	    android:orientation="horizontal"
-	    android:layout_width="wrap_content"
-	    android:layout_height="match_parent"
-	    android:layout_alignParentRight="true"
-	    />
     
 </RelativeLayout>
