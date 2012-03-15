@@ -152,6 +152,7 @@ import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
+import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
@@ -279,6 +280,7 @@ public class OpenExplorer
 		
 		getMimeTypes();
 		setupLoggingDb();
+		setupFilesDb();
 		
 		super.onCreate(savedInstanceState);
 		
@@ -765,6 +767,11 @@ public class OpenExplorer
 			} else if(!IS_DEBUG_BUILD)
 				Logger.setLoggingEnabled(false);
 		}
+	}
+	
+	private void setupFilesDb()
+	{
+		OpenPath.setDb(new OpenPathDbAdapter(getApplicationContext()));
 	}
 	
 	@Override
@@ -2859,6 +2866,8 @@ public class OpenExplorer
 		ContentFragment frag = getDirContentFragment(true);
 		if(frag != null)
 			frag.onWorkerThreadComplete(type, results);
+		if(getClipboard().ClearAfter)
+			getClipboard().clear();
 	}
 	private String getCursorString(int id)
 	{

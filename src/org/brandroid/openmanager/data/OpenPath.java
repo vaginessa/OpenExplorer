@@ -10,6 +10,7 @@ import java.lang.ref.SoftReference;
 import java.util.NavigableSet;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MimeTypes;
+import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
@@ -27,6 +28,7 @@ public abstract class OpenPath
 	private static final long serialVersionUID = 332701810738149106L;
 	private Object mTag = null;
 	private OpenPathThreadUpdater mUpdater;
+	protected static OpenPathDbAdapter mDb = null;
 	public abstract String getName();
 	public abstract String getPath();
 	public abstract String getAbsolutePath();
@@ -302,4 +304,14 @@ public abstract class OpenPath
 	public String toString() {
 		return getName();
 	}
+	
+	public final static void setDb(OpenPathDbAdapter openPathDbAdapter) {
+		mDb = openPathDbAdapter;
+	}
+	public boolean addToDb()
+	{
+		if(mDb == null) return false;
+		return mDb.createItem(this) > 0;
+	}
+	public boolean listFromDb() { return false; }
 }

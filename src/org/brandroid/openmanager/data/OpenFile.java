@@ -15,11 +15,13 @@ import java.util.HashSet;
 import java.util.Hashtable;
 
 import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
 import android.app.AlertDialog.Builder;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -148,6 +150,26 @@ public class OpenFile extends OpenPath
 
 	@Override
 	public OpenFile[] listFiles() { return listFiles(false); }
+
+	@Override
+	public boolean listFromDb()
+	{
+		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
+		if(c == null) return false;
+		mChildren = new OpenFile[c.getCount()];
+		c.moveToFirst();
+		while(!c.isAfterLast())
+		{
+			String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
+			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
+			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
+			mChildren[c.getPosition()] = new OpenFile(folder + "/" + name);
+			c.moveToNext();
+		}
+		c.close();
+		return true;
+	}
 	
 	/*
 	@Override
@@ -338,8 +360,5 @@ public class OpenFile extends OpenPath
 	@Override
 	public void setPath(String path) {
 		mFile = new File(path); 
-	}
-	
-
-	
+	}	
 }

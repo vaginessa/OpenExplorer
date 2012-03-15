@@ -182,6 +182,7 @@ public class OpenSFTP extends OpenNetworkPath
 			Logger.LogError("JSchException during listFiles", e);
 			throw new IOException("JSchException during listFiles", e);
 		}
+		FileManager.setOpenCache(getAbsolutePath(), this);
 		return mChildren.toArray(new OpenSFTP[mChildren.size()]);
 	}
 
