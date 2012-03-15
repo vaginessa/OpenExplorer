@@ -39,6 +39,7 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -70,6 +71,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
+import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -736,7 +738,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 		files.add(file);
-		return executeMenu(id, mode, file, null);
+		return executeMenu(id, mode, file, getClipboard());
 	}
 	public boolean executeMenu(final int id, final Object mode, final OpenPath file, List<OpenPath> fileList)
 	{
@@ -744,9 +746,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		final OpenPath folder = file != null ? file.getParent() : null;
 		String name = file != null ? file.getName() : null;
 		if(fileList == null)
-			fileList = new ArrayList<OpenPath>();
-		final OpenPath[] fileArray = new OpenPath[fileList.size()];
-		fileList.toArray(fileArray);
+			fileList = getClipboard();
+		final OpenPath[] fileArray = fileList.toArray(new OpenPath[fileList.size()]);
 		
 		super.onClick(id);
 		
@@ -840,35 +841,33 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 			case R.id.menu_context_zip:
 				getClipboard().add(file);
+				getClipboard().ClearAfter = true;
 				final String def = getClipboard().size() == 1 ?
 						file.getName() + ".zip" :
 						file.getParent().getName() + ".zip";
 				
-				final DialogBuilder dZip = new DialogBuilder(mContext);
-				dZip
-					.setDefaultText(def)
-					.setIcon(getResources().getDrawable(R.drawable.lg_zip))
+				final InputDialog dZip = new InputDialog(getExplorer())
+					.setIcon(R.drawable.sm_zip)
 					.setTitle(R.string.s_menu_zip)
+					.setMessage(R.string.s_prompt_zip)
 					.setCancelable(true)
+					.setNegativeButton(android.R.string.no, null);
+				dZip
 					.setPositiveButton(android.R.string.ok,
 						new OnClickListener() {
-							public void onClick(DialogInterface di, int which) {
-								if(which != DialogInterface.BUTTON_POSITIVE) return;
+							public void onClick(DialogInterface dialog, int which) {
 								OpenPath zipFile = folder.getChild(dZip.getInputText());
-								Logger.LogInfo("Zipping " + fileArray.length + " items to " + zipFile.getPath());
-								getHandler().zipFile(zipFile, fileArray, getActivity());
+								Logger.LogVerbose("Zipping " + getClipboard().size() + " items to " + zipFile.getPath());
+								getHandler().zipFile(zipFile, getClipboard(), getExplorer());
 								finishMode(mode);
 							}
 						})
-					.setMessage(R.string.s_prompt_zip)
-					.create().show();
+					.setDefaultText(def);
+				dZip.create().show();
 				return true;
 				
 			case R.id.menu_context_unzip:
-				getHandler().unZipFileTo(getClipboard().get(0), file, getActivity());
-				
-				getClipboard().clear();
-				getExplorer().updateTitle("");
+				getHandler().unzipFile(file, getExplorer());
 				return true;
 			
 			case R.id.menu_context_info:
@@ -1520,53 +1519,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		
 	}
-	public class DialogBuilder extends Builder
-	{
-		private View view;
-		private EditText mEdit, mEdit2;
-		
-		public DialogBuilder(Context mContext) {
-			super(mContext);
-			
-			LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			view = inflater.inflate(R.layout.input_dialog_layout, null);
-			super.setView(view);
-			mEdit = (EditText)view.findViewById(R.id.dialog_input);
-			mEdit2 = (EditText)view.findViewById(R.id.dialog_input_top);
-			if(mEdit == null)
-				mEdit = mEdit2;
-		}
-		
-		public String getInputText() { return mEdit.getText().toString(); }
-		public DialogBuilder setPrompt(String s) {
-			((EditText)view.findViewById(R.id.dialog_message_top)).setText(s);
-			return this;
-		}
-		
-		public DialogBuilder setDefaultText(String s) 
-		{
-			mEdit.setText(s);
-			return this;
-		}
-		
-		@Override
-		public DialogBuilder setMessage(CharSequence message) {
-			super.setMessage(message);
-			return this;
-		}
-		
-		@Override
-		public DialogBuilder setTitle(CharSequence title) {
-			super.setTitle(title);
-			return this;
-		}
-		
-		@Override
-		public DialogBuilder setIcon(Drawable icon) {
-			super.setIcon(icon);
-			return this;
-		}
-	}
+	
 	public SortType getSorting() {
 		// TODO Auto-generated method stub
 		return mSorting;

@@ -32,14 +32,12 @@
 		android:id="@+id/dialog_message"
 		android:layout_below="@+id/dialog_layout_top"
 		style="@style/Large"
-		android:text="@string/app_name"
 		/>
 	
 	<TextView
 	    android:id="@+id/dialog_subtitle"
 	    android:layout_below="@+id/dialog_message"
 	    style="@style/Small"
-	    android:text="@string/app_name"
 	    android:visibility="gone"
 	    />
 		

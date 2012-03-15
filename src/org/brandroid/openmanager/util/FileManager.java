@@ -434,12 +434,14 @@ public class FileManager {
 				Uri uri = Uri.parse(path);
 				ret = new OpenSFTP(uri);
 			}
-			if(ret != null && bGetNetworkedFiles)
+			if(ret == null) return ret;
+			if(bGetNetworkedFiles)
 			{
 				ret.listFiles();
-			}
-			if(ret != null)
 				setOpenCache(path, ret);
+			} else {
+				ret.listFromDb();
+			}
 		}
 		//if(ret == null)
 		//	ret = setOpenCache(path, new OpenFile(path));
@@ -450,6 +452,7 @@ public class FileManager {
 	public static OpenPath setOpenCache(String path, OpenPath file)
 	{
 		mOpenCache.put(path, file);
+		file.addToDb();
 		return file;
 	}
 		

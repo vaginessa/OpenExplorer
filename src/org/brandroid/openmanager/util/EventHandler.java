@@ -71,6 +71,7 @@ public class EventHandler {
 	public static final int RENAME_TYPE =		0X06;
 	public static final int MKDIR_TYPE = 		0x07;
 	public static final int CUT_TYPE = 0x08;
+	public static final int ERROR_TYPE = 0x09;
 	
 	private OnWorkerThreadFinishedListener mThreadListener;
 	private FileManager mFileMang;
@@ -328,30 +329,34 @@ public class EventHandler {
 	
 	public void zipFile(OpenPath into, List<OpenPath> files, Context mContext)
 	{
-		zipFile(into, files.subList(0, files.size()), mContext);
+		zipFile(into, files.toArray(new OpenFile[0]), mContext);
 	}
 	public void zipFile(OpenPath into, OpenPath[] files, Context mContext) {
 		new BackgroundWork(ZIP_TYPE, mContext, into).execute(files);
 	}
 	
-	public void unzipFile(final OpenPath into, final OpenPath file, final Context mContext) {
-		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-		b.setTitle(getResourceString(mContext, R.string.s_title_unzip).toString().replace("xxx", file.getName()))
-			 .setMessage(getResourceString(mContext, R.string.s_alert_unzip).toString().replace("xxx", file.getName()))
-			 .setIcon(R.drawable.lg_zip)
-			 .setPositiveButton(getResourceString(mContext, R.string.s_button_unzip_here), new OnClickListener() {
+	public void unzipFile(final OpenPath file, final Context mContext) {
+		final OpenPath into = file.getParent().getChild(file.getName().replace("." + file.getExtension(), ""));
+		//AlertDialog.Builder b = new AlertDialog.Builder(mContext);
+		final InputDialog dUnz = new InputDialog(mContext);
+		dUnz.setTitle(getResourceString(mContext, R.string.s_title_unzip).toString().replace("xxx", file.getName()))
+			.setMessage(getResourceString(mContext, R.string.s_prompt_unzip).toString().replace("xxx", file.getName()))
+			.setIcon(R.drawable.lg_zip)
+			.setPositiveButton(android.R.string.ok, new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						new BackgroundWork(UNZIP_TYPE, mContext, into).execute(file);
+						OpenPath path = new OpenFile(dUnz.getInputText());
+						if(!path.exists()&&!path.mkdir())
+						{
+							Logger.LogError("Couldn't locate output path for unzip! " + path.getPath());
+							mThreadListener.onWorkerThreadComplete(ERROR_TYPE, null);
+							return;
+						}
+						Logger.LogVerbose("Unzipping " + file.getPath() + " into " + path);
+						new BackgroundWork(UNZIP_TYPE, mContext, path).execute(file);
 					}
 				})
-			 .setNegativeButton(getResourceString(mContext, R.string.s_button_unzip_else), new OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						ArrayList<String> l = new ArrayList<String>();
-						l.add(file.getPath());
-						if(mThreadListener != null)
-							mThreadListener.onWorkerThreadComplete(UNZIPTO_TYPE, l);
-					}
-			 	})
+			.setNegativeButton(android.R.string.cancel, null)
+			.setDefaultText(into.getPath())
 			.create()
 			.show();
 	}
