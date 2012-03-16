@@ -20,6 +20,7 @@ package org.brandroid.openmanager.activities;
 
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -190,6 +191,7 @@ public class OpenExplorer
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	public static boolean USE_ACTION_BAR = false;
+	public static boolean USE_ACTIONMODE = true;
 	public static boolean IS_DEBUG_BUILD = false;
 	public static final int REQUEST_CANCEL = 101;
 	public static boolean LOW_MEMORY = false;
@@ -200,7 +202,7 @@ public class OpenExplorer
 	
 	private Preferences mPreferences = null;
 	private SearchView mSearchView;
-	private ActionMode mActionMode;
+	private Object mActionMode;
 	private static OpenClipboard mClipboard;
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
@@ -245,9 +247,13 @@ public class OpenExplorer
 								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		} //else getWindow().addFlags(WindowManager.LayoutParams.FLAG
 		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", false);
+		USE_ACTIONMODE = getPreferences().getBoolean("global", "pref_actionmode", false);
 		
 		Preferences.Pref_Intents_Internal = getPreferences().getBoolean("global", "pref_intent_internal", true);
 		Preferences.Pref_Text_Internal = getPreferences().getBoolean("global", "pref_text_internal", true);
+		
+		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
+			getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
 		if(BEFORE_HONEYCOMB)
 		{
@@ -406,7 +412,7 @@ public class OpenExplorer
 		if(mViewPagerEnabled && findViewById(R.id.content_pager_frame_stub) != null)
 			((ViewStub)findViewById(R.id.content_pager_frame_stub)).inflate();
 		
-		mContentFragment = ContentFragment.getInstance(mLastPath, mViewMode);
+		mContentFragment = ContentFragment.getInstance(path, mViewMode);
 		
 		if(fragmentManager == null)
 		{
@@ -417,7 +423,7 @@ public class OpenExplorer
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 
 		Logger.LogDebug("Creating with " + path.getPath());
-		if(OpenFile.class.equals(path.getClass()))
+		if(path instanceof OpenFile)
 			new PeekAtGrandKidsTask().execute((OpenFile)path);
 				
 		Intent intent = getIntent();
@@ -430,6 +436,7 @@ public class OpenExplorer
 			mContentFragment = new TextEditorFragment(new OpenFile(file.getPath()));
 			bAddToStack = false;
 		}
+		initPager();
 		
 		if(findViewById(R.id.content_frag) != null && !mViewPagerEnabled)
 		{
@@ -439,16 +446,19 @@ public class OpenExplorer
 						!mLastPath.getPath().equals(fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getBreadCrumbTitle()))
 					ft
 						.addToBackStack("path")
-						.replace(R.id.content_frag, mContentFragment)
-						.setBreadCrumbTitle(path.getPath());
-				else Logger.LogWarning("Damn it dog, stay!");
+					.replace(R.id.content_frag, mContentFragment)
+					.setBreadCrumbTitle(path.getPath());
+			else Logger.LogWarning("Damn it dog, stay!");
 			} else {
 				ft.replace(R.id.content_frag, mContentFragment);
 				ft.disallowAddToBackStack();
 			}
+			updateTitle(mLastPath.getPath());
 		} else if(mViewPager != null && mViewPagerAdapter != null)
 		{
 			//mViewPagerAdapter.add(mContentFragment);
+			mLastPath = null;
+			changePath(path, bAddToStack, true);
 			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
 			if(bAddToStack)
 			{
@@ -461,9 +471,8 @@ public class OpenExplorer
 
 		handleBaseBarButtons();
 		initBookmarkDropdown();
-		initPager();
 		
-		updateTitle(mLastPath.getPath());
+		//updateTitle(mLastPath.getPath());
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		
@@ -536,7 +545,6 @@ public class OpenExplorer
 			Logger.LogVerbose("Setting up ViewPager");
 			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 			mViewPagerAdapter.setOnPageTitleClickListener(this);
-			mViewPagerAdapter.add(mContentFragment);
 			setViewPageAdapter(mViewPagerAdapter);
 		}
 
@@ -1307,6 +1315,7 @@ public class OpenExplorer
 			setMenuVisible(menu, true, R.id.menu_debug);
 		if(!BEFORE_HONEYCOMB && USE_ACTION_BAR)
 		{
+			setMenuVisible(menu, false, R.id.title_menu);
 			mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
 			if(mSearchView != null)
 				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -1381,6 +1390,9 @@ public class OpenExplorer
 				menu.removeItem(id);
 			else if(menu.findItem(id) != null && visible)
 				menu.findItem(id).setVisible(visible);
+			else for(int i=0; i<menu.size(); i++)
+				if(menu.getItem(i).hasSubMenu())
+					setMenuVisible(menu.getItem(i).getSubMenu(), visible, ids);
 	}
 	public static void setMenuShowAsAction(Menu menu, int show, int... ids)
 	{
@@ -1615,8 +1627,8 @@ public class OpenExplorer
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // honeycomb
 			setMenuVisible(menu, false, R.id.menu_view_fullscreen);
 		
-		if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
-			menu.findItem(R.id.menu_context_unzip).setVisible(false);
+		//if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
+		//	menu.findItem(R.id.menu_context_unzip).setVisible(false);
 		
 		if(!mSinglePane)
 			setMenuVisible(menu, false, R.id.menu_favorites);
@@ -1722,16 +1734,16 @@ public class OpenExplorer
 				if(getClipboard().isMultiselect())
 				{
 					getClipboard().stopMultiselect();
+					getClipboard().clear();
 					if(!BEFORE_HONEYCOMB && mActionMode != null)
 						((ActionMode)mActionMode).finish();
 					return true;
 				}
 				
-				if(BEFORE_HONEYCOMB)
+				if(BEFORE_HONEYCOMB || !USE_ACTIONMODE)
 				{
 					getClipboard().startMultiselect();
 				} else {
-					
 					mActionMode = startActionMode(new ActionMode.Callback() {
 						
 						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -1883,7 +1895,8 @@ public class OpenExplorer
 			case R.id.title_paste_icon:
 			case R.id.title_paste_text:
 			case R.id.menu_paste:
-				showClipboardDropdown(id);
+				if(BEFORE_HONEYCOMB)
+					showClipboardDropdown(id);
 				return true;
 				
 				//getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
@@ -2365,9 +2378,10 @@ public class OpenExplorer
 			//if(!addToStack && path.getPath().equals("/")) return;
 			//if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
-		boolean isNew = !mLastPath.equals(path);
+		//boolean isNew = !mLastPath.equals(path);
 		int oldView = getSetting(mLastPath, "view", 0);
 		mLastPath = path;
+		
 		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);
 		if(mViewPager != null && mViewPagerEnabled &&
@@ -2507,7 +2521,7 @@ public class OpenExplorer
 		} catch(Exception e) { }
 	}
 	public void onChangeLocation(OpenPath path) {
-		changePath(path, true);
+		changePath(path, true, true);
 	}
 
 	public static final FileManager getFileManager() {
@@ -2749,7 +2763,7 @@ public class OpenExplorer
 		}
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
-		if(!BEFORE_HONEYCOMB && USE_ACTION_BAR && mActionMode != null)
+		if(!BEFORE_HONEYCOMB && USE_ACTIONMODE && mActionMode != null)
 		{
 			((ActionMode)mActionMode).setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
 		}
@@ -2770,6 +2784,12 @@ public class OpenExplorer
 	@Override
 	public boolean onPageTitleLongClick(int position, View titleView) {
 		try {
+			Fragment f = mViewPagerAdapter.getItem(position);
+			if(f instanceof TextEditorFragment)
+			{
+				return false;
+			}
+			if(!(f instanceof ContentFragment)) return false;
 			OpenFile path = (OpenFile)((ContentFragment)mViewPagerAdapter.getItem(position)).getPath();
 			OpenPath parent = path.getParent();
 			if(parent == null) parent = new OpenPathArray(new OpenPath[]{path});

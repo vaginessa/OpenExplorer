@@ -178,4 +178,10 @@
     <string name="s_pref_timeout_summary">Timeout in Seconds</string>
     <string name="s_menu_up">Go up</string>
     <string name="s_prompt_unzip">Enter path to unzip into:</string>
+    <string name="s_pref_hardware_accel">Enable Hardware Acceleration</string>
+    <string name="s_pref_honeyplus">Android 3.0+ Settings</string>
+    <string name="s_pref_actionmode">Action Mode</string>
+    <string name="s_pref_actionmode_enabled">Use Action Mode</string>
+    <string name="s_pref_actionmode_disabled">Use Standard Context Menus</string>
+    
 </resources>

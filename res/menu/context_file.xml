@@ -47,7 +47,7 @@
 		android:showAsAction="always|withText"
     	/>
     <item
-		android:id="@+id/menu_context_multi"
+		android:id="@+id/menu_multi"
     	android:showAsAction="ifRoom|withText"
     	android:icon="@drawable/ic_multiselect"
 		android:title="@string/s_menu_multi" />
@@ -61,10 +61,5 @@
     	android:showAsAction="ifRoom|withText"
     	android:icon="@drawable/ic_zip"
 		android:title="@string/s_menu_zip" />
-    <item
-		android:id="@+id/menu_context_unzip"
-    	android:showAsAction="ifRoom|withText"
-    	android:icon="@drawable/ic_zip"
-		android:title="@string/s_menu_unzip" />
     
 </menu>

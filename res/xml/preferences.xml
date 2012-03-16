@@ -56,6 +56,20 @@
 			
 	</PreferenceCategory>
 	
+		<PreferenceCategory android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus">
+	        <CheckBoxPreference
+	            android:key="pref_actionmode"
+	            android:title="@string/s_pref_actionmode"
+	            android:defaultValue="true"
+	            android:summaryOn="@string/s_pref_actionmode_enabled"
+	            android:summaryOff="@string/s_pref_actionmode_disabled"
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_hardware_accel"
+	            android:title="@string/s_pref_hardware_accel"
+	            android:defaultValue="true"
+	            />
+		</PreferenceCategory>
 	    <PreferenceCategory android:title="@string/s_pref_advanced">
 	        <CheckBoxPreference
 	            android:key="pref_show_root"

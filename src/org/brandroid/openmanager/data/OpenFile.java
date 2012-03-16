@@ -187,7 +187,7 @@ public class OpenFile extends OpenPath
 	private OpenFile[] listFilesNative(File file)
 	{
 		Logger.LogDebug("Trying to list " + mFile.getPath() + " via NoRoot");
-		StringBuilder sbfiles = RootManager.Default.executeNoRoot("ls " + mFile.getPath());
+		StringBuilder sbfiles = RootManager.Default.executeNoRoot("ls " + mFile.getPath() + "/");
 		if(sbfiles != null)
 		{
 			String[] files = sbfiles.toString().split("\n");
@@ -204,9 +204,13 @@ public class OpenFile extends OpenPath
 	
 	public static OpenFile getExternalMemoryDrive(boolean fallbackToInternal) // sd
 	{
-		for(File kid : new File("/mnt").listFiles())
+		for(OpenFile kid : getInternalMemoryDrive().getParent().listFiles())
 			if(kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead() && kid.list().length > 0)
-				return new OpenFile(kid);
+				return kid;
+		if(new File("/Removable").exists())
+			for(File kid : new File("/Removable").listFiles())
+				if(kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead() && kid.list().length > 0)
+					return new OpenFile(kid);
 		if(!fallbackToInternal)
 			return null;
 		else
@@ -217,8 +221,16 @@ public class OpenFile extends OpenPath
 		return new OpenFile(Environment.getExternalStorageDirectory());
 	}
 	
-	
+
 	private OpenFile[] getOpenPaths(File[] files)
+	{
+		if(files == null) return new OpenFile[0];
+		OpenFile[] ret = new OpenFile[files.length];
+		for(int i=0; i < files.length; i++)
+			ret[i] = new OpenFile(files[i]);
+		return ret;
+	}
+	private OpenFile[] getOpenPaths(String[] files, String base)
 	{
 		if(files == null) return new OpenFile[0];
 		OpenFile[] ret = new OpenFile[files.length];
@@ -231,8 +243,10 @@ public class OpenFile extends OpenPath
 		if(mChildren == null)
 		{
 			if(!grandPeek)
+			{
 				mChildren = getOpenPaths(mFile.listFiles());
-			else
+				//Logger.LogDebug(mFile.getPath() + " has " + mChildren.length + " children");
+			} else
 				mChildren = listFilesNative(mFile);
 			if((mChildren == null || mChildren.length == 0) && isDirectory())
 			{

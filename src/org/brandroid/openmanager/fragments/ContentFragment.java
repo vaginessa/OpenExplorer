@@ -110,7 +110,7 @@ import android.net.Uri;
 public class ContentFragment extends OpenFragment implements OnItemClickListener,
 															OnWorkerThreadFinishedListener{
 	
-	public static final boolean USE_ACTIONMODE = false;
+	public static final boolean USE_ACTIONMODE = OpenExplorer.USE_ACTIONMODE;
 	
 	//private static MultiSelectHandler mMultiSelect;
 	//private LinearLayout mPathView;
@@ -562,12 +562,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 								mContext, R.menu.context_file, view, null, null);
 						cm.setAnchor(anchor);
 						Menu cmm = cm.getMenu();
+						//if(!file.isArchive()) hideItem(cmm, R.id.menu_context_unzip);
 						if(getClipboard().size() > 0)
-							hideItem(cmm, R.id.menu_context_multi);
+							hideItem(cmm, R.id.menu_multi);
 						else
 							hideItem(cmm, R.id.menu_context_paste);
-						if(!name.toLowerCase().endsWith(".zip"))
-							hideItem(cmm, R.id.menu_context_unzip);
 						cm.setTitle(name);
 						cm.setOnDismissListener(new android.widget.PopupWindow.OnDismissListener() {
 							public void onDismiss() {
@@ -591,7 +590,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					}
 				}
 				
-				if(!OpenExplorer.BEFORE_HONEYCOMB)
+				if(!OpenExplorer.BEFORE_HONEYCOMB&&USE_ACTIONMODE)
 				{
 					if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
 						mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
@@ -621,7 +620,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 								//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
 								//files.add(file);
 								
-								if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_context_multi && item.getItemId() != R.id.menu_context_copy)
+								if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_context_copy)
 								{
 									mode.finish();
 									mActionModeSelected = false;
@@ -679,7 +678,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					menu.removeItem(itemId); //findItem(itemId).setVisible(false);
 			}
 		});
-		if(OpenExplorer.BEFORE_HONEYCOMB || !USE_ACTIONMODE)
+		if(OpenExplorer.BEFORE_HONEYCOMB) //|| !USE_ACTIONMODE)
 			registerForContextMenu(mGrid);
 	}
 	
@@ -781,11 +780,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					getExplorer().editFile(file);
 				}
 				break;
-			case R.id.menu_context_multi:
-				changeMultiSelectState(!getClipboard().isMultiselect());
-				getClipboard().add(file);
-				return true;
-				
+
 			case R.id.menu_multi:
 				changeMultiSelectState(!getClipboard().isMultiselect());
 				getClipboard().add(file);
@@ -866,9 +861,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				dZip.create().show();
 				return true;
 				
-			case R.id.menu_context_unzip:
-				getHandler().unzipFile(file, getExplorer());
-				return true;
+			//case R.id.menu_context_unzip:
+			//	getHandler().unzipFile(file, getExplorer());
+			//	return true;
 			
 			case R.id.menu_context_info:
 				getExplorer().showFileInfo(file);
@@ -904,12 +899,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = mData2.get(info != null ? info.position : mMenuContextItemIndex);
 		new MenuInflater(mContext).inflate(R.menu.context_file, menu);
-		menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
+		OpenExplorer.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
+		//menu.findItem(R.id.menu_context_unzip).setVisible(file.isArchive());
 		if(!mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
-		{
-			menu.findItem(R.id.menu_context_edit).setVisible(false);
-			menu.findItem(R.id.menu_context_view).setVisible(false);
-		}
+			OpenExplorer.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 	}
 	
 	//@Override

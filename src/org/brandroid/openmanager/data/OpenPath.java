@@ -223,6 +223,9 @@ public abstract class OpenPath
 		
 		return false;
 	}
+	public boolean isArchive() {
+		return getExtension().equals("zip");
+	}
 	
 	public boolean isVideoFile() { return isVideoFile(getName()); }
 	public static boolean isVideoFile(String path)
