@@ -123,7 +123,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private Context mContext;
 	private BaseAdapter mContentAdapter;
-	private ActionMode mActionMode = null;
+	private Object mActionMode = null;
 	private boolean mActionModeSelected;
 	private boolean mShowThumbnails = true;
 	private boolean mReadyToUpdate = true;
@@ -628,7 +628,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 								return executeMenu(item.getItemId(), mode, file);
 							}
 						});
-						mActionMode.setTitle(file.getName());
+						((ActionMode)mActionMode).setTitle(file.getName());
 					}
 					
 					return true;
@@ -665,7 +665,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							return executeMenu(item.getItemId(), mode, file);
 						}
 					});
-					mActionMode.setTitle(file.getName());
+					((ActionMode)mActionMode).setTitle(file.getName());
 					
 					return true;
 				}
@@ -758,7 +758,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					getActivity().startActivity(vintent);
 				else {
 					getExplorer().showToast(R.string.s_error_no_intents);
-					getExplorer().editFile(file);
+					if(file.length() < getResources().getInteger(R.integer.max_text_editor_size))
+						getExplorer().editFile(file);
 				}
 				break;
 			case R.id.menu_context_edit:
@@ -776,8 +777,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							getExplorer().showToast(R.string.s_error_no_intents);
 							getExplorer().editFile(file);
 						}
-				} else {
+				} else if(file.length() < getResources().getInteger(R.integer.max_text_editor_size)) {
 					getExplorer().editFile(file);
+				} else {
+					getExplorer().showToast(R.string.s_error_no_intents);
 				}
 				break;
 
@@ -838,7 +841,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				getClipboard().add(file);
 				getClipboard().ClearAfter = true;
 				final String def = getClipboard().size() == 1 ?
-						file.getName() + ".zip" :
+						file.getName().replace("." + file.getExtension(), "") + ".zip" :
 						file.getParent().getName() + ".zip";
 				
 				final InputDialog dZip = new InputDialog(getExplorer())
