@@ -57,10 +57,6 @@ public class OpenFile extends OpenPath
 		return mFile.getPath();
 	}
 
-	
-	/**
-	 * @return Length in bytes of underlying file.
-	 */
 	@Override
 	public long length() {
 		return mFile.length();

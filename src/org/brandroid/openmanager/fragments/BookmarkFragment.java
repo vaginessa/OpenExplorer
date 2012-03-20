@@ -19,7 +19,7 @@
 package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.data.OpenBookmarks;
+import org.brandroid.openmanager.adapters.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import android.os.Bundle;

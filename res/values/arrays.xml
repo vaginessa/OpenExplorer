@@ -33,10 +33,12 @@
 	<string-array name="server_types">
 	    <item>@string/s_server_ftp</item>
 	    <item>@string/s_server_sftp</item>
+	    <item>@string/s_server_smb</item>
 	</string-array>
 	<string-array name="server_types_values">
 	    <item>FTP</item>
 	    <item>SFTP</item>
+	    <item>SMB</item>
 	</string-array>
 	
 	<string-array name="bookmark_groups">
@@ -44,6 +46,5 @@
 	    <item>Smart Folders</item>
 	    <item>Favorites</item>
 	    <item>Servers</item>
-	    <item>Offline</item>
 	</string-array>
 </resources>

@@ -34,6 +34,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
@@ -63,6 +64,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
+
+import jcifs.smb.SmbAuthException;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
@@ -82,7 +85,6 @@ import android.content.res.ColorStateList;
 import android.content.res.Resources.NotFoundException;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -593,20 +595,20 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(!OpenExplorer.BEFORE_HONEYCOMB&&USE_ACTIONMODE)
 				{
 					if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
-						mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
+						mActionMode = getActivity().startActionMode(new android.view.ActionMode.Callback() {
 							//@Override
-							public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+							public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
 								return false;
 							}
 							
 							//@Override
-							public void onDestroyActionMode(ActionMode mode) {
+							public void onDestroyActionMode(android.view.ActionMode mode) {
 								mActionMode = null;
 								mActionModeSelected = false;
 							}
 							
 							//@Override
-							public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+							public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
 								mode.getMenuInflater().inflate(R.menu.context_file, menu);
 					    		
 					    		mActionModeSelected = true;
@@ -614,7 +616,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							}
 	
 							//@Override
-							public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+							public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
 								//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 								
 								//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
@@ -628,7 +630,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 								return executeMenu(item.getItemId(), mode, file);
 							}
 						});
-						((ActionMode)mActionMode).setTitle(file.getName());
+						((android.view.ActionMode)mActionMode).setTitle(file.getName());
 					}
 					
 					return true;
@@ -636,21 +638,21 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 				if(file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
 					if(!OpenExplorer.BEFORE_HONEYCOMB && USE_ACTIONMODE)
-					mActionMode = getActivity().startActionMode(new ActionMode.Callback() {
+					mActionMode = getActivity().startActionMode(new android.view.ActionMode.Callback() {
 						
 						//@Override
-						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+						public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
 							return false;
 						}
 						
 						//@Override
-						public void onDestroyActionMode(ActionMode mode) {
+						public void onDestroyActionMode(android.view.ActionMode mode) {
 							mActionMode = null;
 							mActionModeSelected = false;
 						}
 						
 						//@Override
-						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+						public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
 							mode.getMenuInflater().inflate(R.menu.context_file, menu);
 							menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
 							//menu.findItem(R.id.menu_context_unzip).setEnabled(mHoldingZip);
@@ -661,11 +663,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						}
 						
 						//@Override
-						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+						public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
 							return executeMenu(item.getItemId(), mode, file);
 						}
 					});
-					((ActionMode)mActionMode).setTitle(file.getName());
+					((android.view.ActionMode)mActionMode).setTitle(file.getName());
 					
 					return true;
 				}
@@ -725,8 +727,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	private void finishMode(Object mode)
 	{
-		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null && mode instanceof ActionMode)
-			((ActionMode)mode).finish();
+		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null && mode instanceof android.view.ActionMode)
+			((android.view.ActionMode)mode).finish();
 	}
 	
 	public boolean executeMenu(final int id, OpenPath file)
@@ -1457,6 +1459,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						try {
 							list = cachePath.list();
 							FileManager.setOpenCache(cachePath.getPath(), cachePath);
+						} catch(SmbAuthException e) {
+							Logger.LogWarning("Couldn't connect to SMB using: " + ((OpenSMB)cachePath).getFile().getCanonicalPath());
 						} catch (IOException e) {
 							Logger.LogWarning("Couldn't list from cachePath", e);
 						}

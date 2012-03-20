@@ -134,7 +134,7 @@ public class OpenServer
 	}
 	public String getPath()
 	{
-		return mPath;
+		return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
 	}
 	public String getUser()
 	{

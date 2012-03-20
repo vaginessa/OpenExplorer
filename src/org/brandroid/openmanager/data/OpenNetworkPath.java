@@ -19,6 +19,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	private int mServersIndex = -1;
 	public static final JSch DefaultJSch = new JSch();
 	public static int Timeout = 20000;
+	protected String mName = null;
 	
 	@Override
 	public Boolean requiresThread() {
@@ -32,6 +33,14 @@ public abstract class OpenNetworkPath extends OpenPath
 	public void disconnect() {
 		Logger.LogVerbose("Disconnecting OpenNetworkPath");
 	}
+
+	/**
+	 * This does not change the actual path of the underlying object, just what is displayed to the user.
+	 * @param name New title for OpenPath object
+	 */
+	public void setName(String name) { mName = name; } 
+	public String getName() { return mName; }
+	public String getName(String defaultName) { return mName != null ? mName : defaultName; }
 	
 	public UserInfo getUserInfo() { return mUserInfo; }
 	public UserInfo setUserInfo(UserInfo info) { mUserInfo = info; return mUserInfo; }
@@ -69,4 +78,9 @@ public abstract class OpenNetworkPath extends OpenPath
 		return mServersIndex;
 	}
 	public void setServersIndex(int index) { mServersIndex = index; }
+	
+	@Override
+	public String toString() {
+		return getName(super.toString());
+	}
 }

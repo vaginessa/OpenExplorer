@@ -135,7 +135,7 @@
     <string name="s_info_permission_execute">Execute: </string>
     <string name="s_toggle_keyboard">Keyboard</string>
     <string name="s_show_password">Show Password</string>
-    <string name="s_error_ftp">Error connecting to FTP</string>
+    <string name="s_error_ftp">Error connecting to Network</string>
     <string name="s_prompt_zip">Enter filename of new Zip file:</string>
     <string name="app_edit">Edit with OpenExplorer</string>
     <string name="s_menu_more">More options...</string>
@@ -183,5 +183,5 @@
     <string name="s_pref_actionmode">Action Mode</string>
     <string name="s_pref_actionmode_enabled">Use Action Mode</string>
     <string name="s_pref_actionmode_disabled">Use Standard Context Menus</string>
-    
+    <string name="s_server_smb">SMB/Windows</string>
 </resources>

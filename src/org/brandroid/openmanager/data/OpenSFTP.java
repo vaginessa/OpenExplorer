@@ -85,12 +85,6 @@ public class OpenSFTP extends OpenNetworkPath
 		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
 	}
 	
-	/**
-	 * This does not change the actual path of the underlying object, just what is displayed to the user.
-	 * @param name New title for OpenPath object
-	 */
-	public void setName(String name) { mName = name; } 
-	
 	public int getPort() { return mPort; }
 	public void setPort(int port) { mPort = port; }
 	public String getHost() { return mHost; }

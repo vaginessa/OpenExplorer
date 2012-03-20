@@ -120,12 +120,12 @@ import java.util.zip.ZipFile;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.openmanager.adapters.OpenBookmarks;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.OpenBookmarks.BookmarkType;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
-import org.brandroid.openmanager.data.OpenBookmarks;
-import org.brandroid.openmanager.data.OpenBookmarks.BookmarkType;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -2436,7 +2436,11 @@ public class OpenExplorer
 				if(!hasMe)
 					mViewPagerAdapter.add(index++, ContentFragment.getInstance(path, newView));
 				if(mViewPager.getCurrentItem() != index)
-					mViewPager.setCurrentItem(index, true);
+					try {
+						mViewPager.setCurrentItem(index, true);
+					} catch(IllegalStateException ise) {
+						Logger.LogWarning("Fragment already active?", ise);
+					}
 				updatePagerTitle(index);
 			}
 		} else {

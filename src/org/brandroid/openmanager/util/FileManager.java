@@ -32,9 +32,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -42,6 +45,9 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenStack;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.ftp.FTPFileComparer;
@@ -433,6 +439,22 @@ public class FileManager {
 			{
 				Uri uri = Uri.parse(path);
 				ret = new OpenSFTP(uri);
+			} else if(path.startsWith("smb:/"))
+			{
+				try {
+					Uri uri = Uri.parse(path);
+					String user = uri.getUserInfo();
+					if(user.indexOf(":") > -1)
+						user = user.substring(0, user.indexOf(":"));
+					OpenServer server = OpenServers.DefaultServers.find(uri.getHost(), user, uri.getPath());
+					if(server != null)
+						user += ":" + server.getPassword();
+					if(!user.equals(""))
+						user += "@";
+					ret = new OpenSMB(new SmbFile(uri.getScheme() + "://" + user + uri.getHost() + uri.getPath()));
+				} catch(Exception e) {
+					Logger.LogError("Couldn't get samba from cache.", e);
+				}
 			}
 			if(ret == null) return ret;
 			if(bGetNetworkedFiles)

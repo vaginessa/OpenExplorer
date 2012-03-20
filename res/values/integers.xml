@@ -17,4 +17,5 @@
 <resources>
     <item type="integer" name="content_grid_image_size">128</item>
     <item type="integer" name="content_list_image_size">36</item>
+    <item type="integer" name="max_text_editor_size">500000</item>
 </resources>
