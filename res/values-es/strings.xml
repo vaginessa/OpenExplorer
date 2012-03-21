@@ -173,4 +173,27 @@
 	<string name="s_pref_show_root">Mostrar la raíz del sistema de archivos (/)</string>
 	<string name="s_pref_show_internal">Mostrar Medios de Comunicación Interna</string>
 	<string name="s_pref_show_external">Mostrar los medios externos</string>
+    <string name="s_error_no_media">Parece que no hay ningún medio insertado. Por favor, deshabilitar el uso compartido de medios USB o re-inserción.</string>
+    <string name="s_prompt_password">Ingrese su contraseña</string>
+    <string name="s_add">añadir</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">puerto</string>
+    <string name="s_about_buildtime">Fecha de compilación</string>
+    <string name="s_default">defecto</string>
+    <string name="s_pref_timeout">Tiempo de espera</string>
+    <string name="s_pref_timeout_summary">Tiempo de espera en segundos</string>
+    <string name="s_menu_up">subir</string>
+    <string name="s_prompt_unzip">Introduzca la ruta para descomprimir en:</string>
+    <string name="s_pref_hardware_accel">Habilitar aceleración de hardware</string>
+    <string name="s_pref_honeyplus">Android 3.0 + Configuración</string>
+    <string name="s_pref_actionmode">Modo de acción</string>
+    <string name="s_pref_actionmode_enabled">Utilice el modo de acción</string>
+    <string name="s_pref_actionmode_disabled">El uso de menús estándar de contexto</string>
+    <string name="s_server_smb">SMB / Windows</string>
+    <string name="s_bookmark_drives">Unidades</string>
+    <string name="s_bookmark_smart">carpetas inteligentes</string>
+    <string name="s_bookmark_favorites">Favoritos</string>
+    <string name="s_bookmark_servers">Servidores</string>
+    <string name="s_bookmark_cache">cache</string>
 </resources>

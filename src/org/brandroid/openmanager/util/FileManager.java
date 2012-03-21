@@ -459,6 +459,7 @@ public class FileManager {
 			if(ret == null) return ret;
 			if(bGetNetworkedFiles)
 			{
+				ret.deleteFolderFromDb();
 				ret.listFiles();
 				setOpenCache(path, ret);
 			} else {

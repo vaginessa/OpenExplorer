@@ -173,4 +173,27 @@
 	<string name="s_pref_show_root">보기 루트 파일 시스템 (/)</string>
 	<string name="s_pref_show_internal">내부 미디어보기</string>
 	<string name="s_pref_show_external">외부 미디어보기</string>
+    <string name="s_error_no_media">삽입된 어떤 미디어가없는 것 같습니다. 의 USB 공유 또는 다시 삽입 미디어를 사용하지 않도록하십시오.</string>
+    <string name="s_prompt_password">비밀 번호를 입력하세요</string>
+    <string name="s_add">추가</string>
+    <string name="s_server_ftp">FTP를</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">포트</string>
+    <string name="s_about_buildtime">빌드 날짜</string>
+    <string name="s_default">기본</string>
+    <string name="s_pref_timeout">시간 초과</string>
+    <string name="s_pref_timeout_summary">초 단위 시간 초과</string>
+    <string name="s_menu_up">올라가다</string>
+    <string name="s_prompt_unzip">로 압축 해제하기위한 경로를 입력 :</string>
+    <string name="s_pref_hardware_accel">하드웨어 가속을 활성화</string>
+    <string name="s_pref_honeyplus">안드로이드 3.0 이상 설정</string>
+    <string name="s_pref_actionmode">액션 모드</string>
+    <string name="s_pref_actionmode_enabled">액션 모드를 사용</string>
+    <string name="s_pref_actionmode_disabled">표준 컨텍스트 메뉴를 사용하여</string>
+    <string name="s_server_smb">SMB / 윈도우</string>
+    <string name="s_bookmark_drives">드라이브</string>
+    <string name="s_bookmark_smart">스마트 폴더</string>
+    <string name="s_bookmark_favorites">즐겨찾기</string>
+    <string name="s_bookmark_servers">서버</string>
+    <string name="s_bookmark_cache">캐시</string>
 </resources>

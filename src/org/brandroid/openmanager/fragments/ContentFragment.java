@@ -352,6 +352,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mContentAdapter.notifyDataSetChanged();
 			if(mProgressBarLoading != null)
 				mProgressBarLoading.setVisibility(View.VISIBLE);
+			if(path instanceof OpenNetworkPath && path.listFromDb())
+				mData = ((OpenNetworkPath)path).getChildren();
 			Logger.LogVerbose("Running FileIOTask");
 			final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 			new Thread(new Runnable(){

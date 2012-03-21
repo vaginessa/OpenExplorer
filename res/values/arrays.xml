@@ -42,9 +42,17 @@
 	</string-array>
 	
 	<string-array name="bookmark_groups">
+	    <item>@string/s_bookmark_drives</item>
+	    <item>@string/s_bookmark_smart</item>
+	    <item>@string/s_bookmark_favorites</item>
+	    <item>@string/s_bookmark_servers</item>
+	</string-array>
+	
+	<string-array name="bookmark_groups_values">
 	    <item>Drives</item>
 	    <item>Smart Folders</item>
 	    <item>Favorites</item>
 	    <item>Servers</item>
+	    <item>Cache</item>
 	</string-array>
 </resources>

@@ -164,4 +164,27 @@
 	<string name="s_pref_show_root">הצג שורש מערכת קבצים (/)</string>
 	<string name="s_pref_show_internal">הצג מדיה פנימיים</string>
 	<string name="s_pref_show_external">הצג מדיה חיצונית</string>
+    <string name="s_error_no_media">זה נראה כאילו אין התקשורת הנוספים. בבקשה לבטל את שיתוף USB או הכנס מחדש מדיה.</string>
+    <string name="s_prompt_password">הזן סיסמה</string>
+    <string name="s_add">להוסיף</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">נמל</string>
+    <string name="s_about_buildtime">תאריך בנייה</string>
+    <string name="s_default">ברירת מחדל</string>
+    <string name="s_pref_timeout">פסק זמן</string>
+    <string name="s_pref_timeout_summary">פסק זמן בשניות</string>
+    <string name="s_menu_up">לעלות</string>
+    <string name="s_prompt_unzip">הזן את הנתיב לפתוח את:</string>
+    <string name="s_pref_hardware_accel">לאפשר האצת חומרה</string>
+    <string name="s_pref_honeyplus">אנדרואיד 3.0 + הגדרות</string>
+    <string name="s_pref_actionmode">מצב פעולה</string>
+    <string name="s_pref_actionmode_enabled">השתמש במצב פעולה</string>
+    <string name="s_pref_actionmode_disabled">להשתמש בתפריטים הקשר רגילים</string>
+    <string name="s_server_smb">SMB / Windows</string>
+    <string name="s_bookmark_drives">כוננים</string>
+    <string name="s_bookmark_smart">תיקיות חכמות</string>
+    <string name="s_bookmark_favorites">המועדפים</string>
+    <string name="s_bookmark_servers">שרתי</string>
+    <string name="s_bookmark_cache">מטמון</string>
 </resources>

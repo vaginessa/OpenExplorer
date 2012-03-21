@@ -173,4 +173,27 @@
 	<string name="s_pref_show_root">Zeige Root-Dateisystem (/)</string>
 	<string name="s_pref_show_internal">Interne Medien anzeigen</string>
 	<string name="s_pref_show_external">Zeigen Sie externe Speichermedien</string>
+    <string name="s_error_no_media">Es sieht so aus, als gäbe es kein Medium eingelegt. Bitte deaktivieren Sie die USB-Sharing oder wieder einsetzen Medien.</string>
+    <string name="s_prompt_password">Geben Sie das Passwort</string>
+    <string name="s_add">hinzufügen</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">Port</string>
+    <string name="s_about_buildtime">Erstellungsdatum</string>
+    <string name="s_default">Default</string>
+    <string name="s_pref_timeout">Timeout</string>
+    <string name="s_pref_timeout_summary">Timeout in Sekunden</string>
+    <string name="s_menu_up">hinaufgehen</string>
+    <string name="s_prompt_unzip">Geben Sie den Pfad zu entpacken:</string>
+    <string name="s_pref_hardware_accel">Hardwarebeschleunigung aktivieren</string>
+    <string name="s_pref_honeyplus">Android 3.0 + Einstellungen</string>
+    <string name="s_pref_actionmode">Action Modus</string>
+    <string name="s_pref_actionmode_enabled">Verwenden Action Modus</string>
+    <string name="s_pref_actionmode_disabled">Verwenden Sie Standard-Kontextmenüs</string>
+    <string name="s_server_smb">SMB / Windows</string>
+    <string name="s_bookmark_drives">Drives</string>
+    <string name="s_bookmark_smart">Smart Folders</string>
+    <string name="s_bookmark_favorites">Favoriten</string>
+    <string name="s_bookmark_servers">Server</string>
+    <string name="s_bookmark_cache">Zwischenspeicher</string>
 </resources>

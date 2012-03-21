@@ -137,4 +137,27 @@
     <string name="s_toggle_keyboard">Клавиатура</string>
     <string name="s_info_num_folders">Количество папок:</string>
     <string name="s_info_permissions">Права доступа к файлам:</string>
+    <string name="s_error_no_media">Похоже, что нет вставлен носитель информации. Пожалуйста, отключите USB обмена или повторной вставки информации.</string>
+    <string name="s_prompt_password">Введите пароль</string>
+    <string name="s_add">добавлять</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">порт</string>
+    <string name="s_about_buildtime">Дата сборки</string>
+    <string name="s_default">умолчание</string>
+    <string name="s_pref_timeout">Тайм-аут</string>
+    <string name="s_pref_timeout_summary">Тайм-аут в секундах</string>
+    <string name="s_menu_up">подниматься</string>
+    <string name="s_prompt_unzip">Введите путь для распаковки в:</string>
+    <string name="s_pref_hardware_accel">Включить аппаратное ускорение</string>
+    <string name="s_pref_honeyplus">Android 3.0 + Настройка</string>
+    <string name="s_pref_actionmode">Действие режима</string>
+    <string name="s_pref_actionmode_enabled">Использование режима работы</string>
+    <string name="s_pref_actionmode_disabled">Используйте стандартные контекстные меню</string>
+    <string name="s_server_smb">SMB / Windows</string>
+    <string name="s_bookmark_drives">диски</string>
+    <string name="s_bookmark_smart">Умные папки</string>
+    <string name="s_bookmark_favorites">Избранные</string>
+    <string name="s_bookmark_servers">Серверы</string>
+    <string name="s_bookmark_cache">кэш</string>
 </resources>

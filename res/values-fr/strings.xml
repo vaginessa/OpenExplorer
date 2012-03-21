@@ -173,4 +173,27 @@
 	<string name="s_pref_show_root">Système de fichiers Afficher racine (/)</string>
 	<string name="s_pref_show_internal">Afficher les médias internes</string>
 	<string name="s_pref_show_external">Afficher les médias externes</string>
+    <string name="s_error_no_media">On dirait qu\'il n\'y a pas de média inséré. S\'il vous plaît désactiver le partage USB ou re-insérer un support.</string>
+    <string name="s_prompt_password">Entrez Mot de passe</string>
+    <string name="s_add">ajouter</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">port</string>
+    <string name="s_about_buildtime">date de fabrication</string>
+    <string name="s_default">par défaut</string>
+    <string name="s_pref_timeout">Timeout</string>
+    <string name="s_pref_timeout_summary">Délai en secondes</string>
+    <string name="s_menu_up">monter</string>
+    <string name="s_prompt_unzip">Entrez le chemin à décompresser dans:</string>
+    <string name="s_pref_hardware_accel">Activer l\'accélération matérielle</string>
+    <string name="s_pref_honeyplus">Android 3.0 + Réglages</string>
+    <string name="s_pref_actionmode">mode d\'action</string>
+    <string name="s_pref_actionmode_enabled">Utilisez le mode d\'action</string>
+    <string name="s_pref_actionmode_disabled">Utiliser les menus contextuels standard</string>
+    <string name="s_server_smb">SMB / Windows</string>
+    <string name="s_bookmark_drives">Disques</string>
+    <string name="s_bookmark_smart">Les dossiers intelligents</string>
+    <string name="s_bookmark_favorites">Favoris</string>
+    <string name="s_bookmark_servers">Serveurs</string>
+    <string name="s_bookmark_cache">Cache</string>
 </resources>

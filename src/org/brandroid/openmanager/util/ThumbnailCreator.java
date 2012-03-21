@@ -35,7 +35,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore;
+import org.brandroid.openmanager.provider.MediaStore;
 import android.view.Gravity;
 import android.widget.ImageView;
 
