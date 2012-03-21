@@ -12,9 +12,9 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 

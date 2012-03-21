@@ -179,6 +179,11 @@ public class OpenSFTP extends OpenNetworkPath
 		FileManager.setOpenCache(getAbsolutePath(), this);
 		return mChildren.toArray(new OpenSFTP[mChildren.size()]);
 	}
+	
+	@Override
+	public OpenNetworkPath[] getChildren() {
+		return mChildren.toArray(new OpenSFTP[mChildren.size()]);
+	}
 
 	@Override
 	public Boolean isDirectory() {
@@ -356,5 +361,20 @@ public class OpenSFTP extends OpenNetworkPath
 			throw new IOException("JSchException while trying to get SCP file (" + mRemotePath + ")");
 		}
 		return out;
+	}
+	static int checkAck(InputStream in) throws IOException
+	{
+		int b=in.read();
+		if(b==0) return b;
+		if(b==-1) return b;
+		
+		if(b==1 || b==2){
+			StringBuffer sb=new StringBuffer();
+			int c;
+			do {c=in.read();sb.append((char)c);}while(c!='\n');
+			if(b==1){System.out.print(sb.toString());}
+			if(b==2){System.out.print(sb.toString());}
+		}
+		return b;
 	}
 }

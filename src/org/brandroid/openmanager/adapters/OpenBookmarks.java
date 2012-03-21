@@ -146,12 +146,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getVideoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
+		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
 		
-		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("Download"));
+		//checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("Download"));
 		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getInternalMemoryDrive()))
 			mHasInternal = true;
 		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getExternalMemoryDrive(false)))
@@ -705,6 +706,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				boolean isLastChild, View convertView, ViewGroup parent) {
 			View ret = getExplorer().getLayoutInflater().inflate(R.layout.bookmark_layout, null); //convertView;;
 			OpenPath path = getChild(group, pos);
+			if(path instanceof OpenCursor && path.getListLength() == 0)
+			{
+				ret.setVisibility(View.GONE);
+				return ret;
+			}
 			BookmarkHolder mHolder = null;
 			mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 			ret.setTag(mHolder);

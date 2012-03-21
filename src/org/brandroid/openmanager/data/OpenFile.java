@@ -14,8 +14,8 @@ import java.lang.ref.SoftReference;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.DFInfo;
-import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;

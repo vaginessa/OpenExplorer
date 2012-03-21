@@ -18,13 +18,14 @@ public class OpenCursor extends OpenPath
 	//private Cursor mCursor;
 	private OpenMediaStore[] mChildren = new OpenMediaStore[0];
 	private final String mName;
+	private String mTitle;
 	private Long mTotalSize = 0l;
 	private boolean loaded = false;
 	private TextView mBookmarkText = null;
 	
 	public OpenCursor(String name)
 	{
-		mName = name;
+		mName = mTitle = name;
 		loaded = false;
 	}
 	
@@ -66,7 +67,7 @@ public class OpenCursor extends OpenPath
 
 	@Override
 	public String getName() {
-		return mName;
+		return mTitle;
 	}
 
 	@Override
@@ -197,6 +198,10 @@ public class OpenCursor extends OpenPath
 	public long getTotalSize()
 	{
 		return mTotalSize;
+	}
+
+	public void setName(String name) {
+		mTitle = name;
 	}
 
 }

@@ -47,7 +47,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.provider.MediaStore;
+import org.brandroid.openmanager.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -121,6 +121,7 @@ import java.util.zip.ZipFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
@@ -153,7 +154,6 @@ import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
-import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
@@ -235,6 +235,7 @@ public class OpenExplorer
 			mPhotoParent = new OpenCursor("Photos"),
 			mVideoParent = new OpenCursor("Videos"),
 			mMusicParent = new OpenCursor("Music"),
+			mDownloadParent = new OpenCursor("Downloads"),
 			mApkParent = new OpenCursor("Apps");
 	
 	public boolean isViewPagerEnabled() { return mViewPagerEnabled; }
@@ -388,6 +389,8 @@ public class OpenExplorer
 				path = mPhotoParent;
 			else if(start.equals("Music"))
 				path = mMusicParent;
+			else if(start.equals("Downloads"))
+				path = mDownloadParent;
 			else if(start.equals("External") && !checkForNoMedia(OpenFile.getExternalMemoryDrive(false)))
 				path = OpenFile.getExternalMemoryDrive(false);
 			else if(start.equals("Internal") || start.equals("External"))
@@ -966,6 +969,9 @@ public class OpenExplorer
 		return mMusicParent;
 	}
 
+	public static OpenCursor getDownloadParent() {
+		return mDownloadParent;
+	}
 	
 	private void ensureCache(OpenCursor parent)
 	{
@@ -986,116 +992,47 @@ public class OpenExplorer
 			//Logger.LogDebug("Videos should be found");
 		}else
 		{
+			mVideoParent.setName(getString(R.string.s_videos));
 			Logger.LogVerbose("Finding videos");
 			//if(!IS_DEBUG_BUILD)
 			try {
-				//CursorLoader loader = new CursorLoader(
 				getSupportLoaderManager().initLoader(0, null, this);
-				/*
-				new LoadMediaStore(
-						getApplicationContext(),
-						Uri.parse("content://media/external/video/media"),
-						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						MediaStore.Video.Media.SIZE + " > 10000", null,
-						MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
-						MediaStore.Video.Media.DATE_MODIFIED + " DESC")
-						//.setCursorType(0).startLoading();
-						/*;
-				Cursor c = loader.loadInBackground();
-				if(c != null)
-				{
-					mVideoParent.setCursor(c);
-					c.close();
-				}
-				//*/
 			} catch(Exception e) { Logger.LogError("Couldn't query videos.", e); }
 			Logger.LogDebug("Done looking for videos");
 		}
 		if(!mPhotoParent.isLoaded())
 		{
+			mPhotoParent.setName(getString(R.string.s_photos));
 			Logger.LogVerbose("Finding Photos");
 			try {
 				getSupportLoaderManager().initLoader(1, null, this);
-				/*CursorLoader loader = new CursorLoader(
-				//new LoadMediaStore(
-						getApplicationContext(),
-						Uri.parse("content://media/external/images/media"),
-						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						MediaStore.Images.Media.SIZE + " > 10000", null,
-						MediaStore.Images.Media.DATE_ADDED + " DESC"
-						//).setCursorType(1).startLoading();
-						);
-				/*
-				loader.registerListener(1, new OnLoadCompleteListener<Cursor>() {
-					@Override
-					public void onLoadComplete(Loader<Cursor> arg0, Cursor cursor) {
-						Logger.LogVerbose("PhotoLoader onLoadComplete");
-						if(cursor != null)
-						{
-							mPhotoParent.setCursor(cursor);
-							cursor.close();
-						} else Logger.LogWarning("Bad Photo Cursor");
-					}
-				});
-				loader.startLoading();
-				//*/
-				/*
-				Cursor c = loader.loadInBackground();
-				if(c != null)
-				{
-					mPhotoParent.setCursor(c);
-					c.close();
-				} //*/
 				Logger.LogDebug("Done looking for photos");
 				
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't query photos.", e); }
 		}
 		if(!mMusicParent.isLoaded())
 		{
+			mMusicParent.setName(getString(R.string.s_music));
 			Logger.LogVerbose("Finding Music");
 			try {
 				getSupportLoaderManager().initLoader(2, null, this);
-				/*
-				CursorLoader loader = new CursorLoader(
-				//new LoadMediaStore(
-						getApplicationContext(),
-						Uri.parse("content://media/external/audio/media"),
-						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						MediaStore.Audio.Media.SIZE + " > 10000", null,
-						MediaStore.Audio.Media.DATE_ADDED + " DESC"
-						//).setCursorType(2).startLoading();
-						);
-				Cursor c = loader.loadInBackground();
-				if(c != null)
-				{
-					mMusicParent.setCursor(c);
-					c.close();
-				} //*/
 				Logger.LogDebug("Done looking for music");
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't query music.", e); }
 		}
-		if(!mApkParent.isLoaded() && Build.VERSION.SDK_INT > 10)
+		if(!mApkParent.isLoaded())
 		{
 			Logger.LogVerbose("Finding APKs");
 			try {
 				getSupportLoaderManager().initLoader(3, null, this);
-				/*
-				CursorLoader loader = new CursorLoader(
-				//new LoadMediaStore(
-						getApplicationContext(),
-						MediaStore.Files.getContentUri("/mnt"),
-						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-						"_size > 10000 AND _data LIKE '%apk'", null,
-						"date modified DESC"
-						//).setCursorType(3).forceLoad();
-						);
-				Cursor c = loader.loadInBackground();
-				if(c != null)
-				{
-					mApkParent.setCursor(c);
-					c.close();
-				}*/
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Apks.", e); }
+		}
+		if(!mDownloadParent.isLoaded())
+		{
+			mDownloadParent.setName(getString(R.string.s_downloads));
+			Logger.LogVerbose("Finding Downloads");
+			try {
+				getSupportLoaderManager().initLoader(4, null, this);
+			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Downloads.", e); }
 		}
 		Logger.LogVerbose("Done finding cursors");
 		return true;
@@ -1558,10 +1495,11 @@ public class OpenExplorer
 						btn.setId(item.getItemId());
 						btn.setOnClickListener(this);
 						tr.addView(btn);
-						//menu.getItem(i).setVisible(false);
+						menu.getItem(i).setVisible(false);
 					} else Logger.LogWarning(item.getTitle() + " should not show. " + item.getShowAsAction() + " :: " + item.getFlags());
 				}
 			}
+			setMenuVisible(menu, false, R.id.title_menu);
 			Logger.LogDebug("Added " + tr.getChildCount() + " children to Base Bar.");
 			if(tbl != null)
 			{
@@ -2894,14 +2832,7 @@ public class OpenExplorer
 		if(getClipboard().ClearAfter)
 			getClipboard().clear();
 	}
-	private String getCursorString(int id)
-	{
-		if(id == 0) return "video";
-		if(id == 1) return "images";
-		if(id == 2) return "music";
-		return null;
-	}
-
+	
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle arg1) {
 		CursorLoader loader = null;
@@ -2944,6 +2875,14 @@ public class OpenExplorer
 					"date modified DESC"
 					);
 				break;
+			case 4:
+				loader = new CursorLoader(
+					getApplicationContext(),
+					MediaStore.Files.getContentUri("/"),
+					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+					"_data LIKE '%download%", null,
+					"date modified DESC"
+					);
 		}
 
 		return loader;
@@ -2958,6 +2897,8 @@ public class OpenExplorer
 			mParent = mMusicParent;
 		else if(l.getId() == 3)
 			mParent = mApkParent;
+		else if(l.getId() == 4)
+			mParent = mDownloadParent;
 		mParent.setCursor(c);
 		mBookmarks.refresh();
 	}
@@ -2966,5 +2907,6 @@ public class OpenExplorer
 	public void onLoaderReset(Loader<Cursor> l) {
 		onLoadFinished(l, null);
 	}
+
 }
 

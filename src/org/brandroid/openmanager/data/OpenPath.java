@@ -8,9 +8,10 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.NavigableSet;
+
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MimeTypes;
-import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
@@ -317,6 +318,12 @@ public abstract class OpenPath
 		return mDb.createItem(this) > 0;
 	}
 	public boolean listFromDb() { return false; }
+	public int deleteFolderFromDb()
+	{
+		if(mDb != null)
+			return mDb.deleteFolder(this);
+		else return -1;
+	}
 	
 	public final static void flushDbCache()
 	{
