@@ -73,11 +73,11 @@
     <string name="s_pref_server_type">שרת סוג</string>
     <string name="s_files">קבצים</string>
     <string name="s_create">ליצור</string>
-    <string name="s_title_holding_x_files">החזקת קבצים xxx</string>
+    <string name="s_title_holding_x_files">החזקת קבצים %s</string>
     <string name="s_title_newfolder">יצירת תיקיה חדשה</string>
-    <string name="s_title_send">שלח xxx</string>
-    <string name="s_title_unzip">Unzip xxx</string>
-    <string name="s_title_zip">מיקוד xxx</string>
+    <string name="s_title_send">שלח %s</string>
+    <string name="s_title_unzip">Unzip %s</string>
+    <string name="s_title_zip">מיקוד %s</string>
     <string name="s_title_executing">מבצע</string>
     <string name="s_title_deleting">מחיקת</string>
     <string name="s_title_searching">חיפוש</string>
@@ -86,10 +86,10 @@
     <string name="s_title_zipping">רכס</string>
     <string name="s_title_unzipping">פתחתי את רוכסן</string>
     <string name="s_title_wait">אנא המתן ...</string>
-    <string name="s_alert_confirm_delete">מחיקת xxx לא ניתן לבטל. האם אתה בטוח שאתה רוצה להמשיך?</string>
+    <string name="s_alert_confirm_delete">מחיקת %s לא ניתן לבטל. האם אתה בטוח שאתה רוצה להמשיך?</string>
     <string name="s_alert_rename">אנא הקלד את השם החדש קובץ זה</string>
     <string name="s_alert_newfolder">הקלד את השם של התיקייה שאתה רוצה ליצור.</string>
-    <string name="s_alert_unzip">היית רוצה לפתוח xxx כאן או תיקיה אחרת?</string>
+    <string name="s_alert_unzip">היית רוצה לפתוח %s כאן או תיקיה אחרת?</string>
     <string name="s_button_unzip_here">Unzip כאן</string>
     <string name="s_button_unzip_else">Unzip במקום אחר ...</string>
     <string name="s_msg_none">קובץ (ים) לא יכול להיות</string>
@@ -142,7 +142,7 @@
 	<string name="s_menu_delete_all">מחק הכל</string>
 	<string name="s_menu_move_all">העבר לכאן</string>
 	<string name="s_menu_copy_all">העתק לכאן</string>
-	<string name="s_confirm_delete">האם אתה בטוח שברצונך למחוק XXX?</string>
+	<string name="s_confirm_delete">האם אתה בטוח שברצונך למחוק %s?</string>
 	<string name="s_error_same_destination">מדריך יעד זהה.</string>
 	<string name="s_sample_notification">העתקה -> sdcard: \n 3 קבצים</string>
 	<string name="s_pref_fullscreen">מסך מלא</string>
