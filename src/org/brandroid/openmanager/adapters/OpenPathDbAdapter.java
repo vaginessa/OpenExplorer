@@ -1,4 +1,4 @@
-package org.brandroid.openmanager.util;
+package org.brandroid.openmanager.adapters;
 
 import java.sql.Date;
 
@@ -118,7 +118,7 @@ public class OpenPathDbAdapter
         Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
         
 		try {
-			mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
+			//mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
 			if(mDb.replace(DATABASE_TABLE, null, initialValues) > -1)
 				return 1;
 			else return 0;
@@ -126,6 +126,19 @@ public class OpenPathDbAdapter
 			Logger.LogError("Couldn't write to Files DB.", e);
 			return 0;
 		}
+    }
+    
+    public int deleteFolder(OpenPath parent)
+    {
+    	try {
+    		if(parent != null) {
+    			String sParent = parent.getPath();
+    			return mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent.replace("'", "\\'") + "'", null);
+    		} else return 0;
+    	} catch(Exception e) {
+    		Logger.LogError("Coudln't delete folder from Files DB.", e);
+    		return -1;
+    	}
     }
     
     public Cursor fetchItemsFromFolder(String folder)

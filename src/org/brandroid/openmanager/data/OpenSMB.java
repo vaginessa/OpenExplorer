@@ -9,8 +9,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
@@ -134,6 +134,9 @@ public class OpenSMB extends OpenNetworkPath
 		}
 		return mChildren;
 	}
+	
+	@Override
+	public OpenSMB[] getChildren() { return mChildren; }
 
 	@Override
 	public Boolean isDirectory() {

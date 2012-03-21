@@ -184,4 +184,9 @@
     <string name="s_pref_actionmode_enabled">Use Action Mode</string>
     <string name="s_pref_actionmode_disabled">Use Standard Context Menus</string>
     <string name="s_server_smb">SMB/Windows</string>
+    <string name="s_bookmark_drives">Drives</string>
+    <string name="s_bookmark_smart">Smart Folders</string>
+    <string name="s_bookmark_favorites">Favorites</string>
+    <string name="s_bookmark_servers">Servers</string>
+    <string name="s_bookmark_cache">Cache</string>
 </resources>
