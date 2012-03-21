@@ -317,4 +317,10 @@ public abstract class OpenPath
 		return mDb.createItem(this) > 0;
 	}
 	public boolean listFromDb() { return false; }
+	
+	public final static void flushDbCache()
+	{
+		if(mDb != null)
+			mDb.clear();
+	}
 }

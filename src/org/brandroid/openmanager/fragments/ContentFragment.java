@@ -38,6 +38,7 @@ import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
+import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
@@ -57,6 +58,9 @@ import com.jcraft.jsch.UserInfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -595,45 +599,61 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(!OpenExplorer.BEFORE_HONEYCOMB&&USE_ACTIONMODE)
 				{
 					if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
-						mActionMode = getActivity().startActionMode(new android.view.ActionMode.Callback() {
-							//@Override
-							public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
-								return false;
-							}
-							
-							//@Override
-							public void onDestroyActionMode(android.view.ActionMode mode) {
-								mActionMode = null;
-								mActionModeSelected = false;
-							}
-							
-							//@Override
-							public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
-								mode.getMenuInflater().inflate(R.menu.context_file, menu);
-					    		
-					    		mActionModeSelected = true;
-								return true;
-							}
-	
-							//@Override
-							public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
-								//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+						try {
+							Method mStarter = getActivity().getClass().getMethod("startActionMode");
+							mActionMode = mStarter.invoke(getActivity(),
+									new ActionModeHelper.Callback() {
+								//@Override
+								public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+									return false;
+								}
 								
-								//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
-								//files.add(file);
-								
-								if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_context_copy)
-								{
-									mode.finish();
+								//@Override
+								public void onDestroyActionMode(android.view.ActionMode mode) {
+									mActionMode = null;
 									mActionModeSelected = false;
 								}
-								return executeMenu(item.getItemId(), mode, file);
-							}
-						});
-						((android.view.ActionMode)mActionMode).setTitle(file.getName());
+								
+								//@Override
+								public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+									mode.getMenuInflater().inflate(R.menu.context_file, menu);
+						    		
+						    		mActionModeSelected = true;
+									return true;
+								}
+		
+								//@Override
+								public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+									//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+									
+									//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
+									//files.add(file);
+									
+									if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_context_copy)
+									{
+										mode.finish();
+										mActionModeSelected = false;
+									}
+									return executeMenu(item.getItemId(), mode, file);
+								}
+							});
+							((android.view.ActionMode)mActionMode).setTitle(file.getName());
+						} catch (NoSuchMethodException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IllegalArgumentException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InvocationTargetException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
-					
 					return true;
+
 				}
 				
 				if(file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {

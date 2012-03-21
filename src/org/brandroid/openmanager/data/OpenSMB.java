@@ -7,9 +7,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.OpenPathDbAdapter;
 import org.brandroid.utils.Logger;
 
+import android.database.Cursor;
 import android.net.Uri;
 
 public class OpenSMB extends OpenNetworkPath
@@ -17,6 +21,8 @@ public class OpenSMB extends OpenNetworkPath
 	private final SmbFile mFile;
 	private final OpenSMB mParent;
 	private OpenSMB[] mChildren = null; 
+	private Long mSize = null;
+	private Long mModified = null;
 	
 	public OpenSMB(String url) throws MalformedURLException
 	{
@@ -33,10 +39,28 @@ public class OpenSMB extends OpenNetworkPath
 		mFile = kid;
 		mParent = parent;
 	}
+	public OpenSMB(String url, long size, long modified) throws MalformedURLException
+	{
+		mFile = new SmbFile(url);
+		mParent = null;
+		mSize = size;
+		mModified = modified;
+	}
 
 	@Override
 	public String getName() {
-		return getName(mFile.getName());
+		String ret = getName(mFile.getPath());
+		if(ret.endsWith("/"))
+			ret = ret.substring(ret.lastIndexOf("/", ret.lastIndexOf("/") - 1) + 1);
+		else
+			ret = ret.substring(ret.lastIndexOf("/") + 1);
+		if(ret.indexOf("@") > -1)
+			ret = ret.substring(ret.indexOf("@") + 1);
+		if(ret.equals(""))
+			ret = mFile.getName();
+		if(ret.equals("") || ret.equals("/"))
+			ret = mFile.getServer();
+		return ret;
 	}
 
 	@Override
@@ -52,6 +76,7 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public long length() {
+		if(mSize != null) return mSize;
 		if(isDirectory()) return 0l;
 		try {
 			return mFile.length();
@@ -103,7 +128,10 @@ public class OpenSMB extends OpenNetworkPath
 		SmbFile[] kids = mFile.listFiles();
 		mChildren = new OpenSMB[kids.length];
 		for(int i = 0; i < kids.length; i++)
+		{
 			mChildren[i] = new OpenSMB(this, kids[i]);
+			FileManager.setOpenCache(mChildren[i].getPath(), mChildren[i]);
+		}
 		return mChildren;
 	}
 
@@ -141,6 +169,7 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public Long lastModified() {
+		if(mModified != null) return mModified;
 		return mFile.getLastModified();
 	}
 
@@ -209,4 +238,32 @@ public class OpenSMB extends OpenNetworkPath
 		return mFile;
 	}
 
+
+	@Override
+	public boolean listFromDb()
+	{
+		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
+		if(c == null) return false;
+		ArrayList<OpenSMB> arr = new ArrayList<OpenSMB>(); 
+		c.moveToFirst();
+		while(!c.isAfterLast())
+		{
+			String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
+			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
+			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
+			OpenSMB child;
+			try {
+				child = new OpenSMB(folder + "/" + name, size, modified);
+				arr.add(child);
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			c.moveToNext();
+		}
+		c.close();
+		mChildren = arr.toArray(new OpenSMB[0]);
+		return true;
+	}
 }

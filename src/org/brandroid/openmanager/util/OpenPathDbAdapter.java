@@ -107,14 +107,18 @@ public class OpenPathDbAdapter
     	if(mDb == null || !mDb.isOpen()) open();
     	if(mDb == null) return -1;
     	ContentValues initialValues = new ContentValues();
-    	initialValues.put(KEY_FOLDER, path.getPath().replace("/" + path.getName(), ""));
+    	OpenPath parent = path.getParent();
+    	String sParent = "";
+    	if(parent != null) sParent = parent.getPath();
+    	initialValues.put(KEY_FOLDER, sParent);
     	initialValues.put(KEY_NAME, path.getName());
         initialValues.put(KEY_SIZE, path.length());
         initialValues.put(KEY_MTIME, path.lastModified());
-        initialValues.put(KEY_STAMP, new java.util.Date().compareTo(new Date(2011,4,9)));
+        initialValues.put(KEY_STAMP, (new java.util.Date().getTime() - new Date(4,9,2011).getTime()) / 1000);
         Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
         
 		try {
+			mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
 			if(mDb.replace(DATABASE_TABLE, null, initialValues) > -1)
 				return 1;
 			else return 0;

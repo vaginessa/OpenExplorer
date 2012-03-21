@@ -177,7 +177,7 @@ public class OpenFTP extends OpenPath
 
 	@Override
 	public Long lastModified() {
-		if(mFile != null)
+		if(mFile != null && mFile.getTimestamp() != null)
 			return mFile.getTimestamp().getTimeInMillis();
 		else return mMTime;
 	}

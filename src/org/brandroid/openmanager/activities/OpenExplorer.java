@@ -1841,6 +1841,7 @@ public class OpenExplorer
 				return true;
 			case R.id.menu_flush:
 				ThumbnailCreator.flushCache();
+				OpenPath.flushDbCache();
 				goHome();
 				return true;
 				
