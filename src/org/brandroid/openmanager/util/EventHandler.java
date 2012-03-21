@@ -113,7 +113,7 @@ public class EventHandler {
 		return ret;
 	}
 
-	public void deleteFile(final List<OpenPath> path, final Context mContext) {
+	public void deleteFile(final List<OpenPath> path, final Context mContext, boolean showConfirmation) {
 		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		String name;
@@ -123,6 +123,11 @@ public class EventHandler {
 		else
 			name = path.size() + " " + getResourceString(mContext, R.string.s_files);
 		
+		if(!showConfirmation)
+		{
+			new BackgroundWork(DELETE_TYPE, mContext, null).execute(files);
+			return;
+		}
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle(getResourceString(mContext, R.string.s_menu_delete) + " " + name)
 			.setMessage(((String)mContext.getText(R.string.s_alert_confirm_delete)).replace("xxx", name))

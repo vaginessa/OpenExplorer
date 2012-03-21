@@ -18,21 +18,16 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.apache.http.entity.FileEntity;
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
-import org.brandroid.openmanager.adapters.OpenPathAdapter;
-import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
@@ -47,18 +42,11 @@ import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
-import org.brandroid.openmanager.util.ThumbnailStruct;
-import org.brandroid.openmanager.util.ThumbnailTask;
-import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.UserInfo;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
@@ -72,23 +60,15 @@ import java.util.List;
 import jcifs.smb.SmbAuthException;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Parcelable;
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.content.res.Resources.NotFoundException;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -97,12 +77,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -144,6 +122,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public static int mGridImageSize = 128;
 	public static int mListImageSize = 36;
 	public Boolean mShowLongDate = false;
+	private int mTopIndex = 0;
+	private OpenPath mTopPath = null;
 	
 	private Bundle mBundle;
 	
@@ -325,9 +305,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mActionModeSelected = false;
 		try {
-			mShowThumbnails = getExplorer()
-								.getSetting(path, "thumbs", true);
+			mShowHiddenFiles = !getExplorer().getSetting(path, "hide",
+					getExplorer().getSetting(null, "hide", true));
+			mShowThumbnails = getExplorer().getSetting(path, "thumbs", 
+					getExplorer().getSetting(null, "thumbs", true));
 		} catch(NullPointerException npe) {
+			mShowHiddenFiles = false;
 			mShowThumbnails = true;
 		}
 
@@ -819,7 +802,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				
 			case R.id.menu_context_delete:
 				fileList.add(file);
-				getHandler().deleteFile(fileList, getActivity());
+				getHandler().deleteFile(fileList, getActivity(), true);
 				finishMode(mode);
 				mContentAdapter.notifyDataSetChanged();
 				return true;
@@ -1054,6 +1037,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(mGrid != null)
 			updateGridView();
+		
+		if(mData2.size() > 0)
+		{
+			if(!restoreTopPath())
+				Logger.LogWarning("Unable to restore top path");
+		}
 		/*
 		mPathView.removeAllViews();
 		mBackPathIndex = 0;	
@@ -1148,16 +1137,49 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		refreshData(null, false);
 	}
 	
+	private void saveTopPath()
+	{
+		mTopIndex = mGrid.getFirstVisiblePosition();
+		if(mContentAdapter != null)
+			mTopPath = (OpenPath)mContentAdapter.getItem(mTopIndex);
+		Logger.LogInfo("Top Path saved to " + mTopIndex + (mTopPath != null ? " :: " + mTopPath.getName() : ""));
+	}
+	
+	private Boolean restoreTopPath()
+	{
+		if(mTopPath != null) 
+		{
+			Logger.LogDebug("Looking for top path (" + mTopPath.getName() + ")");
+			for(int i = 0; i < mContentAdapter.getCount(); i++)
+				if(((OpenPath)mContentAdapter.getItem(i)).getName().equals(mTopPath.getName()))
+					return restoreTopPath(i);
+		}
+		Logger.LogDebug("Falling back to top index (" + mTopIndex + ")");
+		if(mTopIndex > 0)
+			return restoreTopPath(mTopIndex);
+		return false;
+	}
+	private Boolean restoreTopPath(int index)
+	{
+		Logger.LogInfo("Top Path restored to " + index);
+		mGrid.setSelection(index);
+		mTopIndex = 0;
+		mTopPath = null;
+		return true;
+	}
+	
 	//@Override
 	public void onHiddenFilesChanged(boolean toShow)
 	{
+		saveTopPath();
 		setShowHiddenFiles(!toShow);
 		//getManager().setShowHiddenFiles(state);
-		refreshData(null, false);
+		refreshData(null);
 	}
 
 	//@Override
 	public void onThumbnailChanged(boolean state) {
+		saveTopPath();
 		setShowThumbnails(state);
 		refreshData(null);
 	}

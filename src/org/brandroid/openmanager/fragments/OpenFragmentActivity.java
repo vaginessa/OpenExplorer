@@ -24,21 +24,21 @@ public class OpenFragmentActivity
 	}
 	
 	public void onClick(View v) {
-		Logger.LogDebug("View onClick(" + v.getId() + ") - " + v.toString());
+		Logger.LogDebug("View onClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
 	}
 	
 	public void onClick(int id) {
-		Logger.LogDebug("View onClick(" + id + ") / " + getClassName());
+		Logger.LogDebug("View onClick(0x" + Integer.toHexString(id) + ") / " + getClassName());
 	}
 	
 	public boolean onLongClick(View v) {
-		Logger.LogDebug("View onLongClick(" + v.getId() + ") - " + v.toString());
+		Logger.LogDebug("View onLongClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
 		return false;
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Logger.LogDebug("Menu selected(" + item.getItemId() + ") - " + item.toString());
+		Logger.LogDebug("Menu selected(0x" + Integer.toHexString(item.getItemId()) + ") - " + item.toString());
 		return super.onOptionsItemSelected(item);
 	}
 	

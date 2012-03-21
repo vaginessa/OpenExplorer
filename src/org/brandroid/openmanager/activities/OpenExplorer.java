@@ -1160,7 +1160,16 @@ public class OpenExplorer
 		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
 		if(mViewPagerAdapter != null)
-			ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
+		{
+			if(mViewPager.getCurrentItem() > -1)
+			{
+				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount());
+				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
+			} else {
+				Logger.LogWarning("Couldn't find current Page. Using last.");
+				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
+			}
+		}
 		if(ret == null)
 			ret = fragmentManager.findFragmentById(R.id.content_frag);
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
@@ -1741,7 +1750,7 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_view_fullscreen:
-				getPreferences().setSetting("global", "pref_fullscreen", item.isChecked());
+				getPreferences().setSetting("global", "pref_fullscreen", !item.isChecked());
 				goHome();
 				return true;
 				
@@ -1754,8 +1763,8 @@ public class OpenExplorer
 			case R.id.menu_view_carousel:
 				changeViewMode(VIEW_CAROUSEL, true);
 				return true;
-			case R.id.menu_view_hidden: setShowHiddenFiles(item.isChecked()); return true;
-			case R.id.menu_view_thumbs: setShowThumbnails(item.isChecked()); return true;
+			case R.id.menu_view_hidden: setShowHiddenFiles(!item.isChecked()); return true;
+			case R.id.menu_view_thumbs: setShowThumbnails(!item.isChecked()); return true;
 					
 			case R.id.menu_root:
 				if(RootManager.Default.isRoot())
@@ -1806,12 +1815,11 @@ public class OpenExplorer
 			
 			case R.id.menu_multi_all_delete:
 				showConfirmationDialog(
-						getResources().getString(R.string.s_confirm_delete).replace("xxx", getClipboard().getCount() + " " + getResources().getString(R.string.s_files)),
+						getResources().getString(R.string.s_confirm_delete, getClipboard().getCount() + " " + getResources().getString(R.string.s_files)),
 						getResources().getString(R.string.s_menu_delete_all),
 						new DialogInterface.OnClickListener() { // yes
 							public void onClick(DialogInterface dialog, int which) {
-								for(OpenPath file : getClipboard().getAll())
-									file.delete();
+								getEventHandler().deleteFile(getClipboard(), OpenExplorer.this, false);
 							}
 						});
 				break;
@@ -1883,6 +1891,7 @@ public class OpenExplorer
 		final Menu menu = IconContextMenu.newMenu(this, R.menu.multiselect);
 		setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
 		final IconContextMenuAdapter cmdAdapter = new IconContextMenuAdapter(this, menu);
+		cmdAdapter.setTextLayout(R.layout.context_item);
 		cmds.setAdapter(cmdAdapter);
 		cmds.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
@@ -1964,10 +1973,15 @@ public class OpenExplorer
 			else
 				return null;
 			Logger.LogDebug("Trying to show context menu #" + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
-			if(menuId == R.menu.context_file || menuId == R.menu.main_menu || menuId == R.menu.menu_sort || menuId == R.menu.menu_view || menuId == R.menu.menu_sort_flat || menuId == R.menu.menu_view_flat)
+			if(menuId == R.menu.context_file ||
+					menuId == R.menu.main_menu ||
+					menuId == R.menu.menu_sort ||
+					menuId == R.menu.menu_view ||
+					menuId == R.menu.menu_sort_flat ||
+					menuId == R.menu.menu_view_flat)
 			{
-				final IconContextMenu icm = IconContextMenu.getInstance(getApplicationContext(),
-						menuId, from, null, null);
+				final IconContextMenu icm = IconContextMenu.getInstance(
+						getApplicationContext(), menuId, from, null, null);
 				if(icm == null)
 					throw new NullPointerException("context menu returned null");
 				//MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
@@ -1995,9 +2009,9 @@ public class OpenExplorer
 					}
 				});
 				if(menuId == R.menu.menu_sort || menuId == R.menu.menu_sort_flat)
-					icm.setTitle(R.string.s_menu_sort);
+					icm.setTitle(getString(R.string.s_menu_sort) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
 				else if(menuId == R.menu.menu_view || menuId == R.menu.menu_view_flat)
-					icm.setTitle(R.string.s_view);
+					icm.setTitle(getString(R.string.s_view) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
 				icm.show();
 				return icm;
 			} else {
