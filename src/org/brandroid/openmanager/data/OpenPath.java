@@ -42,6 +42,7 @@ public abstract class OpenPath
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
 	public int getChildCount(boolean countHidden) throws IOException {
+		if(requiresThread()) return 0;
 		if(countHidden)
 			return list().length;
 		else {

@@ -40,13 +40,7 @@
 		android:showAsAction="ifRoom"
 		android:title="@string/s_view">
 		<!--  include menu_view.xml -->
-		<menu>
-		    <item android:id="@+id/menu_view_fullscreen"
-		        android:checkable="true"
-		        android:showAsAction="ifRoom"
-		        android:title="@string/s_pref_fullscreen"
-		        />
-		</menu>
+		<menu />
 	</item>
 	<item
 	    android:id="@+id/title_menu"

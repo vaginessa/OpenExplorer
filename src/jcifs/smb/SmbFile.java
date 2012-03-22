@@ -38,6 +38,8 @@ import jcifs.dcerpc.msrpc.*;
 
 import java.util.Date;
 
+import org.brandroid.utils.Logger;
+
 /**
  * This class represents a resource on an SMB network. Mainly these
  * resources are files and directories however an <code>SmbFile</code>
@@ -266,8 +268,24 @@ import java.util.Date;
  * @see       java.io.File
  */
 
+
 public class SmbFile extends URLConnection implements SmbConstants {
 
+	public interface OnSMBCommunicationListener
+	{
+		public void onBeforeConnect(SmbFile file);
+		public void onConnect(SmbFile file);
+		public void onConnectFailure(SmbFile file);
+		public void onDisconnect(SmbFile file);
+		public void onSendCommand(SmbFile file, Object... commands);
+	}
+	
+	private static OnSMBCommunicationListener listener;
+	public static void setSMBCommunicationListener(OnSMBCommunicationListener mListener)
+	{
+		listener = mListener;
+	}
+	
     static final int O_RDONLY = 0x01;
     static final int O_WRONLY = 0x02;
     static final int O_RDWR   = 0x03;
@@ -769,6 +787,10 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
     void send( ServerMessageBlock request,
                     ServerMessageBlock response ) throws SmbException {
+
+        if(listener != null)
+        	listener.onSendCommand(this, request, response);
+        
         for( ;; ) {
             resolveDfs(request);
             try {
@@ -933,6 +955,9 @@ int addressIndex;
                 throw sae;
             }
         }
+
+        if(listener != null)
+        	listener.onConnect(this);
     }
 /**
  * It is not necessary to call this method directly. This is the
@@ -946,7 +971,10 @@ int addressIndex;
         if( isConnected() ) {
             return;
         }
-
+        
+        if(listener != null)
+        	listener.onBeforeConnect(this);
+        
         getUncPath0();
         getFirstAddress();
         for ( ;; ) {
@@ -954,10 +982,13 @@ int addressIndex;
                 doConnect();
                 return;
             } catch(SmbAuthException sae) {
-                throw sae; // Prevents account lockout on servers with multiple IPs
+                 throw sae; // Prevents account lockout on servers with multiple IPs
             } catch(SmbException se) {
+                if(listener != null)
+                	listener.onConnectFailure(this);
                 if (getNextAddress() == null) 
                     throw se;
+                Logger.LogError("SmbFile Connect Exception.", se);
                 if (log.level >= 3)
                     se.printStackTrace(log);
             }

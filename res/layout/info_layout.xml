@@ -29,33 +29,29 @@
 		android:paddingBottom="10dip">
 		<ImageView
 			android:id="@+id/info_icon"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="64dp"
+			android:layout_height="64dp"
 			android:contentDescription="Icon"
 			android:adjustViewBounds="true"
 			android:layout_gravity="left"/>
 		<LinearLayout
 			android:orientation="vertical"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content">
+			android:layout_height="wrap_content"
+				android:paddingRight="4dip">
 			<TextView
 				android:id="@+id/info_name_label"
+				style="@style/Large"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:gravity="right"
-				android:paddingRight="24dip"
-				android:maxLines="1"
-				android:textColor="@color/white"
-				android:textAppearance= "?android:attr/textAppearanceLarge"/>
+				android:gravity="center"
+				/>
 			<TextView
 				android:id="@+id/info_path_label"
+				style="@style/Mid"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:maxLines="1"
-				android:textColor="@color/white"
-				android:textAppearance="?android:attr/textAppearanceLarge"
-				android:paddingRight="4dip"
-				android:gravity="right"/>
+				android:gravity="center"/>
 		</LinearLayout>
 	</LinearLayout>
 	
@@ -86,7 +82,6 @@
 						android:textColor="@color/white"
 						android:gravity="right"/>
 				</TableRow>
-				<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:maxHeight="8dip"/>
 				<TableRow>
 					<TextView
 						android:layout_width="match_parent"
@@ -103,24 +98,6 @@
 						android:textAppearance="?android:attr/textAppearanceMedium"
 						android:gravity="right"/>
 				</TableRow>
-				<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:maxHeight="8dip"/>
-				<TableRow>
-					<TextView
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="@string/s_info_last_modified"/>
-					<TextView
-						android:id="@+id/info_time_stamp"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:gravity="right"/>
-				</TableRow>
-				<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:maxHeight="25dip"/>
 				<TableRow>
 					<TextView
 						android:layout_width="match_parent"
@@ -130,6 +107,42 @@
 						android:textAppearance="?android:attr/textAppearanceMedium"
 						android:text="@string/s_size"/>
 					<TextView
+						android:id="@+id/info_size"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:textColor="@color/white"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:gravity="right"/>
+				</TableRow>
+				<TableRow>
+					<TextView
+						android:layout_span="2"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:textColor="@color/white"
+						android:gravity="left"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:text="@string/s_info_last_modified"/>
+				</TableRow>
+				<TableRow>
+					<TextView
+					    android:layout_span="2"
+						android:id="@+id/info_time_stamp"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:textColor="@color/white"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:gravity="right"/>
+				</TableRow>
+				<TableRow>
+					<TextView
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:textColor="@color/white"
+						android:gravity="left"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:text="@string/s_info_totalspace"/>
+					<TextView
 						android:id="@+id/info_total_size"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
@@ -137,13 +150,30 @@
 						android:textAppearance="?android:attr/textAppearanceMedium"
 						android:gravity="right"/>
 				</TableRow>
-				<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="45dip"/>
 				<TableRow>
 					<TextView
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:textColor="@color/white"
 						android:gravity="left"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:text="@string/s_info_freespace"/>
+					<TextView
+						android:id="@+id/info_free_size"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:textColor="@color/white"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:gravity="right"/>
+				</TableRow>
+				<TableRow>
+					<TextView
+					    android:layout_marginTop="8dp"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:textColor="@color/white"
+						android:gravity="left"
+						android:layout_span="2"
 						android:textAppearance="?android:attr/textAppearanceMedium"
 						android:text="@string/s_info_permissions"/>
 				</TableRow>

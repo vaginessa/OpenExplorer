@@ -333,8 +333,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mData = new OpenPath[0];
 			if(mContentAdapter != null)
 				mContentAdapter.notifyDataSetChanged();
-			if(mProgressBarLoading != null)
-				mProgressBarLoading.setVisibility(View.VISIBLE);
+			setProgressVisibility(true);
 			if(path instanceof OpenNetworkPath && path.listFromDb())
 				mData = ((OpenNetworkPath)path).getChildren();
 			Logger.LogVerbose("Running FileIOTask");
@@ -369,8 +368,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
-		if(mProgressBarLoading != null)
-			mProgressBarLoading.setVisibility(View.GONE);
+		setProgressVisibility(false);
 		super.onCreateView(inflater, container, savedInstanceState);
 		//v.setBackgroundResource(R.color.lightgray);
 		
@@ -422,8 +420,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		if(mProgressBarLoading == null)
 			mProgressBarLoading = v.findViewById(R.id.content_progress);
-		if(mProgressBarLoading != null)
-			mProgressBarLoading.setVisibility(View.GONE);
+		setProgressVisibility(false);
 
 		if(mGrid == null)
 			Logger.LogError("WTF, where are they?");
@@ -1026,8 +1023,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		
 
-		if(mProgressBarLoading != null)
-			mProgressBarLoading.setVisibility(View.GONE);
+		setProgressVisibility(false);
 		
 		//Logger.LogDebug("mData has " + mData2.size());
 		if(mContentAdapter != null)
@@ -1364,7 +1360,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), mContext, mWidth > 72));
 				else if(!mShowThumbnails||!file.hasThumbnail())
 				{
-					if(file.isDirectory())
+					if(file.isDirectory() && !file.requiresThread())
 					{
 						boolean bCountHidden = !getExplorer().getSetting(file, "hide", true);
 						try {
@@ -1375,7 +1371,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 						} catch (Exception e) {
 							mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
 						}
-					} else mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));					
+					} else {
+						mInfo.setVisibility(View.INVISIBLE);
+						mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
+					}
 				} else {
 					ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
 				}
@@ -1539,29 +1538,33 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		protected void onPreExecute() {
 			super.onPreExecute();
 			//mData.clear();
-			if(mProgressBarLoading != null)
-				mProgressBarLoading.setVisibility(View.VISIBLE);
-			else Logger.LogDebug("Starting FileIOTask");
+			setProgressVisibility(true);
 		}
 		
 		@Override
 		protected void onProgressUpdate(Integer... values) {
 			super.onProgressUpdate(values);
-			if(mProgressBarLoading != null)
-				mProgressBarLoading.setVisibility(View.VISIBLE);
+			setProgressVisibility(true);
 		}
 		
 		@Override
 		protected void onPostExecute(OpenPath[] result)
 		{
-			if(mProgressBarLoading != null)
-				mProgressBarLoading.setVisibility(View.GONE);
-			else Logger.LogDebug("Ending FileIOTask");
+			setProgressVisibility(false);
 			//onCancelled(result);
 			//mData2.clear();
 			updateData(result);
 		}
 		
+	}
+	
+	private void setProgressVisibility(boolean visible)
+	{
+		if(mProgressBarLoading == null && mGrid != null && mGrid.getParent() != null)
+			mProgressBarLoading = ((View)mGrid.getParent()).findViewById(R.id.content_progress);
+		if(mProgressBarLoading != null)
+			mProgressBarLoading.setVisibility(visible ? View.VISIBLE : View.GONE);
+		getExplorer().setProgressVisibility(visible);
 	}
 	
 	public SortType getSorting() {

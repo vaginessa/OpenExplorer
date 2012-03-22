@@ -10,11 +10,11 @@
         
 	<PreferenceCategory android:title="@string/s_pref_display">
 		<CheckBoxPreference
-			android:key="pref_hiddenFiles"
+			android:key="pref_hide"
 			android:title="@string/s_pref_hidden"
 			android:summary="@string/s_pref_hidden_summary"/>
 		<CheckBoxPreference
-			android:key="pref_thumbnail"
+			android:key="pref_thumbs"
 			android:title="@string/s_pref_thumbs"
 			android:defaultValue="true"
 			android:summary="@string/s_pref_thumbs_summary"/>
@@ -56,7 +56,8 @@
 			
 	</PreferenceCategory>
 	
-		<PreferenceCategory android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus">
+		<PreferenceCategory
+		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus">
 	        <CheckBoxPreference
 	            android:key="pref_actionmode"
 	            android:title="@string/s_pref_actionmode"

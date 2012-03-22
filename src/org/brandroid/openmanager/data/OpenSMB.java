@@ -19,10 +19,11 @@ import android.net.Uri;
 public class OpenSMB extends OpenNetworkPath
 {
 	private final SmbFile mFile;
-	private final OpenSMB mParent;
+	private OpenSMB mParent;
 	private OpenSMB[] mChildren = null; 
 	private Long mSize = null;
 	private Long mModified = null;
+	private Long mDiskSpace = null;
 	
 	public OpenSMB(String url) throws MalformedURLException
 	{
@@ -67,10 +68,13 @@ public class OpenSMB extends OpenNetworkPath
 	public String getPath() {
 		URL url = mFile.getURL();
 		String user = url.getUserInfo();
-		if(user.indexOf(":") > -1)
-			user = user.substring(0, user.indexOf(":"));
-		if(!user.equals(""))
-			user += "@";
+		if(user != null)
+		{
+			if(user.indexOf(":") > -1)
+				user = user.substring(0, user.indexOf(":"));
+			if(!user.equals(""))
+				user += "@";
+		} else user = "";
 		return url.getProtocol() + "://" + user + url.getHost() + url.getPath();
 	}
 
@@ -79,7 +83,8 @@ public class OpenSMB extends OpenNetworkPath
 		if(mSize != null) return mSize;
 		if(isDirectory()) return 0l;
 		try {
-			return mFile.length();
+			mSize = mFile.length();
+			return mSize;
 		} catch(Exception e) {
 			Logger.LogError("Couldn't get SMB length", e);
 			return 0l;
@@ -100,8 +105,22 @@ public class OpenSMB extends OpenNetworkPath
 	public OpenPath getParent() {
 		if(mParent != null)
 			return mParent;
-		else return null;
+		else {
+			try {
+				String s = mFile.getParent();
+				if(s == null) return null;
+				if(s.equals("smb://")) return null;
+				SmbFile smb = new SmbFile(s);
+				mParent = new OpenSMB(new SmbFile(mFile.getParent()));
+				return mParent;
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
 	}
+	
+	public OpenSMB getParentSMB() { return mParent; }
 
 	@Override
 	public OpenPath getChild(String name)
@@ -125,7 +144,9 @@ public class OpenSMB extends OpenNetworkPath
 	public OpenSMB[] listFiles() throws IOException {
 		if(mChildren != null)
 			return mChildren;
+		Logger.LogInfo("Listing children under " + getPath());
 		SmbFile[] kids = mFile.listFiles();
+		mDiskSpace = mFile.getDiskFreeSpace();
 		mChildren = new OpenSMB[kids.length];
 		for(int i = 0; i < kids.length; i++)
 		{

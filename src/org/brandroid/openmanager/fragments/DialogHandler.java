@@ -48,6 +48,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+
+import jcifs.smb.SmbException;
+import jcifs.smb.SmbFile;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.drawable;
@@ -57,6 +61,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -390,11 +395,13 @@ public class DialogHandler extends DialogFragment {
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
 		TextView numFile = (TextView)v.findViewById(R.id.info_files_label);
-		TextView numSize = (TextView)v.findViewById(R.id.info_total_size);
+		TextView numSize = (TextView)v.findViewById(R.id.info_size);
+		TextView numTotal = (TextView)v.findViewById(R.id.info_total_size);
+		TextView numFree = (TextView)v.findViewById(R.id.info_free_size);
 		
 		if (file.isDirectory()) {
 			
-			new CountAllFilesTask(numDir, numFile, numSize).execute((OpenFile)file);
+			new CountAllFilesTask(numDir, numFile, numSize, numFree, numTotal).execute(file);
 			
 		} else {
 			numFile.setText("-");
@@ -403,7 +410,7 @@ public class DialogHandler extends DialogFragment {
 		
 		((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
 		((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
-		((TextView)v.findViewById(R.id.info_path_label)).setText(apath.substring(0, apath.lastIndexOf("/") + 1));
+		((TextView)v.findViewById(R.id.info_path_label)).setText(file.getParent() != null ? file.getParent().getPath() : "");
 		((TextView)v.findViewById(R.id.info_read_perm)).setText(file.canRead() + "");
 		((TextView)v.findViewById(R.id.info_write_perm)).setText(file.canWrite() + "");
 		((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
@@ -418,17 +425,21 @@ public class DialogHandler extends DialogFragment {
 		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96).get());
 	}
 	
-	public static class CountAllFilesTask extends AsyncTask<OpenFile, Integer, String[]>
+	public static class CountAllFilesTask extends AsyncTask<OpenPath, Integer, String[]>
 	{
-		private TextView mTextFiles, mTextDirs, mTextSize;
+		private TextView mTextFiles, mTextDirs, mTextSize, mTextFree, mTextTotal;
 		private int firstDirs = 0, firstFiles = 0;
 		private int dirCount = 0, fileCount = 0;
 		private long totalSize = 0, firstSize = 0;
+		private long freeSize = 0l, diskTotal = 0l;
 		
-		public CountAllFilesTask(TextView mTextFiles, TextView mTextDirs, TextView mTextSize) {
+		public CountAllFilesTask(TextView mTextFiles, TextView mTextDirs,
+				TextView mTextSize, TextView mTextFree, TextView mTextTotal) {
 			this.mTextFiles = mTextFiles;
 			this.mTextDirs = mTextDirs;
 			this.mTextSize = mTextSize;
+			this.mTextFree = mTextFree;
+			this.mTextTotal = mTextTotal;
 		}
 		
 		private void addPath(OpenPath p, boolean bFirst)
@@ -460,19 +471,48 @@ public class DialogHandler extends DialogFragment {
 		
 		@Override
 		protected void onProgressUpdate(Integer... values) {
-			updateTexts(mTextFiles, fileCount, mTextDirs, dirCount, mTextSize, totalSize);
+			updateTexts(mTextFiles, fileCount,
+					mTextDirs, dirCount,
+					mTextSize, formatSize(totalSize),
+					mTextFree, formatSize(freeSize),
+					mTextTotal, formatSize(diskTotal));
 		}
 
 		@Override
-		protected String[] doInBackground(OpenFile... params) {
+		protected String[] doInBackground(OpenPath... params) {
 			OpenPath path = params[0];
+			
+			if(path instanceof OpenFile)
+			{
+				freeSize = ((OpenFile)path).getFreeSpace();
+				diskTotal = ((OpenFile)path).getTotalSpace();
+				publishProgress();
+			} else if(path instanceof OpenSMB)
+			{
+				try {
+					SmbFile smb = ((OpenSMB)path).getFile();
+					freeSize = smb.getDiskFreeSpace();
+					String server = smb.getServer();
+					if(server == null)
+						diskTotal = smb.length();
+					else
+						diskTotal = new SmbFile(server).length();
+				} catch (SmbException e) {
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+				publishProgress();
+			}
 			
 			addPath(path, true);
 			
-			String[] ret = new String[3];
-			ret[0] = firstFiles + " (" + fileCount + ")";
-			ret[1] = firstDirs + " (" + dirCount + ")";
-			ret[2] = formatSize(totalSize);
+			String[] ret = new String[]{
+					firstFiles + " (" + fileCount + ")"
+					,firstDirs + " (" + dirCount + ")"
+					,formatSize(totalSize)
+					,formatSize(freeSize)
+					,formatSize(diskTotal)
+				};
 			return ret;
 		}
 		
@@ -480,7 +520,7 @@ public class DialogHandler extends DialogFragment {
 		{
 			for(int i = 0; i < params.length - 1; i += 2)
 			{
-				if(TextView.class.equals(params[i].getClass()))
+				if(params[i] != null && params[i] instanceof TextView)
 					((TextView)params[i]).setText(params[i+1].toString());
 			}
 		}
@@ -488,7 +528,7 @@ public class DialogHandler extends DialogFragment {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			updateTexts(mTextFiles, "-", mTextDirs, "-", mTextSize, "0");
+			updateTexts(mTextFiles, "-", mTextDirs, "-", mTextSize, "-", mTextFree, "-", mTextTotal, "-");
 		}
 		
 		@Override
@@ -500,6 +540,16 @@ public class DialogHandler extends DialogFragment {
 				mTextDirs.setText(result[1]);
 			if(mTextSize != null && result != null && result.length > 2)
 				mTextSize.setText(result[2]);
+			
+			if(mTextFree != null && result != null && result.length > 3 && !result[3].equals("0"))
+				mTextFree.setText(result[3]);
+			else if(mTextFree != null) 
+				((View)mTextFree.getParent()).setVisibility(View.GONE);
+			
+			if(mTextTotal != null && result != null && result.length > 4 && !result[4].equals("0"))
+				mTextTotal.setText(result[4]);
+			else if(mTextTotal != null)
+				((View)mTextTotal.getParent()).setVisibility(View.GONE);
 		}
 		
 	}

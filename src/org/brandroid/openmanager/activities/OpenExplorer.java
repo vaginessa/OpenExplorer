@@ -118,6 +118,9 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import jcifs.smb.SmbFile;
+import jcifs.smb.SmbFile.OnSMBCommunicationListener;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
@@ -137,6 +140,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -247,6 +251,9 @@ public class OpenExplorer
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		} //else getWindow().addFlags(WindowManager.LayoutParams.FLAG
+		else {
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		}
 		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", false);
 		USE_ACTIONMODE = getPreferences().getBoolean("global", "pref_actionmode", false);
 		
@@ -778,6 +785,38 @@ public class OpenExplorer
 			} else if(!IS_DEBUG_BUILD)
 				Logger.setLoggingEnabled(false);
 		}
+		SmbFile.setSMBCommunicationListener(new OnSMBCommunicationListener() {
+
+			@Override
+			public void onBeforeConnect(SmbFile file) {
+				Logger.LogVerbose("SMB Connecting: " + file.getPath());
+			}
+
+			@Override
+			public void onConnect(SmbFile file) {
+
+				Logger.LogVerbose("SMB Connected: " + file.getPath());
+			}
+
+			@Override
+			public void onConnectFailure(SmbFile file) {
+				Logger.LogVerbose("SMB Connect Failure: " + file.getPath());
+			}
+
+			@Override
+			public void onDisconnect(SmbFile file) {
+				Logger.LogVerbose("SMB Disconnect: " + file.getPath());
+			}
+
+			@Override
+			public void onSendCommand(SmbFile file, Object... commands) {
+				String s = "SMB Command: " + file.getPath();
+				for(Object o : commands)
+					s += " -> " + o.toString();
+				Logger.LogVerbose(s);
+			}
+			
+		});
 	}
 	
 	private void setupFilesDb()
@@ -1750,7 +1789,8 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_view_fullscreen:
-				getPreferences().setSetting("global", "pref_fullscreen", !item.isChecked());
+				getPreferences().setSetting("global", "pref_fullscreen", 
+						!getPreferences().getSetting("global", "pref_fullscreen", false));
 				goHome();
 				return true;
 				
@@ -1763,8 +1803,14 @@ public class OpenExplorer
 			case R.id.menu_view_carousel:
 				changeViewMode(VIEW_CAROUSEL, true);
 				return true;
-			case R.id.menu_view_hidden: setShowHiddenFiles(!item.isChecked()); return true;
-			case R.id.menu_view_thumbs: setShowThumbnails(!item.isChecked()); return true;
+			case R.id.menu_view_hidden:
+				setShowHiddenFiles(
+					getSetting(getDirContentFragment(false).getPath(), "hide", true));
+				return true;
+			case R.id.menu_view_thumbs:
+				setShowThumbnails(
+					getSetting(getDirContentFragment(false).getPath(), "thumbs", true));
+				return true;
 					
 			case R.id.menu_root:
 				if(RootManager.Default.isRoot())
@@ -2352,11 +2398,19 @@ public class OpenExplorer
 				{
 					Logger.LogWarning("Fragment already active?", e); // crash fix
 				}
-				OpenPath tmp = path.getParent();
+				OpenPath tmp = null;
+				if(!path.requiresThread())
+					tmp = path.getParent();
+				else if(path instanceof OpenSMB)
+					tmp = ((OpenSMB)path).getParentSMB();
 				while(tmp != null)
 				{
 					mViewPagerAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
-					tmp = tmp.getParent();
+					if(!path.requiresThread())
+						tmp = tmp.getParent();
+					else if(path instanceof OpenSMB)
+						tmp = ((OpenSMB)tmp).getParentSMB();
+					else tmp = null;
 				}
 				//mViewPagerAdapter = newAdapter;
 				setViewPageAdapter(mViewPagerAdapter);
@@ -2920,6 +2974,14 @@ public class OpenExplorer
 	@Override
 	public void onLoaderReset(Loader<Cursor> l) {
 		onLoadFinished(l, null);
+	}
+
+	public void setProgressVisibility(boolean visible) {
+		setProgressBarIndeterminateVisibility(visible);
+		if(findViewById(android.R.id.progress) != null)
+			findViewById(android.R.id.progress).setVisibility(visible ? View.VISIBLE : View.GONE);
+		else if(findViewById(R.id.title_progress) != null)
+			findViewById(R.id.title_progress).setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 
 }

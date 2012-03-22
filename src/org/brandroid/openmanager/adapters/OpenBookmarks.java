@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
@@ -39,6 +40,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -180,7 +183,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			String[] l = mBookmarkString.split(";");
 			
 			for(String s : l)
-				checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s).setRoot());
+				checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
 		}
 		
 		OpenServers servers = SettingsActivity.LoadDefaultServers(getExplorer());
@@ -322,7 +325,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 	public String getPathTitle(OpenPath path)
 	{
-		return getSetting("title_" + path.getAbsolutePath(), getPathTitleDefault(path));
+		return getSetting("title_" + path.getPath(), getPathTitleDefault(path));
 	}
 	
 	public void setPathTitle(OpenPath path, String title)
@@ -331,6 +334,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 	public String getPathTitleDefault(OpenPath file)
 	{
+		if(file.getDepth() > 3) return file.getName();
 		String path = file.getPath().toLowerCase();
 		if(path.equals("/"))
 			return "/";
@@ -368,12 +372,17 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			} else if(OpenFile.getExternalMemoryDrive(true).equals(path)) {
 				if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", !getSetting("hide_" + path.getAbsolutePath(), false)))
 					return false;
-			} else if(getSetting("hide_" + path.getAbsolutePath(), false))
+			} else if(getExplorer().getSetting(path, "hide", false) &&
+					getExplorer().getSetting(null, "pref_hide", true))
+				return false;
+			else if(getExplorer().getPreferences()
+						.getSetting("bookmarks", "hide_" + path.getPath(), false) &&
+					getExplorer().getSetting(null, "pref_hide", true))
 				return false;
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
-		if(OpenCursor.class.equals(path.getClass()) ||
-				OpenFTP.class.equals(path.getClass()) ||
+		if(path instanceof OpenCursor ||
+				path instanceof OpenFTP ||
 				path instanceof OpenNetworkPath ||
 				path.exists())
 		{
@@ -627,6 +636,21 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		View size_bar = mParentView.findViewById(R.id.size_bar);
 		TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
 		if(size_bar == null) return;
+		long size = 0l;
+		long free = 0l;
+		long total = 0l;
+		try {
+			if(mFile instanceof OpenSMB && mFile.length() > 0 &&
+					(((OpenSMB)mFile).getFile().getType() == SmbFile.TYPE_SERVER || 
+					((OpenSMB)mFile).getFile().getType() == SmbFile.TYPE_SHARE))
+			{
+					total = size = mFile.length();
+					free = ((OpenSMB)mFile).getFile().getDiskFreeSpace();
+			}
+		} catch (Exception e) {
+			Logger.LogError("Couldn't get SMB size.", e);
+			return;
+		}
 		int total_width = size_bar.getWidth();
 		if(total_width == 0)
 			total_width = mParentView.getWidth();
@@ -637,53 +661,57 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
 		{
 			OpenFile f = (OpenFile)mFile;
-			long size = f.getTotalSpace();
-			long free = f.getFreeSpace();
+			size = total = f.getTotalSpace();
+			free = f.getFreeSpace();
+		}
 			
-			if(size > 0 && free < size)
+		if(size > 0 && free < size)
+		{
+			String sFree = DialogHandler.formatSize(free);
+			String sTotal = DialogHandler.formatSize(size);
+			//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
+			//	sFree = DFInfo.getFriendlySize(free, false);
+			if(sFree.indexOf(" ") > -1 && sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
+				sFree = sFree.substring(0, sFree.lastIndexOf(" "));
+			mSizeText.setText(sFree + "/" + sTotal);
+			mSizeText.setVisibility(View.VISIBLE);
+			
+			while(size > 100000)
 			{
-				String sFree = DialogHandler.formatSize(free);
-				String sTotal = DialogHandler.formatSize(size);
-				//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
-				//	sFree = DFInfo.getFriendlySize(free, false);
-				if(sFree.indexOf(" ") > -1 && sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
-					sFree = sFree.substring(0, sFree.lastIndexOf(" "));
-				mSizeText.setText(sFree + "/" + sTotal);
-				mSizeText.setVisibility(View.VISIBLE);
+				size /= 10;
+				free /= 10;
+			}
+			float total_percent = ((float)total / (float)Math.max(total,mLargestDataSize));
+			int percent_width = (int) (total_percent * total_width);
+			Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " + total + " Percent: " + total_percent + " Width: " + percent_width + " / " + total_width);
+			if(size_bar instanceof ProgressBar)
+			{
+				ProgressBar bar = (ProgressBar)size_bar;
+				bar.setMax((int)size);
+				bar.setProgress((int)(size - free));
+				if(bar.getProgress() == 0)
+					bar.setVisibility(View.GONE);
+				else if(percent_width > 0) {
+					bar.setVisibility(View.VISIBLE);
+					RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)bar.getLayoutParams();
+					//lp.rightMargin = total_width - percent_width;
+					lp.width = percent_width;
+					//bar.setLayoutParams(lp);
+					bar.requestLayout();
+				}
+				size_bar.setTag(true);
+			} else {
+				long taken = Math.min(0, size - free);
+				float percent = (float)taken / (float)size;
+				//mParentView.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+				int size_width = 250; //mParentView.getMeasuredWidth();
+				Logger.LogVerbose("Parent Width: " + size_width);
+				size_width = Math.min(0, (int) (percent * size_width));
+				size_bar.getBackground().setBounds(0,0,size_width,0);
+				size_bar.setTag(true);
+			}
 				
-				while(size > 100000)
-				{
-					size /= 10;
-					free /= 10;
-				}
-				float total_percent = ((float)f.getTotalSpace() / (float)Math.max(f.getTotalSpace(),mLargestDataSize));
-				int percent_width = (int) (total_percent * total_width);
-				Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " + f.getTotalSpace() + " Percent: " + total_percent + " Width: " + percent_width + " / " + total_width);
-				if(size_bar instanceof ProgressBar)
-				{
-					ProgressBar bar = (ProgressBar)size_bar;
-					bar.setMax((int)size);
-					bar.setProgress((int)(size - free));
-					if(bar.getProgress() == 0)
-						bar.setVisibility(View.GONE);
-					else if(percent_width > 0) {
-						bar.setVisibility(View.VISIBLE);
-						RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)bar.getLayoutParams();
-						//lp.rightMargin = total_width - percent_width;
-						lp.width = percent_width;
-						//bar.setLayoutParams(lp);
-						bar.requestLayout();
-					}
-				} else {
-					long taken = Math.min(0, size - free);
-					float percent = (float)taken / (float)size;
-					//mParentView.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-					int size_width = 250; //mParentView.getMeasuredWidth();
-					Logger.LogVerbose("Parent Width: " + size_width);
-					size_width = Math.min(0, (int) (percent * size_width));
-					size_bar.getBackground().setBounds(0,0,size_width,0);
-				}
-			} else if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
+			if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
 		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
 			//bar.setVisibility(View.INVISIBLE);
 			if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
@@ -725,15 +753,25 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			}
 				
 			
-			if(group == 0)
+			if(group == BOOKMARK_DRIVE || group == BOOKMARK_SERVER)
 				updateSizeIndicator(path, ret);
 			else 
 				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);
 			
 			ImageView mIcon = (ImageView)ret.findViewById(R.id.bookmark_icon);
 			
-			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(getChild(group, pos)));
-			ThumbnailCreator.setThumbnail(mIcon, getChild(group, pos), 36, 36);
+			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(path));
+			
+			if(group == BOOKMARK_FAVORITE)
+			{
+				Drawable d = mIcon.getResources().getDrawable(
+						ThumbnailCreator.getDefaultResourceId(path, 36, 36));
+				LayerDrawable ld = new LayerDrawable(new Drawable[]{d,
+						mIcon.getResources().getDrawable(R.drawable.ic_favorites)
+					});
+				mIcon.setImageDrawable(ld);
+			} else
+				ThumbnailCreator.setThumbnail(mIcon, path, 36, 36);
 			
             return ret;
 		}

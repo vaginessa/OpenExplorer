@@ -97,6 +97,7 @@ public class SettingsActivity extends PreferenceActivity
 	//private DonationObserver mDonationObserver;
 	private Handler mHandler;
 	
+	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -130,6 +131,10 @@ public class SettingsActivity extends PreferenceActivity
 		
 		if(mode == MODE_PREFERENCES)
 		{
+			Preference pHoney = findPreference("pref_honeyplus");
+			if(OpenExplorer.BEFORE_HONEYCOMB && pHoney != null)
+				pHoney.setEnabled(false);
+			
 			if(!path.equals("global")) // folder preferences
 			{
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);

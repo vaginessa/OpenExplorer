@@ -70,6 +70,20 @@ public class OpenFile extends OpenPath
 	}
 	
 	public long getFreeSpace() {
+		if(getDepth() > 3)
+		{
+			if(getPath().indexOf("/mnt/") > -1)
+			{
+				OpenFile toCheck = this;
+				for(int i=3; i < getDepth(); i++)
+				{
+					toCheck = toCheck.getParent();
+					if(toCheck == null) break;
+				}
+				if(toCheck != null)
+					return toCheck.getFreeSpace();
+			}
+		}
 		try {
 			StatFs stat = new StatFs(getPath());
 			if(stat.getFreeBlocks() > 0)
@@ -94,6 +108,20 @@ public class OpenFile extends OpenPath
 		return mFile.getUsableSpace();
 	}
 	public long getTotalSpace() {
+		if(getDepth() > 3)
+		{
+			if(getPath().indexOf("/mnt/") > -1)
+			{
+				OpenFile toCheck = this;
+				for(int i=3; i < getDepth(); i++)
+				{
+					toCheck = toCheck.getParent();
+					if(toCheck == null) break;
+				}
+				if(toCheck != null)
+					return toCheck.getTotalSpace();
+			}
+		}
 		try {
 			StatFs stat = new StatFs(getPath());
 			if(stat.getBlockCount() > 0)
