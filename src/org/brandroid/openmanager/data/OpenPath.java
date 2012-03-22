@@ -30,6 +30,7 @@ public abstract class OpenPath
 	private Object mTag = null;
 	private OpenPathThreadUpdater mUpdater;
 	protected static OpenPathDbAdapter mDb = null;
+	public static Boolean AllowDBCache = false;
 	public abstract String getName();
 	public abstract String getPath();
 	public abstract String getAbsolutePath();
@@ -315,11 +316,13 @@ public abstract class OpenPath
 	public boolean addToDb()
 	{
 		if(mDb == null) return false;
+		if(!AllowDBCache) return false;
 		return mDb.createItem(this) > 0;
 	}
 	public boolean listFromDb() { return false; }
 	public int deleteFolderFromDb()
 	{
+		if(!AllowDBCache) return 0;
 		if(mDb != null)
 			return mDb.deleteFolder(this);
 		else return -1;

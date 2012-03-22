@@ -245,6 +245,7 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public boolean listFromDb()
 	{
+		if(!AllowDBCache) return false;
 		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
 		if(c == null) return false;
 		ArrayList<OpenSMB> arr = new ArrayList<OpenSMB>(); 
