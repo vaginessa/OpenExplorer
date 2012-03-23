@@ -20,7 +20,6 @@ package org.brandroid.openmanager.activities;
 
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,7 +33,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -63,13 +61,11 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
-import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,10 +73,8 @@ import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -115,7 +109,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import jcifs.smb.SmbFile;
@@ -128,7 +121,6 @@ import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
-import org.brandroid.openmanager.adapters.OpenBookmarks.BookmarkType;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
@@ -141,7 +133,6 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
-import org.brandroid.openmanager.fragments.BookmarkFragment;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -169,7 +160,6 @@ import org.brandroid.openmanager.views.OpenViewPager.OnPageIndicatorChangeListen
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilder;
-import org.brandroid.utils.MenuBuilderNew;
 import org.brandroid.utils.MenuItemImpl;
 import org.brandroid.utils.Preferences;
 
@@ -197,12 +187,12 @@ public class OpenExplorer
 	public static boolean USE_ACTION_BAR = false;
 	public static boolean USE_ACTIONMODE = true;
 	public static boolean IS_DEBUG_BUILD = false;
-	public static final int REQUEST_CANCEL = 101;
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
 	private static final boolean USE_PRETTY_MENUS = !BEFORE_HONEYCOMB;
 	
 	private static MimeTypes mMimeTypes;
+	public static Thread UiThread = Thread.currentThread();
 	
 	private Preferences mPreferences = null;
 	private SearchView mSearchView;
@@ -1924,7 +1914,7 @@ public class OpenExplorer
 		items.setAdapter(mClipboard);
 		items.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
-				OpenPath file = mClipboard.get(pos);
+				//OpenPath file = mClipboard.get(pos);
 				//if(file.getParent().equals(mLastPath))
 					mClipboard.remove(pos);
 					items.invalidate();

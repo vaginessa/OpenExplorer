@@ -370,20 +370,23 @@ public class DialogHandler extends DialogFragment {
 		return v;
 	}
 	
-	public static String formatSize(long size) {
+	public static String formatSize(long size) { return formatSize(size, 2); }
+	public static String formatSize(long size, int decimalPoints) {
 		int kb = 1024;
 		int mb = kb * 1024;
 		int gb = mb * 1024;
 		String ssize = "";
 		
+		int factor = (10^decimalPoints);
+		
 		if (size < kb)
 			ssize = size + " B";
 		else if (size > kb && size < mb)
-			ssize = ((double)Math.round(((double)size / kb) * 100) / 100) + " KB";
+			ssize = ((double)Math.round(((double)size / kb) * factor) / factor) + " KB";
 		else if (size > mb && size < gb)
-			ssize = ((double)Math.round(((double)size / mb) * 100) / 100) + " MB";
+			ssize = ((double)Math.round(((double)size / mb) * factor) / factor) + " MB";
 		else if(size > gb)
-			ssize = ((double)Math.round(((double)size / gb) * 100) / 100) + " GB";
+			ssize = ((double)Math.round(((double)size / gb) * factor) / factor) + " GB";
 		
 		return ssize;
 	}
@@ -496,7 +499,7 @@ public class DialogHandler extends DialogFragment {
 					if(server == null)
 						diskTotal = smb.length();
 					else
-						diskTotal = new SmbFile(server).length();
+						diskTotal = new SmbFile((server.startsWith("smb://") ? "" : "smb://") + server + (server.endsWith("/") ? "" : "/")).length();
 				} catch (SmbException e) {
 				} catch (MalformedURLException e) {
 					e.printStackTrace();

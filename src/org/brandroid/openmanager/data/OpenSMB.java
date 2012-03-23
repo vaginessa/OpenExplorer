@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
@@ -23,21 +24,33 @@ public class OpenSMB extends OpenNetworkPath
 	private OpenSMB[] mChildren = null; 
 	private Long mSize = null;
 	private Long mModified = null;
+	private Boolean mHidden = false;
 	private Long mDiskSpace = null;
 	
 	public OpenSMB(String url) throws MalformedURLException
 	{
 		mFile = new SmbFile(url);
 		mParent = null;
+		mHidden = null;
+		mSize = mModified = null;
 	}
 	public OpenSMB(SmbFile file)
 	{
 		mFile = file;
 		mParent = null;
+		mHidden = null;
+		mSize = mModified = null;
 	}
 	public OpenSMB(OpenSMB parent, SmbFile kid)
 	{
 		mFile = kid;
+		try {
+			mSize = mFile.length();
+			mModified = mFile.lastModified();
+			mHidden = mFile.isHidden();
+		} catch (SmbException e) {
+			Logger.LogError("Error creating SMB", e);
+		}
 		mParent = parent;
 	}
 	public OpenSMB(String url, long size, long modified) throws MalformedURLException
@@ -161,27 +174,19 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public Boolean isDirectory() {
-		try {
-			return mFile.isDirectory();
-		} catch (SmbException e) {
-			return false;
-		}
+		return mFile.getName().endsWith("/");
 	}
 
 	@Override
 	public Boolean isFile() {
-		try {
-			return mFile.isFile();
-		} catch (SmbException e) {
-			return false;
-		}
+		return !isDirectory();
 	}
 
 	@Override
 	public Boolean isHidden() {
 		try {
 			return mFile.isHidden();
-		} catch (SmbException e) {
+		} catch (Exception e) {
 			return true;
 		}
 	}

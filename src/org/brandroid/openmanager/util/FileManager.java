@@ -78,7 +78,7 @@ import android.util.Log;
  *
  */
 public class FileManager {
-	public static final int BUFFER = 1024 * 1024;
+	public static final int BUFFER = 512 * 1024;
 	
 	private boolean mShowHiddenFiles = false;
 	private SortType mSorting = SortType.ALPHA;

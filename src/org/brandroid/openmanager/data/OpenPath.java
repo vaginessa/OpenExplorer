@@ -85,21 +85,23 @@ public abstract class OpenPath
 	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read, Boolean write) { return ThumbnailCreator.generateThumb(this, w, h, read, write); }
 	public static int compare(OpenPath fa, OpenPath fb)
 	{
-		if(fa == null && fb != null)
-			return 1;
-		if(fb == null && fa != null)
-			return 0;
-		if(fb == null || fa == null)
-			return 0;
-		String a = fa.getName();
-		String b = fb.getName();
-		Long sa = fa.length();
-		Long sb = fb.length();
-		if(a == null && b != null)
-			return 1;
-		if(a == null || b == null)
-			return 0;
 		try {
+			if(fa == null && fb != null)
+				return 1;
+			if(fb == null && fa != null)
+				return 0;
+			if(fb == null || fa == null)
+				return 0;
+			String a = fa.getName();
+			String b = fb.getName();
+			Long sa = fa.length();
+			Long sb = fb.length();
+			Long ma = fa.lastModified();
+			Long mb = fb.lastModified();
+			if(a == null && b != null)
+				return 1;
+			if(a == null || b == null)
+				return 0;
 			switch(Sorting)
 			{
 				case ALPHA_DESC:
@@ -107,13 +109,21 @@ public abstract class OpenPath
 				case ALPHA:
 					return a.toLowerCase().compareTo(b.toLowerCase());
 				case SIZE_DESC:
+					if(sa == null && sb != null) return 1;
+					if(sa == null || sb == null) return 0;
 					return sa.compareTo(sb);
 				case SIZE:
+					if(sb == null && sa != null) return 1;
+					if(sa == null || sb == null) return 0;
 					return sb.compareTo(sa);
 				case DATE_DESC:
-					return fa.lastModified().compareTo(fb.lastModified());
+					if(ma == null && mb != null) return 1;
+					if(ma == null || mb == null) return 0;
+					return ma.compareTo(mb);
 				case DATE:
-					return fb.lastModified().compareTo(fa.lastModified());
+					if(mb == null && ma != null) return 1;
+					if(ma == null || mb == null) return 0;
+					return mb.compareTo(ma);
 				case TYPE:
 					String ea = a.substring(a.lastIndexOf(".") + 1, a.length()).toLowerCase();
 					String eb = b.substring(b.lastIndexOf(".") + 1, b.length()).toLowerCase();

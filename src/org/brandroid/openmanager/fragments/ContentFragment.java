@@ -1004,7 +1004,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		{
 			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
 			OpenPath.Sorting = mSorting; //getManager().getSorting();
-			Arrays.sort(items);
+			try {
+				Arrays.sort(items);
+			} catch(Exception e) {
+				Logger.LogError("Couldn't sort.", e);
+			}
 		}
 		
 		mData2.clear();
@@ -1013,6 +1017,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(items != null)
 		for(OpenPath f : items)
 		{
+			if(f == null) continue;
 			if(!showHidden && f.isHidden()) continue;
 			if(!f.exists()) continue;
 			if(f.isFile() && !(f.length() >= 0)) continue;
@@ -1360,20 +1365,21 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), mContext, mWidth > 72));
 				else if(!mShowThumbnails||!file.hasThumbnail())
 				{
-					if(file.isDirectory() && !file.requiresThread())
+					if(file.isDirectory())
 					{
-						boolean bCountHidden = !getExplorer().getSetting(file, "hide", true);
+						boolean bCountHidden = false;// !getExplorer().getSetting(file, "hide", true);
 						try {
-							if(file.getChildCount(bCountHidden) > 0)
+							if(!file.requiresThread() && file.getChildCount(bCountHidden) > 0)
 								mIcon.setImageDrawable(getResources().getDrawable(mWidth > 72 ? R.drawable.lg_folder_full : R.drawable.sm_folder_full));
-							else
+							else if(!file.requiresThread())
 								mIcon.setImageDrawable(getResources().getDrawable(mWidth > 72 ? R.drawable.lg_folder : R.drawable.sm_folder));
+							else
+								mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 						} catch (Exception e) {
-							mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
+							mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 						}
 					} else {
-						mInfo.setVisibility(View.INVISIBLE);
-						mIcon.setImageDrawable(getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight)));
+						mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 					}
 				} else {
 					ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
@@ -1382,13 +1388,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			return view;
 		}
-		
-		private String getFilePath(String name) {
-			return getManager().peekStack().getChild(name).getPath();
-		}
+
 		private String getFileDetails(OpenPath file, Boolean longDate) {
 			//OpenPath file = getManager().peekStack().getChild(name); 
 			String deets = ""; //file.getPath() + "\t\t";
+			
+			if(file instanceof OpenMediaStore)
+			{
+				OpenMediaStore ms = (OpenMediaStore)file;
+				deets = ms.getWidth() + "x" + ms.getHeight() + " "; 
+			}
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
@@ -1401,7 +1410,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				}
 			} else if(file.isFile()) {
 				deets = DialogHandler.formatSize(file.length()) + " | ";
-			}
+			} 
 			
 			Long last = file.lastModified();
 			if(last != null)

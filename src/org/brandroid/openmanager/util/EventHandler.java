@@ -19,6 +19,7 @@
 package org.brandroid.openmanager.util;
 
 import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -39,7 +40,9 @@ import android.widget.TextView;
 import android.net.Uri;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
@@ -56,8 +59,10 @@ import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.OperationsActivity;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 
 
@@ -72,11 +77,36 @@ public class EventHandler {
 	public static final int MKDIR_TYPE = 		0x07;
 	public static final int CUT_TYPE = 0x08;
 	public static final int ERROR_TYPE = 0x09;
+	public static final int BACKGROUND_NOTIFICATION_ID = 123;
+
+	private static NotificationManager mNotifier = null;
 	
 	private OnWorkerThreadFinishedListener mThreadListener;
 	private FileManager mFileMang;
 	private ProgressBar mExtraProgress;
 	private TextView mExtraStatus, mExtraPercent;
+	
+	private static ArrayList<BackgroundWork> mTasks = new ArrayList<BackgroundWork>();
+	public static ArrayList<BackgroundWork> getTaskList() { return mTasks; }
+		public static BackgroundWork[] getRunningTasks() {
+		ArrayList<BackgroundWork> ret = new ArrayList<EventHandler.BackgroundWork>();
+		for(BackgroundWork bw : mTasks)
+			if(bw.getStatus() != Status.FINISHED)
+				ret.add(bw);
+		return ret.toArray(new BackgroundWork[0]);
+	}
+	public static boolean hasRunningTasks() {
+		for(BackgroundWork bw : mTasks)
+			if(bw.getStatus() == Status.RUNNING)
+				return true;
+		return false;
+	}
+	public static void cancelRunningTasks() {
+		for(BackgroundWork bw : mTasks)
+			if(bw.getStatus() == Status.RUNNING)
+				bw.cancel(true);
+		mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
+	}
 	
 	public interface OnWorkerThreadFinishedListener {
 		/**
@@ -375,29 +405,33 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	private class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> {
-		private static final int BACKGROUND_NOTIFICATION_ID = 123;
+	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> {
 		private final int mType;
 		private final Context mContext;
 		private final String[] mInitParams;
 		private final OpenPath mIntoPath;
-		private final NotificationManager mNotifier;
 		private ProgressDialog mPDialog;
 		private Notification mNote = null;
 		private ArrayList<String> mSearchResults = null;
 		private boolean isDownload = false;
+		private int taskId = -1;
+		private final Date mStart;
 		
 		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
 			mType = type;
 			mContext = context;
 			mInitParams = params;
 			mIntoPath = intoPath;
-			mNotifier = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+			if(mNotifier == null)
+				mNotifier = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+			taskId = mTasks.size();
+			mTasks.add(this);
+			mStart = new Date();
 		}
 		
 		protected void onPreExecute() {
 			String title = getResourceString(mContext, R.string.s_title_executing).toString();
-			Boolean showDialog = true, showNotification = false, isCancellable = false;
+			Boolean showDialog = true, showNotification = false, isCancellable = true;
 			int notifIcon = R.drawable.icon;
 			switch(mType) {
 				case DELETE_TYPE:
@@ -440,7 +474,7 @@ public class EventHandler {
 							true, true,
 							new DialogInterface.OnCancelListener() {
 								public void onCancel(DialogInterface dialog) {
-									
+									cancelRunningTasks();
 								}
 							});
 				} catch(Exception e) { }
@@ -448,19 +482,27 @@ public class EventHandler {
 			{
 				boolean showProgress = true;
 				try {
-					Intent intent = new Intent(mContext, OpenExplorer.class);
-					PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OpenExplorer.REQUEST_CANCEL, intent, 0);
+					Intent intent = new Intent(mContext, OperationsActivity.class);
+					intent.putExtra("TaskId", taskId);
+					PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OperationsActivity.REQUEST_VIEW, intent, 0);
 					mNote = new Notification(notifIcon,
 							title, System.currentTimeMillis());
 					title += " -> " + mIntoPath.getPath();
 					String subtitle = "";
 					if(mInitParams != null && mInitParams.length > 0)
 						subtitle = (mInitParams.length > 1 ? mInitParams.length + " " + mContext.getString(R.string.s_files) : mInitParams[0]);
+					String rate = getResourceString(mContext, R.string.s_status_rate).toString() + "-";
 					if(showProgress)
 					{
+						PendingIntent pendingCancel = PendingIntent.getActivity(mContext, OperationsActivity.REQUEST_CANCEL, intent, 0);
 						RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.notification);
+						if(isCancellable)
+							noteView.setOnClickPendingIntent(android.R.id.button1, pendingCancel);
+						else
+							noteView.setViewVisibility(android.R.id.button1, View.GONE);
 						noteView.setImageViewResource(android.R.id.icon, R.drawable.icon);
-						noteView.setTextViewText(android.R.id.text1, title);
+						noteView.setTextViewText(android.R.id.title, title);
+						noteView.setTextViewText(android.R.id.text2, rate);
 						if(subtitle == "")
 							noteView.setViewVisibility(android.R.id.text2, View.GONE);
 						else
@@ -477,7 +519,7 @@ public class EventHandler {
 					mNote.contentIntent = pendingIntent;
 					mNote.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
 					//mNote.flags |= Notification.FLAG_ONGOING_EVENT;
-					//mNote.flags |= Notification.FLAG_NO_CLEAR;
+					mNote.flags |= Notification.FLAG_NO_CLEAR;
 					mNotifier.notify(BACKGROUND_NOTIFICATION_ID, mNote);
 				} catch(Exception e) {
 					Logger.LogWarning("Couldn't post notification", e);
@@ -714,7 +756,16 @@ public class EventHandler {
 			int progA = (int)(((float)current / (float)size) * 1000f);
 			int progB = (int)(((float)current / (float)total) * 1000f);
 			
-			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-(" + progA + "," + progB + ")");
+			String sRate = "";
+			long running = new Date().getTime() - mStart.getTime();
+			if(running > 0)
+			{
+				long rate = ((long)current) / (running / 1000);
+				sRate += getResourceString(mContext, R.string.s_status_rate).toString();
+				sRate += DialogHandler.formatSize(rate).replace(" ", "").toLowerCase() + "/s";
+			}
+			
+			Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-(" + progA + "," + progB + ")-" + sRate);
 			
 			//mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
 			
@@ -744,6 +795,7 @@ public class EventHandler {
 
 			try {
 				RemoteViews noteView = mNote.contentView;
+				noteView.setTextViewText(android.R.id.text1, sRate);
 				if(values.length == 0 && isDownload)
 					noteView.setImageViewResource(android.R.id.icon, android.R.drawable.stat_sys_download);
 				else
@@ -758,7 +810,9 @@ public class EventHandler {
 
 		protected void onPostExecute(Integer result) {
 			//NotificationManager mNotifier = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-			mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
+			BackgroundWork[] tasks = getRunningTasks();
+			if(tasks.length == 0 || tasks[0].equals(this))
+				mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
 
 			if(mPDialog != null && mPDialog.isShowing())
 				mPDialog.dismiss();
