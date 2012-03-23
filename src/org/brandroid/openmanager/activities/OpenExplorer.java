@@ -2623,13 +2623,17 @@ public class OpenExplorer
 	}
 
 
-	public void showFileInfo(OpenPath path) {
-		new AlertDialog.Builder(this)
-			.setView(DialogHandler.createFileInfoDialog(getLayoutInflater(), path))
-			.setTitle(path.getName())
-			.setIcon(new BitmapDrawable(path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize).get()))
-			.create()
-			.show();
+	public void showFileInfo(final OpenPath path) {
+		runOnUiThread(new Runnable(){
+			@SuppressWarnings("deprecation")
+			public void run(){
+			new AlertDialog.Builder(OpenExplorer.this)
+				.setView(DialogHandler.createFileInfoDialog(getLayoutInflater(), path))
+				.setTitle(path.getName())
+				.setIcon(new BitmapDrawable(path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize).get()))
+				.create()
+				.show();
+			}});
 		//DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
 		//dialogInfo.setFilePath(path.getPath());
 		//dialogInfo.show(fragmentManager, "info");
