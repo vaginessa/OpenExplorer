@@ -59,6 +59,7 @@ import org.brandroid.openmanager.R.id;
 import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
@@ -393,7 +394,9 @@ public class DialogHandler extends DialogFragment {
 	
 	public static void populateFileInfoViews(View v, OpenPath file) throws IOException {
 			
-		String apath = file.getPath();
+		String apath = file.getAbsolutePath();
+		if(file instanceof OpenMediaStore)
+			file = ((OpenMediaStore)file).getFile();
 		Date date = new Date(file.lastModified());
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
@@ -402,14 +405,14 @@ public class DialogHandler extends DialogFragment {
 		TextView numTotal = (TextView)v.findViewById(R.id.info_total_size);
 		TextView numFree = (TextView)v.findViewById(R.id.info_free_size);
 		
-		if (file.isDirectory()) {
+		//if (file.isDirectory()) {
 			
 			new CountAllFilesTask(numDir, numFile, numSize, numFree, numTotal).execute(file);
 			
-		} else {
-			numFile.setText("-");
-			numDir.setText("-");
-		}
+		//} else {
+			//numFile.setText("-");
+			//numDir.setText("-");
+		//}
 		
 		((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
 		((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
@@ -469,7 +472,7 @@ public class DialogHandler extends DialogFragment {
 				}
 			}
 			if(fileCount + dirCount % 50 == 0)
-				publishProgress(fileCount, dirCount);
+				publishProgress();
 		}
 		
 		@Override
@@ -484,11 +487,26 @@ public class DialogHandler extends DialogFragment {
 		@Override
 		protected String[] doInBackground(OpenPath... params) {
 			OpenPath path = params[0];
+
+			totalSize = path.length();
+			if(!path.isDirectory())
+			{
+				firstFiles = fileCount = 1;
+				firstDirs = dirCount = 0;
+			}
+			
+			publishProgress();
 			
 			if(path instanceof OpenFile)
 			{
 				freeSize = ((OpenFile)path).getFreeSpace();
 				diskTotal = ((OpenFile)path).getTotalSpace();
+				publishProgress();
+			} else if(path instanceof OpenMediaStore)
+			{
+				OpenMediaStore ms = (OpenMediaStore)path;
+				freeSize = ms.getFile().getFreeSpace();
+				diskTotal = ms.getFile().getTotalSpace();
 				publishProgress();
 			} else if(path instanceof OpenSMB)
 			{
@@ -507,11 +525,12 @@ public class DialogHandler extends DialogFragment {
 				publishProgress();
 			}
 			
-			addPath(path, true);
+			if(path.isDirectory())
+				addPath(path, true);
 			
 			String[] ret = new String[]{
-					firstFiles + " (" + fileCount + ")"
-					,firstDirs + " (" + dirCount + ")"
+					firstDirs + (dirCount > firstDirs ? " (" + dirCount + ")" : "")
+					,firstFiles + (fileCount > firstFiles ? " (" + fileCount + ")" : "")
 					,formatSize(totalSize)
 					,formatSize(freeSize)
 					,formatSize(diskTotal)
