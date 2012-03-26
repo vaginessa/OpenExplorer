@@ -30,7 +30,7 @@ public abstract class OpenPath
 	private Object mTag = null;
 	private OpenPathThreadUpdater mUpdater;
 	protected static OpenPathDbAdapter mDb = null;
-	public static Boolean AllowDBCache = false;
+	public static Boolean AllowDBCache = true;
 	public abstract String getName();
 	public abstract String getPath();
 	public abstract String getAbsolutePath();

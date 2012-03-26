@@ -475,8 +475,13 @@ public class FileManager {
 	public static OpenPath setOpenCache(String path, OpenPath file)
 	{
 		mOpenCache.put(path, file);
-		file.addToDb();
 		return file;
+	}
+	
+	public static void addCacheToDb()
+	{
+		for(OpenPath path : mOpenCache.values())
+			path.addToDb();
 	}
 		
 	public OpenPath[] getChildren(OpenPath directory) throws IOException

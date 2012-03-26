@@ -1557,8 +1557,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		
 		@Override
-		protected void onPostExecute(OpenPath[] result)
+		protected void onPostExecute(final OpenPath[] result)
 		{
+			if(OpenPath.AllowDBCache)
+				new Thread(new Runnable(){public void run() {
+					for(OpenPath path : result)
+						path.addToDb();
+				}}).start();
 			setProgressVisibility(false);
 			//onCancelled(result);
 			//mData2.clear();
@@ -1573,7 +1578,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mProgressBarLoading = ((View)mGrid.getParent()).findViewById(R.id.content_progress);
 		if(mProgressBarLoading != null)
 			mProgressBarLoading.setVisibility(visible ? View.VISIBLE : View.GONE);
-		getExplorer().setProgressVisibility(visible);
+		if(getExplorer() != null)
+			getExplorer().setProgressVisibility(visible);
 	}
 	
 	public SortType getSorting() {
