@@ -33,6 +33,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.util.TimeUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
@@ -768,5 +769,18 @@ public class DialogHandler extends DialogFragment {
 			ret += "Unknown: " + Build.UNKNOWN + sep;
 		ret += "ID: " + Build.ID;
 		return ret;
+	}
+
+
+	public static String formatDuration(long ms) {
+		int s = (int) (ms / 1000),
+			m = s / 60,
+			h = m / 60;
+		m = m % 60;
+		s = s % 60;
+		return (ms > 360000 ? h + ":" : "") +
+				(ms > 6000 ? (h == 0 || m >= 10 ? "" : "0") + m + ":" : "") +
+				(ms > 6000 ? (s > 10 ? "" : "0") + s : 
+					(ms < 1000 ? ms + "ms" : s + "s"));
 	}
 }

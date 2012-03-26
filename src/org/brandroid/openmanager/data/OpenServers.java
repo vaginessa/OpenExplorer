@@ -34,7 +34,7 @@ public class OpenServers
 				e.printStackTrace();
 			}
 	}
-	
+
 	public OpenServer find(String host, String user, String path)
 	{
 		for(int i=0; i < mData.size(); i++)
@@ -43,6 +43,28 @@ public class OpenServers
 			if(server.getHost().equalsIgnoreCase(host) &&
 				server.getUser().equalsIgnoreCase(user) &&
 				server.getPath().replace("/", "").equalsIgnoreCase(path.replace("/", "")))
+				return server;
+		}
+		return null;
+	}
+
+	public OpenServer find(String host, String user)
+	{
+		for(int i=0; i < mData.size(); i++)
+		{
+			OpenServer server = mData.get(i);
+			if(server.getHost().equalsIgnoreCase(host) &&
+				server.getUser().equalsIgnoreCase(user))
+				return server;
+		}
+		return null;
+	}
+	
+	public OpenServer find(String host) {
+		for(int i=0; i < mData.size(); i++)
+		{
+			OpenServer server = mData.get(i);
+			if(server.getHost().equalsIgnoreCase(host))
 				return server;
 		}
 		return null;

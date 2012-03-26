@@ -75,6 +75,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -1155,9 +1156,11 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				if(((OpenPath)mContentAdapter.getItem(i)).getName().equals(mTopPath.getName()))
 					return restoreTopPath(i);
 		}
-		Logger.LogDebug("Falling back to top index (" + mTopIndex + ")");
 		if(mTopIndex > 0)
+		{
+			Logger.LogDebug("Falling back to top index (" + mTopIndex + ")");
 			return restoreTopPath(mTopIndex);
+		}
 		return false;
 	}
 	private Boolean restoreTopPath(int index)
@@ -1296,6 +1299,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
 					R.layout.grid_content_layout : R.layout.list_content_layout;
 			
+			boolean showLongDate = false;
+			if(getResources().getBoolean(R.bool.show_long_date))
+				showLongDate = true;
+			
 			if(view == null
 						//|| view.getTag() == null
 						//|| !BookmarkHolder.class.equals(view.getTag())
@@ -1318,7 +1325,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			//mHolder.setInfo(getFileDetails(file, false));
 			TextView mInfo = (TextView)view.findViewById(R.id.content_info);
 			if(mInfo != null)
-				mInfo.setText(getFileDetails(file, false));
+				mInfo.setText(getFileDetails(file, showLongDate));
 			
 			TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
 			if(mPathView != null)
@@ -1396,20 +1403,23 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(file instanceof OpenMediaStore)
 			{
 				OpenMediaStore ms = (OpenMediaStore)file;
-				deets = ms.getWidth() + "x" + ms.getHeight() + " "; 
+				if(ms.getWidth() > 0 || ms.getHeight() > 0)
+					deets += ms.getWidth() + "x" + ms.getHeight() + " | ";
+				if(ms.getDuration() > 0)
+					deets += DialogHandler.formatDuration(ms.getDuration()) + " | ";
 			}
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
 					boolean bCountHidden = !getExplorer().getSetting(file, "hide", true);
-					deets = file.getChildCount(bCountHidden) + " " + getString(R.string.s_files) + " | ";
+					deets += file.getChildCount(bCountHidden) + " " + getString(R.string.s_files) + " | ";
 					//deets = file.list().length + " items";
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			} else if(file.isFile()) {
-				deets = DialogHandler.formatSize(file.length()) + " | ";
+				deets += DialogHandler.formatSize(file.length()) + " | ";
 			} 
 			
 			Long last = file.lastModified();
@@ -1561,6 +1571,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		{
 			if(OpenPath.AllowDBCache)
 				new Thread(new Runnable(){public void run() {
+					if(result != null && result.length > 0)
+						mPath.deleteFolderFromDb();
 					for(OpenPath path : result)
 						path.addToDb();
 				}}).start();

@@ -115,7 +115,7 @@ public class OpenPathDbAdapter
         initialValues.put(KEY_SIZE, path.length());
         initialValues.put(KEY_MTIME, path.lastModified());
         initialValues.put(KEY_STAMP, (new java.util.Date().getTime() - new Date(4,9,2011).getTime()) / 1000);
-        Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
+        //Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
         
 		try {
 			//mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
@@ -147,10 +147,10 @@ public class OpenPathDbAdapter
     	try {
     		return mDb.query(DATABASE_TABLE,
     				KEYS, KEY_FOLDER + " = '" + folder.replace("'", "\\'") + "'",
-    				null, null, null, null, KEY_NAME + " asc");
+    				null, null, null, KEY_NAME + " asc", null);
     	} catch(Exception e)
     	{
-    		Logger.LogError("Couldn't fetch from folder " + folder + ".");
+    		Logger.LogError("Couldn't fetch from folder " + folder + ". " + e.getLocalizedMessage(), e);
     		return null;
     	}
     }

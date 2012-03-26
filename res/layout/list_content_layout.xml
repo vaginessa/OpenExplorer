@@ -58,7 +58,7 @@
 		android:layout_marginLeft="4dp"
 		android:text="0 B"
 		android:singleLine="true"
-		android:ellipsize="end"
+		android:ellipsize="marquee"
 		android:typeface="monospace"
 		style="@style/Small" />
 </RelativeLayout>

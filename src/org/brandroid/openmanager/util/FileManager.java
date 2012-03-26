@@ -459,7 +459,6 @@ public class FileManager {
 			if(ret == null) return ret;
 			if(bGetNetworkedFiles)
 			{
-				ret.deleteFolderFromDb();
 				ret.listFiles();
 				setOpenCache(path, ret);
 			} else {
@@ -483,7 +482,7 @@ public class FileManager {
 		for(OpenPath path : mOpenCache.values())
 			path.addToDb();
 	}
-		
+	
 	public OpenPath[] getChildren(OpenPath directory) throws IOException
 	{
 		//mDirContent.clear();

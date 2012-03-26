@@ -179,7 +179,10 @@ public class OpenFile extends OpenPath
 	public boolean listFromDb()
 	{
 		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
-		if(c == null) return false;
+		if(c == null) {
+			Logger.LogWarning("Null found in DB");
+			return false;
+		}
 		mChildren = new OpenFile[c.getCount()];
 		c.moveToFirst();
 		while(!c.isAfterLast())
@@ -191,6 +194,7 @@ public class OpenFile extends OpenPath
 			mChildren[c.getPosition()] = new OpenFile(folder + "/" + name);
 			c.moveToNext();
 		}
+		Logger.LogInfo("listFromDb found " + mChildren.length + " children");
 		c.close();
 		return true;
 	}

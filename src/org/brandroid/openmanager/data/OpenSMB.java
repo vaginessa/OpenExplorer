@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.data;
 
+import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import java.io.IOException;
@@ -158,13 +159,21 @@ public class OpenSMB extends OpenNetworkPath
 		if(mChildren != null)
 			return mChildren;
 		Logger.LogInfo("Listing children under " + getPath());
-		SmbFile[] kids = mFile.listFiles();
-		mDiskSpace = mFile.getDiskFreeSpace();
-		mChildren = new OpenSMB[kids.length];
-		for(int i = 0; i < kids.length; i++)
+		SmbFile[] kids = null;
+		try {
+			kids = mFile.listFiles();
+		} catch(SmbAuthException e) {
+			String path = getServerPath(mFile.getPath());
+			kids = new SmbFile(path).listFiles();
+		}
+		if(kids != null)
 		{
-			mChildren[i] = new OpenSMB(this, kids[i]);
-			FileManager.setOpenCache(mChildren[i].getPath(), mChildren[i]);
+			mChildren = new OpenSMB[kids.length];
+			for(int i = 0; i < kids.length; i++)
+			{
+				mChildren[i] = new OpenSMB(this, kids[i]);
+				FileManager.setOpenCache(mChildren[i].getPath(), mChildren[i]);
+			}
 		}
 		return mChildren;
 	}
@@ -267,13 +276,39 @@ public class OpenSMB extends OpenNetworkPath
 		return mFile;
 	}
 
+	private String getServerPath(String path)
+	{
+		URL url;
+			Uri uri = Uri.parse(path);
+			String user = uri.getUserInfo();
+			if(user.indexOf(":") > -1)
+				user = user.substring(0, user.indexOf(":"));
+			Logger.LogInfo("User: " + user);
+			OpenServer server = OpenServers.DefaultServers.find(uri.getHost(), user, uri.getPath());
+			if(server == null)
+				server = OpenServers.DefaultServers.find(uri.getHost(), user);
+			if(server == null)
+				server = OpenServers.DefaultServers.find(uri.getHost());
+			if(server != null)
+				path = "smb://" + user + ":" + server.getPassword() + "@" + server.getHost() + uri.getPath();
+			else
+				Logger.LogWarning("Couldn't find server for Server Path");
+		return path;
+	}
 
 	@Override
 	public boolean listFromDb()
 	{
 		if(!AllowDBCache) return false;
-		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
-		if(c == null) return false;
+		String parent = getPath(); //.replace("/" + getName(), "");
+		if(!parent.endsWith("/"))
+			parent += "/";
+		Logger.LogDebug("Fetching from folder: " + parent);
+		Cursor c = mDb.fetchItemsFromFolder(parent);
+		if(c == null) {
+			Logger.LogWarning("DB Fetch returned null?");
+			return false;
+		}
 		ArrayList<OpenSMB> arr = new ArrayList<OpenSMB>(); 
 		c.moveToFirst();
 		while(!c.isAfterLast())
@@ -284,7 +319,9 @@ public class OpenSMB extends OpenNetworkPath
 			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
 			OpenSMB child;
 			try {
-				child = new OpenSMB(folder + "/" + name, size, modified);
+				String path = folder + name;
+				/*path = getServerPath(path);*/
+				child = new OpenSMB(path, size, modified);
 				arr.add(child);
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
@@ -292,6 +329,7 @@ public class OpenSMB extends OpenNetworkPath
 			}
 			c.moveToNext();
 		}
+		Logger.LogDebug("listFromDb returning " + arr.size() + " children");
 		c.close();
 		mChildren = arr.toArray(new OpenSMB[0]);
 		return true;

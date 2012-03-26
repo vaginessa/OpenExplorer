@@ -24,6 +24,8 @@ public class OpenMediaStore extends OpenPath
 	private long size = -1;
 	private long modified = -1;
 	private int width = 0, height = 0;
+	private long duration = -1;
+	private String resolution = "";
 	
 	public OpenMediaStore(OpenCursor parent, Cursor cursor)
 	{
@@ -47,6 +49,11 @@ public class OpenMediaStore extends OpenPath
 				modified = mFile.lastModified();
 		}
 		try {
+			duration = cursor.getLong(cursor.getColumnIndexOrThrow("duration"));
+		} catch(Exception e) {
+			duration = -1;
+		}
+		try {
 			width = cursor.getInt(cursor.getColumnIndexOrThrow("width"));
 		} catch(Exception e) {
 			width = 0;
@@ -56,11 +63,28 @@ public class OpenMediaStore extends OpenPath
 		} catch(Exception e) {
 			height = 0;
 		}
+		try {
+			resolution = cursor.getString(cursor.getColumnIndexOrThrow("resolution"));
+			if(resolution.indexOf("x")>-1)
+			{
+				try {
+					if(height == 0)
+						height = Integer.parseInt(resolution.substring(0,resolution.indexOf("x")));
+				} catch(Exception he) { }
+				try {
+					if(width == 0)
+						width = Integer.parseInt(resolution.substring(resolution.indexOf("x")+1));
+				} catch(Exception we) { }
+			}
+		} catch(Exception e) {
+			resolution = "";
+		}
 				
 	}
 	
 	public int getWidth() { return width; }
 	public int getHeight() { return height; }
+	public long getDuration() { return duration; }
 
 	@Override
 	public String getName() {

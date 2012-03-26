@@ -2819,21 +2819,26 @@ public class OpenExplorer
 		CursorLoader loader = null;
 		switch(id)
 		{
-			case 0:
+			case 0: // videos
 				loader = new CursorLoader(
 					getApplicationContext(),
-					Uri.parse("content://media/external/video/media"),
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+					MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+					//Uri.parse("content://media/external/video/media"),
+					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
+							MediaStore.Video.VideoColumns.RESOLUTION,
+							MediaStore.Video.VideoColumns.DURATION},
 					MediaStore.Video.Media.SIZE + " > 10000", null,
 					MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 					MediaStore.Video.Media.DATE_MODIFIED + " DESC"
 						);
 				break;
-			case 1:
+			case 1: // images
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/images/media"),
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
+							MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT,
+						},
 					MediaStore.Images.Media.SIZE + " > 10000", null,
 					MediaStore.Images.Media.DATE_ADDED + " DESC"
 					);
@@ -2842,7 +2847,9 @@ public class OpenExplorer
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/audio/media"),
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
+							MediaStore.Audio.AudioColumns.DURATION
+						},
 					MediaStore.Audio.Media.SIZE + " > 10000", null,
 					MediaStore.Audio.Media.DATE_ADDED + " DESC"
 					);

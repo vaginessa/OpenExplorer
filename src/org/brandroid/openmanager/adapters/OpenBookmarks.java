@@ -360,24 +360,24 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	private boolean checkAndAdd(BookmarkType type, OpenPath path)
 	{
 		if(path == null) return false;
+		boolean bypassHide = getExplorer().getSetting(null, "pref_hide", false);
 		try {
 			if(path.getPath().equals("/"))
 			{
-				if(!getExplorer().getPreferences().getSetting("global", "pref_show_root", !getSetting("hide_" + path.getAbsolutePath(), false)))
+				if(!bypassHide && getExplorer().getPreferences().getSetting("global", "pref_show_root", true))
 					return false;
 			} else if(OpenFile.getInternalMemoryDrive().equals(path))
 			{
-				if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", !getSetting("hide_" + path.getAbsolutePath(), false)))
+				if(!bypassHide && !getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
 					return false;
 			} else if(OpenFile.getExternalMemoryDrive(true).equals(path)) {
-				if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", !getSetting("hide_" + path.getAbsolutePath(), false)))
+				if(!bypassHide && !getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
 					return false;
-			} else if(getExplorer().getSetting(path, "hide", false) &&
-					getExplorer().getSetting(null, "pref_hide", true))
+			} else if(!bypassHide && getExplorer().getSetting(path, "hide", true))
 				return false;
-			else if(getExplorer().getPreferences()
-						.getSetting("bookmarks", "hide_" + path.getPath(), false) &&
-					getExplorer().getSetting(null, "pref_hide", true))
+			else if(!bypassHide && getExplorer().getPreferences()
+						.getSetting("bookmarks", "hide_" + path.getPath(), false)
+					)
 				return false;
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
