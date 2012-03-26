@@ -821,7 +821,7 @@ public class OpenExplorer
 			Logger.closeDb();
 	}
 	
-	private JSONObject getDeviceInfo()
+	private static JSONObject getDeviceInfo()
 	{
 		JSONObject ret = new JSONObject();
 		try {
@@ -1383,87 +1383,6 @@ public class OpenExplorer
 				menu.findItem(id).setEnabled(enabled);
 	}
 	
-	public void showAboutDialog()
-	{
-		LayoutInflater li = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-		View view = li.inflate(R.layout.about, null);
-
-		String sVersionInfo = "";
-		try {
-			PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
-			sVersionInfo += pi.versionName;
-			if(!pi.versionName.contains(""+pi.versionCode))
-				sVersionInfo += " (" + pi.versionCode + ")";
-			if(OpenExplorer.IS_DEBUG_BUILD)
-				sVersionInfo += " *debug*";
-		} catch (NameNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		String sBuildTime = "";
-		try {
-			sBuildTime = SimpleDateFormat.getInstance().format(new Date(
-					new ZipFile(getPackageManager().getApplicationInfo(getPackageName(), 0).sourceDir)
-					.getEntry("classes.dex").getTime()));
-		} catch(Exception e) { 
-			Logger.LogError("Couldn't get Build Time.", e);
-		}
-		
-		final String sSubject = "Feedback for OpenExplorer " + sVersionInfo; 
-
-		OnClickListener email = new OnClickListener() {
-			public void onClick(View v) {
-				Intent intent = new Intent(Intent.ACTION_SEND);
-				intent.setType("text/plain");
-				//intent.addCategory(Intent.CATEGORY_APP_EMAIL);
-				intent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"brandroid64@gmail.com"});
-				intent.putExtra(android.content.Intent.EXTRA_SUBJECT, sSubject);
-				startActivity(Intent.createChooser(intent, getString(R.string.s_chooser_email)));
-			}
-		};
-		OnClickListener viewsite = new OnClickListener() {
-			public void onClick(View v) {
-				startActivity(
-					new Intent(android.content.Intent.ACTION_VIEW, Uri.parse("http://brandroid.org/open/"))
-					);
-			}
-		};
-		view.findViewById(R.id.about_email).setOnClickListener(email);
-		view.findViewById(R.id.about_email_btn).setOnClickListener(email);
-		view.findViewById(R.id.about_site).setOnClickListener(viewsite);
-		view.findViewById(R.id.about_site_btn).setOnClickListener(viewsite);
-		final View mRecentLabel = view.findViewById(R.id.about_recent_status_label);
-		final WebView mRecent = (WebView)view.findViewById(R.id.about_recent);
-		final OpenChromeClient occ = new OpenChromeClient();
-		occ.mStatus = (TextView)view.findViewById(R.id.about_recent_status);
-		mRecent.setWebChromeClient(occ);
-		mRecent.setWebViewClient(new WebViewClient(){
-			@Override
-			public void onReceivedError(WebView view, int errorCode,
-					String description, String failingUrl) {
-				occ.mStatus.setVisibility(View.GONE);
-				mRecent.setVisibility(View.GONE);
-				mRecentLabel.setVisibility(View.GONE);
-			}
-		});
-		mRecent.setBackgroundColor(Color.TRANSPARENT);
-		mRecent.loadUrl("http://brandroid.org/open/?show=recent");
-		
-		((TextView)view.findViewById(R.id.about_version)).setText(sVersionInfo);
-		if(sBuildTime != "")
-			((TextView)view.findViewById(R.id.about_buildtime)).setText(sBuildTime);
-		else
-			((TableRow)view.findViewById(R.id.row_buildtime)).setVisibility(View.GONE);
-		AlertDialog mDlgAbout = new AlertDialog.Builder(this)
-			.setTitle(R.string.app_name)
-			.setView(view)
-			.create();
-		
-		mDlgAbout.getWindow().getAttributes().windowAnimations = R.style.SlideDialogAnimation;
-		mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
-		
-		mDlgAbout.show();
-	}
 	
 	public AlertDialog showConfirmationDialog(String msg, String title, DialogInterface.OnClickListener onYes)
 	{
@@ -1886,7 +1805,7 @@ public class OpenExplorer
 				//return true;
 				
 			case R.id.menu_about:
-				showAboutDialog();
+				DialogHandler.showAboutDialog(this);
 				return true;
 				
 			default:

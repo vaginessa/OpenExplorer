@@ -3,30 +3,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-    
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="center"
-        >
+        android:orientation="horizontal" >
 
-	    <TableLayout
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_margin="5dp"
-	        >
-	
-	        <TableRow
-	            android:id="@+id/tableRow1"
-	            android:layout_width="fill_parent"
-	            android:layout_height="wrap_content" >
-	            <TextView
-	                style="@style/Small"
-	                android:gravity="right"
-	                android:text="@string/s_about_version"
-	                android:layout_weight="1"
-	                />
+        <TableLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp" >
+
+            <TableRow
+                android:id="@+id/tableRow1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    style="@style/Small"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:text="@string/s_about_version" />
+
 	            <TextView
 	                style="@style/Mid"
 	                android:gravity="left"
@@ -113,20 +112,6 @@
 	        <TableRow
 	            android:layout_width="fill_parent"
 	            android:layout_height="wrap_content" >
-	            <TextView
-	                style="@style/Small"
-	                android:gravity="right"
-                	android:id="@+id/about_recent_status_label"
-	                android:text="@string/s_about_recent"
-	                android:layout_weight="1"
-	                />
-	            <TextView
-	                style="@style/Mid"
-	                android:id="@+id/about_recent_status"
-	                android:gravity="left"
-	                android:text="@string/s_status_loading"
-	                android:layout_weight="4"
-	                />
 	        </TableRow>
 	    </TableLayout>
 	    		
@@ -156,10 +141,73 @@
 			    />
     	</LinearLayout>
     </LinearLayout>
-    <WebView
-        android:id="@+id/about_recent"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="4"
-        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/btn_recent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/s_about_recent" />
+
+        <Button
+            android:id="@+id/btn_hardware"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/s_about_hardware" />
+
+    </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tab1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+
+                    <TextView
+                        android:id="@+id/about_recent_status_label"
+                        style="@style/Small"
+                        android:layout_weight="1"
+                        android:gravity="right"
+                        android:text="@string/s_about_recent" />
+
+                    <TextView
+                        android:id="@+id/about_recent_status"
+                        style="@style/Mid"
+                        android:layout_width="0dp"
+                        android:layout_weight="4"
+                        android:gravity="left"
+                        android:text="@string/s_status_loading" />
+
+                </LinearLayout>
+
+                <WebView
+                    android:id="@+id/about_recent"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="4" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tab2"
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <TextView
+                    android:id="@+id/about_hardware"
+                    style="@style/Mid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    />
+
+            </LinearLayout>
  </LinearLayout>

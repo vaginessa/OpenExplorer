@@ -20,14 +20,21 @@ package org.brandroid.openmanager.fragments;
 
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.DialogFragment;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -35,17 +42,25 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ImageView;
+import android.widget.TabHost;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
+import java.util.zip.ZipFile;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -64,6 +79,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
@@ -616,5 +632,141 @@ public class DialogHandler extends DialogFragment {
 			
 			return view;
 		}
+	}
+
+	public static void showAboutDialog(final Context mContext)
+	{
+		LayoutInflater li = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View view = li.inflate(R.layout.about, null);
+
+		String sVersionInfo = "";
+		try {
+			PackageInfo pi = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+			sVersionInfo += pi.versionName;
+			if(!pi.versionName.contains(""+pi.versionCode))
+				sVersionInfo += " (" + pi.versionCode + ")";
+			if(OpenExplorer.IS_DEBUG_BUILD)
+				sVersionInfo += " *debug*";
+		} catch (NameNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String sBuildTime = "";
+		try {
+			sBuildTime = SimpleDateFormat.getInstance().format(new Date(
+					new ZipFile(mContext.getPackageManager().getApplicationInfo(mContext.getPackageName(), 0).sourceDir)
+					.getEntry("classes.dex").getTime()));
+		} catch(Exception e) { 
+			Logger.LogError("Couldn't get Build Time.", e);
+		}
+		
+		WindowManager wm = (WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics dm = new DisplayMetrics(); 
+		wm.getDefaultDisplay().getMetrics(dm);
+		Display d = wm.getDefaultDisplay();
+		String sHardwareInfo = "Display:\n";
+		sHardwareInfo += "Size: " + d.getWidth() + "x" + d.getHeight() + "\n";
+		if(dm!=null)
+			sHardwareInfo += "Density: " + dm.density + "\n";
+		sHardwareInfo += "Rotation: " + d.getRotation() + "\n\n";
+		sHardwareInfo += getDeviceInfo();
+		((TextView)view.findViewById(R.id.about_hardware)).setText(sHardwareInfo);
+		
+		final String sSubject = "Feedback for OpenExplorer " + sVersionInfo; 
+		OnClickListener email = new OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent(Intent.ACTION_SEND);
+				intent.setType("text/plain");
+				//intent.addCategory(Intent.CATEGORY_APP_EMAIL);
+				intent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"brandroid64@gmail.com"});
+				intent.putExtra(android.content.Intent.EXTRA_SUBJECT, sSubject);
+				mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.s_chooser_email)));
+			}
+		};
+		OnClickListener viewsite = new OnClickListener() {
+			public void onClick(View v) {
+				mContext.startActivity(
+					new Intent(android.content.Intent.ACTION_VIEW, Uri.parse("http://brandroid.org/open/"))
+					);
+			}
+		};
+		view.findViewById(R.id.about_email).setOnClickListener(email);
+		view.findViewById(R.id.about_email_btn).setOnClickListener(email);
+		view.findViewById(R.id.about_site).setOnClickListener(viewsite);
+		view.findViewById(R.id.about_site_btn).setOnClickListener(viewsite);
+		final View mRecentLabel = view.findViewById(R.id.about_recent_status_label);
+		final WebView mRecent = (WebView)view.findViewById(R.id.about_recent);
+		final OpenChromeClient occ = new OpenChromeClient();
+		occ.mStatus = (TextView)view.findViewById(R.id.about_recent_status);
+		mRecent.setWebChromeClient(occ);
+		mRecent.setWebViewClient(new WebViewClient(){
+			@Override
+			public void onReceivedError(WebView view, int errorCode,
+					String description, String failingUrl) {
+				occ.mStatus.setVisibility(View.GONE);
+				mRecent.setVisibility(View.GONE);
+				mRecentLabel.setVisibility(View.GONE);
+			}
+		});
+		mRecent.setBackgroundColor(Color.TRANSPARENT);
+		mRecent.loadUrl("http://brandroid.org/open/?show=recent");
+		
+		((TextView)view.findViewById(R.id.about_version)).setText(sVersionInfo);
+		if(sBuildTime != "")
+			((TextView)view.findViewById(R.id.about_buildtime)).setText(sBuildTime);
+		else
+			((TableRow)view.findViewById(R.id.row_buildtime)).setVisibility(View.GONE);
+
+		final View tab1 = view.findViewById(R.id.tab1);
+		final View tab2 = view.findViewById(R.id.tab2);
+		((Button)view.findViewById(R.id.btn_recent)).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				tab1.setVisibility(View.VISIBLE);
+				tab2.setVisibility(View.GONE);
+			}
+		});
+		((Button)view.findViewById(R.id.btn_hardware)).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				tab1.setVisibility(View.GONE);
+				tab2.setVisibility(View.VISIBLE);
+			}
+		});
+		
+		AlertDialog mDlgAbout = new AlertDialog.Builder(mContext)
+			.setTitle(R.string.app_name)
+			.setView(view)
+			.create();
+		
+		mDlgAbout.getWindow().getAttributes().windowAnimations = R.style.SlideDialogAnimation;
+		mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
+		
+		mDlgAbout.show();
+	}
+	
+	public static String getDeviceInfo()
+	{
+		String ret = "";
+		String sep = "\n";
+		ret += "SDK: " + Build.VERSION.SDK_INT + sep;
+		ret += "Fingerprint: " + Build.FINGERPRINT + sep;
+		ret += "Manufacturer: " + Build.MANUFACTURER + sep;
+		ret += "Model: " + Build.MODEL + sep;
+		ret += "Product: " + Build.PRODUCT + sep;
+		ret += "Brand: " + Build.BRAND + sep;
+		ret += "Board: " + Build.BOARD + sep;
+		ret += "Bootloader: " + Build.BOOTLOADER + sep;
+		ret += "Hardware: " + Build.HARDWARE + sep;
+		ret += "Display: " + Build.DISPLAY + sep;
+		ret += "Language: " + Locale.getDefault().getDisplayLanguage() + sep;
+		ret += "Country: " + Locale.getDefault().getDisplayCountry() + sep;
+		ret += "Tags: " + Build.TAGS + sep;
+		ret += "Type: " + Build.TYPE + sep;
+		ret += "User: " + Build.USER + sep;
+		if(Build.UNKNOWN != null)
+			ret += "Unknown: " + Build.UNKNOWN + sep;
+		ret += "ID: " + Build.ID;
+		return ret;
 	}
 }

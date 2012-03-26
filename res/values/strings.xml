@@ -192,4 +192,5 @@
     <string name="s_info_totalspace">Disk Total Space:</string>
     <string name="s_info_freespace">Disk Free Space:</string>
     <string name="s_status_rate">Rate:</string>
+    <string name="s_about_hardware">Hardware</string>
 </resources>
