@@ -488,11 +488,11 @@ public class ThumbnailCreator extends Thread {
 				options.inPurgeable = true;
 										
 				if (len_kb > 500 && len_kb < 2000) {
-					options.inSampleSize = 16;
+					options.inSampleSize = mWidth > 64 ? 8 : 16;
 					bmp = BitmapFactory.decodeFile(file.getPath(), options);
 										
 				} else if (len_kb >= 2000) {
-					options.inSampleSize = 32;
+					options.inSampleSize = options.inSampleSize = mWidth > 64 ? 16 : 32;
 					bmp = BitmapFactory.decodeFile(file.getPath(), options);
 									
 				} else if (len_kb <= 500) {
