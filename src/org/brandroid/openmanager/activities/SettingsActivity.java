@@ -135,6 +135,17 @@ public class SettingsActivity extends PreferenceActivity
 			if(OpenExplorer.BEFORE_HONEYCOMB && pHoney != null)
 				pHoney.setEnabled(false);
 			
+			PreferenceScreen pReset = (PreferenceScreen) findPreference("pref_reset_hide");
+			if(pReset != null)
+				pReset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+					@Override
+					public boolean onPreferenceClick(Preference preference)
+					{
+						
+						return true;
+					}
+				});
+			
 			if(!path.equals("global")) // folder preferences
 			{
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);

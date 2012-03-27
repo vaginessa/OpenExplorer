@@ -87,6 +87,10 @@
 	            android:title="@string/s_pref_show_external"
 	            android:defaultValue="true"
 	            />
+	        <PreferenceScreen
+	            android:key="pref_reset_hide"
+	            android:title="@string/s_pref_reset_hide" 
+	            />
 	        <CheckBoxPreference
 	            android:key="pref_root"
 	            android:title="@string/s_menu_root"

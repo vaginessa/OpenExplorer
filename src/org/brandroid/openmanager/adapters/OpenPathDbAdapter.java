@@ -131,7 +131,7 @@ public class OpenPathDbAdapter
     public int deleteFolder(OpenPath parent)
     {
     	try {
-    		if(parent != null) {
+    		if(mDb != null && parent != null) {
     			String sParent = parent.getPath();
     			return mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent.replace("'", "\\'") + "'", null);
     		} else return 0;

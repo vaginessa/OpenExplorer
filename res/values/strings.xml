@@ -193,4 +193,10 @@
     <string name="s_info_freespace">Disk Free Space:</string>
     <string name="s_status_rate">Rate:</string>
     <string name="s_about_hardware">Hardware</string>
+    <string name="s_menu_refresh">Refresh Folder</string>
+    <string name="s_pref_reset_hide">Reset All Hidden Folders</string>
+    <string name="s_prompt_path">Enter path:</string>
+    <string name="s_prompt_search">Search for:</string>
+    <string name="s_prompt_search_within">Search within:</string>
+    
 </resources>
