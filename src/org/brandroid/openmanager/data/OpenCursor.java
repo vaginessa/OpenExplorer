@@ -22,6 +22,7 @@ public class OpenCursor extends OpenPath
 	private Long mTotalSize = 0l;
 	private boolean loaded = false;
 	private TextView mBookmarkText = null;
+	private Long mModified = Long.MIN_VALUE;
 	
 	public OpenCursor(String name)
 	{
@@ -52,6 +53,7 @@ public class OpenCursor extends OpenPath
 		{
 			c.moveToPosition(i);
 			OpenMediaStore tmp = new OpenMediaStore(this, c);
+			mModified = Math.max(tmp.lastModified(), mModified);
 			if(!tmp.exists()) continue;
 			if(!tmp.getFile().exists()) continue;
 			kids.add(tmp);
@@ -140,7 +142,7 @@ public class OpenCursor extends OpenPath
 
 	@Override
 	public Long lastModified() {
-		return null;
+		return mModified;
 	}
 
 	@Override

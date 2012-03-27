@@ -23,6 +23,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenClipboard;
+import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -301,19 +302,30 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				path = OpenExplorer.getPhotoParent();
 			if(path.getPath().equals("Videos"))
 				path = OpenExplorer.getVideoParent();
+			if(path.getPath().equals("Music"))
+				path = OpenExplorer.getMusicParent();
+			if(path.getPath().equals("Downloads"))
+				path = OpenExplorer.getDownloadParent();
 		}
 		mPath = path;
 		
 		mActionModeSelected = false;
 		try {
 			mShowHiddenFiles = !getExplorer().getSetting(path, "hide",
-					getExplorer().getSetting(null, "hide", true));
+					getExplorer().getSetting(null, "hide", false));
 			mShowThumbnails = getExplorer().getSetting(path, "thumbs", 
 					getExplorer().getSetting(null, "thumbs", true));
 		} catch(NullPointerException npe) {
+			Logger.LogWarning("Null while getting prefs", npe);
 			mShowHiddenFiles = false;
 			mShowThumbnails = true;
 		}
+		if(getExplorer() != null)
+			mSorting = FileManager.parseSortType(
+				getExplorer().getSetting(path, "sort",
+					getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting != null ? mSorting.toString() : SortType.ALPHA.toString())));
+		
+		Logger.LogVerbose("View options for " + path.getPath() + " : " + (mShowHiddenFiles ? "show" : "hide") + " + " + (mShowThumbnails ? "thumbs" : "icons") + " + " + mSorting.toString());
 
 		//if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
 		//	mShowThumbnails = true;
@@ -322,7 +334,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			mShowLongDate = getResources().getBoolean(R.bool.show_long_date) //getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
 					&& mPath != null;
 
-		
 		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
 				mData = path.list();
@@ -426,7 +437,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mGrid == null)
 			Logger.LogError("WTF, where are they?");
 		else
-			updateGridView();
+			refreshData(null);
+			//updateGridView();
 	}
 
 	@Override
@@ -451,9 +463,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		mViewMode = getViewMode();
 		if(getExplorer() == null) return;
-		mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
-		mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hiddenFiles", true));
-		mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", getExplorer().getPreferences().getSetting("global", "pref_thumbnail", true));
+		//mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
+		//mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hide", true));
+		//mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", getExplorer().getPreferences().getSetting("global", "pref_thumbs", true));
 		
 		if(!OpenExplorer.BEFORE_HONEYCOMB)
 			getExplorer().invalidateOptionsMenu();
@@ -747,7 +759,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public boolean executeMenu(final int id, final Object mode, final OpenPath file, List<OpenPath> fileList)
 	{
 		final String path = file != null ? file.getPath() : null;
-		final OpenPath folder = file != null ? file.getParent() : null;
+		OpenPath parent = file != null ? file.getParent() : null;
+		if(parent == null || parent instanceof OpenCursor)
+			parent = OpenFile.getExternalMemoryDrive(true);
+		final OpenPath folder = parent;
 		String name = file != null ? file.getName() : null;
 		if(fileList == null)
 			fileList = getClipboard();
@@ -845,13 +860,24 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			case R.id.menu_context_zip:
 				getClipboard().add(file);
 				getClipboard().ClearAfter = true;
-				final String def = getClipboard().size() == 1 ?
-						file.getName().replace("." + file.getExtension(), "") + ".zip" :
-						file.getParent().getName() + ".zip";
+				String zname = file.getName().replace("." + file.getExtension(), "") + ".zip";
+				if(getClipboard().size() > 1)
+				{
+					OpenPath last = getClipboard().get(getClipboard().getCount() - 1);
+					if(last != null && last.getParent() != null)
+					{
+						if(last.getParent() instanceof OpenCursor)
+							zname = folder.getPath();
+						zname = last.getParent().getName() + ".zip";
+					}
+				}
+				final String def = zname;
 				
 				final InputDialog dZip = new InputDialog(getExplorer())
 					.setIcon(R.drawable.sm_zip)
 					.setTitle(R.string.s_menu_zip)
+					.setMessageTop(R.string.s_prompt_path)
+					.setDefaultTop(folder.getPath())
 					.setMessage(R.string.s_prompt_zip)
 					.setCancelable(true)
 					.setNegativeButton(android.R.string.no, null);
@@ -859,7 +885,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					.setPositiveButton(android.R.string.ok,
 						new OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
-								OpenPath zipFile = folder.getChild(dZip.getInputText());
+								OpenPath zFolder = new OpenFile(dZip.getInputTopText());
+								if(zFolder == null || !zFolder.exists())
+									zFolder = folder;
+								OpenPath zipFile = zFolder.getChild(dZip.getInputText());
 								Logger.LogVerbose("Zipping " + getClipboard().size() + " items to " + zipFile.getPath());
 								getHandler().zipFile(zipFile, getClipboard(), getExplorer());
 								finishMode(mode);
@@ -991,16 +1020,20 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		updateData(items,
 				!allowSkips || (items.length < 500),
 				!allowSkips || (items.length < 500),
-				!allowSkips || (items.length < 500 && mShowHiddenFiles) //getManager().getShowHiddenFiles())
+				mShowHiddenFiles //getManager().getShowHiddenFiles())
 				);
 	}
-	private void updateData(final OpenPath[] items, final boolean doSort, final boolean foldersFirst, final boolean showHidden) {
+	private void updateData(final OpenPath[] items,
+			final boolean doSort,
+			final boolean foldersFirst,
+			final boolean showHidden) {
 		if(!mReadyToUpdate) return;
 		if(items == null) return;
 		mReadyToUpdate = false;
 		
 		//new Thread(new Runnable(){public void run() {
-				
+		Logger.LogVerbose("updateData on " + items.length + " items : " + (showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files") + " + " + (doSort ? mSorting.toString() : "no sort"));
+
 		if(doSort)
 		{
 			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
@@ -1160,8 +1193,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		{
 			Logger.LogDebug("Falling back to top index (" + mTopIndex + ")");
 			return restoreTopPath(mTopIndex);
-		}
-		return false;
+		} else return true;
 	}
 	private Boolean restoreTopPath(int index)
 	{
@@ -1241,7 +1273,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 		if(mGrid == null)
 			Logger.LogError("WTF, where is it?");
-		else updateGridView();
+		else //updateGridView();
+			refreshData(null);
 	}
 			
 	public void changeMultiSelectState(boolean multiSelectOn) {

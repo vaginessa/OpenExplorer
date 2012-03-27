@@ -1,10 +1,8 @@
 package org.brandroid.openmanager.adapters;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -18,18 +16,14 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.view.Gravity;
-import android.view.TextureView;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.TextView;
 
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider {
+	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
 	private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
 	private OnPageTitleClickListener mListener = null;
 
@@ -46,7 +40,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	{
 		mListener = l;
 	}
-
+	
 	@Override
 	public Fragment getItem(int pos) {
 		if(pos < getCount())
@@ -138,6 +132,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			if (f.getClass().equals(c))
 				mExtraFrags.remove(i);
 		}
+		notifyDataSetChanged();
 		return ret;
 	}
 
@@ -169,6 +164,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return 0;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public Drawable[] getIcons(int position) {
 		Fragment f = getItem(position);

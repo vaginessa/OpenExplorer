@@ -1,8 +1,5 @@
 package org.brandroid.openmanager.adapters;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
@@ -10,13 +7,9 @@ import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 
-import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.view.ViewGroup;
 
 public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 {

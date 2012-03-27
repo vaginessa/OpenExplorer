@@ -522,12 +522,16 @@ public class TitlePageIndicator extends View implements PageIndicator {
 
                     if (eventX < leftThird) {
                         if (mCurrentPage > 0) {
-                            mViewPager.setCurrentItem(mCurrentPage - 1);
+                        	try {
+                        		mViewPager.setCurrentItem(mCurrentPage - 1);
+                        	} catch(IllegalStateException e) { }
                             return true;
                         }
                     } else if (eventX > rightThird) {
                         if (mCurrentPage < count - 1) {
-                            mViewPager.setCurrentItem(mCurrentPage + 1);
+                        	try {
+                        		mViewPager.setCurrentItem(mCurrentPage + 1);
+                        	} catch(IllegalStateException e) { }
                             return true;
                         }
                     } else {
@@ -673,7 +677,9 @@ public class TitlePageIndicator extends View implements PageIndicator {
         if (mViewPager == null) {
             throw new IllegalStateException("ViewPager has not been bound.");
         }
-        mViewPager.setCurrentItem(item);
+        try {
+        	mViewPager.setCurrentItem(item);
+    	} catch(IllegalStateException e) { }
         mCurrentPage = item;
         invalidate();
     }

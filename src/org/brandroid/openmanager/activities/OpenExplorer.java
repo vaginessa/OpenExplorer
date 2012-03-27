@@ -213,8 +213,7 @@ public class OpenExplorer
 	private static boolean mViewPagerEnabled = true; 
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
-	private OpenPathList mSiblingList = null;
-	private BetterPopupWindow mBookmarksPopup, mSiblingPopup;
+	private BetterPopupWindow mBookmarksPopup;
 	private static OnBookMarkChangeListener mBookmarkListener;
 	private MenuBuilder mMainMenu = null;
 	
@@ -459,7 +458,12 @@ public class OpenExplorer
 			//mViewPagerAdapter.add(mContentFragment);
 			mLastPath = null;
 			changePath(path, bAddToStack, true);
-			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
+			try {
+				if(mViewPager.getCurrentItem() < mViewPagerAdapter.getCount() - 1)
+					mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1);
+			} catch(IllegalStateException e) {
+				Logger.LogError("I know it's active!", e);
+			}
 			if(bAddToStack)
 			{
 				ft.addToBackStack("path");
@@ -1226,8 +1230,11 @@ public class OpenExplorer
 		if(activate && !ret.isVisible())
 		{
 			if(mViewPager != null)
-				mViewPager.setCurrentItem(mViewPagerAdapter.getItemPosition(ret));
-			else {
+			{
+				try {
+					mViewPager.setCurrentItem(mViewPagerAdapter.getItemPosition(ret));
+            	} catch(IllegalStateException e) { }
+			} else {
 				Logger.LogDebug("Activating content fragment");
 				fragmentManager.beginTransaction()
 					.replace(R.id.content_frag, ret)
@@ -1629,7 +1636,7 @@ public class OpenExplorer
 				if(getClipboard().isMultiselect())
 				{
 					getClipboard().stopMultiselect();
-					getClipboard().clear();
+					//getClipboard().clear();
 					if(!BEFORE_HONEYCOMB && mActionMode != null)
 						((ActionMode)mActionMode).finish();
 					return true;
@@ -1745,6 +1752,18 @@ public class OpenExplorer
 				ThumbnailCreator.flushCache();
 				OpenPath.flushDbCache();
 				goHome();
+				return true;
+				
+			case R.id.menu_refresh:
+				ContentFragment content = getDirContentFragment(true);
+				if(content != null)
+				{
+					Logger.LogDebug("Refreshing " + content.getPath().getPath());
+					FileManager.removeOpenCache(content.getPath().getPath());
+					content.getPath().deleteFolderFromDb();
+					content.refreshData(null, false);
+				}
+				mBookmarks.refresh();
 				return true;
 				
 			case R.id.menu_settings:
@@ -2299,7 +2318,7 @@ public class OpenExplorer
 			setViewVisibility(false, false, R.id.content_frag);
 			if(force || addToStack || path.requiresThread())
 			{
-				mViewPagerAdapter.removeOfType(ContentFragment.class);
+				mViewPagerAdapter.clear();
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				try {
 					mViewPagerAdapter.add(0, ContentFragment.getInstance(path, newView));
@@ -2323,9 +2342,12 @@ public class OpenExplorer
 				}
 				//mViewPagerAdapter = newAdapter;
 				setViewPageAdapter(mViewPagerAdapter);
-				int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
-				if(mViewPager.getCurrentItem() != index) // crash fix
-					mViewPager.setCurrentItem(index, true);
+				int index = mViewPagerAdapter.getCount() - 1;
+				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
+				try {
+					if(mViewPager.getCurrentItem() != index) // crash fix
+						mViewPager.setCurrentItem(index, true);
+				} catch(IllegalStateException e) { Logger.LogError("Hopefully the Pager is okay!", e); }
 				updatePagerTitle(index);
 				try {
 					fragmentManager
@@ -2704,18 +2726,17 @@ public class OpenExplorer
 		getDirContentFragment(false).notifyDataSetChanged();
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	public boolean onPageTitleLongClick(int position, View titleView) {
 		try {
 			Fragment f = mViewPagerAdapter.getItem(position);
-			if(f instanceof TextEditorFragment)
-			{
-				return false;
-			}
+			if(f instanceof TextEditorFragment) return false;
 			if(!(f instanceof ContentFragment)) return false;
-			OpenFile path = (OpenFile)((ContentFragment)mViewPagerAdapter.getItem(position)).getPath();
+			OpenPath path = ((ContentFragment)mViewPagerAdapter.getItem(position)).getPath();
+			if(path.requiresThread()) return false;
 			OpenPath parent = path.getParent();
+			if(path instanceof OpenCursor)
+				parent = new OpenPathArray(new OpenPath[]{mVideoParent,mPhotoParent,mMusicParent,mDownloadParent});
 			if(parent == null) parent = new OpenPathArray(new OpenPath[]{path});
 			OpenPath.Sorting = SortType.ALPHA;
 			SortedSet<OpenPath> arr = new TreeSet<OpenPath>();
@@ -2728,18 +2749,13 @@ public class OpenExplorer
 			siblingArray.addAll(arr);
 			OpenPath foster = new OpenPathArray(siblings);
 			//Logger.LogVerbose("Siblings of " + path.getPath() + ": " + siblings.length);
+			
 			Context mContext = this;
-			View anchor = findViewById(R.id.title_bar);
+			View anchor = titleView; //findViewById(R.id.title_bar);
 			int[] offset = new int[2];
 			titleView.getLocationInWindow(offset);
-			int offsetX = offset[0];
+			int offsetX = 0;
 			int arrowLeft = 0;
-			//if(!BEFORE_HONEYCOMB||BEFORE_HONEYCOMB)
-			{
-				anchor = titleView;
-				offsetX = 0;
-				//Logger.LogVerbose("Is this the width? " + offsetX);
-			}
 			if(anchor == null && findViewById(R.id.content_pager_indicator) != null)
 			{
 				offsetX = titleView.getLeft();
@@ -2749,31 +2765,23 @@ public class OpenExplorer
 				//if(anchor != null)
 				//	offsetX -= anchor.getLeft();
 			}
-			if(mSiblingList == null)
-			{
-				mSiblingPopup = new BetterPopupWindow(mContext, anchor);
-				//mSiblingPopup.USE_INDICATOR = false;
-				mSiblingList = new OpenPathList(foster, mContext);
-				mSiblingList.setOnItemClickListener(new OnItemClickListener() {
-					@Override
-					public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
-						final OpenPath path = (OpenPath)((BaseAdapter)arg0.getAdapter()).getItem(pos);
-						mSiblingPopup.setOnDismissListener(new OnDismissListener() {
-							@Override
-							public void onDismiss() {
-								changePath(path, false);
-							}
-						});
-						mSiblingPopup.dismiss();
-					}
-				});
-				mSiblingPopup.setContentView(mSiblingList);
-			}
-			else {
-				mSiblingPopup.setAnchor(anchor);
-				//mSiblingPopup.setAnchor(titleView);
-				mSiblingList.setPath(foster);
-			}
+			final BetterPopupWindow mSiblingPopup = new BetterPopupWindow(mContext, anchor);
+			//mSiblingPopup.USE_INDICATOR = false;
+			OpenPathList mSiblingList = new OpenPathList(foster, mContext);
+			mSiblingList.setOnItemClickListener(new OnItemClickListener() {
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
+					final OpenPath path = (OpenPath)((BaseAdapter)arg0.getAdapter()).getItem(pos);
+					mSiblingPopup.setOnDismissListener(new OnDismissListener() {
+						@Override
+						public void onDismiss() {
+							changePath(path, false);
+						}
+					});
+					mSiblingPopup.dismiss();
+				}
+			});
+			mSiblingPopup.setContentView(mSiblingList);
 			mSiblingPopup.setAnchorOffset(arrowLeft);
 			mSiblingPopup.showLikePopDownMenu(offsetX,0);
 			return true;
@@ -2836,14 +2844,16 @@ public class OpenExplorer
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/images/media"),
+					Build.VERSION.SDK_INT >= 10 ? // It seems that < 2.3.3 don't have width & height
 					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
-							MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT,
-						},
+							MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT
+						} :
+					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 					MediaStore.Images.Media.SIZE + " > 10000", null,
 					MediaStore.Images.Media.DATE_ADDED + " DESC"
 					);
 				break;
-			case 2:
+			case 2: // music
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/audio/media"),
@@ -2854,7 +2864,7 @@ public class OpenExplorer
 					MediaStore.Audio.Media.DATE_ADDED + " DESC"
 					);
 				break;
-			case 3:
+			case 3: // apks
 				loader = new CursorLoader(
 					getApplicationContext(),
 					MediaStore.Files.getContentUri("/mnt"),
@@ -2863,7 +2873,7 @@ public class OpenExplorer
 					"date modified DESC"
 					);
 				break;
-			case 4:
+			case 4: // downloads
 				loader = new CursorLoader(
 					getApplicationContext(),
 					MediaStore.Files.getContentUri("/"),

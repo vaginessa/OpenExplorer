@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.adapters;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -149,7 +150,14 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getVideoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
-		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
+		try {
+			if(OpenExplorer.getDownloadParent() != null && OpenExplorer.getDownloadParent().getChildCount(true) > 0)
+				checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
+			else {
+				if(!checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("download")))
+					checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("downloads"));
+			}
+		} catch (IOException e) { }
 		
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
 		
@@ -362,23 +370,25 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(path == null) return false;
 		boolean bypassHide = getExplorer().getSetting(null, "pref_hide", false);
 		try {
-			if(path.getPath().equals("/"))
+			if(!bypassHide)
 			{
-				if(!bypassHide && getExplorer().getPreferences().getSetting("global", "pref_show_root", true))
+				if(path.getPath().equals("/"))
+				{
+					if(getExplorer().getPreferences().getSetting("global", "pref_show_root", true))
+						return false;
+				} else if(OpenFile.getInternalMemoryDrive().equals(path))
+				{
+					if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
+						return false;
+				} else if(OpenFile.getExternalMemoryDrive(true).equals(path)) {
+					if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
+						return false;
+				}
+				else if(getExplorer().getPreferences()
+							.getSetting("bookmarks", "hide_" + path.getPath(), false)
+						)
 					return false;
-			} else if(OpenFile.getInternalMemoryDrive().equals(path))
-			{
-				if(!bypassHide && !getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
-					return false;
-			} else if(OpenFile.getExternalMemoryDrive(true).equals(path)) {
-				if(!bypassHide && !getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
-					return false;
-			} else if(!bypassHide && getExplorer().getSetting(path, "hide", true))
-				return false;
-			else if(!bypassHide && getExplorer().getPreferences()
-						.getSetting("bookmarks", "hide_" + path.getPath(), false)
-					)
-				return false;
+			}
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
 		if(path instanceof OpenCursor ||

@@ -17,6 +17,7 @@
 package com.viewpagerindicator;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -41,7 +42,12 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
     private OnClickListener mTabClickListener = new OnClickListener() {
         public void onClick(View view) {
             TabView tabView = (TabView)view;
-            mViewPager.setCurrentItem(tabView.getIndex());
+            try {
+	            if(mViewPager.getCurrentItem() != tabView.getIndex())
+	            	mViewPager.setCurrentItem(tabView.getIndex());
+            } catch(IllegalStateException e) {
+            	Logger.LogWarning("Fragment already active!");
+            }
         }
     };
 
