@@ -176,29 +176,25 @@ public class EventHandler {
 
 	public void startSearch(final OpenPath base, final Context mContext)
 	{
-		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View view = inflater.inflate(R.layout.input_dialog_layout, null);
-		final EditText mQuery = (EditText)view.findViewById(R.id.dialog_input);
-		TextView mSubtitle = ((TextView)view.findViewById(R.id.dialog_subtitle));
-		mSubtitle.setText(base.getPath());
-		mSubtitle.setVisibility(View.VISIBLE);
-		view.findViewById(R.id.dialog_message).setVisibility(View.GONE);
-		
-		new AlertDialog.Builder(mContext)
-			.setPositiveButton(getResourceString(mContext, R.string.s_search), new OnClickListener() {
+		final InputDialog dSearch = new InputDialog(mContext)
+			.setIcon(R.drawable.search)
+			.setTitle(R.string.s_search)
+			.setCancelable(true)
+			.setMessageTop(R.string.s_prompt_search_within)
+			.setDefaultTop(base.getPath())
+			.setMessage(R.string.s_prompt_search);
+		dSearch
+			.setPositiveButton(R.string.s_search, new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					searchFile(base, mQuery.getText().toString(), mContext);
+					searchFile(new OpenFile(dSearch.getInputTopText()),
+							dSearch.getInputText(), mContext);
 				}
 			})
-			.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
+			.setNegativeButton(R.string.s_cancel, new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
 			})
-			.setView(view)
-			.setTitle(getResourceString(mContext, R.string.s_search))
-			.setCancelable(true)
-			.setIcon(R.drawable.search)
 			.create().show();
 	}
 	
@@ -364,7 +360,7 @@ public class EventHandler {
 	
 	public void zipFile(OpenPath into, List<OpenPath> files, Context mContext)
 	{
-		zipFile(into, files.toArray(new OpenFile[0]), mContext);
+		zipFile(into, files.toArray(new OpenPath[0]), mContext);
 	}
 	public void zipFile(OpenPath into, OpenPath[] files, Context mContext) {
 		new BackgroundWork(ZIP_TYPE, mContext, into).execute(files);
@@ -758,7 +754,7 @@ public class EventHandler {
 			
 			String sRate = "";
 			long running = new Date().getTime() - mStart.getTime();
-			if(running > 0)
+			if(running / 1000 > 0)
 			{
 				long rate = ((long)current) / (running / 1000);
 				sRate += getResourceString(mContext, R.string.s_status_rate).toString();

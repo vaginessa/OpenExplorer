@@ -780,7 +780,7 @@ public class DialogHandler extends DialogFragment {
 		s = s % 60;
 		return (ms > 360000 ? h + ":" : "") +
 				(ms > 6000 ? (h == 0 || m >= 10 ? "" : "0") + m + ":" : "") +
-				(ms > 6000 ? (s > 10 ? "" : "0") + s : 
+				(ms > 6000 ? (s >= 10 ? "" : "0") + s : 
 					(ms < 1000 ? ms + "ms" : s + "s"));
 	}
 }

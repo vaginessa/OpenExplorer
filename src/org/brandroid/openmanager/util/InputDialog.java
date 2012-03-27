@@ -24,7 +24,7 @@ public class InputDialog extends Builder
 		view = inflater.inflate(R.layout.input_dialog_layout, null);
 		mEdit = (EditText)view.findViewById(R.id.dialog_input);
 		mEdit2 = (EditText)view.findViewById(R.id.dialog_input_top);
-		setViewVisible(false, R.id.dialog_message, R.id.dialog_message_top);
+		setViewVisible(false, R.id.dialog_message, R.id.dialog_message_top, R.id.dialog_input_top);
 		super.setView(view);
 	}
 	
@@ -47,22 +47,35 @@ public class InputDialog extends Builder
 		return this;
 	}
 
-	public InputDialog setDefaultTop(CharSequence s) { mEdit2.setText(s); return this; }
+	public InputDialog setDefaultTop(CharSequence s) {
+		mEdit2.setVisibility(View.VISIBLE);
+		mEdit2.setText(s);
+		return this;
+	}
 	
-	public InputDialog setPrompt(String s) {
+	public InputDialog setMessageTop(String s) {
 		((TextView)view.findViewById(R.id.dialog_message_top)).setVisibility(View.VISIBLE);
-		((EditText)view.findViewById(R.id.dialog_message_top)).setText(s);
+		((TextView)view.findViewById(R.id.dialog_message_top)).setText(s);
+		mEdit2.setVisibility(View.VISIBLE);
+		return this;
+	}
+	public InputDialog setMessageTop(int resId) {
+		((TextView)view.findViewById(R.id.dialog_message_top)).setVisibility(View.VISIBLE);
+		((TextView)view.findViewById(R.id.dialog_message_top)).setText(resId);
+		mEdit2.setVisibility(View.VISIBLE);
 		return this;
 	}
 	
 	@Override
 	public InputDialog setMessage(CharSequence message) {
-		super.setMessage(message);
+		((TextView)view.findViewById(R.id.dialog_message)).setText(message);
+		((TextView)view.findViewById(R.id.dialog_message)).setVisibility(View.VISIBLE);
 		return this;
 	}
 	@Override
 	public InputDialog setMessage(int messageId) {
-		super.setMessage(messageId);
+		((TextView)view.findViewById(R.id.dialog_message)).setText(messageId);
+		((TextView)view.findViewById(R.id.dialog_message)).setVisibility(View.VISIBLE);
 		return this;
 	}
 	
