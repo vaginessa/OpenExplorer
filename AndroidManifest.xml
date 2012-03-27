@@ -31,8 +31,9 @@
 	<!--  Disable for BB: -->
 	<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
 	<!-- -->
-	<!-- ONLY USE FOR GOOGLE TV:  
+	<!-- ONLY USE FOR GOOGLE TV:
 	<uses-permission android:name="android.permission.READ_LOGS" />
+	<uses-feature android:name="com.google.android.tv" android:required="true"/>  
 	-->
 	<!-- Not using donations for now:
 	<uses-permission android:name="com.android.vending.BILLING" />
@@ -122,6 +123,10 @@
 		<activity android:name=".activities.SplashActivity"
 		    android:theme="@android:style/Theme.Dialog" />
 		
+		<activity android:name=".activities.OperationsActivity"
+		    android:theme="@android:style/Theme.Dialog" />
+		
+		<!-- 
 		<service android:name="org.brandroid.billing.BillingService" />
 
 		<receiver android:name="org.brandroid.billing.BillingReceiver">
@@ -131,6 +136,7 @@
 			    <action android:name="com.android.vending.billing.PURCHASE_STATE_CHANGED" />
 			</intent-filter>
 		</receiver>
+		-->
 
 	</application>
 </manifest>
