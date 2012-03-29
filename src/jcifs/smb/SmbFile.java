@@ -994,8 +994,16 @@ int addressIndex;
             }
         }
     }
-    boolean isConnected() {
+    public boolean isConnected() {
         return tree != null && tree.connectionState == 2;
+    }
+    public void disconnect() {
+    	if(!isConnected()) return;
+    	if(listener != null)
+    		listener.onDisconnect(this);
+    	try {
+    		tree.treeDisconnect(false);
+    	} catch(Exception e) { }
     }
     int open0( int flags, int access, int attrs, int options ) throws SmbException {
         int f;

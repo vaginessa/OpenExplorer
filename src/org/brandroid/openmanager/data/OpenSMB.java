@@ -46,9 +46,12 @@ public class OpenSMB extends OpenNetworkPath
 	{
 		mFile = kid;
 		try {
-			mSize = mFile.length();
-			mModified = mFile.lastModified();
-			mHidden = mFile.isHidden();
+			if(kid.isConnected())
+			{
+				mSize = mFile.length();
+				mModified = mFile.lastModified();
+				mHidden = mFile.isHidden();
+			}
 		} catch (SmbException e) {
 			Logger.LogError("Error creating SMB", e);
 		}
@@ -60,6 +63,12 @@ public class OpenSMB extends OpenNetworkPath
 		mParent = null;
 		mSize = size;
 		mModified = modified;
+	}
+	
+	@Override
+	public void disconnect() {
+		super.disconnect();
+		mFile.disconnect();
 	}
 
 	@Override
@@ -163,6 +172,7 @@ public class OpenSMB extends OpenNetworkPath
 		try {
 			kids = mFile.listFiles();
 		} catch(SmbAuthException e) {
+			Logger.LogWarning("Unable to authenticate. Trying to get password from Servers.");
 			String path = getServerPath(mFile.getPath());
 			kids = new SmbFile(path).listFiles();
 		}
@@ -278,21 +288,20 @@ public class OpenSMB extends OpenNetworkPath
 
 	private String getServerPath(String path)
 	{
-		URL url;
-			Uri uri = Uri.parse(path);
-			String user = uri.getUserInfo();
-			if(user.indexOf(":") > -1)
-				user = user.substring(0, user.indexOf(":"));
-			Logger.LogInfo("User: " + user);
-			OpenServer server = OpenServers.DefaultServers.find(uri.getHost(), user, uri.getPath());
-			if(server == null)
-				server = OpenServers.DefaultServers.find(uri.getHost(), user);
-			if(server == null)
-				server = OpenServers.DefaultServers.find(uri.getHost());
-			if(server != null)
-				path = "smb://" + user + ":" + server.getPassword() + "@" + server.getHost() + uri.getPath();
-			else
-				Logger.LogWarning("Couldn't find server for Server Path");
+		Uri uri = Uri.parse(path);
+		String user = uri.getUserInfo();
+		if(user.indexOf(":") > -1)
+			user = user.substring(0, user.indexOf(":"));
+		Logger.LogInfo("User: " + user);
+		OpenServer server = OpenServers.DefaultServers.find(uri.getHost(), user, uri.getPath());
+		if(server == null)
+			server = OpenServers.DefaultServers.find(uri.getHost(), user);
+		if(server == null)
+			server = OpenServers.DefaultServers.find(uri.getHost());
+		if(server != null)
+			path = "smb://" + user + ":" + server.getPassword() + "@" + server.getHost() + uri.getPath();
+		else
+			Logger.LogWarning("Couldn't find server for Server Path");
 		return path;
 	}
 

@@ -2299,6 +2299,12 @@ public class OpenExplorer
 	public void changePath(OpenPath path, Boolean addToStack) { changePath(path, addToStack, false); }
 	public void changePath(OpenPath path, Boolean addToStack, Boolean force)
 	{
+		try {
+			if(mLastPath != null && !mLastPath.equals(path) && mLastPath instanceof OpenNetworkPath)
+				((OpenNetworkPath)mLastPath).disconnect();
+		} catch(Exception e) {
+			Logger.LogError("Couldn't disconnect while changing paths.", e);
+		}
 		toggleBookmarks(false);
 		if(path == null) path = mLastPath;
 		//if(!force)

@@ -126,6 +126,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public Boolean mShowLongDate = false;
 	private int mTopIndex = 0;
 	private OpenPath mTopPath = null;
+	public final static Hashtable<OpenPath, FileIOTask> mFileTasks = new Hashtable<OpenPath, ContentFragment.FileIOTask>();
 	
 	private Bundle mBundle;
 	
@@ -175,6 +176,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
 		return instances.get(path);
+	}
+
+	public static void cancelAllTasks()
+	{
+		for(AsyncTask t : mFileTasks.values())
+			t.cancel(true);
 	}
 	
 	private void setViewMode(int mode) {
@@ -349,20 +356,24 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(path instanceof OpenNetworkPath && path.listFromDb())
 				mData = ((OpenNetworkPath)path).getChildren();
 			Logger.LogVerbose("Running FileIOTask");
-			final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
-			new Thread(new Runnable(){
-				@Override
-				public void run() {
-					try {
-						Thread.sleep(30000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+			//cancelAllTasks();
+			if(!mFileTasks.containsKey(path))
+			{
+				final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+				new Thread(new Runnable(){
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(30000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						if(task.getStatus() == Status.RUNNING)
+							task.cancel(false);
 					}
-					if(task.getStatus() == Status.RUNNING)
-						task.cancel(false);
-				}
-			}).start();
+				}).start();
+			}
 		}
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
@@ -437,8 +448,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mGrid == null)
 			Logger.LogError("WTF, where are they?");
 		else
-			refreshData(null);
-			//updateGridView();
+			//refreshData(null);
+			updateGridView();
 	}
 
 	@Override
@@ -1273,8 +1284,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 
 		if(mGrid == null)
 			Logger.LogError("WTF, where is it?");
-		else //updateGridView();
-			refreshData(null);
+		else updateGridView();
+			//refreshData(null);
 	}
 			
 	public void changeMultiSelectState(boolean multiSelectOn) {
@@ -1523,6 +1534,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
 			for(FileIOCommand cmd : params)
 			{
+				mFileTasks.put(cmd.Path, this);
 				if(cmd.Path.requiresThread())
 				{
 					OpenPath cachePath = null; 
@@ -1602,6 +1614,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		@Override
 		protected void onPostExecute(final OpenPath[] result)
 		{
+			if(params.length > 0)
+				mFileTasks.remove(params[0]);
 			if(OpenPath.AllowDBCache)
 				new Thread(new Runnable(){public void run() {
 					if(result != null && result.length > 0)
