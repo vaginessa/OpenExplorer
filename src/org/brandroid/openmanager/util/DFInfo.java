@@ -98,14 +98,14 @@ public class DFInfo
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 				catch(CannotReadException e) { } 
 			}
-		} catch (IOException e) {
-			Logger.LogError("DF: Couldn't get Drive sizes.", e);
+		} catch (Exception e) {
+			Logger.LogError("DF: Couldn't get Drive sizes.");
 		} finally {
 			try {
 				if(is != null)
 					is.close();
 			} catch (IOException e) {
-				Logger.LogWarning("DF: Couldn't close drive size input stream.", e);
+				Logger.LogWarning("DF: Couldn't close drive size input stream.");
 			}
 		}
 		return mDefault;
