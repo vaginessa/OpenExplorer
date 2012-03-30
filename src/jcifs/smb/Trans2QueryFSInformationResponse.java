@@ -24,6 +24,7 @@ class Trans2QueryFSInformationResponse extends SmbComTransactionResponse {
 
     // information levels
     static final int SMB_INFO_ALLOCATION = 1;
+    static final int SMB_INFO_TOTAL = 2;
     static final int SMB_QUERY_FS_SIZE_INFO = 0x103;
     static final int SMB_FS_FULL_SIZE_INFORMATION = 1007;
 

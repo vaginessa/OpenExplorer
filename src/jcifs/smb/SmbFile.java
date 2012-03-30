@@ -38,7 +38,12 @@ import jcifs.dcerpc.msrpc.*;
 
 import java.util.Date;
 
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.utils.Logger;
+
+import android.os.AsyncTask;
 
 /**
  * This class represents a resource on an SMB network. Mainly these
@@ -2120,7 +2125,8 @@ if (this instanceof SmbNamedPipe) {
         int n;
         long off;
         boolean ready;
-        SmbFile dest;
+        SmbFile dest = null;
+        OpenFile fdest = null;
         SmbException e = null;
         boolean useNTSmbs;
         SmbComWriteAndX reqx;
@@ -2149,6 +2155,15 @@ if (this instanceof SmbNamedPipe) {
             notify();
         }
 
+        synchronized void write( byte[] b, int n, OpenFile dest, long off ) {
+            this.b = b;
+            this.n = n;
+            this.fdest = dest;
+            this.off = off;
+            ready = false;
+            notify();
+        }
+
         public void run() {
             synchronized( this ) {
                 try {
@@ -2163,10 +2178,16 @@ if (this instanceof SmbNamedPipe) {
                         }
                         if( useNTSmbs ) {
                             reqx.setParam( dest.fid, off, n, b, 0, n );
-                            dest.send( reqx, resp );
+                            if(dest != null)
+                            	dest.send( reqx, resp );
+                            else if(fdest != null)
+                            	fdest.getOutputStream().write(b);
                         } else {
                             req.setParam( dest.fid, off, n, b, 0, n );
-                            dest.send( req, resp );
+                            if(dest != null)
+                            	dest.send( req, resp );
+                            else if(fdest != null)
+                            	fdest.getOutputStream().write(b);
                         }
                     }
                 } catch( SmbException e ) {
@@ -2304,6 +2325,100 @@ if (this instanceof SmbNamedPipe) {
             }
         }
     }
+    void copyTo0( OpenFile dest, byte[][] b, int bsize, WriterThread w,
+            SmbComReadAndX req, SmbComReadAndXResponse resp,
+            BackgroundWork task
+            ) throws SmbException {
+        int i;
+
+        if( attrExpiration < System.currentTimeMillis() ) {
+            attributes = ATTR_READONLY | ATTR_DIRECTORY;
+            createTime = 0L;
+            lastModified = 0L;
+            isExists = false;
+
+            Info info = queryPath( getUncPath0(),
+                    Trans2QueryPathInformationResponse.SMB_QUERY_FILE_BASIC_INFO );
+            attributes = info.getAttributes();
+            createTime = info.getCreateTime();
+            lastModified = info.getLastWriteTime();
+
+            /* If any of the above fails, isExists will not be set true
+             */
+
+            isExists = true;
+            attrExpiration = System.currentTimeMillis() + attrExpirationPeriod;
+        }
+
+        if( isDirectory() ) {
+            SmbFile[] files;
+            OpenFile ndest;
+
+            String path = dest.getPath();
+            if( path.length() > 1 ) {
+            	dest.mkdir();
+            }
+
+            files = listFiles( "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null );
+            for( i = 0; i < files.length; i++ ) {
+                ndest = new OpenFile( dest,
+                                files[i].getName()
+                                );
+                files[i].copyTo0( ndest, b, bsize, w, req, resp, task );
+            }
+        } else {
+            long off;
+
+            try {
+                open( SmbFile.O_RDONLY, 0, ATTR_NORMAL, 0 );
+                dest.create();
+    
+                i = 0;
+                off = 0L;
+                int total = (int) length();
+                for( ;; ) {
+                    req.setParam( fid, off, bsize );
+                    resp.setParam( b[i], 0 );
+                    send( req, resp );
+    
+                    synchronized( w ) {
+                        if( w.e != null ) {
+                            throw w.e;
+                        }
+                        while( !w.ready ) {
+                            try {
+                                w.wait();
+                            } catch( InterruptedException ie ) {
+                                throw new SmbException( "Couldn't write to " + dest.getPath(), ie );
+                            }
+                        }
+                        if( w.e != null ) {
+                            throw w.e;
+                        }
+                        if( resp.dataLength <= 0 ) {
+                            break;
+                        }
+                        w.write( b[i], resp.dataLength, dest, off );
+                        task.publish(i, i, total);
+                    }
+    
+                    i = i == 1 ? 0 : 1;
+                    off += resp.dataLength;
+                }
+            } catch( SmbException se ) {
+
+                if (ignoreCopyToException == false)
+                    throw new SmbException("Failed to copy file from [" + this.toString() + "] to [" + dest.toString() + "]", se);
+
+                if( log.level > 1 )
+                    se.printStackTrace( log );
+            } catch (IOException e) {
+				Logger.LogError("COuldn't write to output OpenFile", e);
+			} finally {
+                close();
+            }
+        }
+    }
 /**
  * This method will copy the file or directory represented by this
  * <tt>SmbFile</tt> and it's sub-contents to the location specified by the
@@ -2385,7 +2500,44 @@ if (this instanceof SmbNamedPipe) {
         try {
             copyTo0( dest, b, bsize, w, req, resp );
         } finally {
-            w.write( null, -1, null, 0 );
+            w.write( null, -1, (SmbFile)null, 0 );
+        }
+    }
+    public void copyTo( OpenFile dest, BackgroundWork task ) throws SmbException {
+        SmbComReadAndX req;
+        SmbComReadAndXResponse resp;
+        WriterThread w;
+        int bsize;
+        byte[][] b;
+
+        /* Should be able to copy an entire share actually
+         */
+        if( share == null ) {
+            throw new SmbException( "Invalid operation for workgroups or servers" );
+        }
+
+        req = new SmbComReadAndX();
+        resp = new SmbComReadAndXResponse();
+
+        connect0();
+
+        resolveDfs(null);
+
+        w = new WriterThread();
+        w.setDaemon( true );
+        w.start();
+
+        SmbTransport t1 = tree.session.transport;
+
+        bsize = t1.rcv_buf_size;
+        b = new byte[2][bsize];
+
+        try {
+            copyTo0( dest, b, bsize, w, req, resp, task );
+        } catch(Exception e) {
+        	Logger.LogError("Couldn't copy to OpenFile." , e);
+        } finally {
+            w.write( null, -1, (OpenFile)null, 0 );
         }
     }
 
@@ -2511,6 +2663,42 @@ if (this instanceof SmbNamedPipe) {
         if( getType() == TYPE_SHARE || type == TYPE_FILESYSTEM ) {
             int level = Trans2QueryFSInformationResponse.SMB_FS_FULL_SIZE_INFORMATION;
             try {
+                return queryFSInformation(level).getFree();
+            } catch( SmbException ex ) {
+                switch (ex.getNtStatus()) {
+                    case NtStatus.NT_STATUS_INVALID_INFO_CLASS:
+                    case NtStatus.NT_STATUS_UNSUCCESSFUL: // NetApp Filer
+                        // SMB_FS_FULL_SIZE_INFORMATION not supported by the server.
+                        level = Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION;
+                        return queryFSInformation(level).getFree();
+                }
+                throw ex;
+            }
+        }
+        return 0L;
+    }
+    public long getDiskSpace() throws SmbException {
+        if( getType() == TYPE_SHARE || type == TYPE_FILESYSTEM ) {
+            int level = Trans2QueryFSInformationResponse.SMB_FS_FULL_SIZE_INFORMATION;
+            try {
+                return queryFSInformation(level).getCapacity();
+            } catch( SmbException ex ) {
+                switch (ex.getNtStatus()) {
+                    case NtStatus.NT_STATUS_INVALID_INFO_CLASS:
+                    case NtStatus.NT_STATUS_UNSUCCESSFUL: // NetApp Filer
+                        // SMB_FS_FULL_SIZE_INFORMATION not supported by the server.
+                        level = Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION;
+                        return queryFSInformation(level).getCapacity();
+                }
+                throw ex;
+            }
+        }
+        return 0L;
+    }
+    public AllocInfo getDiskInfo() throws SmbException {
+        if( getType() == TYPE_SHARE || type == TYPE_FILESYSTEM ) {
+            int level = Trans2QueryFSInformationResponse.SMB_FS_FULL_SIZE_INFORMATION;
+            try {
                 return queryFSInformation(level);
             } catch( SmbException ex ) {
                 switch (ex.getNtStatus()) {
@@ -2523,10 +2711,10 @@ if (this instanceof SmbNamedPipe) {
                 throw ex;
             }
         }
-        return 0L;
+        return null;
     }
 
-    private long queryFSInformation( int level ) throws SmbException {
+    private AllocInfo queryFSInformation( int level ) throws SmbException {
         Trans2QueryFSInformationResponse response;
 
         response = new Trans2QueryFSInformationResponse( level );
@@ -2537,7 +2725,7 @@ if (this instanceof SmbNamedPipe) {
             sizeExpiration = System.currentTimeMillis() + attrExpirationPeriod;
         }
 
-        return response.info.getFree();
+        return response.info;
     }
 
 /**

@@ -24,6 +24,7 @@ import java.io.OutputStreamWriter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -96,6 +97,25 @@ import org.apache.commons.net.io.CRLFLineReader;
 
 public class FTP extends SocketClient
 {
+
+	public interface OnFTPCommunicationListener
+	{
+		public void onBeforeConnect(FTP file);
+		public void onConnect(FTP file);
+		public void onConnectFailure(FTP file);
+		public void onDisconnect(FTP file);
+		public void onSendCommand(FTP file, String message);
+		public void onReply(String line);
+	}
+	
+	private static OnFTPCommunicationListener listener = null;
+	public static void setCommunicationListener(OnFTPCommunicationListener mListener)
+	{
+		listener = mListener;
+	}
+	
+	public Socket getSocket() { return _socket_; }
+	
     /*** The default FTP data port (20). ***/
     public static final int DEFAULT_DATA_PORT = 20;
     /*** The default FTP control port (21). ***/
@@ -258,7 +278,7 @@ public class FTP extends SocketClient
      ***/
     public FTP()
     {
-        super();
+    	super();
         setDefaultPort(DEFAULT_PORT);
         _replyLines = new ArrayList<String>();
         _newReplyString = false;
@@ -331,6 +351,9 @@ public class FTP extends SocketClient
             throw new MalformedServerReplyException(
                 "Could not parse response code.\nServer Reply: " + line);
         }
+        
+        if(reportReply && listener != null)
+        	listener.onReply(line);
 
         _replyLines.add(line);
 
@@ -368,6 +391,8 @@ public class FTP extends SocketClient
     @Override
     protected void _connectAction_() throws IOException
     {
+    	if(listener != null)
+    		listener.onBeforeConnect(this);
         super._connectAction_(); // sets up _input_ and _output_
         _controlInput_ =
             new CRLFLineReader(new InputStreamReader(_input_, getControlEncoding()));
@@ -378,6 +403,8 @@ public class FTP extends SocketClient
             _socket_.setSoTimeout(connectTimeout);
             try {
                 __getReply();
+            	if(listener != null)
+            		listener.onConnect(this);
                 // If we received code 120, we have to fetch completion reply.
                 if (FTPReply.isPositivePreliminary(_replyCode))
                     __getReply();
@@ -390,6 +417,8 @@ public class FTP extends SocketClient
             }
         } else {
             __getReply();
+        	if(listener != null)
+        		listener.onConnect(this);
             // If we received code 120, we have to fetch completion reply.
             if (FTPReply.isPositivePreliminary(_replyCode))
                 __getReply();
@@ -436,6 +465,8 @@ public class FTP extends SocketClient
         _controlOutput_ = null;
         _newReplyString = false;
         _replyString = null;
+    	if(listener != null)
+    		listener.onDisconnect(this);
     }
 
 
@@ -491,6 +522,8 @@ public class FTP extends SocketClient
 
     private void __send(String message) throws IOException,
             FTPConnectionClosedException, SocketException {
+    	if(listener != null)
+    		listener.onSendCommand(this, message);
         try{
             _controlOutput_.write(message);
             _controlOutput_.flush();

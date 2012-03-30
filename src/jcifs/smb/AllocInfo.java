@@ -18,7 +18,7 @@
 
 package jcifs.smb;
 
-interface AllocInfo {
+public interface AllocInfo {
     long getCapacity();
     long getFree();
 }

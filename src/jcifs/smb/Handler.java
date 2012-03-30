@@ -27,7 +27,7 @@ import java.io.PrintStream;
 
 public class Handler extends URLStreamHandler {
 
-    static final URLStreamHandler SMB_HANDLER = new Handler();
+    public static final URLStreamHandler SMB_HANDLER = new Handler();
 
     protected int getDefaultPort() {
         return SmbConstants.DEFAULT_PORT;
