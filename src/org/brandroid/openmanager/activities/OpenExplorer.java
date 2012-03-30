@@ -648,7 +648,9 @@ public class OpenExplorer
 	{
 		if(!getPreferences().getBoolean("warn", "pager", false))
 		{
-			new AlertDialog.Builder(this)
+			runOnUiThread(new Runnable(){
+			public void run() {
+			new AlertDialog.Builder(getApplicationContext())
 				.setTitle(R.string.s_warn_pager_title)
 				.setMessage(getString(R.string.s_warn_pager) + "\n" + getString(R.string.s_warn_confirm))
 				.setPositiveButton(android.R.string.yes, new Dialog.OnClickListener() {
@@ -672,6 +674,7 @@ public class OpenExplorer
 					})
 				.create()
 				.show();
+			}});
 		}
 	}
 	
@@ -2937,7 +2940,7 @@ public class OpenExplorer
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/images/media"),
-					Build.VERSION.SDK_INT >= 10 ? // It seems that < 2.3.3 don't have width & height
+					Build.VERSION.SDK_INT > 10 ? // It seems that < 2.3.3 don't have width & height
 					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
 							MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT
 						} :
