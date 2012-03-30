@@ -170,7 +170,7 @@ public class OpenMediaStore extends OpenPath
 
 	@Override
 	public Boolean exists() {
-		return true;
+		return getFile().exists();
 	}
 
 	@Override
@@ -180,24 +180,24 @@ public class OpenMediaStore extends OpenPath
 
 	@Override
 	public Boolean delete() {
-		return false;
+		return getFile().delete();
 	}
 
 	@Override
 	public Boolean mkdir() {
-		return false;
+		return getFile().mkdir();
 	}
 
 	@Override
 	public InputStream getInputStream() throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return getFile().getInputStream();
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return getFile().getOutputStream();
 	}
 
 	public long getMediaID() {
