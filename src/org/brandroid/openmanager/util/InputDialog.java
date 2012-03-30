@@ -52,6 +52,11 @@ public class InputDialog extends Builder
 		mEdit2.setText(s);
 		return this;
 	}
+	public InputDialog setDefaultTop(CharSequence s, boolean enabled)
+	{
+		mEdit2.setEnabled(enabled);
+		return setDefaultTop(s);
+	}
 	
 	public InputDialog setMessageTop(String s) {
 		((TextView)view.findViewById(R.id.dialog_message_top)).setVisibility(View.VISIBLE);
@@ -104,9 +109,20 @@ public class InputDialog extends Builder
 	}
 	
 	@Override
+	public InputDialog setNeutralButton(int text, OnClickListener listener) {
+		super.setNeutralButton(text, listener);
+		return this;
+	}
+	
+	@Override
 	public InputDialog setIcon(Drawable icon) {
 		super.setIcon(icon);
 		return this;
+	}
+
+	public View getView() {
+		// TODO Auto-generated method stub
+		return view;
 	}
 
 }

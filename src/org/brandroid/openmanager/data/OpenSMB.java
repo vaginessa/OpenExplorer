@@ -34,8 +34,8 @@ public class OpenSMB extends OpenNetworkPath
 	private Long mSize = null;
 	private Long mModified = null;
 	private Boolean mHidden = false;
-	private Long mDiskSpace = null;
-	private Long mDiskFreeSpace = null;
+	private Long mDiskSpace = 0l;
+	private Long mDiskFreeSpace = 0l;
 	
 	public OpenSMB(String urlString) throws MalformedURLException
 	{
@@ -392,15 +392,26 @@ public class OpenSMB extends OpenNetworkPath
 				/*path = getServerPath(path);*/
 				child = new OpenSMB(path, size, modified);
 				arr.add(child);
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} catch (MalformedURLException e) { }
 			c.moveToNext();
 		}
 		Logger.LogDebug("listFromDb returning " + arr.size() + " children");
 		c.close();
 		mChildren = arr.toArray(new OpenSMB[0]);
 		return true;
+	}
+	public long getDiskSpace() {
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+			try {
+				mDiskSpace = mFile.getDiskSpace();
+			} catch (SmbException e) { }
+		return mDiskSpace;
+	}
+	public long getDiskFreeSpace() {
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+			try {
+				mDiskFreeSpace = mFile.getDiskFreeSpace();
+			} catch (SmbException e) { }
+		return mDiskFreeSpace;
 	}
 }

@@ -60,17 +60,22 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	@Override
 	public CharSequence getPageTitle(int position) {
 		Fragment f = getItem(position);
+		
+		if(f instanceof TextEditorFragment)
+			return ((TextEditorFragment)f).getPath().getName();
+		
 		OpenPath path = null;
 		if(f instanceof ContentFragment)
 			path = ((ContentFragment)f).getPath();
-		else if(f instanceof TextEditorFragment)
-			return ((TextEditorFragment)f).getPath().getName();
 		
 		if(path == null)
-			return super.getPageTitle(position);
-		else if(path instanceof OpenFile && path.isDirectory())
+			return "(" + position + ")";
+		else if(path.getName().equals(""))
+			return path.getPath();
+		else if(path.getParent() == null)
+			return path.getName();
+		else if(path.isDirectory() && !path.getName().endsWith("/"))
 			return path.getName() + "/";
-		
 		else return path.getName();
 	}
 	
@@ -153,7 +158,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	@Override
 	public String getTitle(int position) {
 		if (getPageTitle(position) == null)
-			return "";
+			return position + "?";
 		return getPageTitle(position).toString();
 	}
 

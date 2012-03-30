@@ -114,8 +114,9 @@ public class OpenPathDbAdapter
     	initialValues.put(KEY_NAME, path.getName());
         initialValues.put(KEY_SIZE, path.length());
         initialValues.put(KEY_MTIME, path.lastModified());
-        initialValues.put(KEY_STAMP, (new java.util.Date().getTime() - new Date(4,9,2011).getTime()) / 1000);
-        Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
+        initialValues.put(KEY_STAMP, new java.util.Date().getTime());
+        //initialValues.put(KEY_STAMP, (new java.util.Date().getTime() - new Date(4,9,2011).getTime()) / 1000);
+        //Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
         
 		try {
 			//mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
@@ -134,7 +135,7 @@ public class OpenPathDbAdapter
     		if(mDb != null && parent != null) {
     			String sParent = parent.getPath();
     			int ret = mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent.replace("'", "\\'") + "'", null);
-    			Logger.LogDebug("deleteFolder(" + parent.getPath() + ") removed " + ret + " rows");
+    			//Logger.LogDebug("deleteFolder(" + parent.getPath() + ") removed " + ret + " rows");
     			return ret;
     		} else return 0;
     	} catch(Exception e) {
