@@ -1541,6 +1541,17 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mFileTasks.put(cmd.Path, this);
 				if(cmd.Path.requiresThread())
 				{
+					SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+					OpenServer server = null; 
+					if(cmd.Path instanceof OpenNetworkPath)
+					{
+						int si = ((OpenNetworkPath)cmd.Path).getServersIndex();
+						if(si > -1)
+							server = OpenServers.DefaultServers.get(si);
+						if(server != null && server.getPassword() != null && server.getPassword() != "")
+							info.setPassword(server.getPassword());
+					}
+					
 					OpenPath cachePath = null; 
 					OpenPath[] list = null;
 					boolean success = false;
@@ -1557,13 +1568,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					} catch(SmbException ae) {
 						cachePath = cmd.Path;
 						Uri uri = Uri.parse(cachePath.getPath());
-						SimpleUserInfo info = new SimpleUserInfo(getExplorer());
-						int si = ((OpenNetworkPath)cachePath).getServersIndex();
-						OpenServer server = null; 
-						if(si > -1)
-							server = OpenServers.DefaultServers.get(si);
-						if(server != null && server.getPassword() != null && server.getPassword() != "")
-							info.setPassword(server.getPassword());
 						((OpenNetworkPath)cachePath).setUserInfo(info);
 						try {
 							list = cachePath.listFiles();
@@ -1583,13 +1587,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							)
 					{
 						Uri uri = Uri.parse(cmd.Path.getPath());
-						SimpleUserInfo info = new SimpleUserInfo(getExplorer());
-						int si = ((OpenNetworkPath)cachePath).getServersIndex();
-						OpenServer server = null; 
-						if(si > -1)
-							server = OpenServers.DefaultServers.get(si);
-						if(server != null && server.getPassword() != null && server.getPassword() != "")
-							info.setPassword(server.getPassword());
 						((OpenNetworkPath)cachePath).setUserInfo(info);
 					}
 					if(!success)

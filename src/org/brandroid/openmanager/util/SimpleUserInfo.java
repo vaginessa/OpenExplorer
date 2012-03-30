@@ -29,6 +29,18 @@ public class SimpleUserInfo implements UserInfo
 	//private final Uri mUri;
 	private final Activity mActivity;
 	private String mPassword = null;
+	private UserInfoInteractionCallback callback;
+	
+	public interface UserInfoInteractionCallback
+	{
+		void onPasswordEntered(String password);
+		void onYesNoAnswered(boolean yes);
+	}
+	
+	public void setInteractionCallback(UserInfoInteractionCallback listener)
+	{
+		callback = listener;
+	}
 	
 	public SimpleUserInfo(Activity activity)
 	{
@@ -86,6 +98,8 @@ public class SimpleUserInfo implements UserInfo
 						public void onClick(DialogInterface dialog, int which) {
 							mPassword = text1.getText().toString();
 							result[0] = result[1] = true;
+							if(callback != null)
+								callback.onPasswordEntered(mPassword);
 						}
 					})
 					.setNegativeButton(android.R.string.no, new OnClickListener() {
@@ -121,6 +135,8 @@ public class SimpleUserInfo implements UserInfo
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							result[0] = result[1] = true;
+							if(callback != null)
+								callback.onYesNoAnswered(true);
 						}
 					})
 					.setNegativeButton(android.R.string.no, new OnClickListener() {
@@ -128,6 +144,8 @@ public class SimpleUserInfo implements UserInfo
 						public void onClick(DialogInterface dialog, int which) {
 							result[1] = false;
 							result[0] = true;
+							if(callback != null)
+								callback.onYesNoAnswered(false);
 						}
 					})
 					.create();

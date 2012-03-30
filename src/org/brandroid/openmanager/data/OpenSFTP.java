@@ -58,6 +58,13 @@ public class OpenSFTP extends OpenNetworkPath
 		if(uri.getPort() > 0)
 			mPort = uri.getPort();
 	}
+	public OpenSFTP(String host, String user, String path)
+	{
+		//this.jsch = jsch;
+		mHost = host;
+		mUser = user;
+		mRemotePath = path;
+	}
 	public OpenSFTP(String host, String user, String path, UserInfo info)
 	{
 		//this.jsch = jsch;

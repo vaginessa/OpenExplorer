@@ -15,8 +15,11 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+
+import com.jcraft.jsch.UserInfo;
 
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -28,7 +31,7 @@ import android.graphics.Paint.Align;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
-public class OpenFTP extends OpenPath
+public class OpenFTP extends OpenNetworkPath
 {
 	private FTPFile mFile;
 	private final FTPManager mManager;
@@ -36,6 +39,7 @@ public class OpenFTP extends OpenPath
 	private int mServersIndex = -1;
 	private long mMTime = 0;
 	private long mSize = 0;
+	private String mName;
 	protected OpenFTP mParent = null;
 	
 	public OpenFTP(String path, FTPFile[] children, FTPManager man)
@@ -76,11 +80,20 @@ public class OpenFTP extends OpenPath
 		mSize = size;
 		mMTime = modified;
 	}
+	public OpenFTP(OpenFTP parent, FTPFile file, FTPManager man, UserInfo info) {
+		this(parent, file, man);
+		setUserInfo(info);
+	}
 	public FTPFile getFile() { return mFile; }
 	public FTPManager getManager() { return mManager; }
 
+	public void setName(String name) {
+		mName = name;
+	}
 	@Override
 	public String getName() {
+		if(mName != null)
+			return mName;
 		if(mFile != null)
 			return mFile.getName();
 		else return null;
@@ -130,6 +143,7 @@ public class OpenFTP extends OpenPath
 		{
 			OpenFTP tmp = new OpenFTP(this, arr[i], new FTPManager(mManager, base + arr[i].getName()));
 			mChildren.add(tmp);
+			FileManager.setOpenCache(tmp.getPath(), tmp);
 		}
 		mChildren.toArray(ret);
 		FileManager.setOpenCache(getAbsolutePath(), this);
@@ -150,7 +164,8 @@ public class OpenFTP extends OpenPath
 			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
 			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
 			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
-			OpenFTP child = new OpenFTP(folder + "/" + name, null, getManager(), size, modified);
+			OpenFTP child = new OpenFTP(folder + (!(folder.endsWith("/") || name.startsWith("/")) ? "/" : "")
+					+ name, null, getManager(), size, modified);
 			mChildren.add(child);
 			c.moveToNext();
 		}
@@ -299,10 +314,8 @@ public class OpenFTP extends OpenPath
 		mChildren.clear();
 	}
 	
-	public int getServersIndex() { return mServersIndex; }
-	public void setServersIndex(int i) { mServersIndex = i; }
-	
+	@Override
 	public OpenFTP[] getChildren() {
-		return mChildren.toArray(new OpenFTP[0]);
+		return mChildren != null ? mChildren.toArray(new OpenFTP[0]) : null;
 	}
 }

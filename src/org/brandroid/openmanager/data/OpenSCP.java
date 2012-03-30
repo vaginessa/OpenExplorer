@@ -34,18 +34,11 @@ public class OpenSCP extends OpenNetworkPath
 		mRemotePath = path;
 		mUserInfo = info;
 	}
-	
-	public UserInfo getUserInfo() { return mUserInfo; }
-	public UserInfo setUserInfo(UserInfo info)
-	{
-		mUserInfo = info;
-		return info;
-	}
 
 	@Override
 	public String getName() {
 		if(mRemotePath.equals("") || mRemotePath.equals("/"))
-			return mHost;
+			return super.getName(mHost);
 		String ret = mRemotePath.substring(mRemotePath.lastIndexOf("/", mRemotePath.length() - 1) + 1);
 		if(ret.equals(""))
 			ret = mRemotePath;

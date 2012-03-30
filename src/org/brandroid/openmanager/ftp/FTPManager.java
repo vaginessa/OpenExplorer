@@ -18,6 +18,7 @@ import org.apache.commons.net.ftp.FTPFileFilter;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
 import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
@@ -29,6 +30,7 @@ public class FTPManager {
 	private int mPort = 21;
 	private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
 	private FTPClient client;
+	private SimpleUserInfo mUserInfoHelper = null;
 		
 	public FTPManager() { }
 	public FTPManager(String sFTPPath) throws MalformedURLException

@@ -21,6 +21,7 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
@@ -201,59 +202,44 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		for(int i = 0; i < servers.size(); i++)
 		{
 			OpenServer server = servers.get(i);
+			SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+			info.setPassword(server.getPassword());
+			OpenNetworkPath onp = null;
 			if(server.getType().equalsIgnoreCase("ftp"))
 			{
-				FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
-				FTPFile file = new FTPFile();
-				file.setName(server.getName());
-				OpenFTP ftp = new OpenFTP(null, file, man);
-				ftp.setServersIndex(i);
-				checkAndAdd(BookmarkType.BOOKMARK_SERVER, ftp);
+				onp = new OpenFTP(null, new FTPFile(),
+						new FTPManager(server.getHost(),
+								server.getUser(),
+								server.getPassword(),
+								server.getPath()));
+			} else if(server.getType().equalsIgnoreCase("scp")) {
+				onp = new OpenSCP(server.getHost(), server.getUser(), server.getPath(), info);
 			} else if(server.getType().equalsIgnoreCase("sftp"))
 			{
-				SimpleUserInfo info = new SimpleUserInfo(getExplorer());
-				info.setPassword(server.getPassword());
-				OpenSFTP sftp = new OpenSFTP(
-						server.getHost(), server.getUser(), server.getPath(),
-						info);
-				sftp.setName(server.getName());
-				sftp.setServersIndex(i);
-				if(server.getPort() > 0)
-					sftp.setPort(server.getPort());
-				checkAndAdd(BookmarkType.BOOKMARK_SERVER, sftp);
+				onp = new OpenSFTP(
+						server.getHost(), server.getUser(), server.getPath());
 			} else if(server.getType().equalsIgnoreCase("smb"))
 			{
 				try {
-					String domain = "";
-					String user = server.getUser();
-					if(user.indexOf("/") > -1)
-					{
-						domain = user.substring(0, user.indexOf("/"));
-						user = user.substring(user.indexOf("/") + 1);
-					}
-					else if(user.indexOf("@") > -1)
-					{
-						domain = user.substring(user.indexOf("@") + 1);
-						user = user.substring(0, user.indexOf("@"));
-					}
-					String auth = "";
-					if(!domain.equals(""))
-						auth += domain + ";";
-					if(!user.equals(""))
-						auth += user;
-					if(!auth.equals(""))
-						auth += "@";
-					NtlmPasswordAuthentication pauth = new NtlmPasswordAuthentication(auth);
-					pauth.setPassword(server.getPassword());
-					SmbFile sf = new SmbFile("smb://" + server.getHost() + "/" + server.getPath(), pauth);
-					OpenSMB smb = new OpenSMB(sf);
-					smb.setServersIndex(i);
-					smb.setName(server.getName());
-					checkAndAdd(BookmarkType.BOOKMARK_SERVER, smb);
+					onp = new OpenSMB(
+							new SmbFile("smb://" + server.getHost() + "/" + server.getPath(),
+								new NtlmPasswordAuthentication(
+									server.getUser().indexOf("/") > -1 ? server.getUser().substring(0, server.getUser().indexOf("/")) : "",
+									server.getUser(),
+									server.getPassword())
+							));
 				} catch (MalformedURLException e) {
 					Logger.LogError("Couldn't add Samba share to bookmarks.", e);
+					continue;
 				}
-			}
+			} else continue;
+			if(onp == null) continue;
+			onp.setServersIndex(i);
+			onp.setName(server.getName());
+			onp.setUserInfo(info);
+			if(server.getPort() > 0)
+				onp.setPort(server.getPort());
+			checkAndAdd(BookmarkType.BOOKMARK_SERVER, onp);
 		}
 		addBookmark(BookmarkType.BOOKMARK_SERVER, new OpenCommand(getExplorer().getString(R.string.s_pref_server_add), OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add));
 		if(mBookmarkAdapter != null)
@@ -810,7 +796,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			View ret = convertView;
 			if(ret == null)
 			{
-				ret = getExplorer().getLayoutInflater().inflate(android.R.layout.preference_category, null);
+				ret = getExplorer().getLayoutInflater().inflate(R.layout.preference_category_holo, null);
 						//R.layout.bookmark_group, null);
 			}
 			Button button1 = (Button)ret.findViewById(android.R.id.button1);

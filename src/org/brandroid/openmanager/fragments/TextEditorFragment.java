@@ -163,7 +163,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		super.onSaveInstanceState(outState);
 		Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
 		outState.putString("edit_path", mPath.getPath());
-		if(mData.length() < 500000)
+		if(mData != null && mData.length() < 500000)
 			outState.putString("edit_data", mData);
 		if(mPath instanceof OpenFTP && ((OpenFTP)mPath).getServersIndex() > -1)
 		{

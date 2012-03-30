@@ -58,6 +58,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
@@ -225,7 +226,7 @@ public class ThumbnailCreator extends Thread {
 		if(file.isDirectory()) {
 			if(file instanceof OpenSMB)
 				return (useLarge ? R.drawable.lg_folder_pipe : R.drawable.sm_folder_pipe);
-			if(file instanceof OpenNetworkPath)
+			if(file instanceof OpenSFTP)
 				return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
 			if(file.requiresThread())
 				return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);

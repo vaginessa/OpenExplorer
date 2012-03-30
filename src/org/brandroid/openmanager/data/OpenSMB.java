@@ -335,18 +335,31 @@ public class OpenSMB extends OpenNetworkPath
 
 	private String getServerPath(String path)
 	{
-		Uri uri = Uri.parse(path);
-		String user = uri.getUserInfo();
-		if(user.indexOf(":") > -1)
-			user = user.substring(0, user.indexOf(":"));
-		Logger.LogInfo("User: " + user);
-		OpenServer server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user, uri.getPath());
+		OpenServer server = null;
+		if(getServersIndex() >= 0)
+			server = OpenServers.DefaultServers.get(getServersIndex());
+		else {
+			Uri uri = Uri.parse(path);
+			String user = uri.getUserInfo();
+			if(user.indexOf(":") > -1)
+				user = user.substring(0, user.indexOf(":"));
+			Logger.LogInfo("User: " + user);
+			server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user, uri.getPath());
+			if(server == null)
+				server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
+			if(server == null)
+				server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+		}
 		if(server == null)
-			server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
-		if(server == null)
-			server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+			Logger.LogWarning("Couldn't find server for Server Path");
+		else if((server.getPassword() == null || server.getPassword().equals("")) && mUserInfo != null)
+		{
+			if((mUserInfo.getPassword() != null && !mUserInfo.getPassword().equals("")) ||
+					mUserInfo.promptPassword("Password for " + server.getHost()))
+				path = "smb://" + server.getUser() + ":" + mUserInfo.getPassword() + "@" + server.getHost() + Uri.parse(path).getPath();
+		}
 		if(server != null)
-			path = "smb://" + user + ":" + server.getPassword() + "@" + server.getHost() + uri.getPath();
+			path = "smb://" + server.getUser() + ":" + server.getPassword() + "@" + server.getHost() + Uri.parse(path).getPath();
 		else
 			Logger.LogWarning("Couldn't find server for Server Path");
 		return path;

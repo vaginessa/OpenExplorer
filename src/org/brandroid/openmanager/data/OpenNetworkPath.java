@@ -56,4 +56,8 @@ public abstract class OpenNetworkPath extends OpenPath
 	public String toString() {
 		return getName(super.toString());
 	}
+
+	public void setPort(int port) {
+		
+	}
 }
