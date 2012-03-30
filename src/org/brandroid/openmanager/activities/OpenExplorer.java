@@ -33,6 +33,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -111,6 +112,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.RejectedExecutionException;
@@ -191,7 +193,7 @@ public class OpenExplorer
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	public static boolean USE_ACTION_BAR = false;
-	public static boolean USE_ACTIONMODE = true;
+	public static final boolean USE_ACTIONMODE = false;
 	public static boolean IS_DEBUG_BUILD = false;
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
@@ -250,7 +252,7 @@ public class OpenExplorer
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		}
 		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", false);
-		USE_ACTIONMODE = getPreferences().getBoolean("global", "pref_actionmode", false);
+		//USE_ACTIONMODE = getPreferences().getBoolean("global", "pref_actionmode", false);
 		
 		Preferences.Pref_Intents_Internal = getPreferences().getBoolean("global", "pref_intent_internal", true);
 		Preferences.Pref_Text_Internal = getPreferences().getBoolean("global", "pref_text_internal", true);
@@ -295,6 +297,9 @@ public class OpenExplorer
 		
 		setContentView(R.layout.main_fragments);
 		
+		try {
+			upgradeViewSettings();
+		} catch(Exception e) { }
 		try {
 			showWarnings();
 		} catch(Exception e) { }
@@ -490,6 +495,12 @@ public class OpenExplorer
 
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "External"));
+	}
+
+	private void upgradeViewSettings() {
+		if(getSetting(null, "pref_up_views", false)) return;
+		setSetting(null, "pref_up_views", true);
+		mPreferences.upgradeViewSettings();
 	}
 
 	private void initBookmarkDropdown()
@@ -2386,6 +2397,10 @@ public class OpenExplorer
 		//boolean isNew = !mLastPath.equals(path);
 		int oldView = getSetting(mLastPath, "view", 0);
 		mLastPath = path;
+		
+		ImageView icon = (ImageView)findViewById(R.id.title_icon);
+		if(icon != null)
+			ThumbnailCreator.setThumbnail(icon, path, 32, 32);
 		
 		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);

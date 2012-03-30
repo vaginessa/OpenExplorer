@@ -19,6 +19,7 @@ import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSCP;
@@ -30,6 +31,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -353,35 +355,35 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		return file.getName();
 	}
 	
-	
+	private boolean checkPrefs(BookmarkType type, OpenPath path)
+	{
+		if(path.getPath().equals("/"))
+			return getExplorer().getSetting(null, "pref_show_root", true);
+		else if(OpenFile.getInternalMemoryDrive().equals(path))
+			return getExplorer().getSetting(null, "pref_show_internal", true);
+		else if(OpenFile.getExternalMemoryDrive(true).equals(path))
+			return getExplorer().getSetting(null, "pref_show_external", true);
+		else if(type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Videos"))
+			return getExplorer().getSetting(null, "pref_show_videos", true);
+		else if(type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Photos"))
+			return getExplorer().getSetting(null, "pref_show_photos", true);
+		else if(type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Music"))
+			return getExplorer().getSetting(null, "pref_show_music", true);
+		else if(type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Downloads"))
+			return getExplorer().getSetting(null, "pref_show_downloads", true);
+		else
+			return !getExplorer().getPreferences().getSetting("bookmarks", "hide_" + path.getPath(), false);
+	}
 	private boolean checkAndAdd(BookmarkType type, OpenPath path)
 	{
 		if(path == null) return false;
-		boolean bypassHide = getExplorer().getSetting(null, "pref_hide", false);
+		boolean bypassHide = false; //getExplorer().getPreferences().getSetting("global", "pref_hide", false);
 		try {
-			if(!bypassHide)
-			{
-				if(path.getPath().equals("/"))
-				{
-					if(getExplorer().getPreferences().getSetting("global", "pref_show_root", true))
-						return false;
-				} else if(OpenFile.getInternalMemoryDrive().equals(path))
-				{
-					if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
-						return false;
-				} else if(OpenFile.getExternalMemoryDrive(true).equals(path)) {
-					if(!getExplorer().getPreferences().getSetting("global", "pref_show_internal", true))
-						return false;
-				}
-				else if(getExplorer().getPreferences()
-							.getSetting("bookmarks", "hide_" + path.getPath(), false)
-						)
-					return false;
-			}
+			if(!bypassHide && !checkPrefs(type, path))
+				return false;
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
 		if(path instanceof OpenCursor ||
-				path instanceof OpenFTP ||
 				path instanceof OpenNetworkPath ||
 				path.exists())
 		{
@@ -546,26 +548,25 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	
 	public boolean showStandardDialog(final OpenPath mPath, final BookmarkHolder mHolder)
 	{
-		LayoutInflater inflater = (LayoutInflater)getExplorer().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		AlertDialog.Builder builder = new AlertDialog.Builder(getExplorer());
-		final View v = inflater.inflate(R.layout.input_dialog_layout, null);
-		final EditText mText = (EditText)v.findViewById(R.id.dialog_input);
-		//final EditText mTextTop = (EditText)v.findViewById(R.id.dialog_input_top);
-		final String title = getPathTitle(mPath);
-
-		((TextView)v.findViewById(R.id.dialog_message))
-						.setText(getExplorer().getString(R.string.s_alert_bookmark_rename));
-		mText.setText(title);
-		
+		int removeId = R.string.s_remove;
 		if(mHolder != null && mHolder.isEjectable())
-		{	
-			builder.setNeutralButton(getExplorer().getString(R.string.s_eject), new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					tryEject(mPath.getPath(), mHolder);
-				}
-			});
-		} else
-			builder.setNeutralButton(getExplorer().getString(R.string.s_remove), new DialogInterface.OnClickListener() {
+			removeId = R.string.s_eject;
+		else if(mPath.getPath().equals("/")
+			|| mPath.equals(OpenFile.getExternalMemoryDrive(false))
+			|| mPath.equals(OpenFile.getInternalMemoryDrive()))
+			removeId = R.string.s_hide;
+		else if(mPath instanceof OpenMediaStore || mPath instanceof OpenCursor)
+			removeId = R.string.s_hide;
+		final int idRemove = removeId;
+		
+		final View v = mHolder != null ? mHolder.getView() : new View(getExplorer());
+		
+		final InputDialog builder = new InputDialog(getExplorer())
+			.setTitle(R.string.s_title_bookmark_prefix)
+			.setIcon(mHolder != null ? mHolder.getIcon() : null)
+			.setDefaultText(getPathTitle(mPath))
+			.setMessage(R.string.s_alert_bookmark_rename)
+			.setNeutralButton(removeId, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					if(mPath.getPath().equals("/"))
 						getExplorer().getPreferences().setSetting("global", "pref_show_root", false);
@@ -573,34 +574,36 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 						getExplorer().getPreferences().setSetting("global", "pref_show_internal", false);
 					else if(mPath.equals(OpenFile.getExternalMemoryDrive(true)))
 						getExplorer().getPreferences().setSetting("global", "pref_show_external", false);
-					else
+					else if(mPath instanceof OpenMediaStore)
+						getExplorer().getPreferences().setSetting("global", "pref_show_" + mPath.getPath().toLowerCase(), false);
+					else if(idRemove == R.string.s_eject)
+						tryEject(mPath.getPath(), mHolder);
+					else {
 						setSetting("hide_" + mPath.getAbsolutePath(), true);
-					if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
-						mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
-					if(Build.VERSION.SDK_INT >= 12)
-						v.animate().alpha(0).setDuration(200).setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
-							public void onAnimationEnd(Animator animation) {
-								scanBookmarks();
-							}});
-					else
-						v.setVisibility(View.GONE);
+						if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
+							mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
+						if(Build.VERSION.SDK_INT >= 12)
+							v.animate().alpha(0).setDuration(200).setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
+								public void onAnimationEnd(Animator animation) {
+									scanBookmarks();
+								}});
+						else
+							v.setVisibility(View.GONE);
+					}
+					scanBookmarks();
 				}
-			});
-		
-		builder
-			.setView(v)
-			.setIcon(mHolder != null ? mHolder.getIcon() : null)
-			.setNegativeButton(getExplorer().getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
+			})
+			.setNegativeButton(R.string.s_cancel, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
-				}})
-			.setPositiveButton(getExplorer().getString(R.string.s_update), new DialogInterface.OnClickListener() {
+				}});
+		builder
+			.setPositiveButton(R.string.s_update, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					setPathTitle(mPath, mText.getText().toString());					
+					setPathTitle(mPath, builder.getInputText().toString());					
 					mBookmarkAdapter.notifyDataSetChanged();
 				}
 			})
-			.setTitle(getExplorer().getString(R.string.s_title_bookmark_prefix) + " " + title)
 			.create();
 		try {
 			builder.show();
@@ -615,14 +618,14 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		final View viewf = mHolder.getView();
 		if(RootManager.tryExecute("umount " + sPath))
 		{
-			getExplorer().showToast(getExplorer().getString(R.string.s_alert_remove_safe));
+			getExplorer().showToast(R.string.s_alert_remove_safe);
 			viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
 				.setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
 					public void onAnimationEnd(Animator animation) {
 						scanBookmarks();
 					}});
 		} else
-			getExplorer().showToast(getExplorer().getString(R.string.s_alert_remove_error));
+			getExplorer().showToast(R.string.s_alert_remove_error);
 	}
 
 	public String getBookMarkNameString() {
@@ -641,8 +644,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		try {
 			if(mFile instanceof OpenSMB)
 			{
-				total = size = ((OpenSMB)mFile).getFile().getDiskSpace();
-				free = ((OpenSMB)mFile).getFile().getDiskFreeSpace();
+				total = size = ((OpenSMB)mFile).getDiskSpace();
+				free = ((OpenSMB)mFile).getDiskFreeSpace();
 			}
 		} catch (Exception e) {
 			Logger.LogError("Couldn't get SMB size.", e);
@@ -852,13 +855,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		OpenPath path = h.getOpenPath();
 		if(path instanceof OpenCommand)
 			handleCommand(((OpenCommand)path).getCommand());
-		else if(path instanceof OpenFTP)
-			showServerDialog((OpenFTP)path, h, false);
-		else if(path instanceof OpenSMB)
-		{
-			Logger.LogVerbose("Trying to edit SMB");
-			showServerDialog((OpenSMB)path, h, false);
-		} else if(path instanceof OpenNetworkPath)
+		else if(path instanceof OpenNetworkPath)
 			showServerDialog((OpenNetworkPath)path, h, false);
 		else
 			showStandardDialog(path, h);

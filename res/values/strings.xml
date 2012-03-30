@@ -194,9 +194,17 @@
     <string name="s_status_rate">Rate:</string>
     <string name="s_about_hardware">Hardware</string>
     <string name="s_menu_refresh">Refresh Folder</string>
-    <string name="s_pref_reset_hide">Reset All Hidden Folders</string>
+    <string name="s_pref_reset">Reset Views</string>
+    <string name="s_toast_complete">Operation Complete!</string>
+    <string name="s_pref_reset_summary">Click here to remove all folder-specific view settings, returning to a default state.</string>
     <string name="s_prompt_path">Enter path:</string>
     <string name="s_prompt_search">Search for:</string>
     <string name="s_prompt_search_within">Search within:</string>
-    
+    <string name="s_pref_view_category">Bookmark View Preferences</string>
+    <string name="s_pref_show_videos">Show Videos</string>
+    <string name="s_pref_show_photos">Show Photos</string>
+    <string name="s_pref_show_music">Show Music</string>
+    <string name="s_pref_show_downloads">Show Downloads</string>
+    <string name="s_hide">Hide</string>
+    <string name="s_show">Show</string>
 </resources>

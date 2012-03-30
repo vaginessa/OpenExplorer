@@ -133,7 +133,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	private Bundle mBundle;
 	
-	private int mViewMode = OpenExplorer.VIEW_GRID;
+	private Integer mViewMode = null;
 	
 	private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 
@@ -154,7 +154,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		ContentFragment ret = new ContentFragment(path, mode);
 		Bundle args = new Bundle();
 		args.putString("last", path.getPath());
-		args.putInt("view", mode);
 		ret.setArguments(args);
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
 		return ret;
@@ -189,6 +188,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
+		setViewSetting(mPath, "view", mode);
 		Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
@@ -202,9 +202,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 	}
 	public int getViewMode() {
-		if(getExplorer() != null && mPath != null)
-			return getViewSetting(mPath, "view", getGlobalViewMode());
-		else return getGlobalViewMode();
+		if(mViewMode == null)
+		{
+			if(getExplorer() != null && mPath != null)
+				mViewMode = getViewSetting(mPath, "view", getGlobalViewMode());
+			else mViewMode = getGlobalViewMode();
+		}
+		return mViewMode;
 	}
 	public int getGlobalViewMode() {
 		if(getExplorer() != null)
@@ -321,7 +325,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mActionModeSelected = false;
 		try {
-			mShowHiddenFiles = !getViewSetting(path, "show",
+			mShowHiddenFiles = getViewSetting(path, "show",
 					getExplorer().getSetting(null, "show", false));
 			mShowThumbnails = getViewSetting(path, "thumbs", 
 					getExplorer().getSetting(null, "thumbs", true));
@@ -405,6 +409,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 	private void setViewSetting(OpenPath path, String key, Boolean value)
+	{
+		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+	}
+	private void setViewSetting(OpenPath path, String key, Integer value)
 	{
 		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
@@ -1264,10 +1272,10 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		//getManager().setSorting(type);
 		refreshData(null, false);
 	}
-	public void setShowHiddenFiles(boolean hide)
+	public void setShowHiddenFiles(boolean show)
 	{
-		mShowHiddenFiles = !hide;
-		setViewSetting(mPath, "show", hide);
+		mShowHiddenFiles = show;
+		setViewSetting(mPath, "show", show);
 	}
 	
 	public void setSorting(SortType type)
@@ -1481,7 +1489,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
-					boolean bCountHidden = !getViewSetting(file, "show", true);
+					boolean bCountHidden = getViewSetting(file, "show", false);
 					deets += file.getChildCount(bCountHidden) + " " + getString(R.string.s_files) + " | ";
 					//deets = file.list().length + " items";
 				} catch (IOException e) {

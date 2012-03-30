@@ -17,6 +17,9 @@
 <!-- Layout used for PreferenceCategory in a PreferenceActivity. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     style="?android:attr/listSeparatorTextViewStyle"
-    android:id="@+android:id/title"
+    android:text="@string/app_name"
+    android:layout_height="wrap_content"
+    android:id="@android:id/title"
     android:paddingLeft="@dimen/preference_item_padding_side"
-    android:paddingRight="@dimen/preference_item_padding_side" />
+    android:paddingRight="@dimen/preference_item_padding_side"
+    />

@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
 		android:title="@string/s_menu_prefs_global">
-	
-	<PreferenceCategory android:key="servers" android:title="@string/s_pref_servers">
-    	<PreferenceScreen android:key="server_add"
-    		android:title="@string/s_pref_server_add"
-    	/>
-    </PreferenceCategory>
         
 	<PreferenceCategory android:title="@string/s_pref_display">
 		<CheckBoxPreference
-			android:key="pref_hide"
+			android:key="pref_show"
 			android:title="@string/s_pref_hidden"
 			android:summary="@string/s_pref_hidden_summary"/>
 		<CheckBoxPreference
@@ -25,6 +19,11 @@
 			android:entries="@array/view"
 			android:entryValues="@array/view_value"
 			android:dialogTitle="@string/s_pref_view" />
+        <PreferenceScreen
+            android:key="pref_reset_views"
+            android:title="@string/s_pref_reset" 
+            android:summary="@string/s_pref_reset_summary"
+            />
 		<PreferenceScreen
 		    android:key="pref_start"
 		    android:title="@string/s_pref_start"
@@ -56,12 +55,52 @@
 			
 	</PreferenceCategory>
 	
+	<PreferenceCategory android:title="@string/s_pref_view_category">
+        <CheckBoxPreference
+            android:key="pref_show_root"
+            android:title="@string/s_pref_show_root"
+            android:defaultValue="true"
+            />
+        <CheckBoxPreference
+            android:key="pref_show_internal"
+            android:title="@string/s_pref_show_internal"
+            android:defaultValue="true"
+            />
+        <CheckBoxPreference
+            android:key="pref_show_external"
+            android:title="@string/s_pref_show_external"
+            android:defaultValue="true"
+            />
+        <CheckBoxPreference
+            android:key="pref_show_videos"
+            android:title="@string/s_pref_show_videos"
+            android:defaultValue="true" 
+            />
+        <CheckBoxPreference
+            android:key="pref_show_photos"
+            android:title="@string/s_pref_show_photos"
+            android:defaultValue="true" 
+            />
+        <CheckBoxPreference
+            android:key="pref_show_music"
+            android:title="@string/s_pref_show_music"
+            android:defaultValue="true" 
+            />
+        <CheckBoxPreference
+            android:key="pref_show_downloads"
+            android:title="@string/s_pref_show_downloads"
+            android:defaultValue="true" 
+            />
+	</PreferenceCategory>
+	
 		<PreferenceCategory
-		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus">
+		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus"
+		    android:enabled="@bool/honeycomb">
 	        <CheckBoxPreference
 	            android:key="pref_actionmode"
 	            android:title="@string/s_pref_actionmode"
-	            android:defaultValue="true"
+	            android:defaultValue="false"
+	            android:enabled="false"
 	            android:summaryOn="@string/s_pref_actionmode_enabled"
 	            android:summaryOff="@string/s_pref_actionmode_disabled"
 	            />
@@ -72,25 +111,6 @@
 	            />
 		</PreferenceCategory>
 	    <PreferenceCategory android:title="@string/s_pref_advanced">
-	        <CheckBoxPreference
-	            android:key="pref_show_root"
-	            android:title="@string/s_pref_show_root"
-	            android:defaultValue="true"
-	            />
-	        <CheckBoxPreference
-	            android:key="pref_show_internal"
-	            android:title="@string/s_pref_show_internal"
-	            android:defaultValue="true"
-	            />
-	        <CheckBoxPreference
-	            android:key="pref_show_external"
-	            android:title="@string/s_pref_show_external"
-	            android:defaultValue="true"
-	            />
-	        <PreferenceScreen
-	            android:key="pref_reset_hide"
-	            android:title="@string/s_pref_reset_hide" 
-	            />
 	        <CheckBoxPreference
 	            android:key="pref_root"
 	            android:title="@string/s_menu_root"
@@ -115,5 +135,12 @@
 	            android:defaultValue="false"
 	            />
 	    </PreferenceCategory>
+	    
+	
+	<PreferenceCategory android:key="servers" android:title="@string/s_pref_servers">
+    	<PreferenceScreen android:key="server_add"
+    		android:title="@string/s_pref_server_add"
+    	/>
+    </PreferenceCategory>
 		
 </PreferenceScreen>

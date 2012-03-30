@@ -106,7 +106,12 @@ public class Preferences {
 	public int getSetting(String file, String key, Integer defValue)
 	{
 		try {
-			int ret = Integer.parseInt(getSetting(file, key, defValue.toString()));
+			int ret = defValue;
+			try {
+				ret = getPreferences(file).getInt(key, defValue);
+			} catch(ClassCastException e) {
+				ret = Integer.parseInt(getSetting(file, key, defValue.toString()));
+			}
 			//Logger.LogDebug("--GetSetting(" + file + "," + key + "," + defValue + ")=" + ret); 
 			return ret;
 		} catch(Exception e) { return defValue; }
@@ -198,7 +203,12 @@ public class Preferences {
 	}
 	public void setSetting(String file, String key, Integer value)
 	{
-		setSetting(file, key, value.toString());
+		try {
+			getPreferences(file)
+				.edit()
+				.putInt(key, value)
+				.commit();
+		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
 	}
 	public void setSettings(String file, Object... vals)
 	{
@@ -242,4 +252,40 @@ public class Preferences {
 	public SharedPreferences getPreferences() {
         return getPreferences("global");
     }
+
+
+	public void upgradeViewSettings() {
+		Logger.LogVerbose("Upgrading view preferences");
+		Map<String,?> globalPrefs = getPreferences("global").getAll();
+		SharedPreferences.Editor globalOut = getPreferences("global").edit();
+		SharedPreferences.Editor newPrefs = getPreferences("views").edit();
+		int changes = 0;
+		for(String key : globalPrefs.keySet())
+		{
+			Object val = globalPrefs.get(key);
+			if(key.startsWith("hide_") && val instanceof Boolean)
+				newPrefs.putBoolean(key.replace("hide_", "show_"), !((Boolean)val));
+			else if(key.startsWith("sort_") && val instanceof String)
+				newPrefs.putString(key, (String)val);
+			else if(key.startsWith("thumbs_") && val instanceof Boolean)
+				newPrefs.putBoolean(key, (Boolean)val);
+			else if(key.startsWith("view_") && val instanceof Integer)
+				newPrefs.putInt(key, (Integer)val);
+			else if(key.startsWith("view_") && val instanceof String)
+			{
+				String s = (String)val;
+				try {
+					newPrefs.putInt(key, Integer.parseInt(s));
+				} catch(NumberFormatException e) {
+					newPrefs.putString(key, s);
+				}
+			}
+			else continue;
+			changes++;
+			globalOut.remove(key);
+		}
+		globalOut.commit();
+		newPrefs.commit();
+		Logger.LogVerbose("Upgraded " + changes + " preferences");
+	}
 }

@@ -67,6 +67,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.text.method.PasswordTransformationMethod;
@@ -76,6 +77,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class SettingsActivity extends PreferenceActivity
 	implements OnPreferenceChangeListener
@@ -131,17 +133,15 @@ public class SettingsActivity extends PreferenceActivity
 		
 		if(mode == MODE_PREFERENCES)
 		{
-			Preference pHoney = findPreference("pref_honeyplus");
-			if(OpenExplorer.BEFORE_HONEYCOMB && pHoney != null)
-				pHoney.setEnabled(false);
-			
-			PreferenceScreen pReset = (PreferenceScreen) findPreference("pref_reset_hide");
+			PreferenceScreen pReset = (PreferenceScreen)pm.findPreference("pref_reset_views");
 			if(pReset != null)
 				pReset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 					@Override
 					public boolean onPreferenceClick(Preference preference)
 					{
 						
+						Toast.makeText(getApplicationContext(),
+								R.string.s_toast_complete, Toast.LENGTH_SHORT);
 						return true;
 					}
 				});
