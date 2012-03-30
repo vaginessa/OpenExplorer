@@ -55,6 +55,7 @@ import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -71,6 +72,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.text.format.Time;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -201,13 +203,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	public int getViewMode() {
 		if(getExplorer() != null && mPath != null)
-			return getExplorer().getSetting(mPath, "view", getGlobalViewMode());
+			return getViewSetting(mPath, "view", getGlobalViewMode());
 		else return getGlobalViewMode();
 	}
 	public int getGlobalViewMode() {
 		if(getExplorer() != null)
 		{
-			String pref = getExplorer().getSetting(mPath, "pref_view", "list");
+			String pref = getExplorer().getSetting(null, "pref_view", "list");
 			if(pref == "list")
 				return OpenExplorer.VIEW_LIST;
 			if(pref == "grid")
@@ -319,9 +321,9 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		
 		mActionModeSelected = false;
 		try {
-			mShowHiddenFiles = !getExplorer().getSetting(path, "hide",
-					getExplorer().getSetting(null, "hide", false));
-			mShowThumbnails = getExplorer().getSetting(path, "thumbs", 
+			mShowHiddenFiles = !getViewSetting(path, "show",
+					getExplorer().getSetting(null, "show", false));
+			mShowThumbnails = getViewSetting(path, "thumbs", 
 					getExplorer().getSetting(null, "thumbs", true));
 		} catch(NullPointerException npe) {
 			Logger.LogWarning("Null while getting prefs", npe);
@@ -330,8 +332,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		}
 		if(getExplorer() != null)
 			mSorting = FileManager.parseSortType(
-				getExplorer().getSetting(path, "sort",
-					getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting != null ? mSorting.toString() : SortType.ALPHA.toString())));
+				getViewSetting(path, "sort",
+					getExplorer().getSetting(null, "pref_sorting", mSorting != null ? mSorting.toString() : SortType.ALPHA.toString())));
 		
 		Logger.LogVerbose("View options for " + path.getPath() + " : " + (mShowHiddenFiles ? "show" : "hide") + " + " + (mShowThumbnails ? "thumbs" : "icons") + " + " + mSorting.toString());
 
@@ -384,6 +386,27 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			//if(mGrid != null && savedInstanceState.containsKey("first"))
 			
+	}
+	
+	private String getViewSetting(OpenPath path, String key, String def)
+	{
+		return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+	}
+	private Boolean getViewSetting(OpenPath path, String key, Boolean def)
+	{
+		return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+	}
+	private Integer getViewSetting(OpenPath path, String key, Integer def)
+	{
+		return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+	}
+	private void setViewSetting(OpenPath path, String key, String value)
+	{
+		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+	}
+	private void setViewSetting(OpenPath path, String key, Boolean value)
+	{
+		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 
 	//@Override
@@ -1244,20 +1267,19 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	public void setShowHiddenFiles(boolean hide)
 	{
 		mShowHiddenFiles = !hide;
-		if(getExplorer() != null)
-			getExplorer().setSetting(mPath, "hide", hide);
+		setViewSetting(mPath, "show", hide);
 	}
 	
 	public void setSorting(SortType type)
 	{
 		mSorting = type;
-		getExplorer().setSetting(mPath, "sort", type.toString());
+		setViewSetting(mPath, "sort", type.toString());
 	}
 	
 	public void setShowThumbnails(boolean thumbs)
 	{
 		mShowThumbnails = thumbs;
-		getExplorer().setSetting(mPath, "thumbs", thumbs);
+		setViewSetting(mPath, "thumbs", thumbs);
 	}
 	
 	public void setSettings(SortType sort, boolean thumbs, boolean hidden)
@@ -1459,7 +1481,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			
 			if(file.isDirectory() && !file.requiresThread()) {
 				try {
-					boolean bCountHidden = !getExplorer().getSetting(file, "hide", true);
+					boolean bCountHidden = !getViewSetting(file, "show", true);
 					deets += file.getChildCount(bCountHidden) + " " + getString(R.string.s_files) + " | ";
 					//deets = file.list().length + " items";
 				} catch (IOException e) {
@@ -1645,10 +1667,16 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mFileTasks.remove(params[0]);
 			if(OpenPath.AllowDBCache)
 				new Thread(new Runnable(){public void run() {
+					long start = new Date().getTime(); 
+					int dels = 0, adds = 0;
 					if(result != null && result.length > 0)
-						mPath.deleteFolderFromDb();
+						dels = mPath.deleteFolderFromDb();
 					for(OpenPath path : result)
-						path.addToDb();
+						if(path.addToDb())
+							adds++;
+					Logger.LogVerbose("Finished updating OpenPath DB Cache" +
+							"(-" + dels + ",+" + adds + ") in " +
+							((new Date().getTime() - start)/1000) + " seconds");
 				}}).start();
 			setProgressVisibility(false);
 			//onCancelled(result);
