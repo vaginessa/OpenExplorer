@@ -45,6 +45,10 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
+import org.apache.commons.net.ftp.FTPClient;
 import org.brandroid.openmanager.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -100,6 +104,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -619,7 +625,11 @@ public class OpenExplorer
 	{
 		if(mViewPager != null)
 		{
-			mViewPager.setAdapter(adapter);
+			try {
+				mViewPager.setAdapter(adapter);
+			} catch(IllegalStateException e) {
+				Logger.LogError("Error trying to set ViewPageAdapter", e);
+			}
 		}
 	}
 	
@@ -739,6 +749,45 @@ public class OpenExplorer
 	
 	private void setupLoggingDb()
 	{
+		FTP.setCommunicationListener(new OnFTPCommunicationListener() {
+			
+			@Override
+			public void onDisconnect(FTP file) {
+				Logger.LogVerbose("FTP Disconnect " + getFTPString(file));
+			}
+			
+			@Override
+			public void onConnectFailure(FTP file) {
+				Logger.LogVerbose("FTP Connect Failure " + getFTPString(file));
+			}
+			
+			@Override
+			public void onConnect(FTP file) {
+				Logger.LogVerbose("FTP Connect " + getFTPString(file));
+			}
+			
+			@Override
+			public void onBeforeConnect(FTP file) {
+				Logger.LogVerbose("FTP Before Connect " + getFTPString(file));
+			}
+
+			@Override
+			public void onSendCommand(FTP file, String message) {
+				Logger.LogVerbose("FTP Command: " + message.replace("\n", "") + getFTPString(file));
+			}
+			
+			private String getFTPString(FTP file)
+			{
+				if(file != null && file.getSocket() != null && file.getRemoteAddress() != null)
+					return " @ " + file.getRemoteAddress().getHostName();
+				return "";
+			}
+
+			@Override
+			public void onReply(String line) {
+				Logger.LogVerbose("FTP Reply: " + line);
+			}
+		});
 		JSch.setLogger(new com.jcraft.jsch.Logger() {
 			@Override
 			public void log(int level, String message) {
@@ -1198,6 +1247,8 @@ public class OpenExplorer
 			{
 				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount());
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
+				if(!(ret instanceof ContentFragment))
+					ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
 			} else {
 				Logger.LogWarning("Couldn't find current Page. Using last.");
 				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
@@ -1243,6 +1294,27 @@ public class OpenExplorer
 		}
 		
    		return (ContentFragment)ret;
+	}
+	public Fragment getSelectedFragment()
+	{
+		Fragment ret = null;
+		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
+		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
+		if(mViewPagerAdapter != null)
+		{
+			if(mViewPager.getCurrentItem() > -1)
+			{
+				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount());
+				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
+			} else {
+				Logger.LogWarning("Couldn't find current Page. Using last.");
+				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
+			}
+		}
+		if(ret == null)
+			ret = fragmentManager.findFragmentById(R.id.content_frag);
+		
+   		return ret;
 	}
 	
 	public void updateTitle(CharSequence cs)

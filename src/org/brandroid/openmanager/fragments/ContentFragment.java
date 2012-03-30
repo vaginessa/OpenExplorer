@@ -59,6 +59,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
@@ -1063,9 +1064,12 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		for(OpenPath f : items)
 		{
 			if(f == null) continue;
-			if(!showHidden && f.isHidden()) continue;
-			if(!f.exists()) continue;
-			if(f.isFile() && !(f.length() >= 0)) continue;
+			if(!f.requiresThread())
+			{
+				if(!showHidden && f.isHidden()) continue;
+				if(!f.exists()) continue;
+				if(f.isFile() && !(f.length() >= 0)) continue;
+			}
 			if(foldersFirst && f.isDirectory())
 				mData2.add(folder_index++, f);
 			else
@@ -1539,16 +1543,42 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				{
 					OpenPath cachePath = null; 
 					OpenPath[] list = null;
+					boolean success = false;
 					try {
-						cachePath = FileManager.getOpenCache(cmd.Path.getAbsolutePath(), true);
+						cachePath = FileManager.getOpenCache(cmd.Path.getPath(), true);
 						if(cachePath != null)
-							list = cachePath.list();
+						{
+							if(cachePath instanceof OpenNetworkPath)
+								list = ((OpenNetworkPath)cachePath).getChildren();
+							if(list == null)
+								list = cachePath.listFiles();
+						}
+						success = list != null;
+					} catch(SmbException ae) {
+						cachePath = cmd.Path;
+						Uri uri = Uri.parse(cachePath.getPath());
+						SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+						int si = ((OpenNetworkPath)cachePath).getServersIndex();
+						OpenServer server = null; 
+						if(si > -1)
+							server = OpenServers.DefaultServers.get(si);
+						if(server != null && server.getPassword() != null && server.getPassword() != "")
+							info.setPassword(server.getPassword());
+						((OpenNetworkPath)cachePath).setUserInfo(info);
+						try {
+							list = cachePath.listFiles();
+							success = list != null;
+						} catch(IOException e3) {
+							getExplorer().showToast(R.string.s_error_ftp);
+						}
 					} catch (IOException e2) {
 						Logger.LogError("Couldn't get Cache", e2);
+						cachePath = cmd.Path;
 					}
 					if(cachePath == null)
 						cachePath = cmd.Path;
 					if(cachePath instanceof OpenNetworkPath
+							&& !success
 							&& ((OpenNetworkPath)cachePath).getUserInfo() == null
 							)
 					{
@@ -1562,7 +1592,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							info.setPassword(server.getPassword());
 						((OpenNetworkPath)cachePath).setUserInfo(info);
 					}
-					if(list == null)
+					if(!success)
 						try {
 							list = cachePath.list();
 							FileManager.setOpenCache(cachePath.getPath(), cachePath);
@@ -1635,7 +1665,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	{
 		if(mProgressBarLoading == null && mGrid != null && mGrid.getParent() != null)
 			mProgressBarLoading = ((View)mGrid.getParent()).findViewById(R.id.content_progress);
-		if(mProgressBarLoading != null)
+		if(mProgressBarLoading != null && mData.length == 0)
 			mProgressBarLoading.setVisibility(visible ? View.VISIBLE : View.GONE);
 		if(getExplorer() != null)
 			getExplorer().setProgressVisibility(visible);

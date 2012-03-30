@@ -55,14 +55,15 @@ public class OpenFTP extends OpenPath
 		{
 			for(FTPFile f : children)
 			{
-				OpenFTP tmp = new OpenFTP(f, new FTPManager(man, base + f.getName()));
+				OpenFTP tmp = new OpenFTP(null, f, new FTPManager(man, base + f.getName()));
 				tmp.mParent = this;
 				mChildren.add(tmp);
 			}
 			FileManager.setOpenCache(getAbsolutePath(), this);
 		}
 	}
-	public OpenFTP(FTPFile file, FTPManager man) {
+	public OpenFTP(OpenFTP parent, FTPFile file, FTPManager man) {
+		mParent = parent;
 		mFile = file;
 		mManager = man;
 		mChildren = new ArrayList<OpenFTP>();
@@ -106,14 +107,14 @@ public class OpenFTP extends OpenPath
 	}
 
 	@Override
-	public OpenPath[] listFiles() throws IOException {
+	public OpenFTP[] listFiles() throws IOException {
 		if(mChildren.size() > 0)
 		{
-			OpenPath[] ret = new OpenPath[mChildren.size()];
+			OpenFTP[] ret = new OpenFTP[mChildren.size()];
 			mChildren.toArray(ret);
 			return ret;
 		}
-		FTPFile[] arr = mManager.listFiles(getThreadUpdateCallback());
+		FTPFile[] arr = mManager.listFiles();
 		if(arr == null)
 			return null;
 			
@@ -127,8 +128,7 @@ public class OpenFTP extends OpenPath
 			base += "/";
 		for(int i = 0; i < arr.length; i++)
 		{
-			OpenFTP tmp = new OpenFTP(arr[i], new FTPManager(mManager, base + arr[i].getName()));
-			tmp.mParent = this;
+			OpenFTP tmp = new OpenFTP(this, arr[i], new FTPManager(mManager, base + arr[i].getName()));
 			mChildren.add(tmp);
 		}
 		mChildren.toArray(ret);
@@ -301,4 +301,8 @@ public class OpenFTP extends OpenPath
 	
 	public int getServersIndex() { return mServersIndex; }
 	public void setServersIndex(int i) { mServersIndex = i; }
+	
+	public OpenFTP[] getChildren() {
+		return mChildren.toArray(new OpenFTP[0]);
+	}
 }

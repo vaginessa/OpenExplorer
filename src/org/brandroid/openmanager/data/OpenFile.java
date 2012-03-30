@@ -16,6 +16,7 @@ import java.util.Hashtable;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.FileUtils;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -36,6 +37,7 @@ public class OpenFile extends OpenPath
 	private OpenFile[] mChildren = null;
 	private boolean bGrandPeeked = false;
 	//private String mRoot = null;
+	private OutputStream output = null;
 	
 	public OpenFile setRoot() {
 		/// TODO fix this
@@ -44,6 +46,12 @@ public class OpenFile extends OpenPath
 	
 	public OpenFile(File f) { mFile = f; }
 	public OpenFile(String path) { mFile = new File(path); }
+	public OpenFile(String folder, String name) {
+		mFile = new File(folder, name);
+	}
+	public OpenFile(OpenFile folder, String name) {
+		mFile = new File(folder.getFile(), name);
+	}
 	
 	public File getFile() { return mFile; }
 
@@ -392,7 +400,9 @@ public class OpenFile extends OpenPath
 	}
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return new FileOutputStream(mFile);
+		if(output == null)
+			output = new FileOutputStream(mFile);
+		return output;
 	}
 	@Override
 	public Boolean isHidden() {
@@ -402,5 +412,10 @@ public class OpenFile extends OpenPath
 	@Override
 	public void setPath(String path) {
 		mFile = new File(path); 
+	}
+
+	public boolean create() throws IOException
+	{
+		return mFile.createNewFile();
 	}	
 }

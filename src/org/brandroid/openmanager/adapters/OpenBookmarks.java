@@ -130,12 +130,15 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	
 	public void scanBookmarks()
 	{
+		scanBookmarksInner();
+		/*
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				scanBookmarksInner();
 			}
-		}).run();
+		}).start();
+		*/
 	}
 	/**
 	 * 
@@ -203,7 +206,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
 				FTPFile file = new FTPFile();
 				file.setName(server.getName());
-				OpenFTP ftp = new OpenFTP(file, man);
+				OpenFTP ftp = new OpenFTP(null, file, man);
 				ftp.setServersIndex(i);
 				checkAndAdd(BookmarkType.BOOKMARK_SERVER, ftp);
 			} else if(server.getType().equalsIgnoreCase("sftp"))
@@ -238,11 +241,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 						auth += domain + ";";
 					if(!user.equals(""))
 						auth += user;
-					if(server.getPassword() != null && !server.getPassword().equals(""))
-						auth += ":" + server.getPassword();
 					if(!auth.equals(""))
 						auth += "@";
-					SmbFile sf = new SmbFile("smb://" + auth + server.getHost() + "/" + server.getPath());
+					NtlmPasswordAuthentication pauth = new NtlmPasswordAuthentication(auth);
+					pauth.setPassword(server.getPassword());
+					SmbFile sf = new SmbFile("smb://" + server.getHost() + "/" + server.getPath(), pauth);
 					OpenSMB smb = new OpenSMB(sf);
 					smb.setServersIndex(i);
 					smb.setName(server.getName());
@@ -446,7 +449,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		switch(command)
 		{
 			case OpenCommand.COMMAND_ADD_SERVER:
-				showServerDialog(new OpenFTP(null, null), null, true);
+				showServerDialog(new OpenFTP((OpenFTP)null, null, null), null, true);
 				break;
 		}
 	}
@@ -650,12 +653,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		long free = 0l;
 		long total = 0l;
 		try {
-			if(mFile instanceof OpenSMB && mFile.length() > 0 &&
-					(((OpenSMB)mFile).getFile().getType() == SmbFile.TYPE_SERVER || 
-					((OpenSMB)mFile).getFile().getType() == SmbFile.TYPE_SHARE))
+			if(mFile instanceof OpenSMB)
 			{
-					total = size = mFile.length();
-					free = ((OpenSMB)mFile).getFile().getDiskFreeSpace();
+				total = size = ((OpenSMB)mFile).getFile().getDiskSpace();
+				free = ((OpenSMB)mFile).getFile().getDiskFreeSpace();
 			}
 		} catch (Exception e) {
 			Logger.LogError("Couldn't get SMB size.", e);
@@ -693,7 +694,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			}
 			float total_percent = ((float)total / (float)Math.max(total,mLargestDataSize));
 			int percent_width = (int) (total_percent * total_width);
-			Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " + total + " Percent: " + total_percent + " Width: " + percent_width + " / " + total_width);
+			//Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " + total + " Percent: " + total_percent + " Width: " + percent_width + " / " + total_width);
 			if(size_bar instanceof ProgressBar)
 			{
 				ProgressBar bar = (ProgressBar)size_bar;
@@ -763,7 +764,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			}
 				
 			
-			if(group == BOOKMARK_DRIVE || group == BOOKMARK_SERVER)
+			if(group == BOOKMARK_DRIVE || path instanceof OpenSMB)
 				updateSizeIndicator(path, ret);
 			else 
 				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);

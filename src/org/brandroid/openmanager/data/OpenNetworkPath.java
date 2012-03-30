@@ -50,7 +50,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	}
 	public void setServersIndex(int index) { mServersIndex = index; }
 	
-	public OpenNetworkPath[] getChildren() { return null; }
+	public abstract OpenNetworkPath[] getChildren();
 	
 	@Override
 	public String toString() {

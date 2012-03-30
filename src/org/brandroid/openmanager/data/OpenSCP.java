@@ -25,6 +25,7 @@ public class OpenSCP extends OpenNetworkPath
 	private OutputStream out = null;
 	private final String mHost, mUser, mRemotePath;
 	private UserInfo mUserInfo = null;
+	private OpenSCP[] mChildren = null;
 	
 	public OpenSCP(String host, String user, String path, UserInfo info)
 	{
@@ -268,5 +269,10 @@ public class OpenSCP extends OpenNetworkPath
 			if(b==2){System.out.print(sb.toString());}
 		}
 		return b;
+	}
+
+	@Override
+	public OpenNetworkPath[] getChildren() {
+		return mChildren;
 	}
 }

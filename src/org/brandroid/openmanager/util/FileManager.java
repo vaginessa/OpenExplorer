@@ -37,6 +37,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
@@ -418,7 +420,8 @@ public class FileManager {
 	public static OpenPath getOpenCache(String path) throws IOException { return getOpenCache(path, false); }
 	public static OpenPath removeOpenCache(String path) { return mOpenCache.remove(path); }
 	
-	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles) throws IOException
+	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles)
+			throws IOException, SmbAuthException, SmbException
 	{
 		//Logger.LogDebug("Checking cache for " + path);
 		if(mOpenCache == null)
@@ -428,10 +431,15 @@ public class FileManager {
 		{
 			if(path.startsWith("ftp:/"))
 			{
+				Logger.LogDebug("Checking cache for " + path);
 				FTPManager man = new FTPManager(path);
 				FTPFile file = new FTPFile();
 				file.setName(path.substring(path.lastIndexOf("/")+1));
-				ret = new OpenFTP(file, man);
+				Uri uri = Uri.parse(path);
+				OpenServer server = OpenServers.DefaultServers.findByHost("ftp", uri.getHost());
+				man.setUser(server.getUser());
+				man.setPassword(server.getPassword());
+				ret = new OpenFTP(null, file, man);
 			} else if(path.startsWith("scp:/"))
 			{
 				Uri uri = Uri.parse(path);
@@ -445,14 +453,19 @@ public class FileManager {
 				try {
 					Uri uri = Uri.parse(path);
 					String user = uri.getUserInfo();
-					if(user.indexOf(":") > -1)
+					if(user != null && user.indexOf(":") > -1)
 						user = user.substring(0, user.indexOf(":"));
-					OpenServer server = OpenServers.DefaultServers.find(uri.getHost(), user, uri.getPath());
-					if(server != null)
+					else user = "";
+					OpenServer server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user, uri.getPath());
+					if(server == null)
+						server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
+					if(server == null)
+						server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+					if(server != null && server.getPassword() != null && server.getPassword() != "")
 						user += ":" + server.getPassword();
 					if(!user.equals(""))
 						user += "@";
-					ret = new OpenSMB(new SmbFile(uri.getScheme() + "://" + user + uri.getHost() + uri.getPath()));
+					ret = new OpenSMB(uri.getScheme() + "://" + user + uri.getHost() + uri.getPath());
 				} catch(Exception e) {
 					Logger.LogError("Couldn't get samba from cache.", e);
 				}
@@ -460,8 +473,8 @@ public class FileManager {
 			if(ret == null) return ret;
 			if(bGetNetworkedFiles)
 			{
-				ret.listFiles();
-				setOpenCache(path, ret);
+				if(ret.listFiles() != null)
+					setOpenCache(path, ret);
 			} else {
 				ret.listFromDb();
 			}

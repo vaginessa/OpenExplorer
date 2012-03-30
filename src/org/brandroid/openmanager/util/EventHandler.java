@@ -62,6 +62,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.OperationsActivity;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 
@@ -640,7 +641,11 @@ public class EventHandler {
 				
 				return true;
 				
-			} else if(old.isFile() && newDir.isDirectory() && newDir.canWrite())
+			} else if(old instanceof OpenSMB && newDir instanceof OpenFile)
+			{
+				((OpenSMB)old).copyTo((OpenFile)newDir, this);
+			}
+			else if(old.isFile() && newDir.isDirectory() && newDir.canWrite())
 			{
 				OpenPath newFile = newDir.getChild(old.getName());
 				if(newFile.getPath().equals(old.getPath()))
@@ -735,6 +740,11 @@ public class EventHandler {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+		
+		public void publish(int current, int size, int total)
+		{
+			publishProgress(current, size, total);
 		}
 		
 		@Override

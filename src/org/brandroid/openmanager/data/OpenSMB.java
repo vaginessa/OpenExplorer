@@ -1,22 +1,30 @@
 package org.brandroid.openmanager.data;
 
+import jcifs.smb.AllocInfo;
+import jcifs.smb.Handler;
+import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
+import jcifs.smb.SmbShareInfo;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 
 public class OpenSMB extends OpenNetworkPath
 {
@@ -27,10 +35,20 @@ public class OpenSMB extends OpenNetworkPath
 	private Long mModified = null;
 	private Boolean mHidden = false;
 	private Long mDiskSpace = null;
+	private Long mDiskFreeSpace = null;
 	
-	public OpenSMB(String url) throws MalformedURLException
+	public OpenSMB(String urlString) throws MalformedURLException
 	{
-		mFile = new SmbFile(url);
+		URL url = new URL(null, urlString, Handler.SMB_HANDLER);
+		NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
+		if(auth.getPassword() == null || auth.getPassword() == "")
+		{
+			OpenServers servers = OpenServers.DefaultServers;
+			OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
+			if(s != null)
+				auth.setPassword(s.getPassword());
+		}
+		mFile = new SmbFile(url, auth);
 		mParent = null;
 		mHidden = null;
 		mSize = mModified = null;
@@ -44,6 +62,7 @@ public class OpenSMB extends OpenNetworkPath
 	}
 	public OpenSMB(OpenSMB parent, SmbFile kid)
 	{
+		mParent = parent;
 		mFile = kid;
 		try {
 			if(kid.isConnected())
@@ -55,7 +74,6 @@ public class OpenSMB extends OpenNetworkPath
 		} catch (SmbException e) {
 			Logger.LogError("Error creating SMB", e);
 		}
-		mParent = parent;
 	}
 	public OpenSMB(String url, long size, long modified) throws MalformedURLException
 	{
@@ -167,6 +185,14 @@ public class OpenSMB extends OpenNetworkPath
 	public OpenSMB[] listFiles() throws IOException {
 		if(mChildren != null)
 			return mChildren;
+		if(Thread.currentThread().equals(OpenExplorer.UiThread))
+			return null;
+		AllocInfo disk = mFile.getDiskInfo();
+		if(disk != null)
+		{
+			mDiskSpace = disk.getCapacity();
+			mDiskFreeSpace = disk.getFree();
+		}
 		Logger.LogInfo("Listing children under " + getPath());
 		SmbFile[] kids = null;
 		try {
@@ -204,7 +230,10 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public Boolean isHidden() {
 		try {
-			return mFile.isHidden();
+			if(mHidden != null || Thread.currentThread().equals(OpenExplorer.UiThread))
+				return mHidden != null ? mHidden : false;
+			else
+				return mFile.isHidden();
 		} catch (Exception e) {
 			return true;
 		}
@@ -217,14 +246,19 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public Long lastModified() {
-		if(mModified != null) return mModified;
-		return mFile.getLastModified();
+		if(mModified != null || Thread.currentThread().equals(OpenExplorer.UiThread))
+			return mModified != null ? mModified : 0;
+		else
+			return mFile.getLastModified();
 	}
 
 	@Override
 	public Boolean canRead() {
 		try {
-			return mFile.canRead();
+			if(Thread.currentThread().equals(OpenExplorer.UiThread))
+				return true;
+			else
+				return mFile.canRead();
 		} catch (SmbException e) {
 			return false;
 		}
@@ -233,7 +267,11 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public Boolean canWrite() {
 		try {
-			return mFile.canWrite();
+
+			if(Thread.currentThread().equals(OpenExplorer.UiThread))
+				return true;
+			else
+				return mFile.canWrite();
 		} catch (SmbException e) {
 			return false;
 		}
@@ -247,7 +285,10 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public Boolean exists() {
 		try {
-			return mFile.exists();
+			if(Thread.currentThread().equals(OpenExplorer.UiThread))
+				return true;
+			else
+				return mFile.exists();
 		} catch (SmbException e) {
 			return false;
 		}
@@ -282,6 +323,12 @@ public class OpenSMB extends OpenNetworkPath
 	public OutputStream getOutputStream() throws IOException {
 		return mFile.getOutputStream();
 	}
+	
+
+	public void copyTo(OpenFile dest, BackgroundWork task) throws SmbException {
+		mFile.copyTo(dest, task);
+	}
+	
 	public SmbFile getFile() {
 		return mFile;
 	}
@@ -293,11 +340,11 @@ public class OpenSMB extends OpenNetworkPath
 		if(user.indexOf(":") > -1)
 			user = user.substring(0, user.indexOf(":"));
 		Logger.LogInfo("User: " + user);
-		OpenServer server = OpenServers.DefaultServers.find(uri.getHost(), user, uri.getPath());
+		OpenServer server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user, uri.getPath());
 		if(server == null)
-			server = OpenServers.DefaultServers.find(uri.getHost(), user);
+			server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
 		if(server == null)
-			server = OpenServers.DefaultServers.find(uri.getHost());
+			server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
 		if(server != null)
 			path = "smb://" + user + ":" + server.getPassword() + "@" + server.getHost() + uri.getPath();
 		else

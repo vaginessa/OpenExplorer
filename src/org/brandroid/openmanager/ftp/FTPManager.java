@@ -145,7 +145,8 @@ public class FTPManager {
 		{
 			try {
 				client.connect(mHost);
-				client.login(mUser, mPassword);
+				if(!client.login(mUser, mPassword))
+					throw new IOException("Unable to log in to FTP. Invalid credentials?", new Throwable());
 				client.cwd(mBasePath);
 			} catch(Throwable e) {
 				throw new IOException("Error connecting to FTP.", e);
@@ -176,16 +177,11 @@ public class FTPManager {
 		return retf;
 	}
 	
-	public FTPFile[] listFiles() throws IOException { return listFiles(null); }
-	public FTPFile[] listFiles(OpenPathThreadUpdater updater) throws IOException
+	public FTPFile[] listFiles() throws IOException 
 	{
 		if(connect())
 		{
-			if(updater != null)
-				updater.update("ls " + getPath());
 			FTPFile[] ret = client.listFiles();
-			for(FTPFile f : ret)
-				fileCache.put(f.getName(), new OpenFTP(f, new FTPManager(this, f.getName())));
 			return ret;
 		} else return null;
 	}
