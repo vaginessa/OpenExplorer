@@ -207,4 +207,5 @@
     <string name="s_pref_show_downloads">Show Downloads</string>
     <string name="s_hide">Hide</string>
     <string name="s_show">Show</string>
+    <string name="s_msg_event_cancelled">Event cancelled.</string>
 </resources>

@@ -61,5 +61,7 @@
     <style name="ActionBarTitle">
         <item name="android:textColor">@color/actionbar_title_color</item>
     </style>
+    
+    <style name="Dialog" parent="@android:style/Theme.Holo.Dialog" />
 
 </resources>
