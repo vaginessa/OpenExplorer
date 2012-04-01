@@ -657,7 +657,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(total_width == 0 && mParentView.getRootView().findViewById(R.id.list_frag) != null)
 			total_width = mParentView.getRootView().findViewById(R.id.list_frag).getWidth();
 		if(total_width == 0)
-			total_width = 400;
+			total_width = getExplorer().getResources().getDimensionPixelSize(R.dimen.bookmarks_width);
 		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
 		{
 			OpenFile f = (OpenFile)mFile;
@@ -704,7 +704,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				long taken = Math.min(0, size - free);
 				float percent = (float)taken / (float)size;
 				//mParentView.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-				int size_width = 250; //mParentView.getMeasuredWidth();
+				int size_width = total_width; //mParentView.getMeasuredWidth();
 				Logger.LogVerbose("Parent Width: " + size_width);
 				size_width = Math.min(0, (int) (percent * size_width));
 				size_bar.getBackground().setBounds(0,0,size_width,0);
