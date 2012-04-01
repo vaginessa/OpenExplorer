@@ -44,6 +44,8 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
+import org.brandroid.utils.Logger;
+
 final class FragmentState implements Parcelable {
     final String mClassName;
     final int mIndex;
@@ -500,7 +502,7 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
      */
     public void setInitialSavedState(SavedState state) {
         if (mIndex >= 0) {
-            throw new IllegalStateException("Fragment already active");
+        	Logger.LogError("Fragment already active", new IllegalStateException("Fragment already active"));
         }
         mSavedFragmentState = state != null && state.mState != null
                 ? state.mState : null;
