@@ -80,7 +80,7 @@ import android.util.Log;
  *
  */
 public class FileManager {
-	public static final int BUFFER = 512 * 1024;
+	public static final int BUFFER = 8 * 1024;
 	
 	private boolean mShowHiddenFiles = false;
 	private SortType mSorting = SortType.ALPHA;
@@ -417,11 +417,10 @@ public class FileManager {
 	 }
 	
 	public static boolean hasOpenCache(String path) { return mOpenCache != null && mOpenCache.containsKey(path); }
-	public static OpenPath getOpenCache(String path) throws IOException { return getOpenCache(path, false); }
 	public static OpenPath removeOpenCache(String path) { return mOpenCache.remove(path); }
 	
-	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles)
-			throws IOException, SmbAuthException, SmbException
+	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles, SortType sort)
+			throws IOException //, SmbAuthException, SmbException
 	{
 		//Logger.LogDebug("Checking cache for " + path);
 		if(mOpenCache == null)
@@ -447,7 +446,12 @@ public class FileManager {
 			} else if(path.startsWith("sftp:/"))
 			{
 				Uri uri = Uri.parse(path);
+				OpenServer server = OpenServers.DefaultServers.findByHost("sftp", uri.getHost());
 				ret = new OpenSFTP(uri);
+				SimpleUserInfo info = new SimpleUserInfo(DefaultUserInfo.getActivity());
+				if(server != null)
+					info.setPassword(server.getPassword());
+				((OpenSFTP)ret).setUserInfo(info);
 			} else if(path.startsWith("smb:/"))
 			{
 				try {
@@ -461,6 +465,8 @@ public class FileManager {
 						server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
 					if(server == null)
 						server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+					if(user == "")
+						user = server.getUser();
 					if(server != null && server.getPassword() != null && server.getPassword() != "")
 						user += ":" + server.getPassword();
 					if(!user.equals(""))
@@ -476,7 +482,7 @@ public class FileManager {
 				if(ret.listFiles() != null)
 					setOpenCache(path, ret);
 			} else {
-				ret.listFromDb();
+				ret.listFromDb(sort);
 			}
 		}
 		//if(ret == null)
