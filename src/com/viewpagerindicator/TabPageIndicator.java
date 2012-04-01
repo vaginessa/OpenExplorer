@@ -85,7 +85,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
             if (childCount > 2) {
                 mMaxTabWidth = (int)(MeasureSpec.getSize(widthMeasureSpec) * 0.8f);
             } else {
-                mMaxTabWidth = MeasureSpec.getSize(widthMeasureSpec) / 2;
+                mMaxTabWidth = MeasureSpec.getSize(widthMeasureSpec);
             }
         } else {
             mMaxTabWidth = -1;
@@ -279,10 +279,10 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
             // Re-measure if we went beyond our maximum size.
-            if (mParent.mMaxTabWidth > 0 && getMeasuredWidth() > mParent.mMaxTabWidth) {
+            /*if (mParent.mMaxTabWidth > 0 && getMeasuredWidth() > mParent.mMaxTabWidth) {
                 super.onMeasure(MeasureSpec.makeMeasureSpec(mParent.mMaxTabWidth, MeasureSpec.EXACTLY),
                         heightMeasureSpec);
-            }
+            }*/
         }
 
         public int getIndex() {
