@@ -33,7 +33,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -42,6 +41,7 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -49,7 +49,6 @@ import android.graphics.drawable.LayerDrawable;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
-import org.apache.commons.net.ftp.FTPClient;
 import org.brandroid.openmanager.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -77,11 +76,8 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
@@ -95,7 +91,6 @@ import android.widget.ListView;
 import android.widget.PopupWindow.OnDismissListener;
 import android.widget.SearchView;
 import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
@@ -105,20 +100,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLStreamHandler;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipFile;
-
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
@@ -140,11 +128,9 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
-import org.brandroid.openmanager.fragments.OpenFragmentActivity;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
@@ -153,7 +139,6 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.MimeTypes;
-import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
@@ -193,7 +178,7 @@ public class OpenExplorer
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	public static boolean USE_ACTION_BAR = false;
-	public static final boolean USE_ACTIONMODE = false;
+	public static boolean USE_ACTIONMODE = false;
 	public static boolean IS_DEBUG_BUILD = false;
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
@@ -211,7 +196,7 @@ public class OpenExplorer
 	private BroadcastReceiver storageReceiver = null;
 	private Handler mHandler = new Handler();  // handler for the main thread
 	//private int mViewMode = VIEW_LIST;
-	private static long mLastCursorEnsure = 0;
+	//private static long mLastCursorEnsure = 0;
 	private static boolean mRunningCursorEnsure = false;
 	private Boolean mSinglePane = false;
 	
@@ -225,7 +210,7 @@ public class OpenExplorer
 	private static OnBookMarkChangeListener mBookmarkListener;
 	private MenuBuilder mMainMenu = null;
 	
-	private IconContextMenu mContextMenu = null;
+	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
 	
 	private static final FileManager mFileManager = new FileManager();
 	private static final EventHandler mEvHandler = new EventHandler(mFileManager);
@@ -328,8 +313,6 @@ public class OpenExplorer
 			Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
 		}
 		ThumbnailCreator.setContext(getApplicationContext());
-		
-		Logger.LogDebug("Refreshing cursors");
 		
 		//refreshCursors();
 
@@ -613,8 +596,6 @@ public class OpenExplorer
 						
 						@Override
 						public void onAnimationRepeat(Animation animation) {
-							// TODO Auto-generated method stub
-							
 						}
 						
 						@Override
@@ -1069,18 +1050,6 @@ public class OpenExplorer
 		return mDownloadParent;
 	}
 	
-	private void ensureCache(OpenCursor parent)
-	{
-		int done = 0;
-		for(OpenPath kid : parent.list())
-		{
-			ThumbnailCreator.generateThumb(kid, 36, 36);
-			ThumbnailCreator.generateThumb(kid, 128, 128);
-			done++;
-		}
-		Logger.LogInfo("ensureCache on " + parent.getName() + " = " + done + "/" + parent.list().length);
-	}
-	
 	private boolean findCursors()
 	{
 		if(mVideoParent.isLoaded())
@@ -1098,6 +1067,8 @@ public class OpenExplorer
 		}
 		if(!mPhotoParent.isLoaded())
 		{
+			if(bRetrieveDimensionsForPhotos)
+				bRetrieveDimensionsForPhotos = !getSetting(null, "tag_nodims", false);
 			mPhotoParent.setName(getString(R.string.s_photos));
 			Logger.LogVerbose("Finding Photos");
 			try {
@@ -1213,7 +1184,7 @@ public class OpenExplorer
 
 		Logger.LogVerbose("Done with ensureCursorCache");
 		
-		mLastCursorEnsure = new Date().getTime();
+		//mLastCursorEnsure = new Date().getTime();
 		mRunningCursorEnsure = false;
 	}
 	
@@ -1259,8 +1230,8 @@ public class OpenExplorer
 		{
 			if(mViewPager.getCurrentItem() > -1)
 			{
-				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount());
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
+				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount() + (ret instanceof ContentFragment ? " : " + ((ContentFragment)ret).getPath().getPath() : ""));
 				if(!(ret instanceof ContentFragment))
 					ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
 			} else {
@@ -1571,7 +1542,7 @@ public class OpenExplorer
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		if(BEFORE_HONEYCOMB)
 			setMenuVisible(menu, false, R.id.menu_view_carousel);
-		else if(getWindowManager().getDefaultDisplay().getWidth() < 500) {
+		else if(getWindowWidth() < 500) {
 			if(Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
 			{
 				setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
@@ -1962,8 +1933,8 @@ public class OpenExplorer
 		});
 		
 		float w = getResources().getDimension(R.dimen.popup_width) * (3 / 2);
-		if(w > getWindow().getWindowManager().getDefaultDisplay().getWidth())
-			w = getWindow().getWindowManager().getDefaultDisplay().getWidth() - 20;
+		if(w > getWindowWidth())
+			w = getWindowWidth() - 20;
 		clipdrop.setPopupWidth((int)w);
 		clipdrop.setContentView(root);
 		
@@ -2336,10 +2307,18 @@ public class OpenExplorer
 						mFileManager.popStack();
 					if(new OpenFile(entry.getBreadCrumbTitle().toString()).exists())
 					{
-						mLastPath = new OpenFile(entry.getBreadCrumbTitle().toString());
-						Logger.LogDebug("last path set to " + mLastPath.getPath());
-						changePath(mLastPath, false);
-						updateTitle(mLastPath.getPath());
+						try {
+							mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(),
+									false, OpenPath.Sorting);
+						} catch (Exception e) {
+							Logger.LogError("Couldn't get back cache.", e);
+						}
+						if(mLastPath != null)
+						{
+							Logger.LogDebug("last path set to " + mLastPath.getPath());
+							changePath(mLastPath, false);
+							updateTitle(mLastPath.getPath());
+						} else finish();
 					} else Logger.LogError("Back Stack Entry doesn't exist? " + entry.getBreadCrumbTitle());
 				} else if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
 					goBack();
@@ -2386,8 +2365,8 @@ public class OpenExplorer
 	public void changePath(OpenPath path, Boolean addToStack, Boolean force)
 	{
 		try {
-			if(mLastPath != null && !mLastPath.equals(path) && mLastPath instanceof OpenNetworkPath)
-				((OpenNetworkPath)mLastPath).disconnect();
+			//if(mLastPath != null && !mLastPath.equals(path) && mLastPath instanceof OpenNetworkPath)
+			//	((OpenNetworkPath)mLastPath).disconnect();
 		} catch(Exception e) {
 			Logger.LogError("Couldn't disconnect while changing paths.", e);
 		}
@@ -2398,7 +2377,7 @@ public class OpenExplorer
 			//if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
 		//boolean isNew = !mLastPath.equals(path);
-		int oldView = getSetting(mLastPath, "view", 0);
+		//int oldView = getSetting(mLastPath, "view", 0);
 		mLastPath = path;
 		
 		ImageView icon = (ImageView)findViewById(R.id.title_icon);
@@ -2422,20 +2401,13 @@ public class OpenExplorer
 				{
 					Logger.LogWarning("Fragment already active?", e); // crash fix
 				}
-				OpenPath tmp = null;
-				if(!path.requiresThread())
-					tmp = path.getParent();
-				else if(path instanceof OpenSMB)
-					tmp = ((OpenSMB)path).getParentSMB();
+				OpenPath tmp = path.getParent();
 				while(tmp != null)
 				{
 					mViewPagerAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
-					if(!path.requiresThread())
-						tmp = tmp.getParent();
-					else if(path instanceof OpenSMB)
-						tmp = ((OpenSMB)tmp).getParentSMB();
-					else tmp = null;
+					tmp = tmp.getParent();
 				}
+				Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				setViewPageAdapter(mViewPagerAdapter);
 				int index = mViewPagerAdapter.getCount() - 1;
@@ -2547,13 +2519,38 @@ public class OpenExplorer
 		//ft.replace(R.id.content_frag, content);
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
-		
+	}
+	private String getFragmentPaths(List<Fragment> frags)
+	{
+		String ret = "";
+		for(int i = 0; i < frags.size(); i++)
+		{
+			Fragment f = frags.get(i);
+			if(f instanceof ContentFragment)
+				ret += ((ContentFragment)f).getPath().getPath();
+			else
+				ret += f.getClass().toString();
+			if(i < frags.size() - 1)
+				ret += ",";
+		}
+		return ret;
+	}
+	private String getPagerTitles()
+	{
+		String ret = "";
+		for(int i = 0; i < mViewPagerAdapter.getCount(); i++)
+		{
+			ret += mViewPagerAdapter.getTitle(i);
+			if(i < mViewPagerAdapter.getCount() - 1)
+				ret += ",";
+		}
+		return ret;
 	}
 	public void setLights(Boolean on)
 	{
 		try {
 			View root = getCurrentFocus().getRootView();
-			int vis = on ? View.STATUS_BAR_VISIBLE : View.STATUS_BAR_HIDDEN;
+			int vis = on ? View.SYSTEM_UI_FLAG_VISIBLE : View.SYSTEM_UI_FLAG_LOW_PROFILE;
 			if(root.getSystemUiVisibility() != vis)
 				root.setSystemUiVisibility(vis);
 		} catch(Exception e) { }
@@ -2629,7 +2626,7 @@ public class OpenExplorer
 	{
 		@Override
 		protected Void doInBackground(OpenPath... params) {
-			int done = 0;
+			//int done = 0;
 			for(OpenPath path : params)
 			{
 				if(path.isDirectory())
@@ -2639,10 +2636,9 @@ public class OpenExplorer
 						{
 							ThumbnailCreator.generateThumb(kid, 36, 36);
 							ThumbnailCreator.generateThumb(kid, 128, 128);
-							done++;
+							//done++;
 						}
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				} else {
@@ -2650,7 +2646,7 @@ public class OpenExplorer
 						ThumbnailCreator.setContext(getApplicationContext());
 					ThumbnailCreator.generateThumb(path, 36, 36);
 					ThumbnailCreator.generateThumb(path, 128, 128);
-					done++;
+					//done++;
 				}
 			}
 			//Logger.LogDebug("cursor cache of " + done + " generated.");
@@ -2728,7 +2724,6 @@ public class OpenExplorer
 				try {
 					reader.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 		}
@@ -2940,7 +2935,7 @@ public class OpenExplorer
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/images/media"),
-					Build.VERSION.SDK_INT > 10 ? // It seems that < 2.3.3 don't have width & height
+					bRetrieveDimensionsForPhotos ? // It seems that < 2.3.3 don't have width & height
 					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
 							MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT
 						} :
@@ -2948,6 +2943,16 @@ public class OpenExplorer
 					MediaStore.Images.Media.SIZE + " > 10000", null,
 					MediaStore.Images.Media.DATE_ADDED + " DESC"
 					);
+				if(bRetrieveDimensionsForPhotos)
+				{
+					try {
+						loader.loadInBackground();
+					} catch(SQLiteException e) {
+						bRetrieveDimensionsForPhotos = false;
+						setSetting(null, "tag_nodims", true);
+						return onCreateLoader(id, arg1);
+					}
+				}
 				break;
 			case 2: // music
 				loader = new CursorLoader(

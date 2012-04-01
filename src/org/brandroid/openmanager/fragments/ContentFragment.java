@@ -248,7 +248,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				mPath = OpenExplorer.getMusicParent();
 			else {
 				try {
-					mPath = FileManager.getOpenCache(last, false);
+					mPath = FileManager.getOpenCache(last, false, mSorting);
 				} catch (IOException e) {
 					Logger.LogWarning("Couldn't get Cache in Fragment", e);
 					if(last.startsWith("sftp:/"))
@@ -360,27 +360,25 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(mContentAdapter != null)
 				mContentAdapter.notifyDataSetChanged();
 			setProgressVisibility(true);
-			if(path instanceof OpenNetworkPath && path.listFromDb())
+			if(path instanceof OpenNetworkPath && path.listFromDb(mSorting))
 				mData = ((OpenNetworkPath)path).getChildren();
-			Logger.LogVerbose("Running FileIOTask");
 			//cancelAllTasks();
-			if(!mFileTasks.containsKey(path))
-			{
-				final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
-				new Thread(new Runnable(){
-					@Override
-					public void run() {
-						try {
-							Thread.sleep(30000);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						if(task.getStatus() == Status.RUNNING)
-							task.cancel(false);
+			if(mFileTasks.containsKey(path))
+				mFileTasks.get(path).cancel(true);
+			final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
+			new Thread(new Runnable(){
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(30000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				}).start();
-			}
+					if(task.getStatus() == Status.RUNNING)
+						task.cancel(false);
+				}
+			}).start();
 		}
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
@@ -1084,7 +1082,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			try {
 				Arrays.sort(items);
 			} catch(Exception e) {
-				Logger.LogError("Couldn't sort.", e);
+				//Logger.LogError("Couldn't sort.", e);
 			}
 		}
 		
@@ -1159,7 +1157,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 				public void onFileSelected(String fileName) {
 					OpenPath file = null;
 					try {
-						file = FileManager.getOpenCache(fileName);
+						file = FileManager.getOpenCache(fileName, false, OpenPath.Sorting);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -1189,7 +1187,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			if(!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
 				try {
 					if(mPath.requiresThread())
-						mPath = FileManager.getOpenCache(mPath.getAbsolutePath());
+						mPath = FileManager.getOpenCache(mPath.getAbsolutePath(), false, mSorting);
 					updateData(mPath.list());
 				} catch (IOException e) {
 					Logger.LogWarning("Couldn't update data after thread completion", e);
@@ -1568,6 +1566,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
 			for(FileIOCommand cmd : params)
 			{
+				Logger.LogVerbose("FileIOTask running " + cmd.Type + " on " + cmd.Path.getPath()); 
 				mFileTasks.put(cmd.Path, this);
 				if(cmd.Path.requiresThread())
 				{
@@ -1586,7 +1585,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					OpenPath[] list = null;
 					boolean success = false;
 					try {
-						cachePath = FileManager.getOpenCache(cmd.Path.getPath(), true);
+						cachePath = FileManager.getOpenCache(cmd.Path.getPath(), true, mSorting);
 						if(cachePath != null)
 						{
 							if(cachePath instanceof OpenNetworkPath)
@@ -1603,6 +1602,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 							list = cachePath.listFiles();
 							success = list != null;
 						} catch(IOException e3) {
+							Logger.LogError("Error listing SMB Files", e3);
 							getExplorer().showToast(R.string.s_error_ftp);
 						}
 					} catch (IOException e2) {
@@ -1622,7 +1622,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					if(!success)
 						try {
 							list = cachePath.list();
-							FileManager.setOpenCache(cachePath.getPath(), cachePath);
+							if(list != null)
+								FileManager.setOpenCache(cachePath.getPath(), cachePath);
 						} catch(SmbAuthException e) {
 							Logger.LogWarning("Couldn't connect to SMB using: " + ((OpenSMB)cachePath).getFile().getCanonicalPath());
 						} catch (IOException e) {
@@ -1680,11 +1681,13 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 					if(result != null && result.length > 0)
 						dels = mPath.deleteFolderFromDb();
 					for(OpenPath path : result)
-						if(path.addToDb())
+						if(path != null && path.addToDb())
 							adds++;
 					Logger.LogVerbose("Finished updating OpenPath DB Cache" +
 							"(-" + dels + ",+" + adds + ") in " +
-							((new Date().getTime() - start)/1000) + " seconds");
+							((new Date().getTime() - start)/1000) + " seconds for " +
+							mPath.getPath()
+							);
 				}}).start();
 			setProgressVisibility(false);
 			//onCancelled(result);
