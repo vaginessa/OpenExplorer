@@ -47,6 +47,8 @@ public class SimpleUserInfo implements UserInfo
 		//mUri = uri;
 		mActivity = activity;
 	}
+	
+	public Activity getActivity() { return mActivity; }
 
 	@Override
 	public String getPassphrase() {

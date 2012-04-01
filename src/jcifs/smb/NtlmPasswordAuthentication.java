@@ -397,7 +397,8 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     public String getPassword() {
         return password;
     }
-    
+
+    public void setUsername(String user) { username = user; }
     public void setPassword(String pass) { password = pass; }
 /**
  * Return the domain and username in the format:

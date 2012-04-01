@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -70,6 +72,8 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		
 		if(path == null)
 			return "(" + position + ")";
+		else if(path instanceof OpenNetworkPath && path.getParent() == null && ((OpenNetworkPath)path).getServersIndex() >= 0)
+			return OpenServers.DefaultServers.get(((OpenNetworkPath)path).getServersIndex()).getName();
 		else if(path.getName().equals(""))
 			return path.getPath();
 		else if(path.getParent() == null)

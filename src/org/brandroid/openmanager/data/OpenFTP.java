@@ -11,14 +11,21 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
+import jcifs.smb.SmbFile;
+
 import org.apache.commons.net.ftp.FTPFile;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
 import android.database.Cursor;
@@ -35,42 +42,59 @@ public class OpenFTP extends OpenNetworkPath
 {
 	private FTPFile mFile;
 	private final FTPManager mManager;
-	private final ArrayList<OpenFTP> mChildren; 
+	private OpenFTP[] mChildren = null; 
 	private int mServersIndex = -1;
 	private long mMTime = 0;
 	private long mSize = 0;
+	private String mPath;
 	private String mName;
 	protected OpenFTP mParent = null;
 	
 	public OpenFTP(String path, FTPFile[] children, FTPManager man)
 	{
+		mPath = path;
 		mManager = man;
+		Uri uri = Uri.parse(path);
+		String base = uri.getPath();
+		String name = uri.getLastPathSegment();
+		if(name == null)
+			name = uri.getHost();
 		mFile = new FTPFile();
-		mFile.setName(path);
-		mChildren = new ArrayList<OpenFTP>();
-		String base = path;
-		base = base.replace("://", ":/").replace(":/", "://");
-		if(base.indexOf("//") > -1 && base.indexOf("/", base.indexOf("//") + 2) > -1)
-			base = base.substring(base.indexOf("/", base.indexOf("//") + 2));
-		else base = "";
-		if(!base.endsWith("/"))
-			base += "/";
+		mFile.setName(name);
 		if(children != null)
 		{
+			int i = 0;
+			mChildren = new OpenFTP[children.length];
 			for(FTPFile f : children)
 			{
-				OpenFTP tmp = new OpenFTP(null, f, new FTPManager(man, base + f.getName()));
+				String parent = base + (base.endsWith("/") || name.startsWith("/") ? "" : "/") + name;
+				if(f.isDirectory() && !parent.endsWith("/"))
+					parent += "/";
+				OpenFTP tmp = new OpenFTP(null, f, new FTPManager(man, parent));
 				tmp.mParent = this;
-				mChildren.add(tmp);
+				mChildren[i++] = tmp;				
 			}
 			FileManager.setOpenCache(getAbsolutePath(), this);
 		}
 	}
 	public OpenFTP(OpenFTP parent, FTPFile file, FTPManager man) {
+		if(man != null)
+			mPath = man.getPath();
+		else if(parent != null)
+			mPath = parent.getPath();
+		else mPath = "";
+		if(file != null && file.getName() != null && !(mPath.endsWith(file.getName()) || mPath.endsWith(file.getName() + "/")))
+		{
+			if(!mPath.endsWith("/")) mPath += "/";
+			if(file != null)
+				mPath += file.getName();
+		}
+		if(file != null && file.isDirectory())
+			mPath += "/";
 		mParent = parent;
 		mFile = file;
 		mManager = man;
-		mChildren = new ArrayList<OpenFTP>();
+		mName = getName();
 	}
 	
 	public OpenFTP(String path, FTPFile[] children, FTPManager manager,
@@ -86,6 +110,20 @@ public class OpenFTP extends OpenNetworkPath
 	}
 	public FTPFile getFile() { return mFile; }
 	public FTPManager getManager() { return mManager; }
+	
+	@Override
+	public void disconnect() {
+		super.disconnect();
+		if(mManager != null)
+			mManager.disconnect();
+	}
+	
+	@Override
+	public void connect() throws IOException {
+		super.connect();
+		if(mManager != null)
+			mManager.connect();
+	}
 
 	public void setName(String name) {
 		mName = name;
@@ -94,44 +132,53 @@ public class OpenFTP extends OpenNetworkPath
 	public String getName() {
 		if(mName != null)
 			return mName;
-		if(mFile != null)
-			return mFile.getName();
-		else return null;
+		Uri uri = getUri();
+		if(uri.getLastPathSegment() != null)
+			return uri.getLastPathSegment();
+		else return uri.getHost();
 	}
 
 	@Override
 	public String getPath() { return getPath(false); }
 	public String getPath(boolean bIncludeUser) {
-		return mManager.getPath(bIncludeUser);
+		if(!bIncludeUser)
+			return mPath.replace(getUri().getUserInfo() + "@", "");
+		else
+			return mPath;
 	}
 	
-	public String getHost() { return mManager.getHost(); }
+	public String getHost() { return getUri().getHost(); }
 
 	@Override
 	public long length() {
-		if(mFile != null)
-			return mFile.getSize();
-		else return mSize;
+		if(mFile != null && !Thread.currentThread().equals(OpenExplorer.UiThread))
+			mSize = mFile.getSize();
+		return mSize;
 	}
 
 	@Override
 	public OpenFTP getParent() {
-		return mParent;
+		if(mParent != null || mParent == null)
+			return mParent;
+		String parent = OpenPath.getParent(getPath());
+		if(parent == null) return null;
+		if(parent.length() < 5) return null;
+		//return new OpenSMB(new SmbFile(parent, mFile.getAuth()));
+		//return new OpenFTP(parent, new FTPFile[]{this.getFile()}, new FTPManager(mManager, parent));
+		try {
+			return (OpenFTP) FileManager.getOpenCache(parent, false, null);
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	@Override
 	public OpenFTP[] listFiles() throws IOException {
-		if(mChildren.size() > 0)
-		{
-			OpenFTP[] ret = new OpenFTP[mChildren.size()];
-			mChildren.toArray(ret);
-			return ret;
-		}
 		FTPFile[] arr = mManager.listFiles();
 		if(arr == null)
 			return null;
 			
-		OpenFTP[] ret = new OpenFTP[arr.length];
+		mChildren = new OpenFTP[arr.length];
 		String base = getPath();
 		if(base.indexOf("//") > -1)
 			base = base.substring(base.indexOf("/", base.indexOf("//") + 2) + 1);
@@ -141,32 +188,37 @@ public class OpenFTP extends OpenNetworkPath
 			base += "/";
 		for(int i = 0; i < arr.length; i++)
 		{
-			OpenFTP tmp = new OpenFTP(this, arr[i], new FTPManager(mManager, base + arr[i].getName()));
-			mChildren.add(tmp);
-			FileManager.setOpenCache(tmp.getPath(), tmp);
+			String parent = base + arr[i].getName();
+			if(arr[i].isDirectory() && !parent.endsWith("/"))
+				parent += "/";
+			OpenFTP tmp = new OpenFTP(this, arr[i], new FTPManager(mManager, parent));
+			mChildren[i] = tmp;
+			//FileManager.setOpenCache(tmp.getPath(), tmp);
 		}
-		mChildren.toArray(ret);
+		//mChildren.toArray(ret);
 		FileManager.setOpenCache(getAbsolutePath(), this);
-		return ret;
+		return mChildren;
 	}
 	
 
 	@Override
-	public boolean listFromDb()
+	public boolean listFromDb(SortType sort)
 	{
-		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
+		if(!OpenPath.AllowDBCache) return false;
+		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""), sort);
 		if(c == null) return false;
-		mChildren.clear();
+		mChildren = new OpenFTP[c.getCount()];
 		c.moveToFirst();
+		int i = 0;
 		while(!c.isAfterLast())
 		{
 			String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
 			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
 			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
 			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
-			OpenFTP child = new OpenFTP(folder + (!(folder.endsWith("/") || name.startsWith("/")) ? "/" : "")
-					+ name, null, getManager(), size, modified);
-			mChildren.add(child);
+			String path = folder + (!(folder.endsWith("/") || name.startsWith("/")) ? "/" : "") + name;
+			OpenFTP child = new OpenFTP(path, null, getManager(), size, modified);
+			mChildren[i++] = child;
 			c.moveToNext();
 		}
 		c.close();
@@ -175,7 +227,7 @@ public class OpenFTP extends OpenNetworkPath
 
 	@Override
 	public Boolean isDirectory() {
-		if(mChildren != null && mChildren.size() > 0)
+		if(mChildren != null && mChildren.length > 0)
 			return true;
 		String path = getPath();
 		if(path.endsWith("/")) return true;
@@ -187,7 +239,7 @@ public class OpenFTP extends OpenNetworkPath
 
 	@Override
 	public Uri getUri() {
-		return Uri.parse(mFile.toString());
+		return Uri.parse(mPath);
 	}
 
 	@Override
@@ -219,11 +271,7 @@ public class OpenFTP extends OpenNetworkPath
 	@Override
 	public OpenPath[] list() throws IOException {
 		if(mChildren != null)
-		{
-			OpenPath[] ret = new OpenPath[mChildren.size()];
-			mChildren.toArray(ret);
-			return ret;
-		}
+			return mChildren;
 		return listFiles();
 	}
 	
@@ -311,11 +359,10 @@ public class OpenFTP extends OpenNetworkPath
 		mManager.setBasePath(path);
 		mFile = new FTPFile();
 		mFile.setName(path);
-		mChildren.clear();
 	}
 	
 	@Override
 	public OpenFTP[] getChildren() {
-		return mChildren != null ? mChildren.toArray(new OpenFTP[0]) : null;
+		return mChildren;
 	}
 }

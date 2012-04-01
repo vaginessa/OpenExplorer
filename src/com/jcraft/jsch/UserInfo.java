@@ -29,6 +29,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jsch;
 
+import android.app.Activity;
+
 public interface UserInfo{
   String getPassphrase();
   String getPassword();
@@ -37,4 +39,5 @@ public interface UserInfo{
   boolean promptPassphrase(String message);
   boolean promptYesNo(String message);
   void showMessage(String message);
+  Activity getActivity();
 }

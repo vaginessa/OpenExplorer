@@ -2858,6 +2858,12 @@ if (this instanceof SmbNamedPipe) {
         exists();
         return attributes & ATTR_GET_MASK;
     }
+    
+    public void setAuth(NtlmPasswordAuthentication auth)
+    {
+    	this.auth = auth;
+    }
+    public NtlmPasswordAuthentication getAuth() { return auth; } 
 
 /**
  * Set the attributes of this file. Attributes are composed into a

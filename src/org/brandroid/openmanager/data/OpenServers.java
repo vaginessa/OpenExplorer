@@ -56,7 +56,7 @@ public class OpenServers
 			OpenServer server = mData.get(i);
 			if(server.getHost().equalsIgnoreCase(host) &&
 				server.getType().equalsIgnoreCase(type) &&
-				server.getUser().equalsIgnoreCase(user))
+				(user == "" || server.getUser().equalsIgnoreCase(user)))
 				return server;
 		}
 		return null;

@@ -3,11 +3,14 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.ChannelSftp;
@@ -18,6 +21,7 @@ import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.UserInfo;
 
+import android.database.Cursor;
 import android.net.Uri;
 
 public class OpenSFTP extends OpenNetworkPath
@@ -36,7 +40,9 @@ public class OpenSFTP extends OpenNetworkPath
 	private SftpATTRS mAttrs = null;
 	private String mName = null;
 	protected OpenSFTP mParent = null;
-	private Vector<OpenSFTP> mChildren = null;
+	private OpenSFTP[] mChildren = null;
+	private Long mSize = null;
+	private Long mModified = null;
 	
 	public OpenSFTP(String fullPath)
 	{
@@ -81,6 +87,8 @@ public class OpenSFTP extends OpenNetworkPath
 		mUser = parent.getUser();
 		mParent = parent;
 		mAttrs = child.getAttrs();
+		mSize = mAttrs.getSize();
+		mModified = (long) mAttrs.getMTime();
 		Uri pUri = mParent.getUri();
 		String name = child.getFilename();
 		name = name.substring(name.lastIndexOf("/") + 1);
@@ -89,9 +97,14 @@ public class OpenSFTP extends OpenNetworkPath
 		mRemotePath = myUri.getPath();
 		mSession = parent.mSession;
 		mChannel = parent.mChannel;
-		Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
+		//Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
 	}
 	
+	public OpenSFTP(String path, int size, int modified) {
+		this(Uri.parse(path));
+		mSize = (long)size;
+		mModified = (long)modified;
+	}
 	public int getPort() { return mPort; }
 	public void setPort(int port) { mPort = port; }
 	public String getHost() { return mHost; }
@@ -100,7 +113,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public String getName() {
-		if(mName != null && !mName.equals(""))
+		if(mName != null)
 			return mName;
 		if(mRemotePath.equals("") || mRemotePath.equals("/"))
 			return mHost;
@@ -124,6 +137,11 @@ public class OpenSFTP extends OpenNetworkPath
 	public String getAbsolutePath() {
 		return getPath();
 	}
+	
+	@Override
+	public void setName(String name) {
+		mName = name;
+	}
 
 	@Override
 	public void setPath(String path) {
@@ -132,6 +150,10 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public long length() {
+		if(mSize != null)
+			return mSize;
+		if(mAttrs != null)
+			return mAttrs.getMTime();
 		return 0;
 	}
 
@@ -159,8 +181,7 @@ public class OpenSFTP extends OpenNetworkPath
 	@Override
 	public OpenPath[] listFiles() throws IOException {
 		if(mChildren != null)
-			return mChildren.toArray(new OpenSFTP[mChildren.size()]);
-		mChildren = new Vector<OpenSFTP>(); 
+			return mChildren;
 		try {
 			connect();
 			String lsPath = mRemotePath;
@@ -168,13 +189,15 @@ public class OpenSFTP extends OpenNetworkPath
 				lsPath = ".";
 			Logger.LogVerbose("ls " + lsPath);
 			Vector<LsEntry> vv = mChannel.ls(lsPath);
+			mChildren = new OpenSFTP[vv.size()];
+			int i = 0;
 			for(LsEntry item : vv)
 			{
 				String name = item.getFilename();
 				name = name.substring(name.lastIndexOf("/") + 1);
 				if(name.equals(".")) continue;
 				if(name.equals("..")) continue;
-				mChildren.add(new OpenSFTP(this, item));
+				mChildren[i++] = new OpenSFTP(this, item);
 			}
 		} catch (SftpException e) {
 			Logger.LogError("SftpException during listFiles", e);
@@ -184,12 +207,12 @@ public class OpenSFTP extends OpenNetworkPath
 			throw new IOException("JSchException during listFiles", e);
 		}
 		FileManager.setOpenCache(getAbsolutePath(), this);
-		return mChildren.toArray(new OpenSFTP[mChildren.size()]);
+		return mChildren;
 	}
 	
 	@Override
 	public OpenNetworkPath[] getChildren() {
-		return mChildren.toArray(new OpenSFTP[mChildren.size()]);
+		return mChildren;
 	}
 
 	@Override
@@ -214,6 +237,8 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Long lastModified() {
+		if(mModified != null)
+			return mModified;
 		return mAttrs != null ? (long)mAttrs.getMTime() : null;
 	}
 
@@ -252,6 +277,37 @@ public class OpenSFTP extends OpenNetworkPath
 		return false;
 	}
 	
+
+	@Override
+	public boolean listFromDb(SortType sort)
+	{
+		if(!AllowDBCache) return false;
+		String parent = getPath(); //.replace("/" + getName(), "");
+		if(!parent.endsWith("/"))
+			parent += "/";
+		Logger.LogDebug("Fetching from folder: " + parent);
+		Cursor c = mDb.fetchItemsFromFolder(parent, sort);
+		if(c == null) {
+			Logger.LogWarning("DB Fetch returned null?");
+			return false;
+		}
+		ArrayList<OpenSFTP> arr = new ArrayList<OpenSFTP>(); 
+		c.moveToFirst();
+		while(!c.isAfterLast())
+		{
+			String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
+			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
+			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
+			arr.add(new OpenSFTP(folder + name, size, modified));
+			c.moveToNext();
+		}
+		Logger.LogDebug("listFromDb returning " + arr.size() + " children");
+		c.close();
+		mChildren = arr.toArray(new OpenSFTP[0]);
+		return true;
+	}
+	
 	@Override
 	public void disconnect()
 	{
@@ -272,7 +328,7 @@ public class OpenSFTP extends OpenNetworkPath
 	}
 	
 	@Override
-	public void connect() throws JSchException
+	public void connect() throws IOException
 	{
 		if(mSession != null && mSession.isConnected() && mChannel != null && mChannel.isConnected())
 		{

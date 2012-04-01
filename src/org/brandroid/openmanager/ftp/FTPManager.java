@@ -30,7 +30,6 @@ public class FTPManager {
 	private int mPort = 21;
 	private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
 	private FTPClient client;
-	private SimpleUserInfo mUserInfoHelper = null;
 		
 	public FTPManager() { }
 	public FTPManager(String sFTPPath) throws MalformedURLException
@@ -185,7 +184,7 @@ public class FTPManager {
 		{
 			FTPFile[] ret = client.listFiles();
 			return ret;
-		} else return null;
+		} else throw new IOException("Unable to list files due to invalid connecction.", new Throwable());
 	}
 	public InputStream getInputStream() throws IOException
 	{

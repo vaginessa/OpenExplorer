@@ -3,7 +3,11 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
 
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.Channel;
@@ -13,6 +17,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
+import android.database.Cursor;
 import android.net.Uri;
 
 public class OpenSCP extends OpenNetworkPath
@@ -26,6 +31,7 @@ public class OpenSCP extends OpenNetworkPath
 	private final String mHost, mUser, mRemotePath;
 	private UserInfo mUserInfo = null;
 	private OpenSCP[] mChildren = null;
+	private Long mSize = null, mModified = null;
 	
 	public OpenSCP(String host, String user, String path, UserInfo info)
 	{
@@ -33,6 +39,16 @@ public class OpenSCP extends OpenNetworkPath
 		mUser = user;
 		mRemotePath = path;
 		mUserInfo = info;
+	}
+	
+	public OpenSCP(String path, int size, int modified)
+	{
+		Uri uri = Uri.parse(path);
+		mHost = uri.getHost();
+		mUser = uri.getUserInfo();
+		mRemotePath = uri.getPath();
+		mSize = (long)size;
+		mModified = (long)modified;
 	}
 
 	@Override
@@ -82,6 +98,36 @@ public class OpenSCP extends OpenNetworkPath
 	@Override
 	public OpenPath[] listFiles() throws IOException {
 		return new OpenPath[0];
+	}
+
+	@Override
+	public boolean listFromDb(SortType sort)
+	{
+		if(!AllowDBCache) return false;
+		String parent = getPath(); //.replace("/" + getName(), "");
+		if(!parent.endsWith("/"))
+			parent += "/";
+		Logger.LogDebug("Fetching from folder: " + parent);
+		Cursor c = mDb.fetchItemsFromFolder(parent, sort);
+		if(c == null) {
+			Logger.LogWarning("DB Fetch returned null?");
+			return false;
+		}
+		ArrayList<OpenSCP> arr = new ArrayList<OpenSCP>(); 
+		c.moveToFirst();
+		while(!c.isAfterLast())
+		{
+			String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
+			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
+			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
+			arr.add(new OpenSCP(folder + name, size, modified));
+			c.moveToNext();
+		}
+		Logger.LogDebug("listFromDb returning " + arr.size() + " children");
+		c.close();
+		mChildren = arr.toArray(new OpenSCP[0]);
+		return true;
 	}
 
 	@Override
@@ -163,11 +209,11 @@ public class OpenSCP extends OpenNetworkPath
 	}
 	
 	@Override
-	public void connect() throws JSchException
+	public void connect() throws IOException
 	{
 		connect("scp -f " + mRemotePath);
 	}
-	public void connect(String command) throws JSchException
+	public void connect(String command) throws IOException
 	{
 		disconnect();
 		JSch jsch = new JSch();

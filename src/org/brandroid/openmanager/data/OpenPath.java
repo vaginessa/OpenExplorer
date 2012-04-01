@@ -41,6 +41,16 @@ public abstract class OpenPath
 	public OpenPath getChild(int index) throws IOException { return ((OpenPath[])list())[index]; }
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
+	public static String getParent(String path)
+	{
+		if(path.equals("/")) return null;
+		if(path.endsWith("/"))
+			path = path.substring(0, path.length() - 1);
+		path = path.substring(0, path.lastIndexOf("/") + 1);
+		if(path.endsWith("://") || path.endsWith(":/"))
+			return null;
+		return path;
+	}
 	public int getChildCount(boolean countHidden) throws IOException {
 		if(requiresThread()) return 0;
 		if(countHidden)
@@ -167,10 +177,8 @@ public abstract class OpenPath
         public OpenPath createFromParcel(Parcel in) {
         	String path = in.readString();
         	try {
-				return FileManager.getOpenCache(path);
+				return FileManager.getOpenCache(path, false, Sorting);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 				return null;
 			}
         }
@@ -330,7 +338,7 @@ public abstract class OpenPath
 		if(!AllowDBCache) return false;
 		return mDb.createItem(this) > 0;
 	}
-	public boolean listFromDb() { return false; }
+	public boolean listFromDb(SortType sort) { return false; }
 	public int deleteFolderFromDb()
 	{
 		if(!AllowDBCache) return 0;

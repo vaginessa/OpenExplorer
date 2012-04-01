@@ -26,7 +26,7 @@ public abstract class OpenNetworkPath extends OpenPath
 		return true;
 	}
 	
-	public void connect() throws JSchException
+	public void connect() throws IOException
 	{
 		Logger.LogVerbose("Connecting OpenNetworkPath");
 	}

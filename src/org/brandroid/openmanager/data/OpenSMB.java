@@ -14,12 +14,15 @@ import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
@@ -28,7 +31,7 @@ import android.os.AsyncTask;
 
 public class OpenSMB extends OpenNetworkPath
 {
-	private final SmbFile mFile;
+	private SmbFile mFile;
 	private OpenSMB mParent;
 	private OpenSMB[] mChildren = null; 
 	private Long mSize = null;
@@ -46,7 +49,10 @@ public class OpenSMB extends OpenNetworkPath
 			OpenServers servers = OpenServers.DefaultServers;
 			OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
 			if(s != null)
+			{
+				auth.setUsername(s.getUser());
 				auth.setPassword(s.getPassword());
+			}
 		}
 		mFile = new SmbFile(url, auth);
 		mParent = null;
@@ -75,9 +81,23 @@ public class OpenSMB extends OpenNetworkPath
 			Logger.LogError("Error creating SMB", e);
 		}
 	}
-	public OpenSMB(String url, long size, long modified) throws MalformedURLException
+	public OpenSMB(String urlString, long size, long modified) throws MalformedURLException
 	{
-		mFile = new SmbFile(url);
+		URL url = new URL(null, urlString, Handler.SMB_HANDLER);
+		NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
+		if(auth.getUsername() == null || auth.getUsername() == "" || auth.getPassword() == null || auth.getPassword() == "")
+		{
+			OpenServers servers = OpenServers.DefaultServers;
+			OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
+			if(s == null)
+				s = servers.findByHost("smb", url.getHost());
+			if(s != null)
+			{
+				auth.setUsername(s.getUser());
+				auth.setPassword(s.getPassword());
+			}
+		}
+		mFile = new SmbFile(url, auth);
 		mParent = null;
 		mSize = size;
 		mModified = modified;
@@ -141,27 +161,31 @@ public class OpenSMB extends OpenNetworkPath
 	public void setPath(String path) {
 		
 	}
+	
+	@Override
+	public void setName(String name) {
+		mName = name;
+	}
 
 	@Override
-	public OpenPath getParent() {
+	public OpenSMB getParent() {
 		if(mParent != null)
 			return mParent;
 		else {
 			try {
-				String s = mFile.getParent();
-				if(s == null) return null;
-				if(s.equals("smb://")) return null;
-				SmbFile smb = new SmbFile(s);
-				mParent = new OpenSMB(new SmbFile(mFile.getParent()));
-				return mParent;
+				if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+					return new OpenSMB(new SmbFile(mFile.getParent(), mFile.getAuth()));
+				String parent = OpenPath.getParent(getPath());
+				if(parent == null) return null;
+				if(!parent.startsWith("smb://"))
+					parent = "smb://" + parent;
+				return new OpenSMB(new SmbFile(parent, mFile.getAuth()));
 			} catch (MalformedURLException e) {
-				e.printStackTrace();
+				Logger.LogError("Couldn't get SMB Parent.", e);
 				return null;
 			}
 		}
 	}
-	
-	public OpenSMB getParentSMB() { return mParent; }
 
 	@Override
 	public OpenPath getChild(String name)
@@ -199,16 +223,22 @@ public class OpenSMB extends OpenNetworkPath
 			kids = mFile.listFiles();
 		} catch(SmbAuthException e) {
 			Logger.LogWarning("Unable to authenticate. Trying to get password from Servers.");
+			mFile.disconnect();
 			String path = getServerPath(mFile.getPath());
-			kids = new SmbFile(path).listFiles();
+			URL url = new URL(null, path, Handler.SMB_HANDLER);
+			NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
+			mFile = new SmbFile(mFile.getPath(), auth);
+			kids = mFile.listFiles();
 		}
 		if(kids != null)
 		{
 			mChildren = new OpenSMB[kids.length];
 			for(int i = 0; i < kids.length; i++)
 			{
-				mChildren[i] = new OpenSMB(this, kids[i]);
-				FileManager.setOpenCache(mChildren[i].getPath(), mChildren[i]);
+				kids[i].setAuth(mFile.getAuth());
+				OpenSMB smb = new OpenSMB(this, kids[i]);
+				mChildren[i] = smb;
+				FileManager.setOpenCache(smb.getPath(), smb);
 			}
 		}
 		return mChildren;
@@ -343,12 +373,13 @@ public class OpenSMB extends OpenNetworkPath
 			String user = uri.getUserInfo();
 			if(user.indexOf(":") > -1)
 				user = user.substring(0, user.indexOf(":"));
-			Logger.LogInfo("User: " + user);
 			server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user, uri.getPath());
 			if(server == null)
 				server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
 			if(server == null)
 				server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+
+			Logger.LogVerbose("User: " + user + " :: " + server.getUser() + ":" + server.getPassword().substring(0,1) + server.getPassword().substring(1).replaceAll(".", "*"));
 		}
 		if(server == null)
 			Logger.LogWarning("Couldn't find server for Server Path");
@@ -366,14 +397,14 @@ public class OpenSMB extends OpenNetworkPath
 	}
 
 	@Override
-	public boolean listFromDb()
+	public boolean listFromDb(SortType sort)
 	{
 		if(!AllowDBCache) return false;
 		String parent = getPath(); //.replace("/" + getName(), "");
 		if(!parent.endsWith("/"))
 			parent += "/";
 		Logger.LogDebug("Fetching from folder: " + parent);
-		Cursor c = mDb.fetchItemsFromFolder(parent);
+		Cursor c = mDb.fetchItemsFromFolder(parent, sort);
 		if(c == null) {
 			Logger.LogWarning("DB Fetch returned null?");
 			return false;

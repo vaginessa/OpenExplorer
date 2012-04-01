@@ -3,6 +3,7 @@ package org.brandroid.openmanager.adapters;
 import java.sql.Date;
 
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 import android.content.ContentValues;
 import android.content.Context;
@@ -144,13 +145,39 @@ public class OpenPathDbAdapter
     	}
     }
     
-    public Cursor fetchItemsFromFolder(String folder)
+    private String getSortString(SortType sort)
+    {
+    	boolean asc = true;
+    	String col = "";
+    	switch(sort)
+    	{
+	    	case ALPHA_DESC:
+	    		asc = false;
+	    	case ALPHA:
+	    		col = KEY_NAME;
+	    		break;
+	    	case DATE_DESC:
+	    		asc = false;
+	    	case DATE:
+	    		col = KEY_MTIME;
+	    		break;
+	    	case SIZE_DESC:
+	    		asc = false;
+	    	case SIZE:
+	    		col = KEY_SIZE;
+	    		break;
+	    	default: return "";
+    	}
+    	return col + " " + (asc ? "asc" : "desc");
+    }
+    
+    public Cursor fetchItemsFromFolder(String folder, SortType sort)
     {
     	open();
     	try {
     		return mDb.query(DATABASE_TABLE,
     				KEYS, KEY_FOLDER + " = '" + folder.replace("'", "\\'") + "'",
-    				null, null, null, KEY_NAME + " asc", null);
+    				null, null, null, getSortString(sort), null);
     	} catch(Exception e)
     	{
     		Logger.LogError("Couldn't fetch from folder " + folder + ". " + e.getLocalizedMessage(), e);

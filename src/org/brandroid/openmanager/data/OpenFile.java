@@ -16,6 +16,7 @@ import java.util.Hashtable;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.FileUtils;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -165,28 +166,18 @@ public class OpenFile extends OpenPath
 
 	@Override
 	public OpenFile getParent() {
-		return getParent(null);
+		String parent = mFile.getParent();
+		if(parent == null) return null;
+		return new OpenFile(parent);
 	}
 	
-	public OpenFile getParent(String root)
-	{
-		if(root != null && root != "")
-		{
-			if(getPath().indexOf(root) == -1) return null;
-			if(getPath().equals(root)) return null;
-		}
-		if(mFile.getParent() == null)
-			return null;
-		return new OpenFile(mFile.getParent());
-	}
-
 	@Override
 	public OpenFile[] listFiles() { return listFiles(false); }
 
 	@Override
-	public boolean listFromDb()
+	public boolean listFromDb(SortType sort)
 	{
-		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""));
+		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""), sort);
 		if(c == null) {
 			Logger.LogWarning("Null found in DB");
 			return false;
