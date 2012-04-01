@@ -43,13 +43,14 @@
 	    
 	    
 	    <FrameLayout android:id="@+id/list_frag"
-	        android:layout_weight="3"
-	        android:layout_width="match_parent"
+	        android:layout_width="@dimen/bookmarks_width"
 	        android:layout_height="match_parent"
 	       	/>
 	    
 	    <RelativeLayout
 	        android:layout_weight="1"
+	        android:layout_toRightOf="@id/list_frag"
+	        android:layout_alignParentRight="true"
 	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
 	        >	

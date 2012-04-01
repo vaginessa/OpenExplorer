@@ -133,22 +133,20 @@
 
         <FrameLayout
             android:id="@+id/list_frag"
-            android:layout_width="0dp"
+            android:layout_width="@dimen/bookmarks_width"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            />
 
 
         <FrameLayout
             android:id="@+id/content_frag"
-            android:layout_weight="3"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
         <ViewStub
             android:id="@+id/content_pager_frame_stub"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="3"
             android:layout="@layout/viewpager" />
     </LinearLayout>
 
