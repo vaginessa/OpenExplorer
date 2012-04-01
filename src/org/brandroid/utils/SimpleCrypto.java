@@ -1,5 +1,6 @@
 package org.brandroid.utils;
 import java.security.SecureRandom;
+import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -17,23 +18,44 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class SimpleCrypto {
 
-        public static String encrypt(String seed, String cleartext) throws Exception {
-                byte[] rawKey = getRawKey(seed.getBytes());
-                byte[] result = encrypt(rawKey, cleartext.getBytes());
-                return toHex(result);
+        public static String encrypt(String seed, String cleartext)
+        	throws Exception
+        {
+        	String seed2 = generateRandomString(2); 
+            byte[] rawKey = getRawKey((seed+seed2).getBytes());
+            byte[] result = encrypt(rawKey, cleartext.getBytes());
+            return toHex(result) + "-" + seed2;
         }
+        public static String generateRandomString(int len)
+    	{
+        	String ret = "";
+    		for(int i=0; i < len; i++)
+    			ret += (char)('a' + (new Random().nextInt() % 26));
+    		return ret;
+    	}
         
-        public static String decrypt(String seed, String encrypted) throws Exception {
-                byte[] rawKey = getRawKey(seed.getBytes());
-                byte[] enc = toByte(encrypted);
-                byte[] result = decrypt(rawKey, enc);
-                return new String(result);
+        public static String decrypt(String seed, String encrypted)
+        	throws Exception
+        {
+        	String seed2 = "";
+        	if(encrypted.indexOf("-") > -1)
+        	{
+        		seed2 = encrypted.substring(encrypted.indexOf("-") + 1);
+        		encrypted = encrypted.substring(0, encrypted.indexOf("-"));
+        	}
+        	
+            byte[] rawKey = getRawKey((seed+seed2).getBytes());
+            byte[] enc = toByte(encrypted);
+            byte[] result = decrypt(rawKey, enc);
+            return new String(result);
         }
 
-        private static byte[] getRawKey(byte[] seed) throws Exception {
-                KeyGenerator kgen = KeyGenerator.getInstance("AES");
-                SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-                sr.setSeed(seed);
+        private static byte[] getRawKey(byte[] seed)
+        	throws Exception
+        {
+            KeyGenerator kgen = KeyGenerator.getInstance("AES");
+            SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+            sr.setSeed(seed);
             kgen.init(128, sr); // 192 and 256 bits may not be available
             SecretKey skey = kgen.generateKey();
             byte[] raw = skey.getEncoded();
