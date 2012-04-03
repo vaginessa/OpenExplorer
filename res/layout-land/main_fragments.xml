@@ -14,7 +14,7 @@
 
 	    <com.viewpagerindicator.TabPageIndicator
 	        android:id="@+id/content_pager_indicator"
-	        android:layout_width="fill_parent"
+	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
 	        />
 
@@ -74,8 +74,8 @@
         <ProgressBar
             android:id="@+id/title_progress"
             style="@android:style/Widget.ProgressBar.Small"
-            android:layout_width="fill_parent"
-            android:layout_height="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_below="@+id/title_icon"
             android:layout_marginTop="2dp"
             android:indeterminate="true"

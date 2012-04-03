@@ -73,6 +73,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
@@ -1491,6 +1492,7 @@ public class OpenExplorer
 				tbl.setStretchAllColumns(false);
 			ViewGroup tr = (ViewGroup)findViewById(R.id.base_row);
 			if(tr.getTag() != null) return;
+			tr.measure(LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.actionbar_compat_height));
 			int i = -1;
 			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (int)(16 * getResources().getDimension(R.dimen.one_dp));
 			int tblWidth = tr.getWidth();

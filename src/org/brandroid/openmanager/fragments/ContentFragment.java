@@ -413,7 +413,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 	}
 	private void setViewSetting(OpenPath path, String key, Integer value)
 	{
-		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+		if(path != null && path.getPath() != null && getExplorer() != null && getExplorer().getPreferences() != null)
+			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 
 	//@Override
