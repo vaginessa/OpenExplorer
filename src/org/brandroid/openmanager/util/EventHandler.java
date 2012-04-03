@@ -186,7 +186,7 @@ public class EventHandler {
 			.setMessageTop(R.string.s_prompt_search_within)
 			.setDefaultTop(base.getPath())
 			.setMessage(R.string.s_prompt_search);
-		dSearch
+		AlertDialog alert = dSearch
 			.setPositiveButton(R.string.s_search, new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					searchFile(new OpenFile(dSearch.getInputTopText()),
@@ -198,7 +198,9 @@ public class EventHandler {
 					dialog.dismiss();
 				}
 			})
-			.create().show();
+			.create();
+		alert.setInverseBackgroundForced(true);
+		alert.show();
 	}
 	
 	public void renameFile(final String path, boolean isFolder, Context mContext) {
@@ -248,20 +250,21 @@ public class EventHandler {
 	 * @param directory directory path to create the new folder in.
 	 */
 	public void createNewFolder(final String directory, Context mContext) {
-		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View view = inflater.inflate(R.layout.input_dialog_layout, null);
-		
-		final EditText text = (EditText)view.findViewById(R.id.dialog_input);
-		TextView msg = (TextView)view.findViewById(R.id.dialog_message);
-		
-		msg.setText(getResourceString(mContext, R.string.s_alert_newfolder));
-		
-		new AlertDialog.Builder(mContext)
-			.setPositiveButton(getResourceString(mContext, R.string.s_create), new OnClickListener() {
-			
+		final InputDialog dlg = new InputDialog(mContext)
+			.setTitle(R.string.s_title_newfolder)
+			.setIcon(R.drawable.ic_menu_folder_add_dark)
+			.setMessage(R.string.s_alert_newfolder)
+			.setMessageTop(R.string.s_alert_newfolder_folder)
+			.setDefaultTop(directory, false)
+			.setCancelable(true)
+			.setNegativeButton(R.string.s_cancel, new OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+		dlg.setPositiveButton(R.string.s_create, new OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				String name = text.getText().toString();
-				
+				String name = dlg.getInputText();
 				if(name.length() > 0) {
 					if(mFileMang != null)
 						mFileMang.createDir(directory, name);
@@ -271,17 +274,8 @@ public class EventHandler {
 					dialog.dismiss();
 				}
 			}
-		})
-		.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-		})
-		.setView(view)
-		.setTitle(getResourceString(mContext, R.string.s_title_newfolder))
-		.setCancelable(false)
-		.setIcon(R.drawable.lg_folder).create().show();
+		});
+		dlg.create().show();
 	}
 	
 	public void sendFile(final List<OpenPath> path, final Context mContext) {
