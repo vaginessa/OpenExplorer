@@ -52,12 +52,11 @@ public class IconContextMenu
     	return menu;
     }
 
-	public IconContextMenu(Context context, MenuBuilder menu, final View from, final View head, final View foot) {
+	public IconContextMenu(Context context, MenuBuilder newMenu, final View from, final View head, final View foot) {
 		root = (ViewGroup) ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.paste_layout, null);
 		//root.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        //menu = newMenu;
-		this.menu = menu;
-        anchor = from;
+        menu = newMenu;
+		anchor = from;
         //this.dialog = new AlertDialog.Builder(context);
         popup = new BetterPopupWindow(context, anchor);
         mGrid = new GridView(context);

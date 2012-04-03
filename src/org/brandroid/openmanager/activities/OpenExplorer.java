@@ -211,6 +211,8 @@ public class OpenExplorer
 	private MenuBuilder mMainMenu = null;
 	
 	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
+	private static boolean bRetrieveExtraVideoDetails = Build.VERSION.SDK_INT > 8;
+	private static boolean bRetrieveCursorFiles = Build.VERSION.SDK_INT >= 10;
 	
 	private static final FileManager mFileManager = new FileManager();
 	private static final EventHandler mEvHandler = new EventHandler(mFileManager);
@@ -1057,6 +1059,8 @@ public class OpenExplorer
 			//Logger.LogDebug("Videos should be found");
 		}else
 		{
+			if(bRetrieveExtraVideoDetails)
+				bRetrieveExtraVideoDetails = !getSetting(null, "tag_novidinfo", false);
 			mVideoParent.setName(getString(R.string.s_videos));
 			Logger.LogVerbose("Finding videos");
 			//if(!IS_DEBUG_BUILD)
@@ -1486,11 +1490,14 @@ public class OpenExplorer
 			if(tbl != null)
 				tbl.setStretchAllColumns(false);
 			ViewGroup tr = (ViewGroup)findViewById(R.id.base_row);
+			if(tr.getTag() != null) return;
 			int i = -1;
 			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (int)(16 * getResources().getDimension(R.dimen.one_dp));
 			int tblWidth = tr.getWidth();
 			if(tblWidth == 0)
-				tblWidth = btnWidth * 4;
+				tblWidth = getWindowWidth();
+			if(tblWidth == 0)
+				tblWidth = btnWidth * getResources().getInteger(R.integer.max_base_buttons);
 			while(++i < menu.size())
 			{
 				if(tr.getChildCount() * btnWidth > tblWidth)
@@ -1502,9 +1509,8 @@ public class OpenExplorer
 						menu.getItem(i) instanceof MenuItemImpl)
 				{
 					MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
-					if(item.getMenuInfo() != null)
-						Logger.LogVerbose("INFO: " + item.getMenuInfo().toString());
-					if(!item.isCheckable())
+					if(item.getItemId() == R.id.title_menu) break;
+					if(!item.isCheckable() && tr.findViewById(item.getItemId()) == null)
 					{
 						ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
 						if(!item.isVisible())
@@ -1516,11 +1522,32 @@ public class OpenExplorer
 						btn.setId(item.getItemId());
 						btn.setOnClickListener(this);
 						tr.addView(btn);
-						menu.getItem(i).setVisible(false);
+						menu.getItem(i--).setVisible(false);
+						menu.removeItem(item.getItemId());
 					} else Logger.LogWarning(item.getTitle() + " should not show. " + item.getShowAsAction() + " :: " + item.getFlags());
 				}
 			}
-			setMenuVisible(menu, false, R.id.title_menu);
+			tr.setTag(true);
+			if(Build.VERSION.SDK_INT > 10)
+				setMenuVisible(menu, false, R.id.title_menu);
+			else if(menu.size() > 0)
+			{
+				MenuItemImpl item = (MenuItemImpl)menu.findItem(R.id.title_menu);
+				if(item != null)
+				{
+					ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
+					if(!item.isVisible())
+						btn.setVisibility(View.GONE);
+					Drawable d = item.getIcon();
+					if(d instanceof BitmapDrawable)
+						((BitmapDrawable)d).setGravity(Gravity.CENTER);
+					btn.setImageDrawable(d);
+					btn.setId(item.getItemId());
+					btn.setOnClickListener(this);
+					tr.addView(btn);
+					menu.removeItem(item.getItemId());
+				}
+			}
 			Logger.LogDebug("Added " + tr.getChildCount() + " children to Base Bar.");
 			if(tbl != null)
 			{
@@ -1971,10 +1998,10 @@ public class OpenExplorer
 	public void showMenu(int menuId, final View from)
 	{
 		//if(mMenuPopup == null)
-		if(showContextMenu(menuId, from instanceof CheckedTextView ? null : from) == null)
-			if(menuId == R.menu.main_menu || menuId == R.id.title_menu)
-				openOptionsMenu();
-			else if (menuId == R.id.menu_sort)
+		if(menuId == R.id.title_menu || menuId == R.menu.main_menu)
+			showContextMenu(IconContextMenu.newMenu(this, menuId), from instanceof CheckedTextView ? null : from);
+		else if(showContextMenu(menuId, from instanceof CheckedTextView ? null : from) == null)
+			if (menuId == R.id.menu_sort)
 				showMenu(R.menu.menu_sort, from instanceof CheckedTextView ? null : from);
 			else if(menuId == R.id.menu_view)
 				showMenu(R.menu.menu_view, from instanceof CheckedTextView ? null : from);
@@ -2011,6 +2038,7 @@ public class OpenExplorer
 					menuId == R.menu.menu_sort_flat ||
 					menuId == R.menu.menu_view_flat)
 			{
+				//IconContextMenu icm1 = new IconContextMenu(getApplicationContext(), menu, from, null, null);
 				final IconContextMenu icm = IconContextMenu.getInstance(
 						getApplicationContext(), menuId, from, null, null);
 				if(icm == null)
@@ -2061,9 +2089,18 @@ public class OpenExplorer
 		Logger.LogDebug("Trying to show context menu " + menu.toString() + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 		IconContextMenu icm = null;
 		try {
+			ViewGroup baseRow = (ViewGroup)findViewById(R.id.base_row);
+			for(int i = menu.size() - 1; i >= 0; i--)
+			{
+				MenuItem item = menu.getItem(i);
+				if(baseRow.findViewById(item.getItemId()) != null)
+					menu.removeItemAt(i);
+			}
+				
 			icm = new IconContextMenu(this, menu, from, null, null);
-			if(menu.size() > 10)
+			if(menu.findItem(R.id.menu_context_bookmark) != null)
 				icm.setNumColumns(2);
+			else icm.setNumColumns(1);
 			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 				public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 					//showToast(item.getTitle().toString());
@@ -2305,21 +2342,20 @@ public class OpenExplorer
 				{
 					if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
 						mFileManager.popStack();
-					if(new OpenFile(entry.getBreadCrumbTitle().toString()).exists())
+
+					try {
+						mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(),
+								false, OpenPath.Sorting);
+					} catch (Exception e) {
+						Logger.LogError("Couldn't get back cache.", e);
+					}
+					if(mLastPath != null)
 					{
-						try {
-							mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(),
-									false, OpenPath.Sorting);
-						} catch (Exception e) {
-							Logger.LogError("Couldn't get back cache.", e);
-						}
-						if(mLastPath != null)
-						{
-							Logger.LogDebug("last path set to " + mLastPath.getPath());
-							changePath(mLastPath, false);
-							updateTitle(mLastPath.getPath());
-						} else finish();
-					} else Logger.LogError("Back Stack Entry doesn't exist? " + entry.getBreadCrumbTitle());
+						Logger.LogDebug("last path set to " + mLastPath.getPath());
+						changePath(mLastPath, false);
+						updateTitle(mLastPath.getPath());
+					} else finish();
+					
 				} else if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
 					goBack();
 				else {
@@ -2393,8 +2429,9 @@ public class OpenExplorer
 			setViewVisibility(false, false, R.id.content_frag);
 			if(force || addToStack || path.requiresThread())
 			{
-				mViewPagerAdapter.clear();
+				mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
+				int iNonContentPages = mViewPagerAdapter.getCount();
 				try {
 					mViewPagerAdapter.add(0, ContentFragment.getInstance(path, newView));
 				} catch(IllegalStateException e)
@@ -2411,43 +2448,53 @@ public class OpenExplorer
 				//mViewPagerAdapter = newAdapter;
 				setViewPageAdapter(mViewPagerAdapter);
 				int index = mViewPagerAdapter.getCount() - 1;
+				index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				try {
 					if(mViewPager.getCurrentItem() != index) // crash fix
 						mViewPager.setCurrentItem(index, true);
 				} catch(IllegalStateException e) { Logger.LogError("Hopefully the Pager is okay!", e); }
 				updatePagerTitle(index);
-				try {
-					fragmentManager
-						.beginTransaction()
-						.setBreadCrumbTitle(path.getPath())
-						.addToBackStack("path")
-						.commit();
-				} catch(IllegalStateException e) {
-					Logger.LogError("Couldn't add frag to stack", e);
-				}
-			} else {
-				List<ContentFragment> pageFrags = mViewPagerAdapter.getItemsOfType(new ContentFragment());
-				for(int i = pageFrags.size() - 1; i >= 0; i--)
-				{
-					if(path.getPath().startsWith(pageFrags.get(i).getPath().getPath()))
-						continue;
-					pageFrags.remove(i);
-				}
-				boolean hasMe = false;
-				for(ContentFragment frag : pageFrags)
-					if(frag.getPath().getPath().equals(path.getPath()))
-						hasMe = true;
-				int index = pageFrags.size();
-				if(!hasMe)
-					mViewPagerAdapter.add(index++, ContentFragment.getInstance(path, newView));
-				if(mViewPager.getCurrentItem() != index)
+				if(addToStack)
 					try {
-						mViewPager.setCurrentItem(index, true);
-					} catch(IllegalStateException ise) {
-						Logger.LogWarning("Fragment already active?", ise);
+						fragmentManager
+							.beginTransaction()
+							.setBreadCrumbTitle(path.getPath())
+							.addToBackStack("path")
+							.commit();
+					} catch(IllegalStateException e) {
+						Logger.LogError("Couldn't add frag to stack", e);
 					}
-				updatePagerTitle(index);
+			} else {
+				mViewPager.setAdapter(null);
+				OpenPath commonBase = null;
+				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
+				{
+					if(!(mViewPagerAdapter.getItem(i) instanceof ContentFragment))
+						continue;
+					ContentFragment c = (ContentFragment)mViewPagerAdapter.getItem(i);
+					if(path.getPath().startsWith(c.getPath().getPath()))
+						continue;
+					commonBase = ((ContentFragment)mViewPagerAdapter.remove(i)).getPath();
+				}
+				int depth = 0;
+				if(commonBase != null)
+					depth = commonBase.getDepth() - 1;
+				OpenPath tmp = path;
+				while(tmp != null && (commonBase == null || !tmp.equals(commonBase)))
+				{
+					mViewPagerAdapter.add(depth,
+						ContentFragment.getInstance(path));
+					tmp = tmp.getParent();
+					if(tmp == null) break;
+				}
+				mViewPager.setAdapter(mViewPagerAdapter);
+				try {
+					if(mViewPager.getCurrentItem() != path.getDepth() - 1)
+						mViewPager.setCurrentItem(path.getDepth() - 1, true);
+				} catch(IllegalStateException ise) {
+					Logger.LogWarning("Fragment already active?", ise);
+				}
 			}
 		} else {
 			setViewVisibility(false, false, R.id.content_pager_frame);
@@ -2506,6 +2553,7 @@ public class OpenExplorer
 			updateTitle(path.getPath());
 			changeViewMode(getSetting(path, "view", 0), false); // bug fix
 		}
+		refreshContent();
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		/*if(content instanceof ContentFragment)
@@ -2519,6 +2567,10 @@ public class OpenExplorer
 		//ft.replace(R.id.content_frag, content);
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
+	}
+	private void refreshContent()
+	{
+		getDirContentFragment(true).refreshData(null, false);
 	}
 	private String getFragmentPaths(List<Fragment> frags)
 	{
@@ -2550,7 +2602,7 @@ public class OpenExplorer
 	{
 		try {
 			View root = getCurrentFocus().getRootView();
-			int vis = on ? View.SYSTEM_UI_FLAG_VISIBLE : View.SYSTEM_UI_FLAG_LOW_PROFILE;
+			int vis = on ? View.STATUS_BAR_VISIBLE : View.STATUS_BAR_HIDDEN;
 			if(root.getSystemUiVisibility() != vis)
 				root.setSystemUiVisibility(vis);
 		} catch(Exception e) { }
@@ -2923,23 +2975,33 @@ public class OpenExplorer
 					getApplicationContext(),
 					MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
 					//Uri.parse("content://media/external/video/media"),
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
-							MediaStore.Video.VideoColumns.RESOLUTION,
-							MediaStore.Video.VideoColumns.DURATION},
+					bRetrieveExtraVideoDetails ?
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
+								MediaStore.Video.VideoColumns.RESOLUTION,
+								MediaStore.Video.VideoColumns.DURATION} :
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 					MediaStore.Video.Media.SIZE + " > 10000", null,
 					MediaStore.Video.Media.BUCKET_DISPLAY_NAME + " ASC, " +
 					MediaStore.Video.Media.DATE_MODIFIED + " DESC"
 						);
+				if(bRetrieveExtraVideoDetails)
+					try {
+						loader.loadInBackground();
+					} catch(SQLiteException e) {
+						bRetrieveExtraVideoDetails = false;
+						setSetting(null, "tag_novidinfo", true);
+						return onCreateLoader(id, arg1);
+					}
 				break;
 			case 1: // images
 				loader = new CursorLoader(
 					getApplicationContext(),
 					Uri.parse("content://media/external/images/media"),
 					bRetrieveDimensionsForPhotos ? // It seems that < 2.3.3 don't have width & height
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
-							MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT
-						} :
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
+								MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT
+							} :
+						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 					MediaStore.Images.Media.SIZE + " > 10000", null,
 					MediaStore.Images.Media.DATE_ADDED + " DESC"
 					);
@@ -2966,6 +3028,7 @@ public class OpenExplorer
 					);
 				break;
 			case 3: // apks
+				if(bRetrieveCursorFiles)
 				loader = new CursorLoader(
 					getApplicationContext(),
 					MediaStore.Files.getContentUri("/mnt"),
@@ -2975,6 +3038,7 @@ public class OpenExplorer
 					);
 				break;
 			case 4: // downloads
+				if(bRetrieveCursorFiles)
 				loader = new CursorLoader(
 					getApplicationContext(),
 					MediaStore.Files.getContentUri("/"),
