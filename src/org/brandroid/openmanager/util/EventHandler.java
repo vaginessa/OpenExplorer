@@ -163,7 +163,7 @@ public class EventHandler {
 		}
 		AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 		b.setTitle(getResourceString(mContext, R.string.s_menu_delete) + " " + name)
-			.setMessage(((String)mContext.getText(R.string.s_alert_confirm_delete)).replace("xxx", name))
+			.setMessage(mContext.getString(R.string.s_alert_confirm_delete, name))
 			.setIcon(R.drawable.ic_menu_delete)
 			.setPositiveButton(getResourceString(mContext, R.string.s_menu_delete), new OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
@@ -475,7 +475,9 @@ public class EventHandler {
 			mNotifier.cancel(mNotifyId);
 		}
 		protected void onPreExecute() {
-			Boolean showDialog = true, showNotification = false, isCancellable = true;
+			boolean showDialog = true,
+					showNotification = false,
+					isCancellable = true;
 			int notifIcon = R.drawable.icon;
 			switch(mType) {
 				case DELETE_TYPE:
@@ -508,13 +510,13 @@ public class EventHandler {
 			if(showDialog)
 				try {
 					mPDialog = ProgressDialog.show(mContext, getTitle(),
-							getResourceString(mContext, R.string.s_title_wait).toString(),
-							true, true,
-							new DialogInterface.OnCancelListener() {
-								public void onCancel(DialogInterface dialog) {
-									cancelRunningTasks();
-								}
-							});
+						getResourceString(mContext, R.string.s_title_wait).toString(),
+						true, true,
+						new DialogInterface.OnCancelListener() {
+							public void onCancel(DialogInterface dialog) {
+								cancelRunningTasks();
+							}
+						});
 				} catch(Exception e) { }
 			if(showNotification)
 			{

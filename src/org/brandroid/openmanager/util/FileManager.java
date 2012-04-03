@@ -362,38 +362,37 @@ public class FileManager {
 		
 		int ret = 0;
 		
-		if(target.exists() && target.isFile() && target.canWrite())
+		if(!target.exists())
+			Logger.LogWarning("Unable to delete target as it no longer exists: " + target.getPath());
+		
+		if(target.isFile())
+		{
 			if(target.delete())
 				ret++;
+			else Logger.LogError("Unable to delete target file: " + target.getPath());
+		}
 		
 		else if(target.exists() && target.isDirectory() && target.canRead()) {
 			OpenPath[] file_list = null;
 			try {
 				file_list = target.list();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Logger.LogError("Error listing children to delete.", e);
 			}
 			
-			if(file_list != null && file_list.length == 0) {
-				if(target.delete())
-					ret++;
-				
-			} else if(file_list != null && file_list.length > 0) {
+			if(file_list != null && file_list.length > 0) {
 				
 				for(int i = 0; i < file_list.length; i++)
-				{
-					OpenPath f = file_list[i];
-					if(f.isDirectory())
-						ret += deleteTarget(f);
-					else if(f.isFile())
-						if(f.delete())
-							ret++;
-				}
+					ret += deleteTarget(file_list[i]);
+				
 			}
 			if(target.exists())
+			{
+				// Directory is now empty, please delete!
 				if(target.delete())
 					ret++;
+				else Logger.LogError("Couldn't delete target " + target.getPath());
+			} else Logger.LogWarning("Unable to delete target as it does not exist: " + target.getPath());
 		}	
 		return ret;
 	}
