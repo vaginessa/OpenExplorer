@@ -201,10 +201,10 @@ public class OpenSFTP extends OpenNetworkPath
 			}
 		} catch (SftpException e) {
 			Logger.LogError("SftpException during listFiles", e);
-			throw new IOException("SftpException during listFiles", e);
+			throw new IOException("SftpException during listFiles");
 		} catch (JSchException e) {
 			Logger.LogError("JSchException during listFiles", e);
-			throw new IOException("JSchException during listFiles", e);
+			throw new IOException("JSchException during listFiles");
 		}
 		FileManager.setOpenCache(getAbsolutePath(), this);
 		return mChildren;

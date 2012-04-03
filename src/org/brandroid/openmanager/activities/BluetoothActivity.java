@@ -18,6 +18,7 @@
 
 package org.brandroid.openmanager.activities;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -162,7 +163,9 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setTheme(android.R.style.Theme_Holo_Dialog_MinWidth);
+		if(Build.VERSION.SDK_INT >= 13)
+			setTheme(android.R.style.Theme_Holo_Dialog_MinWidth);
+		else setTheme(android.R.style.Theme_Dialog);
 		setContentView(R.layout.bluetooth_layout);
 		
 		mFilePaths = getIntent().getExtras().getStringArray("paths");
