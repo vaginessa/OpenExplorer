@@ -358,7 +358,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	private boolean checkPrefs(BookmarkType type, OpenPath path)
 	{
 		if(path.getPath().equals("/"))
-			return getExplorer().getSetting(null, "pref_show_root", true);
+			return getExplorer().getSetting(null, "pref_show_root", false);
 		else if(OpenFile.getInternalMemoryDrive().equals(path))
 			return getExplorer().getSetting(null, "pref_show_internal", true);
 		else if(OpenFile.getExternalMemoryDrive(true).equals(path))

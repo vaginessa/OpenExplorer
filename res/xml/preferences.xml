@@ -41,7 +41,7 @@
 		    android:title="@string/s_pref_pagers" 
 		    android:summaryOn="@string/s_pref_pagers_summary_on"
 		    android:summaryOff="@string/s_pref_pagers_summary_off"
-		    android:defaultValue="false"
+		    android:defaultValue="true"
 		    />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/s_pref_sort">
@@ -59,7 +59,7 @@
         <CheckBoxPreference
             android:key="pref_show_root"
             android:title="@string/s_pref_show_root"
-            android:defaultValue="true"
+            android:defaultValue="false"
             />
         <CheckBoxPreference
             android:key="pref_show_internal"

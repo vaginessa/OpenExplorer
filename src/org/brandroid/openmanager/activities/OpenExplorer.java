@@ -239,7 +239,7 @@ public class OpenExplorer
 		else {
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		}
-		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", false);
+		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", true);
 		//USE_ACTIONMODE = getPreferences().getBoolean("global", "pref_actionmode", false);
 		
 		Preferences.Pref_Intents_Internal = getPreferences().getBoolean("global", "pref_intent_internal", true);
@@ -365,7 +365,7 @@ public class OpenExplorer
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
 		{	
-			String start = getPreferences().getString("global", "pref_start", "Videos");
+			String start = getPreferences().getString("global", "pref_start", "External");
 	
 			if(savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals(""))
 				start = savedInstanceState.getString("last");
@@ -480,7 +480,7 @@ public class OpenExplorer
 		handleMediaReceiver();
 
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
-			showSplashIntent(this, getPreferences().getString("global", "pref_start", "External"));
+			showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
 	}
 
 	private void upgradeViewSettings() {
@@ -636,6 +636,7 @@ public class OpenExplorer
 			public void run() {
 			new AlertDialog.Builder(getApplicationContext())
 				.setTitle(R.string.s_warn_pager_title)
+				.setCancelable(true)
 				.setMessage(getString(R.string.s_warn_pager) + "\n" + getString(R.string.s_warn_confirm))
 				.setPositiveButton(android.R.string.yes, new Dialog.OnClickListener() {
 						@Override
@@ -1611,7 +1612,7 @@ public class OpenExplorer
 		
 		setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
 		
-		setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", true), R.id.menu_view_fullscreen);
+		setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // honeycomb
 			setMenuVisible(menu, false, R.id.menu_view_fullscreen);
 		
@@ -1715,7 +1716,7 @@ public class OpenExplorer
 				
 			
 			case R.id.menu_new_folder:
-				mEvHandler.createNewFolder(mLastPath.getPath(), this);
+				mEvHandler.createNewFolder(getDirContentFragment(false).getPath().getPath(), this);
 				return true;
 				
 			case R.id.menu_multi:
@@ -2965,6 +2966,7 @@ public class OpenExplorer
 			frag.onWorkerThreadComplete(type, results);
 		if(getClipboard().ClearAfter)
 			getClipboard().clear();
+		refreshContent();
 	}
 	
 	@Override
