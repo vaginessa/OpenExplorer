@@ -619,11 +619,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(RootManager.tryExecute("umount " + sPath))
 		{
 			getExplorer().showToast(R.string.s_alert_remove_safe);
-			viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
-				.setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
-					public void onAnimationEnd(Animator animation) {
-						scanBookmarks();
-					}});
+			if(Build.VERSION.SDK_INT >= 12)
+				viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
+					.setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener(){
+						public void onAnimationEnd(Animator animation) {
+							scanBookmarks();
+						}});
 		} else
 			getExplorer().showToast(R.string.s_alert_remove_error);
 	}
