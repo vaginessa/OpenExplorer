@@ -42,7 +42,9 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSCP;
@@ -475,14 +477,24 @@ public class FileManager {
 				} catch(Exception e) {
 					Logger.LogError("Couldn't get samba from cache.", e);
 				}
-			}
+			} else if(path.startsWith("/"))
+				ret = new OpenFile(path);
+			else if(path.equals("Videos"))
+				ret = OpenExplorer.getVideoParent();
+			else if(path.equals("Photos"))
+				ret = OpenExplorer.getPhotoParent();
+			else if(path.equals("Music"))
+				ret = OpenExplorer.getMusicParent();
+			else if(path.equals("Downloads"))
+				ret = OpenExplorer.getDownloadParent();
 			if(ret == null) return ret;
-			if(bGetNetworkedFiles)
+			if(!ret.requiresThread() || bGetNetworkedFiles)
 			{
 				if(ret.listFiles() != null)
 					setOpenCache(path, ret);
-			} else {
-				ret.listFromDb(sort);
+			} else if(ret instanceof OpenNetworkPath) {
+				if(ret.listFromDb(sort))
+					setOpenCache(path, ret);
 			}
 		}
 		//if(ret == null)

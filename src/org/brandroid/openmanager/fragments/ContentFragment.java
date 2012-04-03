@@ -267,7 +267,7 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		mContext = getActivity().getApplicationContext();
 		
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
-		refreshData(mBundle);
+		refreshData(mBundle, true);
 		
 		if(mGrid != null)
 		{
@@ -293,7 +293,6 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		if(mContentAdapter != null)
 			mContentAdapter.notifyDataSetChanged();
 	}
-	public void refreshData(Bundle savedInstanceState) { refreshData(savedInstanceState, true); }
 	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
 		if(mData2 == null)
@@ -362,6 +361,8 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 			setProgressVisibility(true);
 			if(path instanceof OpenNetworkPath && path.listFromDb(mSorting))
 				mData = ((OpenNetworkPath)path).getChildren();
+			else if(path instanceof OpenFile)
+				mData = ((OpenFile)path).listFiles();
 			//cancelAllTasks();
 			if(mFileTasks.containsKey(path))
 				mFileTasks.get(path).cancel(true);
@@ -1254,14 +1255,14 @@ public class ContentFragment extends OpenFragment implements OnItemClickListener
 		saveTopPath();
 		setShowHiddenFiles(!toShow);
 		//getManager().setShowHiddenFiles(state);
-		refreshData(null);
+		refreshData(null, false);
 	}
 
 	//@Override
 	public void onThumbnailChanged(boolean state) {
 		saveTopPath();
 		setShowThumbnails(state);
-		refreshData(null);
+		refreshData(null, false);
 	}
 	
 	//@Override

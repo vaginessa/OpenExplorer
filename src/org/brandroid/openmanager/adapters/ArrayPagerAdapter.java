@@ -125,13 +125,8 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		notifyDataSetChanged();
 		return ret;
 	}
-
-	public <T extends Fragment> List<T> getItemsOfType(T c) {
-		List<T> ret = new ArrayList<T>();
-		for (Fragment f : mExtraFrags)
-			if (f.getClass().equals(c))
-				ret.add((T) f);
-		return ret;
+	public Fragment remove(int index) {
+		return mExtraFrags.remove(index);
 	}
 
 	public int removeOfType(Class c) {
