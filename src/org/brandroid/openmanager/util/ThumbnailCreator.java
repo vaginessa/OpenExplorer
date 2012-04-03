@@ -72,6 +72,7 @@ public class ThumbnailCreator extends Thread {
 	
 	private static Context mContext;
 	private boolean mStop = false;
+	private static int iVideoThumbErrors = 0;
 	
 	public static boolean useCache = true;
 	public static boolean showThumbPreviews = true; 
@@ -401,11 +402,13 @@ public class ThumbnailCreator extends Thread {
 									om.getMediaID(), kind, opts
 								);
 					else // if(om.getParent().getName().equals("Videos"))
-						bmp = MediaStore.Video.Thumbnails.getThumbnail(
+						if(iVideoThumbErrors < 5)
+							bmp = MediaStore.Video.Thumbnails.getThumbnail(
 									mContext.getContentResolver(),
 									om.getMediaID(), kind, opts
 								);
 				} catch(Exception e) {
+					iVideoThumbErrors++;
 					Logger.LogWarning("Couldn't get MediaStore thumbnail.", e);
 				}
 				if(bmp != null) {
