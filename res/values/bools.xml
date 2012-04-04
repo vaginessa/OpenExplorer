@@ -4,4 +4,5 @@
     <item type="bool" name="use_pager">true</item>
     <item type="bool" name="add_bookmarks_to_pager">false</item>
     <item type="bool" name="honeycomb">false</item>
+    <item type="bool" name="prehoneycomb">true</item>
 </resources>

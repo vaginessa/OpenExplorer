@@ -201,13 +201,16 @@
                 android:visibility="visible"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" >
-
+
+                <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
                 <TextView
                     android:id="@+id/about_hardware"
                     style="@style/Mid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     />
+                
+                </ScrollView>
 
             </LinearLayout>
  </LinearLayout>

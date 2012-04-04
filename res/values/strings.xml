@@ -209,4 +209,7 @@
     <string name="s_show">Show</string>
     <string name="s_msg_event_cancelled">Event cancelled.</string>
     <string name="s_alert_newfolder_folder">Create new folder in:</string>
+    <string name="s_pref_fancy_category">Fancy Display Settings</string>
+    <string name="s_pref_fancy_menus">Fancy Menus</string>
+    <string name="s_pref_fancy_context">Fancy Context Menus</string>
 </resources>

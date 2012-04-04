@@ -123,10 +123,13 @@ public class BetterPopupWindow {
 		if(backgroundView == null)
 		{
 			
-			backgroundView = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+			backgroundView = ((LayoutInflater)mContext
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
 					.inflate(layout, null);
 			if(this.root.getParent() == null)
-				((ViewGroup)backgroundView.findViewById(android.R.id.widget_frame)).addView(this.root);
+				((ViewGroup)backgroundView
+					.findViewById(android.R.id.widget_frame))
+					.addView(this.root);
 		}
 		this.popup.setContentView(backgroundView);
 		
@@ -140,6 +143,7 @@ public class BetterPopupWindow {
 	private void placeArrow(int arrowOffset, int rootWidth)
 	{
 		View indicator = backgroundView.findViewById(R.id.indicator);
+		if(indicator == null) return;
 		if(!USE_INDICATOR && indicator != null)
 		{
 			indicator.setVisibility(View.GONE);

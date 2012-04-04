@@ -53,7 +53,8 @@ public class IconContextMenu
     }
 
 	public IconContextMenu(Context context, MenuBuilder newMenu, final View from, final View head, final View foot) {
-		root = (ViewGroup) ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.paste_layout, null);
+		root = (ViewGroup) ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+				.inflate(R.layout.paste_layout, null);
 		//root.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         menu = newMenu;
 		anchor = from;

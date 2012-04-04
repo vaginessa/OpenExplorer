@@ -18,7 +18,11 @@
 
 package org.brandroid.openmanager.fragments;
 
+import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,11 +64,15 @@ import android.widget.Toast;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.zip.ZipFile;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
@@ -670,6 +678,7 @@ public class DialogHandler extends DialogFragment {
 		if(dm!=null)
 			sHardwareInfo += "Density: " + dm.density + "\n";
 		sHardwareInfo += "Rotation: " + d.getRotation() + "\n\n";
+		sHardwareInfo += getNetworkInfo(mContext);
 		sHardwareInfo += getDeviceInfo();
 		((TextView)view.findViewById(R.id.about_hardware)).setText(sHardwareInfo);
 		
@@ -746,10 +755,97 @@ public class DialogHandler extends DialogFragment {
 		mDlgAbout.show();
 	}
 	
+	private static String getNetworkInfoInfo(NetworkInfo info)
+	{
+		String ret = "";
+		ret += info.getSubtypeName() + "/ ";
+		if(info.getState() != null)
+			ret += "s=" + info.getState().name() + "/ ";
+		if(info.getDetailedState() != null)
+			ret += "d=" + info.getDetailedState().name() + "/ ";
+		if(info.getExtraInfo() != null)
+			ret += "e=" + info.getExtraInfo();
+		return ret;
+	}
+	
+	private static String getReadableIP(int ip)
+	{
+		int[] bytes = new int[4];
+	    bytes[0] = ip & 0xFF;
+	    bytes[1] = (ip >> 8) & 0xFF;
+	    bytes[2] = (ip >> 16) & 0xFF;
+	    bytes[3] = (ip >> 24) & 0xFF;       
+	    return bytes[3] + "." + bytes[2] + "." + bytes[1] + "." + bytes[0];   
+	}
+	private static String getNetworkInterfaces()
+	{
+		String ret = "IP Address:";
+		try {
+		for(Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
+		{
+			NetworkInterface ni = en.nextElement();
+			for(Enumeration<InetAddress> enumIP = ni.getInetAddresses(); enumIP.hasMoreElements();)
+			{
+				InetAddress ip = enumIP.nextElement();
+				if(!ip.isLoopbackAddress())
+					ret += " " + ip.getHostAddress();
+			}
+		}
+		} catch(SocketException e) {
+			Logger.LogError("Couldn't get Network Interfaces", e);
+		}
+		ret += "\n";
+		return ret;
+	}
+	
+	public static String getNetworkInfo(Context c)
+	{
+		String ret = getNetworkInterfaces();
+		
+		ConnectivityManager conman = (ConnectivityManager)c.getSystemService(Context.CONNECTIVITY_SERVICE);
+		if(conman == null)
+			ret += "No Connectivity?\n";
+		else {
+			ret += "Connectivity Info:\n" + conman.toString() + "\n";
+			for(NetworkInfo ni : conman.getAllNetworkInfo())
+			{
+				if(!ni.isAvailable()) continue;
+				ret += "Network [" + ni.getTypeName() + "]: " +
+						getNetworkInfoInfo(ni) + "\n";
+			}
+		}
+		try {
+			WifiManager wifi = (WifiManager) c.getSystemService(Context.WIFI_SERVICE);
+			if(wifi == null)
+				ret += "No wifi\n";
+			else {
+				ret += "Wifi Info:\n" + wifi.toString() + "\n";
+				ret += "Status: " + (wifi.isWifiEnabled() ? "ENABLED" : "DISABLED") + "\n";
+				ret += "ip=" + getReadableIP(wifi.getConnectionInfo().getIpAddress()) + "/ " +
+						"mac=" + wifi.getConnectionInfo().getMacAddress() + "/ " +
+						"b=" + wifi.getConnectionInfo().getBSSID() + "/ " + 
+						"s=" + wifi.getConnectionInfo().getSSID();
+				DhcpInfo dh = wifi.getDhcpInfo();
+				if(dh == null)
+					ret += "No DHCP\n";
+				else
+				{
+					ret += "IP: " + getReadableIP(dh.ipAddress) + "\n";
+					ret += "Gateway: " + getReadableIP(dh.gateway) + "\n";
+					ret += "DNS: " + getReadableIP(dh.dns1) + " " + getReadableIP(dh.dns2) + "\n";
+				}
+			}
+		} catch(SecurityException sec) {
+			ret += "No Wifi permissions.\n";
+		}
+		return ret;
+	}
+	
 	public static String getDeviceInfo()
 	{
 		String ret = "";
 		String sep = "\n";
+		ret += sep + "Build Info:" + sep;
 		ret += "SDK: " + Build.VERSION.SDK_INT + sep;
 		ret += "Fingerprint: " + Build.FINGERPRINT + sep;
 		ret += "Manufacturer: " + Build.MANUFACTURER + sep;
