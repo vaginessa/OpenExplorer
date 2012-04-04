@@ -28,6 +28,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -88,6 +89,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.CheckedTextView;
 import android.widget.EditText;
@@ -305,6 +307,8 @@ public class OpenExplorer
 		
 		setContentView(R.layout.main_fragments);
 		
+		handleIntent(getIntent());
+		
 		try {
 			upgradeViewSettings();
 		} catch(Exception e) { }
@@ -375,7 +379,6 @@ public class OpenExplorer
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
-		setupSearch();
 		IconContextMenu.clearInstances();
 		
 		if(findViewById(R.id.list_frag) == null)
@@ -503,40 +506,27 @@ public class OpenExplorer
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
 	}
-	
-	private void setupSearch() {
-		final ViewGroup mSearchFrame = (ViewGroup)findViewById(R.id.title_search_frame);
-		mSearchFrame.setVisibility(View.GONE);
-		EditText mSearch = (EditText)findViewById(R.id.title_search);
-		mSearch.setFocusable(true);
-		mSearch.setOnFocusChangeListener(new OnFocusChangeListener() {
-			@Override
-			public void onFocusChange(View v, boolean hasFocus) {
-				if(!hasFocus)
-					mSearchFrame.setVisibility(View.GONE);
-			}
-		});
-		mSearch.setOnKeyListener(new OnKeyListener() {
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				if(keyCode == KeyEvent.KEYCODE_BACK)
-					mSearchFrame.setVisibility(View.GONE);
-				return false;
-			}
-		});
-		mSearch.setOnTouchListener(new OnTouchListener() {
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				if(event.getAction() == MotionEvent.ACTION_OUTSIDE)
-					mSearchFrame.setVisibility(View.GONE);
-				return false;
-			}
-		});
-	}
 
 	@Override
 	protected void onNewIntent(Intent intent) {
 		setIntent(intent);
+		handleIntent(intent);
+	}
+	
+	private void handleIntent(Intent intent)
+	{
+		if(Intent.ACTION_SEARCH.equals(intent.getAction()))
+		{
+			FileManager fm = new FileManager();
+			EventHandler eh = new EventHandler(fm);
+			eh.setOnWorkerThreadFinishedListener(new OnWorkerThreadFinishedListener() {
+				@Override
+				public void onWorkerThreadComplete(int type, ArrayList<String> results) {
+					//setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_single_choice, results));
+				}
+			});
+			eh.searchFile(new OpenFile("/"), intent.getStringExtra(SearchManager.QUERY), this);
+		}
 	}
 
 	private void upgradeViewSettings() {
@@ -1951,7 +1941,8 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_search:
-				return onSearchRequested();
+				onSearchRequested();
+				return true;
 
 			case R.id.menu_favorites:
 				toggleBookmarks();
@@ -2205,16 +2196,6 @@ public class OpenExplorer
 			Logger.LogWarning("Couldn't show icon context menu.", e);
 		}
 		return icm;
-	}
-	
-	@Override
-	public boolean onSearchRequested() {
-		if(USE_ACTION_BAR) return false;
-		findViewById(R.id.title_search_frame).setVisibility(View.VISIBLE);
-		((EditText)findViewById(R.id.title_search)).requestFocus();
-		//mEvHandler.startSearch(mLastPath, this);
-		//showToast("Sorry, not working yet.");
-		return super.onSearchRequested();
 	}
 	
 	public void changeViewMode(int newView, boolean doSet) {

@@ -212,4 +212,5 @@
     <string name="s_pref_fancy_category">Fancy Display Settings</string>
     <string name="s_pref_fancy_menus">Fancy Menus</string>
     <string name="s_pref_fancy_context">Fancy Context Menus</string>
+    <string name="s_search_files">Search Filesystem</string>
 </resources>

@@ -66,23 +66,5 @@
 		android:layout_alignBottom="@id/title_underline"
 		android:layout_alignWithParentIfMissing="true"
 		/>
-	
-	<LinearLayout android:id="@+id/title_search_frame"
-	    android:layout_height="0dp"
-	    android:layout_alignParentTop="true"
-	    android:layout_alignBottom="@+id/title_icon"
-	    android:layout_width="match_parent"
-	    android:layout_toRightOf="@id/title_icon"
-	    android:background="@color/black"
-	    android:gravity="center"
-	>
-		<EditText
-		    android:id="@+id/title_search"
-		    android:layout_width="match_parent"
-		    android:layout_height="wrap_content"
-		    android:hint="@string/s_search"
-		    android:inputType="text"
-		/>
-	</LinearLayout>
     
 </RelativeLayout>
