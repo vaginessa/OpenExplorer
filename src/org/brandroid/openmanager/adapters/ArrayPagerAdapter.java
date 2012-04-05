@@ -8,6 +8,8 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -63,15 +65,19 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	public CharSequence getPageTitle(int position) {
 		Fragment f = getItem(position);
 		
+		CharSequence ret = null;
+		
 		if(f instanceof TextEditorFragment)
 			return ((TextEditorFragment)f).getPath().getName();
+		else if(f instanceof SearchResultsFragment)
+			return ((SearchResultsFragment)f).getTitle();
 		
 		OpenPath path = null;
 		if(f instanceof ContentFragment)
 			path = ((ContentFragment)f).getPath();
 		
 		if(path == null)
-			return "(" + position + ")";
+			return ret;
 		else if(path instanceof OpenNetworkPath && path.getParent() == null && ((OpenNetworkPath)path).getServersIndex() >= 0)
 			return OpenServers.DefaultServers.get(((OpenNetworkPath)path).getServersIndex()).getName();
 		else if(path.getName().equals(""))

@@ -367,4 +367,9 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		// TODO Auto-generated method stub
 		return mPath;
 	}
+	@Override
+	public CharSequence getTitle() {
+		// TODO Auto-generated method stub
+		return getPath().getName();
+	}
 }

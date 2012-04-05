@@ -86,4 +86,9 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 			mBookmarks.scanBookmarks();
 	}
 
+	@Override
+	public CharSequence getTitle() {
+		return null;
+	}
+
 }

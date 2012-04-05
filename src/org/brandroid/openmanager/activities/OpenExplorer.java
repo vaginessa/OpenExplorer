@@ -76,6 +76,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
 import android.view.View.OnTouchListener;
@@ -143,6 +144,7 @@ import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
+import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.BetterPopupWindow;
@@ -193,7 +195,7 @@ public class OpenExplorer
 	public static boolean IS_DEBUG_BUILD = false;
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
-	public static boolean USE_PRETTY_MENUS = !BEFORE_HONEYCOMB;
+	public static boolean USE_PRETTY_MENUS = true;
 	public static boolean USE_PRETTY_CONTEXT_MENUS = true;
 	
 	private static MimeTypes mMimeTypes;
@@ -221,6 +223,7 @@ public class OpenExplorer
 	private BetterPopupWindow mBookmarksPopup;
 	private static OnBookMarkChangeListener mBookmarkListener;
 	private MenuBuilder mMainMenu = null;
+	private IconContextMenu mOpenMenu = null;
 	
 	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
 	private static boolean bRetrieveExtraVideoDetails = Build.VERSION.SDK_INT > 8;
@@ -497,6 +500,8 @@ public class OpenExplorer
 		setupBaseBarButtons();
 		initBookmarkDropdown();
 		
+		setOnClicks(R.id.menu_view, R.id.menu_sort);
+		
 		//updateTitle(mLastPath.getPath());
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
@@ -517,16 +522,29 @@ public class OpenExplorer
 	{
 		if(Intent.ACTION_SEARCH.equals(intent.getAction()))
 		{
-			FileManager fm = new FileManager();
-			EventHandler eh = new EventHandler(fm);
-			eh.setOnWorkerThreadFinishedListener(new OnWorkerThreadFinishedListener() {
-				@Override
-				public void onWorkerThreadComplete(int type, ArrayList<String> results) {
-					//setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_single_choice, results));
+			OpenPath searchIn = new OpenFile("/");
+			Bundle bundle = intent.getBundleExtra(SearchManager.APP_DATA);
+			if(bundle != null && bundle.containsKey("path"))
+				try {
+					searchIn = FileManager.getOpenCache(bundle.getString("path"), false, null);
+				} catch (IOException e) {
+					searchIn = new OpenFile(bundle.getString("path"));
 				}
-			});
-			eh.searchFile(new OpenFile("/"), intent.getStringExtra(SearchManager.QUERY), this);
+			SearchResultsFragment srf = new SearchResultsFragment(searchIn, intent.getStringExtra(SearchManager.QUERY));
+			mViewPagerAdapter.add(srf);
+			setViewPageAdapter(mViewPagerAdapter);
+			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 		}
+	}
+	
+	@Override
+	public boolean onSearchRequested() {
+		Bundle appData = new Bundle();
+		OpenPath path = getDirContentFragment(false).getPath();
+		Logger.LogVerbose("Search in " + path.getPath() + " please");
+		appData.putString("path", path.getPath());
+		startSearch(null, false, appData, false);
+		return true;
 	}
 
 	private void upgradeViewSettings() {
@@ -553,6 +571,8 @@ public class OpenExplorer
 				anchor = getActionBar().getCustomView();
 			if(anchor == null)
 				anchor = findViewById(R.id.base_bar);
+			if(anchor == null)
+				anchor = findViewById(R.id.base_row);
 			if(anchor == null)
 				anchor = findViewById(R.id.title_bar);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
@@ -1404,6 +1424,8 @@ public class OpenExplorer
 		{
 		case R.id.menu_view:
 			getMenuInflater().inflate(R.menu.menu_view, menu);
+			if(Build.VERSION.SDK_INT < 11)
+				setMenuVisible(menu, false, R.id.menu_view_carousel);
 			break;
 		case R.id.menu_sort:
 			getMenuInflater().inflate(R.menu.menu_sort, menu);
@@ -1417,6 +1439,11 @@ public class OpenExplorer
 			Logger.LogWarning("Submenu not found for " + v.getId());
 			break;
 		}
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		return onClick(item.getItemId(), item, null);
 	}
 	
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -1579,7 +1606,7 @@ public class OpenExplorer
 				if(!checkArray(menu.getItem(i).getItemId(), mMenuOptionsToHide) &&
 						menu.getItem(i) instanceof MenuItemImpl)
 				{
-					MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
+					final MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
 					if(item.getItemId() == R.id.title_menu) break;
 					if(!item.isCheckable() && tr.findViewById(item.getItemId()) == null)
 					{
@@ -1591,6 +1618,7 @@ public class OpenExplorer
 							((BitmapDrawable)d).setGravity(Gravity.CENTER);
 						btn.setImageDrawable(d);
 						btn.setId(item.getItemId());
+						btn.setBackgroundColor(android.R.color.darker_gray);
 						btn.setOnClickListener(this);
 						if(!USE_PRETTY_MENUS)
 							btn.setOnCreateContextMenuListener(this);
@@ -1616,6 +1644,7 @@ public class OpenExplorer
 						((BitmapDrawable)d).setGravity(Gravity.CENTER);
 					btn.setImageDrawable(d);
 					btn.setId(item.getItemId());
+					btn.setTag(item);
 					btn.setOnClickListener(this);
 					if(!USE_PRETTY_MENUS)
 						btn.setOnCreateContextMenuListener(this);
@@ -1769,13 +1798,26 @@ public class OpenExplorer
 	@Override
 	public void onClick(View v) {
 		super.onClick(v);
+		int id = v.getId();
+		if(v.getTag() != null && v.getTag() instanceof MenuItem)
+			id = ((MenuItem)v.getTag()).getItemId();
+		else if(v instanceof ImageButton)
+		{
+			Drawable d = ((ImageButton)v).getDrawable();
+			if(d.equals(getResources().getDrawable(R.drawable.ic_menu_view)))
+				id = R.id.menu_view;
+			else if(d.equals(getResources().getDrawable(R.drawable.ic_menu_sort_by_size)))
+				id = R.id.menu_sort;
+		}
 		if(USE_PRETTY_MENUS || !v.showContextMenu())
-			onClick(v.getId(), null, v);
+			onClick(id, null, v);
 	}
 	
 	public boolean onClick(int id, MenuItem item, View from)
 	{
 		super.onClick(id);
+		if(mOpenMenu != null)
+			mOpenMenu.dismiss();
 		if(id != R.id.title_icon && id != android.R.id.home);
 			toggleBookmarks(false);
 		switch(id)
@@ -2080,6 +2122,7 @@ public class OpenExplorer
 	}
 	public void showMenu(int menuId, final View from)
 	{
+		Logger.LogVerbose("showMenu(" + menuId + "," + (from != null ? from.toString() : "NULL") + ")");
 		//if(mMenuPopup == null)
 		if(menuId == R.id.title_menu || menuId == R.menu.main_menu)
 			showContextMenu(IconContextMenu.newMenu(this, menuId), from instanceof CheckedTextView ? null : from);
@@ -2111,8 +2154,10 @@ public class OpenExplorer
 				menuId = R.menu.menu_sort_flat;
 			else if(menuId == R.menu.menu_view_flat)
 				menuId = R.menu.menu_view_flat;
-			else
+			else {
+				Logger.LogWarning("Unknown menuId (" + menuId + ")!");
 				return null;
+			}
 			Logger.LogDebug("Trying to show context menu #" + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 			if(menuId == R.menu.context_file ||
 				menuId == R.menu.main_menu ||
@@ -2122,22 +2167,19 @@ public class OpenExplorer
 				menuId == R.menu.menu_view_flat)
 			{
 				//IconContextMenu icm1 = new IconContextMenu(getApplicationContext(), menu, from, null, null);
-				final IconContextMenu icm = IconContextMenu.getInstance(
-						getApplicationContext(), menuId, from, null, null);
-				if(icm == null)
-					throw new NullPointerException("context menu returned null");
 				//MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
 				MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
 				onPrepareOptionsMenu(menu);
-				icm.setMenu(menu);
-				icm.setAnchor(from);
+				mOpenMenu = new IconContextMenu(this, menu, from, null, null);
+				mOpenMenu.setMenu(menu);
+				mOpenMenu.setAnchor(from);
 				if(menuId == R.menu.context_file)
 				{
-					icm.setNumColumns(2);
+					mOpenMenu.setNumColumns(2);
 					//icm.setPopupWidth(getResources().getDimensionPixelSize(R.dimen.popup_width) / 2);
-					icm.setTextLayout(R.layout.context_item);
-				} else icm.setNumColumns(1);
-				icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+					mOpenMenu.setTextLayout(R.layout.context_item);
+				} else mOpenMenu.setNumColumns(1);
+				mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 						//showToast(item.getTitle().toString());
 						if(item.getItemId() == R.id.menu_sort)
@@ -2146,16 +2188,16 @@ public class OpenExplorer
 							showMenu(R.menu.menu_view, view);
 						else
 							onClick(item.getItemId(), item, view);
-						icm.dismiss();
+						mOpenMenu.dismiss();
 						//mMenuPopup.dismiss();
 					}
 				});
 				if(menuId == R.menu.menu_sort || menuId == R.menu.menu_sort_flat)
-					icm.setTitle(getString(R.string.s_menu_sort) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
+					mOpenMenu.setTitle(getString(R.string.s_menu_sort) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
 				else if(menuId == R.menu.menu_view || menuId == R.menu.menu_view_flat)
-					icm.setTitle(getString(R.string.s_view) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
-				icm.show();
-				return icm;
+					mOpenMenu.setTitle(getString(R.string.s_view) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
+				mOpenMenu.show();
+				return mOpenMenu;
 			} else {
 				showMenu(menuId, from);
 			}
@@ -2170,7 +2212,6 @@ public class OpenExplorer
 	public IconContextMenu showContextMenu(MenuBuilder menu, final View from)
 	{
 		Logger.LogDebug("Trying to show context menu " + menu.toString() + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
-		IconContextMenu icm = null;
 		try {
 			ViewGroup baseRow = (ViewGroup)findViewById(R.id.base_row);
 			for(int i = menu.size() - 1; i >= 0; i--)
@@ -2179,23 +2220,24 @@ public class OpenExplorer
 				if(baseRow.findViewById(item.getItemId()) != null)
 					menu.removeItemAt(i);
 			}
-				
-			icm = new IconContextMenu(this, menu, from, null, null);
+			mOpenMenu = new IconContextMenu(this, menu, from, null, null);
 			if(menu.findItem(R.id.menu_context_bookmark) != null)
-				icm.setNumColumns(2);
-			else icm.setNumColumns(1);
-			icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+				mOpenMenu.setNumColumns(2);
+			else mOpenMenu.setNumColumns(1);
+			mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 				public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 					//showToast(item.getTitle().toString());
 					onClick(item.getItemId(), item, view);
+					if(mOpenMenu != null)
+						mOpenMenu.dismiss();
 					//mMenuPopup.dismiss();
 				}
 			});
-			icm.show();
+			mOpenMenu.show();
 		} catch(Exception e) {
 			Logger.LogWarning("Couldn't show icon context menu.", e);
 		}
-		return icm;
+		return mOpenMenu;
 	}
 	
 	public void changeViewMode(int newView, boolean doSet) {
@@ -3151,6 +3193,13 @@ public class OpenExplorer
 			findViewById(android.R.id.progress).setVisibility(visible ? View.VISIBLE : View.GONE);
 		else if(findViewById(R.id.title_progress) != null)
 			findViewById(R.id.title_progress).setVisibility(visible ? View.VISIBLE : View.GONE);
+	}
+
+	public void removeFragment(Fragment frag) {
+		mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 2, true);
+		mViewPagerAdapter.remove(frag);
+		setViewPageAdapter(mViewPagerAdapter);
+		refreshContent();
 	}
 
 }

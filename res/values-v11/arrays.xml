@@ -2,9 +2,9 @@
 <resources>
 
 	<string-array name="view">
-		<item>Grid View</item>
-		<item>List View</item>
-		<item>Carousel</item>
+		<item>@string/s_menu_grid</item>
+		<item>@string/s_menu_list</item>
+		<item>@string/s_menu_carousel</item>
 	</string-array>
 	<string-array name="view_value">
 		<item>grid</item>

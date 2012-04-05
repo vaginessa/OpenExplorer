@@ -213,4 +213,6 @@
     <string name="s_pref_fancy_menus">Fancy Menus</string>
     <string name="s_pref_fancy_context">Fancy Context Menus</string>
     <string name="s_search_files">Search Filesystem</string>
+    <string name="search_summary" formatted="false">Searching for "%s" \n within "%s" (%d)...</string>
+    <string name="search_results" formatted="false">Found %d results for "%s" \n within "%s"</string>
 </resources>

@@ -1,5 +1,8 @@
 package org.brandroid.openmanager.activities;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Preferences;
@@ -50,6 +53,17 @@ public class SplashActivity extends Activity implements OnClickListener
 					((RadioButton)findViewById(R.id.pref_start_external)).setChecked(true);
 			}
 		}
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		new Timer().schedule(new TimerTask() {
+			@Override
+			public void run() {
+				finish();
+			}
+		}, 5000);
 	}
 	
 	public void onClick(View v) {
