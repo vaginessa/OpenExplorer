@@ -138,6 +138,19 @@ public class LoggerDbAdapter
 	    			"sent = 0", null, null, null, null);
     	} catch(Exception e) { return null; }
     }
+
+	public int countLevel(int level) {
+		open();
+		try {
+			Cursor c = mDb.rawQuery("SELECT COUNT(*) FROM " + DATABASE_TABLE, new String[]{KEY_LEVEL + " = " + level});
+			if(c.getCount() == 0) return 0;
+			int ret = 0;
+			if(c.moveToFirst())
+				ret = c.getInt(0);
+			c.close();
+			return ret;
+		} catch(Exception e) { return 0; }
+	}
     
     public int clear() {
     	if(mDb != null && mDb.isOpen())

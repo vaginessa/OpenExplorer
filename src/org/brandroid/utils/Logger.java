@@ -50,7 +50,7 @@ public class Logger
 				ret++;
 		return ret;
 	}
-	private static StackTraceElement[] getMyStackTrace(Error e)
+	private static StackTraceElement[] getMyStackTrace(Throwable e)
 	{
 		StackTraceElement[] elArray = e.getStackTrace();
 		StackTraceElement[] ret = new StackTraceElement[getMyStackTraceCount(elArray)];
@@ -88,6 +88,11 @@ public class Logger
 			dbLog.clear();
 		return ret;
 	}
+	public static int countLevel(int level)
+	{
+		if(dbLog == null) return 0;
+		return dbLog.countLevel(level);
+	}
 	public static void clearDb()
 	{
 		if(dbLog != null)
@@ -116,6 +121,12 @@ public class Logger
 		ex.setStackTrace(trace);
 		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
 		Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
+	}
+	public static void LogWTF(String msg, Throwable ex)
+	{
+		LogToDB(Log.ASSERT, msg, Log.getStackTraceString(ex));
+		StackTraceElement[] trace = getMyStackTrace(ex);
+		Log.wtf(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
 	public static void LogWarning(String msg)
 	{

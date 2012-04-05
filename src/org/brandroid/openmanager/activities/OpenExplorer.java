@@ -66,6 +66,7 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.Gravity;
@@ -163,11 +164,13 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.openmanager.views.OpenViewPager.OnPageIndicatorChangeListener;
+import org.brandroid.utils.CustomExceptionHandler;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuItemImpl;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SubmitStatsTask;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -257,8 +260,10 @@ public class OpenExplorer
 		USE_PRETTY_CONTEXT_MENUS = getPreferences().getBoolean("global", "pref_fancy_context", USE_PRETTY_CONTEXT_MENUS);
 	}
 	
-	public void onCreate(Bundle savedInstanceState) {
-
+	public void onCreate(Bundle savedInstanceState)
+	{
+		Thread.setDefaultUncaughtExceptionHandler(new CustomExceptionHandler());
+		
 		if(getPreferences().getBoolean("global", "pref_fullscreen", false))
 		{
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -302,8 +307,9 @@ public class OpenExplorer
 			} else USE_ACTION_BAR = false;
 		}
 		
-		getMimeTypes();
 		setupLoggingDb();
+		handleExceptionHandler();
+		getMimeTypes();
 		setupFilesDb();
 		
 		super.onCreate(savedInstanceState);
@@ -512,6 +518,21 @@ public class OpenExplorer
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
 	}
 
+	private void handleExceptionHandler()
+	{
+		if(Logger.countLevel(Log.ASSERT) > 0)
+		{
+			if(!getSetting(null, "pref_autowtf", false))
+				showWTFIntent();
+			else { new SubmitStatsTask(this).escalate().execute(Logger.getDbLogs(false)); }
+		}
+	}
+
+	private void showWTFIntent() {
+		Intent intent = new Intent(this, WTFSenderActivity.class);
+		startActivity(intent);
+	}
+
 	@Override
 	protected void onNewIntent(Intent intent) {
 		setIntent(intent);
@@ -531,9 +552,16 @@ public class OpenExplorer
 					searchIn = new OpenFile(bundle.getString("path"));
 				}
 			SearchResultsFragment srf = new SearchResultsFragment(searchIn, intent.getStringExtra(SearchManager.QUERY));
-			mViewPagerAdapter.add(srf);
-			setViewPageAdapter(mViewPagerAdapter);
-			mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+			if(mViewPagerEnabled && mViewPagerAdapter != null)
+			{
+				mViewPagerAdapter.add(srf);
+				setViewPageAdapter(mViewPagerAdapter);
+				mViewPager.setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+			} else {
+				getSupportFragmentManager().beginTransaction()
+					.replace(R.id.content_frag, srf)
+					.commit();
+			}
 		}
 	}
 	
@@ -541,7 +569,6 @@ public class OpenExplorer
 	public boolean onSearchRequested() {
 		Bundle appData = new Bundle();
 		OpenPath path = getDirContentFragment(false).getPath();
-		Logger.LogVerbose("Search in " + path.getPath() + " please");
 		appData.putString("path", path.getPath());
 		startSearch(null, false, appData, false);
 		return true;
@@ -939,34 +966,6 @@ public class OpenExplorer
 			Logger.closeDb();
 	}
 	
-	private static JSONObject getDeviceInfo()
-	{
-		JSONObject ret = new JSONObject();
-		try {
-			ret.put("SDK", Build.VERSION.SDK_INT);
-			ret.put("Language", Locale.getDefault().getDisplayLanguage());
-			ret.put("Country", Locale.getDefault().getDisplayCountry());
-			ret.put("Brand", Build.BRAND);
-			ret.put("Manufacturer", Build.MANUFACTURER);
-			ret.put("Model", Build.MODEL);
-			ret.put("Product", Build.PRODUCT);
-			ret.put("Board", Build.BOARD);
-			ret.put("Tags", Build.TAGS);
-			ret.put("Type", Build.TYPE);
-			ret.put("Bootloader", Build.BOOTLOADER);
-			ret.put("Hardware", Build.HARDWARE);
-			ret.put("User", Build.USER);
-			if(Build.UNKNOWN != null)
-				ret.put("Unknown", Build.UNKNOWN);
-			ret.put("Display", Build.DISPLAY);
-			ret.put("Fingerprint", Build.FINGERPRINT);
-			ret.put("ID", Build.ID);
-		} catch (JSONException e) {
-			
-		}
-		return ret;
-	}
-	
 	private void submitStats()
 	{
 		if(!Logger.isLoggingEnabled()) return;
@@ -976,7 +975,7 @@ public class OpenExplorer
 		if(logs == null) logs = "[]";
 		//if(logs != null && logs != "") {
 			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
-			new SubmitStatsTask().execute(logs);
+			new SubmitStatsTask(this).execute(logs);
 		//} else Logger.LogWarning("Logs not found.");
 	}
 	
@@ -1461,7 +1460,15 @@ public class OpenExplorer
 				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 					public boolean onQueryTextSubmit(String query) {
 						mSearchView.clearFocus();
-						mEvHandler.searchFile(mLastPath, query, getApplicationContext());
+						Intent intent = getIntent();
+						if(intent == null)
+							intent = new Intent();
+						intent.setAction(Intent.ACTION_SEARCH);
+						Bundle appData = new Bundle();
+						appData.putString("path", getDirContentFragment(false).getPath().getPath());
+						intent.putExtra(SearchManager.APP_DATA, appData);
+						intent.putExtra(SearchManager.QUERY, query);
+						handleIntent(intent);
 						return true;
 					}
 					public boolean onQueryTextChange(String newText) {
@@ -1823,7 +1830,8 @@ public class OpenExplorer
 		switch(id)
 		{
 			case R.id.menu_debug:
-				//debugTest();
+				int bad = 2 / 0;
+				Logger.LogInfo("HEY! We know how to divide by 0!");
 				break;
 			case R.id.title_icon:
 			case android.R.id.home:
@@ -2034,6 +2042,10 @@ public class OpenExplorer
 				
 			case R.id.menu_about:
 				DialogHandler.showAboutDialog(this);
+				return true;
+				
+			case R.id.menu_exit:
+				finish();
 				return true;
 				
 			default:
@@ -2736,59 +2748,7 @@ public class OpenExplorer
 		return mEvHandler;
 	}
 	
-	public class SubmitStatsTask extends AsyncTask<String, Void, Void>
-	{
-		@Override
-		protected Void doInBackground(String... params) {
-			HttpURLConnection uc = null;
-			try {
-				uc = (HttpURLConnection)new URL("http://brandroid.org/stats.php").openConnection();
-				uc.setReadTimeout(2000);
-				PackageManager pm = OpenExplorer.this.getPackageManager();
-				PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
-				JSONObject device = getDeviceInfo();
-				if(device == null) device = new JSONObject();
-				String data = "{\"Version\":" + pi.versionCode + ",\"DeviceInfo\":" + device.toString() + ",\"Logs\":" + params[0] + ",\"App\":\"" + getPackageName() + "\"}"; 
-				//uc.addRequestProperty("Accept-Encoding", "gzip, deflate");
-				uc.addRequestProperty("App", getPackageName());
-				uc.addRequestProperty("Version", ""+pi.versionCode);
-				uc.setDoOutput(true);
-				Logger.LogDebug("Sending logs...");
-				GZIPOutputStream out = new GZIPOutputStream(uc.getOutputStream());
-				out.write(data.getBytes());
-				out.flush();
-				out.close();
-				uc.connect();
-				if(uc.getResponseCode() == HttpURLConnection.HTTP_OK)
-				{
-					BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
-					String line = br.readLine();
-					if(line == null)
-					{
-						Logger.LogWarning("No response on stat submit.");
-					} else {
-						Logger.LogDebug("Response: " + line);
-						if(line.indexOf("Thanks") > -1)
-						{
-							while((line = br.readLine()) != null)
-								Logger.LogDebug("Response: " + line);
-							Logger.LogDebug("Sent logs successfully.");
-							Logger.clearDb();
-						} else {
-							Logger.LogWarning("Logs not thanked");
-						}
-					}
-				} else {
-					Logger.LogWarning("Couldn't send logs (" + uc.getResponseCode() + ")");
-				}
-			} catch(Exception e)
-			{
-				Logger.LogError("Error sending logs.", e);
-			}
-			return null;
-		}
-		
-	}
+	
 	
 
 	public class EnsureCursorCacheTask extends AsyncTask<OpenPath, Void, Void>

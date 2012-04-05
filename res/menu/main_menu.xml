@@ -94,4 +94,10 @@
 	    android:showAsAction="never"
 		android:icon="@drawable/ic_menu_help"
 	    android:title="@string/s_menu_about" />
+	
+	<item android:id="@+id/menu_exit"
+	    android:showAsAction="never"
+	    android:icon="@drawable/ic_menu_close_clear_cancel"
+	    android:title="@string/s_menu_exit"
+	    />
 </menu>

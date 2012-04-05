@@ -688,6 +688,7 @@ public class DialogHandler extends DialogFragment {
 				Intent intent = new Intent(Intent.ACTION_SEND);
 				intent.setType("text/plain");
 				//intent.addCategory(Intent.CATEGORY_APP_EMAIL);
+				intent.putExtra(android.content.Intent.EXTRA_TEXT, "\n" + getDeviceInfo());
 				intent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"brandroid64@gmail.com"});
 				intent.putExtra(android.content.Intent.EXTRA_SUBJECT, sSubject);
 				mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.s_chooser_email)));
