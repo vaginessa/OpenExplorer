@@ -222,4 +222,7 @@
     <string name="s_no">No</string>
     <string name="s_wtf_preview">Preview Report Data</string>
     <string name="s_wtf_remember">Do not ask again</string>
+    <string name="s_pref_basebar">Split Action Bar</string>
+    <string name="s_pref_basebar_on">Action buttons on bottom of screen in Portrait Mode</string>
+    <string name="s_pref_basebar_off">Action buttons on top of screen (when available)</string>
 </resources>

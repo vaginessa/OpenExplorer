@@ -87,10 +87,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/title_icon"
             android:gravity="center"
-            android:visibility="invisible"
             >
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/title_paste_icon"
                 style="@style/ActionBarCompatHomeItem"
                 android:layout_width="@dimen/actionbar_compat_button_width"

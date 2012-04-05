@@ -43,6 +43,14 @@
 		    android:summaryOff="@string/s_pref_pagers_summary_off"
 		    android:defaultValue="true"
 		    />
+		<CheckBoxPreference
+		    android:key="pref_basebar"
+		    android:title="@string/s_pref_basebar"
+		    android:summaryOn="@string/s_pref_basebar_on"
+		    android:summaryOff="@string/s_pref_basebar_off"
+		    android:defaultValue="@bool/prehoneycomb"
+		    android:enabled="@bool/prehoneycomb"
+		    />
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/s_pref_sort">
 		<ListPreference

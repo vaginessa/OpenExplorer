@@ -1,18 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
-  	<item
-  	    android:id="@+id/menu_debug"
-  	    android:showAsAction="never|withText"
-  	    android:icon="@drawable/ic_menu_upload"
-  	    android:title="DEBUG Test"
-  	    android:visible="false"
-  	    />
-  	<item
-  	    android:id="@+id/menu_favorites"
-  	    android:showAsAction="never"
-  	    android:icon="@drawable/ic_menu_star"
-  	    android:title="@string/s_menu_favorites" />
+  	
     <item
 		android:id="@+id/menu_paste"
 		android:title="@string/s_menu_multi"
@@ -61,6 +50,18 @@
 	    >
 	    <menu />
 	</item>
+	<item
+  	    android:id="@+id/menu_debug"
+  	    android:showAsAction="never|withText"
+  	    android:icon="@drawable/ic_menu_upload"
+  	    android:title="DEBUG Test"
+  	    android:visible="false"
+  	    />
+  	<item
+  	    android:id="@+id/menu_favorites"
+  	    android:showAsAction="never"
+  	    android:icon="@drawable/ic_menu_star"
+  	    android:title="@string/s_menu_favorites" />
 	<item
 		android:id="@+id/menu_up"
 		android:icon="@drawable/ic_up"

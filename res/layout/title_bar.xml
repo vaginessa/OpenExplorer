@@ -26,6 +26,7 @@
 	    android:layout_marginTop="1dp"
 	    android:layout_alignParentTop="true"
 	    android:layout_toRightOf="@id/title_icon"
+	    android:layout_toLeftOf="@+id/title_buttons"
 	    android:gravity="left|center_vertical"
 	    android:text="@string/app_name" />
 	
@@ -34,7 +35,7 @@
 	    style="@android:style/Widget.ProgressBar.Small"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
-	    android:layout_alignParentRight="true"
+	    android:layout_toLeftOf="@+id/title_buttons"
 	    android:layout_alignParentTop="true"
 	    android:layout_margin="4dp"
 	    android:indeterminate="true" />
@@ -45,19 +46,28 @@
 	    android:layout_marginTop="@dimen/large_text_height"
 	    android:layout_alignTop="@id/title_text"
 	    android:layout_toRightOf="@id/title_icon"
+	    android:layout_toLeftOf="@+id/title_buttons"
 	    android:lines="2"
 	    android:gravity="left|center_vertical"
 	    android:text="/mnt/sdcard"
 	    />
 
-	<com.viewpagerindicator.TabPageIndicator
-		android:id="@+id/content_pager_indicator"
+	<FrameLayout
 	    android:layout_height="@dimen/actionbar_compat_height"
 		android:layout_width="wrap_content"
 		android:layout_toRightOf="@id/title_icon"
 		android:layout_alignBottom="@id/title_icon"
 		android:layout_alignParentTop="true"
-		android:layout_alignWithParentIfMissing="true"
-		/>
+		android:layout_toLeftOf="@+id/title_buttons"
+		android:layout_alignWithParentIfMissing="true">
+
+		<com.viewpagerindicator.TabPageIndicator
+			android:id="@+id/content_pager_indicator"
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			/>
+	</FrameLayout>
+	
+	<include layout="@layout/title_buttons" />
     
 </RelativeLayout>
