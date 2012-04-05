@@ -23,11 +23,21 @@
 	
     <ViewStub android:layout="@layout/title_bar" android:id="@+id/title_stub" android:inflatedId="@+id/title_bar"
         android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignWithParentIfMissing="true"
         />
+    
+	    <View android:background="@color/blue"
+	        android:layout_height="1dp"
+	        android:layout_width="match_parent"
+	        android:layout_alignBottom="@id/title_bar"
+	        android:id="@+id/title_underline"
+	        android:layout_alignWithParentIfMissing="true"
+	        />
     
 	    <FrameLayout
 	    	android:id="@+id/content_frag"
-	        android:layout_below="@id/title_bar"
+	        android:layout_below="@id/title_underline"
 	        android:layout_above="@id/base_bar"
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent"

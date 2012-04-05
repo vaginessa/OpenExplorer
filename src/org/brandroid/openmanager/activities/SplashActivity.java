@@ -63,7 +63,7 @@ public class SplashActivity extends Activity implements OnClickListener
 			public void run() {
 				finish();
 			}
-		}, 5000);
+		}, 15000);
 	}
 	
 	public void onClick(View v) {

@@ -29,9 +29,17 @@
 	      android:layout_width="fill_parent"
 	      android:layout_height="@dimen/actionbar_compat_height"
 	      />
+    
+    <View android:background="@color/blue"
+        android:layout_height="1dp"
+        android:layout_width="match_parent"
+        android:layout_below="@id/title_bar"
+        android:id="@+id/title_underline"
+        android:layout_alignWithParentIfMissing="true"
+        />
    
 	<LinearLayout
-	    android:layout_below="@+id/title_stub"
+	    android:layout_below="@+id/title_underline"
 		android:id="@+id/frag_holder"
 	    android:orientation="horizontal"
 	    android:layout_width="match_parent"

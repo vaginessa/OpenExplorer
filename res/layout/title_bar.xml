@@ -1,18 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-	android:layout_height="wrap_content"
+	android:layout_height="@dimen/actionbar_compat_height"
 	android:layout_gravity="top|left"
 	android:gravity="bottom|left"
     >
-    
-    <View android:background="@color/blue"
-        android:layout_height="1dp"
-        android:layout_width="match_parent"
-        android:layout_below="@id/title_icon"
-        android:id="@+id/title_underline"
-        android:layout_alignWithParentIfMissing="true"
-        />
     
 	<ImageButton
 	    android:src="@drawable/ic_launcher"
@@ -63,7 +55,8 @@
 	    android:layout_height="@dimen/actionbar_compat_height"
 		android:layout_width="wrap_content"
 		android:layout_toRightOf="@id/title_icon"
-		android:layout_alignBottom="@id/title_underline"
+		android:layout_alignBottom="@id/title_icon"
+		android:layout_alignParentTop="true"
 		android:layout_alignWithParentIfMissing="true"
 		/>
     

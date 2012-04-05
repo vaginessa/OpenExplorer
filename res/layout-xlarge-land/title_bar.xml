@@ -6,13 +6,6 @@
 	android:gravity="bottom|left"
     >
     
-    <View android:background="@color/blue"
-        android:layout_height="1dp"
-        android:layout_width="match_parent"
-        android:layout_below="@+id/title_icon"
-        android:id="@+id/title_underline"
-        />
-    
 	<ImageButton
 	    android:src="@drawable/ic_launcher"
 	    android:id="@+id/title_icon"

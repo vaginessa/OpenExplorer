@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
 <resources>
-	<color name="blue">@android:color/holo_blue_bright</color>	
 	<color name="notification_text">@android:color/primary_text_dark</color>
 </resources>
