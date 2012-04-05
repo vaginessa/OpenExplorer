@@ -306,8 +306,12 @@ public class OpenFile extends OpenPath
 		{
 			for(int i=0; i < mChildren.length; i++)
 			{
-				if(!mChildren[i].isDirectory()) continue;
-				mChildren[i].listFiles();
+				try {
+					if(!mChildren[i].isDirectory()) continue;
+					mChildren[i].listFiles();
+				} catch(ArrayIndexOutOfBoundsException e) {
+					Logger.LogWarning("Grandchild lost!", e);
+				}
 			}
 			bGrandPeeked = true;
 		}
