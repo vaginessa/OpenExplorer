@@ -1,13 +1,9 @@
 package org.brandroid.openmanager.util;
 
-import java.lang.ref.SoftReference;
-
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -20,14 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
-import android.view.ViewParent;
-import android.view.WindowManager.BadTokenException;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
@@ -42,10 +33,10 @@ public class BetterPopupWindow {
 	protected View anchor;
 	private final PopupWindow popup;
 	private View root;
-	private Drawable background = null;
 	private final WindowManager windowManager;
 	private View backgroundView;
 	private int anchorOffset = 0;
+	private final int forcePadding = 0;
 	public boolean USE_INDICATOR = true;
 
 
@@ -179,11 +170,6 @@ public class BetterPopupWindow {
 		
 	}
 	
-
-	public void setBackgroundDrawable(Drawable background) {
-		this.background = background;
-	}
-
 	public BetterPopupWindow setContentView(View root) {
 		this.root = root;
 		this.popup.setContentView(root);
@@ -211,9 +197,9 @@ public class BetterPopupWindow {
 		if(anchor == null)
 		{
 			Logger.LogWarning("Anchor is null");
-			xOffset = (windowManager.getDefaultDisplay().getWidth() / 2) - (popup.getWidth() / 2);
+			xOffset = (getWindowWidth() / 2) - (popup.getWidth() / 2);
 			if(popup.getHeight() > 0)
-				yOffset = (windowManager.getDefaultDisplay().getHeight() / 2) + (popup.getHeight() / 2);
+				yOffset = (getWindowHeight() / 2) + (popup.getHeight() / 2);
 			else
 				yOffset = 100;
 			//placeArrow(0, popup.getWidth());
@@ -239,7 +225,7 @@ public class BetterPopupWindow {
 			if(widget != null)
 			{
 				try {
-				widget.measure(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+				widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 				widgetWidth = widget.getMeasuredWidth();
 				widgetHeight = widget.getMeasuredHeight();
 				} catch(Exception e) {
@@ -249,7 +235,7 @@ public class BetterPopupWindow {
 			//if(popup.getMaxAvailableHeight(anchor) < widgetHeight)
 			//	popup.setHeight(widgetHeight + 20);
 			try {
-				root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+				root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 				rootWidth = root.getMeasuredWidth();
 				rootHeight = root.getMeasuredHeight();
 				if(rootWidth > getWindowWidth())
@@ -261,7 +247,7 @@ public class BetterPopupWindow {
 			}
 			
 			try {
-				backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+				backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 				bgWidth = backgroundView.getMeasuredWidth();
 				bgHeight = backgroundView.getMeasuredHeight();
 			} catch(Exception e) {
@@ -327,7 +313,7 @@ public class BetterPopupWindow {
 						"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
 						"off=" + xOffset + "," + yOffset + "/" +
 						"pop=" + popup.getWidth() + "x" + popup.getHeight());
-				backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+				//backgroundView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 				
 				popup.showAtLocation(anchor, gravity, xOffset, yOffset);
 				return true;
@@ -337,9 +323,16 @@ public class BetterPopupWindow {
 			{
 				int newHeight = getWindowHeight() - (ancTop + anchor.getHeight());
 				newHeight = Math.max(newHeight, popup.getMaxAvailableHeight(anchor));
+				newHeight -= forcePadding;
 				Logger.LogInfo("Need to increase height (" + newHeight + ")");
 				if(newHeight > bgHeight)
+				{
 					popup.setHeight(newHeight);
+					root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+					widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+					widgetWidth = widget.getMeasuredWidth();
+					widgetHeight = widget.getMeasuredHeight();
+				}
 			}
 
 			Logger.LogVerbose("Widths: " +
@@ -375,6 +368,8 @@ public class BetterPopupWindow {
 			//Logger.LogDebug("Some More: pop(w/l)=(" + popWidth + "/" + popLeft + "),arr=" + arrowOffset);
 			
 			placeArrow(arrowOffset, popWidth);
+			
+			
 			
 			/*
 			if(this.anchor.getY() > windowManager.getDefaultDisplay().getHeight() / 2)
@@ -470,12 +465,12 @@ public class BetterPopupWindow {
 	private int getAvailableHeight()
 	{
 		if(anchor == null)
-			return getWindowHeight();
+			return getWindowHeight() - forcePadding;
 		try {
 			View root = getAnchorRoot();
 			//root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			return root.getHeight();
-		} catch(Exception e) { return getWindowHeight(); }
+			return (root.getHeight() > 0 ? root.getHeight() : getWindowHeight()) - forcePadding;
+		} catch(Exception e) { return getWindowHeight() - forcePadding; }
 	}
 	private int getWindowWidth()
 	{
@@ -495,7 +490,7 @@ public class BetterPopupWindow {
 	 * Displays like a QuickAction from the anchor view.
 	 */
 	public void showLikeQuickAction() {
-		this.showLikeQuickAction(0, 0, anchor != null ? getAbsoluteLeft(anchor) : 20);
+		this.showLikeQuickAction(0, 0, anchor != null ? getAbsoluteLeft(anchor) : 10);
 	}
 	private View setViewWidth(View v, int w)
 	{

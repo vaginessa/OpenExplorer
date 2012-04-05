@@ -4,12 +4,13 @@
     android:layout_height="match_parent"
 	android:minHeight="100dp"
     android:orientation="vertical"
+    android:paddingTop="10dp"
     android:gravity="bottom"
     >
 
     
     <LinearLayout
-        android:background="@drawable/context_bottom"
+        android:background="@drawable/contextmenu_square"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -59,6 +60,7 @@
 			android:id="@+id/space_left"
 			android:alpha="0.95"
 			android:background="@android:color/white"
+			android:visibility="invisible"
 			/>
         
         <ImageView
@@ -75,6 +77,7 @@
 			android:id="@+id/space_right"
 			android:alpha="0.95"
 			android:background="@android:color/white"
+			android:visibility="invisible"
 			/>
         
     </LinearLayout>
