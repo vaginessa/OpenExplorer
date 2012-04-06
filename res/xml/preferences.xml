@@ -43,12 +43,11 @@
 		    android:summaryOff="@string/s_pref_pagers_summary_off"
 		    android:defaultValue="true"
 		    />
-		<CheckBoxPreference
-		    android:key="pref_basebar"
+		<ListPreference
+		    android:key="pref_basebar_split"
 		    android:title="@string/s_pref_basebar"
-		    android:summaryOn="@string/s_pref_basebar_on"
-		    android:summaryOff="@string/s_pref_basebar_off"
-		    android:defaultValue="@bool/prehoneycomb"
+		    android:entries="@array/basebar_split"
+		    android:entryValues="@array/basebar_split_values"
 		    android:enabled="@bool/prehoneycomb"
 		    />
 	</PreferenceCategory>
@@ -62,6 +61,37 @@
 			android:dialogTitle="@string/s_pref_sort" />
 			
 	</PreferenceCategory>
+	
+	<PreferenceCategory android:title="@string/s_pref_fancy_category">
+	    <CheckBoxPreference
+	        android:key="pref_fancy_menus"
+	        android:title="@string/s_pref_fancy_menus"
+	        android:defaultValue="@bool/prehoneycomb"
+	        />
+	    <CheckBoxPreference
+	        android:key="pref_fancy_context"
+	        android:title="@string/s_pref_fancy_context"
+	        android:defaultValue="true"
+	        />
+	</PreferenceCategory>
+	
+		<PreferenceCategory
+		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus"
+		    android:enabled="@bool/honeycomb">
+	        <CheckBoxPreference
+	            android:key="pref_actionmode"
+	            android:title="@string/s_pref_actionmode"
+	            android:defaultValue="false"
+	            android:enabled="false"
+	            android:summaryOn="@string/s_pref_actionmode_enabled"
+	            android:summaryOff="@string/s_pref_actionmode_disabled"
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_hardware_accel"
+	            android:title="@string/s_pref_hardware_accel"
+	            android:defaultValue="@bool/honeycomb"
+	            />
+		</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/s_pref_view_category">
         <CheckBoxPreference
@@ -100,37 +130,6 @@
             android:defaultValue="true" 
             />
 	</PreferenceCategory>
-	
-	<PreferenceCategory android:title="@string/s_pref_fancy_category">
-	    <CheckBoxPreference
-	        android:key="pref_fancy_menus"
-	        android:title="@string/s_pref_fancy_menus"
-	        android:defaultValue="@bool/prehoneycomb"
-	        />
-	    <CheckBoxPreference
-	        android:key="pref_fancy_context"
-	        android:title="@string/s_pref_fancy_context"
-	        android:defaultValue="true"
-	        />
-	</PreferenceCategory>
-	
-		<PreferenceCategory
-		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus"
-		    android:enabled="@bool/honeycomb">
-	        <CheckBoxPreference
-	            android:key="pref_actionmode"
-	            android:title="@string/s_pref_actionmode"
-	            android:defaultValue="false"
-	            android:enabled="false"
-	            android:summaryOn="@string/s_pref_actionmode_enabled"
-	            android:summaryOff="@string/s_pref_actionmode_disabled"
-	            />
-	        <CheckBoxPreference
-	            android:key="pref_hardware_accel"
-	            android:title="@string/s_pref_hardware_accel"
-	            android:defaultValue="@bool/honeycomb"
-	            />
-		</PreferenceCategory>
 	    <PreferenceCategory android:title="@string/s_pref_advanced">
 	        <CheckBoxPreference
 	            android:key="pref_root"
@@ -154,6 +153,12 @@
 	            android:title="@string/s_pref_stats_title"
 	            android:summary="@string/s_pref_stats_summary"
 	            android:defaultValue="false"
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_autowtf"
+	            android:title="@string/s_pref_autowtf"
+	            android:summary="@string/s_pref_autowtf_summary"
+	            android:defaultValue="false" 
 	            />
 	    </PreferenceCategory>
 	    

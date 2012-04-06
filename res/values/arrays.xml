@@ -55,4 +55,19 @@
 	    <item>Servers</item>
 	    <item>Cache</item>
 	</string-array>
+	
+	<string-array name="basebar_split">
+	    <item>@string/s_split_auto</item>
+	    <item>@string/s_split_top</item>
+	    <item>@string/s_split_top_single</item>
+	    <item>@string/s_split_bottom</item>
+	    <item>@string/s_split_none</item>
+	</string-array>
+	<string-array name="basebar_split_values">
+	    <item>Auto</item>
+	    <item>Top</item>
+	    <item>Single</item>
+	    <item>Bottom</item>
+	    <item>None</item>
+	</string-array>
 </resources>

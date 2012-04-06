@@ -225,4 +225,11 @@
     <string name="s_pref_basebar">Split Action Bar</string>
     <string name="s_pref_basebar_on">Action buttons on bottom of screen in Portrait Mode</string>
     <string name="s_pref_basebar_off">Action buttons on top of screen (when available)</string>
+    <string name="s_pref_autowtf">Auto-send Crash Reports</string>
+    <string name="s_pref_autowtf_summary">When an unhandled exception occurs, automatically send report.</string>
+    <string name="s_split_auto">Automatic</string>
+    <string name="s_split_top">Force Buttons to Top</string>
+    <string name="s_split_top_single">Force Single Button to Top</string>
+    <string name="s_split_bottom">Force Buttons to Bottom</string>
+    <string name="s_split_none">Place all Buttons in System Menu</string>
 </resources>
