@@ -2376,6 +2376,7 @@ if (this instanceof SmbNamedPipe) {
                 i = 0;
                 off = 0L;
                 int total = (int) length();
+                long lastPub = 0;
                 for( ;; ) {
                     req.setParam( fid, off, bsize );
                     resp.setParam( b[i], 0 );
@@ -2399,7 +2400,11 @@ if (this instanceof SmbNamedPipe) {
                             break;
                         }
                         w.write( b[i], resp.dataLength, dest, off );
-                        task.publish(i, i, total);
+                        if(new Date().getTime() - lastPub > 500)
+                        {
+                        	task.publish(i, i, total);
+                        	lastPub = new Date().getTime();
+                        }
                     }
     
                     i = i == 1 ? 0 : 1;

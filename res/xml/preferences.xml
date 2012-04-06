@@ -43,13 +43,21 @@
 		    android:summaryOff="@string/s_pref_pagers_summary_off"
 		    android:defaultValue="true"
 		    />
-		<ListPreference
+		<CheckBoxPreference
+		    android:key="pref_basebar"
+		    android:title="@string/s_pref_basebar"
+		    android:summaryOn="@string/s_pref_basebar_on"
+		    android:summaryOff="@string/s_pref_basebar_off"
+		    android:defaultValue="true"
+		    /> 
+		    />
+		<!-- <ListPreference
 		    android:key="pref_basebar_split"
 		    android:title="@string/s_pref_basebar"
 		    android:entries="@array/basebar_split"
 		    android:entryValues="@array/basebar_split_values"
 		    android:enabled="@bool/prehoneycomb"
-		    />
+		    /> -->
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/s_pref_sort">
 		<ListPreference

@@ -232,4 +232,6 @@
     <string name="s_split_top_single">Force Single Button to Top</string>
     <string name="s_split_bottom">Force Buttons to Bottom</string>
     <string name="s_split_none">Place all Buttons in System Menu</string>
+    <string name="s_about_screensize">Screen Size</string>
+    <string name="s_about_density">Density</string>
 </resources>

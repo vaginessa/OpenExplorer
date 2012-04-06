@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:layout_height="match_parent">
+	<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+	android:orientation="vertical" >
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -34,6 +37,43 @@
 	                android:layout_weight="4"
 	                />
 	        </TableRow>
+	        
+            <TableRow
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    style="@style/Small"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:text="@string/s_about_screensize" />
+
+	            <TextView
+	                style="@style/Mid"
+	                android:gravity="left"
+	                android:text="@string/screen_size"
+	                android:layout_weight="4"
+	                />
+	        </TableRow>
+	        
+            <TableRow
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    style="@style/Small"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:text="@string/s_about_density" />
+
+	            <TextView
+	                style="@style/Mid"
+	                android:gravity="left"
+	                android:text="@string/screen_density"
+	                android:layout_weight="4"
+	                />
+	        </TableRow>
+	        
 	        
 	        <TableRow
 	            android:id="@+id/row_buildtime"
@@ -202,15 +242,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" >
 
-                <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
                 <TextView
                     android:id="@+id/about_hardware"
                     style="@style/Mid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     />
-                
-                </ScrollView>
 
             </LinearLayout>
- </LinearLayout>
+ 	</LinearLayout>
+ </ScrollView>

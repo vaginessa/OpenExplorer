@@ -35,7 +35,7 @@
     <View android:background="@color/blue"
         android:layout_height="1dp"
         android:layout_width="match_parent"
-        android:layout_below="@+id/title_bar"
+        android:layout_alignBottom="@+id/title_bar"
         android:layout_alignWithParentIfMissing="true"
         android:id="@+id/title_underline"
         />
@@ -81,7 +81,7 @@
 	</LinearLayout>
 	
 	<ViewStub
-	    android:id="@id/base_stub"
+	    android:id="@+id/base_stub"
 	    android:layout="@layout/base_bar"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
