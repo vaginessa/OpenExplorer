@@ -83,7 +83,7 @@ public class EventHandler {
 	private static NotificationManager mNotifier = null;
 	private static int EventCount = 0;
 	
-	private OnWorkerThreadFinishedListener mThreadListener;
+	private OnWorkerUpdateListener mThreadListener;
 	private FileManager mFileMang;
 	private ProgressBar mExtraProgress;
 	private TextView mExtraStatus, mExtraPercent;
@@ -111,16 +111,9 @@ public class EventHandler {
 			mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
 	}
 	
-	public interface OnWorkerThreadFinishedListener {
-		/**
-		 * This callback is called everytime our background thread
-		 * completes its work.
-		 * 
-		 * @param type specifying what work it did (e.g SEARCH, DELETE ...)
-		 * 			   you may pass null if you do not want to report the results.
-		 * @param results the results of the work
-		 */
+	public interface OnWorkerUpdateListener {
 		public void onWorkerThreadComplete(int type, ArrayList<String> results);
+		public void onWorkerProgressUpdate(int pos, int total);
 	}
 	
 	public void setExtraViews(ProgressBar pb, TextView status, TextView percent)
@@ -134,9 +127,12 @@ public class EventHandler {
 		mFileMang = filemanager;
 	}
 	
-	public void setOnWorkerThreadFinishedListener(OnWorkerThreadFinishedListener e) {
+	public void setUpdateListener(OnWorkerUpdateListener e) {
 		mThreadListener = e;
-	}	
+	}
+	public OnWorkerUpdateListener getUpdateListener() {
+		return mThreadListener;
+	}
 
 	public static CharSequence getResourceString(Context mContext, int... resIds)
 	{
@@ -663,8 +659,40 @@ public class EventHandler {
 			return ret;
 		}
 		
+		private Boolean copyFileToDirectory(final OpenFile source, OpenFile into, final int total)
+		{
+			final OpenFile dest = (OpenFile)into.getChild(source.getName());
+			final boolean[] running = new boolean[]{true};
+			final long size = source.length();
+			new Thread(new Runnable(){
+				@Override
+				public void run() {
+					while(running[0])
+					{
+						long pos = dest.length();
+						publish((int)pos, (int)size, (int)total);
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							running[0] = false;
+						}
+					}
+				}
+			}).start();
+			boolean ret = dest.copyFrom(source);
+			running[0] = false;
+			return ret;
+		}
+		
 		private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total) throws IOException
 		{
+			if(old instanceof OpenFile && intoDir instanceof OpenFile)
+				return copyFileToDirectory((OpenFile)old, (OpenFile)intoDir, total);
+			else if(old instanceof OpenSMB && intoDir instanceof OpenSMB)
+			{
+				if(((OpenSMB)old).copyTo((OpenSMB)intoDir))
+					return true;
+			}
 			Logger.LogDebug("Trying to copy [" + old.getPath() + "] to [" + intoDir.getPath() + "]...");
 			if(old.getPath().equals(intoDir.getPath())) {
 				return false;
@@ -817,6 +845,9 @@ public class EventHandler {
 				size = total = values[1];
 			if(values.length > 2)
 				total = values[2];
+			
+			if(mThreadListener != null)
+				mThreadListener.onWorkerProgressUpdate(current, size);
 			
 			mLastProgress[0] = current;
 			mLastProgress[1] = size;

@@ -359,6 +359,16 @@ public class OpenSMB extends OpenNetworkPath
 		mFile.copyTo(dest, task);
 	}
 	
+	public boolean copyTo(OpenSMB dest) {
+		try {
+			mFile.copyTo(dest.getFile());
+			return true;
+		} catch(SmbException sex) {
+			Logger.LogError("Error copying SMB -> SMB.", sex);
+			return false;
+		}
+	}
+	
 	public SmbFile getFile() {
 		return mFile;
 	}

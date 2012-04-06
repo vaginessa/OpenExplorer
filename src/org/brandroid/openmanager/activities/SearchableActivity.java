@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
 
 import android.R.anim;
@@ -14,14 +14,18 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 
 
 public class SearchableActivity extends ListActivity
 {
+	private ProgressBar mProgressBar;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_fragments);
+		mProgressBar = (ProgressBar)findViewById(android.R.id.progress);
 		handleIntent(getIntent());
 	}
 	
@@ -37,10 +41,19 @@ public class SearchableActivity extends ListActivity
 		{
 			FileManager fm = new FileManager();
 			EventHandler eh = new EventHandler(fm);
-			eh.setOnWorkerThreadFinishedListener(new OnWorkerThreadFinishedListener() {
+			eh.setUpdateListener(new OnWorkerUpdateListener() {
 				@Override
 				public void onWorkerThreadComplete(int type, ArrayList<String> results) {
 					setListAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_single_choice, results));
+				}
+
+				@Override
+				public void onWorkerProgressUpdate(int pos, int total) {
+					if(mProgressBar != null)
+					{
+						mProgressBar.setMax(total);
+						mProgressBar.setProgress(pos);
+					}
 				}
 			});
 			eh.searchFile(new OpenFile("/"), intent.getStringExtra(SearchManager.QUERY), this);

@@ -114,6 +114,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.SortedSet;
@@ -150,7 +151,7 @@ import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
@@ -184,7 +185,7 @@ import org.xmlpull.v1.XmlPullParserException;
 public class OpenExplorer
 		extends OpenFragmentActivity
 		implements OnBackStackChangedListener, OnClipboardUpdateListener,
-			OnPageIndicatorChangeListener, OnWorkerThreadFinishedListener,
+			OnPageIndicatorChangeListener, OnWorkerUpdateListener,
 			OnPageTitleClickListener, LoaderCallbacks<Cursor>
 	{	
 
@@ -329,7 +330,7 @@ public class OpenExplorer
 			showWarnings();
 		} catch(Exception e) { }
 		
-		mEvHandler.setOnWorkerThreadFinishedListener(this);
+		mEvHandler.setUpdateListener(this);
 		
 		mClipboard = new OpenClipboard(this);
 		mClipboard.setClipboardUpdateListener(this);
@@ -1862,8 +1863,7 @@ public class OpenExplorer
 		switch(id)
 		{
 			case R.id.menu_debug:
-				int bad = 2 / 0;
-				Logger.LogInfo("HEY! We know how to divide by 0!");
+				debugTest();
 				break;
 			case R.id.title_icon:
 			case android.R.id.home:
@@ -2089,6 +2089,42 @@ public class OpenExplorer
 		//return super.onOptionsItemSelected(item);
 	}
 	
+	private void debugTest() {
+		int bad = 2 / 0;
+		Logger.LogInfo("HEY! We know how to divide by 0!");
+		/*
+		final OpenFile src = new OpenFile("/mnt/sdcard-ext/gapps-gb-20110828-signed.zip");
+		final OpenFile dest = new OpenFile("/mnt/sdcard/Download/");
+		final OnWorkerUpdateListener oldHandler = mEvHandler.getUpdateListener();
+		final long start = new Date().getTime();
+		mEvHandler.setUpdateListener(new OnWorkerUpdateListener() {
+			@Override
+			public void onWorkerThreadComplete(int type, ArrayList<String> results) {
+				long elapsed = new Date().getTime() - start;
+				Logger.LogVerbose("DEBUG Copy Old: " + elapsed);
+				mEvHandler.setUpdateListener(oldHandler);
+				dest.delete();
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						long start2 = new Date().getTime();
+						dest.getChild(src.getName()).copyFrom(src);
+						long elapsed2 = new Date().getTime() - start2;
+						Logger.LogVerbose("DEBUG Copy New: " + elapsed2);
+					}
+				}).start();
+			}
+
+			@Override
+			public void onProgressUpdate(int pos, int total) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		mEvHandler.copyFile(src, dest, this);
+		*/
+	}
+
 	private void showClipboardDropdown(int menuId)
 	{
 		View anchor = findViewById(menuId);
@@ -3100,6 +3136,14 @@ public class OpenExplorer
 		}
 		if(getClipboard().ClearAfter)
 			getClipboard().clear();
+	}
+	
+	@Override
+	public void onWorkerProgressUpdate(int pos, int total)
+	{
+		ContentFragment frag = getDirContentFragment(false);
+		if(frag != null)
+			frag.onWorkerProgressUpdate(pos, total);
 	}
 	
 	@Override

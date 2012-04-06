@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ref.SoftReference;
+import java.nio.channels.FileChannel;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -373,7 +374,7 @@ public class OpenFile extends OpenPath
 		return mFile.getAbsolutePath();
 	}
 	@Override
-	public OpenPath getChild(String name)
+	public OpenFile getChild(String name)
 	{
 		File base = getFile();
 		if(!base.isDirectory())
@@ -397,11 +398,46 @@ public class OpenFile extends OpenPath
 	public InputStream getInputStream() throws IOException {
 		return new FileInputStream(mFile);
 	}
+	public FileChannel getInputChannel() throws IOException {
+		return ((FileInputStream)getInputStream()).getChannel();
+	}
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		if(output == null)
 			output = new FileOutputStream(mFile);
 		return output;
+	}
+	public FileChannel getOutputChannel() throws IOException
+	{
+		return ((FileOutputStream)getOutputStream()).getChannel();
+	}
+	public boolean copyFrom(OpenFile sourceFile)
+	{
+		try {
+			if(!exists())
+				getFile().createNewFile();
+		} catch(IOException e) { }
+		boolean ret = false;
+		FileChannel source = null;
+		FileChannel dest = null;
+		try {
+			source = sourceFile.getInputChannel();
+			dest = getOutputChannel();
+			dest.transferFrom(source, 0, source.size());
+			ret = true;
+		} catch(IOException e) {
+			Logger.LogError("Couldn't CopyFrom (" + sourceFile.getPath() + " -> " + getPath() + ")", e);
+		} finally {
+			if(source != null)
+				try {
+					source.close();
+				} catch (IOException e) { }
+			if(dest != null)
+				try {
+					dest.close();
+				} catch (IOException e) { }
+		}
+		return ret;
 	}
 	@Override
 	public Boolean isHidden() {

@@ -42,7 +42,7 @@ import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerThreadFinishedListener;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
@@ -99,7 +99,7 @@ import android.net.Uri;
 
 public class ContentFragment extends OpenFragment
 				implements OnItemClickListener, OnItemLongClickListener,
-							OnWorkerThreadFinishedListener
+							OnWorkerUpdateListener
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -743,6 +743,11 @@ public class ContentFragment extends OpenFragment
 			refreshData(null, false);
 			//changePath(getManager().peekStack(), false);
 		}
+	}
+	
+	@Override
+	public void onWorkerProgressUpdate(int pos, int total) {
+		
 	}
 	
 	/**
