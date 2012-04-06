@@ -535,7 +535,7 @@ public class OpenExplorer
 				try {
 					report.put(0, Logger.getCrashReport(false));
 				} catch (JSONException e) { }
-				new SubmitStatsTask(this).escalate().execute(report.toString());
+				new SubmitStatsTask(this).execute(report.toString());
 			}
 		}
 	}
@@ -2758,7 +2758,9 @@ public class OpenExplorer
 	}
 	private void refreshContent()
 	{
-		getDirContentFragment(true).refreshData(null, false);
+		ContentFragment frag = getDirContentFragment(false);
+		if(frag != null)
+			frag.refreshData(null, false);
 	}
 	private String getFragmentPaths(List<Fragment> frags)
 	{
