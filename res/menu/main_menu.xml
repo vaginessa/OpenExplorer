@@ -55,7 +55,6 @@
   	    android:showAsAction="never|withText"
   	    android:icon="@drawable/ic_menu_upload"
   	    android:title="DEBUG Test"
-  	    android:visible="false"
   	    />
   	<item
   	    android:id="@+id/menu_favorites"

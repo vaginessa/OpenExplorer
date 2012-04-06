@@ -60,7 +60,8 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void>
 			if(device == null) device = new JSONObject();
 			String data = "{\"Version\":" + pi.versionCode + ",\"DeviceInfo\":" + device.toString() + ",\"Logs\":" + params[0] + ",\"App\":\"" + mContext.getPackageName() + "\"}";
 			if(mEscalate)
-				sendEmail(pi.packageName + " v" + pi.versionName + " crash report", "Logs:\n" + params[0] + "\n" + DialogHandler.getDeviceInfo());
+				sendEmail("Crash Report " + pi.packageName.substring(pi.packageName.lastIndexOf(".") + 1) + " v" + pi.versionName, params[0] + "\n" + DialogHandler.getDeviceInfo());
+			Logger.getCrashFile().delete();
 			//uc.addRequestProperty("Accept-Encoding", "gzip, deflate");
 			uc.addRequestProperty("App", mContext.getPackageName());
 			uc.addRequestProperty("Version", ""+pi.versionCode);

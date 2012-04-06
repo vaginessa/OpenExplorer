@@ -158,7 +158,7 @@ public class LoggerDbAdapter
     	else return -1;
     }
     
-    public String getAllItems()
+    public JSONArray getAllItemsJSON()
     {
     	//JSONObject ret = new JSONObject();
     	JSONArray items = new JSONArray();
@@ -184,11 +184,14 @@ public class LoggerDbAdapter
     		//sb.append("[" + id + "," + stamp + "," + lvl + ",\"" + msg.replace("\"", "\\\"") + "\"," + ",\"" + stack.replace("\"", "\\\""));
     		c.moveToNext();
     	}
-    	String retStr = items.toString();
     	//sb.append("]}");
     	c.close();
     	//clear();
     	//Logger.LogVerbose("Sending Error report: " + retStr);
-    	return retStr;
+    	return items;
+    }
+    public String getAllItems()
+    {
+    	return getAllItemsJSON().toString();
     }
 }

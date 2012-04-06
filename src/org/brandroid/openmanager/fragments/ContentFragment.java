@@ -325,9 +325,13 @@ public class ContentFragment extends OpenFragment
 		mActionModeSelected = false;
 		try {
 			mShowHiddenFiles = getViewSetting(path, "show",
-					getExplorer().getSetting(null, "pref_show", false));
+						getExplorer() != null ? 
+								getExplorer().getSetting(null, "pref_show", false)
+								: false);
 			mShowThumbnails = getViewSetting(path, "thumbs", 
-					getExplorer().getSetting(null, "pref_thumbs", true));
+						getExplorer() != null ?
+								getExplorer().getSetting(null, "pref_thumbs", true)
+								: true);
 		} catch(NullPointerException npe) {
 			Logger.LogWarning("Null while getting prefs", npe);
 			mShowHiddenFiles = false;

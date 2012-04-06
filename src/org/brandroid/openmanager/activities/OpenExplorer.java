@@ -175,6 +175,8 @@ import org.brandroid.utils.SubmitStatsTask;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.PageIndicator;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
@@ -523,11 +525,18 @@ public class OpenExplorer
 
 	private void handleExceptionHandler()
 	{
-		if(Logger.countLevel(Log.ASSERT) > 0)
+		if(Logger.checkWTF())
 		{
 			if(!getSetting(null, "pref_autowtf", false))
 				showWTFIntent();
-			else { new SubmitStatsTask(this).escalate().execute(Logger.getDbLogs(false)); }
+			else
+			{
+				JSONArray report = Logger.getDbLogArray();
+				try {
+					report.put(0, Logger.getCrashReport(false));
+				} catch (JSONException e) { }
+				new SubmitStatsTask(this).escalate().execute(report.toString());
+			}
 		}
 	}
 
@@ -975,7 +984,7 @@ public class OpenExplorer
 		setupLoggingDb();
 		if(IS_DEBUG_BUILD) return;
 		String logs = Logger.getDbLogs(false);
-		if(logs == null) logs = "[]";
+		if(logs == null || logs == "") logs = "[]";
 		//if(logs != null && logs != "") {
 			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
 			new SubmitStatsTask(this).execute(logs);

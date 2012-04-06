@@ -1,5 +1,7 @@
 package org.brandroid.openmanager.data;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -9,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.util.HashSet;
@@ -17,6 +20,7 @@ import java.util.Hashtable;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.FileUtils;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -412,5 +416,28 @@ public class OpenFile extends OpenPath
 	public boolean create() throws IOException
 	{
 		return mFile.createNewFile();
+	}
+
+	public String readAscii() {
+		StringBuilder sb = new StringBuilder((int)length());
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(getInputStream()));
+			String line;
+			while((line = br.readLine()) != null)
+				sb.append(line + "\n");
+		} catch (Exception e) {
+			Logger.LogError("Couldn't read data from OpenFile(" + getPath() + ")", e);
+		}
+		return sb.toString();
+	}
+	public void write(String data) {
+		try {
+			OutputStream s = getOutputStream();
+			s.write(data.getBytes());
+			s.flush();
+			s.close();
+		} catch(Exception e) {
+			Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
+		}
 	}	
 }

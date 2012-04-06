@@ -1,6 +1,13 @@
 package org.brandroid.utils;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.IOException;
+
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.util.FileManager;
+import org.json.JSONArray;
 
 import android.content.Context;
 import android.util.Log;
@@ -81,8 +88,9 @@ public class Logger
 	}
 	public static Boolean hasDb() { return dbLog != null; }
 	public static void setDb(LoggerDbAdapter newDb) { dbLog = newDb; }
+	public static JSONArray getDbLogArray() { return dbLog != null ? dbLog.getAllItemsJSON() : new JSONArray(); }
 	public static String getDbLogs(Boolean clear) {
-		if(dbLog == null) return null;
+		if(dbLog == null) return "";
 		String ret = dbLog.getAllItems();
 		if(clear)
 			dbLog.clear();
@@ -122,9 +130,51 @@ public class Logger
 		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
 		Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
+	public static boolean checkWTF()
+	{
+		OpenFile crp = getCrashFile();
+		if(crp != null && crp.exists() && crp.length() > 0)
+			return true;
+		return countLevel(Log.ASSERT) > 0;
+	}
+	public static OpenFile getCrashFile()
+	{
+		OpenFile ext = OpenFile.getExternalMemoryDrive(true);
+		if(ext != null)
+		{
+			ext = (OpenFile)ext.getChild("openexplorer_crash.txt");
+			if(ext.exists() && !ext.canWrite())
+				ext.getFile().setWritable(true);
+			return ext;
+		}
+		ext = new OpenFile("/mnt/sdcard/openexplorer_crash.txt");
+		if(ext.exists() && !ext.canWrite())
+			ext.getFile().setWritable(true);
+		if(ext.canWrite())
+			return ext;
+		return null;
+	}
+	public static String getCrashReport(boolean json)
+	{
+		OpenFile crp = getCrashFile();
+		if(crp == null || !crp.exists()) return null;
+		return json ?
+				"{crash:\"" + crp.readAscii().replace("\"", "\\\"") + "}" : 
+				crp.readAscii();
+	}
 	public static void LogWTF(String msg, Throwable ex)
 	{
-		LogToDB(Log.ASSERT, msg, Log.getStackTraceString(ex));
+		if(hasDb())
+			LogToDB(Log.ASSERT, msg, Log.getStackTraceString(ex));
+		OpenFile crp = getCrashFile();
+		if(crp != null)
+		{
+			crp.write(Log.getStackTraceString(ex));
+			if(crp.exists())
+				Logger.LogVerbose("Crash file created!");
+			else
+				Logger.LogWarning("Crash file written, but we can't find it!");
+		} else Logger.LogWarning("Crash file is null!");
 		StackTraceElement[] trace = getMyStackTrace(ex);
 		Log.wtf(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}

@@ -21,21 +21,22 @@ public class WTFSenderActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.wtf_sender);
-		prefs = new org.brandroid.utils.Preferences(this);
+		prefs = new Preferences(this);
 		findViewById(R.id.wtf_yes).setOnClickListener(this);
 		findViewById(R.id.wtf_no).setOnClickListener(this);
 		findViewById(R.id.wtf_preview).setOnClickListener(this);
 		findViewById(R.id.wtf_remember).setOnClickListener(this);
+		findViewById(R.id.wtf_report).setVisibility(View.GONE);
 	}
 	
 	private void sendReport()
 	{
-		String report = "";
-		if(((CheckBox)findViewById(R.id.wtf_preview)).isChecked())
-			report = ((EditText)findViewById(R.id.wtf_report)).getText().toString();
-		if(report == "")
-			report = Logger.getDbLogs(false);
-		new SubmitStatsTask(this).execute(report);
+		new SubmitStatsTask(this).escalate().execute(getReport());
+	}
+	
+	private String getReport()
+	{
+		return Logger.getCrashReport(false) + "\n" + Logger.getDbLogs(false);
 	}
 
 	@Override
@@ -44,12 +45,18 @@ public class WTFSenderActivity extends Activity
 		{
 		case R.id.wtf_yes:
 			sendReport();
+			Logger.getCrashFile().delete();
+			finish();
 			break;
 		case R.id.wtf_no:
+			Logger.getCrashFile().delete();
 			finish();
 			break;
 		case R.id.wtf_preview:
-			((EditText)findViewById(R.id.wtf_report)).setText(Logger.getDbLogs(false));
+			EditText mPreview = ((EditText)findViewById(R.id.wtf_report));
+			mPreview.setText(getReport());
+			mPreview.setVisibility(View.VISIBLE);
+			v.setEnabled(false);
 			break;
 		case R.id.wtf_remember:
 			prefs.setSetting("global", "prefs_autowtf", ((CheckBox)v).isChecked());

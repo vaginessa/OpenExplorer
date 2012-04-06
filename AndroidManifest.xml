@@ -124,6 +124,8 @@
 				<data android:mimeType="application/vnd.android.package-archive" />
 			</intent-filter>
 		</activity -->
+		
+		<activity android:name=".activities.WTFSenderActivity" android:theme="@style/Dialog" />
 
 		<activity android:name=".activities.SettingsActivity" android:label="@string/s_menu_prefs_global" />
 
