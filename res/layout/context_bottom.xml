@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
 	android:minHeight="100dp"
     android:orientation="vertical"
-    android:paddingTop="10dp"
     android:gravity="bottom"
     >
 

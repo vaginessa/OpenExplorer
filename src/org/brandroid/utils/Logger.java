@@ -142,12 +142,12 @@ public class Logger
 		OpenFile ext = OpenFile.getExternalMemoryDrive(true);
 		if(ext != null)
 		{
-			ext = (OpenFile)ext.getChild("openexplorer_crash.txt");
+			ext = (OpenFile)ext.getChild(".openexplorer_crash");
 			if(ext.exists() && !ext.canWrite())
 				ext.getFile().setWritable(true);
 			return ext;
 		}
-		ext = new OpenFile("/mnt/sdcard/openexplorer_crash.txt");
+		ext = new OpenFile("/mnt/sdcard/.openexplorer_crash");
 		if(ext.exists() && !ext.canWrite())
 			ext.getFile().setWritable(true);
 		if(ext.canWrite())

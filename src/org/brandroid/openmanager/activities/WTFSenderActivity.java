@@ -27,6 +27,7 @@ public class WTFSenderActivity extends Activity
 		findViewById(R.id.wtf_preview).setOnClickListener(this);
 		findViewById(R.id.wtf_remember).setOnClickListener(this);
 		findViewById(R.id.wtf_report).setVisibility(View.GONE);
+		prefs.setSetting("global", "prefs_autowtf", true);
 	}
 	
 	private void sendReport()

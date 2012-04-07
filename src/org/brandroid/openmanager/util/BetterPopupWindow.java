@@ -290,7 +290,7 @@ public class BetterPopupWindow {
 			if((ancLeft == 0 && ancTop > 0) || (spaceHorizontal > spaceVertical * 1.2f && spaceVertical < bgHeight * 2)) // Go Horizontal
 			{
 				popup.setHeight(getAvailableHeight());
-				int gravity = Gravity.TOP | Gravity.LEFT;
+				int gravity = (fromBottom ? Gravity.BOTTOM : Gravity.TOP) | Gravity.LEFT;
 				/*fromRight ? Gravity.RIGHT : Gravity.LEFT;
 				if(fromBottom)
 					gravity |= Gravity.TOP;
