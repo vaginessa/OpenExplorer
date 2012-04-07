@@ -44,6 +44,8 @@ public class OpenFile extends OpenPath
 	private boolean bGrandPeeked = false;
 	//private String mRoot = null;
 	private OutputStream output = null;
+	private static OpenFile mInternalDrive = null;
+	private static OpenFile mExternalDrive = null;
 	
 	public OpenFile setRoot() {
 		/// TODO fix this
@@ -233,24 +235,48 @@ public class OpenFile extends OpenPath
 		}
 		return getOpenPaths(file.listFiles());
 	}
-	
+	public static void setExternalMemoryDrive(OpenFile root) { mExternalDrive = root; }
 	public static OpenFile getExternalMemoryDrive(boolean fallbackToInternal) // sd
 	{
+		if(mExternalDrive != null) return mExternalDrive;
 		for(OpenFile kid : getInternalMemoryDrive().getParent().listFiles())
-			if(kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead() && kid.list().length > 0)
+			if(kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead() && kid.canWrite())
+			{
+				mExternalDrive = kid;
 				return kid;
+			}
 		if(new File("/Removable").exists())
 			for(File kid : new File("/Removable").listFiles())
 				if(kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead() && kid.list().length > 0)
-					return new OpenFile(kid);
+				{
+					mExternalDrive = new OpenFile(kid);
+					return mExternalDrive;
+				}
 		if(!fallbackToInternal)
 			return null;
 		else
 			return getInternalMemoryDrive();
 	}
+	public static void setInternalMemoryDrive(OpenFile root) { mInternalDrive = root; }
 	public static OpenFile getInternalMemoryDrive() // internal
 	{
-		return new OpenFile(Environment.getExternalStorageDirectory());
+		if(mInternalDrive != null) return mInternalDrive;
+		OpenFile ret = new OpenFile(Environment.getExternalStorageDirectory());
+		if(ret == null || !ret.exists())
+		{
+			OpenFile mnt = new OpenFile("/mnt");
+			if(mnt != null && mnt.exists())
+				for(OpenFile kid : mnt.listFiles())
+					if(kid.getName().toLowerCase().indexOf("sd") > -1)
+						if(kid.canWrite())
+						{
+							mInternalDrive = kid;
+							return kid;
+						}
+						
+		}
+		mInternalDrive = ret;
+		return mInternalDrive;
 	}
 	
 

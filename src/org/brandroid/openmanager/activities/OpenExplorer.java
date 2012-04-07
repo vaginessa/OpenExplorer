@@ -255,14 +255,24 @@ public class OpenExplorer
 	{
 		Preferences prefs = getPreferences();
 
-		mViewPagerEnabled = getPreferences().getBoolean("global", "pref_pagers", true);
+		mViewPagerEnabled = prefs.getBoolean("global", "pref_pagers", true);
 		//USE_ACTIONMODE = getPreferences().getBoolean("global", "pref_actionmode", false);
 		
-		Preferences.Pref_Intents_Internal = getPreferences().getBoolean("global", "pref_intent_internal", true);
-		Preferences.Pref_Text_Internal = getPreferences().getBoolean("global", "pref_text_internal", true);
+		Preferences.Pref_Intents_Internal = prefs.getBoolean("global", "pref_intent_internal", true);
+		Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
 		
-		USE_PRETTY_MENUS = getPreferences().getBoolean("global", "pref_fancy_menus", USE_PRETTY_MENUS);
-		USE_PRETTY_CONTEXT_MENUS = getPreferences().getBoolean("global", "pref_fancy_context", USE_PRETTY_CONTEXT_MENUS);
+		USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus", USE_PRETTY_MENUS);
+		USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", USE_PRETTY_CONTEXT_MENUS);
+		
+		String s = prefs.getString("global", "pref_location_ext", null);
+		if(s != null && new OpenFile(s).exists())
+			OpenFile.setExternalMemoryDrive(new OpenFile(s));
+		else prefs.setSetting("global", "pref_location_ext", OpenFile.getExternalMemoryDrive(true).getPath());
+		
+		s = prefs.getString("global", "pref_location_int", null);
+		if(s != null && new OpenFile(s).exists())
+			OpenFile.setInternalMemoryDrive(new OpenFile(s));
+		else prefs.setSetting("global", "pref_location_int", OpenFile.getInternalMemoryDrive().getPath());
 	}
 	
 	public void onCreate(Bundle savedInstanceState)
@@ -373,6 +383,7 @@ public class OpenExplorer
 		
 		if(!BEFORE_HONEYCOMB)
 		{
+			getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
 			setViewVisibility(false, false, R.id.title_underline);
 			//if(USE_ACTION_BAR)
 			//	setViewVisibility(false, false, R.id.title_bar, R.id.title_underline, R.id.title_underline_2);

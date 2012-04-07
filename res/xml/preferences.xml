@@ -144,6 +144,16 @@
 	            android:title="@string/s_menu_root"
 	            android:defaultValue="false"
 	            />
+	        <EditTextPreference
+	            android:key="pref_location_int"
+	            android:title="@string/s_menu_location_int"
+	            android:defaultValue="/mnt/sdcard" 
+	            />
+	        <EditTextPreference
+	            android:key="pref_location_ext"
+	            android:title="@string/s_menu_location_ext"
+	            android:defaultValue="/mnt/sdcard-ext" 
+	            />
 	        <CheckBoxPreference
 	            android:key="pref_intent_internal"
 	            android:title="@string/s_pref_intent_internal"
