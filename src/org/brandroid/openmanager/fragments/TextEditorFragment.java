@@ -59,7 +59,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 	{
 		mPath = path;
 		Bundle b = new Bundle();
-		b.putString("edit_path", path.getPath().toString());
+		if(path != null && path.getPath() != null)
+			b.putString("edit_path", path.getPath().toString());
 		setArguments(b);
 	}
 	

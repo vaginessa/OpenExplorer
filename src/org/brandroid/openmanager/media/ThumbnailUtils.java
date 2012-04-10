@@ -100,10 +100,10 @@ public class ThumbnailUtils {
         SizedThumbnailBitmap sizedThumbnailBitmap = new SizedThumbnailBitmap();
         Bitmap bitmap = null;
         MediaFileType fileType = MediaFile.getFileType(filePath);
-        if (fileType != null && fileType.fileType == MediaFile.FILE_TYPE_JPEG) {
+        /*if (fileType != null && fileType.fileType == MediaFile.FILE_TYPE_JPEG) {
             createThumbnailFromEXIF(filePath, targetSize, maxPixels, sizedThumbnailBitmap);
             bitmap = sizedThumbnailBitmap.mBitmap;
-        }
+        }*/
 
         if (bitmap == null) {
             try {
@@ -479,7 +479,7 @@ public class ThumbnailUtils {
             if (exif != null) {
                 thumbData = exif.getThumbnail();
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Log.w(TAG, ex);
         }
 

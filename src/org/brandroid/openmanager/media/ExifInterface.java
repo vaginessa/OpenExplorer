@@ -201,7 +201,9 @@ public class ExifInterface {
 
         String attrStr;
         synchronized (sLock) {
+        	try {
             attrStr = getAttributesNative(mFilename);
+        	} catch(UnsatisfiedLinkError e) { return; }
         }
 
         // get count

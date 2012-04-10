@@ -20,6 +20,9 @@ package org.brandroid.openmanager.util;
 
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
+import android.provider.MediaStore.Audio;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Video;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -32,6 +35,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -60,6 +64,8 @@ import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.OperationsActivity;
+import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
@@ -661,24 +667,27 @@ public class EventHandler {
 		
 		private Boolean copyFileToDirectory(final OpenFile source, OpenFile into, final int total)
 		{
-			final OpenFile dest = (OpenFile)into.getChild(source.getName());
+			if(into.isDirectory() || !into.exists())
+				into = into.getChild(source.getName());
+			final OpenFile dest = (OpenFile)into;
 			final boolean[] running = new boolean[]{true};
 			final long size = source.length();
-			new Thread(new Runnable(){
-				@Override
-				public void run() {
-					while(running[0])
-					{
-						long pos = dest.length();
-						publish((int)pos, (int)size, (int)total);
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							running[0] = false;
+			if(size > 50000)
+				new Thread(new Runnable(){
+					@Override
+					public void run() {
+						while(running[0])
+						{
+							long pos = dest.length();
+							publish((int)pos, (int)size, (int)total);
+							try {
+								Thread.sleep(100);
+							} catch (InterruptedException e) {
+								running[0] = false;
+							}
 						}
 					}
-				}
-			}).start();
+				}).start();
 			boolean ret = dest.copyFrom(source);
 			running[0] = false;
 			return ret;
@@ -692,6 +701,17 @@ public class EventHandler {
 			{
 				if(((OpenSMB)old).copyTo((OpenSMB)intoDir))
 					return true;
+			}
+			if(intoDir instanceof OpenCursor)
+			{
+				try {
+					if(old.isImageFile() && intoDir.getName().equals("Photos"))
+					{
+						if(Images.Media.insertImage(mContext.getContentResolver(), old.getPath(), old.getName(), null)
+								!= null)
+						return true;
+					}
+				} catch(Exception e) { return false; }
 			}
 			Logger.LogDebug("Trying to copy [" + old.getPath() + "] to [" + intoDir.getPath() + "]...");
 			if(old.getPath().equals(intoDir.getPath())) {

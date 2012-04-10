@@ -2,10 +2,13 @@ package org.brandroid.utils;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.json.JSONArray;
 
@@ -142,40 +145,63 @@ public class Logger
 		OpenFile ext = OpenFile.getExternalMemoryDrive(true);
 		if(ext != null)
 		{
-			ext = (OpenFile)ext.getChild(".openexplorer_crash");
+			ext = (OpenFile)ext.getChild(".oe_crash.txt");
 			if(ext.exists() && !ext.canWrite())
 				ext.getFile().setWritable(true);
 			return ext;
 		}
-		ext = new OpenFile("/mnt/sdcard/.openexplorer_crash");
+		ext = new OpenFile("/mnt/sdcard/.oe_crash.txt");
 		if(ext.exists() && !ext.canWrite())
 			ext.getFile().setWritable(true);
 		if(ext.canWrite())
 			return ext;
 		return null;
 	}
-	public static String getCrashReport(boolean json)
+	public static String getCrashReport(boolean full)
 	{
 		OpenFile crp = getCrashFile();
 		if(crp == null || !crp.exists()) return null;
-		return json ?
-				"{crash:\"" + crp.readAscii().replace("\"", "\\\"") + "}" : 
-				crp.readAscii();
+		return full ? crp.readAscii() : crp.readHead(1); 
 	}
 	public static void LogWTF(String msg, Throwable ex)
 	{
 		if(hasDb())
 			LogToDB(Log.ASSERT, msg, Log.getStackTraceString(ex));
 		OpenFile crp = getCrashFile();
+		Throwable cause = ex.getCause();
+		StackTraceElement[] trace = getMyStackTrace(cause != null ? cause : ex);
 		if(crp != null)
 		{
-			crp.write(Log.getStackTraceString(ex));
+			FileWriter fw = null;
+			try {
+				fw = new FileWriter(crp.getFile(), true);
+				if(fw != null)
+				{
+					if(trace.length > 0)
+					{
+						int index = Math.min(trace.length - 1, 1);
+						String badGuy = ex.getMessage();
+						if(badGuy.indexOf(":") > -1)
+							badGuy = badGuy.substring(badGuy.lastIndexOf(".", badGuy.indexOf(":")) + 1);
+						//badGuy = badGuy.substring(badGuy.lastIndexOf(".") + 1);
+						fw.write(badGuy + ": " +
+								trace[index].getFileName() + ":" + trace[index].getLineNumber() +
+									" (" + trace[index].getMethodName() + ")\n");
+					} else fw.write("\n");
+					fw.write(Log.getStackTraceString(ex));
+					fw.write("\n");
+					fw.write(getDbLogs(true));
+					fw.write("\n");
+					fw.write(DialogHandler.getDeviceInfo());
+				}
+				fw.flush();
+				fw.close();
+			} catch (Exception e) { Logger.LogDebug("Couldn't write to crash file!", e); }
 			if(crp.exists())
 				Logger.LogVerbose("Crash file created!");
 			else
 				Logger.LogWarning("Crash file written, but we can't find it!");
 		} else Logger.LogWarning("Crash file is null!");
-		StackTraceElement[] trace = getMyStackTrace(ex);
 		Log.wtf(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
 	public static void LogWarning(String msg)

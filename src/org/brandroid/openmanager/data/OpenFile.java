@@ -414,6 +414,7 @@ public class OpenFile extends OpenPath
 	}
 	@Override
 	public Boolean delete() {
+		Logger.LogDebug("Deleting " + getPath());
 		return mFile.delete();
 	}
 	@Override
@@ -492,6 +493,18 @@ public class OpenFile extends OpenPath
 		}
 		return sb.toString();
 	}
+	public String readHead(int lines) {
+		StringBuilder sb = new StringBuilder((int)length());
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(getInputStream()));
+			String line;
+			while(lines-- > 0 && (line = br.readLine()) != null)
+				sb.append(line + "\n");
+		} catch (Exception e) {
+			Logger.LogError("Couldn't read data from OpenFile(" + getPath() + ")", e);
+		}
+		return sb.toString();
+	}
 	public void write(String data) {
 		try {
 			OutputStream s = getOutputStream();
@@ -501,5 +514,13 @@ public class OpenFile extends OpenPath
 		} catch(Exception e) {
 			Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
 		}
-	}	
+	}
+
+	public void rename(String name) {
+		File newFile = new File(getParent().getFile(), name);
+		if(newFile.exists())
+			newFile.delete();
+		Logger.LogDebug("Renaming " + getPath() + " to " + newFile.getPath());
+		mFile.renameTo(newFile);
+	}
 }

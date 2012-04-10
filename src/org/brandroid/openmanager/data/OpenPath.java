@@ -206,6 +206,7 @@ public abstract class OpenPath
 
 	public boolean isTextFile() { return isTextFile(getName()); }
 	public static boolean isTextFile(String file) {
+		if(file == null) return false;
 		if(file.indexOf(".") == -1) return false;
 		String ext = file.substring(file.lastIndexOf(".") + 1);
 		if(MimeTypes.Default != null)
@@ -350,5 +351,8 @@ public abstract class OpenPath
 	{
 		if(mDb != null)
 			mDb.clear();
+	}
+	public int getAttributes() {
+		return 0;
 	}
 }

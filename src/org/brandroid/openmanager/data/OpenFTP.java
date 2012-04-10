@@ -191,6 +191,7 @@ public class OpenFTP extends OpenNetworkPath
 			String parent = base + arr[i].getName();
 			if(arr[i].isDirectory() && !parent.endsWith("/"))
 				parent += "/";
+			if(arr[i].getName().equals(".") || arr[i].getName().equals("..")) continue;
 			OpenFTP tmp = new OpenFTP(this, arr[i], new FTPManager(mManager, parent));
 			mChildren[i] = tmp;
 			//FileManager.setOpenCache(tmp.getPath(), tmp);

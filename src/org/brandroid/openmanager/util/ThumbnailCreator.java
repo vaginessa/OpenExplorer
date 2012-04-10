@@ -35,7 +35,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import org.brandroid.openmanager.provider.MediaStore;
+import android.provider.MediaStore;
 import android.view.Gravity;
 import android.widget.ImageView;
 
@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -75,7 +76,7 @@ public class ThumbnailCreator extends Thread {
 	private static int iVideoThumbErrors = 0;
 	
 	public static boolean useCache = true;
-	public static boolean showThumbPreviews = true; 
+	public static boolean showThumbPreviews = true;
 	
 	private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
 	private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
@@ -380,7 +381,7 @@ public class ThumbnailCreator extends Thread {
 		if(readCache && bmp == null)
 			bmp = loadThumbnail(mCacheFilename);
 		
-		if(bmp == null && !useGeneric)
+		if(bmp == null && !useGeneric && !OpenExplorer.LOW_MEMORY)
 		{
 			Boolean valid = false;
 			if ((file instanceof OpenMediaStore || file instanceof OpenCursor)

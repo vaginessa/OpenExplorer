@@ -36,9 +36,9 @@ public class OpenSMB extends OpenNetworkPath
 	private OpenSMB[] mChildren = null; 
 	private Long mSize = null;
 	private Long mModified = null;
-	private Boolean mHidden = false;
 	private Long mDiskSpace = 0l;
 	private Long mDiskFreeSpace = 0l;
+	private Integer mAttributes = null;
 	
 	public OpenSMB(String urlString) throws MalformedURLException
 	{
@@ -56,14 +56,12 @@ public class OpenSMB extends OpenNetworkPath
 		}
 		mFile = new SmbFile(url, auth);
 		mParent = null;
-		mHidden = null;
 		mSize = mModified = null;
 	}
 	public OpenSMB(SmbFile file)
 	{
 		mFile = file;
 		mParent = null;
-		mHidden = null;
 		mSize = mModified = null;
 	}
 	public OpenSMB(OpenSMB parent, SmbFile kid)
@@ -73,9 +71,9 @@ public class OpenSMB extends OpenNetworkPath
 		try {
 			if(kid.isConnected())
 			{
+				mAttributes = mFile.getAttributes();
 				mSize = mFile.length();
 				mModified = mFile.lastModified();
-				mHidden = mFile.isHidden();
 			}
 		} catch (SmbException e) {
 			Logger.LogError("Error creating SMB", e);
@@ -150,6 +148,15 @@ public class OpenSMB extends OpenNetworkPath
 			Logger.LogError("Couldn't get SMB length", e);
 			return 0l;
 		}
+	}
+	
+	@Override
+	public int getAttributes() {
+		int ret = 0;
+		try {
+			ret = mFile.getAttributes();
+		} catch (SmbException e) { }
+		return ret;
 	}
 	
 	@Override
@@ -249,6 +256,12 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public Boolean isDirectory() {
+		if(mAttributes != null)
+			return (mAttributes & SmbFile.ATTR_DIRECTORY) == SmbFile.ATTR_DIRECTORY;
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+			try {
+				return mFile.isDirectory();
+			} catch (SmbException e) { }
 		return mFile.getName().endsWith("/");
 	}
 
@@ -260,10 +273,11 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public Boolean isHidden() {
 		try {
-			if(mHidden != null || Thread.currentThread().equals(OpenExplorer.UiThread))
-				return mHidden != null ? mHidden : false;
-			else
+			if(mAttributes != null)
+				return ( mAttributes & SmbFile.ATTR_HIDDEN ) == SmbFile.ATTR_HIDDEN;
+			else if(!Thread.currentThread().equals(OpenExplorer.UiThread))
 				return mFile.isHidden();
+			else return false;
 		} catch (Exception e) {
 			return true;
 		}
@@ -297,7 +311,8 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public Boolean canWrite() {
 		try {
-
+			if(mAttributes != null)
+				return (mAttributes & SmbFile.ATTR_READONLY) == 0;
 			if(Thread.currentThread().equals(OpenExplorer.UiThread))
 				return true;
 			else

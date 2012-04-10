@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StatFs;
+import android.provider.MediaStore;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -51,7 +52,6 @@ import android.graphics.drawable.LayerDrawable;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
-import org.brandroid.openmanager.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -542,13 +542,8 @@ public class OpenExplorer
 			if(!getSetting(null, "pref_autowtf", false))
 				showWTFIntent();
 			else
-			{
-				JSONArray report = Logger.getDbLogArray();
-				try {
-					report.put(0, Logger.getCrashReport(false));
-				} catch (JSONException e) { }
-				new SubmitStatsTask(this).execute(report.toString());
-			}
+				new SubmitStatsTask(this).execute(
+						Logger.getCrashReport(true));
 		}
 	}
 
@@ -937,7 +932,7 @@ public class OpenExplorer
 		});
 		if(Logger.isLoggingEnabled())
 		{
-			if(getPreferences().getBoolean("global", "pref_stats", false))
+			if(getPreferences().getBoolean("global", "pref_stats", true))
 			{
 				if(!Logger.hasDb())
 					Logger.setDb(new LoggerDbAdapter(getApplicationContext()));
@@ -1321,7 +1316,7 @@ public class OpenExplorer
 		Fragment ret = null;
 		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
-		if(mViewPagerAdapter != null)
+		if(mViewPagerAdapter != null && mViewPager != null)
 		{
 			if(mViewPager.getCurrentItem() > -1)
 			{
@@ -2691,15 +2686,27 @@ public class OpenExplorer
 				} catch(IllegalStateException e) { Logger.LogError("Hopefully the Pager is okay!", e); }
 				updatePagerTitle(index);
 				if(addToStack)
-					try {
-						fragmentManager
-							.beginTransaction()
-							.setBreadCrumbTitle(path.getPath())
-							.addToBackStack("path")
-							.commit();
-					} catch(IllegalStateException e) {
-						Logger.LogError("Couldn't add frag to stack", e);
+				{
+					int bsCount = fragmentManager.getBackStackEntryCount();
+					if(bsCount > 0)
+					{
+						BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
+						String last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString() : "";
+						Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
+						if(!last.equalsIgnoreCase(path.getPath()))
+						{
+							try {
+								fragmentManager
+									.beginTransaction()
+									.setBreadCrumbTitle(path.getPath())
+									.addToBackStack("path")
+									.commit();
+							} catch(IllegalStateException e) {
+								Logger.LogError("Couldn't add frag to stack", e);
+							}
+						}
 					}
+				}
 			} else {
 				mViewPager.setAdapter(null);
 				OpenPath commonBase = null;
@@ -3191,7 +3198,7 @@ public class OpenExplorer
 					Uri.parse("content://media/external/images/media"),
 					bRetrieveDimensionsForPhotos ? // It seems that < 2.3.3 don't have width & height
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified",
-								MediaStore.Images.ImageColumns.WIDTH, MediaStore.Images.ImageColumns.HEIGHT
+								"width", "height"
 							} :
 						new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 					MediaStore.Images.Media.SIZE + " > 10000", null,

@@ -21,6 +21,7 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.Preferences;
 
 import com.jcraft.jsch.UserInfo;
@@ -117,7 +118,7 @@ public abstract class OpenFragment
 		//if(list.showContextMenu()) return true;
 		
 		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
-		final String name = file.getPath().substring(file.getPath().lastIndexOf("/")+1);
+		final String name = file.getName();
 		
 		if(!OpenExplorer.USE_PRETTY_CONTEXT_MENUS)
 		{
@@ -125,19 +126,20 @@ public abstract class OpenFragment
 		} else if(OpenExplorer.BEFORE_HONEYCOMB || !OpenExplorer.USE_ACTIONMODE) {
 			
 			try {
-				View anchor = view; //view.findViewById(R.id.content_context_helper);
+				//View anchor = view; //view.findViewById(R.id.content_context_helper);
 				//if(anchor == null) anchor = view;
 				//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 				//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
-				final IconContextMenu cm = new IconContextMenu(
-						list.getContext(), R.menu.context_file, view, null, null);
-				cm.setAnchor(anchor);
-				Menu cmm = cm.getMenu();
+				MenuBuilder cmm = IconContextMenu.newMenu(list.getContext(), R.menu.context_file);
 				//if(!file.isArchive()) hideItem(cmm, R.id.menu_context_unzip);
 				if(getClipboard().size() > 0)
 					OpenExplorer.setMenuVisible(cmm, false, R.id.menu_multi);
 				else
 					OpenExplorer.setMenuVisible(cmm, false, R.id.menu_context_paste);
+				OpenExplorer.setMenuEnabled(cmm, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
+				final IconContextMenu cm = new IconContextMenu(
+						list.getContext(), cmm, view, null, null);
+				//cm.setAnchor(anchor);
 				cm.setTitle(name);
 				cm.setOnDismissListener(new android.widget.PopupWindow.OnDismissListener() {
 					public void onDismiss() {
@@ -269,7 +271,9 @@ public abstract class OpenFragment
 	}
 	protected Boolean getViewSetting(OpenPath path, String key, Boolean def)
 	{
-		return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+		if(getExplorer() != null && getExplorer().getPreferences() != null)
+			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+		return def;
 	}
 	protected Integer getViewSetting(OpenPath path, String key, Integer def)
 	{
@@ -299,6 +303,7 @@ public abstract class OpenFragment
 			file = ((FileSystemAdapter)mContentAdapter).getItem(info != null ? info.position : mMenuContextItemIndex);
 		else return;
 		new MenuInflater(v.getContext()).inflate(R.menu.context_file, menu);
+		OpenExplorer.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
 		OpenExplorer.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
 		//menu.findItem(R.id.menu_context_unzip).setVisible(file.isArchive());
 		if(!mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))

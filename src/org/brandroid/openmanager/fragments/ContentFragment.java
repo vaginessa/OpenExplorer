@@ -425,7 +425,11 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
+		try {
 		super.onSaveInstanceState(outState);
+		} catch(NullPointerException e) {
+			// Not sure why this is causing NPE crashes
+		}
 		outState.putInt("view", mViewMode);
 		if(mPath != null)
 			outState.putString("last", mPath.getPath());

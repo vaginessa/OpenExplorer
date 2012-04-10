@@ -120,7 +120,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 				&& checkForContentFragmentWithPath(((ContentFragment) frag)
 						.getPath()))
 			return;
-		mExtraFrags.add(index, frag);
+		mExtraFrags.add(Math.min(getCount(), index), frag);
 		try {
 			notifyDataSetChanged();
 		} catch(IllegalStateException eew) { }

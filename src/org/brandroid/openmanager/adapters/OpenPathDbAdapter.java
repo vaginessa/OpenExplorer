@@ -20,14 +20,15 @@ public class OpenPathDbAdapter
     public static final String KEY_SIZE = "size";
     public static final String KEY_MTIME = "mtime";
     public static final String KEY_STAMP = "stamp";
-    public static final String[] KEYS = {KEY_ID,KEY_FOLDER,KEY_NAME,KEY_SIZE,KEY_MTIME,KEY_STAMP};
+    public static final String KEY_ATTRIBUTES = "atts";
+    public static final String[] KEYS = {KEY_ID,KEY_FOLDER,KEY_NAME,KEY_SIZE,KEY_MTIME,KEY_STAMP,KEY_ATTRIBUTES};
     
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
     
     private static final String DATABASE_NAME = "files.db";
     private static final String DATABASE_TABLE = "files";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     private static final String DATABASE_CREATE =
         "create table " + DATABASE_TABLE + " (" + KEY_ID + " integer primary key autoincrement, "
@@ -54,6 +55,12 @@ public class OpenPathDbAdapter
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        	if(oldVersion == 4 && newVersion >= 5)
+        	{
+        		Logger.LogVerbose("We can do this upgrade [" + DATABASE_TABLE + "] from " + oldVersion + " to " + newVersion + " and retain old data");
+        		db.execSQL("ALTER TABLE " + DATABASE_TABLE + " ADD COLUMN [" + KEY_ATTRIBUTES + "] int null");
+        		return;
+        	}
             Logger.LogVerbose("Upgrading table [" + DATABASE_TABLE + "] from version " + oldVersion + " to "
                     + newVersion + ", which will destroy all old data");
             db.execSQL("DROP TABLE IF EXISTS " + DATABASE_TABLE);
@@ -116,6 +123,7 @@ public class OpenPathDbAdapter
         initialValues.put(KEY_SIZE, path.length());
         initialValues.put(KEY_MTIME, path.lastModified());
         initialValues.put(KEY_STAMP, new java.util.Date().getTime());
+        initialValues.put(KEY_ATTRIBUTES, path.getAttributes());
         //initialValues.put(KEY_STAMP, (new java.util.Date().getTime() - new Date(4,9,2011).getTime()) / 1000);
         //Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
         

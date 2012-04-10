@@ -91,6 +91,7 @@ public class IconContextMenu
 		mGrid.setOnItemClickListener(new OnItemClickListener() {
 
 			public void onItemClick(AdapterView<?> arg0, View v, int pos, long id) {
+				if(!adapter.getItem(pos).isEnabled()) return;
 				if(iconContextItemSelectedListener != null)
 				{
 					iconContextItemSelectedListener.onIconContextItemSelected(

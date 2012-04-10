@@ -40,6 +40,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
     			.setIcon(item.getIcon())
     			.setCheckable(item.isCheckable())
     			.setChecked(item.isChecked())
+    			.setVisible(item.isVisible())
     			.setEnabled(item.isEnabled());
     	}
     	notifyDataSetChanged();
@@ -120,6 +121,14 @@ public class IconContextMenuAdapter extends BaseAdapter {
         	icon = new ColorDrawable(android.R.color.white);
         if(icon instanceof BitmapDrawable)
         	((BitmapDrawable)icon).setGravity(Gravity.CENTER);
+        
+        if(!item.isEnabled())
+        {
+        	res.setClickable(false);
+        	res.setLongClickable(false);
+        	res.setTextColor(R.color.lightgray);
+        	icon.setAlpha(128);
+        }
         
         res.setTag(item);
         res.setText(item.getTitle());

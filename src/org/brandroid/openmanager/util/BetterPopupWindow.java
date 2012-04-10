@@ -196,6 +196,8 @@ public class BetterPopupWindow {
 
 		if(anchor == null)
 		{
+			return false;
+			/*
 			Logger.LogWarning("Anchor is null");
 			xOffset = (getWindowWidth() / 2) - (popup.getWidth() / 2);
 			if(popup.getHeight() > 0)
@@ -207,6 +209,7 @@ public class BetterPopupWindow {
 			setViewWidth(backgroundView.findViewById(R.id.space_right), LayoutParams.FILL_PARENT);
 			backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
 			popup.showAtLocation(null, Gravity.CENTER, xOffset, yOffset);
+			*/
 			//popup.showAsDropDown(new View(mContext), xOffset, yOffset);
 		} else {
 			if(anchor.findViewById(R.id.content_icon) != null && anchor.getWidth() > getWindowWidth() / 2)
@@ -283,11 +286,16 @@ public class BetterPopupWindow {
 			//if(fromBottom)
 			//	popup.setHeight(popup.getMaxAvailableHeight(anchor));
 			
+			float dp = mContext.getResources().getDimension(R.dimen.one_dp);
+			
 			if(spaceVertical < bgHeight)
 			{
 				popup.setHeight(bgHeight);
 			}
-			if((ancLeft == 0 && ancTop > 0) || (spaceHorizontal > spaceVertical * 1.2f && spaceVertical < bgHeight * 2)) // Go Horizontal
+			if((ancLeft == 0 && ancTop > 0) ||
+				(getWindowHeight() / dp < 600 &&
+					spaceHorizontal > spaceVertical * 1.2f &&
+					spaceVertical < bgHeight * 2)) // Go Horizontal
 			{
 				popup.setHeight(getAvailableHeight());
 				int gravity = (fromBottom ? Gravity.BOTTOM : Gravity.TOP) | Gravity.LEFT;
@@ -307,7 +315,7 @@ public class BetterPopupWindow {
 				anchor = getAnchorRoot();
 				ancLeft = getAbsoluteLeft(anchor);
 				ancTop = getAbsoluteTop(anchor);
-				yOffset = getWindowHeight() - popup.getHeight();
+				//yOffset = getWindowHeight() - getAvailableHeight();
 				Logger.LogInfo("Switching to absolute popup! " +
 						"anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/" +
 						"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
@@ -347,7 +355,6 @@ public class BetterPopupWindow {
 						//backgroundView.findViewById(R.id.indicator).getWidth() + "/" +
 						);
 			
-			float dp = mContext.getResources().getDimension(R.dimen.one_dp);
 			
 			//anchor.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 			//arrowOffset = anchor.getMeasuredWidth() / 2;

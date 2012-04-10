@@ -102,7 +102,7 @@ public class OpenPathAdapter extends BaseAdapter
 		TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
 		if(mPathView != null)
 		{
-			if(file.getClass().equals(OpenMediaStore.class))
+			if(file instanceof OpenMediaStore)
 			{
 				mPathView.setText(file.getPath());
 				mPathView.setVisibility(View.VISIBLE);

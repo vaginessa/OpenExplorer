@@ -236,4 +236,6 @@
     <string name="s_about_density">Density</string>
     <string name="s_menu_location_int">Internal Memory Path</string>
     <string name="s_menu_location_ext">External Memory Path</string>
+    <string name="s_wtf_context">Please describe context of crash:</string>
+    <string name="thanks">Thank you!</string>
 </resources>
