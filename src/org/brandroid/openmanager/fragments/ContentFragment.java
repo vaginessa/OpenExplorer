@@ -795,6 +795,10 @@ public class ContentFragment extends OpenFragment
 		return true;
 	}
 	
+	public void onHiddenFilesChanged()
+	{
+		onHiddenChanged(!getShowHiddenFiles());
+	}
 	//@Override
 	public void onHiddenFilesChanged(boolean toShow)
 	{
@@ -804,6 +808,9 @@ public class ContentFragment extends OpenFragment
 		refreshData(null, false);
 	}
 
+	public void onThumbnailChanged() { 
+		onThumbnailChanged(!getShowThumbnails());
+	}
 	//@Override
 	public void onThumbnailChanged(boolean state) {
 		saveTopPath();

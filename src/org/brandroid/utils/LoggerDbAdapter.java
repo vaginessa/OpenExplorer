@@ -163,7 +163,7 @@ public class LoggerDbAdapter
     	//JSONObject ret = new JSONObject();
     	JSONArray items = new JSONArray();
     	Cursor c = fetchAllItems();
-    	if(c == null) return null;
+    	if(c == null) return items;
     	c.moveToFirst();
     	//sb.append("{errors:[");
     	while(!c.isAfterLast())

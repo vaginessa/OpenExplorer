@@ -38,6 +38,11 @@
 	    android:title="@string/s_menu_refresh"
 	    />
 	<item
+		android:id="@+id/menu_new_folder"
+		android:icon="@drawable/ic_menu_new_folder"
+		android:showAsAction="ifRoom"
+		android:title="@string/s_menu_new_folder" />
+	<item
 	    android:id="@+id/title_menu"
 	    android:icon="@drawable/ic_menu_moreoverflow"
 	    android:showAsAction="always"
@@ -45,11 +50,6 @@
 	    >
 	    <menu />
 	</item>
-	<item
-		android:id="@+id/menu_new_folder"
-		android:icon="@drawable/ic_menu_new_folder"
-		android:showAsAction="ifRoom"
-		android:title="@string/s_menu_new_folder" />
 	<item
   	    android:id="@+id/menu_debug"
   	    android:showAsAction="never|withText"

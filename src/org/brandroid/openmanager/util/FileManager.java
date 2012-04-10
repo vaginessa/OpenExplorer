@@ -417,6 +417,7 @@ public class FileManager {
 		return ascii_address;
 	 }
 	
+	public static void clearOpenCache() { if(mOpenCache != null) mOpenCache.clear(); }
 	public static boolean hasOpenCache(String path) { return mOpenCache != null && mOpenCache.containsKey(path); }
 	public static OpenPath removeOpenCache(String path) { return mOpenCache.remove(path); }
 	

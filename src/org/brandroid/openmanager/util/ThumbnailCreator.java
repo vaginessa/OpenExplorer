@@ -583,9 +583,10 @@ public class ThumbnailCreator extends Thread {
 		});
 	}
 
-	public static void flushCache() {
+	public static void flushCache(boolean deleteFiles) {
 		//Logger.LogInfo("Flushing" + mCacheMap.size() + " from memory & " + mContext.fileList().length + " from disk.");
 		mCacheMap.clear();
+		if(!deleteFiles) return;
 		for(String s : mContext.fileList())
 			if(!s.toLowerCase().endsWith(".json"))
 				mContext.deleteFile(s);

@@ -235,7 +235,7 @@ public class OpenExplorer
 	
 	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
 	private static boolean bRetrieveExtraVideoDetails = Build.VERSION.SDK_INT > 8;
-	private static boolean bRetrieveCursorFiles = Build.VERSION.SDK_INT >= 10;
+	private static boolean bRetrieveCursorFiles = Build.VERSION.SDK_INT > 10;
 	
 	private static final FileManager mFileManager = new FileManager();
 	private static final EventHandler mEvHandler = new EventHandler(mFileManager);
@@ -842,6 +842,9 @@ public class OpenExplorer
 		super.onLowMemory();
 		LOW_MEMORY = true;
 		showToast(R.string.s_msg_low_memory);
+		ThumbnailCreator.flushCache(false);
+		FileManager.clearOpenCache();
+		EventHandler.cancelRunningTasks();
 	}
 	
 	public void setBookmarksPopupListAdapter(ListAdapter adapter)
@@ -1811,6 +1814,7 @@ public class OpenExplorer
 		
 		setMenuChecked(menu, frag.getShowHiddenFiles(), R.id.menu_view_hidden);
 		setMenuChecked(menu, frag.getShowThumbnails(), R.id.menu_view_thumbs);
+		setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
 		
 		if(RootManager.Default.isRoot())
 			setMenuChecked(menu, true, R.id.menu_root);
@@ -1975,11 +1979,16 @@ public class OpenExplorer
 				return true;
 			case R.id.menu_view_hidden:
 				setShowHiddenFiles(
-					getSetting(getDirContentFragment(false).getPath(), "hide", true));
+					!getSetting(getDirContentFragment(false).getPath(), "show", true));
 				return true;
 			case R.id.menu_view_thumbs:
 				setShowThumbnails(
-					getSetting(getDirContentFragment(false).getPath(), "thumbs", true));
+					!getSetting(getDirContentFragment(false).getPath(), "thumbs", true));
+				return true;
+
+			case R.id.menu_view_split:
+				setSetting(null, "pref_basebar", !getSetting(null, "pref_basebar", true));
+				goHome();
 				return true;
 					
 			case R.id.menu_root:
@@ -2003,7 +2012,7 @@ public class OpenExplorer
 				}
 				return true;
 			case R.id.menu_flush:
-				ThumbnailCreator.flushCache();
+				ThumbnailCreator.flushCache(true);
 				OpenPath.flushDbCache();
 				goHome();
 				return true;
@@ -2185,16 +2194,16 @@ public class OpenExplorer
 	
 	private void setShowThumbnails(boolean checked) {
 		//setSetting(mLastPath, "thumbs", checked);
-		getDirContentFragment(true).onThumbnailChanged(checked);
+		getDirContentFragment(false).onThumbnailChanged();
 	}
 	private void setShowHiddenFiles(boolean checked) {
 		//setSetting(mLastPath, "hide", checked);
-		getDirContentFragment(true).onHiddenFilesChanged(checked);
+		getDirContentFragment(false).onHiddenFilesChanged();
 	}
 	private void setSorting(SortType sort) {
 		//setSetting(mLastPath, "sort", sort.toString());
 		//getFileManager().setSorting(sort);
-		getDirContentFragment(true).onSortingChanged(sort);
+		getDirContentFragment(false).onSortingChanged(sort);
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 	}
@@ -2451,27 +2460,27 @@ public class OpenExplorer
 	
 	public String getSetting(OpenPath file, String key, String defValue)
 	{
-		return getPreferences().getSetting("global", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
 	{
-		return getPreferences().getSetting("global", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public Integer getSetting(OpenPath file, String key, Integer defValue)
 	{
-		return getPreferences().getSetting("global", key + (file != null ? "_" + file.getPath() : ""), defValue);
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
 	public void setSetting(OpenPath file, String key, String value)
 	{
-		getPreferences().setSetting("global", key + (file != null ? "_" + file.getPath() : ""), value);
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 	public void setSetting(OpenPath file, String key, Boolean value)
 	{
-		getPreferences().setSetting("global", key + (file != null ? "_" + file.getPath() : ""), value);
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 	public void setSetting(OpenPath file, String key, Integer value)
 	{
-		getPreferences().setSetting("global", key + (file != null ? "_" + file.getPath() : ""), value);
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 
 	public void showPreferences(OpenPath path)

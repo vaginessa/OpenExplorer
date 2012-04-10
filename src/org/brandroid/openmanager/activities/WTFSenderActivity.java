@@ -91,8 +91,6 @@ public class WTFSenderActivity extends Activity
 		if(requestCode == REQ_CODE_WTF_SEND)
 		{
 			Toast.makeText(this, getString(R.string.thanks), Toast.LENGTH_SHORT);
-			if(crashFile != null && crashFile.exists())
-				crashFile.delete();
 		}
 		finish();
 	}
@@ -100,8 +98,6 @@ public class WTFSenderActivity extends Activity
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		if(crashFile != null && crashFile.exists())
-			crashFile.delete();
 	}
 
 	@Override
@@ -118,12 +114,10 @@ public class WTFSenderActivity extends Activity
 			Resources res = getResources();
 			sendEmail(this,
 					"Crash Report " + res.getString(R.string.app_title) + " v" + version + " " + crashFile.readHead(1),
-					crashFile.readAscii() + "\n\n" + res.getString(R.string.s_wtf_context) + "\n",
+					crashFile.readHead(1) + "\n\n" + res.getString(R.string.s_wtf_context) + "\n",
 					crashFile);
 			break;
 		case R.id.wtf_no:
-			if(crashFile != null && crashFile.exists())
-				crashFile.delete();
 			finish();
 			break;
 		case R.id.wtf_preview:
