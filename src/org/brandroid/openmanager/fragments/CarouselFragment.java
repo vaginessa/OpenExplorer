@@ -2,6 +2,8 @@ package org.brandroid.openmanager.fragments;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -33,9 +35,10 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
-public class CarouselFragment extends ContentFragment {
+public class CarouselFragment extends OpenFragment {
 	private static final String TAG = "CarouselTestActivity";
 	private static final int CARD_SLOTS = 56;
 	private static final int SLOTS_VISIBLE = 7;
@@ -75,10 +78,12 @@ public class CarouselFragment extends ContentFragment {
 		@Override
 		public void onCardSelected(final int id) {
 			runOnUiThread(new Runnable() {
-				
 				@Override
 				public void run() {
-					IntentManager.startIntent(mPathItems[id], getActivity());
+					if(mPathItems[id].isDirectory())
+						setPath(mPathItems[id]);
+					else
+						IntentManager.startIntent(mPathItems[id], getActivity());
 				}});
 			//postMessage("Selection", "Card " + id + " was selected");
 		}
@@ -89,8 +94,10 @@ public class CarouselFragment extends ContentFragment {
 		}
 
 		@Override
-		public void onCardLongPress(int n, int touchPosition[], Rect detailCoordinates) {
-			((OpenExplorer)getActivity()).showFileInfo(mPathItems[n]);
+		public void onCardLongPress(final int n, int touchPosition[], Rect detailCoordinates) {
+			runOnUiThread(new Runnable(){public void run() {
+			DialogHandler.showFileInfo(getExplorer(), mPathItems[n]);
+			}});
 		}
 
 		@Override
@@ -119,7 +126,7 @@ public class CarouselFragment extends ContentFragment {
 			mPaint.setColor(0xffffffff);
 			mPaint.setAntiAlias(true);
 			
-			if(mPathItems != null && (thumb = mPath.getThumbnail(textw, texth)) != null && thumb.get() != null)
+			if(mPathItems != null && (thumb = ThumbnailCreator.generateThumb(mPath, textw, texth)) != null && thumb.get() != null)
 			{
 				Bitmap b = thumb.get();
 				w = b.getWidth();
@@ -205,6 +212,15 @@ public class CarouselFragment extends ContentFragment {
 		});
 	}
 	
+	public void setPath(OpenPath path)
+	{
+		mPath = path;
+		try {
+			mPathItems = path.listFiles();
+			Arrays.sort(mPathItems);
+		} catch(IOException e) { Logger.LogError("Couldn't set carousel path.", e); }
+	}
+	
 	public CarouselFragment()
 	{
 		super();
@@ -228,22 +244,6 @@ public class CarouselFragment extends ContentFragment {
 	}
 	
 	@Override
-	public int getViewMode() {
-		return OpenExplorer.VIEW_CAROUSEL;
-	}
-	
-	@Override
-	public void changePath(OpenPath path) {
-		super.changePath(path);
-		try {
-			mPathItems = path.list();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		
@@ -259,6 +259,7 @@ public class CarouselFragment extends ContentFragment {
 	@Override
 	public void onViewCreated(View mParent, Bundle savedInstanceState) {
 		super.onViewCreated(mParent, savedInstanceState);
+		Logger.LogDebug("Carousel onViewCreated!");
 		mView.getHolder().setFormat(PixelFormat.RGBA_8888);
 		mPaint.setColor(0xffffffff);
 		
@@ -304,6 +305,15 @@ public class CarouselFragment extends ContentFragment {
 		super.onPause();
 		if(!OpenExplorer.BEFORE_HONEYCOMB)
 			mHelper.onPause();
+	}
+
+	@Override
+	public CharSequence getTitle() {
+		return mPath.getName();
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
 	}
 
 }

@@ -45,6 +45,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 
 import java.io.File;
@@ -68,6 +69,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -88,6 +90,7 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ArrayAdapter;
@@ -99,7 +102,7 @@ import android.net.Uri;
 
 public class ContentFragment extends OpenFragment
 				implements OnItemClickListener, OnItemLongClickListener,
-							OnWorkerUpdateListener
+							OnWorkerUpdateListener, OpenPathFragmentInterface
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -130,7 +133,7 @@ public class ContentFragment extends OpenFragment
 	
 	private Bundle mBundle;
 	
-	private Integer mViewMode = null;
+	protected Integer mViewMode = null;
 	
 	private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 
@@ -424,21 +427,91 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		if(item == null) return false;
+		switch(item.getItemId())
+		{
+		case R.id.menu_sort_name_asc:	onSortingChanged(FileManager.SortType.ALPHA); return true; 
+		case R.id.menu_sort_name_desc:	onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
+		case R.id.menu_sort_date_asc: 	onSortingChanged(FileManager.SortType.DATE); return true;
+		case R.id.menu_sort_date_desc: 	onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
+		case R.id.menu_sort_size_asc: 	onSortingChanged(FileManager.SortType.SIZE); return true; 
+		case R.id.menu_sort_size_desc: 	onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
+		case R.id.menu_sort_type: 		onSortingChanged(FileManager.SortType.TYPE); return true;
+		case R.id.menu_view_hidden:
+			onHiddenFilesChanged(!getShowHiddenFiles());
+			return true;
+		case R.id.menu_view_thumbs:
+			onThumbnailChanged(!getShowThumbnails());
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(R.menu.main_menu, menu);
+		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
+		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
+		{
+			MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
+			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
+			if(mSearchView != null)
+				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+					public boolean onQueryTextSubmit(String query) {
+						mSearchView.clearFocus();
+						Intent intent = getExplorer().getIntent();
+						if(intent == null)
+							intent = new Intent();
+						intent.setAction(Intent.ACTION_SEARCH);
+						Bundle appData = new Bundle();
+						appData.putString("path", getExplorer().getDirContentFragment(false).getPath().getPath());
+						intent.putExtra(SearchManager.APP_DATA, appData);
+						intent.putExtra(SearchManager.QUERY, query);
+						getExplorer().handleIntent(intent);
+						return true;
+					}
+					public boolean onQueryTextChange(String newText) {
+						return false;
+					}
+				});
+		}
+		if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			MenuItem sort = menu.findItem(R.id.menu_sort);
+			try {
+				inflater.inflate(R.menu.menu_sort, sort.getSubMenu());
+			} catch(NullPointerException npe) { }
+			MenuItem view = menu.findItem(R.id.menu_view);
+			try {
+				inflater.inflate(R.menu.menu_view, view.getSubMenu());
+			} catch(NullPointerException npe) { }
+			MenuItem paste = menu.findItem(R.id.menu_paste);
+			try {
+				inflater.inflate(R.menu.multiselect, paste.getSubMenu());
+			} catch(NullPointerException npe) { }
+		}
+	}
+	
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		try {
-		super.onSaveInstanceState(outState);
+			super.onSaveInstanceState(outState);
+			outState.putInt("view", mViewMode);
+			if(mPath != null)
+				outState.putString("last", mPath.getPath());
+			if(mListVisibleStartIndex > 0)
+				outState.putInt("first", mListVisibleStartIndex);
+			if(mListScrollY > 0)
+				outState.putInt("scroll", mListScrollY);
+			if(mGrid != null)
+				outState.putParcelable("grid", mGrid.onSaveInstanceState());
 		} catch(NullPointerException e) {
 			// Not sure why this is causing NPE crashes
 		}
-		outState.putInt("view", mViewMode);
-		if(mPath != null)
-			outState.putString("last", mPath.getPath());
-		if(mListVisibleStartIndex > 0)
-			outState.putInt("first", mListVisibleStartIndex);
-		if(mListScrollY > 0)
-			outState.putInt("scroll", mListScrollY);
-		if(mGrid != null)
-			outState.putParcelable("grid", mGrid.onSaveInstanceState());
+
 		/*
 		if(mPath != null && mPath.getPath() != null)
 		{

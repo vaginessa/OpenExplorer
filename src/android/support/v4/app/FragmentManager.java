@@ -47,6 +47,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.brandroid.utils.Logger;
+
 /**
  * Static library support version of the framework's {@link android.app.FragmentManager}.
  * Used to write apps that run on platforms prior to Android 3.0.  When running
@@ -540,8 +542,9 @@ final class FragmentManagerImpl extends FragmentManager {
     @Override
     public Fragment.SavedState saveFragmentInstanceState(Fragment fragment) {
         if (fragment.mIndex < 0) {
-            throw new IllegalStateException("Fragment " + fragment
-                    + " is not currently in the FragmentManager");
+            //throw new IllegalStateException("Fragment " + fragment
+            //        + " is not currently in the FragmentManager");
+        	Logger.LogError("Fragment " + fragment + " is not currently in the FragmentManager");
         }
         if (fragment.mState > Fragment.INITIALIZING) {
             Bundle result = saveFragmentBasicState(fragment);

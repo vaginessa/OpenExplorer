@@ -22,6 +22,7 @@ import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 
 import com.jcraft.jsch.UserInfo;
@@ -52,7 +53,8 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 
 public abstract class OpenFragment
 			extends Fragment
-			implements View.OnClickListener, View.OnLongClickListener
+			implements View.OnClickListener, View.OnLongClickListener,
+				OpenPathFragmentInterface
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
@@ -133,10 +135,10 @@ public abstract class OpenFragment
 				MenuBuilder cmm = IconContextMenu.newMenu(list.getContext(), R.menu.context_file);
 				//if(!file.isArchive()) hideItem(cmm, R.id.menu_context_unzip);
 				if(getClipboard().size() > 0)
-					OpenExplorer.setMenuVisible(cmm, false, R.id.menu_multi);
+					MenuUtils.setMenuVisible(cmm, false, R.id.menu_multi);
 				else
-					OpenExplorer.setMenuVisible(cmm, false, R.id.menu_context_paste);
-				OpenExplorer.setMenuEnabled(cmm, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
+					MenuUtils.setMenuVisible(cmm, false, R.id.menu_context_paste);
+				MenuUtils.setMenuEnabled(cmm, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
 				final IconContextMenu cm = new IconContextMenu(
 						list.getContext(), cmm, view, null, null);
 				//cm.setAnchor(anchor);
@@ -303,11 +305,11 @@ public abstract class OpenFragment
 			file = ((FileSystemAdapter)mContentAdapter).getItem(info != null ? info.position : mMenuContextItemIndex);
 		else return;
 		new MenuInflater(v.getContext()).inflate(R.menu.context_file, menu);
-		OpenExplorer.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
-		OpenExplorer.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
+		MenuUtils.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
+		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
 		//menu.findItem(R.id.menu_context_unzip).setVisible(file.isArchive());
 		if(!mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
-			OpenExplorer.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 	}
 	
 
@@ -484,7 +486,7 @@ public abstract class OpenFragment
 			//	return true;
 			
 			case R.id.menu_context_info:
-				getExplorer().showFileInfo(file);
+				DialogHandler.showFileInfo(getExplorer(), file);
 				finishMode(mode);
 				return true;
 				

@@ -7,8 +7,10 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -60,6 +62,25 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	public int getCount() {
 		return mExtraFrags.size();
 	}
+	
+	@Override
+	public int getItemPosition(Object object) {
+		if(object instanceof OpenPathFragmentInterface)
+		{
+			OpenPath tofind = ((OpenPathFragmentInterface)object).getPath();
+			for(int i = 0; i < getCount(); i++)
+			{
+				Fragment f = getItem(i);
+				if(f instanceof OpenPathFragmentInterface)
+				{
+					OpenPath tocheck = ((OpenPathFragmentInterface)f).getPath();
+					if(tocheck.getPath().equals(tofind.getPath()))
+						return i;
+				}
+			}
+		}
+		return super.getItemPosition(object);
+	}
 
 	@Override
 	public CharSequence getPageTitle(int position) {
@@ -91,8 +112,8 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	public boolean checkForContentFragmentWithPath(OpenPath path) {
 		for (Fragment f : mExtraFrags)
-			if (f instanceof ContentFragment
-					&& ((ContentFragment) f).getPath().equals(path))
+			if (f instanceof OpenPathFragmentInterface
+					&& ((OpenPathFragmentInterface) f).getPath().equals(path))
 				return true;
 		return false;
 	}
@@ -199,5 +220,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			tab.setLongClickable(true);
 		}
 		return true;
+	}
+
+	public void replace(Fragment old, Fragment newFrag) {
+		int pos = getItemPosition(old);
+		if(pos == -1)
+			mExtraFrags.add(newFrag);
+		else
+			mExtraFrags.set(pos, newFrag);
 	}
 }

@@ -136,7 +136,7 @@ public abstract class FragmentStatePagerAdapter extends PagerAdapter {
         while (mSavedState.size() <= position) {
             mSavedState.add(null);
         }
-        mSavedState.set(position, mFragmentManager.saveFragmentInstanceState(fragment));
+        mSavedState.set(Math.max(getCount() - 1, position), mFragmentManager.saveFragmentInstanceState(fragment));
         mFragments.set(position, null);
 
         mCurTransaction.remove(fragment);

@@ -642,6 +642,20 @@ public class DialogHandler extends DialogFragment {
 			return view;
 		}
 	}
+	
+
+
+	public static void showFileInfo(final Context mContext, final OpenPath path) {
+		new AlertDialog.Builder(mContext)
+			.setView(createFileInfoDialog((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE), path))
+			.setTitle(path.getName())
+			.setIcon(new BitmapDrawable(path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize).get()))
+			.create()
+			.show();
+		//DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
+		//dialogInfo.setFilePath(path.getPath());
+		//dialogInfo.show(fragmentManager, "info");
+	}
 
 	public static void showAboutDialog(final Context mContext)
 	{
