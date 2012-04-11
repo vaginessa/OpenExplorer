@@ -42,6 +42,7 @@
 		    android:summaryOn="@string/s_pref_pagers_summary_on"
 		    android:summaryOff="@string/s_pref_pagers_summary_off"
 		    android:defaultValue="true"
+		    android:enabled="false"
 		    />
 		<CheckBoxPreference
 		    android:key="pref_basebar"

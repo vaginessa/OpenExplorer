@@ -29,6 +29,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
@@ -40,12 +43,11 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class TextEditorFragment extends OpenFragment implements OnClickListener
+public class TextEditorFragment extends OpenFragment
+	implements OnClickListener, OpenPathFragmentInterface
 {
 	private EditText mEditText;
-	private TextView mPathLabel;
 	private ProgressBar mProgress;
-	private Button mSave, mCancel;
 	
 	private OpenPath mPath = null;
 	private String mData = null;
@@ -115,23 +117,33 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 	}
 	
 	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(R.menu.text_editor, menu);
+	}
+	
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		return onClickItem(item.getItemId());
+	}
+	
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.edit_text, null);
 		mEditText = (EditText)view.findViewById(R.id.text_edit);
-		mPathLabel = ((TextView)view.findViewById(R.id.label_path));
-		mProgress = ((ProgressBar)view.findViewById(R.id.progress));
-		mSave = ((Button)view.findViewById(R.id.btn_save));
-		mCancel = ((Button)view.findViewById(R.id.btn_cancel));
+		mProgress = ((ProgressBar)view.findViewById(android.R.id.progress));
 		return view;
 	}
 	
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		mSave.setOnClickListener(this);
-		mCancel.setOnClickListener(this);
-		((Button)view.findViewById(R.id.btn_toggle_keyboard)).setOnClickListener(this);
 		mEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
 				/*if(hasFocus)
@@ -166,10 +178,10 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		outState.putString("edit_path", mPath.getPath());
 		if(mData != null && mData.length() < 500000)
 			outState.putString("edit_data", mData);
-		if(mPath instanceof OpenFTP && ((OpenFTP)mPath).getServersIndex() > -1)
+		if(mPath instanceof OpenNetworkPath && ((OpenNetworkPath)mPath).getServersIndex() > -1)
 		{
-			Logger.LogDebug("Saving server #" + ((OpenFTP)mPath).getServersIndex());
-			outState.putInt("edit_server", ((OpenFTP)mPath).getServersIndex());
+			Logger.LogDebug("Saving server #" + ((OpenNetworkPath)mPath).getServersIndex());
+			outState.putInt("edit_server", ((OpenNetworkPath)mPath).getServersIndex());
 		} else Logger.LogDebug("No server #");
 	}
 	
@@ -185,30 +197,43 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			mTask.cancel(true);
 	}
 
+	@Override
 	public void onClick(View v) {
-		switch(v.getId())
+		onClickItem(v.getId());
+	}
+	@Override
+	public void onClick(int id) {
+		onClickItem(id);
+	}
+	public boolean onClickItem(int id) {
+		switch(id)
 		{
-			case R.id.btn_save:
-				save();
-				break;
-			case R.id.btn_cancel:
-				cancelTask();
-				if(getExplorer().isViewPagerEnabled())
-				{
-					ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
-					ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
-					if(pager.getCurrentItem() > 0)
-						pager.setCurrentItem(pager.getCurrentItem() - 1);
-					adapter.remove(this);
-					pager.invalidate();
-				} else
-					getFragmentManager().popBackStack();
-				break;
-			case R.id.btn_toggle_keyboard:
-				//if(((InputMethodManager)getActivity()).getInputMethodList().
-				((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(mEditText, 0);
-				break;
+		case R.id.menu_context_info:
+			DialogHandler.showFileInfo(getExplorer(), getPath());
+			return true;
+		case R.id.menu_save:
+			save();
+			return true;
+			
+		case R.id.menu_close:
+			cancelTask();
+			if(getExplorer().isViewPagerEnabled())
+			{
+				ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
+				ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
+				if(pager.getCurrentItem() > 0)
+					pager.setCurrentItem(pager.getCurrentItem() - 1);
+				adapter.remove(this);
+				pager.setAdapter(adapter);
+			} else
+				getFragmentManager().popBackStack();
+			return true;
+		case R.id.menu_view_keyboard_toggle:
+			//if(((InputMethodManager)getActivity()).getInputMethodList().
+			((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(mEditText, 0);
+			return true;
 		}
+		return false;
 	}
 
 	
@@ -250,7 +275,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			super.onPreExecute();
 			if(mProgress != null)
 				mProgress.setVisibility(View.VISIBLE);
-			setEnabled(false, mEditText, mSave);
+			setEnabled(false, mEditText);
 		}
 		
 		@Override
@@ -258,7 +283,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 			super.onPostExecute(result);
 			if(mProgress != null)
 				mProgress.setVisibility(View.GONE);
-			setEnabled(true, mEditText, mSave);
+			setEnabled(true, mEditText);
 		}
 		
 	}
@@ -344,11 +369,9 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			setEnabled(false, mEditText, mSave, mCancel);
+			setEnabled(false, mEditText);
 			if(mProgress != null)
 				mProgress.setVisibility(View.VISIBLE);
-			if(mPathLabel != null)
-				mPathLabel.setText("Loading " + mPath.getPath());
 		}
 		
 		@Override
@@ -357,9 +380,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener
 				mEditText.setText(result);
 			if(mProgress != null)
 				mProgress.setVisibility(View.GONE);
-			if(mPathLabel != null)
-				mPathLabel.setText(mPath.getName());
-			setEnabled(true, mEditText, mSave, mCancel);
+			setEnabled(true, mEditText);
 			mData = result;
 		}
 	}

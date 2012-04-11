@@ -238,4 +238,7 @@
     <string name="s_menu_location_ext">External Memory Path</string>
     <string name="s_wtf_context">Please describe context of crash:</string>
     <string name="thanks">Thank you!</string>
+    <string name="menu_view_font_small">Font Size Small</string>
+    <string name="menu_view_font_medium">Font Size Medium</string>
+    <string name="menu_view_font_large">Font Size Large</string>
 </resources>
