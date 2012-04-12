@@ -35,6 +35,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
@@ -330,10 +331,15 @@ public class OpenExplorer
 		mClipboard.setClipboardUpdateListener(this);
 		
 		try {
+			/*
 			Signature[] sigs = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES).signatures;
 			for(Signature sig : sigs)
 				if(sig.toCharsString().indexOf("4465627567") > -1) // check for "Debug" in signature
 					IS_DEBUG_BUILD = true;
+			*/
+			IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), 0)
+					.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) ==
+						ApplicationInfo.FLAG_DEBUGGABLE;
 		} catch (NameNotFoundException e1) { }
 
 		FileManager.DefaultUserInfo = new SimpleUserInfo(this);
@@ -1462,12 +1468,6 @@ public class OpenExplorer
 		return onClick(item.getItemId(), item, null);
 	}
 	
-	public boolean onCreateOptionsMenu(Menu menu) {
-		onPrepareOptionsMenu(menu);
-		super.onCreateOptionsMenu(menu);
-		return true;
-	}
-	
 	public AlertDialog showConfirmationDialog(String msg, String title, DialogInterface.OnClickListener onYes)
 	{
 		return new AlertDialog.Builder(this)
@@ -1611,125 +1611,21 @@ public class OpenExplorer
 	}
 
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
+	public boolean onPrepareOptionsMenu(Menu menu)
+	{
+		Logger.LogDebug("OpenExplorer.onPrepareOptionsMenu start");
+		super.onPrepareOptionsMenu(menu);
+		Logger.LogDebug("OpenExplorer.onPrepareOptionsMenu begin");
 		
-		menu.clear();
-		Fragment f = getSelectedFragment();
-
-		f.onCreateOptionsMenu(menu, getMenuInflater());
-		
-		if(f instanceof ContentFragment)
-		{
-			ContentFragment frag = (ContentFragment)f;
-		
-		if(BEFORE_HONEYCOMB)
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
-		else if(getWindowWidth() < 500) {
-			if(Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
-			{
-				MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
-				MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
-			}
-		}
-		
-		switch(frag.getSorting())
-		{
-		case ALPHA:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
-			break;
-		case ALPHA_DESC:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_desc);
-			break;
-		case DATE:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_asc);
-			break;
-		case DATE_DESC:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_desc);
-			break;
-		case SIZE:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_asc);
-			break;
-		case SIZE_DESC:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_desc);
-			break;
-		case TYPE:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
-			break;
-		}
-		
-		if(BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
-			menu.findItem(R.id.menu_multi).setIcon(null);
-		
-		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
-		
-		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
-		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // honeycomb
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
-		
-		//if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
-		//	menu.findItem(R.id.menu_context_unzip).setVisible(false);
-		
-		if(!mSinglePane)
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_favorites);
-		
-		if(mClipboard == null || mClipboard.size() == 0)
-		{
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_paste);
-		} else {
-			MenuItem mPaste = menu.findItem(R.id.menu_paste);
-			if(mPaste != null && getClipboard() != null)
-				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
-			if(getClipboard().isMultiselect())
-			{
-				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
-				d.getDrawable(1).setAlpha(127);
-				if(menu.findItem(R.id.menu_paste) != null)
-					menu.findItem(R.id.menu_paste).setIcon(d);
-			}
-			/*
-			if(!BEFORE_HONEYCOMB)
-			{
-				SubMenu pasties = mPaste.getSubMenu();
-				pasties.clear();
-				getMenuInflater().inflate(R.menu.multiselect, pasties);
-				if(getClipboard().isMultiselect())
-					pasties.findItem(R.id.menu_multi).setChecked(true);
-				for(OpenPath p : getClipboard().getAll())
-					pasties.add(p.getName());
-			}
-			*/
-			//if()
-			//mPaste.setIcon();
-			//mPaste.setIcon(R.drawable.bluetooth);
-			if(mPaste != null)
-				mPaste.setVisible(true);
-		}
-		
-		int mViewMode = frag.getViewMode();
-		MenuUtils.setMenuChecked(menu, true, 0, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
-		if(mViewMode == VIEW_GRID)
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
-		else if(mViewMode == VIEW_LIST)
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_list, R.id.menu_view_grid, R.id.menu_view_carousel);
-		else if(mViewMode == VIEW_CAROUSEL)
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
-		
-		MenuUtils.setMenuChecked(menu, frag.getShowHiddenFiles(), R.id.menu_view_hidden);
-		MenuUtils.setMenuChecked(menu, frag.getShowThumbnails(), R.id.menu_view_thumbs);
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
-		
-		if(RootManager.Default.isRoot())
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_root);
-		
-		}
+		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
+		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
 
 		if(BEFORE_HONEYCOMB)
-		{
 			setupBaseBarButtons(menu, false);
-			
-		}
 		
-		return super.onPrepareOptionsMenu(menu);
+		return true;
 	}
 	
 	/*
@@ -2038,6 +1934,8 @@ public class OpenExplorer
 		mEvHandler.copyFile(src, dest, this);
 		*/
 	}
+	
+	public boolean isSinglePane() { return mSinglePane; }
 
 	private void showClipboardDropdown(int menuId)
 	{
@@ -2175,7 +2073,7 @@ public class OpenExplorer
 				Logger.LogWarning("Unknown menuId (" + menuId + ")!");
 				return null;
 			}
-			Logger.LogDebug("Trying to show context menu #" + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
+			Logger.LogDebug("Trying to show context menu 0x" + Integer.toHexString(menuId) + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 			if(menuId == R.menu.context_file ||
 				menuId == R.menu.main_menu ||
 				menuId == R.menu.menu_sort ||

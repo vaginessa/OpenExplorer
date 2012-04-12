@@ -40,6 +40,7 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
@@ -65,6 +66,7 @@ import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -75,6 +77,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.drawable.LayerDrawable;
 import android.text.format.Time;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -231,6 +234,7 @@ public class ContentFragment extends OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		setHasOptionsMenu(true);
 		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
 		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
 		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
@@ -457,6 +461,7 @@ public class ContentFragment extends OpenFragment
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{
 			MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
+			try {
 			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
 			if(mSearchView != null)
 				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -477,7 +482,11 @@ public class ContentFragment extends OpenFragment
 						return false;
 					}
 				});
+			} catch(NullPointerException e) {
+				Logger.LogError("Couldn't set up Search ActionView", e);
+			}
 		}
+		//MenuInflater inflater = new MenuInflater(mContext);
 		if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
 		{
 			MenuItem sort = menu.findItem(R.id.menu_sort);
@@ -493,6 +502,92 @@ public class ContentFragment extends OpenFragment
 				inflater.inflate(R.menu.multiselect, paste.getSubMenu());
 			} catch(NullPointerException npe) { }
 		}
+	}
+	
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		Logger.LogDebug("ContentFragment.onPrepareOptionsMenu start");
+		
+		super.onPrepareOptionsMenu(menu);
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
+		else if(getExplorer().getWindowWidth() < 500) {
+			if(Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
+			{
+				MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
+				MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
+			}
+		}
+		
+		switch(getSorting())
+		{
+		case ALPHA:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
+			break;
+		case ALPHA_DESC:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_desc);
+			break;
+		case DATE:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_asc);
+			break;
+		case DATE_DESC:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_desc);
+			break;
+		case SIZE:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_asc);
+			break;
+		case SIZE_DESC:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_desc);
+			break;
+		case TYPE:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
+			break;
+		}
+		
+		if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
+			menu.findItem(R.id.menu_multi).setIcon(null);
+		
+		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+				
+		//if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
+		//	menu.findItem(R.id.menu_context_unzip).setVisible(false);
+		
+		if(!getExplorer().isSinglePane())
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_favorites);
+		
+		if(getClipboard() == null || getClipboard().size() == 0)
+		{
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_paste);
+		} else {
+			MenuItem mPaste = menu.findItem(R.id.menu_paste);
+			if(mPaste != null && getClipboard() != null)
+				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
+			if(getClipboard().isMultiselect())
+			{
+				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
+				d.getDrawable(1).setAlpha(127);
+				if(menu.findItem(R.id.menu_paste) != null)
+					menu.findItem(R.id.menu_paste).setIcon(d);
+			}
+			if(mPaste != null)
+				mPaste.setVisible(true);
+		}
+		
+		int mViewMode = getViewMode();
+		MenuUtils.setMenuChecked(menu, true, 0, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
+		if(mViewMode == OpenExplorer.VIEW_GRID)
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
+		else if(mViewMode == OpenExplorer.VIEW_LIST)
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_list, R.id.menu_view_grid, R.id.menu_view_carousel);
+		else if(mViewMode == OpenExplorer.VIEW_CAROUSEL)
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
+		
+		MenuUtils.setMenuChecked(menu, getShowHiddenFiles(), R.id.menu_view_hidden);
+		MenuUtils.setMenuChecked(menu, getShowThumbnails(), R.id.menu_view_thumbs);
+		
+		if(RootManager.Default.isRoot())
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_root);
+		
 	}
 	
 	@Override

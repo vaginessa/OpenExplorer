@@ -21,7 +21,9 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.ftp.FTPManager;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
 
 import android.content.Context;
 import android.inputmethodservice.InputMethodService.InputMethodImpl;
@@ -56,6 +58,10 @@ public class TextEditorFragment extends OpenFragment
 	
 	private boolean bShowKeyboard = true;
 	
+	public static int[] USED_MENUS = new int[]{R.id.menu_save, R.id.menu_close, R.id.menu_context_info, R.id.menu_view,
+			R.id.menu_view_font_large, R.id.menu_view_font_medium, R.id.menu_view_font_small,
+			R.id.menu_view_keyboard_toggle, R.id.menu_settings};
+	
 	public TextEditorFragment() { }
 	public TextEditorFragment(OpenPath path)
 	{
@@ -64,6 +70,7 @@ public class TextEditorFragment extends OpenFragment
 		if(path != null && path.getPath() != null)
 			b.putString("edit_path", path.getPath().toString());
 		setArguments(b);
+		setHasOptionsMenu(true);
 	}
 	
 	@Override
@@ -122,9 +129,10 @@ public class TextEditorFragment extends OpenFragment
 		inflater.inflate(R.menu.text_editor, menu);
 	}
 	
-	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		super.onPrepareOptionsMenu(menu);
+		MenuUtils.setMenuVisible(menu, false);
+		MenuUtils.setMenuVisible(menu, true, USED_MENUS);
 	}
 	
 	@Override

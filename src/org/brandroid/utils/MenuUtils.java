@@ -41,6 +41,10 @@ public class MenuUtils {
 	public static void setMenuVisible(Menu menu, boolean visible, int... ids)
 	{
 		if(menu == null) return;
+		if(ids.length == 0)
+			for(int i = 0; i < menu.size(); i++)
+				menu.getItem(i).setVisible(visible);
+		else
 		for(int id : ids)
 			if(menu.findItem(id) != null && !visible)
 				menu.removeItem(id);
