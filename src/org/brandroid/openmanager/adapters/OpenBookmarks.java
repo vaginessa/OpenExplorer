@@ -668,12 +668,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			
 		if(size > 0 && free < size)
 		{
-			String sFree = DialogHandler.formatSize(free);
+			String sFree = DialogHandler.formatSize(free, false);
 			String sTotal = DialogHandler.formatSize(size);
 			//if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
 			//	sFree = DFInfo.getFriendlySize(free, false);
-			if(sFree.indexOf(" ") > -1 && sFree.endsWith(sTotal.substring(sFree.lastIndexOf(" "))))
-				sFree = sFree.substring(0, sFree.lastIndexOf(" "));
 			mSizeText.setText(sFree + "/" + sTotal);
 			mSizeText.setVisibility(View.VISIBLE);
 			

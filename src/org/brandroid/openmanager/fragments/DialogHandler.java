@@ -395,9 +395,10 @@ public class DialogHandler extends DialogFragment {
 		
 		return v;
 	}
-	
-	public static String formatSize(long size) { return formatSize(size, 2); }
-	public static String formatSize(long size, int decimalPoints) {
+	public static String formatSize(long size) { return formatSize(size, true); }
+	public static String formatSize(long size, boolean includeUnits) { return formatSize(size, 2, includeUnits); }
+	public static String formatSize(long size, int decimalPoints) { return formatSize(size, decimalPoints, true); }
+	public static String formatSize(long size, int decimalPoints, boolean includeUnits) {
 		int kb = 1024;
 		int mb = kb * 1024;
 		int gb = mb * 1024;
@@ -408,11 +409,11 @@ public class DialogHandler extends DialogFragment {
 		if (size < kb)
 			ssize = size + " B";
 		else if (size > kb && size < mb)
-			ssize = ((double)Math.round(((double)size / kb) * factor) / factor) + " KB";
+			ssize = ((double)Math.round(((double)size / kb) * factor) / factor) + (includeUnits ? " KB" : "");
 		else if (size > mb && size < gb)
-			ssize = ((double)Math.round(((double)size / mb) * factor) / factor) + " MB";
+			ssize = ((double)Math.round(((double)size / mb) * factor) / factor) + (includeUnits ? " MB" : "");
 		else if(size > gb)
-			ssize = ((double)Math.round(((double)size / gb) * factor) / factor) + " GB";
+			ssize = ((double)Math.round(((double)size / gb) * factor) / factor) + (includeUnits ? " GB" : "");
 		
 		return ssize;
 	}
