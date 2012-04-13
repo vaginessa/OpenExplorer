@@ -28,7 +28,7 @@ public class OpenPathDbAdapter
     
     private static final String DATABASE_NAME = "files.db";
     private static final String DATABASE_TABLE = "files";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     private static final String DATABASE_CREATE =
         "create table " + DATABASE_TABLE + " (" + KEY_ID + " integer primary key autoincrement, "
@@ -36,7 +36,8 @@ public class OpenPathDbAdapter
         + KEY_NAME + " text null, "
         + KEY_SIZE + " text not null, "
         + KEY_MTIME + " int not null, "
-        + KEY_STAMP + " int not null);";
+        + KEY_STAMP + " int not null, "
+        + KEY_ATTRIBUTES + " int null);";
 
     private final Context mCtx;
 
@@ -55,7 +56,7 @@ public class OpenPathDbAdapter
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        	if(oldVersion == 4 && newVersion >= 5)
+        	if(oldVersion < 4 && newVersion >= 5)
         	{
         		Logger.LogVerbose("We can do this upgrade [" + DATABASE_TABLE + "] from " + oldVersion + " to " + newVersion + " and retain old data");
         		db.execSQL("ALTER TABLE " + DATABASE_TABLE + " ADD COLUMN [" + KEY_ATTRIBUTES + "] int null");
