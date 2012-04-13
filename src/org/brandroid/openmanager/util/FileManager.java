@@ -424,6 +424,7 @@ public class FileManager {
 	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles, SortType sort)
 			throws IOException //, SmbAuthException, SmbException
 	{
+		if(path == null) return null;
 		//Logger.LogDebug("Checking cache for " + path);
 		if(mOpenCache == null)
 			mOpenCache = new Hashtable<String, OpenPath>();
