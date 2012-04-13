@@ -852,6 +852,50 @@ public class OpenExplorer
 		mBookmarks.scanBookmarks();
 	}
 	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		try {
+			super.onSaveInstanceState(outState);
+			List<Fragment> frags = mViewPagerAdapter.getFragments();
+			String[] paths = new String[frags.size()];
+			for(int i = 0; i < frags.size(); i++)
+			{
+				Fragment f = frags.get(i);
+				if(f instanceof OpenPathFragmentInterface)
+					paths[i] = ((OpenPathFragmentInterface)f).getPath().toString();
+			}
+			outState.putStringArray("paths", paths);
+			Logger.LogDebug("-->Saving fragments: " + paths.length);
+		} catch(Exception e) {
+			Logger.LogError("Couldn't save main state", e);
+		}
+	}
+	
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		if(savedInstanceState != null && savedInstanceState.containsKey("paths"))
+		{
+			String[] paths = savedInstanceState.getStringArray("paths");
+			Logger.LogDebug("<--Restoring fragments: " + paths.length);
+			for(int i = 0; i < paths.length; i++)
+			{
+				String path = paths[i];
+				if(path == null) continue;
+				try {
+					OpenPath file = FileManager.getOpenCache(path, false, null);
+					if(file == null) file = new OpenFile(path);
+					if(file.isTextFile())
+						mViewPagerAdapter.add(new TextEditorFragment(file));
+				} catch (IOException e) {
+					Logger.LogError("Couldn't get Path while restoring state", e);
+				}
+				
+			}
+			mViewPagerAdapter.notifyDataSetChanged();
+		}
+	}
+	
 	private void setupLoggingDb()
 	{
 		FTP.setCommunicationListener(new OnFTPCommunicationListener() {
@@ -1288,7 +1332,10 @@ public class OpenExplorer
 	public void toggleBookmarks()
 	{
 		View mBookmarks = findViewById(R.id.list_frag);
-		toggleBookmarks(mBookmarks == null || mBookmarks.getVisibility() == View.GONE);
+		if(isSinglePane())
+			toggleBookmarks(mBookmarks == null || mBookmarks.getVisibility() == View.GONE);
+		else
+			mBookmarks.setVisibility(mBookmarks.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
 	}
 	
 	public void refreshBookmarks()
@@ -1533,7 +1580,7 @@ public class OpenExplorer
 			int tblWidth = mToolbarButtons.getWidth();
 			if(tblWidth <= 0 && !topButtons)
 				tblWidth = getWindowWidth();
-			if(topButtons || tblWidth <= 0 || tblWidth > getWindowWidth())
+			if(topButtons || tblWidth <= 0 || tblWidth > getWindowWidth() || !getResources().getBoolean(R.bool.ignore_max_base_buttons))
 				tblWidth = btnWidth * getResources().getInteger(R.integer.max_base_buttons);
 			if(mToolbarButtons.findViewById(R.id.title_paste) != null)
 				tblWidth += btnWidth;
@@ -1565,7 +1612,7 @@ public class OpenExplorer
 						menu.getItem(i--).setVisible(false);
 						//menu.removeItem(item.getItemId());
 						Logger.LogDebug("Added " + item.getTitle() + " to base bar.");
-					} else Logger.LogWarning(item.getTitle() + " should not show. " + item.getShowAsAction() + " :: " + item.getFlags());
+					} //else Logger.LogWarning(item.getTitle() + " should not show. " + item.getShowAsAction() + " :: " + item.getFlags());
 				}
 			}
 			mToolbarButtons.setTag(f.getClass());
@@ -1613,17 +1660,24 @@ public class OpenExplorer
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu)
 	{
-		Logger.LogDebug("OpenExplorer.onPrepareOptionsMenu start");
 		super.onPrepareOptionsMenu(menu);
-		Logger.LogDebug("OpenExplorer.onPrepareOptionsMenu begin");
+		//Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
+		
+		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
-
+		
+		getSelectedFragment().onPrepareOptionsMenu(menu);
+		
 		if(BEFORE_HONEYCOMB)
+		{
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 			setupBaseBarButtons(menu, false);
+		}
 		
 		return true;
 	}
@@ -1642,6 +1696,9 @@ public class OpenExplorer
 	{
 		if(item.isCheckable())
 			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
+		
+		boolean ret = getSelectedFragment().onOptionsItemSelected(item);
+		if(ret) return true;
 		
 		return onClick(item.getItemId(), item, null);
 	}
@@ -1901,7 +1958,7 @@ public class OpenExplorer
 	
 	private void debugTest() {
 		int bad = 2 / 0;
-		Logger.LogInfo("HEY! We know how to divide by 0!");
+		Logger.LogInfo("HEY! We know how to divide by 0! It is " + bad);
 		/*
 		final OpenFile src = new OpenFile("/mnt/sdcard-ext/gapps-gb-20110828-signed.zip");
 		final OpenFile dest = new OpenFile("/mnt/sdcard/Download/");

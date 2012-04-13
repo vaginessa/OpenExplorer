@@ -506,7 +506,7 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		Logger.LogDebug("ContentFragment.onPrepareOptionsMenu start");
+		//Logger.LogDebug("ContentFragment.onPrepareOptionsMenu start");
 		
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
@@ -547,13 +547,8 @@ public class ContentFragment extends OpenFragment
 		if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
 			menu.findItem(R.id.menu_multi).setIcon(null);
 		
-		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
-				
 		//if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
 		//	menu.findItem(R.id.menu_context_unzip).setVisible(false);
-		
-		if(!getExplorer().isSinglePane())
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_favorites);
 		
 		if(getClipboard() == null || getClipboard().size() == 0)
 		{
@@ -584,6 +579,7 @@ public class ContentFragment extends OpenFragment
 		
 		MenuUtils.setMenuChecked(menu, getShowHiddenFiles(), R.id.menu_view_hidden);
 		MenuUtils.setMenuChecked(menu, getShowThumbnails(), R.id.menu_view_thumbs);
+		MenuUtils.setMenuVisible(menu, !OpenExplorer.BEFORE_HONEYCOMB, R.id.menu_view_carousel);
 		
 		if(RootManager.Default.isRoot())
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_root);
@@ -803,9 +799,9 @@ public class ContentFragment extends OpenFragment
 		for(OpenPath f : items)
 		{
 			if(f == null) continue;
+			if(!showHidden && f.isHidden()) continue;
 			if(!f.requiresThread())
 			{
-				if(!showHidden && f.isHidden()) continue;
 				if(!f.exists()) continue;
 				if(f.isFile() && !(f.length() >= 0)) continue;
 			}
@@ -933,6 +929,7 @@ public class ContentFragment extends OpenFragment
 	
 	private void saveTopPath()
 	{
+		if(mGrid == null) return;
 		mTopIndex = mGrid.getFirstVisiblePosition();
 		if(mContentAdapter != null)
 			mTopPath = (OpenPath)mContentAdapter.getItem(mTopIndex);
@@ -970,8 +967,9 @@ public class ContentFragment extends OpenFragment
 	//@Override
 	public void onHiddenFilesChanged(boolean toShow)
 	{
+		Logger.LogInfo("onHiddenFilesChanged(" + toShow + ")");
 		saveTopPath();
-		setShowHiddenFiles(!toShow);
+		setShowHiddenFiles(toShow);
 		//getManager().setShowHiddenFiles(state);
 		refreshData(null, false);
 	}
