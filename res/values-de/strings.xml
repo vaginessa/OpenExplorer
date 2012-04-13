@@ -1,191 +1,242 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">Öffnen Sie den Explorer</string>
-    <string name="s_search">Suche</string>
-    <string name="s_photos">Fotos</string>
-    <string name="s_videos">Videos</string>
-    <string name="s_music">Musik</string>
-    <string name="s_downloads">Downloads</string>
-    <string name="s_external">Extern</string>
-    <string name="s_internal">Intern</string>
-    <string name="s_view">Blick</string>
-    <string name="s_bookmarks">Bookmarks</string>
-    <string name="s_menu_favorites">Toggle Bookmarks</string>
-    <string name="s_menu_sort">Art</string>
-    <string name="s_menu_sort_name_asc">Sortieren nach Name (A-Z)</string>
-    <string name="s_menu_sort_name_desc">Sortieren nach Name (Z-A)</string>
-    <string name="s_menu_sort_date_asc">Sortieren nach Neueste</string>
-    <string name="s_menu_sort_date_desc">Sortieren nach Älteste</string>
-    <string name="s_menu_sort_size_asc">Sortieren nach Größte</string>
-    <string name="s_menu_sort_size_desc">Sortieren nach Smallest</string>
-    <string name="s_menu_sort_type">Sortieren nach Dateityp</string>
-    <string name="s_menu_multi">Multi-Select</string>
-    <string name="s_menu_grid">Grid View</string>
-    <string name="s_menu_list">List View</string>
-    <string name="s_menu_carousel">Karussell</string>
-    <string name="s_menu_hidden">Versteckte Dateien anzeigen</string>
-    <string name="s_menu_thumbs">Show Image Thumbnails</string>
-    <string name="s_menu_new_folder">Neuer Ordner</string>
-    <string name="s_menu_other">Andere Einstellungen</string>
-    <string name="s_menu_flush">Flush Cache</string>
-    <string name="s_menu_root">Wurzel</string>
-    <string name="s_menu_prefs_folder">Ordner Preferences</string>
-    <string name="s_menu_prefs_global">Globale Einstellungen</string>
-    <string name="s_menu_info">Info</string>
-    <string name="s_menu_copy">Kopie</string>
-    <string name="s_menu_cut">Schnitt</string>
-    <string name="s_menu_paste">Paste</string>
-    <string name="s_menu_delete">Löschen</string>
-    <string name="s_menu_share">Senden / Share ...</string>
-    <string name="s_menu_zip">Zip-Datei (en) ...</string>
-    <string name="s_menu_unzip">Entpacken Sie ...</string>
-    <string name="s_menu_rename">Umbenennen ...</string>
-    <string name="s_menu_bookmark">Lesezeichen hinzufügen</string>
-    <string name="s_save">Sparen</string>
-    <string name="s_saveas">Speichern unter ...</string>
-    <string name="s_cancel">Kündigen</string>
-    <string name="s_size">Größe</string>
-    <string name="s_none">Keiner</string>
-    <string name="s_pref_servers">Zusätzliche Server</string>
-    <string name="s_pref_server_add">+ Add New Server</string>
-    <string name="s_pref_display">Anzeige-Einstellungen</string>
-    <string name="s_pref_hidden">Versteckte Dateien anzeigen</string>
-    <string name="s_pref_hidden_summary">Anzeige versteckter Dateien und Ordner</string>
-    <string name="s_pref_thumbs">Show Image Thumbnails</string>
-    <string name="s_pref_thumbs_summary">Zeigen Sie eine Vorschau für Bild / Video / App-Dateien</string>
-    <string name="s_pref_view">Ansichtsmodus</string>
-    <string name="s_pref_view_summary">Anzeige von Dateien in einem Raster, Liste oder Karussell (Honeycomb nur)</string>
-    <string name="s_pref_sort">Sortierung</string>
-    <string name="s_pref_sort_summary">Wählen Sie, wie Sie Dateien und Ordner sortieren</string>
-    <string name="s_pref_advanced">Fortgeschritten</string>
-    <string name="s_pref_server_name">Server-Namen</string>
-    <string name="s_pref_server_name_summary">Geben Sie Server-Name</string>
-    <string name="s_pref_server_url">Server URL</string>
-    <string name="s_pref_server_url_summary">Geben Sie die vollständige URL des Servers</string>
-    <string name="s_pref_server_host">Server-Host</string>
-    <string name="s_pref_server_user">Benutzer</string>
-    <string name="s_pref_server_user_summary">Benutzername</string>
-    <string name="s_pref_server_password">Kennwort</string>
-    <string name="s_pref_server_password_summary">Login Passwort</string>
-    <string name="s_pref_server_path">Unterverzeichnis</string>
-    <string name="s_pref_server_path_summary">Geben Sie Standard-Login-Pfad</string>
-    <string name="s_pref_server_extras">Weitere Einstellungen</string>
-    <string name="s_pref_server_update">Add / Update Server</string>
-    <string name="s_pref_server_type">Server-Typ</string>
-    <string name="s_files">Dateien</string>
-    <string name="s_create">Schaffen</string>
-    <string name="s_title_holding_x_files">Halten %s-Dateien</string>
-    <string name="s_title_newfolder">Erstellen eines neuen Ordners</string>
-    <string name="s_title_send">Send %s</string>
-    <string name="s_title_unzip">Entpacken Sie %s</string>
-    <string name="s_title_zip">Zip %s</string>
-    <string name="s_title_executing">Executing</string>
-    <string name="s_title_deleting">Löschen</string>
-    <string name="s_title_searching">Suche</string>
-    <string name="s_title_moving">Verschieben</string>
-    <string name="s_title_copying">Kopieren</string>
-    <string name="s_title_zipping">Zipping</string>
-    <string name="s_title_unzipping">Entpacken</string>
-    <string name="s_title_wait">Bitte warten ...</string>
-    <string name="s_alert_confirm_delete">Löschen %s kann nicht rückgängig gemacht werden. Sind Sie sicher, dass Sie den Vorgang fortsetzen?</string>
-    <string name="s_alert_rename">Bitte geben Sie den neuen Namen dieser Datei</string>
-    <string name="s_alert_newfolder">Geben Sie den Namen des Ordners, den Sie erstellen möchten.</string>
-    <string name="s_alert_unzip">Möchten Sie %s hier oder einem anderen Ordner entpacken?</string>
-    <string name="s_button_unzip_here">Entpacken Sie hier</string>
-    <string name="s_button_unzip_else">Entpacken Sie woanders ...</string>
-    <string name="s_msg_none">Datei (en) konnte nicht</string>
-    <string name="s_msg_some">Einige file (s) konnte nicht</string>
-    <string name="s_msg_all">Datei (en) erfolgreich</string>
-    <string name="s_msg_deleted">gelöscht</string>
-    <string name="s_msg_moved">verschoben</string>
-    <string name="s_msg_copied">kopiert</string>
-    <string name="s_remove">Entfernen</string>
-    <string name="s_eject">Auswerfen</string>
-    <string name="s_update">Aktualisierung</string>
-    <string name="s_alert_bookmark_rename">Ändern Sie den Titel Ihrer Lesezeichen.</string>
-    <string name="s_title_bookmark_prefix">Verwalten Bookmark:</string>
-    <string name="s_alert_remove_safe">Sie können nun das Laufwerk sicher entfernen.</string>
-    <string name="s_alert_remove_error">Kann auswerfen.</string>
-    <string name="s_menu_about">Über</string>
-    <string name="s_about_version">Version</string>
-    <string name="s_about_author">Autor</string>
-    <string name="s_about_site">Webseite</string>
-    <string name="s_about_email">E-Mail</string>
-    <string name="s_about_recent">Aktuelle Updates</string>
-    <string name="s_chooser_email">Feedback senden ...</string>
-    <string name="s_status_loading">Loading ...</string>
-    <string name="s_menu_open">Öffnen mit ...</string>
-    <string name="s_menu_edit">Bearbeiten mit ...</string>
-    <string name="s_pref_stats_title">Hilfe zu verbessern OpenExplorer</string>
-    <string name="s_pref_stats_summary">Senden Sie anonyme Nutzungsstatistiken. Dies gilt nicht für alle Informationen, die verwendet werden, um den Benutzer identifiziert werden könnten.</string>
-    <string name="s_error_no_intents">Keine installierten Anwendungen lesen kann diese Art von Datei.</string>
-    <string name="s_menu_root_disabled">Root deaktiviert</string>
-    <string name="s_pref_start">Ab Ordner</string>
-    <string name="s_pref_start_summary">Zeigt an, welche Ordner OpenExplorer in beginnt</string>
-    <string name="s_custom">Eigene ...</string>
-    <string name="s_text_intro_top">Willkommen bei OpenExplorer!</string>
-    <string name="s_text_intro_body">Das Ziel der OpenExplorer ist, dass Sie noch produktiver im Android-Dateisystem und in der Wolke. Egal, ob Sie Videos oder Fotos von mehreren Standorten aus verwalten oder verwalten Sie Ihre Webserver remote über FTP benötigen, können OpenExplorer Ihre Bedürfnisse \ n \ nBitte wählen Sie Ihre Start-Pfad.:</string>
-    <string name="s_info_num_folders">Anzahl der Ordner:</string>
-    <string name="s_info_num_files">Anzahl der Dateien:</string>
-    <string name="s_info_last_modified">Zuletzt geändert am:</string>
-    <string name="s_info_permissions">Datei-Berechtigungen:</string>
-    <string name="s_info_permission_read">Lesen Sie:</string>
-    <string name="s_info_permission_write">schreiben:</string>
-    <string name="s_info_permission_execute">Execute:</string>
-    <string name="s_toggle_keyboard">Tastatur</string>
-    <string name="s_show_password">Zeige Passwort</string>
-    <string name="s_error_ftp">Fehler beim Verbinden zu FTP</string>
-    <string name="s_prompt_zip">Geben Sie Dateinamen der neuen ZIP-Datei:</string>
-    <string name="app_edit">Bearbeiten Sie mit OpenExplorer</string>
-    <string name="s_menu_more">Weitere Optionen ...</string>
-    <string name="s_msg_low_memory">Geringer Speicherbedarf!</string>
-    <string name="s_clear">löschen</string>
-    <string name="s_menu_delete_all">Alle löschen</string>
-    <string name="s_menu_move_all">Hierher verschieben</string>
-    <string name="s_menu_copy_all">Hierhin kopieren</string>
-    <string name="s_confirm_delete">Sind Sie sicher, dass Sie %s löschen möchten?</string>
-    <string name="s_error_same_destination">Das Zielverzeichnis ist die gleiche.</string>
-    <string name="s_sample_notification">Kopieren -> SD-Karte: \ n 3 Dateien</string>
-    <string name="s_pref_fullscreen">Full Screen</string>
-    <string name="s_pref_fullscreen_summary_on">Benachrichtigung ausblenden Bar</string>
-    <string name="s_pref_fullscreen_summary_off">Benachrichtigung anzeigen Bar</string>
-    <string name="s_pref_pagers">Alle Pager</string>
-    <string name="s_pref_pagers_summary_on">Horizontale swiping = Directory-Navigation</string>
-    <string name="s_pref_pagers_summary_off">Horizontale swiping Behinderte</string>
-    <string name="s_alert_new_media">Neue Medien eingefügt!</string>
-    <string name="s_warn_pager_title">Neues Feature: Blick Pager</string>
-    <string name="s_warn_pager">Swipe links nach rechts zu gehen und ein Verzeichnis von rechts nach links, um zurückzugehen. Dadurch sollte es einfacher zu navigieren. Probieren Sie es aus (auf externen Medien)!</string>
-    <string name="s_warn_confirm">Verstehst du?</string>
-    <string name="s_warn_disable">Deaktivieren</string>
-    <string name="s_pref_intent_internal">Interne Intents</string>
-    <string name="s_pref_intent_internal_on">Verwenden Sie OpenExplorer Intent-Manager</string>
-    <string name="s_pref_intent_internal_off">Verwenden Sie den System-Manager im Visier</string>
-    <string name="s_pref_text_internal">Verwenden Sie den internen Text-Editor</string>
-    <string name="s_text_editor_title">Text-Editor</string>
-    <string name="s_pref_show_root">Zeige Root-Dateisystem (/)</string>
-    <string name="s_pref_show_internal">Interne Medien anzeigen</string>
-    <string name="s_pref_show_external">Zeigen Sie externe Speichermedien</string>
-    <string name="s_error_no_media">Es sieht so aus, als gäbe es kein Medium eingelegt. Bitte deaktivieren Sie die USB-Sharing oder wieder einsetzen Medien.</string>
-    <string name="s_prompt_password">Geben Sie das Passwort</string>
-    <string name="s_add">hinzufügen</string>
-    <string name="s_server_ftp">FTP</string>
-    <string name="s_server_sftp">SFTP</string>
-    <string name="s_pref_server_port">Port</string>
-    <string name="s_about_buildtime">Erstellungsdatum</string>
-    <string name="s_default">Default</string>
-    <string name="s_pref_timeout">Timeout</string>
-    <string name="s_pref_timeout_summary">Timeout in Sekunden</string>
-    <string name="s_menu_up">hinaufgehen</string>
-    <string name="s_prompt_unzip">Geben Sie den Pfad zu entpacken:</string>
-    <string name="s_pref_hardware_accel">Hardwarebeschleunigung aktivieren</string>
-    <string name="s_pref_honeyplus">Android 3.0 + Einstellungen</string>
-    <string name="s_pref_actionmode">Action Modus</string>
-    <string name="s_pref_actionmode_enabled">Verwenden Action Modus</string>
-    <string name="s_pref_actionmode_disabled">Verwenden Sie Standard-Kontextmenüs</string>
-    <string name="s_server_smb">SMB / Windows</string>
-    <string name="s_bookmark_drives">Drives</string>
-    <string name="s_bookmark_smart">Smart Folders</string>
-    <string name="s_bookmark_favorites">Favoriten</string>
-    <string name="s_bookmark_servers">Server</string>
-    <string name="s_bookmark_cache">Zwischenspeicher</string>
+    <string name="app_name" auto="1">Öffnen Sie den Explorer</string>
+    <string name="s_search" auto="1">Suche</string>
+    <string name="s_photos" auto="1">Fotos</string>
+    <string name="s_videos" auto="1">Videos</string>
+    <string name="s_music" auto="1">Musik</string>
+    <string name="s_downloads" auto="1">Downloads</string>
+    <string name="s_external" auto="1">Extern</string>
+    <string name="s_internal" auto="1">Intern</string>
+    <string name="s_view" auto="1">Blick</string>
+    <string name="s_bookmarks" auto="1">Bookmarks</string>
+    <string name="s_menu_favorites" auto="1">Toggle Bookmarks</string>
+    <string name="s_menu_sort" auto="1">Art</string>
+    <string name="s_menu_sort_name_asc" auto="1">Sortieren nach Name (A-Z)</string>
+    <string name="s_menu_sort_name_desc" auto="1">Sortieren nach Name (Z-A)</string>
+    <string name="s_menu_sort_date_asc" auto="1">Sortieren nach Neueste</string>
+    <string name="s_menu_sort_date_desc" auto="1">Sortieren nach Älteste</string>
+    <string name="s_menu_sort_size_asc" auto="1">Sortieren nach Größte</string>
+    <string name="s_menu_sort_size_desc" auto="1">Sortieren nach Smallest</string>
+    <string name="s_menu_sort_type" auto="1">Sortieren nach Dateityp</string>
+    <string name="s_menu_multi" auto="1">Multi-Select</string>
+    <string name="s_menu_grid" auto="1">Grid View</string>
+    <string name="s_menu_list" auto="1">List View</string>
+    <string name="s_menu_carousel" auto="1">Karussell</string>
+    <string name="s_menu_hidden" auto="1">Versteckte Dateien anzeigen</string>
+    <string name="s_menu_thumbs" auto="1">Show Image Thumbnails</string>
+    <string name="s_menu_new_folder" auto="1">Neuer Ordner</string>
+    <string name="s_menu_other" auto="1">Andere Einstellungen</string>
+    <string name="s_menu_flush" auto="1">Flush Cache</string>
+    <string name="s_menu_root" auto="1">Wurzel</string>
+    <string name="s_menu_prefs_folder" auto="1">Ordner Preferences</string>
+    <string name="s_menu_prefs_global" auto="1">Globale Einstellungen</string>
+    <string name="s_menu_info" auto="1">Info</string>
+    <string name="s_menu_copy" auto="1">Kopie</string>
+    <string name="s_menu_cut" auto="1">Schnitt</string>
+    <string name="s_menu_paste" auto="1">Paste</string>
+    <string name="s_menu_delete" auto="1">Löschen</string>
+    <string name="s_menu_share" auto="1">Senden / Share ...</string>
+    <string name="s_menu_zip" auto="1">Zip-Datei (en) ...</string>
+    <string name="s_menu_unzip" auto="1">Entpacken Sie ...</string>
+    <string name="s_menu_rename" auto="1">Umbenennen ...</string>
+    <string name="s_menu_bookmark" auto="1">Lesezeichen hinzufügen</string>
+    <string name="s_save" auto="1">Sparen</string>
+    <string name="s_saveas" auto="1">Speichern unter ...</string>
+    <string name="s_cancel" auto="1">Kündigen</string>
+    <string name="s_size" auto="1">Größe</string>
+    <string name="s_none" auto="1">Keiner</string>
+    <string name="s_pref_servers" auto="1">Zusätzliche Server</string>
+    <string name="s_pref_server_add" auto="1">+ Add New Server</string>
+    <string name="s_pref_display" auto="1">Anzeige-Einstellungen</string>
+    <string name="s_pref_hidden" auto="1">Versteckte Dateien anzeigen</string>
+    <string name="s_pref_hidden_summary" auto="1">Anzeige versteckter Dateien und Ordner</string>
+    <string name="s_pref_thumbs" auto="1">Show Image Thumbnails</string>
+    <string name="s_pref_thumbs_summary" auto="1">Zeigen Sie eine Vorschau für Bild / Video / App-Dateien</string>
+    <string name="s_pref_view" auto="1">Ansichtsmodus</string>
+    <string name="s_pref_view_summary" auto="1">Anzeige von Dateien in einem Raster, Liste oder Karussell (Honeycomb nur)</string>
+    <string name="s_pref_sort" auto="1">Sortierung</string>
+    <string name="s_pref_sort_summary" auto="1">Wählen Sie, wie Sie Dateien und Ordner sortieren</string>
+    <string name="s_pref_advanced" auto="1">Fortgeschritten</string>
+    <string name="s_pref_server_name" auto="1">Server-Namen</string>
+    <string name="s_pref_server_name_summary" auto="1">Geben Sie Server-Name</string>
+    <string name="s_pref_server_url" auto="1">Server URL</string>
+    <string name="s_pref_server_url_summary" auto="1">Geben Sie die vollständige URL des Servers</string>
+    <string name="s_pref_server_host" auto="1">Server-Host</string>
+    <string name="s_pref_server_user" auto="1">Benutzer</string>
+    <string name="s_pref_server_user_summary" auto="1">Benutzername</string>
+    <string name="s_pref_server_password" auto="1">Kennwort</string>
+    <string name="s_pref_server_password_summary" auto="1">Login Passwort</string>
+    <string name="s_pref_server_path" auto="1">Unterverzeichnis</string>
+    <string name="s_pref_server_path_summary" auto="1">Geben Sie Standard-Login-Pfad</string>
+    <string name="s_pref_server_extras" auto="1">Weitere Einstellungen</string>
+    <string name="s_pref_server_update" auto="1">Add / Update Server</string>
+    <string name="s_pref_server_type" auto="1">Server-Typ</string>
+    <string name="s_files" auto="1">Dateien</string>
+    <string name="s_create" auto="1">Schaffen</string>
+    <string name="s_title_holding_x_files" auto="1">Halten xxx-Dateien</string>
+    <string name="s_title_newfolder" auto="1">Erstellen eines neuen Ordners</string>
+    <string name="s_title_send" auto="1">Send xxx</string>
+    <string name="s_title_unzip" auto="1">Entpacken Sie xxx</string>
+    <string name="s_title_zip" auto="1">Zip xxx</string>
+    <string name="s_title_executing" auto="1">Executing</string>
+    <string name="s_title_deleting" auto="1">Löschen</string>
+    <string name="s_title_searching" auto="1">Suche</string>
+    <string name="s_title_moving" auto="1">Verschieben</string>
+    <string name="s_title_copying" auto="1">Kopieren</string>
+    <string name="s_title_zipping" auto="1">Zipping</string>
+    <string name="s_title_unzipping" auto="1">Entpacken</string>
+    <string name="s_title_wait" auto="1">Bitte warten ...</string>
+    <string name="s_alert_confirm_delete" auto="1">Löschen%skann nicht rückgängig gemacht werden. Sind Sie sicher, dass Sie den Vorgang fortsetzen?</string>
+    <string name="s_alert_rename" auto="1">Bitte geben Sie den neuen Namen dieser Datei</string>
+    <string name="s_alert_newfolder" auto="1">Geben Sie den Namen des Ordners, den Sie erstellen möchten.</string>
+    <string name="s_alert_unzip" auto="1">Möchten Sie%shier oder einem anderen Ordner entpacken?</string>
+    <string name="s_button_unzip_here" auto="1">Entpacken Sie hier</string>
+    <string name="s_button_unzip_else" auto="1">Entpacken Sie woanders ...</string>
+    <string name="s_msg_none" auto="1">Datei (en) konnte nicht</string>
+    <string name="s_msg_some" auto="1">Einige file (s) konnte nicht</string>
+    <string name="s_msg_all" auto="1">Datei (en) erfolgreich</string>
+    <string name="s_msg_deleted" auto="1">gelöscht</string>
+    <string name="s_msg_moved" auto="1">verschoben</string>
+    <string name="s_msg_copied" auto="1">kopiert</string>
+    <string name="s_remove" auto="1">Entfernen</string>
+    <string name="s_eject" auto="1">Auswerfen</string>
+    <string name="s_update" auto="1">Aktualisierung</string>
+    <string name="s_alert_bookmark_rename" auto="1">Ändern Sie den Titel Ihrer Lesezeichen.</string>
+    <string name="s_title_bookmark_prefix" auto="1">Verwalten Bookmark:</string>
+    <string name="s_alert_remove_safe" auto="1">Sie können nun das Laufwerk sicher entfernen.</string>
+    <string name="s_alert_remove_error" auto="1">Kann auswerfen.</string>
+    <string name="s_menu_about" auto="1">Über</string>
+    <string name="s_about_version" auto="1">Version</string>
+    <string name="s_about_author" auto="1">Autor</string>
+    <string name="s_about_site" auto="1">Webseite</string>
+    <string name="s_about_email" auto="1">E-Mail</string>
+    <string name="s_about_recent" auto="1">Aktuelle Updates</string>
+    <string name="s_chooser_email" auto="1">Feedback senden ...</string>
+    <string name="s_status_loading" auto="1">Loading ...</string>
+    <string name="s_menu_open" auto="1">Öffnen mit ...</string>
+    <string name="s_menu_edit" auto="1">Bearbeiten mit ...</string>
+    <string name="s_pref_stats_title" auto="1">Hilfe zu verbessern OpenExplorer</string>
+    <string name="s_pref_stats_summary" auto="1">Senden Sie anonyme Nutzungsstatistiken. Dies gilt nicht für alle Informationen, die verwendet werden, um den Benutzer identifiziert werden könnten.</string>
+    <string name="s_error_no_intents" auto="1">Keine installierten Anwendungen lesen kann diese Art von Datei.</string>
+    <string name="s_menu_root_disabled" auto="1">Root deaktiviert</string>
+    <string name="s_pref_start" auto="1">Ab Ordner</string>
+    <string name="s_pref_start_summary" auto="1">Zeigt an, welche Ordner OpenExplorer in beginnt</string>
+    <string name="s_custom" auto="1">Eigene ...</string>
+    <string name="s_text_intro_top" auto="1">Willkommen bei OpenExplorer!</string>
+    <string name="s_text_intro_body">Das Ziel der OpenExplorer ist, dass Sie noch produktiver im Android-Dateisystem und in der Wolke. Egal, ob Sie Videos oder Fotos von mehreren Standorten aus verwalten oder verwalten Sie Ihre Webserver remote über FTP benötigen, können OpenExplorer Ihre Bedürfnisse  n  nBitte wählen Sie Ihre Start-Pfad.:</string>
+    <string name="s_info_num_folders" auto="1">Anzahl der Ordner:</string>
+    <string name="s_info_num_files" auto="1">Anzahl der Dateien:</string>
+    <string name="s_info_last_modified" auto="1">Zuletzt geändert am:</string>
+    <string name="s_info_permissions" auto="1">Datei-Berechtigungen:</string>
+    <string name="s_info_permission_read" auto="1">Lesen Sie:</string>
+    <string name="s_info_permission_write" auto="1">schreiben:</string>
+    <string name="s_info_permission_execute" auto="1">Execute:</string>
+    <string name="s_toggle_keyboard" auto="1">Tastatur</string>
+    <string name="s_show_password" auto="1">Zeige Passwort</string>
+    <string name="s_error_ftp" auto="1">Fehler beim Verbinden zu FTP</string>
+    <string name="s_prompt_zip" auto="1">Geben Sie Dateinamen der neuen ZIP-Datei:</string>
+    <string name="app_edit" auto="1">Bearbeiten Sie mit OpenExplorer</string>
+    <string name="s_menu_more" auto="1">Weitere Optionen ...</string>
+    <string name="s_msg_low_memory" auto="1">Geringer Speicherbedarf!</string>
+    <string name="s_clear" auto="1">löschen</string>
+    <string name="s_menu_delete_all" auto="1">Alle löschen</string>
+    <string name="s_menu_move_all" auto="1">Hierher verschieben</string>
+    <string name="s_menu_copy_all" auto="1">Hierhin kopieren</string>
+    <string name="s_confirm_delete" auto="1">Sind Sie sicher, dass Sie %s löschen möchten?</string>
+    <string name="s_error_same_destination" auto="1">Das Zielverzeichnis ist die gleiche.</string>
+    <string name="s_sample_notification" auto="1">Kopieren -&gt; SD-Karte:  n 3 Dateien</string>
+    <string name="s_pref_fullscreen" auto="1">Full Screen</string>
+    <string name="s_pref_fullscreen_summary_on" auto="1">Benachrichtigung ausblenden Bar</string>
+    <string name="s_pref_fullscreen_summary_off" auto="1">Benachrichtigung anzeigen Bar</string>
+    <string name="s_pref_pagers" auto="1">Alle Pager</string>
+    <string name="s_pref_pagers_summary_on" auto="1">Horizontale swiping = Directory-Navigation</string>
+    <string name="s_pref_pagers_summary_off" auto="1">Horizontale swiping Behinderte</string>
+    <string name="s_alert_new_media" auto="1">Neue Medien eingefügt!</string>
+    <string name="s_warn_pager_title" auto="1">Neues Feature: Blick Pager</string>
+    <string name="s_warn_pager" auto="1">Swipe links nach rechts zu gehen und ein Verzeichnis von rechts nach links, um zurückzugehen. Dadurch sollte es einfacher zu navigieren. Probieren Sie es aus (auf externen Medien)!</string>
+    <string name="s_warn_confirm" auto="1">Verstehst du?</string>
+    <string name="s_warn_disable" auto="1">Deaktivieren</string>
+    <string name="s_pref_intent_internal" auto="1">Interne Intents</string>
+    <string name="s_pref_intent_internal_on" auto="1">Verwenden Sie OpenExplorer Intent-Manager</string>
+    <string name="s_pref_intent_internal_off" auto="1">Verwenden Sie den System-Manager im Visier</string>
+    <string name="s_pref_text_internal" auto="1">Verwenden Sie den internen Text-Editor</string>
+    <string name="s_text_editor_title" auto="1">Text-Editor</string>
+    <string name="s_pref_show_root" auto="1">Zeige Root-Dateisystem (/)</string>
+    <string name="s_pref_show_internal" auto="1">Interne Medien anzeigen</string>
+    <string name="s_pref_show_external" auto="1">Zeigen Sie externe Speichermedien</string>
+    <string name="s_error_no_media" auto="1">Es sieht so aus, als gäbe es kein Medium eingelegt. Bitte deaktivieren Sie die USB-Sharing oder wieder einsetzen Medien.</string>
+    <string name="s_prompt_password" auto="1">Geben Sie das Passwort</string>
+    <string name="s_add" auto="1">hinzufügen</string>
+    <string name="s_server_ftp" auto="1">FTP</string>
+    <string name="s_server_sftp" auto="1">SFTP</string>
+    <string name="s_pref_server_port" auto="1">Port</string>
+    <string name="s_about_buildtime" auto="1">Erstellungsdatum</string>
+    <string name="s_default" auto="1">Default</string>
+    <string name="s_pref_timeout" auto="1">Timeout</string>
+    <string name="s_pref_timeout_summary" auto="1">Timeout in Sekunden</string>
+    <string name="s_menu_up" auto="1">hinaufgehen</string>
+    <string name="s_prompt_unzip" auto="1">Geben Sie den Pfad zu entpacken:</string>
+    <string name="s_pref_hardware_accel" auto="1">Hardwarebeschleunigung aktivieren</string>
+    <string name="s_pref_honeyplus" auto="1">Android 3.0 + Einstellungen</string>
+    <string name="s_pref_actionmode" auto="1">Action Modus</string>
+    <string name="s_pref_actionmode_enabled" auto="1">Verwenden Action Modus</string>
+    <string name="s_pref_actionmode_disabled" auto="1">Verwenden Sie Standard-Kontextmenüs</string>
+    <string name="s_server_smb" auto="1">SMB / Windows</string>
+    <string name="s_bookmark_drives" auto="1">Drives</string>
+    <string name="s_bookmark_smart" auto="1">Smart Folders</string>
+    <string name="s_bookmark_favorites" auto="1">Favoriten</string>
+    <string name="s_bookmark_servers" auto="1">Server</string>
+    <string name="s_bookmark_cache" auto="1">Zwischenspeicher</string>
+    <string name="s_info_totalspace" auto="1">Festplatten-Speicherplatz:</string>
+    <string name="s_info_freespace" auto="1">Disk Free Space:</string>
+    <string name="s_status_rate" auto="1">Rate:</string>
+    <string name="s_about_hardware" auto="1">Hardware</string>
+    <string name="s_menu_refresh" auto="1">Ordner aktualisieren</string>
+    <string name="s_pref_reset" auto="1">Reset Views</string>
+    <string name="s_toast_complete" auto="1">Operation Complete!</string>
+    <string name="s_pref_reset_summary" auto="1">Klicken Sie hier, um alle Ordner-spezifische Einstellungen anzeigen zu entfernen, die Rückkehr zu einem Standard-Zustand.</string>
+    <string name="s_prompt_path" auto="1">Geben Sie den Pfad:</string>
+    <string name="s_prompt_search" auto="1">Suche nach:</string>
+    <string name="s_prompt_search_within" auto="1">Suche Nach:</string>
+    <string name="s_pref_view_category" auto="1">Bookmark View Preferences</string>
+    <string name="s_pref_show_videos" auto="1">Videos anzeigen</string>
+    <string name="s_pref_show_photos" auto="1">Zeigen Sie Fotos</string>
+    <string name="s_pref_show_music" auto="1">Zeigen Sie Musik</string>
+    <string name="s_pref_show_downloads" auto="1">Downloads anzeigen</string>
+    <string name="s_hide" auto="1">Verbergen</string>
+    <string name="s_show" auto="1">Zeigen</string>
+    <string name="s_msg_event_cancelled" auto="1">Termin abgesagt.</string>
+    <string name="s_alert_newfolder_folder" auto="1">Neuen Ordner erstellen in:</string>
+    <string name="s_pref_fancy_category" auto="1">Fancy Display-Einstellungen</string>
+    <string name="s_pref_fancy_menus" auto="1">Schicke Menüs</string>
+    <string name="s_pref_fancy_context" auto="1">Fancy Kontextmenüs</string>
+    <string name="s_search_files" auto="1">Suche Filesystem</string>
+    <string name="s_menu_exit" auto="1">Ausgang</string>
+    <string name="s_warn_wtf_message" auto="1">Oops! Es scheint, dass ein nicht behandelter Fehler ist aufgetreten! Da es sich um ein verbreitetes Problem in vielen Beta-Anwendungen, ist der einzige Weg, um diese Probleme zu beheben, um Berichte von verschiedenen Geräten, wie dem Ihren zu empfangen, um zu bestimmen, wie das Problem zu beheben. Dürfen wir einen solchen Bericht, die nur anonyme Daten, auf die Entwickler?</string>
+    <string name="s_warn_wtf_ps" auto="1">*** Bitte beachten Sie, es bei dieser Anwendung im Beta Stadium. Bitte nicht geben dieser App eine schlechte Bewertung, einfach weil es abstürzt. Einfach deinstallieren, wenn es wirklich stört Sie. Vielen Dank!</string>
+    <string name="s_yes" auto="1">Ja</string>
+    <string name="s_no" auto="1">Kein</string>
+    <string name="s_wtf_preview" auto="1">Vorschau Berichtsdaten</string>
+    <string name="s_wtf_remember" auto="1">Nicht erneut fragen</string>
+    <string name="s_pref_basebar" auto="1">Split Aktionsleiste</string>
+    <string name="s_pref_basebar_on" auto="1">Aktion-Buttons am unteren Bildschirmrand im Portrait-Modus</string>
+    <string name="s_pref_basebar_off" auto="1">Aktion-Buttons am oberen Bildschirmrand (falls verfügbar)</string>
+    <string name="s_pref_autowtf" auto="1">Auto-Crash Reports senden</string>
+    <string name="s_pref_autowtf_summary" auto="1">Wenn eine unbehandelte Ausnahme auftritt, automatisch zu senden Bericht.</string>
+    <string name="s_split_auto" auto="1">Automatisch</string>
+    <string name="s_split_top" auto="1">Force-Tasten nach oben</string>
+    <string name="s_split_top_single" auto="1">Force Single-Taste nach oben</string>
+    <string name="s_split_bottom" auto="1">Force-Tasten Bottom</string>
+    <string name="s_split_none" auto="1">Legen Sie alle Schaltflächen im System-Menü</string>
+    <string name="s_about_screensize" auto="1">Bildschirmgröße</string>
+    <string name="s_about_density" auto="1">Dichte</string>
+    <string name="s_menu_location_int" auto="1">Interner Speicher-Pfad</string>
+    <string name="s_menu_location_ext" auto="1">Externer Speicher-Pfad</string>
+    <string name="s_wtf_context" auto="1">Bitte beschreiben Kontext der Crash:</string>
+    <string name="thanks" auto="1">Vielen Dank!</string>
+    <string name="menu_view_font_small" auto="1">Schriftgröße Klein</string>
+    <string name="menu_view_font_medium" auto="1">Schriftgröße Medium</string>
+    <string name="menu_view_font_large" auto="1">Schriftgröße große</string>
+    <string name="app_description" auto="1">Öffnen Sie den Explorer - Open-Source-Dateimanager für alle Geräte! (Tabletten, Handys, Google-TVs, Sandwiches!) \n-Complete-Dateisystem Management \n-USB, SD-und andere externe Medien \n-Netzwerk anschließbar (FTP, SFTP, SMB / Samba / Windows / LAN / WIFI) \n - Text-Editor \n-Smart Folders, dass Scan für verschiedene Arten von Medien (Videos, Fotos, Musik, Downloads) \n-View Pager-Verzeichnis-Navigation (Swipe rechts hinauf ein Verzeichnis) \n-Superuser / Root Fähigkeit zur Liste / lesen Systemordner (kein System noch schreiben) \n \nFeatures zu kommen: \n-Tabbed-Text-Editor \n-Mehr Netzwerkfähigkeit (Dropbox, Box.net, Sky-Laufwerk) \n-Offline-Cache-Datei-Struktur, werden sich erinnern, welche Dateien Sie haben an verschiedenen Orten, ohne dass eine Verbindung herstellen \n-Speicherplatz Heat Map zeigt, wo Ihre größten Dateien sind \n \n * HINWEIS: Diese App ist im Beta Stadium. Es gibt noch viele Bugs. Wenn Sie nicht möchten, dass diese Fehler auftreten, bitte nicht herunterladen Diese App. Wenn Sie möchten, mir zu helfen, diese Fehler zu finden, mailen Sie mich an oder kooperieren mit mir auf GitHub (https://github.com/BrandoCommando/OpenExplorer/). Bitte denken Sie daran schlechten Ratings helfen, niemand.</string>
 </resources>

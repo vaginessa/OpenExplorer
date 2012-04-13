@@ -6,7 +6,7 @@
     <string name="s_photos">Photos</string>
     <string name="s_videos">Videos</string>
     <string name="s_music">Music</string>
-    <string name="s_downloads">Downloads</string>
+    <string name="s_downloads" auto="1">Downloads</string>
     <string name="s_external">External</string>
     <string name="s_internal">Internal</string>
     <string name="s_view">View</string>
@@ -241,4 +241,5 @@
     <string name="menu_view_font_small">Font Size Small</string>
     <string name="menu_view_font_medium">Font Size Medium</string>
     <string name="menu_view_font_large">Font Size Large</string>
+    <string name="app_description">Open Explorer - Open source file manager for all devices! (Tablets, Phones, Google TVs, sandwiches!) \n- Complete file system management \n- USB, SD and other external media \n- Network Connectable (FTP, SFTP, SMB/Samba/Windows/Lan/WIFI) \n- Text Editor \n- Smart Folders that scan for different types of media (Videos, Photos, Music, Downloads) \n- View Pager directory navigation (swipe right to go up a directory) \n- Superuser/Root ability to list/read system folders (no system write yet) \n\nFeatures to come: \n- Tabbed Text Editor \n- More Networking capability (Dropbox, Box.net, Sky drive) \n- Offline file structure cache, will remember which files you have in different places without needing to connect \n- Disk space heat map shows where your biggest files are \n\n*PLEASE NOTE: This app is in Beta. There are still MANY bugs. If you do not wish to experience these bugs, please do not download this app. If you would like to help me find these bugs, please email me or cooperate with me on GitHub (https://github.com/BrandoCommando/OpenExplorer/). Please remember bad ratings help nobody.</string>
 </resources>
