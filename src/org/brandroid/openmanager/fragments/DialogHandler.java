@@ -857,12 +857,21 @@ public class DialogHandler extends DialogFragment {
 		return ret;
 	}
 	
+	public static String getLangCode()
+	{
+		String lang = Locale.getDefault().toString().toUpperCase();
+		if(lang.length() > 2)
+			lang = lang.substring(0, 2);
+		return lang;
+	}
+	
 	public static String getDeviceInfo()
 	{
 		String ret = "";
 		String sep = "\n";
 		ret += sep + "Build Info:" + sep;
 		ret += "SDK: " + Build.VERSION.SDK_INT + sep;
+		ret += "Lang: " + getLangCode() + sep;
 		ret += "Fingerprint: " + Build.FINGERPRINT + sep;
 		ret += "Manufacturer: " + Build.MANUFACTURER + sep;
 		ret += "Model: " + Build.MODEL + sep;

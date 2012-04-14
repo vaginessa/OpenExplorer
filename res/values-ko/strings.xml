@@ -239,4 +239,7 @@
     <string name="menu_view_font_medium" auto="1">폰트 크기 매체</string>
     <string name="menu_view_font_large" auto="1">폰트 크기 대형</string>
     <string name="app_description" auto="1">오픈 탐색기 - 모든 장치를위한 오픈 소스 파일 매니저! (정제, 전화기, 구글 텔레비전, 샌드위치!) \n-전체 파일 시스템 관리 \n-USB, SD 및 다른 외부 미디어를 \n-네트워크 Connectable (FTP, SFTP, SMB / 삼바 / 윈도우 / LAN / 무선) \n - 텍스트 편집기는 \n-스마트 폴더는 해당 미디어의 다른 유형 (동영상, 사진, 음악, 다운로드) \n-보기 호출기 디렉토리 탐색 (디렉토리를 이동 슬쩍 오른쪽) \n-슈퍼유저 / 루트 기능 / 목록에 대한 스캔 시스템 폴더를 (어떤 시스템이 아직 작성하지 않음) 앞으로 \n \nFeatures 읽기 옵션 : \n-탭 텍스트 편집기 \n-더많은 네트워킹 기능 (보관용, Box.net, 스카이 드라이브) \n-오프라인 파일 구조 캐시 기억되는 파일 당신이 연결할 필요 \n-디스크 공간 열지도가 가장 큰 파일의 위치를​​ 보여주는하지 않고 다른 장소에 가지고 \n \n * 참고 사항 :이 애플 리케이션은 베타 버전입니다. 많은 버그가 아직 있습니다. 여러분이 이러한 버그를 경험하지 않으려면, 제발이 응용 프로그램을 다운로드하지 않습니다. 당신이 이러한 버그를 쉽게 찾을 수 있도록 알아보려면 이메일을 보내주십시오 또는 GitHub (https://github.com/BrandoCommando/OpenExplorer/)에 협조. 나쁜 평가는 아무 도움도 기억하시기 바랍니다.</string>
+    <string name="alert_translate_google" auto="1">안녕하세요,이 번역은 Google 번역에 의해 제공됩니다. 당신뿐만 %s 의로서의 영어 몰랐어요, 그리고 더 나은 번역을 제공하는데 도움을하려는 경우,이 버튼을 클릭하십시오 :</string>
+    <string name="alert_translate_none" auto="1">안녕하세요, 당신이 지원되지 않는 언어를 사용하고있는 것으로 나타납니다. 당신은 영어와 %s을 아십니까? 당신은 당신이 정확한 ​​번역을 제공하는데 도움을 원하시면 여기를 클릭하십시오 :</string>
+    <string name="button_translate" auto="1">번역</string>
 </resources>

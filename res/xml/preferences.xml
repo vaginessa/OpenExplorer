@@ -51,7 +51,10 @@
 		    android:summaryOff="@string/s_pref_basebar_off"
 		    android:defaultValue="true"
 		    android:enabled="@bool/prehoneycomb"
-		    /> 
+		    />
+		<Preference
+		    android:key="pref_translate"
+		    android:title="@string/button_translate"
 		    />
 		<!-- <ListPreference
 		    android:key="pref_basebar_split"
@@ -84,24 +87,6 @@
 	        android:defaultValue="true"
 	        />
 	</PreferenceCategory>
-	
-		<PreferenceCategory
-		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus"
-		    android:enabled="@bool/honeycomb">
-	        <CheckBoxPreference
-	            android:key="pref_actionmode"
-	            android:title="@string/s_pref_actionmode"
-	            android:defaultValue="false"
-	            android:enabled="false"
-	            android:summaryOn="@string/s_pref_actionmode_enabled"
-	            android:summaryOff="@string/s_pref_actionmode_disabled"
-	            />
-	        <CheckBoxPreference
-	            android:key="pref_hardware_accel"
-	            android:title="@string/s_pref_hardware_accel"
-	            android:defaultValue="@bool/honeycomb"
-	            />
-		</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/s_pref_view_category">
         <CheckBoxPreference
@@ -182,6 +167,24 @@
 	            />
 	    </PreferenceCategory>
 	    
+	
+		<PreferenceCategory
+		    android:key="pref_honeyplus" android:title="@string/s_pref_honeyplus"
+		    android:enabled="@bool/honeycomb">
+	        <CheckBoxPreference
+	            android:key="pref_actionmode"
+	            android:title="@string/s_pref_actionmode"
+	            android:defaultValue="false"
+	            android:enabled="false"
+	            android:summaryOn="@string/s_pref_actionmode_enabled"
+	            android:summaryOff="@string/s_pref_actionmode_disabled"
+	            />
+	        <CheckBoxPreference
+	            android:key="pref_hardware_accel"
+	            android:title="@string/s_pref_hardware_accel"
+	            android:defaultValue="@bool/honeycomb"
+	            />
+		</PreferenceCategory>
 	
 	<PreferenceCategory android:key="servers" android:title="@string/s_pref_servers">
     	<PreferenceScreen android:key="server_add"

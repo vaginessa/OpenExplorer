@@ -35,6 +35,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
@@ -133,19 +134,6 @@ public class SettingsActivity extends PreferenceActivity
 		
 		if(mode == MODE_PREFERENCES)
 		{
-			PreferenceScreen pReset = (PreferenceScreen)pm.findPreference("pref_reset_views");
-			if(pReset != null)
-				pReset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-					@Override
-					public boolean onPreferenceClick(Preference preference)
-					{
-						
-						Toast.makeText(getApplicationContext(),
-								R.string.s_toast_complete, Toast.LENGTH_SHORT);
-						return true;
-					}
-				});
-			
 			if(!path.equals("global")) // folder preferences
 			{
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);
@@ -154,9 +142,37 @@ public class SettingsActivity extends PreferenceActivity
 				Preference pTitle = findPreference("folder_title");
 				if(pTitle != null)
 					pTitle.setTitle(pTitle.getTitle() + " - " + path);
+				
+				
 			} else { // global preferences
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				addPreferencesFromResource(R.xml.preferences);
+
+				Preference pTranslate = pm.findPreference("pref_translate");
+				if(pTranslate == null) pTranslate = findPreference("pref_translate");
+				if(pTranslate != null)
+				{
+					pTranslate.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+						@Override
+						public boolean onPreferenceClick(Preference preference) {
+							OpenExplorer.launchTranslator(SettingsActivity.this);
+							return true;
+						}
+					});
+				}
+				
+				PreferenceScreen pReset = (PreferenceScreen)pm.findPreference("pref_reset_views");
+				if(pReset != null)
+					pReset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+						@Override
+						public boolean onPreferenceClick(Preference preference)
+						{
+							
+							Toast.makeText(getApplicationContext(),
+									R.string.s_toast_complete, Toast.LENGTH_SHORT);
+							return true;
+						}
+					});
 				
 				Preference preference = pm.findPreference("pref_stats");
 				if(preference != null) { // "Help improve..."

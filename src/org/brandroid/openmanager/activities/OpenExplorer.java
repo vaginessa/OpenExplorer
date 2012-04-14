@@ -104,6 +104,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.RejectedExecutionException;
@@ -321,9 +322,9 @@ public class OpenExplorer
 		try {
 			upgradeViewSettings();
 		} catch(Exception e) { }
-		try {
+		//try {
 			showWarnings();
-		} catch(Exception e) { }
+		//} catch(Exception e) { }
 		
 		mEvHandler.setUpdateListener(this);
 		
@@ -731,39 +732,50 @@ public class OpenExplorer
 		}
 	}
 	
+	public static void launchTranslator(Activity a)
+	{
+		new Preferences(a).setSetting("warn", "translate", true);
+		String lang = DialogHandler.getLangCode();
+		Intent intent = new Intent(Intent.ACTION_VIEW,
+				Uri.parse("http://brandroid.org/translation_helper.php?lang=" + lang + "&full=" + Locale.getDefault().getDisplayLanguage()));
+		a.startActivity(intent);
+	}
 	private void showWarnings()
 	{
-		if(!getPreferences().getBoolean("warn", "pager", false))
+		// Non-viewpager disabled
+		
+		if(checkLanguage() > 0 && !getPreferences().getBoolean("warn", "translate", false))
 		{
-			runOnUiThread(new Runnable(){
-			public void run() {
-			new AlertDialog.Builder(getApplicationContext())
-				.setTitle(R.string.s_warn_pager_title)
-				.setCancelable(true)
-				.setMessage(getString(R.string.s_warn_pager) + "\n" + getString(R.string.s_warn_confirm))
-				.setPositiveButton(android.R.string.yes, new Dialog.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							getPreferences().setSetting("global", "pref_pagers", true);
-							getPreferences().setSetting("warn", "pager", true);
-							goHome();
-							//finish();
-						}
-					})
-				.setNegativeButton(android.R.string.no, null)
-				.setNeutralButton(R.string.s_warn_disable, new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							getPreferences().setSetting("warn", "pager", true);
-							getPreferences().setSetting("global", "pref_pagers", false);
-							goHome();
-							//finish();
-						}
-					})
-				.create()
-				.show();
-			}});
+			//runOnUiThread(new Runnable(){public void run() {
+				int msg = checkLanguage() == 1 ? R.string.alert_translate_google : R.string.alert_translate_none;
+				new AlertDialog.Builder(OpenExplorer.this)
+					.setCancelable(true)
+					.setMessage(getString(msg, Locale.getDefault().getDisplayLanguage()))
+					.setPositiveButton(R.string.button_translate,
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									launchTranslator(OpenExplorer.this);
+								}
+							})
+					.setNegativeButton(android.R.string.no,
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									getPreferences().setSetting("warn", "translate", true);
+								}
+							})
+					.create()
+					.show();
+			//}});
 		}
+	}
+	
+	private int checkLanguage()
+	{
+		String lang = DialogHandler.getLangCode();
+		if(lang.equals("EN")) return 0;
+		return ",ES,FR,KO,HE,DE,RU,".indexOf(","+DialogHandler.getLangCode()+",") == -1 ? 2 : 1;
 	}
 	
 	public static void showSplashIntent(Context context, String start)
@@ -852,6 +864,7 @@ public class OpenExplorer
 		mBookmarks.scanBookmarks();
 	}
 	
+	/*
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		try {
@@ -895,7 +908,7 @@ public class OpenExplorer
 			mViewPagerAdapter.notifyDataSetChanged();
 		}
 	}
-	
+	*/
 	private void setupLoggingDb()
 	{
 		FTP.setCommunicationListener(new OnFTPCommunicationListener() {
@@ -2568,7 +2581,7 @@ public class OpenExplorer
 				try {
 					if(mViewPager.getCurrentItem() != index) // crash fix
 						mViewPager.setCurrentItem(index, false);
-				} catch(IllegalStateException e) { Logger.LogError("Hopefully the Pager is okay!", e); }
+				} catch(Exception e) { Logger.LogError("Hopefully the Pager is okay!", e); }
 				updatePagerTitle(index);
 				if(addToStack)
 				{
