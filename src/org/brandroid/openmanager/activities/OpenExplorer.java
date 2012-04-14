@@ -1416,7 +1416,7 @@ public class OpenExplorer
 		Fragment ret = null;
 		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
-		if(mViewPagerAdapter != null)
+		if(mViewPagerAdapter != null && mViewPager != null)
 		{
 			if(mViewPager.getCurrentItem() > -1)
 			{
@@ -1656,12 +1656,19 @@ public class OpenExplorer
 				return true;
 		return false;
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
+		return true;
+	}
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu)
 	{
 		super.onPrepareOptionsMenu(menu);
-		//Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
+		Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
 		
 		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
 		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_paste);
@@ -1670,8 +1677,14 @@ public class OpenExplorer
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
-		
-		getSelectedFragment().onPrepareOptionsMenu(menu);
+		if(getWindowWidth() < 500 && Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
+		{
+			MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
+			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
+		}
+		Fragment f = getSelectedFragment();
+		if(f != null)
+			f.onPrepareOptionsMenu(menu);
 		
 		if(BEFORE_HONEYCOMB)
 		{
@@ -1697,8 +1710,9 @@ public class OpenExplorer
 		if(item.isCheckable())
 			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
 		
-		boolean ret = getSelectedFragment().onOptionsItemSelected(item);
-		if(ret) return true;
+		//Fragment f = getSelectedFragment();
+		//if(f != null && f.onOptionsItemSelected(item))
+		//	return true;
 		
 		return onClick(item.getItemId(), item, null);
 	}

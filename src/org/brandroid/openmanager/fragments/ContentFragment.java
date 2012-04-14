@@ -456,6 +456,7 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
+		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		inflater.inflate(R.menu.main_menu, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
@@ -511,13 +512,6 @@ public class ContentFragment extends OpenFragment
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
-		else if(getExplorer().getWindowWidth() < 500) {
-			if(Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
-			{
-				MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
-				MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
-			}
-		}
 		
 		switch(getSorting())
 		{

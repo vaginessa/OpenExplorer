@@ -236,7 +236,7 @@ public class ThumbnailCreator extends Thread {
 				return (R.drawable.drive);
 			else if(sPath2.indexOf("download") > -1)
 				return (useLarge ? R.drawable.lg_download : R.drawable.sm_download);
-			else if(mName.equals("Photos"))
+			else if(mName.equals("Photos") || sPath2.indexOf("dcim") > -1 || sPath2.indexOf("pictures") > -1)
 				return (useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
 			else if(mName.equals("Videos"))
 				return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);

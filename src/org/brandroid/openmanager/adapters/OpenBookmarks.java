@@ -157,11 +157,15 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
 		try {
+			if(getExplorer().getSetting(null, "pref_show_downloads", true))
+			{
 			if(OpenExplorer.getDownloadParent() != null && OpenExplorer.getDownloadParent().getChildCount(true) > 0)
 				checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
 			else {
-				if(!checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("download")))
-					checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("downloads"));
+				OpenFile downloads = new OpenFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+				if(downloads.exists())
+					checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, downloads);
+			}
 			}
 		} catch (IOException e) { }
 		
@@ -334,6 +338,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	public String getPathTitleDefault(OpenPath file)
 	{
 		if(file.getDepth() > 3) return file.getName();
+		if(file instanceof OpenCursor || file instanceof OpenMediaStore) return file.getName();
 		String path = file.getPath().toLowerCase();
 		if(path.equals("/"))
 			return "/";

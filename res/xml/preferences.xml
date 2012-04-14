@@ -50,6 +50,7 @@
 		    android:summaryOn="@string/s_pref_basebar_on"
 		    android:summaryOff="@string/s_pref_basebar_off"
 		    android:defaultValue="true"
+		    android:enabled="@bool/prehoneycomb"
 		    /> 
 		    />
 		<!-- <ListPreference

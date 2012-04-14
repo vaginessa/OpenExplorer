@@ -6,7 +6,7 @@
     <string name="s_photos">Photos</string>
     <string name="s_videos">Videos</string>
     <string name="s_music">Music</string>
-    <string name="s_downloads" auto="1">Downloads</string>
+    <string name="s_downloads">Downloads</string>
     <string name="s_external">External</string>
     <string name="s_internal">Internal</string>
     <string name="s_view">View</string>
