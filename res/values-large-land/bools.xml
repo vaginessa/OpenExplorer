@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="bool" name="ignore_max_base_buttons">true</item>
+</resources>
