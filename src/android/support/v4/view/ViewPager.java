@@ -315,8 +315,10 @@ public class ViewPager extends ViewGroup {
             mAdapter.unregisterDataSetObserver(mObserver);
             mAdapter.startUpdate(this);
             for (int i = 0; i < mItems.size(); i++) {
-                final ItemInfo ii = mItems.get(i);
-                mAdapter.destroyItem(this, ii.position, ii.object);
+            	try {
+	                final ItemInfo ii = mItems.get(i);
+	                mAdapter.destroyItem(this, ii.position, ii.object);
+            	} catch(Exception e) { }
             }
             mAdapter.finishUpdate(this);
             mItems.clear();

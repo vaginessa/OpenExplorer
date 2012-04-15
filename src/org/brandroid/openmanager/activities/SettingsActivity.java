@@ -29,8 +29,6 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.Random;
 
-import org.brandroid.billing.BillingService;
-import org.brandroid.billing.PurchaseObserver;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
 import org.brandroid.openmanager.data.OpenServer;
@@ -42,14 +40,6 @@ import org.brandroid.utils.SimpleCrypto;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import org.brandroid.billing.ResponseHandler;
-
-import org.brandroid.billing.Consts;
-import org.brandroid.billing.BillingService.RequestPurchase;
-import org.brandroid.billing.BillingService.RestoreTransactions;
-import org.brandroid.billing.Consts.PurchaseState;
-import org.brandroid.billing.Consts.ResponseCode;
 
 import android.content.Context;
 import android.content.Intent;
@@ -257,82 +247,6 @@ public class SettingsActivity extends PreferenceActivity
         }
         */
 	}
-	
-	/**
-     * A {@link PurchaseObserver} is used to get callbacks when Android Market sends
-     * messages to this application so that we can update the UI.
-     */
-    private class DonationObserver extends PurchaseObserver {
-        public DonationObserver(Handler handler) {
-            super(SettingsActivity.this, handler);
-        }
-
-        @Override
-        public void onBillingSupported(boolean supported) {
-            if (Consts.DEBUG) {
-                //Log.i(TAG, "supported: " + supported);
-            }
-            if (supported) {
-                //restoreDatabase();
-                //mBuyButton.setEnabled(true);
-                //mEditPayloadButton.setEnabled(true);
-            } else {
-                //showDialog(DIALOG_BILLING_NOT_SUPPORTED_ID);
-            }
-        }
-
-        @Override
-        public void onPurchaseStateChange(PurchaseState purchaseState, String itemId,
-                int quantity, long purchaseTime, String developerPayload) {
-        	Logger.LogDebug("onPurchaseStateChange() itemId: " + itemId + " " + purchaseState);
-            /*
-
-            if (developerPayload == null) {
-                logProductActivity(itemId, purchaseState.toString());
-            } else {
-                logProductActivity(itemId, purchaseState + "\n\t" + developerPayload);
-            }
-
-            if (purchaseState == PurchaseState.PURCHASED) {
-                mOwnedItems.add(itemId);
-            }
-            mCatalogAdapter.setOwnedItems(mOwnedItems);
-            mOwnedItemsCursor.requery();
-            */
-        }
-
-        @Override
-        public void onRequestPurchaseResponse(RequestPurchase request,
-                ResponseCode responseCode) {
-        	Logger.LogDebug(request.mProductId + ": " + responseCode);
-        	if (responseCode == ResponseCode.RESULT_OK) {
-                Logger.LogInfo("purchase was successfully sent to server");
-                //logProductActivity(request.mProductId, "sending purchase request");
-            } else if (responseCode == ResponseCode.RESULT_USER_CANCELED) {
-                Logger.LogInfo("user canceled purchase");
-                //logProductActivity(request.mProductId, "dismissed purchase dialog");
-            } else {
-                Logger.LogInfo("purchase failed");
-                //logProductActivity(request.mProductId, "request purchase returned " + responseCode);
-            }
-        }
-
-        @Override
-        public void onRestoreTransactionsResponse(RestoreTransactions request,
-                ResponseCode responseCode) {
-        	if (responseCode == ResponseCode.RESULT_OK) {
-                Logger.LogDebug("completed RestoreTransactions request");
-                // Update the shared preferences so that we don't perform
-                // a RestoreTransactions again.
-                /*SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-                SharedPreferences.Editor edit = prefs.edit();
-                edit.putBoolean(DB_INITIALIZED, true);
-                edit.commit();*/
-            } else {
-                Logger.LogDebug("RestoreTransactions error: " + responseCode);
-            }
-        }
-    }
 	
 	@Override
 	protected void onDestroy() {

@@ -9,10 +9,13 @@ import org.brandroid.utils.Logger;
 
 import com.viewpagerindicator.PageIndicator;
 import com.viewpagerindicator.TabPageIndicator;
+import com.viewpagerindicator.TabPageIndicator.TabView;
 import com.viewpagerindicator.TitlePageIndicator;
+import com.viewpagerindicator.TitleProvider;
 import com.viewpagerindicator.TitlePageIndicator.IndicatorStyle;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -78,13 +81,13 @@ public class OpenViewPager extends ViewPager
 
 	public void setIndicator(PageIndicator indicator)
 	{	
+		if(mIndicator != null && indicator != null && !mIndicator.equals(indicator)) return;
 		mIndicator = indicator;
-		if(mIndicator != null)
-			if(getAdapter() != null)
-			{
-				mIndicator.setViewPager(this);
-				mIndicator.notifyDataSetChanged();
-			}
+		if(mIndicator != null && getAdapter() != null)
+		{
+			mIndicator.setViewPager(this);
+			mIndicator.notifyDataSetChanged();
+		}
 		if(mIndicatorListener != null)
 			mIndicatorListener.onPageIndicatorChange();
 	}

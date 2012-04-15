@@ -172,9 +172,9 @@ import org.xmlpull.v1.XmlPullParserException;
 public class OpenExplorer
 		extends OpenFragmentActivity
 		implements OnBackStackChangedListener, OnClipboardUpdateListener,
-			OnPageIndicatorChangeListener, OnWorkerUpdateListener,
+			OnWorkerUpdateListener,
 			OnPageTitleClickListener, LoaderCallbacks<Cursor>, OnPageChangeListener
-	{	
+	{
 
 	private static final int PREF_CODE =		0x6;
 	private static final int REQ_SPLASH = 7;
@@ -628,7 +628,7 @@ public class OpenExplorer
 			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
 			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
 			mViewPager.setOnPageChangeListener(this);
-			mViewPager.setOnPageIndicatorChangeListener(this);
+			//mViewPager.setOnPageIndicatorChangeListener(this);
 			View indicator_frame = findViewById(R.id.content_pager_indicator);
 			try {
 				//LayoutAnimationController lac = new LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(), false));
@@ -726,6 +726,8 @@ public class OpenExplorer
 		{
 			try {
 				mViewPager.setAdapter(adapter);
+			} catch(IndexOutOfBoundsException e) {
+				Logger.LogError("Why is this happening?", e);
 			} catch(IllegalStateException e) {
 				Logger.LogError("Error trying to set ViewPageAdapter", e);
 			}
@@ -2557,30 +2559,50 @@ public class OpenExplorer
 			setViewVisibility(false, false, R.id.content_frag);
 			if(force || addToStack || path.requiresThread())
 			{
-				mViewPagerAdapter.removeOfType(ContentFragment.class);
+				int common = 0;
+				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
+				{
+					Fragment f = mViewPagerAdapter.getItem(i);
+					if(f != null)
+					{
+						if(!(f instanceof ContentFragment)) continue;
+						if(path.getPath().indexOf(((ContentFragment)f).getPath().getPath()) > -1)
+						{
+							common = i + 1;
+							break;
+						}
+					}
+					mViewPagerAdapter.remove(i);
+				}
+				//mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-				int iNonContentPages = mViewPagerAdapter.getCount();
+				int iNonContentPages = mViewPagerAdapter.getCount() - common;
 				try {
-					mViewPagerAdapter.add(0, ContentFragment.getInstance(path, newView));
+					mViewPagerAdapter.add(common, ContentFragment.getInstance(path, newView));
 				} catch(IllegalStateException e)
 				{
 					Logger.LogWarning("Fragment already active?", e); // crash fix
 				}
 				OpenPath tmp = path.getParent();
-				while(tmp != null)
+				while(tmp != null) 
 				{
-					mViewPagerAdapter.add(0, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+					try {
+						if(common > 0)
+							if(tmp.getPath().equals(((ContentFragment)mViewPagerAdapter.getItem(common - 1)).getPath()))
+								break;
+					} catch(Exception e) { Logger.LogError("I don't trust this!", e); }
+					mViewPagerAdapter.add(common, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
 					tmp = tmp.getParent();
 				}
 				Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
+				int index = mViewPagerAdapter.getCount() - iNonContentPages - 1;
 				setViewPageAdapter(mViewPagerAdapter);
-				int index = mViewPagerAdapter.getCount() - 1;
-				index -= iNonContentPages;
+				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				try {
 					if(mViewPager.getCurrentItem() != index) // crash fix
-						mViewPager.setCurrentItem(index, false);
+						mViewPager.setCurrentItem(index, true);
 				} catch(Exception e) { Logger.LogError("Hopefully the Pager is okay!", e); }
 				updatePagerTitle(index);
 				if(addToStack)
@@ -2606,7 +2628,6 @@ public class OpenExplorer
 					}
 				}
 			} else {
-				mViewPager.setAdapter(null);
 				OpenPath commonBase = null;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 				{
@@ -3002,22 +3023,6 @@ public class OpenExplorer
 			Logger.LogError("Couldn't show sibling dropdown", e);
 		}
 		return false;
-	}
-
-	@Override
-	public void onPageIndicatorChange() {
-		Logger.LogVerbose("onPageIndicatorChange");
-		/*
-		if(mViewPagerAdapter == null || mViewPagerAdapter.getCount() < 2)
-		{
-			setViewVisibility(false, true, R.id.content_pager_indicator);
-			setViewVisibility(true, false, R.id.title_text, R.id.title_path);
-			//setViewVisibility(true, false, R.id.title_underline);
-		} else {
-			setViewVisibility(true, true, R.id.content_pager_indicator);
-			setViewVisibility(false, false, R.id.title_underline);
-		}
-		*/
 	}
 
 	@Override
