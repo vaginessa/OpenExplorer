@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="s_photos">Foton</string>
+    <string name="s_videos">Video</string>
+    <string name="s_music">Musik</string>
+    <string name="s_downloads">Nedladdningar</string>
+    <string name="s_external">Externt</string>
+    <string name="s_internal">Internt</string>
+    <string name="s_view">Översikt</string>
+    <string name="s_bookmarks">Bokmärke</string>
+    <string name="s_menu_sort">Sortera</string>
+    <string name="s_menu_sort_name_asc">Sortera efter namn (A-Z)</string>
+    <string name="s_menu_sort_name_desc">Sortera efter namn (Z-A)</string>
+    <string name="s_menu_sort_date_asc">Sortera efter nyaste</string>
+    <string name="s_menu_sort_date_desc">Sortera efter äldsta</string>
+    <string name="s_menu_sort_size_asc">Sortera efter största</string>
+    <string name="s_menu_sort_size_desc">Sortera efter minsta</string>
+    <string name="s_menu_sort_type">Sortera efter filtyp</string>
+</resources>

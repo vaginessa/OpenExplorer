@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">Öffnen Sie den Explorer</string>
-    <string name="s_search" auto="1">Suche</string>
+    <string name="app_name">Open Explorer </string>
     <string name="s_photos" auto="1">Fotos</string>
     <string name="s_videos" auto="1">Videos</string>
     <string name="s_music" auto="1">Musik</string>
     <string name="s_downloads" auto="1">Downloads</string>
     <string name="s_external" auto="1">Extern</string>
     <string name="s_internal" auto="1">Intern</string>
-    <string name="s_view" auto="1">Blick</string>
-    <string name="s_bookmarks" auto="1">Bookmarks</string>
+    <string name="s_view">Ansehen </string>
+    <string name="s_bookmarks">Lesezeichen </string>
     <string name="s_menu_favorites" auto="1">Toggle Bookmarks</string>
-    <string name="s_menu_sort" auto="1">Art</string>
+    <string name="s_menu_sort">Sortieren </string>
     <string name="s_menu_sort_name_asc" auto="1">Sortieren nach Name (A-Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">Sortieren nach Name (Z-A)</string>
     <string name="s_menu_sort_date_asc" auto="1">Sortieren nach Neueste</string>
@@ -28,28 +27,28 @@
     <string name="s_menu_new_folder" auto="1">Neuer Ordner</string>
     <string name="s_menu_other" auto="1">Andere Einstellungen</string>
     <string name="s_menu_flush" auto="1">Flush Cache</string>
-    <string name="s_menu_root" auto="1">Wurzel</string>
-    <string name="s_menu_prefs_folder" auto="1">Ordner Preferences</string>
+    <string name="s_menu_root">Root </string>
+    <string name="s_menu_prefs_folder">Ordner Einstellungen</string>
     <string name="s_menu_prefs_global" auto="1">Globale Einstellungen</string>
     <string name="s_menu_info" auto="1">Info</string>
     <string name="s_menu_copy" auto="1">Kopie</string>
-    <string name="s_menu_cut" auto="1">Schnitt</string>
-    <string name="s_menu_paste" auto="1">Paste</string>
+    <string name="s_menu_cut">Ausschneiden</string>
+    <string name="s_menu_paste">Einfügen </string>
     <string name="s_menu_delete" auto="1">Löschen</string>
     <string name="s_menu_share" auto="1">Senden / Share ...</string>
     <string name="s_menu_zip" auto="1">Zip-Datei (en) ...</string>
     <string name="s_menu_unzip" auto="1">Entpacken Sie ...</string>
     <string name="s_menu_rename" auto="1">Umbenennen ...</string>
     <string name="s_menu_bookmark" auto="1">Lesezeichen hinzufügen</string>
-    <string name="s_save" auto="1">Sparen</string>
+    <string name="s_save">Speichern </string>
     <string name="s_saveas" auto="1">Speichern unter ...</string>
-    <string name="s_cancel" auto="1">Kündigen</string>
+    <string name="s_cancel">Abbrechen </string>
     <string name="s_size" auto="1">Größe</string>
     <string name="s_none" auto="1">Keiner</string>
     <string name="s_pref_servers" auto="1">Zusätzliche Server</string>
-    <string name="s_pref_server_add" auto="1">+ Add New Server</string>
-    <string name="s_pref_display" auto="1">Anzeige-Einstellungen</string>
-    <string name="s_pref_hidden" auto="1">Versteckte Dateien anzeigen</string>
+    <string name="s_pref_server_add">neuenServerhinzufügen</string>
+    <string name="s_pref_display">Server</string>
+    <string name="s_pref_hidden">versteckteDateienanzeigen</string>
     <string name="s_pref_hidden_summary" auto="1">Anzeige versteckter Dateien und Ordner</string>
     <string name="s_pref_thumbs" auto="1">Show Image Thumbnails</string>
     <string name="s_pref_thumbs_summary" auto="1">Zeigen Sie eine Vorschau für Bild / Video / App-Dateien</string>
@@ -73,13 +72,13 @@
     <string name="s_pref_server_update" auto="1">Add / Update Server</string>
     <string name="s_pref_server_type" auto="1">Server-Typ</string>
     <string name="s_files" auto="1">Dateien</string>
-    <string name="s_create" auto="1">Schaffen</string>
+    <string name="s_create">Erstellen </string>
     <string name="s_title_holding_x_files" auto="1">Halten xxx-Dateien</string>
     <string name="s_title_newfolder" auto="1">Erstellen eines neuen Ordners</string>
     <string name="s_title_send" auto="1">Send xxx</string>
     <string name="s_title_unzip" auto="1">Entpacken Sie xxx</string>
     <string name="s_title_zip" auto="1">Zip xxx</string>
-    <string name="s_title_executing" auto="1">Executing</string>
+    <string name="s_title_executing">Ausführung</string>
     <string name="s_title_deleting" auto="1">Löschen</string>
     <string name="s_title_searching" auto="1">Suche</string>
     <string name="s_title_moving" auto="1">Verschieben</string>
@@ -105,7 +104,7 @@
     <string name="s_alert_bookmark_rename" auto="1">Ändern Sie den Titel Ihrer Lesezeichen.</string>
     <string name="s_title_bookmark_prefix" auto="1">Verwalten Bookmark:</string>
     <string name="s_alert_remove_safe" auto="1">Sie können nun das Laufwerk sicher entfernen.</string>
-    <string name="s_alert_remove_error" auto="1">Kann auswerfen.</string>
+    <string name="s_alert_remove_error">Kann nicht auswerfen.</string>
     <string name="s_menu_about" auto="1">Über</string>
     <string name="s_about_version" auto="1">Version</string>
     <string name="s_about_author" auto="1">Autor</string>
@@ -131,7 +130,7 @@
     <string name="s_info_permissions" auto="1">Datei-Berechtigungen:</string>
     <string name="s_info_permission_read" auto="1">Lesen Sie:</string>
     <string name="s_info_permission_write" auto="1">schreiben:</string>
-    <string name="s_info_permission_execute" auto="1">Execute:</string>
+    <string name="s_info_permission_execute">Ausführen:</string>
     <string name="s_toggle_keyboard" auto="1">Tastatur</string>
     <string name="s_show_password" auto="1">Zeige Passwort</string>
     <string name="s_error_ftp" auto="1">Fehler beim Verbinden zu FTP</string>
@@ -212,7 +211,7 @@
     <string name="s_pref_fancy_menus" auto="1">Schicke Menüs</string>
     <string name="s_pref_fancy_context" auto="1">Fancy Kontextmenüs</string>
     <string name="s_search_files" auto="1">Suche Filesystem</string>
-    <string name="s_menu_exit" auto="1">Ausgang</string>
+    <string name="s_menu_exit">Beenden</string>
     <string name="s_warn_wtf_message" auto="1">Oops! Es scheint, dass ein nicht behandelter Fehler ist aufgetreten! Da es sich um ein verbreitetes Problem in vielen Beta-Anwendungen, ist der einzige Weg, um diese Probleme zu beheben, um Berichte von verschiedenen Geräten, wie dem Ihren zu empfangen, um zu bestimmen, wie das Problem zu beheben. Dürfen wir einen solchen Bericht, die nur anonyme Daten, auf die Entwickler?</string>
     <string name="s_warn_wtf_ps" auto="1">*** Bitte beachten Sie, es bei dieser Anwendung im Beta Stadium. Bitte nicht geben dieser App eine schlechte Bewertung, einfach weil es abstürzt. Einfach deinstallieren, wenn es wirklich stört Sie. Vielen Dank!</string>
     <string name="s_yes" auto="1">Ja</string>
@@ -239,4 +238,7 @@
     <string name="menu_view_font_medium" auto="1">Schriftgröße Medium</string>
     <string name="menu_view_font_large" auto="1">Schriftgröße große</string>
     <string name="app_description" auto="1">Öffnen Sie den Explorer - Open-Source-Dateimanager für alle Geräte! (Tabletten, Handys, Google-TVs, Sandwiches!) \n-Complete-Dateisystem Management \n-USB, SD-und andere externe Medien \n-Netzwerk anschließbar (FTP, SFTP, SMB / Samba / Windows / LAN / WIFI) \n - Text-Editor \n-Smart Folders, dass Scan für verschiedene Arten von Medien (Videos, Fotos, Musik, Downloads) \n-View Pager-Verzeichnis-Navigation (Swipe rechts hinauf ein Verzeichnis) \n-Superuser / Root Fähigkeit zur Liste / lesen Systemordner (kein System noch schreiben) \n \nFeatures zu kommen: \n-Tabbed-Text-Editor \n-Mehr Netzwerkfähigkeit (Dropbox, Box.net, Sky-Laufwerk) \n-Offline-Cache-Datei-Struktur, werden sich erinnern, welche Dateien Sie haben an verschiedenen Orten, ohne dass eine Verbindung herstellen \n-Speicherplatz Heat Map zeigt, wo Ihre größten Dateien sind \n \n * HINWEIS: Diese App ist im Beta Stadium. Es gibt noch viele Bugs. Wenn Sie nicht möchten, dass diese Fehler auftreten, bitte nicht herunterladen Diese App. Wenn Sie möchten, mir zu helfen, diese Fehler zu finden, mailen Sie mich an oder kooperieren mit mir auf GitHub (https://github.com/BrandoCommando/OpenExplorer/). Bitte denken Sie daran schlechten Ratings helfen, niemand.</string>
+    <string name="alert_translate_google" auto="1">Hallo, dies ist eine Übersetzung von Google Translate zur Verfügung gestellt. Wenn Sie Englisch als auch% s wissen, und möchte in eine bessere Übersetzung zu helfen, klicken Sie bitte auf diesen Button:</string>
+    <string name="alert_translate_none" auto="1">Hallo, scheint es, dass Sie mit einer nicht unterstützten Sprache. Weißt du, Englisch und% s? Wenn Sie möchten Sie bei der Bereitstellung einer richtigen Übersetzung zu helfen, bitte hier klicken:</string>
+    <string name="button_translate" auto="1">übersetzen</string>
 </resources>

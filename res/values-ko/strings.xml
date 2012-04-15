@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name" auto="1">오픈 탐색기</string>
-    <string name="s_search">검색</string>
     <string name="s_photos" auto="1">사진</string>
     <string name="s_videos" auto="1">동영상</string>
     <string name="s_music" auto="1">음악</string>
     <string name="s_downloads" auto="1">다운로드</string>
-    <string name="s_external">외부의</string>
-    <string name="s_internal" auto="1">내부의</string>
+    <string name="s_external">내장메모리</string>
+    <string name="s_internal">내부메모리</string>
     <string name="s_view">보기</string>
     <string name="s_bookmarks" auto="1">북마크</string>
-    <string name="s_menu_favorites" auto="1">전환 즐겨찾기</string>
+    <string name="s_menu_favorites">북마크 전환</string>
     <string name="s_menu_sort">정렬하기</string>
     <string name="s_menu_sort_name_asc" auto="1">이름으로 정렬 (A - Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">이름으로 정렬 (Z - A)</string>
@@ -18,17 +17,17 @@
     <string name="s_menu_sort_date_desc">오래된 순서로 정렬</string>
     <string name="s_menu_sort_size_asc">큰순서로 정렬</string>
     <string name="s_menu_sort_size_desc">작은순서로 정렬</string>
-    <string name="s_menu_sort_type" auto="1">파일 형식을 기준으로 정렬</string>
+    <string name="s_menu_sort_type">파일확장자 정렬</string>
     <string name="s_menu_multi" auto="1">다중 선택</string>
     <string name="s_menu_grid">그리드 보기</string>
     <string name="s_menu_list">목록 보기</string>
     <string name="s_menu_carousel" auto="1">회전 목마</string>
-    <string name="s_menu_hidden">히든 파일보기</string>
+    <string name="s_menu_hidden">숨김파일보기</string>
     <string name="s_menu_thumbs" auto="1">이미지 미리보기</string>
     <string name="s_menu_new_folder" auto="1">새 폴더</string>
     <string name="s_menu_other" auto="1">기타 설정</string>
-    <string name="s_menu_flush" auto="1">플러시 캐시</string>
-    <string name="s_menu_root" auto="1">뿌리</string>
+    <string name="s_menu_flush">캐시지우기</string>
+    <string name="s_menu_root">루트</string>
     <string name="s_menu_prefs_folder" auto="1">폴더 환경 설정</string>
     <string name="s_menu_prefs_global" auto="1">글로벌 환경 설정</string>
     <string name="s_menu_info" auto="1">정보</string>
@@ -37,7 +36,7 @@
     <string name="s_menu_paste" auto="1">붙여넣기</string>
     <string name="s_menu_delete" auto="1">삭제</string>
     <string name="s_menu_share">보내기/공유...</string>
-    <string name="s_menu_zip">압축파일(들)...</string>
+    <string name="s_menu_zip">파일압축 ...</string>
     <string name="s_menu_unzip" auto="1">압축 풀기 ...</string>
     <string name="s_menu_rename" auto="1">이름 바꾸기 ...</string>
     <string name="s_menu_bookmark" auto="1">즐겨찾기에 추가</string>
@@ -51,8 +50,8 @@
     <string name="s_pref_display" auto="1">디스플레이 환경 설정</string>
     <string name="s_pref_hidden">히든 파일보기</string>
     <string name="s_pref_hidden_summary">히든 파일 및 폴더를 표시합니다</string>
-    <string name="s_pref_thumbs" auto="1">이미지 미리보기</string>
-    <string name="s_pref_thumbs_summary" auto="1">이미지 / 비디오 / 응용 프로그램 파일에 대한 미리보기 이미지를 표시합니다</string>
+    <string name="s_pref_thumbs">썸네일 미리보기</string>
+    <string name="s_pref_thumbs_summary">이미지/비디오/앱 썸네일 표시</string>
     <string name="s_pref_view" auto="1">보기 모드</string>
     <string name="s_pref_view_summary">그리드에서 파일, 목록, 또는 회전 목마를 표시 (단 허니콤)</string>
     <string name="s_pref_sort" auto="1">정렬</string>
@@ -87,19 +86,19 @@
     <string name="s_title_zipping">압축중</string>
     <string name="s_title_unzipping">압축 풀기중</string>
     <string name="s_title_wait" auto="1">잠시 기다려주십시오 ...</string>
-    <string name="s_alert_confirm_delete">XXX 삭제하는 것은 복구할수 없습니다. 당신은 계속하시겠습니까?</string>
+    <string name="s_alert_confirm_delete">%s를 삭제하면 복구할 수 없습니다. 계속하겠습니까?</string>
     <string name="s_alert_rename">파일의 새이름을 입력하십시오</string>
-    <string name="s_alert_newfolder">귀하께서 작성하고자하는 폴더의 이름을 입력하세요.</string>
-    <string name="s_alert_unzip">여기다 XXX 압축풀기를 하시겠습니까 아니면 다른 폴더에 하시겠습니까?</string>
+    <string name="s_alert_newfolder">작성하고자하는 폴더의 이름을 입력하세요.</string>
+    <string name="s_alert_unzip">여기에 %s를 풀겠습니까 아니면 다른 폴더에 풀겠습니까?</string>
     <string name="s_button_unzip_here" auto="1">여기에 압축 풀기</string>
     <string name="s_button_unzip_else">다른곳에 압축 풀기 ...</string>
     <string name="s_msg_none">파일(들)은 ..수 없습니다</string>
     <string name="s_msg_some">일부 파일(들)은 ...수 없습니다</string>
     <string name="s_msg_all">성공적으로 파일(들)</string>
-    <string name="s_msg_deleted">삭제됬습니다</string>
-    <string name="s_msg_moved">이동됬습니다</string>
-    <string name="s_msg_copied">복사됬습니다</string>
-    <string name="s_remove">삭제됬습니다</string>
+    <string name="s_msg_deleted">삭제되었습니다</string>
+    <string name="s_msg_moved">이동되었습니다</string>
+    <string name="s_msg_copied">복사되었습니다</string>
+    <string name="s_remove">삭제되었습니다</string>
     <string name="s_eject" auto="1">꺼내기</string>
     <string name="s_update" auto="1">업데이트</string>
     <string name="s_alert_bookmark_rename" auto="1">북마크의 제목을 변경합니다.</string>
@@ -239,7 +238,7 @@
     <string name="menu_view_font_medium" auto="1">폰트 크기 매체</string>
     <string name="menu_view_font_large" auto="1">폰트 크기 대형</string>
     <string name="app_description" auto="1">오픈 탐색기 - 모든 장치를위한 오픈 소스 파일 매니저! (정제, 전화기, 구글 텔레비전, 샌드위치!) \n-전체 파일 시스템 관리 \n-USB, SD 및 다른 외부 미디어를 \n-네트워크 Connectable (FTP, SFTP, SMB / 삼바 / 윈도우 / LAN / 무선) \n - 텍스트 편집기는 \n-스마트 폴더는 해당 미디어의 다른 유형 (동영상, 사진, 음악, 다운로드) \n-보기 호출기 디렉토리 탐색 (디렉토리를 이동 슬쩍 오른쪽) \n-슈퍼유저 / 루트 기능 / 목록에 대한 스캔 시스템 폴더를 (어떤 시스템이 아직 작성하지 않음) 앞으로 \n \nFeatures 읽기 옵션 : \n-탭 텍스트 편집기 \n-더많은 네트워킹 기능 (보관용, Box.net, 스카이 드라이브) \n-오프라인 파일 구조 캐시 기억되는 파일 당신이 연결할 필요 \n-디스크 공간 열지도가 가장 큰 파일의 위치를​​ 보여주는하지 않고 다른 장소에 가지고 \n \n * 참고 사항 :이 애플 리케이션은 베타 버전입니다. 많은 버그가 아직 있습니다. 여러분이 이러한 버그를 경험하지 않으려면, 제발이 응용 프로그램을 다운로드하지 않습니다. 당신이 이러한 버그를 쉽게 찾을 수 있도록 알아보려면 이메일을 보내주십시오 또는 GitHub (https://github.com/BrandoCommando/OpenExplorer/)에 협조. 나쁜 평가는 아무 도움도 기억하시기 바랍니다.</string>
-    <string name="alert_translate_google" auto="1">안녕하세요,이 번역은 Google 번역에 의해 제공됩니다. 당신뿐만 %s 의로서의 영어 몰랐어요, 그리고 더 나은 번역을 제공하는데 도움을하려는 경우,이 버튼을 클릭하십시오 :</string>
-    <string name="alert_translate_none" auto="1">안녕하세요, 당신이 지원되지 않는 언어를 사용하고있는 것으로 나타납니다. 당신은 영어와 %s을 아십니까? 당신은 당신이 정확한 ​​번역을 제공하는데 도움을 원하시면 여기를 클릭하십시오 :</string>
+    <string name="alert_translate_google" auto="1">안녕하세요,이 번역은 Google 번역에 의해 제공됩니다. 당신뿐만 % s의로서의 영어 몰랐어요, 그리고 더 나은 번역을 제공하는데 도움을하려는 경우,이 버튼을 클릭하십시오 :</string>
+    <string name="alert_translate_none" auto="1">안녕하세요, 당신이 지원되지 않는 언어를 사용하고있는 것으로 나타납니다. 당신은 영어와 % s을 아십니까? 당신은 당신이 정확한 ​​번역을 제공하는데 도움을 원하시면 여기를 클릭하십시오 :</string>
     <string name="button_translate" auto="1">번역</string>
 </resources>
