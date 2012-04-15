@@ -1443,7 +1443,7 @@ public class OpenExplorer
 				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
 			}
 		}
-		if(ret == null)
+		if(ret == null && fragmentManager != null)
 			ret = fragmentManager.findFragmentById(R.id.content_frag);
 		
    		return ret;
@@ -1690,8 +1690,12 @@ public class OpenExplorer
 		super.onPrepareOptionsMenu(menu);
 		Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
 		
-		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
-		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_paste);
+		if(getClipboard() != null)
+		{
+			MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+			MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_paste);
+		} else
+			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
