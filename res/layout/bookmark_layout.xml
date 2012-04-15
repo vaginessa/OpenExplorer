@@ -27,7 +27,11 @@
 	android:id="@+id/layout"
 	>
 	<ProgressBar
-	    style="@style/Widget.ProgressBar.Horizontal"
+	    style="@android:style/Widget.ProgressBar.Horizontal"
+        android:progressDrawable="@drawable/progress_horizontal"
+        android:indeterminateDrawable="@android:drawable/progress_indeterminate_horizontal"
+        android:max="100"
+        android:progress="50"
 	    android:id="@+id/size_bar"
 	    android:alpha="0.5"
 	    android:layout_width="fill_parent"

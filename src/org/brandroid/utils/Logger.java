@@ -22,7 +22,7 @@ public class Logger
 	private final static Boolean DO_LOG = true; // global static
 	private static Boolean bLoggingEnabled = true; // this can be set view preferences
 	public final static Integer MIN_DB_LEVEL = Log.WARN;
-	private final static String LOG_KEY = "OpenExplorer";
+	public final static String LOG_KEY = "OpenExplorer";
 	private static LoggerDbAdapter dbLog;
 	
 	@Override

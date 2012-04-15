@@ -130,7 +130,7 @@ public class ThumbnailCreator extends Thread {
 				}
 				if(thumb != null)
 				{
-					BitmapDrawable bd = new BitmapDrawable(thumb);
+					BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), thumb);
 					bd.setGravity(Gravity.CENTER);
 					ImageUtils.fadeToDrawable(mImage, bd);
 				}
@@ -188,7 +188,7 @@ public class ThumbnailCreator extends Thread {
 				}
 				if(thumb != null)
 				{
-					BitmapDrawable bd = new BitmapDrawable(thumb);
+					BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), thumb);
 					bd.setGravity(Gravity.CENTER);
 					ImageUtils.fadeToDrawable(mImage, bd);
 				}
@@ -570,7 +570,7 @@ public class ThumbnailCreator extends Thread {
 	private void sendThumbBack(SoftReference<Bitmap> mThumb, String path)
 	{
 		final Bitmap d = mThumb.get();
-		new BitmapDrawable(d).setGravity(Gravity.CENTER);
+		new BitmapDrawable(mContext.getResources(), d).setGravity(Gravity.CENTER);
 		mCacheMap.put(path, d);
 		
 		mHandler.post(new Runnable() {

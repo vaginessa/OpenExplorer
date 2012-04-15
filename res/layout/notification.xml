@@ -27,7 +27,7 @@
 	    <TextView
 		    android:id="@android:id/title"
 		    style="@style/Small"
-		    android:text="Copying -> /mnt/sdcard"
+		    android:text="@string/s_sample_notification"
 		    android:textColor="@color/notification_text"
 		    android:layout_marginTop="1dp"
 		    />
@@ -36,7 +36,7 @@
 		    android:id="@android:id/text1"
 		    style="@style/Small"
 		    android:layout_width="match_parent"
-		    android:text="Rate:"
+		    android:text="@string/s_status_remaining"
 		    android:gravity="right" 
 		    />
 		
@@ -44,7 +44,9 @@
 		
 		<ProgressBar
 		    android:id="@android:id/progress"
-		    style="@android:style/Widget.ProgressBar.Horizontal"
+		    style="@style/Widget.ProgressBar.Horizontal"
+		    android:progress="50"
+		    android:max="100"
 		    android:layout_width="match_parent" 
 		    android:layout_height="6dp"
 		    />

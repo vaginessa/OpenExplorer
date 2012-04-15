@@ -328,7 +328,6 @@ public abstract class OpenFragment
 		//return super.onContextItemSelected(item);
 	}
 	
-
 	public boolean executeMenu(final int id, OpenPath file)
 	{
 		return executeMenu(id, null, file);

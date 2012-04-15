@@ -34,8 +34,8 @@ import java.io.InterruptedIOException;
 import java.util.Random;
 
 public class Utils {
-    private static final String TAG = "Utils";
-    private static final String DEBUG_TAG = "GalleryDebug";
+    private static final String TAG = Logger.LOG_KEY;
+    private static final String DEBUG_TAG = TAG;
 
     private static final long POLY64REV = 0x95AC9329AC4BC9B5L;
     private static final long INITIALCRC = 0xFFFFFFFFFFFFFFFFL;
@@ -53,6 +53,14 @@ public class Utils {
             throw new AssertionError();
         }
     }
+    
+	public static long getAverage(Long... longs)
+	{
+		long total = 0;
+		for(long l : longs)
+			total += l;
+		return total / longs.length;
+	}
 
     // Throws AssertionError if the input is false.
     public static void assertTrue(boolean cond, String message, Object ... args) {

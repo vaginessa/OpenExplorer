@@ -549,7 +549,7 @@ public class ContentFragment extends OpenFragment
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_paste);
 		} else {
 			MenuItem mPaste = menu.findItem(R.id.menu_paste);
-			if(mPaste != null && getClipboard() != null)
+			if(mPaste != null && getClipboard() != null && !isDetached())
 				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
 			if(getClipboard().isMultiselect())
 			{
@@ -1121,6 +1121,7 @@ public class ContentFragment extends OpenFragment
 						}
 					} catch (IOException e2) {
 						Logger.LogError("Couldn't get Cache", e2);
+						getExplorer().showToast(R.string.s_error_ftp);
 						cachePath = cmd.Path;
 					}
 					if(cachePath == null)

@@ -103,6 +103,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.SortedSet;
@@ -1377,7 +1378,7 @@ public class OpenExplorer
 			if(mViewPager.getCurrentItem() > -1)
 			{
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
-				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount() + (ret instanceof ContentFragment ? " : " + ((ContentFragment)ret).getPath().getPath() : ""));
+				//Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount() + (ret instanceof ContentFragment ? " : " + ((ContentFragment)ret).getPath().getPath() : ""));
 				if(!(ret instanceof ContentFragment))
 					ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
 			} else {
@@ -1550,9 +1551,13 @@ public class OpenExplorer
 		else
 			mMainMenu.clearAll();
 		//getMenuInflater().inflate(R.menu.main_menu, mMainMenu);
+		try {
 		getSelectedFragment().onCreateOptionsMenu(mMainMenu, getMenuInflater());
 		Logger.LogVerbose("Setting up base bar (" + mMainMenu.size() + ")...");
 		onPrepareOptionsMenu(mMainMenu);
+		} catch(Exception e) {
+			Logger.LogError("Couldn't set up base bar.", e);
+		}
 		//handleBaseBarButtons(mMainMenu);
 	}
 	
@@ -1698,7 +1703,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
 		}
 		Fragment f = getSelectedFragment();
-		if(f != null)
+		if(f != null && !f.isDetached())
 			f.onPrepareOptionsMenu(menu);
 		
 		if(BEFORE_HONEYCOMB)
@@ -1944,12 +1949,12 @@ public class OpenExplorer
 
 			case R.id.menu_multi_all_copy:
 				mClipboard.DeleteSource = false;
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, getDirContentFragment(false).getPath(), mClipboard);
 				break;
 				
 			case R.id.menu_multi_all_move:
 				mClipboard.DeleteSource = true;
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, getDirContentFragment(false).getPath(), mClipboard);
 				break;
 				
 			case R.id.title_paste:
@@ -1974,7 +1979,11 @@ public class OpenExplorer
 			default:
 				Fragment f = getSelectedFragment();
 				if(f instanceof ContentFragment)
-					return ((ContentFragment)f).executeMenu(id, mLastPath);
+				{
+					if(!((ContentFragment)f).onContextItemSelected(item) &&
+						!((ContentFragment)f).onOptionsItemSelected(item))
+					return ((ContentFragment)f).executeMenu(id, getDirContentFragment(false).getPath());
+				}
 				else if(f instanceof TextEditorFragment)
 					((TextEditorFragment)f).onClick(id);
 				else if(f.onOptionsItemSelected(item)) return true;
@@ -1986,39 +1995,13 @@ public class OpenExplorer
 	}
 	
 	private void debugTest() {
+		/*
 		int bad = 2 / 0;
 		Logger.LogInfo("HEY! We know how to divide by 0! It is " + bad);
-		/*
-		final OpenFile src = new OpenFile("/mnt/sdcard-ext/gapps-gb-20110828-signed.zip");
-		final OpenFile dest = new OpenFile("/mnt/sdcard/Download/");
-		final OnWorkerUpdateListener oldHandler = mEvHandler.getUpdateListener();
-		final long start = new Date().getTime();
-		mEvHandler.setUpdateListener(new OnWorkerUpdateListener() {
-			@Override
-			public void onWorkerThreadComplete(int type, ArrayList<String> results) {
-				long elapsed = new Date().getTime() - start;
-				Logger.LogVerbose("DEBUG Copy Old: " + elapsed);
-				mEvHandler.setUpdateListener(oldHandler);
-				dest.delete();
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						long start2 = new Date().getTime();
-						dest.getChild(src.getName()).copyFrom(src);
-						long elapsed2 = new Date().getTime() - start2;
-						Logger.LogVerbose("DEBUG Copy New: " + elapsed2);
-					}
-				}).start();
-			}
-
-			@Override
-			public void onProgressUpdate(int pos, int total) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
-		mEvHandler.copyFile(src, dest, this);
 		*/
+		//*
+		mEvHandler.copyFile(new OpenFile("/mnt/sdcard/cm9-droid3-20120316-0330.zip"), new OpenFile("/mnt/sdcard/Download"), this);
+		//*/
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }
@@ -2249,8 +2232,10 @@ public class OpenExplorer
 		return mOpenMenu;
 	}
 	
+	public OpenPath getCurrentPath() { return getDirContentFragment(false).getPath(); }
+	
 	public void changeViewMode(int newView, boolean doSet) {
-		int mViewMode = getSetting(mLastPath, "view", 0);
+		int mViewMode = getSetting(getCurrentPath(), "view", 0);
 		if(mViewMode == newView) {
 			Logger.LogWarning("changeViewMode called unnecessarily! " + newView + " = " + mViewMode);
 			return;
@@ -2261,19 +2246,19 @@ public class OpenExplorer
 			newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
 		//setViewMode(newView);
 		if(doSet)
-			setSetting(mLastPath, "view", newView);
+			setSetting(getCurrentPath(), "view", newView);
 		if(!mSinglePane)
 		{
 			if(oldView == VIEW_CAROUSEL && mViewPagerEnabled)
 			{
 				setViewVisibility(false, false, R.id.content_frag);
 				setViewVisibility(true, false, R.id.content_pager_frame);
-				changePath(mLastPath, false);
+				changePath(getCurrentPath(), false);
 			} else if(newView == VIEW_CAROUSEL && mViewPagerEnabled)
 			{
 				setViewVisibility(false, false, R.id.content_pager_frame);
 				setViewVisibility(true, false, R.id.content_frag);
-				changePath(mLastPath, false);
+				changePath(getCurrentPath(), false);
 			}
 			getDirContentFragment(true).onViewChanged(newView);
 			if(!BEFORE_HONEYCOMB)
@@ -2300,14 +2285,14 @@ public class OpenExplorer
 				setViewVisibility(true, false, R.id.content_frag);
 				setViewVisibility(false, false, R.id.content_pager_frame_stub,
 						R.id.content_pager, R.id.content_pager_indicator);
-				changePath(mLastPath, false, true);
+				changePath(getCurrentPath(), false, true);
 			} else {
 				fragmentManager.beginTransaction()
-					.replace(R.id.content_frag, ContentFragment.getInstance(mLastPath, mViewMode))
-					.setBreadCrumbTitle(mLastPath.getAbsolutePath())
+					.replace(R.id.content_frag, ContentFragment.getInstance(getCurrentPath(), mViewMode))
+					.setBreadCrumbTitle(getCurrentPath().getAbsolutePath())
 					//.addToBackStack(null)
 					.commit();
-				updateTitle(mLastPath.getPath());
+				updateTitle(getCurrentPath().getPath());
 			}
 			
 			invalidateOptionsMenu();
@@ -2430,7 +2415,7 @@ public class OpenExplorer
 				String start = data.getStringExtra("start");
 				getPreferences().setSetting("global", "pref_splash", true);
 				getPreferences().setSetting("global", "pref_start", start);
-				if(!start.equals(mLastPath.getPath()))
+				if(!start.equals(getCurrentPath().getPath()))
 				{
 					if("Videos".equals(start))
 						changePath(mVideoParent, true);
@@ -2591,7 +2576,9 @@ public class OpenExplorer
 							if(tmp.getPath().equals(((ContentFragment)mViewPagerAdapter.getItem(common - 1)).getPath()))
 								break;
 					} catch(Exception e) { Logger.LogError("I don't trust this!", e); }
-					mViewPagerAdapter.add(common, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+					try {
+						mViewPagerAdapter.add(common, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+					} catch(Exception e) { Logger.LogError("Downloads?", e); }
 					tmp = tmp.getParent();
 				}
 				Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");

@@ -572,7 +572,12 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
      * @param resId Resource id for the string
      */
     public final String getString(int resId) {
-        return getResources().getString(resId);
+    	try {
+    		return getResources().getString(resId);
+    	} catch(Exception e) {
+    		Logger.LogError("Unable to getString(0x" + Integer.toHexString(resId) + ")");
+    		return "";
+    	}
     }
 
     /**

@@ -44,8 +44,10 @@ import android.widget.TextView;
 import android.net.Uri;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -71,6 +73,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
 
 
 public class EventHandler {
@@ -140,7 +143,7 @@ public class EventHandler {
 		return mThreadListener;
 	}
 
-	public static CharSequence getResourceString(Context mContext, int... resIds)
+	public static String getResourceString(Context mContext, int... resIds)
 	{
 		String ret = "";
 		for(int resId : resIds)
@@ -413,6 +416,8 @@ public class EventHandler {
 		private int taskId = -1;
 		private final Date mStart;
 		private long mLastRate = 0;
+		private long mRemain = 0l;
+		private boolean notifReady = false;
 		private final int[] mLastProgress = new int[3];
 		
 		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
@@ -464,12 +469,19 @@ public class EventHandler {
 		}
 		private String getLastRate()
 		{
-			String sRate = getResourceString(mContext, R.string.s_status_rate).toString();
+			if(mRemain > 0)
+			{
+				Integer min = (int) (mRemain / 60);
+				Integer sec = (int) (mRemain % 60);
+				return getResourceString(mContext, R.string.s_status_remaining) +
+						(min > 15 ? ">15m" : 
+							(min > 0 ? min + ":" : "") +
+							sec + (min > 0 ? "" : "s"));
+			}
 			if(mLastRate > 0)
-				sRate += DialogHandler.formatSize(mLastRate).replace(" ", "").toLowerCase() + "/s";
-			else
-				sRate += "--";
-			return sRate;
+				return getResourceString(mContext, R.string.s_status_rate) + 
+						DialogHandler.formatSize(mLastRate).replace(" ", "").toLowerCase() + "/s";
+			return "";
 		}
 		@Override
 		protected void onCancelled() {
@@ -522,43 +534,56 @@ public class EventHandler {
 				} catch(Exception e) { }
 			if(showNotification)
 			{
-				boolean showProgress = true;
-				try {
-					Intent intent = new Intent(mContext, OperationsActivity.class);
-					intent.putExtra("TaskId", taskId);
-					PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OperationsActivity.REQUEST_VIEW, intent, 0);
-					mNote = new Notification(notifIcon,
-							getTitle(), System.currentTimeMillis());
-					if(showProgress)
-					{
-						PendingIntent pendingCancel = PendingIntent.getActivity(mContext, OperationsActivity.REQUEST_VIEW, intent, 0);
-						RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.notification);
-						if(isCancellable)
-							noteView.setOnClickPendingIntent(android.R.id.button1, pendingCancel);
-						else
-							noteView.setViewVisibility(android.R.id.button1, View.GONE);
-						noteView.setImageViewResource(android.R.id.icon, R.drawable.icon);
-						noteView.setTextViewText(android.R.id.title, getTitle());
-						noteView.setTextViewText(android.R.id.text1, getLastRate());
-						noteView.setTextViewText(android.R.id.text2, getSubtitle());
-						noteView.setProgressBar(android.R.id.progress, 100, 0, true);
-						//noteView.setViewVisibility(R.id.title_search, View.GONE);
-						//noteView.setViewVisibility(R.id.title_path, View.GONE);
-						mNote.contentView = noteView;
-						if(!OpenExplorer.BEFORE_HONEYCOMB)
-							mNote.tickerView = noteView;
-					} else {
-						mNote.tickerText = getTitle();
-					}
-					mNote.contentIntent = pendingIntent;
-					mNote.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
-					//mNote.flags |= Notification.FLAG_ONGOING_EVENT;
-					if(!isCancellable)
-						mNote.flags |= Notification.FLAG_NO_CLEAR;
-					mNotifier.notify(mNotifyId, mNote);
-				} catch(Exception e) {
-					Logger.LogWarning("Couldn't post notification", e);
+				prepareNotification(notifIcon, isCancellable);
+			}
+		}
+		
+		public void showNotification()
+		{
+			if(!notifReady)
+				prepareNotification(R.drawable.ic_menu_copy, true);
+			mNotifier.notify(mNotifyId, mNote);
+		}
+		
+		public void prepareNotification(int notifIcon, boolean isCancellable)
+		{
+			boolean showProgress = true;
+			try {
+				Intent intent = new Intent(mContext, OperationsActivity.class);
+				intent.putExtra("TaskId", taskId);
+				PendingIntent pendingIntent = PendingIntent.getActivity(mContext, OperationsActivity.REQUEST_VIEW, intent, 0);
+				mNote = new Notification(notifIcon,
+						getTitle(), System.currentTimeMillis());
+				if(showProgress)
+				{
+					PendingIntent pendingCancel = PendingIntent.getActivity(mContext, OperationsActivity.REQUEST_VIEW, intent, 0);
+					RemoteViews noteView = new RemoteViews(mContext.getPackageName(), R.layout.notification);
+					if(isCancellable)
+						noteView.setOnClickPendingIntent(android.R.id.button1, pendingCancel);
+					else
+						noteView.setViewVisibility(android.R.id.button1, View.GONE);
+					noteView.setImageViewResource(android.R.id.icon, R.drawable.icon);
+					noteView.setTextViewText(android.R.id.title, getTitle());
+					noteView.setTextViewText(android.R.id.text1, getLastRate());
+					noteView.setTextViewText(android.R.id.text2, getSubtitle());
+					noteView.setProgressBar(android.R.id.progress, 100, 0, true);
+					//noteView.setViewVisibility(R.id.title_search, View.GONE);
+					//noteView.setViewVisibility(R.id.title_path, View.GONE);
+					mNote.contentView = noteView;
+					if(!OpenExplorer.BEFORE_HONEYCOMB)
+						mNote.tickerView = noteView;
+				} else {
+					mNote.tickerText = getTitle();
 				}
+				mNote.contentIntent = pendingIntent;
+				mNote.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
+				//mNote.flags |= Notification.FLAG_ONGOING_EVENT;
+				if(!isCancellable)
+					mNote.flags |= Notification.FLAG_NO_CLEAR;
+				//mNotifier.notify(mNotifyId, mNote);
+				notifReady = true;
+			} catch(Exception e) {
+				Logger.LogWarning("Couldn't post notification", e);
 			}
 		}
 
@@ -665,8 +690,12 @@ public class EventHandler {
 			return ret;
 		}
 		
+		/*
+		 * More efficient Channel based copying 
+		 */
 		private Boolean copyFileToDirectory(final OpenFile source, OpenFile into, final int total)
 		{
+			Logger.LogVerbose("Using Channel copy");
 			if(into.isDirectory() || !into.exists())
 				into = into.getChild(source.getName());
 			final OpenFile dest = (OpenFile)into;
@@ -695,13 +724,15 @@ public class EventHandler {
 		
 		private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total) throws IOException
 		{
-			if(old instanceof OpenFile && intoDir instanceof OpenFile)
+			if(old instanceof OpenFile && !old.isDirectory() && intoDir instanceof OpenFile)
 				return copyFileToDirectory((OpenFile)old, (OpenFile)intoDir, total);
 			else if(old instanceof OpenSMB && intoDir instanceof OpenSMB)
 			{
+				Logger.LogVerbose("Using OpenSMB Channel copy");
 				if(((OpenSMB)old).copyTo((OpenSMB)intoDir))
 					return true;
 			}
+			Logger.LogVerbose("Using Stream copy");
 			if(intoDir instanceof OpenCursor)
 			{
 				try {
@@ -864,10 +895,10 @@ public class EventHandler {
 			if(values.length > 1)
 				size = total = values[1];
 			if(values.length > 2)
-				total = values[2];
+				total = Math.max(total, values[2]);
 			
-			if(mThreadListener != null)
-				mThreadListener.onWorkerProgressUpdate(current, size);
+			//if(mThreadListener != null)
+			//	mThreadListener.onWorkerProgressUpdate(current, size);
 			
 			mLastProgress[0] = current;
 			mLastProgress[1] = size;
@@ -878,10 +909,13 @@ public class EventHandler {
 			
 			long running = new Date().getTime() - mStart.getTime();
 			if(running / 1000 > 0)
+			{
 				mLastRate = ((long)current) / (running / 1000);
+				mRemain = Utils.getAverage(mRemain, (long)(size - current) / mLastRate);
+			}
 			
-			Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-("
-					+ progA + "," + progB + ")-" + getLastRate());
+			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-("
+			//		+ progA + "," + progB + ")-> " + mRemain + "::" + mLastRate);
 			
 			//mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
 			
@@ -892,7 +926,9 @@ public class EventHandler {
 					mPDialog.setIndeterminate(false);
 					mPDialog.setMax(1000);
 					mPDialog.setProgress(progA);
-					mPDialog.setSecondaryProgress(progB);
+					if(progB != progA)
+						mPDialog.setSecondaryProgress(progB);
+					else mPDialog.setSecondaryProgress(0);
 				}
 			} catch(Exception e) { }
 			

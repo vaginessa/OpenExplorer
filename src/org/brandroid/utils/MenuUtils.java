@@ -1,5 +1,7 @@
 package org.brandroid.utils;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
+
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -56,6 +58,7 @@ public class MenuUtils {
 	}
 	public static void setMenuShowAsAction(Menu menu, int show, int... ids)
 	{
+		if(OpenExplorer.BEFORE_HONEYCOMB) return;
 		for(int id : ids)
 			if(menu.findItem(id) != null)
 				menu.findItem(id).setShowAsAction(show);
