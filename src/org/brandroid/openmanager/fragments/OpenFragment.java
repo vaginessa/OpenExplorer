@@ -20,6 +20,8 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.views.IconAnimationPanel;
+import org.brandroid.utils.BitmapUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
@@ -33,6 +35,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -44,6 +50,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
@@ -78,6 +87,20 @@ public abstract class OpenFragment
 					getClipboard().stopMultiselect();
 				((BaseAdapter)list.getAdapter()).notifyDataSetChanged();
 			} else {
+				//Animation anim = Animation.
+				/*
+				Drawable dIcon = ((ImageView)view.findViewById(R.id.content_icon)).getDrawable();
+				if(dIcon instanceof BitmapDrawable)
+				{
+					IconAnimationPanel panel = new IconAnimationPanel(getExplorer())
+						.setIcon(((BitmapDrawable)dIcon).getBitmap())
+						.setStart(new Point(view.getLeft(), view.getRight()))
+						.setEnd(new Point(getActivity().getWindow().getWindowManager().getDefaultDisplay().getWidth() / 2, getActivity().getWindowManager().getDefaultDisplay().getHeight()))
+						.setDuration(500);
+					((ViewGroup)getView()).addView(panel);
+				}
+				*/
+				
 				addToMultiSelect(file);
 				((TextView)view.findViewById(R.id.content_text)).setTextAppearance(list.getContext(), R.style.Highlight);
 			}
@@ -298,6 +321,7 @@ public abstract class OpenFragment
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
+		Logger.LogDebug("OpenFragment.onCreateContextMenu");
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = null;
@@ -396,8 +420,8 @@ public abstract class OpenFragment
 				return true;
 				
 			case R.id.menu_context_delete:
-				fileList.add(file);
-				getHandler().deleteFile(fileList, getActivity(), true);
+				//fileList.add(file);
+				getHandler().deleteFile(file, getActivity(), true);
 				finishMode(mode);
 				mContentAdapter.notifyDataSetChanged();
 				return true;

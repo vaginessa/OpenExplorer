@@ -218,6 +218,10 @@ public class ThumbnailCreator extends Thread {
 		return b;
 	}
 
+	public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c)
+	{
+		return c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+	}
 	public static int getDefaultResourceId(OpenPath file, int mWidth, int mHeight)
 	{
 		final String mName = file.getName();
