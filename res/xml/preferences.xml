@@ -52,6 +52,11 @@
 		    android:defaultValue="true"
 		    android:enabled="@bool/prehoneycomb"
 		    />
+		<CheckBoxPreference
+		    android:key="pref_logview"
+		    android:title="@string/s_pref_logview"
+		    android:defaultValue="true" 
+		    />
 		<Preference
 		    android:key="pref_translate"
 		    android:title="@string/button_translate"

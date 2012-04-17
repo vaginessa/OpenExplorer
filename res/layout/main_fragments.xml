@@ -48,7 +48,7 @@
 	    android:layout_height="match_parent"
 	    android:layout_above="@id/base_bar"
 	    android:layout_alignParentLeft="true"
-	    android:layout_alignParentRight="true"
+	    android:layout_toLeftOf="@+id/frag_log"
 	    android:baselineAligned="false">
 	    
 	    
@@ -79,6 +79,16 @@
 	
 	
 	</LinearLayout>
+		
+		    <FrameLayout
+				android:id="@+id/frag_log"
+		        android:layout_width="@dimen/bookmarks_width"
+		        android:layout_height="match_parent"
+		        android:layout_alignParentRight="true"
+		        android:layout_alignWithParentIfMissing="true"
+		        >
+		    	<include layout="@layout/log_viewer" />
+		    </FrameLayout>
 	
 	<ViewStub
 	    android:id="@+id/base_stub"

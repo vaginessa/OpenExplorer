@@ -246,4 +246,5 @@
     <string name="alert_translate_none">Hello, it appears that you are using a non-supported language. Do you know English and %s? If you would you like to assist in providing a correct translation, click here:</string>
     <string name="button_translate">Translate</string>
     <string name="s_status_remaining">Remaining:</string>
+    <string name="s_pref_logview">Network Log</string>
 </resources>

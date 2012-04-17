@@ -95,6 +95,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.PopupWindow.OnDismissListener;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -212,6 +213,7 @@ public class OpenExplorer
 	
 	private static Fragment mContentFragment = null;
 	private OpenViewPager mViewPager;
+	private TextView mTextLog;
 	private static ArrayPagerAdapter mViewPagerAdapter;
 	private static final boolean mViewPagerEnabled = true; 
 	private ExpandableListView mBookmarksList;
@@ -333,6 +335,15 @@ public class OpenExplorer
 		
 		mClipboard = new OpenClipboard(this);
 		mClipboard.setClipboardUpdateListener(this);
+		
+		if(getPreferences().getSetting(null, "pref_logview", true))
+		{
+			mTextLog = (TextView)findViewById(R.id.log_text);
+			if(mTextLog != null)
+				((ImageButton)findViewById(R.id.log_close)).setOnClickListener(this);
+		}
+		else if(findViewById(R.id.frag_log) != null)
+			findViewById(R.id.frag_log).setVisibility(View.GONE);
 		
 		try {
 			/*
@@ -917,33 +928,52 @@ public class OpenExplorer
 		}
 	}
 	*/
+	
+	private void sendToLogView(final String txt, final int color)
+	{
+		Logger.LogVerbose(txt);
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				if(mTextLog != null)
+				{
+					if(color != 0)
+					{
+						SpannableString line = new SpannableString(txt + "\n");
+						line.setSpan(new ForegroundColorSpan(color), 0, line.length(), Spanned.SPAN_COMPOSING);
+						mTextLog.append(line);
+					} else mTextLog.append(txt + "\n");
+				}
+			}});
+	}
 	private void setupLoggingDb()
 	{
 		FTP.setCommunicationListener(new OnFTPCommunicationListener() {
 			
 			@Override
 			public void onDisconnect(FTP file) {
-				Logger.LogVerbose("FTP Disconnect " + getFTPString(file));
+				sendToLogView("FTP Disconnect " + getFTPString(file), Color.GRAY);
 			}
 			
 			@Override
 			public void onConnectFailure(FTP file) {
-				Logger.LogVerbose("FTP Connect Failure " + getFTPString(file));
+				sendToLogView("FTP Failure " + getFTPString(file), Color.RED);
 			}
 			
 			@Override
 			public void onConnect(FTP file) {
-				Logger.LogVerbose("FTP Connect " + getFTPString(file));
+				sendToLogView("FTP Connect " + getFTPString(file), Color.GREEN);
 			}
 			
 			@Override
 			public void onBeforeConnect(FTP file) {
-				Logger.LogVerbose("FTP Before Connect " + getFTPString(file));
+				//sendToLogView("FTP Before Connect " + getFTPString(file));
 			}
 
 			@Override
 			public void onSendCommand(FTP file, String message) {
-				Logger.LogVerbose("FTP Command: " + message.replace("\n", "") + getFTPString(file));
+				sendToLogView("FTP: " + message.replace("\n", "") + getFTPString(file), 0);
 			}
 			
 			private String getFTPString(FTP file)
@@ -955,7 +985,7 @@ public class OpenExplorer
 
 			@Override
 			public void onReply(String line) {
-				Logger.LogVerbose("FTP Reply: " + line);
+				sendToLogView("FTP Reply: " + line, Color.BLUE);
 			}
 		});
 		JSch.setLogger(new com.jcraft.jsch.Logger() {
@@ -964,22 +994,22 @@ public class OpenExplorer
 				switch(level)
 				{
 					case com.jcraft.jsch.Logger.DEBUG:
-						Logger.LogDebug("JSCH - " + message);
+						sendToLogView("JSCH - " + message, Color.BLUE);
 						break;
 					case com.jcraft.jsch.Logger.INFO:
-						Logger.LogInfo("JSCH - " + message);
+						sendToLogView("JSCH - " + message, Color.GREEN);
 						break;
 					case com.jcraft.jsch.Logger.WARN:
-						Logger.LogWarning("JSCH - " + message);
+						sendToLogView("JSCH - " + message, Color.YELLOW);
 						break;
 					case com.jcraft.jsch.Logger.ERROR:
-						Logger.LogError("JSCH - " + message);
+						sendToLogView("JSCH - " + message, Color.RED);
 						break;
 					case com.jcraft.jsch.Logger.FATAL:
-						Logger.LogError("JSCH (FATAL) - " + message);
+						sendToLogView("JSCH (FATAL) - " + message, Color.RED);
 						break;
 					default:
-						Logger.LogDebug("JSCH (" + level + ") - " + message);
+						sendToLogView("JSCH (" + level + ") - " + message, 0);
 						break;
 				}		
 			}
@@ -1002,23 +1032,23 @@ public class OpenExplorer
 
 			@Override
 			public void onBeforeConnect(SmbFile file) {
-				Logger.LogVerbose("SMB Connecting: " + file.getPath());
+				sendToLogView("SMB Connecting: " + file.getPath(), Color.GREEN);
 			}
 
 			@Override
 			public void onConnect(SmbFile file) {
 
-				Logger.LogVerbose("SMB Connected: " + file.getPath());
+				sendToLogView("SMB Connected: " + file.getPath(), Color.GREEN);
 			}
 
 			@Override
 			public void onConnectFailure(SmbFile file) {
-				Logger.LogVerbose("SMB Connect Failure: " + file.getPath());
+				sendToLogView("SMB Connect Failure: " + file.getPath(), Color.RED);
 			}
 
 			@Override
 			public void onDisconnect(SmbFile file) {
-				Logger.LogVerbose("SMB Disconnect: " + file.getPath());
+				sendToLogView("SMB Disconnect: " + file.getPath(), Color.DKGRAY);
 			}
 
 			@Override
@@ -1026,7 +1056,7 @@ public class OpenExplorer
 				String s = "SMB Command: " + file.getPath();
 				for(Object o : commands)
 					s += " -> " + o.toString();
-				Logger.LogVerbose(s);
+				sendToLogView(s, Color.BLUE);
 			}
 			
 		});
@@ -1702,6 +1732,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
+		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_logview", true), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
@@ -1812,6 +1843,10 @@ public class OpenExplorer
 
 				return true;
 				
+			case R.id.log_close:
+				getPreferences().setSetting(null, "pref_logview", false);
+				findViewById(R.id.frag_log).setVisibility(View.GONE);
+				break;
 			
 			case R.id.menu_new_folder:
 				mEvHandler.createNewFolder(getDirContentFragment(false).getPath().getPath(), this);
@@ -1901,6 +1936,16 @@ public class OpenExplorer
 			case R.id.menu_view_split:
 				setSetting(null, "pref_basebar", !getSetting(null, "pref_basebar", true));
 				goHome();
+				return true;
+				
+			case R.id.menu_view_logview:
+				setSetting(null, "pref_logview", !getSetting(null, "pref_logview", true));
+				if(findViewById(R.id.frag_log) == null)
+					showToast("Couldn't find LogView :(");
+				else {
+					findViewById(R.id.frag_log).setVisibility(getSetting(null, "pref_logview", true) ? View.VISIBLE : View.GONE);
+					mTextLog = (TextView)findViewById(R.id.log_text);
+				}
 				return true;
 					
 			case R.id.menu_root:
