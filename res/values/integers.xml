@@ -19,4 +19,7 @@
     <item type="integer" name="content_list_image_size">36</item>
     <item type="integer" name="max_text_editor_size">500000</item>
     <item type="integer" name="max_base_buttons">4</item>
+    
+    <item type="integer" name="config_shortAnimTime">150</item>
+    <item type="integer" name="config_mediumAnimTime">@android:integer/config_mediumAnimTime</item>
 </resources>

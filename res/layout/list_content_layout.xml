@@ -61,4 +61,12 @@
 		android:ellipsize="marquee"
 		android:typeface="monospace"
 		style="@style/Small" />
+	<ImageView
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" 
+	    android:layout_alignParentRight="true"
+	    android:visibility="gone"
+	    android:id="@+id/content_check"
+	    android:src="@android:drawable/checkbox_on_background"
+	    />
 </RelativeLayout>

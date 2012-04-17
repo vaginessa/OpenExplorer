@@ -226,6 +226,9 @@ public class Logger
 		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
 		Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
 	}
+	/*
+	 * Used for usage tracking
+	 */
 	public static void LogInfo(String msg)
 	{
 		if(CheckLastLog(msg, Log.INFO)) return;

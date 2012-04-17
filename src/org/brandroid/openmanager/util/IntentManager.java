@@ -113,7 +113,7 @@ public class IntentManager
 								{
 									for(ActivityInfo info : packInfo.activities)
 									{
-										Logger.LogInfo("Activity Info: " + info.toString());
+										Logger.LogDebug("Activity Info: " + info.toString());
 									}
 									Logger.LogDebug("Intent chosen: " + item.activityInfo.toString());
 								}

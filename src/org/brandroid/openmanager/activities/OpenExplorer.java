@@ -74,6 +74,8 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -375,8 +377,11 @@ public class OpenExplorer
 		
 		if(!BEFORE_HONEYCOMB)
 		{
+			if(Build.VERSION.SDK_INT < 15)
+			{
 			getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
 			setViewVisibility(false, false, R.id.title_underline);
+			}
 			//if(USE_ACTION_BAR)
 			//	setViewVisibility(false, false, R.id.title_bar, R.id.title_underline, R.id.title_underline_2);
 		} else {
@@ -1608,7 +1613,7 @@ public class OpenExplorer
 			{
 				if(mToolbarButtons.getChildCount() * btnWidth >= tblWidth)
 				{
-					Logger.LogInfo("Base bar full after #" + i + " (" + (mToolbarButtons.getChildCount() * btnWidth) + ">" + tblWidth + ")!");
+					Logger.LogDebug("Base bar full after #" + i + " (" + (mToolbarButtons.getChildCount() * btnWidth) + ">" + tblWidth + ")!");
 					break;
 				} else if(!checkArray(menu.getItem(i).getItemId(), mMenuOptionsToHide) &&
 						menu.getItem(i) instanceof MenuItemImpl)
@@ -1679,9 +1684,8 @@ public class OpenExplorer
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
 		Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
-		return true;
+		return super.onCreateOptionsMenu(menu);
 	}
 
 	@Override
@@ -1709,6 +1713,29 @@ public class OpenExplorer
 		Fragment f = getSelectedFragment();
 		if(f != null && !f.isDetached())
 			f.onPrepareOptionsMenu(menu);
+		
+		if(menu != null && menu.findItem(R.id.menu_paste) != null && getClipboard() != null && getClipboard().size() > 0)
+		{
+			SubMenu sub = menu.findItem(R.id.menu_paste).getSubMenu();
+			if(sub != null)
+			{
+				int i = 0;
+				for(final OpenPath item : getClipboard().getAll())
+				{
+					sub.add(Menu.CATEGORY_CONTAINER, i++, i, item.getName())
+						.setCheckable(true)
+						.setChecked(true)
+						.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+							@Override
+							public boolean onMenuItemClick(MenuItem menuitem) {
+								getClipboard().remove(item);
+								return true;
+							}
+						})
+						.setIcon(ThumbnailCreator.getDefaultResourceId(item, 32, 32));
+				}
+			}
+		}
 		
 		if(BEFORE_HONEYCOMB)
 		{
@@ -1965,7 +1992,7 @@ public class OpenExplorer
 			case R.id.title_paste_icon:
 			case R.id.title_paste_text:
 			case R.id.menu_paste:
-				if(BEFORE_HONEYCOMB)
+				//if(BEFORE_HONEYCOMB)
 					showClipboardDropdown(id);
 				return true;
 				
@@ -2025,13 +2052,19 @@ public class OpenExplorer
 		final ListView items = (ListView)root.findViewById(R.id.multiselect_item_list);
 		items.setAdapter(mClipboard);
 		items.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
+			public void onItemClick(AdapterView<?> list, View view, final int pos, long id) {
 				//OpenPath file = mClipboard.get(pos);
 				//if(file.getParent().equals(mLastPath))
+				Animation anim = AnimationUtils.loadAnimation(OpenExplorer.this,
+						R.anim.slide_out_left);
+				//anim.setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
+				list.getChildAt(pos).startAnimation(anim);
+				new Handler().postDelayed(new Runnable(){public void run() {
 					mClipboard.remove(pos);
 					items.invalidate();
 					if(mClipboard.getCount() == 0)
 						clipdrop.dismiss();
+				}}, anim.getDuration());
 				//else
 					//getEventHandler().copyFile(file, mLastPath, OpenExplorer.this);
 			}
@@ -2196,7 +2229,7 @@ public class OpenExplorer
 			if(from != null)
 				return showContextMenu(menuId, null);
 		}
-		Logger.LogInfo("Not sure what happend with " + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
+		Logger.LogWarning("Not sure what happend with " + menuId + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 		return null;
 	}
 	public IconContextMenu showContextMenu(MenuBuilder menu, final View from)
@@ -3045,6 +3078,8 @@ public class OpenExplorer
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle arg1) {
 		CursorLoader loader = null;
+		int flag = (int) Math.pow(2, id + 1);
+		if((OpenCursor.LoadedCursors & flag) == flag) return null;
 		switch(id)
 		{
 			case 0: // videos
@@ -3130,6 +3165,14 @@ public class OpenExplorer
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> l, Cursor c) {
+		if(c == null) return;
+		int flag = (int)Math.pow(2, l.getId() + 1);
+		if((OpenCursor.LoadedCursors & flag) == flag) {
+			c.close();
+			return;
+		}
+		OpenCursor.LoadedCursors |= flag;
+		Logger.LogVerbose("LoadedCursors: " + OpenCursor.LoadedCursors);
 		OpenCursor mParent = mVideoParent;
 		if(l.getId() == 1)
 			mParent = mPhotoParent;

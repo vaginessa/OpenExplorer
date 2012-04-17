@@ -19,6 +19,7 @@
 package org.brandroid.openmanager.util;
 
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.AsyncTask.Status;
 import android.provider.MediaStore.Audio;
 import android.provider.MediaStore.Images;
@@ -72,6 +73,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
@@ -151,6 +153,12 @@ public class EventHandler {
 		return ret;
 	}
 
+	public void deleteFile(final OpenPath file, final Context mContext, boolean showConfirmation)
+	{
+		List<OpenPath> files = new ArrayList<OpenPath>();
+		files.add(file);
+		deleteFile(files, mContext, showConfirmation);
+	}
 	public void deleteFile(final List<OpenPath> path, final Context mContext, boolean showConfirmation) {
 		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
@@ -403,7 +411,7 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> {
+	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> implements OnProgressUpdateCallback {
 		private final int mType;
 		private final Context mContext;
 		private final String[] mInitParams;
@@ -476,6 +484,7 @@ public class EventHandler {
 				return getResourceString(mContext, R.string.s_status_remaining) +
 						(min > 15 ? ">15m" : 
 							(min > 0 ? min + ":" : "") +
+							(min > 0 && sec < 10 ? "0" : "") +
 							sec + (min > 0 ? "" : "s"));
 			}
 			if(mLastRate > 0)
@@ -518,6 +527,7 @@ public class EventHandler {
 					showNotification = true;
 					break;
 				case ZIP_TYPE:
+					showDialog = false;
 					showNotification = true;
 					break;
 			}
@@ -683,6 +693,8 @@ public class EventHandler {
 					break;
 	
 				case ZIP_TYPE:
+					mFileMang.setProgressListener(this);
+					publishProgress();
 					mFileMang.createZipFile(mIntoPath, params);
 					break;
 			}
@@ -710,7 +722,7 @@ public class EventHandler {
 							long pos = dest.length();
 							publish((int)pos, (int)size, (int)total);
 							try {
-								Thread.sleep(100);
+								Thread.sleep(500);
 							} catch (InterruptedException e) {
 								running[0] = false;
 							}
@@ -725,8 +737,9 @@ public class EventHandler {
 		private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total) throws IOException
 		{
 			if(old instanceof OpenFile && !old.isDirectory() && intoDir instanceof OpenFile)
-				return copyFileToDirectory((OpenFile)old, (OpenFile)intoDir, total);
-			else if(old instanceof OpenSMB && intoDir instanceof OpenSMB)
+				if(copyFileToDirectory((OpenFile)old, (OpenFile)intoDir, total))
+					return true;
+			if(old instanceof OpenSMB && intoDir instanceof OpenSMB)
 			{
 				Logger.LogVerbose("Using OpenSMB Channel copy");
 				if(((OpenSMB)old).copyTo((OpenSMB)intoDir))
@@ -813,7 +826,7 @@ public class EventHandler {
 					{
 						o_stream.write(data, 0, read);
 						pos += FileManager.BUFFER;
-						publishProgress(pos, size);
+						publishMyProgress(pos, size);
 					}
 					
 					o_stream.flush();
@@ -885,6 +898,14 @@ public class EventHandler {
 			publishProgress(current, size, total);
 		}
 		
+		private long lastPublish = 0l;
+		public void publishMyProgress(Integer... values)
+		{
+			if(new Date().getTime() - lastPublish < 500) return;
+			lastPublish = new Date().getTime();
+			publishProgress(values);
+		}
+		
 		@Override
 		protected void onProgressUpdate(Integer... values) {
 			int current = 0,
@@ -911,7 +932,8 @@ public class EventHandler {
 			if(running / 1000 > 0)
 			{
 				mLastRate = ((long)current) / (running / 1000);
-				mRemain = Utils.getAverage(mRemain, (long)(size - current) / mLastRate);
+				if(mLastRate > 0)
+					mRemain = Utils.getAverage(mRemain, (long)(size - current) / mLastRate);
 			}
 			
 			//Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total + ")-("
@@ -950,14 +972,19 @@ public class EventHandler {
 				noteView.setTextViewText(android.R.id.text1, getLastRate());
 				if(values.length == 0 && isDownload)
 					noteView.setImageViewResource(android.R.id.icon, android.R.drawable.stat_sys_download);
-				else
-					noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
+				else noteView.setImageViewResource(android.R.id.icon, android.R.drawable.stat_notify_sync);
+				noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
 				mNotifier.notify(mNotifyId, mNote);
 				//noteView.notify();
 				//noteView.
 			} catch(Exception e) {
 				Logger.LogWarning("Couldn't update notification progress.", e);
 			}
+		}
+
+		@Override
+		public void onProgressUpdateCallback(Integer... vals) {
+			publishMyProgress(vals);
 		}
 
 		protected void onPostExecute(Integer result) {

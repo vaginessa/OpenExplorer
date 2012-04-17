@@ -16,6 +16,7 @@ import org.brandroid.openmanager.views.RemoteImageView;
 import android.text.ClipboardManager;
 import android.content.ClipData;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -90,16 +91,16 @@ public class OpenClipboard
 				}
 				return;
 			}
+		} else {
+			@SuppressWarnings("deprecation")
+			CharSequence clipText = sysboard.getText();
+			if(clipText != null)
+			{
+				for(String s : clipText.toString().split("\n"))
+					if(s != null && new File(s).exists())
+						add(new OpenFile(s));
+			}
 		}
-		/*
-		CharSequence clipText = sysboard.getText();
-		if(clipText != null)
-		{
-			for(String s : clipText.toString().split("\n"))
-				if(s != null && new File(s).exists())
-					add(new OpenFile(s));
-		}
-		*/
 	}
 	
 	public void startMultiselect() {
@@ -140,7 +141,7 @@ public class OpenClipboard
 		if(ret == null)
 		{
 			ret = ((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-					.inflate(R.layout.list_content_layout, null); 
+					.inflate(R.layout.list_content_layout, parent, false); 
 		}
 		int w = mContext.getResources().getDimensionPixelSize(R.dimen.list_icon_size);
 		//ret.setLayoutParams(new Gallery.LayoutParams(w, w));
@@ -148,13 +149,29 @@ public class OpenClipboard
 		
 		final OpenPath file = (OpenPath)getItem(position);
 		
-		RemoteImageView image = (RemoteImageView)ret.findViewById(R.id.content_icon);
 		TextView text = (TextView)ret.findViewById(R.id.content_text);
-		TextView pathView = (TextView)ret.findViewById(R.id.content_fullpath);
-		
-		text.setText(file.getName());
-		pathView.setText(file.getPath());
-		ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w * (3f/4f)), (int)(w * (3f/4f)));
+		if(text != null)
+		{
+			RemoteImageView image = (RemoteImageView)ret.findViewById(R.id.content_icon);
+			TextView pathView = (TextView)ret.findViewById(R.id.content_fullpath);
+			TextView info = (TextView)ret.findViewById(R.id.content_info);
+			ImageView check = (ImageView)ret.findViewById(R.id.content_check);
+			check.setVisibility(View.VISIBLE);
+			
+			info.setVisibility(View.GONE);
+			text.setText(file.getName());
+			pathView.setText(file.getPath());
+			ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w * (3f/4f)), (int)(w * (3f/4f)));
+			
+		} else if(ret instanceof TextView) {
+			text = (TextView)ret;
+			text.setText(file.getName());
+			text.setCompoundDrawables(
+				ThumbnailCreator.getDefaultDrawable(file, 32, 32, parent.getContext()),
+				(Drawable)null,
+				parent.getContext().getResources().getDrawable(android.R.drawable.checkbox_on_background),
+				(Drawable)null);
+		}
 
 		return ret;
 	}

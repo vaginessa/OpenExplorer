@@ -55,6 +55,7 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenStack;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.ftp.FTPFileComparer;
+import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
@@ -91,6 +92,7 @@ public class FileManager {
 	private OpenStack mPathStack;
 	private static Hashtable<String, OpenPath> mOpenCache = new Hashtable<String, OpenPath>();
 	public static UserInfo DefaultUserInfo;
+	private OnProgressUpdateCallback mCallback = null;
 	
 	public static enum SortType {
 		NONE,
@@ -101,6 +103,18 @@ public class FileManager {
 		DATE,
 		DATE_DESC,
 		ALPHA_DESC
+	}
+	
+	public interface OnProgressUpdateCallback
+	{
+		public void onProgressUpdateCallback(Integer... vals);
+	}
+	
+	public void setProgressListener(OnProgressUpdateCallback listener) { mCallback = listener; }
+	public void updateProgress(Integer... vals)
+	{
+		if(mCallback != null)
+			mCallback.onProgressUpdateCallback(vals);
 	}
 	
 	/**
@@ -255,10 +269,14 @@ public class FileManager {
 									  new BufferedOutputStream(
 									  new FileOutputStream(((OpenFile)zip).getFile()), BUFFER));
 			
+			int total = 0;
+			for(OpenPath file : files)
+				total += file.length();
+			Logger.LogDebug("Zipping " + total + " bytes!");
 			for(OpenPath file : files)
 			{
 				try {
-					zipIt(file, zout);
+					zipIt(file, zout, total);
 				} catch(IOException e) {
 					Logger.LogError("Error zipping file.", e);
 				}
@@ -281,18 +299,26 @@ public class FileManager {
 				}
 		}
 	}
-	private void zipIt(OpenPath file, ZipOutputStream zout) throws IOException
+	private void zipIt(OpenPath file, ZipOutputStream zout, int totalSize) throws IOException
 	{
 		byte[] data = new byte[BUFFER];
 		int read;
+		
+		
 		
 		if(file.isFile()){
 			ZipEntry entry = new ZipEntry(file.getName());
 			zout.putNextEntry(entry);
 			BufferedInputStream instream = new BufferedInputStream(file.getInputStream());
-			Log.e("File Manager", "zip_folder file name = " + entry.getName());
+			Logger.LogVerbose("zip_folder file name = " + entry.getName());
+			int size = (int)file.length();
+			int pos = 0;
 			while((read = instream.read(data, 0, BUFFER)) != -1)
+			{
+				pos += read;
 				zout.write(data, 0, read);
+				updateProgress(pos, size, totalSize);
+			}
 			
 			zout.closeEntry();
 			instream.close();
@@ -300,7 +326,9 @@ public class FileManager {
 		} else if (file.isDirectory()) {
 			Log.e("File Manager", "zip_folder dir name = " + file.getPath());
 			for(OpenPath kid : file.list())
-				zipIt(kid, zout);
+				totalSize += kid.length();
+			for(OpenPath kid : file.list())
+				zipIt(kid, zout, totalSize);
 		}
 	}
 	

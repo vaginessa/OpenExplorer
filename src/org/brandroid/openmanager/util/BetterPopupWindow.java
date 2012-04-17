@@ -276,7 +276,7 @@ public class BetterPopupWindow {
 	
 			int popWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
 			int popLeft = ancLeft;
-
+			
 			if(fromRight)
 			{
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
@@ -292,7 +292,7 @@ public class BetterPopupWindow {
 			{
 				popup.setHeight(bgHeight);
 			}
-			if((ancLeft == 0 && ancTop > 0) ||
+			if((ancLeft == 0 && ancTop > 0 && ancTop < getWindowHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height)) ||
 				(getWindowHeight() / dp < 600 &&
 					spaceHorizontal > spaceVertical * 1.2f &&
 					spaceVertical < bgHeight * 2)) // Go Horizontal
@@ -332,7 +332,7 @@ public class BetterPopupWindow {
 				int newHeight = getWindowHeight() - (ancTop + anchor.getHeight());
 				newHeight = Math.max(newHeight, popup.getMaxAvailableHeight(anchor));
 				newHeight -= forcePadding;
-				Logger.LogInfo("Need to increase height (" + newHeight + ")");
+				Logger.LogDebug("Need to increase height (" + newHeight + ")");
 				if(newHeight > bgHeight)
 				{
 					popup.setHeight(newHeight);
@@ -343,7 +343,7 @@ public class BetterPopupWindow {
 				}
 			}
 
-			Logger.LogVerbose("Widths: " +
+			Logger.LogInfo("Widths: " +
 						"space(x,y)=" + spaceHorizontal + "," + spaceVertical + "/" +
 						"anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/" +
 						"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
