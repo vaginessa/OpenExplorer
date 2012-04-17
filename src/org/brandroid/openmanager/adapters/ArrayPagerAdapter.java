@@ -111,8 +111,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	public boolean checkForContentFragmentWithPath(OpenPath path) {
+		if(mExtraFrags == null) return false;
 		for (Fragment f : mExtraFrags)
 			if (f instanceof OpenPathFragmentInterface
+					&& ((OpenPathFragmentInterface) f).getPath() != null
 					&& ((OpenPathFragmentInterface) f).getPath().equals(path))
 				return true;
 		return false;

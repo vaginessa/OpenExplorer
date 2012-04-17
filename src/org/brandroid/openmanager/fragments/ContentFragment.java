@@ -507,7 +507,7 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		//Logger.LogDebug("ContentFragment.onPrepareOptionsMenu start");
+		Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
 		
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)

@@ -23,6 +23,7 @@ public class OpenCursor extends OpenPath
 	private boolean loaded = false;
 	private TextView mBookmarkText = null;
 	private Long mModified = Long.MIN_VALUE;
+	public static int LoadedCursors = 0;
 	
 	public OpenCursor(String name)
 	{
