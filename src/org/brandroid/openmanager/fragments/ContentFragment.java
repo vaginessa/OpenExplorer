@@ -113,7 +113,7 @@ public class ContentFragment extends OpenFragment
 	//private SlidingDrawer mMultiSelectDrawer;
 	//private GridView mMultiSelectView;
 	private GridView mGrid = null;
-	private View mProgressBarLoading = null;
+	//private View mProgressBarLoading = null;
 	
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
@@ -407,8 +407,8 @@ public class ContentFragment extends OpenFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
-		if(mProgressBarLoading == null)
-			mProgressBarLoading = v.findViewById(R.id.content_progress);
+		//if(mProgressBarLoading == null)
+		//	mProgressBarLoading = v.findViewById(R.id.content_progress);
 		setProgressVisibility(false);
 		super.onCreateView(inflater, container, savedInstanceState);
 		//v.setBackgroundResource(R.color.lightgray);
@@ -614,8 +614,7 @@ public class ContentFragment extends OpenFragment
 		//if(mGrid == null)
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		
-		if(mProgressBarLoading == null)
-			mProgressBarLoading = v.findViewById(R.id.content_progress);
+		//if(mProgressBarLoading == null) mProgressBarLoading = v.findViewById(R.id.content_progress);
 		setProgressVisibility(false);
 
 		if(mGrid == null)
@@ -893,8 +892,7 @@ public class ContentFragment extends OpenFragment
 					Logger.LogWarning("Couldn't update data after thread completion", e);
 				}
 			else {
-				if(mProgressBarLoading == null)
-					mProgressBarLoading = getView().findViewById(R.id.content_progress);
+				//if(mProgressBarLoading == null) mProgressBarLoading = getView().findViewById(R.id.content_progress);
 				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
 			}
 			
@@ -1214,10 +1212,8 @@ public class ContentFragment extends OpenFragment
 	
 	private void setProgressVisibility(boolean visible)
 	{
-		if(mProgressBarLoading == null && mGrid != null && mGrid.getParent() != null)
-			mProgressBarLoading = ((View)mGrid.getParent()).findViewById(R.id.content_progress);
-		if(mProgressBarLoading != null && mData.length == 0)
-			mProgressBarLoading.setVisibility(visible ? View.VISIBLE : View.GONE);
+		//if(mProgressBarLoading == null && mGrid != null && mGrid.getParent() != null) mProgressBarLoading = ((View)mGrid.getParent()).findViewById(R.id.content_progress);
+		//if(mProgressBarLoading != null && mData.length == 0) mProgressBarLoading.setVisibility(visible ? View.VISIBLE : View.GONE);
 		if(getExplorer() != null)
 			getExplorer().setProgressVisibility(visible);
 	}

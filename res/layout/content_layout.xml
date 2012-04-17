@@ -21,29 +21,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <LinearLayout
-        android:id="@+id/content_progress"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:visibility="gone" >
-
-        <ProgressBar
-            style="@android:style/Widget.ProgressBar.Small"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:indeterminate="true" />
-
-        <TextView
-            android:id="@+id/textView1"
-            style="@style/Mid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="4dp"
-            android:text="@string/s_status_loading" />
-    </LinearLayout>
-
 	<GridView
 	    android:id="@+id/content_grid"
 	    android:layout_width="match_parent"
