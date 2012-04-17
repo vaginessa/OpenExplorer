@@ -126,6 +126,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 		android:layout_toRightOf="@+id/title_buttons"
+		android:layout_toLeftOf="@+id/frag_log"
 		android:layout_below="@+id/title_bar"
         android:baselineAligned="false"
         android:orientation="horizontal" >
@@ -148,5 +149,14 @@
             android:layout_height="match_parent"
             android:layout="@layout/viewpager" />
     </LinearLayout>
+		
+		    <FrameLayout
+				android:id="@+id/frag_log"
+				android:layout_alignParentRight="true"
+		        android:layout_width="@dimen/bookmarks_width"
+		        android:layout_height="match_parent"
+		        android:layout_below="@+id/title_bar"
+		        >
+		    </FrameLayout>
 
 </RelativeLayout>

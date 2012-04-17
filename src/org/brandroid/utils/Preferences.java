@@ -35,7 +35,7 @@ public class Preferences {
 	}
 	public static synchronized SharedPreferences getPreferences(Context context, String file)
 	{
-		if(mStorageHash.containsKey(file))
+		if(mStorageHash != null && file != null && mStorageHash.containsKey(file))
 			return mStorageHash.get(file);
 		if(preferences == null)
 			preferences = new Preferences(context);
@@ -195,6 +195,7 @@ public class Preferences {
 	public void setSetting(String file, String key, Boolean value)
 	{
 		try {
+			if(file == null) file = "global";
 			getPreferences(file)
 				.edit()
 				.putBoolean(key, value)

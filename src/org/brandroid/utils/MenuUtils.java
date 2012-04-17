@@ -2,8 +2,12 @@ package org.brandroid.utils;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 
+import android.app.Activity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 public class MenuUtils {
 	public static void transferMenu(Menu from, Menu to) { transferMenu(from, to, true); }
@@ -29,6 +33,24 @@ public class MenuUtils {
 			.setChecked(item.isChecked())
 			.setVisible(item.isVisible())
 			.setIcon(item.getIcon());
+	}
+	public static void setOnClicks(View parent, OnClickListener listener, int... ids)
+	{
+		for(int id : ids)
+			if(parent.findViewById(id) != null)
+				parent.findViewById(id).setOnClickListener(listener);
+	}
+	public static void setViewsVisible(View a, boolean visible, int... ids)
+	{
+		for(int id : ids)
+			if(a.findViewById(id) != null)
+				a.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
+	}
+	public static void setViewsVisible(Activity a, boolean visible, int... ids)
+	{
+		for(int id : ids)
+			if(a.findViewById(id) != null)
+				a.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 
 	public static void setMenuChecked(Menu menu, boolean checked, int toCheck, int... toOppose)

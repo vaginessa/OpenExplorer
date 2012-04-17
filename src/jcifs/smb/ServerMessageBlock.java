@@ -29,7 +29,7 @@ import jcifs.util.Hexdump;
 import jcifs.util.LogStream;
 import jcifs.util.transport.*;
 
-abstract class ServerMessageBlock extends Response implements Request, SmbConstants {
+public abstract class ServerMessageBlock extends Response implements Request, SmbConstants {
 
     static LogStream log = LogStream.getInstance();
 

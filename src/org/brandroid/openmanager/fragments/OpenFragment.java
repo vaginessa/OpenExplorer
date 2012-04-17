@@ -302,15 +302,19 @@ public abstract class OpenFragment
 	}
 	protected Integer getViewSetting(OpenPath path, String key, Integer def)
 	{
-		return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+		if(getExplorer() != null && getExplorer().getPreferences() != null)
+			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+		return def;
 	}
 	protected void setViewSetting(OpenPath path, String key, String value)
 	{
-		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+		if(getExplorer() != null && getExplorer().getPreferences() != null)
+			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 	protected void setViewSetting(OpenPath path, String key, Boolean value)
 	{
-		getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+		if(getExplorer() != null && getExplorer().getPreferences() != null)
+			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 	protected void setViewSetting(OpenPath path, String key, Integer value)
 	{

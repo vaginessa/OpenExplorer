@@ -41,6 +41,7 @@
 	        android:layout_above="@id/base_bar"
 	    	android:layout_height="match_parent"
 	    	android:layout_width="match_parent"
+	        android:layout_toLeftOf="@+id/frag_log"
 	    	/>
 
 	    <ViewStub
@@ -50,7 +51,20 @@
 	        android:layout="@layout/viewpager"
 	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
+	        android:layout_toLeftOf="@+id/frag_log"
 	        />
+	    
+	    
+		    <FrameLayout
+				android:id="@+id/frag_log"
+				android:layout_alignParentRight="true"
+		        android:layout_width="@dimen/bookmarks_width"
+		        android:layout_height="match_parent"
+		        android:layout_below="@+id/title_bar"
+		        android:layout_alignWithParentIfMissing="true"
+		        >
+		    </FrameLayout>
+	    
 	
 	<ViewStub
 	    android:layout_alignParentBottom="true"

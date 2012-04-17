@@ -51,6 +51,8 @@ import android.graphics.drawable.LayerDrawable;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
+
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -112,6 +114,8 @@ import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.RejectedExecutionException;
+
+import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
@@ -136,6 +140,7 @@ import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.LogViewerFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
@@ -212,8 +217,9 @@ public class OpenExplorer
 	private Boolean mSinglePane = false;
 	
 	private static Fragment mContentFragment = null;
+	private static LogViewerFragment mLogFragment = null;
+	private static boolean mLogViewEnabled = true;
 	private OpenViewPager mViewPager;
-	private TextView mTextLog;
 	private static ArrayPagerAdapter mViewPagerAdapter;
 	private static final boolean mViewPagerEnabled = true; 
 	private ExpandableListView mBookmarksList;
@@ -335,15 +341,6 @@ public class OpenExplorer
 		
 		mClipboard = new OpenClipboard(this);
 		mClipboard.setClipboardUpdateListener(this);
-		
-		if(getPreferences().getSetting(null, "pref_logview", true))
-		{
-			mTextLog = (TextView)findViewById(R.id.log_text);
-			if(mTextLog != null)
-				((ImageButton)findViewById(R.id.log_close)).setOnClickListener(this);
-		}
-		else if(findViewById(R.id.frag_log) != null)
-			findViewById(R.id.frag_log).setVisibility(View.GONE);
 		
 		try {
 			/*
@@ -472,6 +469,13 @@ public class OpenExplorer
 		{
 			fragmentManager = getSupportFragmentManager();
 			fragmentManager.addOnBackStackChangedListener(this);
+		}
+		
+		mLogFragment = new LogViewerFragment();
+		if(findViewById(R.id.frag_log) != null)
+		{
+			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
+			findViewById(R.id.frag_log).setVisibility(View.GONE);
 		}
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -932,20 +936,15 @@ public class OpenExplorer
 	private void sendToLogView(final String txt, final int color)
 	{
 		Logger.LogVerbose(txt);
-		runOnUiThread(new Runnable() {
-			
-			@Override
-			public void run() {
-				if(mTextLog != null)
-				{
-					if(color != 0)
-					{
-						SpannableString line = new SpannableString(txt + "\n");
-						line.setSpan(new ForegroundColorSpan(color), 0, line.length(), Spanned.SPAN_COMPOSING);
-						mTextLog.append(line);
-					} else mTextLog.append(txt + "\n");
-				}
-			}});
+		if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isVisible())
+		{
+			if(findViewById(R.id.frag_log) != null)
+				findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
+			else
+				mLogFragment.show(fragmentManager, "log");
+		}
+		if(mLogFragment != null)
+			mLogFragment.print(txt, color);
 	}
 	private void setupLoggingDb()
 	{
@@ -973,7 +972,9 @@ public class OpenExplorer
 
 			@Override
 			public void onSendCommand(FTP file, String message) {
-				sendToLogView("FTP: " + message.replace("\n", "") + getFTPString(file), 0);
+				if(message.startsWith("PASS "))
+					message = "PASS " + message.substring(6).replaceAll(".", "*");
+				sendToLogView("Command: " + message.replace("\n", ""), Color.BLACK); // + getFTPString(file), Color.BLACK);
 			}
 			
 			private String getFTPString(FTP file)
@@ -985,7 +986,7 @@ public class OpenExplorer
 
 			@Override
 			public void onReply(String line) {
-				sendToLogView("FTP Reply: " + line, Color.BLUE);
+				sendToLogView("Reply: " + line, Color.BLUE);
 			}
 		});
 		JSch.setLogger(new com.jcraft.jsch.Logger() {
@@ -994,22 +995,22 @@ public class OpenExplorer
 				switch(level)
 				{
 					case com.jcraft.jsch.Logger.DEBUG:
-						sendToLogView("JSCH - " + message, Color.BLUE);
+						sendToLogView("SFTP - " + message, Color.GREEN);
 						break;
 					case com.jcraft.jsch.Logger.INFO:
-						sendToLogView("JSCH - " + message, Color.GREEN);
+						sendToLogView("SFTP - " + message, Color.BLUE);
 						break;
 					case com.jcraft.jsch.Logger.WARN:
-						sendToLogView("JSCH - " + message, Color.YELLOW);
+						sendToLogView("SFTP - " + message, Color.YELLOW);
 						break;
 					case com.jcraft.jsch.Logger.ERROR:
-						sendToLogView("JSCH - " + message, Color.RED);
+						sendToLogView("SFTP - " + message, Color.RED);
 						break;
 					case com.jcraft.jsch.Logger.FATAL:
-						sendToLogView("JSCH (FATAL) - " + message, Color.RED);
+						sendToLogView("SFTP - " + message, Color.MAGENTA);
 						break;
 					default:
-						sendToLogView("JSCH (" + level + ") - " + message, 0);
+						sendToLogView("SFTP (" + level + ") - " + message, Color.BLACK);
 						break;
 				}		
 			}
@@ -1053,10 +1054,20 @@ public class OpenExplorer
 
 			@Override
 			public void onSendCommand(SmbFile file, Object... commands) {
-				String s = "SMB Command: " + file.getPath();
+				String s = "Command: " + file.getPath();
 				for(Object o : commands)
-					s += " -> " + o.toString();
-				sendToLogView(s, Color.BLUE);
+				{
+					if(o instanceof ServerMessageBlock)
+					{
+						ServerMessageBlock blk = (ServerMessageBlock)o;
+						String tmp = blk.toString();
+						if(tmp.indexOf("[") > -1)
+							s += " -> " + tmp.substring(0, tmp.indexOf("["));
+						else
+							s += " -> " + tmp; 
+					} else s += " -> " + o.toString();
+				}
+				sendToLogView(s, Color.BLACK);
 			}
 			
 		});
@@ -1732,7 +1743,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
-		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_logview", true), R.id.menu_view_logview);
+		MenuUtils.setMenuChecked(menu, mLogFragment.isVisible() && getSetting(null, "pref_logview", true), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
@@ -1845,7 +1856,11 @@ public class OpenExplorer
 				
 			case R.id.log_close:
 				getPreferences().setSetting(null, "pref_logview", false);
-				findViewById(R.id.frag_log).setVisibility(View.GONE);
+				mLogViewEnabled = false;
+				if(findViewById(R.id.frag_log) != null)
+					findViewById(R.id.frag_log).setVisibility(View.GONE);
+				else
+					mLogFragment.dismiss();
 				break;
 			
 			case R.id.menu_new_folder:
@@ -1939,12 +1954,23 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_view_logview:
-				setSetting(null, "pref_logview", !getSetting(null, "pref_logview", true));
-				if(findViewById(R.id.frag_log) == null)
-					showToast("Couldn't find LogView :(");
-				else {
-					findViewById(R.id.frag_log).setVisibility(getSetting(null, "pref_logview", true) ? View.VISIBLE : View.GONE);
-					mTextLog = (TextView)findViewById(R.id.log_text);
+				boolean lvenabled = setSetting(null, "pref_logview", !getSetting(null, "pref_logview", true));
+				if(mLogFragment == null)
+					mLogFragment = new LogViewerFragment();
+				if (!lvenabled || !getSetting(null,  "pref_logview", true))
+				{
+					if(mLogFragment.isVisible())
+					{
+						if(findViewById(R.id.frag_log) != null)
+							findViewById(R.id.frag_log).setVisibility(View.GONE);
+						else
+							mLogFragment.dismiss();
+					}
+				} else {
+					if(findViewById(R.id.frag_log) != null)
+						findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
+					else
+						mLogFragment.show(fragmentManager, "log");
 				}
 				return true;
 					
@@ -2432,9 +2458,10 @@ public class OpenExplorer
 	{
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
-	public void setSetting(OpenPath file, String key, Boolean value)
+	public boolean setSetting(OpenPath file, String key, Boolean value)
 	{
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
+		return value;
 	}
 	public void setSetting(OpenPath file, String key, Integer value)
 	{
@@ -2613,6 +2640,13 @@ public class OpenExplorer
 		//int oldView = getSetting(mLastPath, "view", 0);
 		mLastPath = path;
 		
+		if(path instanceof OpenNetworkPath)
+		{
+			if(mLogViewEnabled)
+				setViewVisibility(true, false, R.id.frag_log);
+		} else
+			setViewVisibility(false, false, R.id.frag_log);
+		
 		ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
 			ThumbnailCreator.setThumbnail(icon, path, 32, 32);
@@ -2633,7 +2667,7 @@ public class OpenExplorer
 					if(f != null)
 					{
 						if(!(f instanceof ContentFragment)) continue;
-						if(path.getPath().indexOf(((ContentFragment)f).getPath().getPath()) > -1)
+						if(path.getPath().startsWith(((ContentFragment)f).getPath().getPath()))
 						{
 							common = i + 1;
 							break;
