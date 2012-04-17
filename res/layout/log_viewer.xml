@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+<TextView android:id="@android:id/title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentTop="true"
+    android:layout_alignBottom="@+id/log_close"
+    android:gravity="left|center_vertical"
+    android:layout_toLeftOf="@+id/log_close"
+    android:text="@string/s_pref_logview"
+    />
+<ImageButton
+    android:id="@+id/log_close"
+    style="@style/ActionBarCompatItem"
+    android:layout_alignParentRight="true"
+    android:src="@drawable/ic_menu_close_clear_cancel"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    />
+<ScrollView
+    android:layout_below="@+id/log_close"
+    android:layout_alignParentBottom="true" 
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    
+    <TextView
+        android:id="@+id/log_text"
+        style="@style/Small"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:bufferType="normal"
+        android:editable="false"
+        android:inputType="none"
+        />
+
+</ScrollView>
+</RelativeLayout>
