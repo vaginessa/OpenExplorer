@@ -67,7 +67,7 @@ public class LogViewerFragment extends DialogFragment implements OnClickListener
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		mTextLog = (TextView)view.findViewById(R.id.log_text);
-		MenuUtils.setOnClicks(view, this, R.id.log_clear, R.id.log_clear, R.id.log_copy);
+		MenuUtils.setOnClicks(view, this, R.id.log_clear, R.id.log_clear, R.id.log_copy, R.id.log_close);
 		if(getShowsDialog())
 		{
 			getDialog().setTitle(R.string.s_pref_logview);
