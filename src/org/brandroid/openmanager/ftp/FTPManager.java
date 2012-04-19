@@ -112,6 +112,8 @@ public class FTPManager {
 		if(ensureConnect)
 		{
 			FTPClient client = ftpClients.get(mHost);
+			if(client == null)
+				client = new FTPClient();
 			if(!client.isConnected())
 			{
 				client.connect(mHost, mPort);
@@ -121,6 +123,7 @@ public class FTPManager {
 			if(mBasePath.endsWith("/"))
 				mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
 			client.cwd(mBasePath);
+			return client;
 		}
 		return ftpClients.get(mHost);
 	}
@@ -213,7 +216,7 @@ public class FTPManager {
 	{
 		if(connect())
 		{
-			FTPFile[] ret = getClient().listFiles();
+			FTPFile[] ret = getClient(false).listFiles();
 			return ret;
 		} else throw new IOException("Unable to list files due to invalid connecction.", new Throwable());
 	}

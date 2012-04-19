@@ -387,7 +387,8 @@ public abstract class OpenFragment
 				if(vintent != null)
 					getActivity().startActivity(vintent);
 				else {
-					getExplorer().showToast(R.string.s_error_no_intents);
+					if(getExplorer() != null)
+						getExplorer().showToast(R.string.s_error_no_intents);
 					if(file.length() < getResources().getInteger(R.integer.max_text_editor_size))
 						getExplorer().editFile(file);
 				}

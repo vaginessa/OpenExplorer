@@ -133,16 +133,17 @@ public class OpenPathDbAdapter
     			ret += createItem(slice(files, start, Math.min(50, files.length - start)));
     		return ret;
     	}
-    	String query = generateInsertStatement(files);
-    	if(query == null || query.equals("")) return 0;
     	try {
-    		mDb.execSQL(query);
+    		String query = generateInsertStatement(files);
+        	if(query == null || query.equals("")) return 0;
+        	mDb.execSQL(query);
     		return files.length;
     	} catch(Exception e) {
-    		Logger.LogError("Couldn't do mass insert for query: " + query, e);
+    		Logger.LogError("Couldn't do mass insert.", e);
     		long ret = 0;
     		for(OpenPath file : files)
-    			ret += createItem(file, false);
+    			if(file != null)
+    				ret += createItem(file, false);
     		return ret;
     	}
     }
@@ -158,7 +159,10 @@ public class OpenPathDbAdapter
     			KEY_ATTRIBUTES + "')");
     	int i = 0;
     	for(OpenPath file : files)
-    		generateInsertStatement(file, sb, i++ == 0);
+    	{
+    		if(file == null) continue;
+    			generateInsertStatement(file, sb, i++ == 0);
+    	}
     	//sb.setLength(sb.length() - 1);
     	return sb.toString();
     }
@@ -188,9 +192,8 @@ public class OpenPathDbAdapter
     	if(mDb == null || !mDb.isOpen()) open();
     	if(mDb == null) return -1;
     	ContentValues initialValues = new ContentValues();
-    	OpenPath parent = path.getParent();
     	String sParent = "";
-    	if(parent != null) sParent = parent.getPath();
+    	if(path != null && path.getParent() != null) sParent = path.getParent().getPath();
     	initialValues.put(KEY_FOLDER, sParent);
     	initialValues.put(KEY_NAME, path.getName());
         initialValues.put(KEY_SIZE, path.length());
@@ -257,6 +260,10 @@ public class OpenPathDbAdapter
     {
     	open();
     	try {
+    		if(!folder.endsWith("/"))
+    			folder += "/";
+    		if(folder != null && folder.endsWith("//"))
+    			folder = folder.substring(0, folder.length() - 1);
     		Logger.LogDebug("Fetching from folder: " + folder + " (" + sort.toString() + ")");
     		return mDb.query(true, DATABASE_TABLE,
     				KEYS, KEY_FOLDER + " = '" + folder.replace("'", "\\'") + "'",

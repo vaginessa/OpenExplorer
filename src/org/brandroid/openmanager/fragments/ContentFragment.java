@@ -382,12 +382,7 @@ public class ContentFragment extends OpenFragment
 			new Thread(new Runnable(){
 				@Override
 				public void run() {
-					try {
-						Thread.sleep(30000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					try { Thread.sleep(30000); } catch (InterruptedException e) { }
 					if(task.getStatus() == Status.RUNNING)
 						task.cancel(false);
 				}
@@ -1120,8 +1115,11 @@ public class ContentFragment extends OpenFragment
 						}
 					} catch (IOException e2) {
 						Logger.LogError("Couldn't get Cache", e2);
-						getExplorer().showToast(R.string.s_error_ftp);
+						if(getExplorer() != null)
+							getExplorer().showToast(R.string.s_error_ftp);
 						cachePath = cmd.Path;
+					} catch(Exception e) {
+						Logger.LogError("Null 1?", e);
 					}
 					if(cachePath == null)
 						cachePath = cmd.Path;
@@ -1135,6 +1133,7 @@ public class ContentFragment extends OpenFragment
 					}
 					if(!success)
 						try {
+							Logger.LogDebug("Trying 1 last time!!");
 							list = cachePath.list();
 							if(list != null)
 								FileManager.setOpenCache(cachePath.getPath(), cachePath);
@@ -1142,6 +1141,8 @@ public class ContentFragment extends OpenFragment
 							Logger.LogWarning("Couldn't connect to SMB using: " + ((OpenSMB)cachePath).getFile().getCanonicalPath());
 						} catch (IOException e) {
 							Logger.LogWarning("Couldn't list from cachePath", e);
+						} catch(Exception e) {
+							Logger.LogError("Null?", e);
 						}
 					if(list != null) {
 						for(OpenPath f : list)

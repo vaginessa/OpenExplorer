@@ -49,6 +49,10 @@ public class OpenFTP extends OpenNetworkPath
 	private String mPath;
 	private String mName;
 	protected OpenFTP mParent = null;
+	private Integer mAttributes = null;
+	public final int FLAG_HIDDEN = 1;
+	public final int FLAG_DIRECTORY = 2;
+	public final int FLAG_SYMBOLIC = 4;
 	
 	public OpenFTP(String path, FTPFile[] children, FTPManager man)
 	{
@@ -89,8 +93,11 @@ public class OpenFTP extends OpenNetworkPath
 			if(file != null)
 				mPath += file.getName();
 		}
+		mAttributes = 0;
 		if(file != null && file.isDirectory())
-			mPath += "/";
+			mAttributes |= FLAG_DIRECTORY;
+		if(file != null && file.isSymbolicLink())
+			mAttributes |= FLAG_SYMBOLIC;
 		mParent = parent;
 		mFile = file;
 		mManager = man;
@@ -141,10 +148,10 @@ public class OpenFTP extends OpenNetworkPath
 	@Override
 	public String getPath() { return getPath(false); }
 	public String getPath(boolean bIncludeUser) {
+		String ret = mPath;
 		if(!bIncludeUser)
-			return mPath.replace(getUri().getUserInfo() + "@", "");
-		else
-			return mPath;
+			ret = ret.replace(getUri().getUserInfo() + "@", "");
+		return ret;
 	}
 	
 	public String getHost() { return getUri().getHost(); }
@@ -206,18 +213,35 @@ public class OpenFTP extends OpenNetworkPath
 	public boolean listFromDb(SortType sort)
 	{
 		if(!OpenPath.AllowDBCache) return false;
-		Cursor c = mDb.fetchItemsFromFolder(getPath().replace("/" + getName(), ""), sort);
+		String folder = getPath(); //.replace("/" + getName(), "");
+		if(!isDirectory())
+			folder = folder.replace("/" + getName(), "");
+		if(!folder.endsWith("/"))
+			folder += "/";
+		if(folder.endsWith("//"))
+			folder = folder.substring(0, folder.length() - 1);
+		Cursor c = mDb.fetchItemsFromFolder(folder, sort);
 		if(c == null) return false;
+		if(c.getCount() == 0)
+		{
+			c.close();
+			c = mDb.fetchItemsFromFolder(folder.substring(0, folder.length() - 1), sort);
+		}
 		mChildren = new OpenFTP[c.getCount()];
 		c.moveToFirst();
 		int i = 0;
 		while(!c.isAfterLast())
 		{
-			String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+			//String folder = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
 			String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
 			int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
 			int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
-			String path = folder + (!(folder.endsWith("/") || name.startsWith("/")) ? "/" : "") + name;
+			String path = folder + name;
+			int atts = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_ATTRIBUTES));
+			if((atts & FLAG_DIRECTORY) == FLAG_DIRECTORY && !path.endsWith("/"))
+				path += "/";
+			if(path.endsWith("//"))
+				path = path.substring(0, path.length() - 1);
 			OpenFTP child = new OpenFTP(path, null, getManager(), size, modified);
 			mChildren[i++] = child;
 			c.moveToNext();
@@ -228,6 +252,7 @@ public class OpenFTP extends OpenNetworkPath
 
 	@Override
 	public Boolean isDirectory() {
+		if(mAttributes != null && (mAttributes & FLAG_DIRECTORY) == FLAG_DIRECTORY) return true;
 		if(mChildren != null && mChildren.length > 0)
 			return true;
 		String path = getPath();
@@ -281,6 +306,10 @@ public class OpenFTP extends OpenNetworkPath
 		return true;
 	}
 	@Override
+	public int getAttributes() {
+		return mAttributes != null ? mAttributes : 0;
+	}
+	@Override
 	public String getAbsolutePath() {
 		return getPath(true);
 	}
@@ -302,7 +331,7 @@ public class OpenFTP extends OpenNetworkPath
 	}
 	@Override
 	public Boolean isFile() {
-		return mFile.isFile();
+		return !isDirectory();
 	}
 	@Override
 	public Boolean delete() {
