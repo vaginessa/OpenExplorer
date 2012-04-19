@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Date;
 import java.util.Locale;
 import java.util.zip.GZIPOutputStream;
 
@@ -64,6 +65,7 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void>
 						while((line = br.readLine()) != null)
 							Logger.LogDebug("Response: " + line);
 						Logger.LogDebug("Sent logs successfully.");
+						new Preferences(mContext).setSetting("flags", "last_stat_submit", new Date().getTime());
 						Logger.clearDb();
 					} else {
 						Logger.LogWarning("Logs not thanked");
