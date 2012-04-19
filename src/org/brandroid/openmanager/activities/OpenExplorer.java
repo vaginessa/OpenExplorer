@@ -1125,6 +1125,9 @@ public class OpenExplorer
 		if(!Logger.isLoggingEnabled()) return;
 		setupLoggingDb();
 		if(IS_DEBUG_BUILD) return;
+		long lastSubmit = getPreferences().getSetting("flags", "last_stat_submit", 0l);
+		if(new Date().getTime() - lastSubmit < 6000)
+			return;
 		String logs = Logger.getDbLogs(false);
 		if(logs == null || logs == "") logs = "[]";
 		//if(logs != null && logs != "") {
@@ -1760,7 +1763,7 @@ public class OpenExplorer
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
+		//Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -1768,7 +1771,7 @@ public class OpenExplorer
 	public boolean onPrepareOptionsMenu(Menu menu)
 	{
 		super.onPrepareOptionsMenu(menu);
-		Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
+		//Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
 		
 		if(getClipboard() != null)
 		{

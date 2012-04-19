@@ -211,6 +211,15 @@ public class Preferences {
 				.commit();
 		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
 	}
+	public void setSetting(String file, String key, Long value)
+	{
+		try {
+			getPreferences(file)
+				.edit()
+				.putLong(key, value)
+				.commit();
+		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
+	}
 	public void setSettings(String file, Object... vals)
 	{
 		try {
