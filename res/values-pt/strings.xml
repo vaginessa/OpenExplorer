@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="s_photos">Fotos</string>
+    <string name="s_music">Música </string>
+    <string name="s_menu_sort">Ordenação</string>
+    <string name="s_menu_sort_name_asc">Ordenar por Nome (A-Z) </string>
+    <string name="s_menu_sort_name_desc">Ordenar por Nome (Z-A) </string>
+    <string name="s_menu_sort_date_asc">Ordenar pelo mais recente</string>
+    <string name="s_menu_sort_date_desc">Ordenar pelo mais antigo</string>
+    <string name="s_menu_sort_size_asc">Ordenar pelo maior</string>
+    <string name="s_menu_sort_size_desc">Ordenar pelo menor </string>
+    <string name="s_menu_sort_type">Ordenar pelo tipo de arquivo </string>
+    <string name="s_menu_multi">Multi-seleção </string>
+    <string name="s_menu_grid">Visão em grade</string>
+    <string name="s_menu_list">Visão em lista</string>
+    <string name="s_menu_carousel">Carrossel </string>
+    <string name="s_menu_hidden">Mostrar arquivos ocultos</string>
+    <string name="s_menu_new_folder">Nova pasta</string>
+    <string name="s_menu_copy">Copiar</string>
+    <string name="s_menu_cut">Cortar</string>
+    <string name="s_menu_paste">Colar</string>
+    <string name="s_menu_rename">Renomear</string>
+    <string name="s_menu_bookmark">Adicionar aos &quot;bookmarks&quot;</string>
+    <string name="s_save">Salvar</string>
+    <string name="s_saveas">Salvar como</string>
+    <string name="s_cancel">Cancelar</string>
+    <string name="s_size">Tamanho</string>
+    <string name="s_pref_servers">Servidores adicionais</string>
+    <string name="s_pref_server_add">Adicionar novo servidor </string>
+    <string name="s_pref_hidden">Mostrar arquivos ocultos</string>
+    <string name="s_pref_sort">Ordenando</string>
+</resources>
