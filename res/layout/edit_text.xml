@@ -22,27 +22,20 @@
 	        android:layout_alignParentLeft="true"
 	        android:visibility="gone"
 	        android:layout_margin="4dp" />
-
-	    <TextView
-	        android:id="@+id/label_size"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_marginRight="10dp"
-	        android:gravity="center"
-	        android:text="Size: 0"
-	        android:textAppearance="?android:attr/textAppearanceMedium"
-	        android:visibility="gone" />
+	    
 	</RelativeLayout>
 
     <EditText
     	android:layout_width="fill_parent"
     	android:layout_height="fill_parent"
-    	android:inputType="textMultiLine"
 		android:id="@+id/text_edit"
 		android:layout_below="@+id/layout_info"
 		android:typeface="monospace"
 		android:textSize="10dp"
 		android:gravity="top|left"
+		android:bufferType="normal"
+		android:editable="false"
+		android:inputType="textNoSuggestions|textMultiLine"
 		android:layout_alignParentLeft="true">
         <requestFocus></requestFocus>
     </EditText>

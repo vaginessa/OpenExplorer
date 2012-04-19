@@ -162,6 +162,11 @@
         <item name="@android:windowExitAnimation">@anim/slide_up_out</item>
     </style>
     
+    <style name="Animations.PagerSlideRight">
+        <item name="@android:windowEnterAnimation">@anim/slide_in_right</item>
+        <item name="@android:windowExitAnimation">@anim/push_down_in</item>
+    </style>
+    
     <style name="Dialog" parent="@android:style/Theme.Dialog" />
     
     <style name="Widget.ProgressBar.Horizontal" parent="@android:style/Widget.ProgressBar.Horizontal">

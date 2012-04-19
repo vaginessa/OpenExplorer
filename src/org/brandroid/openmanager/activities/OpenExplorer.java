@@ -759,9 +759,30 @@ public class OpenExplorer
 	{
 		new Preferences(a).setSetting("warn", "translate", true);
 		String lang = DialogHandler.getLangCode();
-		Intent intent = new Intent(Intent.ACTION_VIEW,
-				Uri.parse("http://brandroid.org/translation_helper.php?lang=" + lang + "&full=" + Locale.getDefault().getDisplayLanguage()));
-		a.startActivity(intent);
+		Uri uri = Uri.parse("http://brandroid.org/translation_helper.php?lang=" + lang + "&full=" + Locale.getDefault().getDisplayLanguage() + "&wid=" + a.getWindowManager().getDefaultDisplay().getWidth());
+		//Intent intent = new Intent(a, WebViewActivity.class);
+		//intent.setData();
+		//a.startActivity(intent);
+		WebViewFragment web = new WebViewFragment().setUri(uri);
+		if(!(a instanceof FragmentActivity))
+		{
+			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+			a.startActivity(intent);
+		} else if(a.findViewById(R.id.frag_log) != null)
+		{
+			((FragmentActivity)a).getSupportFragmentManager()
+				.beginTransaction()
+				.replace(R.id.frag_log, web)
+				.addToBackStack("trans")
+				.commit();
+			a.findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
+		} else {
+			web.setShowsDialog(true);
+			web.show(((FragmentActivity)a).getSupportFragmentManager(), "trans");
+			if(web.getDialog() != null)
+				web.getDialog().setTitle(R.string.button_translate);
+			web.setUri(uri);
+		}
 	}
 	private void showWarnings()
 	{
@@ -1743,7 +1764,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
-		MenuUtils.setMenuChecked(menu, mLogFragment.isVisible() && getSetting(null, "pref_logview", true), R.id.menu_view_logview);
+		MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible() && getSetting(null, "pref_logview", true), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
@@ -1853,6 +1874,10 @@ public class OpenExplorer
 					goHome();
 
 				return true;
+				
+			case R.id.menu_translate:
+				launchTranslator(this);
+				break;
 				
 			case R.id.log_close:
 				getPreferences().setSetting(null, "pref_logview", false);
