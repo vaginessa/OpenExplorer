@@ -25,16 +25,22 @@ import android.widget.TextView;
 
 public class LogViewerFragment extends DialogFragment implements OnClickListener
 {
-	private final SpannableStringBuilder builder;
+	private static final SpannableStringBuilder builder = new SpannableStringBuilder();
+	private static int builderLines = 0;
 	private TextView mTextLog;
 	
 	public LogViewerFragment() {
-		builder = new SpannableStringBuilder();
+
 	}
 	
 	public void print(final String txt, final int color)
 	{
 		builder.insert(0, colorify(txt, color));
+		if(builderLines++ > 100)
+		{
+			builder.delete(80, 100);
+			builderLines -= 20;
+		}
 		if(isVisible())
 			getActivity().runOnUiThread(new Runnable() {public void run() {
 				if(mTextLog != null)

@@ -11,11 +11,12 @@
     android:layout_alignBottom="@+id/log_close"
     android:gravity="left|center_vertical"
     android:layout_toLeftOf="@+id/log_close"
+    android:paddingLeft="4dp"
     android:text="@string/s_pref_logview"
     />
 <ImageButton
     android:id="@+id/log_close"
-    style="@style/ActionBarCompatItem"
+    android:background="@drawable/list_selector_background"
     android:layout_alignParentRight="true"
     android:src="@drawable/ic_menu_close_clear_cancel"
     android:layout_width="wrap_content"

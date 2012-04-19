@@ -2,7 +2,9 @@ package org.brandroid.openmanager.activities;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.OpenChromeClient;
+import org.brandroid.utils.MenuUtils;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -14,16 +16,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.View.OnClickListener;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class WebViewFragment
 		extends DialogFragment
+		implements OnClickListener
 {
 	private Uri uri;
 	private WebView web;
+	private TextView mTitle;
 	
 	public WebViewFragment() {
 	}
@@ -44,6 +51,10 @@ public class WebViewFragment
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
+		MenuUtils.setOnClicks(view, this, android.R.id.button1);
+		mTitle = (TextView)view.findViewById(android.R.id.title);
+		if(getShowsDialog())
+			MenuUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.title);
 		if(view != null && view instanceof WebView)
 			web = (WebView)view;
 		else if(view.findViewById(R.id.webview) != null)
@@ -101,7 +112,8 @@ public class WebViewFragment
 				getDialog().setTitle(R.string.s_status_loading);
 				if(view != null && view.getTitle() != null)
 					getDialog().setTitle(view.getTitle());
-			}
+			} else if (mTitle != null)
+				mTitle.setText(view.getTitle());
 			view.setEnabled(false);
 			//getDialog().setFeatureDrawable(Window.FEATURE_LEFT_ICON, new BitmapDrawable(getResources(), favicon));
 		}
@@ -111,7 +123,21 @@ public class WebViewFragment
 			super.onPageFinished(view, url);
 			if(getShowsDialog())
 				getDialog().setTitle(view.getTitle());
+			else if(mTitle != null)
+				mTitle.setText(view.getTitle());
 			view.setEnabled(true);
+		}
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch(v.getId())
+		{
+		case android.R.id.button1:
+			if(!getShowsDialog() && getActivity() instanceof OpenExplorer)
+				((OpenExplorer)getActivity()).findViewById(R.id.frag_log).setVisibility(View.GONE);
+			dismiss();
+			break;
 		}
 	}
 }

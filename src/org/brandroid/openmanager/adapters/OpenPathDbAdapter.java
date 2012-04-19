@@ -21,7 +21,7 @@ public class OpenPathDbAdapter
     public static final String KEY_MTIME = "mtime";
     public static final String KEY_STAMP = "stamp";
     public static final String KEY_ATTRIBUTES = "atts";
-    public static final String[] KEYS = {KEY_ID,KEY_FOLDER,KEY_NAME,KEY_SIZE,KEY_MTIME,KEY_STAMP,KEY_ATTRIBUTES};
+    public static final String[] KEYS = {KEY_FOLDER,KEY_NAME,KEY_SIZE,KEY_MTIME,KEY_STAMP,KEY_ATTRIBUTES};
     
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
@@ -184,7 +184,7 @@ public class OpenPathDbAdapter
     {
     	open();
     	try {
-    		return mDb.query(DATABASE_TABLE,
+    		return mDb.query(true, DATABASE_TABLE,
     				KEYS, KEY_FOLDER + " = '" + folder.replace("'", "\\'") + "'",
     				null, null, null, getSortString(sort), null);
     	} catch(Exception e)

@@ -107,6 +107,7 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -776,6 +777,9 @@ public class OpenExplorer
 				.addToBackStack("trans")
 				.commit();
 			a.findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
+			LayoutParams lp = a.findViewById(R.id.frag_log).getLayoutParams();
+			lp.width = a.getResources().getDimensionPixelSize(R.dimen.bookmarks_width) * 2;
+			a.findViewById(R.id.frag_log).setLayoutParams(lp);
 		} else {
 			web.setShowsDialog(true);
 			web.show(((FragmentActivity)a).getSupportFragmentManager(), "trans");
@@ -902,6 +906,7 @@ public class OpenExplorer
 	@Override
 	protected void onStart() {
 		super.onStart();
+		Logger.LogVerbose("OpenExplorer.onStart");
 		setupLoggingDb();
 		submitStats();
 		refreshCursors();
@@ -960,9 +965,17 @@ public class OpenExplorer
 		if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isVisible())
 		{
 			if(findViewById(R.id.frag_log) != null)
+			{
 				findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
-			else
-				mLogFragment.show(fragmentManager, "log");
+				Fragment f = fragmentManager.findFragmentById(R.id.frag_log);
+				if(f == null || !(f instanceof LogViewerFragment))
+					fragmentManager.beginTransaction()
+						.replace(R.id.frag_log, mLogFragment)
+						.commit();
+				LayoutParams lp = findViewById(R.id.frag_log).getLayoutParams();
+				lp.width = getResources().getDimensionPixelSize(R.dimen.bookmarks_width);
+				findViewById(R.id.frag_log).setLayoutParams(lp);
+			} //else mLogFragment.show(fragmentManager, "log");
 		}
 		if(mLogFragment != null)
 			mLogFragment.print(txt, color);
@@ -1060,7 +1073,7 @@ public class OpenExplorer
 			@Override
 			public void onConnect(SmbFile file) {
 
-				sendToLogView("SMB Connected: " + file.getPath(), Color.GREEN);
+				//sendToLogView("SMB Connected: " + file.getPath(), Color.GREEN);
 			}
 
 			@Override
@@ -1075,7 +1088,8 @@ public class OpenExplorer
 
 			@Override
 			public void onSendCommand(SmbFile file, Object... commands) {
-				String s = "Command: " + file.getPath();
+				URL url = file.getURL();
+				String s = "Command: smb://" + url.getHost() + url.getPath(); 
 				for(Object o : commands)
 				{
 					if(o instanceof ServerMessageBlock)
@@ -1764,7 +1778,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
-		MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible() && getSetting(null, "pref_logview", true), R.id.menu_view_logview);
+		MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
@@ -1773,9 +1787,9 @@ public class OpenExplorer
 			MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
 			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
 		}
-		Fragment f = getSelectedFragment();
-		if(f != null && !f.isDetached())
-			f.onPrepareOptionsMenu(menu);
+		//Fragment f = getSelectedFragment();
+		//if(f != null && !f.isDetached())
+		//	f.onPrepareOptionsMenu(menu);
 		
 		if(menu != null && menu.findItem(R.id.menu_paste) != null && getClipboard() != null && getClipboard().size() > 0)
 		{
@@ -1993,8 +2007,13 @@ public class OpenExplorer
 					}
 				} else {
 					if(findViewById(R.id.frag_log) != null)
+					{
 						findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
-					else
+						Fragment f = fragmentManager.findFragmentById(R.id.frag_log);
+						if(f == null || !(f instanceof LogViewerFragment))
+							fragmentManager.beginTransaction()
+								.replace(R.id.frag_log, f).commit();
+					} else
 						mLogFragment.show(fragmentManager, "log");
 				}
 				return true;
@@ -3323,6 +3342,7 @@ public class OpenExplorer
 			invalidateOptionsMenu();
 		else
 			setupBaseBarButtons();
+		Fragment f = getSelectedFragment();
 	}
 
 	@Override
