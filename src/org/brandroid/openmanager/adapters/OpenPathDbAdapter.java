@@ -19,16 +19,16 @@ public class OpenPathDbAdapter
     public static final String KEY_NAME = "name";
     public static final String KEY_SIZE = "size";
     public static final String KEY_MTIME = "mtime";
-    public static final String KEY_STAMP = "stamp";
+    //public static final String KEY_STAMP = "stamp";
     public static final String KEY_ATTRIBUTES = "atts";
-    public static final String[] KEYS = {KEY_FOLDER,KEY_NAME,KEY_SIZE,KEY_MTIME,KEY_STAMP,KEY_ATTRIBUTES};
+    public static final String[] KEYS = {KEY_FOLDER,KEY_NAME,KEY_SIZE,KEY_MTIME,KEY_ATTRIBUTES};
     
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
     
     private static final String DATABASE_NAME = "files.db";
     private static final String DATABASE_TABLE = "files";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 8;
 
     private static final String DATABASE_CREATE =
         "create table " + DATABASE_TABLE + " (" + KEY_ID + " integer primary key autoincrement, "
@@ -36,7 +36,7 @@ public class OpenPathDbAdapter
         + KEY_NAME + " text null, "
         + KEY_SIZE + " text not null, "
         + KEY_MTIME + " int not null, "
-        + KEY_STAMP + " int not null, "
+        //+ KEY_STAMP + " int not null, "
         + KEY_ATTRIBUTES + " int null);";
 
     private final Context mCtx;
@@ -60,6 +60,8 @@ public class OpenPathDbAdapter
         	{
         		Logger.LogVerbose("We can do this upgrade [" + DATABASE_TABLE + "] from " + oldVersion + " to " + newVersion + " and retain old data");
         		db.execSQL("ALTER TABLE " + DATABASE_TABLE + " ADD COLUMN [" + KEY_ATTRIBUTES + "] int null");
+        		if(newVersion >= 7)
+        			db.execSQL("ALTER TABLE " + DATABASE_TABLE + " DROP COLUMN [stamp]");
         		return;
         	}
             Logger.LogVerbose("Upgrading table [" + DATABASE_TABLE + "] from version " + oldVersion + " to "
@@ -112,7 +114,77 @@ public class OpenPathDbAdapter
     	return -1;
     }
     
-    public long createItem(OpenPath path) {
+    private OpenPath[] slice(OpenPath[] input, int index, int size)
+    {
+    	OpenPath[] ret = new OpenPath[size];
+    	for(int i = index; i < index + size; i++)
+    		ret[i - index] = input[i];
+    	return ret;
+    }
+    public long createItem(OpenPath[] files)
+    {
+    	if(mDb == null || !mDb.isOpen()) open();
+    	if(mDb == null) return -1;
+    	if(files.length > 50)
+    	{
+    		Logger.LogDebug("Splitting createItem(OpenPath[]) into groups");
+    		long ret = 0;
+    		for(int start = 0; start < files.length; start += 50)
+    			ret += createItem(slice(files, start, Math.min(50, files.length - start)));
+    		return ret;
+    	}
+    	String query = generateInsertStatement(files);
+    	if(query == null || query.equals("")) return 0;
+    	try {
+    		mDb.execSQL(query);
+    		return files.length;
+    	} catch(Exception e) {
+    		Logger.LogError("Couldn't do mass insert for query: " + query, e);
+    		long ret = 0;
+    		for(OpenPath file : files)
+    			ret += createItem(file, false);
+    		return ret;
+    	}
+    }
+    private String generateInsertStatement(OpenPath[] files)
+    {
+    	if(files == null || files.length == 0) return null;
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("INSERT INTO [" + DATABASE_TABLE + "] ('" +
+    			KEY_FOLDER + "','" +
+    			KEY_NAME + "','" +
+    			KEY_SIZE + "','" +
+    			KEY_MTIME + "','" +
+    			KEY_ATTRIBUTES + "')");
+    	int i = 0;
+    	for(OpenPath file : files)
+    		generateInsertStatement(file, sb, i++ == 0);
+    	//sb.setLength(sb.length() - 1);
+    	return sb.toString();
+    }
+    private void generateInsertStatement(OpenPath file, StringBuilder sb, boolean first)
+    {
+    	if(!first)
+    		sb.append(" UNION ALL");
+    	sb.append(" SELECT '");
+    	String sParent = "";
+    	if(file.getParent() != null)
+    		sParent = file.getParent().getPath();
+    	else
+    		sParent = file.getPath().replace("/" + file.getName(), "");
+    	sb.append(sParent.replace("'", "''"));
+    	sb.append("','");
+    	sb.append(file.getName().replace("'", "''"));
+    	sb.append("','");
+    	sb.append(file.length());
+    	sb.append("','");
+    	sb.append(file.lastModified());
+    	sb.append("','");
+    	sb.append(file.getAttributes());
+    	sb.append("'");
+    }
+    
+    public long createItem(OpenPath path, boolean removeOld) {
     	if(mDb == null || !mDb.isOpen()) open();
     	if(mDb == null) return -1;
     	ContentValues initialValues = new ContentValues();
@@ -123,13 +195,14 @@ public class OpenPathDbAdapter
     	initialValues.put(KEY_NAME, path.getName());
         initialValues.put(KEY_SIZE, path.length());
         initialValues.put(KEY_MTIME, path.lastModified());
-        initialValues.put(KEY_STAMP, new java.util.Date().getTime());
+        //initialValues.put(KEY_STAMP, new java.util.Date().getTime());
         initialValues.put(KEY_ATTRIBUTES, path.getAttributes());
         //initialValues.put(KEY_STAMP, (new java.util.Date().getTime() - new Date(4,9,2011).getTime()) / 1000);
         //Logger.LogVerbose("Adding " + path.getPath() + " to files.db");
         
 		try {
-			//mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
+			if(removeOld)
+				mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent + "' AND " + KEY_NAME + " = '" + path.getName() + "'", null);
 			if(mDb.replace(DATABASE_TABLE, null, initialValues) > -1)
 				return 1;
 			else return 0;
@@ -145,7 +218,7 @@ public class OpenPathDbAdapter
     		if(mDb != null && parent != null) {
     			String sParent = parent.getPath();
     			int ret = mDb.delete(DATABASE_TABLE, KEY_FOLDER + " = '" + sParent.replace("'", "\\'") + "'", null);
-    			//Logger.LogDebug("deleteFolder(" + parent.getPath() + ") removed " + ret + " rows");
+    			Logger.LogDebug("deleteFolder(" + parent.getPath() + ") removed " + ret + " rows");
     			return ret;
     		} else return 0;
     	} catch(Exception e) {
@@ -184,6 +257,7 @@ public class OpenPathDbAdapter
     {
     	open();
     	try {
+    		Logger.LogDebug("Fetching from folder: " + folder + " (" + sort.toString() + ")");
     		return mDb.query(true, DATABASE_TABLE,
     				KEYS, KEY_FOLDER + " = '" + folder.replace("'", "\\'") + "'",
     				null, null, null, getSortString(sort), null);

@@ -24,12 +24,12 @@ import org.brandroid.utils.Logger;
 import android.net.Uri;
 
 public class FTPManager {
-	public static Hashtable<String, FTPManager> instances = new Hashtable<String, FTPManager>();
-	private static Hashtable<String, OpenFTP> fileCache = new Hashtable<String, OpenFTP>();
+	public final static Hashtable<String, FTPManager> instances = new Hashtable<String, FTPManager>();
+	private final static Hashtable<String, OpenFTP> fileCache = new Hashtable<String, OpenFTP>();
+	private final static Hashtable<String, FTPClient> ftpClients = new Hashtable<String, FTPClient>();
 	
 	private int mPort = 21;
 	private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
-	private FTPClient client;
 		
 	public FTPManager() { }
 	public FTPManager(String sFTPPath) throws MalformedURLException
@@ -86,10 +86,60 @@ public class FTPManager {
 		return mBasePath;
 	}
 	
-	@Override
-	protected void finalize() throws Throwable {
-		if(client != null && client.isConnected())
-			client.disconnect();
+	public FTPClient getClient() throws IOException { return getClient(false); }
+	public FTPClient getClient(boolean ensureConnect) throws IOException { return getClient(mHost, mPort, mUser, mPassword, mBasePath, ensureConnect); }
+	public static FTPClient getClient(String mHost, int mPort, String mUser, String mPassword, String mBasePath, boolean ensureConnect) throws IOException
+	{
+		if(!ftpClients.containsKey(mHost))
+		{
+			FTPClient client = new FTPClient();
+			if(ensureConnect)
+			{
+				try {
+					client.connect(mHost, mPort);
+					if(!client.login(mUser, mPassword))
+						throw new IOException("Unable to log in to FTP. Invalid credentials?", new Throwable());
+					if(mBasePath.endsWith("/"))
+						mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
+					client.cwd(mBasePath);
+				} catch(Throwable e) {
+					throw new IOException("Error connecting to FTP.", e);
+				}
+			}
+			ftpClients.put(mHost, client);
+			return client;
+		}
+		if(ensureConnect)
+		{
+			FTPClient client = ftpClients.get(mHost);
+			if(!client.isConnected())
+			{
+				client.connect(mHost, mPort);
+				if(!client.login(mUser, mPassword))
+					throw new IOException("Unable to log in to FTP. Invalid credentials?", new Throwable());
+			}
+			if(mBasePath.endsWith("/"))
+				mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
+			client.cwd(mBasePath);
+		}
+		return ftpClients.get(mHost);
+	}
+
+	public Boolean connect() throws IOException
+	{
+		FTPClient client = getClient(true);
+		if(client.isConnected()) return true;
+		return false;
+	}
+	
+	public static void closeAll()
+	{
+		for(FTPClient client : ftpClients.values())
+		{
+			try {
+				client.disconnect();
+			} catch(Exception e) { }
+		}
 	}
 	
 	public static FTPFile[] getFTPFiles(String name)
@@ -112,7 +162,8 @@ public class FTPManager {
 	public void disconnect()
 	{
 		try {
-			client.disconnect();
+			Logger.LogDebug("Disconnecting FTP?");
+			getClient().disconnect();
 		} catch(Exception e) { }
 	}
 	public static FTPManager getInstance(String instanceName)
@@ -138,26 +189,6 @@ public class FTPManager {
 	public void setPassword(String password) { mPassword = password; }
 	public void setBasePath(String path) { mBasePath = path; }
 	
-	public Boolean connect() throws IOException
-	{
-		if(client == null)
-			client = new FTPClient();
-		if(!client.isConnected())
-		{
-			try {
-				client.connect(mHost);
-				if(!client.login(mUser, mPassword))
-					throw new IOException("Unable to log in to FTP. Invalid credentials?", new Throwable());
-				client.cwd(mBasePath);
-			} catch(Throwable e) {
-				throw new IOException("Error connecting to FTP.", e);
-			}
-		}
-		
-		if(client.isConnected()) return true;
-		return false;
-	}
-	
 	public FTPFile[] listAll() throws IOException
 	{
 		if(1 == 2 - 1)
@@ -182,7 +213,7 @@ public class FTPManager {
 	{
 		if(connect())
 		{
-			FTPFile[] ret = client.listFiles();
+			FTPFile[] ret = getClient().listFiles();
 			return ret;
 		} else throw new IOException("Unable to list files due to invalid connecction.", new Throwable());
 	}
@@ -194,7 +225,7 @@ public class FTPManager {
 	{
 		Logger.LogDebug("Getting InputStream for " + path);
 		if(connect())
-			return client.retrieveFileStream(path);
+			return getClient().retrieveFileStream(path);
 		else throw new IOException("Couldn't connect");
 	}
 	public OutputStream getOutputStream() throws IOException
@@ -204,7 +235,7 @@ public class FTPManager {
 	public OutputStream getOutputStream(String path) throws IOException
 	{
 		if(connect())
-			return client.storeFileStream(path);
+			return getClient().storeFileStream(path);
 		else throw new IOException("Couldn't connect");
 	}
 	
@@ -230,12 +261,12 @@ public class FTPManager {
 	}
 	public Boolean delete() throws IOException {
 		if(connect())
-			return client.deleteFile(getPath());
+			return getClient().deleteFile(getPath());
 		else
 			return false;
 	}
 	public void get(String name, OutputStream stream) throws IOException {
 		if(connect())
-			client.retrieveFile(name, stream);
+			getClient().retrieveFile(name, stream);
 	}
 }

@@ -329,14 +329,16 @@ public abstract class OpenPath
 		return getName();
 	}
 	
+	public static OpenPathDbAdapter getDb() { if(AllowDBCache) return mDb; return null; }
 	public final static void setDb(OpenPathDbAdapter openPathDbAdapter) {
 		mDb = openPathDbAdapter;
 	}
-	public boolean addToDb()
+	public boolean addToDb() { return addToDb(false); }
+	public boolean addToDb(boolean delete)
 	{
 		if(mDb == null) return false;
 		if(!AllowDBCache) return false;
-		return mDb.createItem(this) > 0;
+		return mDb.createItem(this, delete) > 0;
 	}
 	public boolean listFromDb(SortType sort) { return false; }
 	public int deleteFolderFromDb()

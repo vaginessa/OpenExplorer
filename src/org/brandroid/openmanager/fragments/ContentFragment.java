@@ -23,6 +23,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.FileSystemAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -456,7 +457,7 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
+		//Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		inflater.inflate(R.menu.main_menu, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
@@ -507,7 +508,7 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
+		//Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
 		
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
@@ -1193,9 +1194,13 @@ public class ContentFragment extends OpenFragment
 					int dels = 0, adds = 0;
 					if(result != null && result.length > 0)
 						dels = mPath.deleteFolderFromDb();
-					for(OpenPath path : result)
-						if(path != null && path.addToDb())
-							adds++;
+					OpenPathDbAdapter db = OpenPath.getDb();
+					if(db != null)
+						adds += db.createItem(result);
+					else
+						for(OpenPath path : result)
+							if(path != null && path.addToDb())
+								adds++;
 					Logger.LogVerbose("Finished updating OpenPath DB Cache" +
 							"(-" + dels + ",+" + adds + ") in " +
 							((new Date().getTime() - start)/1000) + " seconds for " +
