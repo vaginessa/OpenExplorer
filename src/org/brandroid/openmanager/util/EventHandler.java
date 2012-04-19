@@ -925,6 +925,11 @@ public class EventHandler {
 			mLastProgress[1] = size;
 			mLastProgress[2] = total;
 			
+			if(size == 0)
+				size = 1;
+			if(total == 0)
+				total = 1;
+			
 			int progA = (int)(((float)current / (float)size) * 1000f);
 			int progB = (int)(((float)current / (float)total) * 1000f);
 			
