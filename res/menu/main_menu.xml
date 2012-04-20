@@ -89,9 +89,22 @@
 		android:icon="@drawable/ic_menu_preferences"
 		android:title="@string/s_menu_prefs_global" />
 	<item
-	    android:id="@+id/menu_translate"
-	    android:showAsAction="never"
-	    android:title="@string/button_translate" />
+	    android:id="@+id/menu_view_fullscreen"
+	    android:checkable="true"
+	    android:title="@string/s_pref_fullscreen" />
+	<item
+	    android:id="@+id/menu_view_split"
+	    android:checkable="true"
+	    android:title="@string/s_pref_basebar"
+	    android:visible="@bool/prehoneycomb" />
+	<item
+	    android:id="@+id/menu_view_logview"
+	    android:checkable="true"
+	    android:title="@string/s_pref_logview"
+	    />
+	<item android:id="@+id/menu_translate"
+	    android:title="@string/button_translate"
+	    />
 	<item
 	    android:id="@+id/menu_about"
 	    android:showAsAction="never"
