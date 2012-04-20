@@ -395,4 +395,7 @@ public class OpenFTP extends OpenNetworkPath
 	public OpenFTP[] getChildren() {
 		return mChildren;
 	}
+	public boolean isConnected() throws IOException {
+		return mManager.isConnected();
+	}
 }

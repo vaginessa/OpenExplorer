@@ -2591,7 +2591,13 @@ public class OpenExplorer
 	public void goBack()
 	{
 		//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.PREV, mFileManager.getLastPath()));
-		OpenPath last = mFileManager.popStack();
+		if(fragmentManager.getBackStackEntryCount() == 0) return;
+		BackStackEntry entry = fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1);
+		OpenPath last = null;
+		if(entry != null && entry.getBreadCrumbTitle() != null)
+			try {
+				last = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(), false, (SortType)null);
+			} catch (IOException e) { }
 		if(last == null) return;
 		Logger.LogDebug("Going back to " + last.getPath());
 		changePath(last, false, true);
@@ -2610,9 +2616,6 @@ public class OpenExplorer
 			{
 				if(entry != null && entry.getBreadCrumbTitle() != null)
 				{
-					if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
-						mFileManager.popStack();
-
 					try {
 						mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(),
 								false, OpenPath.Sorting);
@@ -2626,8 +2629,7 @@ public class OpenExplorer
 						updateTitle(mLastPath.getPath());
 					} else finish();
 					
-				} else if(mFileManager != null && mFileManager.getStack() != null && mFileManager.getStack().size() > 0)
-					goBack();
+				} 
 				else {
 					Logger.LogWarning("No Breadcrumb Title");
 					updateTitle("");
@@ -2639,12 +2641,6 @@ public class OpenExplorer
 				updateTitle("");
 				//showToast("Press back again to exit.");
 			}
-		}
-		if(isBack && mFileManager != null && mFileManager.getStack() != null)
-		{
-			while(mFileManager.getStack().size() > i)
-				mFileManager.popStack();
-			//goBack();
 		}
 		mLastBackIndex = i;
 	}
@@ -2825,7 +2821,7 @@ public class OpenExplorer
 					if(last.equalsIgnoreCase(path.getPath()))
 						return;
 				}
-				mFileManager.pushStack(path);
+				//mFileManager.pushStack(path);
 				ft.addToBackStack("path");
 			} else Logger.LogVerbose("Covertly changing to " + path.getPath());
 			Fragment content = ContentFragment.getInstance(path, newView);
@@ -3319,10 +3315,7 @@ public class OpenExplorer
 
 	public void setProgressVisibility(boolean visible) {
 		setProgressBarIndeterminateVisibility(visible);
-		if(findViewById(android.R.id.progress) != null)
-			findViewById(android.R.id.progress).setVisibility(visible ? View.VISIBLE : View.GONE);
-		else if(findViewById(R.id.title_progress) != null)
-			findViewById(R.id.title_progress).setVisibility(visible ? View.VISIBLE : View.GONE);
+		MenuUtils.setViewsVisible(this, visible, android.R.id.progress, R.id.title_progress);
 	}
 
 	public void removeFragment(Fragment frag) {

@@ -106,6 +106,11 @@ public class OpenSMB extends OpenNetworkPath
 		super.disconnect();
 		mFile.disconnect();
 	}
+	
+	@Override
+	public boolean isConnected() throws IOException {
+		return mFile.isConnected();
+	}
 
 	@Override
 	public String getName() {

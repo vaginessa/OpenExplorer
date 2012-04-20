@@ -46,11 +46,17 @@ public class MenuUtils {
 			if(a.findViewById(id) != null)
 				a.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
-	public static void setViewsVisible(Activity a, boolean visible, int... ids)
+	public static void setViewsVisible(Activity a, final boolean visible, int... ids)
 	{
 		for(int id : ids)
-			if(a.findViewById(id) != null)
-				a.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
+		{
+			if(a == null) return;
+			final View v = a.findViewById(id);
+			if(v != null)
+				v.post(new Runnable(){public void run(){
+					v.setVisibility(visible ? View.VISIBLE : View.GONE);
+				}});
+		}
 	}
 
 	public static void setMenuChecked(Menu menu, boolean checked, int toCheck, int... toOppose)

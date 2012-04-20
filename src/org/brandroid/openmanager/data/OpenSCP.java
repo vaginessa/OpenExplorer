@@ -209,6 +209,11 @@ public class OpenSCP extends OpenNetworkPath
 	}
 	
 	@Override
+	public boolean isConnected() throws IOException {
+		return mSession.isConnected();
+	}
+	
+	@Override
 	public void connect() throws IOException
 	{
 		connect("scp -f " + mRemotePath);

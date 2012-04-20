@@ -33,6 +33,8 @@ public abstract class OpenNetworkPath extends OpenPath
 	public void disconnect() {
 		Logger.LogVerbose("Disconnecting OpenNetworkPath");
 	}
+	
+	public abstract boolean isConnected() throws IOException;
 
 	/**
 	 * This does not change the actual path of the underlying object, just what is displayed to the user.

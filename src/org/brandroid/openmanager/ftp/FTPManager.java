@@ -272,4 +272,7 @@ public class FTPManager {
 		if(connect())
 			getClient().retrieveFile(name, stream);
 	}
+	public boolean isConnected() throws IOException {
+		return getClient().isConnected();
+	}
 }

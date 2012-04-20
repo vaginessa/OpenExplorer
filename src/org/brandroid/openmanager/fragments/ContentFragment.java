@@ -378,10 +378,11 @@ public class ContentFragment extends OpenFragment
 			//cancelAllTasks();
 			if(mFileTasks.containsKey(path))
 				mFileTasks.get(path).cancel(true);
-			final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
 			new Thread(new Runnable(){
 				@Override
 				public void run() {
+					try { Thread.sleep(50); } catch (InterruptedException e) { }
+					final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
 					try { Thread.sleep(30000); } catch (InterruptedException e) { }
 					if(task.getStatus() == Status.RUNNING)
 						task.cancel(false);
@@ -1051,14 +1052,15 @@ public class ContentFragment extends OpenFragment
 		
 		@Override
 		protected void onCancelled() {
+			Logger.LogDebug("FileIOTask.onCancelled");
 			if(params != null)
 				for(FileIOCommand cmd : params)
 				{
 					OpenPath path = cmd.Path;
-					if(path instanceof OpenNetworkPath)
-						((OpenNetworkPath)path).disconnect();
-					else if(path instanceof OpenFTP)
-						((OpenFTP)path).getManager().disconnect();
+					try {
+						if(path instanceof OpenNetworkPath && ((OpenNetworkPath)path).isConnected())
+							((OpenNetworkPath)path).disconnect();
+					} catch(IOException e) { }
 				}
 		}
 		
@@ -1163,7 +1165,7 @@ public class ContentFragment extends OpenFragment
 					((OpenFTP)cmd.Path).getManager().disconnect();
 				//else if(cmd.Path instanceof OpenNetworkPath)
 				//	((OpenNetworkPath)cmd.Path).disconnect();
-				getManager().pushStack(cmd.Path);
+				//getManager().pushStack(cmd.Path);
 			}
 			Logger.LogDebug("Found " + ret.size() + " items.");
 			OpenPath[] ret2 = new OpenPath[ret.size()];

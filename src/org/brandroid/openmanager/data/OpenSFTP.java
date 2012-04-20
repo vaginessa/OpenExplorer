@@ -365,6 +365,11 @@ public class OpenSFTP extends OpenNetworkPath
 			//e.printStackTrace();
 		//}
 	}
+	
+	@Override
+	public boolean isConnected() throws IOException {
+		return mSession.isConnected();
+	}
 
 	@Override
 	public InputStream getInputStream() throws IOException {
