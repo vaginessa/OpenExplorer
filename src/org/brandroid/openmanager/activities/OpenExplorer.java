@@ -959,22 +959,26 @@ public class OpenExplorer
 	}
 	*/
 	
-	private void sendToLogView(final String txt, final int color)
+	public void sendToLogView(final String txt, final int color)
 	{
 		Logger.LogVerbose(txt);
 		if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isVisible())
 		{
-			if(findViewById(R.id.frag_log) != null)
+			final View logview = findViewById(R.id.frag_log);
+			if(logview != null)
 			{
-				findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
-				Fragment f = fragmentManager.findFragmentById(R.id.frag_log);
-				if(f == null || !(f instanceof LogViewerFragment))
-					fragmentManager.beginTransaction()
-						.replace(R.id.frag_log, mLogFragment)
-						.commit();
-				LayoutParams lp = findViewById(R.id.frag_log).getLayoutParams();
-				lp.width = getResources().getDimensionPixelSize(R.dimen.bookmarks_width);
-				findViewById(R.id.frag_log).setLayoutParams(lp);
+				logview.post(new Runnable(){
+					public void run() {
+						logview.setVisibility(View.VISIBLE);
+						Fragment f = fragmentManager.findFragmentById(R.id.frag_log);
+						if(f == null || !(f instanceof LogViewerFragment))
+							fragmentManager.beginTransaction()
+								.replace(R.id.frag_log, mLogFragment)
+								.commit();
+						LayoutParams lp = logview.getLayoutParams();
+						lp.width = getResources().getDimensionPixelSize(R.dimen.bookmarks_width);
+						logview.setLayoutParams(lp);
+				}});
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
 		if(mLogFragment != null)
@@ -2054,7 +2058,7 @@ public class OpenExplorer
 					Logger.LogDebug("Refreshing " + content.getPath().getPath());
 					FileManager.removeOpenCache(content.getPath().getPath());
 					content.getPath().deleteFolderFromDb();
-					content.refreshData(null, false);
+					content.runUpdateTask();
 				}
 				mBookmarks.refresh();
 				return true;
@@ -2879,7 +2883,10 @@ public class OpenExplorer
 	{
 		ContentFragment frag = getDirContentFragment(false);
 		if(frag != null)
+		{
 			frag.refreshData(null, false);
+			frag.runUpdateTask();
+		}
 	}
 	private String getFragmentPaths(List<Fragment> frags)
 	{

@@ -38,6 +38,7 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileIOTask;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
@@ -78,6 +79,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.LayerDrawable;
 import android.text.format.Time;
 import android.view.ContextMenu;
@@ -133,7 +135,6 @@ public class ContentFragment extends OpenFragment
 	public Boolean mShowLongDate = false;
 	private int mTopIndex = 0;
 	private OpenPath mTopPath = null;
-	public final static Hashtable<OpenPath, FileIOTask> mFileTasks = new Hashtable<OpenPath, ContentFragment.FileIOTask>();
 	
 	private Bundle mBundle;
 	
@@ -186,8 +187,7 @@ public class ContentFragment extends OpenFragment
 
 	public static void cancelAllTasks()
 	{
-		for(AsyncTask t : mFileTasks.values())
-			t.cancel(true);
+		FileIOTask.cancelAllTasks();
 	}
 	
 	public int getViewMode() {
@@ -362,6 +362,7 @@ public class ContentFragment extends OpenFragment
 		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
 				mData = path.list();
+				updateData(mData, allowSkips);
 			} catch (IOException e) {
 				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
@@ -375,28 +376,35 @@ public class ContentFragment extends OpenFragment
 				mData = ((OpenNetworkPath)path).getChildren();
 			else if(path instanceof OpenFile)
 				mData = ((OpenFile)path).listFiles();
+			updateData(mData, allowSkips);
 			//cancelAllTasks();
-			if(mFileTasks.containsKey(path))
-				mFileTasks.get(path).cancel(true);
-			new Thread(new Runnable(){
-				@Override
-				public void run() {
-					try { Thread.sleep(50); } catch (InterruptedException e) { }
-					final AsyncTask task = new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
-					try { Thread.sleep(30000); } catch (InterruptedException e) { }
-					if(task.getStatus() == Status.RUNNING)
-						task.cancel(false);
-				}
-			}).start();
+			
 		}
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
 		
 			//new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, path));
-			updateData(mData, allowSkips);
 			
 			//if(mGrid != null && savedInstanceState.containsKey("first"))
 			
+	}
+	
+	public void runUpdateTask()
+	{
+		String sPath = mPath.getPath();
+		FileIOTask.cancelTask(sPath);
+		Logger.LogDebug("Running Task for " + sPath);
+		final FileIOTask task = new FileIOTask(getExplorer(), this);
+		FileIOTask.addTask(sPath, task);
+		task.execute(mPath);
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				try { Thread.sleep(30000); } catch (InterruptedException e) { }
+				if(task.getStatus() == Status.RUNNING)
+					task.doCancel(false);
+			}
+		}).start();
 	}
 	
 
@@ -750,7 +758,7 @@ public class ContentFragment extends OpenFragment
 	
 
 	
-	private void updateData(final OpenPath[] items) { updateData(items, true); }
+	public void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items, boolean allowSkips)
 	{
 		if(items == null) return;
@@ -890,7 +898,7 @@ public class ContentFragment extends OpenFragment
 				}
 			else {
 				//if(mProgressBarLoading == null) mProgressBarLoading = getView().findViewById(R.id.content_progress);
-				new FileIOTask().execute(new FileIOCommand(FileIOCommandType.ALL, mPath));
+				new FileIOTask(getExplorer(), this).execute(mPath);
 			}
 			
 			//changePath(mPath, false);
@@ -1030,195 +1038,7 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	
-	public enum FileIOCommandType
-	{
-		ALL
-	}
-	public class FileIOCommand
-	{
-		public FileIOCommandType Type;
-		public OpenPath Path;
-		
-		public FileIOCommand(FileIOCommandType type, OpenPath path)
-		{
-			Type = type;
-			Path = path;
-		}
-	}
-	
-	public class FileIOTask extends AsyncTask<FileIOCommand, Integer, OpenPath[]>
-	{
-		private FileIOCommand[] params = null;
-		
-		@Override
-		protected void onCancelled() {
-			Logger.LogDebug("FileIOTask.onCancelled");
-			if(params != null)
-				for(FileIOCommand cmd : params)
-				{
-					OpenPath path = cmd.Path;
-					try {
-						if(path instanceof OpenNetworkPath && ((OpenNetworkPath)path).isConnected())
-							((OpenNetworkPath)path).disconnect();
-					} catch(IOException e) { }
-				}
-		}
-		
-		@Override
-		protected void onCancelled(OpenPath[] result) {
-			onCancelled();
-		}
-		
-		@Override
-		protected OpenPath[] doInBackground(FileIOCommand... params) {
-			this.params = params;
-			publishProgress(0);
-			ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
-			for(FileIOCommand cmd : params)
-			{
-				Logger.LogVerbose("FileIOTask running " + cmd.Type + " on " + cmd.Path.getPath()); 
-				mFileTasks.put(cmd.Path, this);
-				if(cmd.Path.requiresThread())
-				{
-					SimpleUserInfo info = new SimpleUserInfo(getExplorer());
-					OpenServer server = null; 
-					if(cmd.Path instanceof OpenNetworkPath)
-					{
-						int si = ((OpenNetworkPath)cmd.Path).getServersIndex();
-						if(si > -1)
-							server = OpenServers.DefaultServers.get(si);
-						if(server != null && server.getPassword() != null && server.getPassword() != "")
-							info.setPassword(server.getPassword());
-					}
-					
-					OpenPath cachePath = null; 
-					OpenPath[] list = null;
-					boolean success = false;
-					try {
-						cachePath = FileManager.getOpenCache(cmd.Path.getPath(), true, mSorting);
-						if(cachePath != null)
-						{
-							if(cachePath instanceof OpenNetworkPath)
-								list = ((OpenNetworkPath)cachePath).getChildren();
-							if(list == null)
-								list = cachePath.listFiles();
-						}
-						success = list != null;
-					} catch(SmbException ae) {
-						cachePath = cmd.Path;
-						Uri uri = Uri.parse(cachePath.getPath());
-						((OpenNetworkPath)cachePath).setUserInfo(info);
-						try {
-							list = cachePath.listFiles();
-							success = list != null;
-						} catch(IOException e3) {
-							Logger.LogError("Error listing SMB Files", e3);
-							getExplorer().showToast(R.string.s_error_ftp);
-						}
-					} catch (IOException e2) {
-						Logger.LogError("Couldn't get Cache", e2);
-						if(getExplorer() != null)
-							getExplorer().showToast(R.string.s_error_ftp);
-						cachePath = cmd.Path;
-					} catch(Exception e) {
-						Logger.LogError("Null 1?", e);
-					}
-					if(cachePath == null)
-						cachePath = cmd.Path;
-					if(cachePath instanceof OpenNetworkPath
-							&& !success
-							&& ((OpenNetworkPath)cachePath).getUserInfo() == null
-							)
-					{
-						Uri uri = Uri.parse(cmd.Path.getPath());
-						((OpenNetworkPath)cachePath).setUserInfo(info);
-					}
-					if(!success)
-						try {
-							Logger.LogDebug("Trying 1 last time!!");
-							list = cachePath.list();
-							if(list != null)
-								FileManager.setOpenCache(cachePath.getPath(), cachePath);
-						} catch(SmbAuthException e) {
-							Logger.LogWarning("Couldn't connect to SMB using: " + ((OpenSMB)cachePath).getFile().getCanonicalPath());
-						} catch (IOException e) {
-							Logger.LogWarning("Couldn't list from cachePath", e);
-						} catch(Exception e) {
-							Logger.LogError("Null?", e);
-						}
-					if(list != null) {
-						for(OpenPath f : list)
-							ret.add(f);
-					} else {
-						if(getExplorer() != null)
-							getExplorer().showToast(R.string.s_error_ftp);
-					}
-				} else {
-					try {
-						for(OpenPath f : cmd.Path.list())
-							ret.add(f);
-					} catch (IOException e) {
-						Logger.LogError("IOException listing children inside FileIOTask", e);
-					}
-				}
-				if(cmd.Path instanceof OpenFTP)
-					((OpenFTP)cmd.Path).getManager().disconnect();
-				//else if(cmd.Path instanceof OpenNetworkPath)
-				//	((OpenNetworkPath)cmd.Path).disconnect();
-				//getManager().pushStack(cmd.Path);
-			}
-			Logger.LogDebug("Found " + ret.size() + " items.");
-			OpenPath[] ret2 = new OpenPath[ret.size()];
-			ret.toArray(ret2);
-			return ret2;
-		}
-		
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			//mData.clear();
-			setProgressVisibility(true);
-		}
-		
-		@Override
-		protected void onProgressUpdate(Integer... values) {
-			super.onProgressUpdate(values);
-			setProgressVisibility(true);
-		}
-		
-		@Override
-		protected void onPostExecute(final OpenPath[] result)
-		{
-			if(params.length > 0)
-				mFileTasks.remove(params[0]);
-			if(OpenPath.AllowDBCache)
-				new Thread(new Runnable(){public void run() {
-					long start = new Date().getTime(); 
-					int dels = 0, adds = 0;
-					if(result != null && result.length > 0)
-						dels = mPath.deleteFolderFromDb();
-					OpenPathDbAdapter db = OpenPath.getDb();
-					if(db != null)
-						adds += db.createItem(result);
-					else
-						for(OpenPath path : result)
-							if(path != null && path.addToDb())
-								adds++;
-					Logger.LogVerbose("Finished updating OpenPath DB Cache" +
-							"(-" + dels + ",+" + adds + ") in " +
-							((new Date().getTime() - start)/1000) + " seconds for " +
-							mPath.getPath()
-							);
-				}}).start();
-			setProgressVisibility(false);
-			//onCancelled(result);
-			//mData2.clear();
-			updateData(result);
-		}
-		
-	}
-	
-	private void setProgressVisibility(boolean visible)
+	public void setProgressVisibility(boolean visible)
 	{
 		//if(mProgressBarLoading == null && mGrid != null && mGrid.getParent() != null) mProgressBarLoading = ((View)mGrid.getParent()).findViewById(R.id.content_progress);
 		//if(mProgressBarLoading != null && mData.length == 0) mProgressBarLoading.setVisibility(visible ? View.VISIBLE : View.GONE);

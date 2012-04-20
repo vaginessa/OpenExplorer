@@ -109,6 +109,7 @@ public class OpenSMB extends OpenNetworkPath
 	
 	@Override
 	public boolean isConnected() throws IOException {
+		if(mFile == null) return false;
 		return mFile.isConnected();
 	}
 
@@ -214,13 +215,13 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public OpenSMB[] list() throws IOException {
+		if(mChildren != null)
+			return mChildren;
 		return listFiles();
 	}
 
 	@Override
 	public OpenSMB[] listFiles() throws IOException {
-		if(mChildren != null)
-			return mChildren;
 		if(Thread.currentThread().equals(OpenExplorer.UiThread))
 			return null;
 		AllocInfo disk = mFile.getDiskInfo();

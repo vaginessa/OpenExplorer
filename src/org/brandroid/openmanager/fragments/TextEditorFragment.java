@@ -337,10 +337,11 @@ public class TextEditorFragment extends OpenFragment
 			}
 			else if(path.indexOf("ftp:/") > -1)
 			{
+				BufferedInputStream in = null;
 				try {
 					URL url = new URL(path);
 					FTPManager ftp = FTPManager.getInstance(url);
-					BufferedInputStream in = (BufferedInputStream)ftp.getInputStream(url.getPath());
+					in = new BufferedInputStream(ftp.getInputStream(url.getPath()));
 					byte[] buffer = new byte[4096];
 					StringBuilder sb = new StringBuilder();
 					while(in.read(buffer) > 0)
@@ -353,6 +354,12 @@ public class TextEditorFragment extends OpenFragment
 					Logger.LogError("Bad URL for FTP - " + path, e);
 				} catch (IOException e) {
 					Logger.LogError("Couldn't read from FTP - " + path, e);
+				}
+				finally {
+					if(in != null)
+						try {
+							in.close();
+						} catch(IOException e) { }
 				}
 				
 				//return FTPManager.getData(path);

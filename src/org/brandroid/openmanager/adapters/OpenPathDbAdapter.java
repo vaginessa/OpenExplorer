@@ -194,6 +194,8 @@ public class OpenPathDbAdapter
     	ContentValues initialValues = new ContentValues();
     	String sParent = "";
     	if(path != null && path.getParent() != null) sParent = path.getParent().getPath();
+    	if(sParent != "" && !sParent.endsWith("/"))
+    		sParent += "/";
     	initialValues.put(KEY_FOLDER, sParent);
     	initialValues.put(KEY_NAME, path.getName());
         initialValues.put(KEY_SIZE, path.length());

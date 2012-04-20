@@ -446,8 +446,6 @@ public class FileManager {
 				man.setUser(server.getUser());
 				man.setPassword(server.getPassword());
 				ret = new OpenFTP(null, file, man);
-				if(file.getName().equals(""))
-					((OpenFTP)ret).setName(server.getName());
 			} else if(path.startsWith("scp:/"))
 			{
 				Uri uri = Uri.parse(path);

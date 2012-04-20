@@ -120,6 +120,9 @@ public class OpenFTP extends OpenNetworkPath
 	
 	@Override
 	public void disconnect() {
+		try {
+			if(!isConnected()) return;
+		} catch(IOException e) { }
 		super.disconnect();
 		if(mManager != null)
 			mManager.disconnect();
@@ -183,7 +186,10 @@ public class OpenFTP extends OpenNetworkPath
 	public OpenFTP[] listFiles() throws IOException {
 		FTPFile[] arr = mManager.listFiles();
 		if(arr == null)
+		{
+			Logger.LogWarning("Manager couldn't return files?");
 			return null;
+		}
 			
 		mChildren = new OpenFTP[arr.length];
 		String base = getPath();
@@ -396,6 +402,7 @@ public class OpenFTP extends OpenNetworkPath
 		return mChildren;
 	}
 	public boolean isConnected() throws IOException {
+		if(mManager == null) return false;
 		return mManager.isConnected();
 	}
 }

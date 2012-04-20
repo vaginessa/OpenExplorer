@@ -175,13 +175,12 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public OpenPath[] list() throws IOException {
+		if(mChildren != null) return mChildren;
 		return listFiles();
 	}
 
 	@Override
 	public OpenPath[] listFiles() throws IOException {
-		if(mChildren != null)
-			return mChildren;
 		try {
 			connect();
 			String lsPath = mRemotePath;
@@ -368,6 +367,7 @@ public class OpenSFTP extends OpenNetworkPath
 	
 	@Override
 	public boolean isConnected() throws IOException {
+		if(mSession == null) return false;
 		return mSession.isConnected();
 	}
 
