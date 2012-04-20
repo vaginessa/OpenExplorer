@@ -88,8 +88,6 @@ public class FileManager {
 	private boolean mShowHiddenFiles = false;
 	private SortType mSorting = SortType.ALPHA;
 	private long mDirSize = 0;
-	private ArrayList<OpenPath> mDirContent;
-	private OpenStack mPathStack;
 	private static Hashtable<String, OpenPath> mOpenCache = new Hashtable<String, OpenPath>();
 	public static UserInfo DefaultUserInfo;
 	private OnProgressUpdateCallback mCallback = null;
@@ -123,28 +121,6 @@ public class FileManager {
 	 * this class uses a stack to handle the navigation of directories.
 	 */
 	public FileManager() {
-		mDirContent = new ArrayList<OpenPath>();
-		mPathStack = new OpenStack();
-	}
-	
-	public OpenStack getStack() { return mPathStack; }
-	
-	public OpenPath peekStack() {
-		return mPathStack.peek();
-	}
-	public void clearStack() {
-		mPathStack.clear();
-	}
-	public OpenPath popStack() {
-		return mPathStack.pop();
-	}
-	public OpenPath pushStack(OpenPath file) {
-		return mPathStack.push(file);
-	}
-	public OpenPath setHomeDir(OpenPath home)
-	{
-		mPathStack.clear();
-		return pushStack(home);
 	}
 
 	
