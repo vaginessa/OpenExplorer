@@ -81,6 +81,32 @@ public class ThumbnailCreator extends Thread {
 	private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
 	private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
 	
+	public static void postImageBitmap(final ImageView image, final Bitmap bmp)
+	{
+		if(Thread.currentThread().equals(OpenExplorer.UiThread))
+			image.setImageBitmap(bmp);
+		else
+			image.post(new Runnable() {public void run() {
+				image.setImageBitmap(bmp);
+			}});
+	}
+	public static void postImageResource(final ImageView image, final int resId)
+	{
+		if(Thread.currentThread().equals(OpenExplorer.UiThread))
+			image.setImageResource(resId);
+		else
+			image.post(new Runnable() {public void run() {
+				image.setImageResource(resId);
+			}});
+	}
+	public static void postImageFromPath(final ImageView mImage, final OpenPath file, final boolean useLarge)
+	{
+		mImage.post(new Runnable() {
+			public void run() {
+				mImage.setImageBitmap(getFileExtIcon(file.getExtension(), mContext, useLarge));
+			}
+		});
+	}
 	public static boolean setThumbnail(final ImageView mImage, OpenPath file, int mWidth, int mHeight)
 	{
 		//if(mImage instanceof RemoteImageView)
@@ -95,14 +121,9 @@ public class ThumbnailCreator extends Thread {
 		final Context mContext = mImage.getContext().getApplicationContext();
 		
 		if(!file.isDirectory() && file.isTextFile())
-		{
-			mImage.post(new Runnable() {
-				public void run() {
-					mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
-				}
-			});
-		} else //if(mImage.getDrawable() == null)
-			mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
+			postImageFromPath(mImage, file, useLarge);
+		else //if(mImage.getDrawable() == null)
+			postImageResource(mImage, getDefaultResourceId(file, mWidth, mHeight));
 		
 		if(file.hasThumbnail())
 		{
@@ -130,9 +151,13 @@ public class ThumbnailCreator extends Thread {
 				}
 				if(thumb != null)
 				{
-					BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), thumb);
+					final BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), thumb);
 					bd.setGravity(Gravity.CENTER);
-					ImageUtils.fadeToDrawable(mImage, bd);
+					mImage.post(new Runnable(){
+						public void run() {
+							ImageUtils.fadeToDrawable(mImage, bd);							
+						}
+					});
 				}
 			
 			}
