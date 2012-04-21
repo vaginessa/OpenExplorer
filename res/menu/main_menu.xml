@@ -79,29 +79,11 @@
 		android:icon="@drawable/ic_menu_manage"
 		android:title="@string/s_menu_root" />
 	<item
-		android:id="@+id/menu_settings_folder"
-		android:showAsAction="never"
-		android:icon="@drawable/ic_pref_folder"
-		android:title="@string/s_menu_prefs_folder" />
-	<item
 		android:id="@+id/menu_settings"
 		android:showAsAction="never"
 		android:icon="@drawable/ic_menu_preferences"
-		android:title="@string/s_menu_prefs_global" />
-	<item
-	    android:id="@+id/menu_view_fullscreen"
-	    android:checkable="true"
-	    android:title="@string/s_pref_fullscreen" />
-	<item
-	    android:id="@+id/menu_view_split"
-	    android:checkable="true"
-	    android:title="@string/s_pref_basebar"
-	    android:visible="@bool/prehoneycomb" />
-	<item
-	    android:id="@+id/menu_view_logview"
-	    android:checkable="true"
-	    android:title="@string/s_pref_logview"
-	    />
+		android:title="@string/s_menu_prefs_global"
+		/>
 	<item android:id="@+id/menu_translate"
 	    android:title="@string/button_translate"
 	    />
