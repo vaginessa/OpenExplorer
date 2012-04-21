@@ -4,6 +4,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.utils.MenuBuilder;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -126,7 +127,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
         {
         	res.setClickable(false);
         	res.setLongClickable(false);
-        	res.setTextColor(R.color.lightgray);
+        	res.setTextColor(context.getResources().getColor(R.color.lightgray));
         	icon.setAlpha(128);
         }
         

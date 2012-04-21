@@ -16,6 +16,7 @@
 
 package android.support.v4.view.accessibility;
 
+import android.annotation.TargetApi;
 import android.os.Parcelable;
 import android.view.View;
 import android.view.accessibility.AccessibilityRecord;
@@ -25,6 +26,7 @@ import java.util.List;
 /**
  * ICS specific AccessibilityRecord API implementation.
  */
+@TargetApi(14)
 class AccessibilityRecordCompatIcs {
 
     public static Object obtain() {

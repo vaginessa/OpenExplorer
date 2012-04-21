@@ -13,6 +13,7 @@
         <ignore path="res\layout\list_content_layout.xml" />
         <ignore path="res\layout\title_bar.xml" />
     </issue>
+    <issue id="MissingTranslation" severity="ignore" />
     <issue id="UseCompoundDrawables">
         <ignore path="res\layout\grid_content_layout.xml" />
         <ignore path="res\layout\multiselect_layout.xml" />

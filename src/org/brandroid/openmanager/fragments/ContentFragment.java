@@ -41,6 +41,7 @@ import java.util.Hashtable;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.os.Environment;
+import android.annotation.TargetApi;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -416,6 +417,7 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 	
+	@TargetApi(11)
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
@@ -431,6 +433,7 @@ public class ContentFragment extends OpenFragment
 			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
 			if(mSearchView != null)
 				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+					@TargetApi(11)
 					public boolean onQueryTextSubmit(String query) {
 						mSearchView.clearFocus();
 						Intent intent = getExplorer().getIntent();
@@ -594,6 +597,7 @@ public class ContentFragment extends OpenFragment
 		refreshData(mBundle, true);
 	}
 
+	@TargetApi(11)
 	public void updateGridView()
 	{
 		int mLayoutID;

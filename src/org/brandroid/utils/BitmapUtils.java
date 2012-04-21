@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.os.Build;
+import android.util.FloatMath;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -95,7 +96,7 @@ public class BitmapUtils {
 
     // Fin the min x that 1 / x <= scale
     public static int computeSampleSizeLarger(float scale) {
-        int initialSize = (int) Math.floor(1f / scale);
+        int initialSize = (int) FloatMath.floor(1f / scale);
         if (initialSize <= 1) return 1;
 
         return initialSize <= 8

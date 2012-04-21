@@ -216,8 +216,8 @@ public class ChannelForwardedTCPIP extends Channel{
         throw new JSchException("PortForwardingR: remote port "+port+" is already registered.");
       }
       Object[] foo=new Object[6];
-      foo[0]=session; foo[1]=new Integer(port);
-      foo[2]=target; foo[3]=new Integer(lport);
+      foo[0]=session; foo[1]=Integer.valueOf(port);
+      foo[2]=target; foo[3]=Integer.valueOf(lport);
       foo[4]=address_to_bind;
       foo[5]=factory;
       pool.addElement(foo);

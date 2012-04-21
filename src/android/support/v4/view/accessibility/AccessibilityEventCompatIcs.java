@@ -16,12 +16,14 @@
 
 package android.support.v4.view.accessibility;
 
+import android.annotation.TargetApi;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityRecord;
 
 /**
  * ICS specific AccessibilityEvent API implementation.
  */
+@TargetApi(14)
 class AccessibilityEventCompatIcs {
 
     public static int getRecordCount(AccessibilityEvent event) {

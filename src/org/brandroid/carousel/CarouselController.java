@@ -19,6 +19,7 @@ package org.brandroid.carousel;
 import org.brandroid.carousel.CarouselRS.CarouselCallback;
 import org.brandroid.carousel.CarouselView.DetailAlignment;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.renderscript.Float4;
 import android.renderscript.Mesh;
@@ -33,6 +34,7 @@ import android.util.Log;
  * If the number of cards exceeds the number of slots, then the Carousel will continue to go
  * around until the last card can be seen.
  */
+@TargetApi(11)
 public class CarouselController {
     private final int DEFAULT_SLOT_COUNT = 10;
     private final float DEFAULT_RADIUS = 20.0f;

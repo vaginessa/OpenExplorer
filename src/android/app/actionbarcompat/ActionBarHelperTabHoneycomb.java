@@ -1,11 +1,13 @@
 package android.app.actionbarcompat;
 
+import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.ActionBar.TabListener;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
+@TargetApi(11)
 public class ActionBarHelperTabHoneycomb extends android.app.ActionBar.Tab implements ActionBarHelperTab
 {
 	private ActionBar.Tab me;

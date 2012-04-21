@@ -16,6 +16,7 @@
 
 package org.brandroid.carousel;
 
+import android.annotation.TargetApi;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -29,6 +30,7 @@ import android.util.Log;
  * with Renderscript as well as dispatching events.
  *
  */
+@TargetApi(11)
 public class CarouselRS  {
     private static final int DEFAULT_VISIBLE_SLOTS = 1;
     private static final int DEFAULT_CARD_COUNT = 0;
