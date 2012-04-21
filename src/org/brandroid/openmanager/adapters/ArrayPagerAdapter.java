@@ -30,7 +30,7 @@ import android.view.View.OnLongClickListener;
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider {
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
-	private List<Fragment> mExtraFrags = new ArrayList<Fragment>();
+	private List<Fragment> mFrags = new ArrayList<Fragment>();
 	private OnPageTitleClickListener mListener = null;
 
 	public ArrayPagerAdapter(FragmentManager fm) {
@@ -50,17 +50,17 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	@Override
 	public Fragment getItem(int pos) {
 		if(pos < getCount())
-			return mExtraFrags.get(pos);
+			return mFrags.get(pos);
 		else return null;
 	}
 
 	public Fragment getLastItem() {
-		return mExtraFrags.get(getCount() - 1);
+		return mFrags.get(getCount() - 1);
 	}
 
 	@Override
 	public int getCount() {
-		return mExtraFrags.size();
+		return mFrags.size();
 	}
 	
 	@Override
@@ -111,8 +111,8 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	public boolean checkForContentFragmentWithPath(OpenPath path) {
-		if(mExtraFrags == null) return false;
-		for (Fragment f : mExtraFrags)
+		if(mFrags == null) return false;
+		for (Fragment f : mFrags)
 			if (f instanceof OpenPathFragmentInterface
 					&& ((OpenPathFragmentInterface) f).getPath() != null
 					&& ((OpenPathFragmentInterface) f).getPath().equals(path))
@@ -123,13 +123,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	public boolean add(Fragment frag) {
 		if (frag == null)
 			return false;
-		if (mExtraFrags.contains(frag))
+		if (mFrags.contains(frag))
 			return false;
 		if (frag instanceof ContentFragment
 				&& checkForContentFragmentWithPath(((ContentFragment) frag).getPath()))
 			return false;
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
-		boolean ret = mExtraFrags.add(frag);
+		boolean ret = mFrags.add(frag);
 		notifyDataSetChanged();
 		return ret;
 	}
@@ -137,25 +137,32 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	public void add(int index, Fragment frag) {
 		if (frag == null)
 			return;
-		if (mExtraFrags.contains(frag))
+		if (mFrags.contains(frag))
 			return;
 		if (frag instanceof ContentFragment
 				&& checkForContentFragmentWithPath(((ContentFragment) frag)
 						.getPath()))
 			return;
-		mExtraFrags.add(Math.min(getCount(), index), frag);
-		try {
+		mFrags.add(Math.max(0, Math.min(getCount(), index)), frag);
+		try { notifyDataSetChanged(); }
+		catch(IllegalStateException eew) { }
+		catch(IndexOutOfBoundsException e) {
+			ArrayList<Fragment> recoveryArray = new ArrayList<Fragment>(mFrags);
+			//recoveryArray.add(Math.max(0, Math.min(getCount() - 1, index)), frag);
+			mFrags.clear();
+			for(Fragment f : recoveryArray)
+				mFrags.add(f);
 			notifyDataSetChanged();
-		} catch(IllegalStateException eew) { }
+		}
 	}
 
 	public boolean remove(Fragment frag) {
-		boolean ret = mExtraFrags.remove(frag);
+		boolean ret = mFrags.remove(frag);
 		notifyDataSetChanged();
 		return ret;
 	}
 	public Fragment remove(int index) {
-		return mExtraFrags.remove(index);
+		return mFrags.remove(index);
 	}
 
 	public int removeOfType(Class c) {
@@ -163,24 +170,24 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		for (int i = getCount() - 1; i >= 0; i--) {
 			Fragment f = getItem(i);
 			if (f.getClass().equals(c))
-				mExtraFrags.remove(i);
+				mFrags.remove(i);
 		}
 		notifyDataSetChanged();
 		return ret;
 	}
 
 	public void clear() {
-		mExtraFrags.clear();
+		mFrags.clear();
 	}
 
 	public List<Fragment> getFragments() {
-		return mExtraFrags;
+		return mFrags;
 	}
 
 	public void set(int index, Fragment frag) {
 		if(index < getCount())
-			mExtraFrags.set(index, frag);
-		else mExtraFrags.add(frag);
+			mFrags.set(index, frag);
+		else mFrags.add(frag);
 	}
 
 	@Override
@@ -227,8 +234,8 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	public void replace(Fragment old, Fragment newFrag) {
 		int pos = getItemPosition(old);
 		if(pos == -1)
-			mExtraFrags.add(newFrag);
+			mFrags.add(newFrag);
 		else
-			mExtraFrags.set(pos, newFrag);
+			mFrags.set(pos, newFrag);
 	}
 }

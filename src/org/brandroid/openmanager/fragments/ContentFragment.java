@@ -21,91 +21,44 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.FileSystemAdapter;
-import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
-import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.data.OpenClipboard;
-import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenFTP;
-import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSMB;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
-import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileIOTask;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.InputDialog;
-import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.openmanager.util.SimpleUserInfo;
-import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
-import org.brandroid.utils.Preferences;
-
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Hashtable;
-import java.util.List;
-
-import jcifs.smb.SmbAuthException;
-import jcifs.smb.SmbException;
-import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.app.SearchManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.LayerDrawable;
-import android.text.format.Time;
-import android.view.ContextMenu;
-import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.SearchView;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.net.Uri;
 
 public class ContentFragment extends OpenFragment
 				implements OnItemClickListener, OnItemLongClickListener,
@@ -276,8 +229,6 @@ public class ContentFragment extends OpenFragment
 		mContext = getActivity().getApplicationContext();
 		
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
-		refreshData(mBundle, true);
-		
 		if(mGrid != null)
 		{
 			if(mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0)
@@ -624,6 +575,9 @@ public class ContentFragment extends OpenFragment
 	public void onViewCreated(View v, Bundle savedInstanceState) {
 		super.onViewCreated(v, savedInstanceState);
 		
+		if(mBundle == null && savedInstanceState != null)
+			mBundle = savedInstanceState;
+		
 		//mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 		//if(mGrid == null)
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
@@ -636,6 +590,8 @@ public class ContentFragment extends OpenFragment
 		else
 			//refreshData(null);
 			updateGridView();
+		
+		refreshData(mBundle, true);
 	}
 
 	public void updateGridView()
