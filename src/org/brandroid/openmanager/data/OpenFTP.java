@@ -152,6 +152,12 @@ public class OpenFTP extends OpenNetworkPath
 	public String getPath() { return getPath(false); }
 	public String getPath(boolean bIncludeUser) {
 		String ret = mPath;
+		if(!ret.endsWith("/") && (
+			(mAttributes != null && (mAttributes & FLAG_DIRECTORY) == FLAG_DIRECTORY) ||
+			(mChildren != null && mChildren.length > 0)))
+			ret += "/";
+		if(ret == "")
+			ret = "/";
 		if(!bIncludeUser)
 			ret = ret.replace(getUri().getUserInfo() + "@", "");
 		return ret;

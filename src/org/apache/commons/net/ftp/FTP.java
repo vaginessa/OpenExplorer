@@ -798,6 +798,8 @@ public class FTP extends SocketClient
      ***/
     public int cwd(String directory) throws IOException
     {
+    	if(directory.equals(""))
+    		directory = ".";
         return sendCommand(FTPCommand.CWD, directory);
     }
 

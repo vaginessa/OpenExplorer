@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.util;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
@@ -161,8 +162,15 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 				}
 				if(!success || list == null || list.length == 0)
 					try {
-						Logger.LogDebug("Trying 1 last time!!");
-						list = cachePath.listFiles();
+						try {
+							list = cachePath.listFiles();
+						} catch(SocketException e) {
+							if(cachePath instanceof OpenNetworkPath)
+							{
+								((OpenNetworkPath)cachePath).connect();
+								list = cachePath.listFiles();
+							}
+						}
 						if(list != null)
 							FileManager.setOpenCache(cachePath.getPath(), cachePath);
 					} catch(SmbAuthException e) {
