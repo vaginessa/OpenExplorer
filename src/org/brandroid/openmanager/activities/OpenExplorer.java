@@ -143,6 +143,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.LogViewerFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.OpenPathFragment;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
@@ -2067,10 +2068,6 @@ public class OpenExplorer
 				showPreferences(null);
 				return true;
 			
-			case R.id.menu_settings_folder:
-				showPreferences(mLastPath);
-				return true;
-				
 			case R.id.menu_search:
 				onSearchRequested();
 				return true;
@@ -2714,7 +2711,7 @@ public class OpenExplorer
 					if(f != null)
 					{
 						if(!(f instanceof ContentFragment)) continue;
-						if(path.getPath().startsWith(((ContentFragment)f).getPath().getPath()))
+						if((path.getPath()+"/").startsWith(((ContentFragment)f).getPath().getPath()+"/"))
 						{
 							common = i + 1;
 							break;
@@ -2722,6 +2719,7 @@ public class OpenExplorer
 					}
 					mViewPagerAdapter.remove(i);
 				}
+				mViewPagerAdapter.notifyDataSetChanged();
 				//mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
@@ -3344,10 +3342,16 @@ public class OpenExplorer
 		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
 		final Fragment f = getSelectedFragment();
-		if(f instanceof ContentFragment)
+		if(f instanceof OpenPathFragmentInterface)
 		{
-			ContentFragment cf = (ContentFragment)f;
-			if(cf.getPath() instanceof OpenNetworkPath)
+			final OpenPathFragmentInterface cf = (OpenPathFragmentInterface)f;
+			final ImageView icon = (ImageView)findViewById(R.id.title_icon);
+			if(icon != null)
+				new Thread(new Runnable(){
+					public void run() {
+						ThumbnailCreator.setThumbnail(icon, cf.getPath(), 32, 32);
+					}}).start();
+			if((f instanceof ContentFragment) && (cf.getPath() instanceof OpenNetworkPath))
 				((ContentFragment)f).refreshData(null, false);
 		}
 	}
