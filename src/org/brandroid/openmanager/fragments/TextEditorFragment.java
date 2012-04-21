@@ -77,7 +77,7 @@ public class TextEditorFragment extends OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle bundle = savedInstanceState;
-		if(savedInstanceState == null && getArguments() != null)
+		if(getArguments() != null)
 			bundle = getArguments();
 		if(bundle != null && bundle.containsKey("edit_path"))
 		{
@@ -227,12 +227,14 @@ public class TextEditorFragment extends OpenFragment
 			cancelTask();
 			if(getExplorer().isViewPagerEnabled())
 			{
-				ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
-				ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
-				if(pager.getCurrentItem() > 0)
-					pager.setCurrentItem(pager.getCurrentItem() - 1);
-				adapter.remove(this);
-				pager.setAdapter(adapter);
+				final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
+				final ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
+				final int pos = pager.getCurrentItem() - 1;
+				pager.post(new Runnable() {public void run() {
+					adapter.remove(TextEditorFragment.this);
+					pager.setAdapter(adapter);
+					pager.setCurrentItem(pos, false);
+					}});
 			} else
 				getFragmentManager().popBackStack();
 			return true;
