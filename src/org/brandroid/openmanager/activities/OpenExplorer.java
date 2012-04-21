@@ -2058,7 +2058,7 @@ public class OpenExplorer
 					Logger.LogDebug("Refreshing " + content.getPath().getPath());
 					FileManager.removeOpenCache(content.getPath().getPath());
 					content.getPath().deleteFolderFromDb();
-					content.runUpdateTask();
+					content.runUpdateTask(true);
 				}
 				mBookmarks.refresh();
 				return true;
@@ -3341,11 +3341,15 @@ public class OpenExplorer
 
 	@Override
 	public void onPageSelected(int position) {
-		if(Build.VERSION.SDK_INT > 10)
-			invalidateOptionsMenu();
-		else
+		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
-		Fragment f = getSelectedFragment();
+		final Fragment f = getSelectedFragment();
+		if(f instanceof ContentFragment)
+		{
+			ContentFragment cf = (ContentFragment)f;
+			if(cf.getPath() instanceof OpenNetworkPath)
+				((ContentFragment)f).refreshData(null, false);
+		}
 	}
 
 	@Override

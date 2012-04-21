@@ -83,6 +83,7 @@ import android.graphics.Color;
 import android.graphics.drawable.LayerDrawable;
 import android.text.format.Time;
 import android.view.ContextMenu;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -373,8 +374,11 @@ public class ContentFragment extends OpenFragment
 				mContentAdapter.notifyDataSetChanged();
 			setProgressVisibility(true);
 			if(path instanceof OpenNetworkPath && path.listFromDb(mSorting))
+			{
 				mData = ((OpenNetworkPath)path).getChildren();
-			else if(path instanceof OpenFile)
+				if(getExplorer() != null)
+					getExplorer().sendToLogView("Loaded " + mData.length + " entries from cache", Color.DKGRAY);
+			} else if(path instanceof OpenFile)
 				mData = ((OpenFile)path).listFiles();
 			updateData(mData, allowSkips);
 			//cancelAllTasks();
@@ -389,10 +393,13 @@ public class ContentFragment extends OpenFragment
 			
 	}
 	
-	public void runUpdateTask()
+	public void runUpdateTask() { runUpdateTask(false); }
+	public void runUpdateTask(boolean reconnect)
 	{
 		String sPath = mPath.getPath();
 		FileIOTask.cancelTask(sPath);
+		if(reconnect && (mPath instanceof OpenNetworkPath))
+			((OpenNetworkPath)mPath).disconnect();
 		Logger.LogDebug("Running Task for " + sPath);
 		final FileIOTask task = new FileIOTask(getExplorer(), this);
 		FileIOTask.addTask(sPath, task);
@@ -462,7 +469,9 @@ public class ContentFragment extends OpenFragment
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
 		//Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
-		inflater.inflate(R.menu.main_menu, menu);
+		try {
+			inflater.inflate(R.menu.main_menu, menu);
+		} catch(Exception e) { }
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{
