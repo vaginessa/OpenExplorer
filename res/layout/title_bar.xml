@@ -38,6 +38,7 @@
 	    android:layout_toLeftOf="@+id/title_buttons"
 	    android:layout_alignParentTop="true"
 	    android:layout_margin="4dp"
+	    android:visibility="gone"
 	    android:indeterminate="true" />
 	
 	<TextView
