@@ -40,13 +40,6 @@
 			android:layout_height="wrap_content"
 				android:paddingRight="4dip">
 			<TextView
-				android:id="@+id/info_name_label"
-				style="@style/Large"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:gravity="center"
-				/>
-			<TextView
 				android:id="@+id/info_path_label"
 				style="@style/Mid"
 				android:layout_width="fill_parent"
