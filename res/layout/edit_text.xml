@@ -16,7 +16,7 @@
 
 	    <ProgressBar
 	        android:id="@android:id/progress"
-	        style="@android:style/Widget.ProgressBar.Horizontal"
+	        style="@style/Widget.ProgressBar.Horizontal"
 	        android:indeterminate="true"
 	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
@@ -25,27 +25,30 @@
 	        android:layout_margin="4dp" />
 	    
 	</RelativeLayout>
+
+	<ListView
+	    android:id="@+id/text_view_list"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent" 
+	    android:scrollingCache="false"
+	    android:fastScrollEnabled="true"
+	    android:listSelector="@color/transparent"
+	    />
 	
-	<WebView
-	    android:id="@+id/text_webview"
+	<ScrollView android:id="@+id/text_view_scroller"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:layout_alignParentLeft="true"
-	    android:layout_alignParentTop="true" />
-	
-	<ScrollView android:id="@+id/text_scroller"
-	    android:layout_height="match_parent"
-	    android:layout_alignParentLeft="true"
+	    android:scrollbars="vertical"
 	    android:visibility="gone"
-	    android:layout_width="match_parent">
-	    <TextView
-	        android:id="@+id/text_view"
-	        android:layout_width="match_parent" 
-	        android:layout_height="wrap_content"
-	        android:typeface="monospace"
-	        android:textSize="10dp"
-	        android:gravity="top|left"
-	        />
+	    >
+	<TableLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:id="@+id/text_view_table"
+	    >
+
+	    
+	</TableLayout>
 	</ScrollView>
 	
     <EditText
@@ -55,7 +58,7 @@
 		android:layout_below="@+id/layout_info"
 		android:typeface="monospace"
 	    android:visibility="gone"
-		android:textSize="10dp"
+		android:textSize="@dimen/text_size_small"
 		android:gravity="top|left"
 		android:bufferType="normal"
 		android:inputType="textNoSuggestions|textMultiLine"

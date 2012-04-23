@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
@@ -18,6 +19,7 @@ import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.LinesAdapter;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
@@ -32,6 +34,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -60,10 +63,15 @@ import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
@@ -71,7 +79,11 @@ public class TextEditorFragment extends OpenFragment
 	implements OnClickListener, OpenPathFragmentInterface, TextWatcher
 {
 	private EditText mEditText;
-	private WebView mWebText;
+	private ListView mViewList;
+	private LinesAdapter mViewListAdapter = null;
+	//private WebView mWebText;
+	private TableLayout mViewTable;
+	//private ScrollView mViewScroller;
 	private ProgressBar mProgress = null;
 	
 	private OpenPath mPath = null;
@@ -82,7 +94,12 @@ public class TextEditorFragment extends OpenFragment
 	
 	private boolean mEditMode = false;
 	
-	public TextEditorFragment() { }
+	public TextEditorFragment() {
+		if(getArguments() != null && getArguments().containsKey("edit_path"))
+		{
+			setPath(getArguments().getString("edit_path"));
+		}
+	}
 	public TextEditorFragment(OpenPath path)
 	{
 		mPath = path;
@@ -92,7 +109,24 @@ public class TextEditorFragment extends OpenFragment
 		setArguments(b);
 		setHasOptionsMenu(true);
 	}
+	
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mViewListAdapter = new LinesAdapter(activity, mData != null ? mData.split("\n") : new String[]{});
+	}
 
+	private void setPath(String path)
+	{
+		if(path.startsWith("content://"))
+			mPath = new OpenContent(Uri.parse(path), getActivity());
+		else
+			try {
+				mPath = FileManager.getOpenCache(path, false, null);
+			} catch (IOException e) {
+				mPath = new OpenFile(path);
+			}
+	}
 	public void setProgressVisibility(boolean visible)
 	{
 		if(mProgress != null)
@@ -110,6 +144,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
 		Bundle bundle = savedInstanceState;
 		if(getArguments() != null)
 			bundle = getArguments();
@@ -164,12 +199,14 @@ public class TextEditorFragment extends OpenFragment
 	}
 	
 	public void onPrepareOptionsMenu(Menu menu) {
+		if(getActivity() == null) return;
+		if(menu == null) return;
 		super.onPrepareOptionsMenu(menu);
 		MenuUtils.setMenuVisible(menu, mPath.canWrite(), R.id.menu_save);
 		MenuUtils.setMenuChecked(menu, mEditMode, R.id.menu_view_keyboard_toggle);
-		if(mTextSize >= 30f)
+		if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_medium))
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_large, R.id.menu_view_font_medium, R.id.menu_view_font_small);
-		else if(mTextSize >= 20f)
+		else if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_medium))
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_medium, R.id.menu_view_font_large, R.id.menu_view_font_small);
 		else
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_small, R.id.menu_view_font_medium, R.id.menu_view_font_large);
@@ -186,19 +223,15 @@ public class TextEditorFragment extends OpenFragment
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.edit_text, null);
 		mEditText = (EditText)view.findViewById(R.id.text_edit);
+		mViewList = (ListView)view.findViewById(R.id.text_view_list);
+		//mViewTable = (TableLayout)view.findViewById(R.id.text_view_table);
+		//mViewScroller = (ScrollView)view.findViewById(R.id.text_view_scroller);
 		//mViewText = (TextView)view.findViewById(R.id.text_view);
 		//mViewScroller = (ScrollView)view.findViewById(R.id.text_scroller);
-		mWebText = (WebView)view.findViewById(R.id.text_webview);
-		mWebText.getSettings().setJavaScriptEnabled(true);
+		//mWebText = (WebView)view.findViewById(R.id.text_webview);
+		//mWebText.getSettings().setJavaScriptEnabled(true);
 		mProgress = ((ProgressBar)view.findViewById(android.R.id.progress));
-		mEditText.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				//mData = s.toString();
-			}
-			
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-			public void afterTextChanged(Editable s) { }
-		});
+		mEditText.addTextChangedListener(this);
 		return view;
 	}
 	
@@ -206,8 +239,12 @@ public class TextEditorFragment extends OpenFragment
 	{
 		mTextSize = sz;
 		mEditText.setTextSize(sz);
+		if(mViewListAdapter != null)
+			mViewListAdapter.setTextSize(sz);
 		//mViewText.setTextSize(sz);
 	}
+	
+	/*
 	private String getDataHTML()
 	{
 		StringBuilder sb = new StringBuilder();
@@ -259,6 +296,49 @@ public class TextEditorFragment extends OpenFragment
 			}
 		}).start();
 	}
+	*/
+	
+	private void refreshTable2()
+	{
+		final Context c = getActivity();
+		if(c == null) return;
+		final LayoutInflater inflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		if(inflater == null) return;
+		setProgressVisibility(true);
+		new Thread(new Runnable(){
+			public void run() {
+				String[] lines = mData.split("\n");
+				int i = 1;
+				final ArrayList<View> rows = new ArrayList<View>();
+				for(String line : lines)
+				{
+					TableRow row = (TableRow)inflater.inflate(R.layout.edit_text_view_row, null);
+					
+					TextView txtLine = (TextView)row.findViewById(R.id.text_line);
+					txtLine.setTextSize(mTextSize-1);
+					txtLine.setText(((Integer)i++).toString());
+					
+					TextView txtData = (TextView)row.findViewById(R.id.text_data);
+					txtData.setTextSize(mTextSize);
+					txtData.setText(line);
+					
+					rows.add(row);
+				}
+				mViewTable.post(new Runnable() {
+					public void run() {
+						mViewTable.removeAllViews();
+						for(View row : rows)
+							mViewTable.addView(row);
+						mViewTable.invalidate();
+						setProgressVisibility(false);
+					}});
+		}}).start();
+	}
+	private void refreshList()
+	{
+		mViewListAdapter.setLines(mData.split("\n"));
+		
+	}
 	public void setText(final String txt)
 	{
 		mData = txt;
@@ -269,7 +349,7 @@ public class TextEditorFragment extends OpenFragment
 				}
 			});
 		else
-			refreshWebText();
+			refreshList();
 	}
 	
 	@Override
@@ -280,7 +360,8 @@ public class TextEditorFragment extends OpenFragment
 			mData = savedInstanceState.getString("edit_data");
 		if(mPath != null && mData == null)
 		{
-			if(mPath instanceof OpenFile && mPath.length() < 500000)
+			mData = getString(R.string.s_status_loading);
+			if(mPath instanceof OpenFile)
 			{
 				//new Thread(new Runnable() {public void run() {
 					try {
@@ -293,12 +374,14 @@ public class TextEditorFragment extends OpenFragment
 					} catch (IOException e) {
 						Logger.LogError("Couldn't read from file - " + mPath.getPath(), e);
 					}
-				}
-				//}).start();
-			else
+				//}}).start();
+			} else
 				mTask = new FileLoadTask().execute(mPath);
 		} else if (mData != null)
 			setText(mData);
+		if(savedInstanceState != null && savedInstanceState.containsKey("size"))
+			setTextSize(savedInstanceState.getFloat("size"));
+		mViewList.setAdapter(mViewListAdapter);
 	}
 	
 	@Override
@@ -323,6 +406,7 @@ public class TextEditorFragment extends OpenFragment
 			Logger.LogDebug("Saving server #" + ((OpenNetworkPath)mPath).getServersIndex());
 			outState.putInt("edit_server", ((OpenNetworkPath)mPath).getServersIndex());
 		} else Logger.LogDebug("No server #");
+		outState.putFloat("size", mTextSize);
 	}
 	
 	public void doSave()
@@ -378,13 +462,13 @@ public class TextEditorFragment extends OpenFragment
 			return true;
 			
 		case R.id.menu_view_font_large:
-			setTextSize(30f);
+			setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_large));
 			return true;
 		case R.id.menu_view_font_medium:
-			setTextSize(20f);
+			setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_medium));
 			return true;
 		case R.id.menu_view_font_small:
-			setTextSize(10f);
+			setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_small));
 			return true;
 			
 		case R.id.menu_close:
@@ -407,8 +491,10 @@ public class TextEditorFragment extends OpenFragment
 		mEditMode = editable;
 		if(editable)
 		{
-			mWebText.setVisibility(View.GONE);
+			//mWebText.setVisibility(View.GONE);
 			//mViewScroller.setVisibility(View.GONE);
+			//mViewScroller.setVisibility(View.GONE);
+			mViewList.setVisibility(View.GONE);
 			mEditText.setVisibility(View.VISIBLE);
 			mEditText.removeTextChangedListener(this);
 			setText(mData);
@@ -417,7 +503,9 @@ public class TextEditorFragment extends OpenFragment
 			mEditText.removeTextChangedListener(this);
 			mEditText.setVisibility(View.GONE);
 			//mViewScroller.setVisibility(View.VISIBLE);
-			mWebText.setVisibility(View.VISIBLE);
+			//mWebText.setVisibility(View.VISIBLE);
+			//mViewScroller.setVisibility(View.VISIBLE);
+			mViewList.setVisibility(View.VISIBLE);
 		}
 	}
 
@@ -447,8 +535,8 @@ public class TextEditorFragment extends OpenFragment
 				fos = new BufferedOutputStream(mPath.getOutputStream());
 				fos.write(data.getBytes());
 				fos.close();
-				if(OpenFTP.class.equals(mPath.getClass()))
-					((OpenFTP)mPath).getManager().disconnect();
+				if(mPath instanceof OpenNetworkPath)
+					((OpenNetworkPath)mPath).disconnect();
 			} catch(Exception e) {
 				Logger.LogError("Couldn't save file.", e);
 			}
@@ -490,9 +578,9 @@ public class TextEditorFragment extends OpenFragment
 						sb.append(line + "\n");
 				} catch (RuntimeException r) {
 					Logger.LogError("File too large?", r);
-					getExplorer().showToast("Unable to open file. File too large?");
-					cancelTask();
-					getFragmentManager().popBackStack();
+					if(getExplorer() != null)
+						getExplorer().showToast("Unable to open file. File too large?");
+					doClose();
 				} catch (Exception e) {
 					Logger.LogError("Couldn't find file - " + path, e);
 				} finally {
@@ -503,9 +591,7 @@ public class TextEditorFragment extends OpenFragment
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					if(OpenFTP.class.equals(mPath.getClass()))
-						((OpenFTP)mPath).getManager().disconnect();
-					else if(mPath instanceof OpenNetworkPath)
+					if(mPath instanceof OpenNetworkPath)
 						((OpenNetworkPath)mPath).disconnect();
 				}
 				return sb.toString();
@@ -540,8 +626,9 @@ public class TextEditorFragment extends OpenFragment
 				//return FTPManager.getData(path);
 			} else if(path.indexOf("sftp:/") > -1)
 			{
+				BufferedInputStream in = null;
 				try {
-					BufferedInputStream in = (BufferedInputStream)mPath.getInputStream();
+					in = new BufferedInputStream(mPath.getInputStream());
 					byte[] buffer = new byte[4096];
 					StringBuilder sb = new StringBuilder();
 					while(in.read(buffer) > 0)
@@ -552,6 +639,11 @@ public class TextEditorFragment extends OpenFragment
 					return sb.toString();
 				} catch(IOException e) {
 					Logger.LogError("Couldn't read from SFTP - " + path, e);
+				} finally {
+					if(in != null)
+						try {
+							in.close();
+						} catch(Exception e) { }
 				}
 			}
 			return null;
@@ -568,7 +660,6 @@ public class TextEditorFragment extends OpenFragment
 			setText(result);
 			setProgressVisibility(false);
 			setEnabled(true, mEditText);
-			mData = result;
 		}
 	}
 
@@ -593,4 +684,6 @@ public class TextEditorFragment extends OpenFragment
 	public void afterTextChanged(Editable s) {
 		mData = s.toString();
 	}
+	
+	
 }

@@ -12,12 +12,6 @@
         android:showAsAction="always"
         />
     <item
-        android:id="@+id/menu_close"
-        android:title="@string/s_cancel"
-        android:icon="@drawable/ic_menu_close_clear_cancel"
-        android:showAsAction="always"
-        />
-    <item
         android:id="@id/menu_view"
         android:title="@string/s_view"
         android:icon="@drawable/ic_menu_view"
@@ -25,6 +19,12 @@
         >
         <menu />
     </item>
+    <item
+        android:id="@+id/menu_close"
+        android:title="@string/s_cancel"
+        android:icon="@drawable/ic_menu_close_clear_cancel"
+        android:showAsAction="always"
+        />
     <item
         android:id="@id/menu_context_info"
         android:title="@string/s_menu_info"

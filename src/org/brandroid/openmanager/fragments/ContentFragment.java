@@ -21,6 +21,7 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.FileSystemAdapter;
+import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -40,6 +41,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
+
+import android.net.Uri;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.os.Environment;
@@ -102,7 +105,10 @@ public class ContentFragment extends OpenFragment
 	private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 
 	public ContentFragment() {
-		
+		if(getArguments() != null && getArguments().containsKey("last"))
+		{
+			setPath(getArguments().getString("last"));
+		}
 	}
 	private ContentFragment(OpenPath path)
 	{
@@ -112,6 +118,17 @@ public class ContentFragment extends OpenFragment
 	{
 		mPath = path;
 		mViewMode = view;
+	}
+	private void setPath(String path)
+	{
+		if(path.startsWith("content://"))
+			mPath = new OpenContent(Uri.parse(path), getActivity());
+		else
+			try {
+				mPath = FileManager.getOpenCache(path, false, null);
+			} catch (IOException e) {
+				mPath = new OpenFile(path);
+			}
 	}
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
@@ -195,17 +212,22 @@ public class ContentFragment extends OpenFragment
 		super.onCreate(savedInstanceState);
 		
 		setHasOptionsMenu(true);
+		
+		mContext = getActivity();
+		
 		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
 		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
 		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
 		if(savedInstanceState != null)
 			mBundle = savedInstanceState;
-		else if(getArguments() != null)
+		if(getArguments() != null && getArguments().containsKey("last"))
 			mBundle = getArguments();
 		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || mPath.getPath().equals(mBundle.getString("last"))))
 		{
 			String last = mBundle.getString("last");
-			if(last.startsWith("/"))
+			if(last.startsWith("content://"))
+				mPath = new OpenContent(Uri.parse(last), mContext);
+			else if(last.startsWith("/"))
 				mPath = new OpenFile(last).setRoot();
 			else if(last.equalsIgnoreCase("Photos"))
 				mPath = OpenExplorer.getPhotoParent();
@@ -230,8 +252,6 @@ public class ContentFragment extends OpenFragment
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
 		else Logger.LogDebug("Creating ContentFragment @ " + mPath.getPath());
-		
-		mContext = getActivity().getApplicationContext();
 		
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		if(mGrid != null)
@@ -318,7 +338,7 @@ public class ContentFragment extends OpenFragment
 
 		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
-				mData = path.list();
+				mData = path.listFiles();
 				updateData(mData, allowSkips);
 			} catch (IOException e) {
 				Logger.LogError("Error getting children from FileManager for " + path, e);
@@ -329,9 +349,13 @@ public class ContentFragment extends OpenFragment
 			if(mContentAdapter != null)
 				mContentAdapter.notifyDataSetChanged();
 			setProgressVisibility(true);
-			if(path instanceof OpenNetworkPath && path.listFromDb(mSorting))
+			if(path.listFromDb(mSorting))
 			{
-				mData = ((OpenNetworkPath)path).getChildren();
+				try {
+					mData = path.list();
+				} catch (IOException e) {
+					Logger.LogError("Error listing from path " + path.getPath(), e);
+				}
 				if(getExplorer() != null)
 					getExplorer().sendToLogView("Loaded " + mData.length + " entries from cache", Color.DKGRAY);
 			} else if(path instanceof OpenFile)
@@ -478,7 +502,8 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		//Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
-		
+		if(getActivity() == null) return;
+		if(menu == null) return;
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);

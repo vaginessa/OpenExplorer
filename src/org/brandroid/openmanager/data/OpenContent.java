@@ -46,7 +46,7 @@ public class OpenContent extends OpenPath
 
 	@Override
 	public String getPath() {
-		return uri.getPath();
+		return uri.toString();
 	}
 
 	@Override
