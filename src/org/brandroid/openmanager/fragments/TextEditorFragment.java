@@ -44,6 +44,7 @@ import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -56,6 +57,9 @@ import android.view.View.OnFocusChangeListener;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -67,9 +71,8 @@ public class TextEditorFragment extends OpenFragment
 	implements OnClickListener, OpenPathFragmentInterface, TextWatcher
 {
 	private EditText mEditText;
-	private TextView mViewText;
+	private WebView mWebText;
 	private ProgressBar mProgress = null;
-	private ScrollView mViewScroller;
 	
 	private OpenPath mPath = null;
 	private String mData = null;
@@ -183,8 +186,10 @@ public class TextEditorFragment extends OpenFragment
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.edit_text, null);
 		mEditText = (EditText)view.findViewById(R.id.text_edit);
-		mViewText = (TextView)view.findViewById(R.id.text_view);
-		mViewScroller = (ScrollView)view.findViewById(R.id.text_scroller);
+		//mViewText = (TextView)view.findViewById(R.id.text_view);
+		//mViewScroller = (ScrollView)view.findViewById(R.id.text_scroller);
+		mWebText = (WebView)view.findViewById(R.id.text_webview);
+		mWebText.getSettings().setJavaScriptEnabled(true);
 		mProgress = ((ProgressBar)view.findViewById(android.R.id.progress));
 		mEditText.addTextChangedListener(new TextWatcher() {
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -201,7 +206,55 @@ public class TextEditorFragment extends OpenFragment
 	{
 		mTextSize = sz;
 		mEditText.setTextSize(sz);
-		mViewText.setTextSize(sz);
+		//mViewText.setTextSize(sz);
+	}
+	private String getDataHTML()
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append(getHTMLHead());
+		sb.append(TextUtils.htmlEncode(mData));
+		sb.append(getHTMLFoot());
+		return sb.toString();
+	}
+	private String getLanguage() {
+		String ext = getPath().getExtension().toLowerCase();
+		if(ext.endsWith("ml")) return "html";
+		if(ext.equals("js")) return "javascript";
+		if(ext.equals("css")) return "css";
+		if(ext.equals("php")) return "php";
+		if(ext.equals("java")) return "java";
+		return "text";
+	}
+	private String getHTMLHead() {
+		return getHTMLHead(getLanguage());
+	}
+	private String getHTMLHead(String language)
+	{
+		return //"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n" +
+			//"<html><head>" +
+			"<script src=\"sh/shCore.js\" type=\"text/javascript\"></script>"
+			+ "<link href=\"sh/styles/shCore.css\" type=\"text/css\" rel=\"stylesheet\" />"
+			+ "<link href=\"sh/styles/shThemeDefault.css\" type=\"text/css\" rel=\"stylesheet\" />"
+			+ "<style>body,textarea,pre{margin:0px;padding:0px;border:0px;}textarea{width:100%;height:100%;}</style></head>"
+			+ "<pre class=\"brush: " + language + "\">";
+	}
+	private String getHTMLFoot()
+	{
+		return "</pre><script type=\"text/javascript\">SyntaxHighlighter.all()</script>";
+	}
+	private void refreshWebText()
+	{
+		new Thread(new Runnable(){
+			public void run() {
+				final String mDataHTML = getDataHTML();
+				mWebText.post(new Runnable() {
+					public void run() {
+						mWebText.loadDataWithBaseURL("file:///android_asset/",
+								mDataHTML, "text/html", "utf-8", null);
+					}
+				});
+			}
+		}).start();
 	}
 	public void setText(final String txt)
 	{
@@ -213,11 +266,7 @@ public class TextEditorFragment extends OpenFragment
 				}
 			});
 		else
-			mViewText.post(new Runnable() {
-				public void run() {
-					mViewText.setText(txt);
-				}
-			});
+			refreshWebText();
 	}
 	
 	@Override
@@ -280,6 +329,7 @@ public class TextEditorFragment extends OpenFragment
 		mTask = new FileSaveTask(mPath);
 		((FileSaveTask)mTask).execute(mEditText.getText().toString());
 	}
+	
 	public void doClose()
 	{
 		cancelTask();
@@ -354,7 +404,8 @@ public class TextEditorFragment extends OpenFragment
 		mEditMode = editable;
 		if(editable)
 		{
-			mViewScroller.setVisibility(View.GONE);
+			mWebText.setVisibility(View.GONE);
+			//mViewScroller.setVisibility(View.GONE);
 			mEditText.setVisibility(View.VISIBLE);
 			mEditText.removeTextChangedListener(this);
 			setText(mData);
@@ -362,7 +413,8 @@ public class TextEditorFragment extends OpenFragment
 		} else {
 			mEditText.removeTextChangedListener(this);
 			mEditText.setVisibility(View.GONE);
-			mViewScroller.setVisibility(View.VISIBLE);
+			//mViewScroller.setVisibility(View.VISIBLE);
+			mWebText.setVisibility(View.VISIBLE);
 		}
 	}
 

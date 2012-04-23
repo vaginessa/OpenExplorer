@@ -505,6 +505,7 @@ public class OpenExplorer
 			mLastPath = null;
 			changePath(path, bAddToStack, true);
 			setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
+			restoreOpenedEditors();
 		}
 
 		ft.commit();
@@ -812,21 +813,8 @@ public class OpenExplorer
 				}
 			if(path == null)
 				path = new OpenFile(intent.getDataString());
-			if(path != null && path.exists())
-			{
-				if(path.isTextFile() || path.length() < 500000)
-				{
-					TextEditorFragment tf = new TextEditorFragment(path);
-					if(mViewPagerEnabled && mViewPagerAdapter != null)
-					{
-						mViewPagerAdapter.add(tf);
-						setViewPageAdapter(mViewPagerAdapter);
-						final int pos = mViewPagerAdapter.getItemPosition(tf);
-						setCurrentItem(pos > -1 ? pos : mViewPagerAdapter.getCount() - 1, true);
-						return true;
-					}
-				}
-			}
+			if(path != null && path.exists() && (path.isTextFile() || path.length() < 500000))
+				editFile(path);
 		}
 		return false;
 	}
@@ -1805,18 +1793,64 @@ public class OpenExplorer
 		}
 	}
 	
-	public void editFile(OpenPath path)
+	private void saveOpenedEditors()
+	{
+		StringBuilder editing = new StringBuilder(",");
+		for(int i = 0; i < mViewPagerAdapter.getCount(); i++)
+		{
+			Fragment f = mViewPagerAdapter.getItem(i);
+			if(f instanceof TextEditorFragment)
+			{
+				TextEditorFragment tf = (TextEditorFragment)f;
+				OpenPath path = tf.getPath();
+				if(editing.indexOf(","+path.getPath()+",") == -1)
+					editing.append(path + ",");
+			}
+		}
+		Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
+		setSetting(null, "editing", editing.toString());
+	}
+	private void restoreOpenedEditors()
+	{
+		String editing = getSetting(null, "editing", (String)null);
+		Logger.LogDebug("Restoring [" + editing + "] to TextEditorFragments");
+		if(editing == null) return;
+		for(String s : editing.split(","))
+		{
+			if(s == null || s == "") continue;
+			OpenPath path = null;
+			if(s.startsWith("content://"))
+				path = new OpenContent(Uri.parse(s), this);
+			else
+				try {
+					path = FileManager.getOpenCache(s, false, null);
+				} catch (IOException e) {
+					path = new OpenFile(s);
+				}
+			if(path == null) continue;
+			editFile(path, true);
+		}
+		mViewPagerAdapter.notifyDataSetChanged();
+		setViewPageAdapter(mViewPagerAdapter);
+	}
+	
+	public void editFile(OpenPath path) { editFile(path, false); }
+	public void editFile(OpenPath path, boolean batch)
 	{
 		TextEditorFragment editor = new TextEditorFragment(path);
-		if(mViewPagerAdapter != null && mViewPagerAdapter instanceof ArrayPagerAdapter)
+		if(mViewPagerAdapter != null)
 		{
 			int pos = mViewPagerAdapter.getItemPosition(editor);
 			if(pos == -1)
 			{
 				mViewPagerAdapter.add(editor);
-				mViewPager.setAdapter(mViewPagerAdapter);
-				setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
-			} else setCurrentItem(pos, false);
+				if(!batch)
+				{
+					saveOpenedEditors();
+					mViewPager.setAdapter(mViewPagerAdapter);
+					setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+				}
+			} else if(!batch) setCurrentItem(pos, false);
 		} else
 			fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, editor)

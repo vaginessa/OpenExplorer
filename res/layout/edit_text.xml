@@ -26,6 +26,13 @@
 	    
 	</RelativeLayout>
 	
+	<WebView
+	    android:id="@+id/text_webview"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_alignParentLeft="true"
+	    android:layout_alignParentTop="true" />
+	
 	<ScrollView android:id="@+id/text_scroller"
 	    android:layout_height="match_parent"
 	    android:layout_alignParentLeft="true"
@@ -47,6 +54,7 @@
 		android:id="@+id/text_edit"
 		android:layout_below="@+id/layout_info"
 		android:typeface="monospace"
+	    android:visibility="gone"
 		android:textSize="10dp"
 		android:gravity="top|left"
 		android:bufferType="normal"
