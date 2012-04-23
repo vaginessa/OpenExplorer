@@ -218,8 +218,8 @@ public class TextEditorFragment extends OpenFragment
 	}
 	private String getLanguage() {
 		String ext = getPath().getExtension().toLowerCase();
-		if(ext.endsWith("ml")) return "html";
-		if(ext.equals("js")) return "javascript";
+		if(ext.endsWith("ml")) return "xml";
+		if(ext.equals("js")) return "js";
 		if(ext.equals("css")) return "css";
 		if(ext.equals("php")) return "php";
 		if(ext.equals("java")) return "java";
@@ -230,17 +230,20 @@ public class TextEditorFragment extends OpenFragment
 	}
 	private String getHTMLHead(String language)
 	{
-		return //"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n" +
-			//"<html><head>" +
-			"<script src=\"sh/shCore.js\" type=\"text/javascript\"></script>"
+		return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n" +
+			"<html><head>" +
+			"<script src=\"sh/scripts/shCore.js\" type=\"text/javascript\"></script>"
+			+ "<script type=\"text/javascript\" src=\"sh/scripts/shBrushJScript.js\"></script>"
 			+ "<link href=\"sh/styles/shCore.css\" type=\"text/css\" rel=\"stylesheet\" />"
 			+ "<link href=\"sh/styles/shThemeDefault.css\" type=\"text/css\" rel=\"stylesheet\" />"
-			+ "<style>body,textarea,pre{margin:0px;padding:0px;border:0px;}textarea{width:100%;height:100%;}</style></head>"
-			+ "<pre class=\"brush: " + language + "\">";
+			//+ "<style>body,textarea,pre{margin:0px;padding:0px;border:0px;}textarea{width:100%;height:100%;}</style>"
+			+ "<script type=\"text/javascript\">SyntaxHighlighter.all()</script>"
+			+ "</head><body>"
+			+ "<pre class=\"brush: " + language + ";\">";
 	}
 	private String getHTMLFoot()
 	{
-		return "</pre><script type=\"text/javascript\">SyntaxHighlighter.all()</script>";
+		return "</pre></body></html>";
 	}
 	private void refreshWebText()
 	{
