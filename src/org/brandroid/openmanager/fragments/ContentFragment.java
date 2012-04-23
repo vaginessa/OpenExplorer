@@ -29,9 +29,11 @@ import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileIOTask;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import java.io.IOException;
@@ -46,6 +48,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -90,6 +93,7 @@ public class ContentFragment extends OpenFragment
 	public Boolean mShowLongDate = false;
 	private int mTopIndex = 0;
 	private OpenPath mTopPath = null;
+	private OpenPath mPath = null;
 	
 	private Bundle mBundle;
 	
@@ -421,10 +425,11 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
+		if(mPath == null || !mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 		//Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
-		try {
+		if(!menu.hasVisibleItems())
 			inflater.inflate(R.menu.main_menu, menu);
-		} catch(Exception e) { }
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{
@@ -459,17 +464,14 @@ public class ContentFragment extends OpenFragment
 		if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
 		{
 			MenuItem sort = menu.findItem(R.id.menu_sort);
-			try {
+			if(sort != null && sort.getSubMenu() != null && !sort.getSubMenu().hasVisibleItems())
 				inflater.inflate(R.menu.menu_sort, sort.getSubMenu());
-			} catch(NullPointerException npe) { }
 			MenuItem view = menu.findItem(R.id.menu_view);
-			try {
+			if(view != null && view.getSubMenu() != null && !view.getSubMenu().hasVisibleItems())
 				inflater.inflate(R.menu.menu_view, view.getSubMenu());
-			} catch(NullPointerException npe) { }
 			MenuItem paste = menu.findItem(R.id.menu_paste);
-			try {
+			if(paste != null && paste.getSubMenu() != null && !paste.getSubMenu().hasVisibleItems())
 				inflater.inflate(R.menu.multiselect, paste.getSubMenu());
-			} catch(NullPointerException npe) { }
 		}
 	}
 	
@@ -1028,6 +1030,19 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public CharSequence getTitle() {
 		return mPath.getName();
+	}
+	
+	@Override
+	public OpenPath getPath() {
+		return mPath;
+	}
+	
+	@Override
+	public Drawable getIcon() {
+		if(isDetached()) return null;
+		if(getActivity() != null && getResources() != null)
+			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 32, 32));
+		return null;
 	}
 }
 

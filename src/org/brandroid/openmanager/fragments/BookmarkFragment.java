@@ -22,6 +22,8 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
+
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +31,10 @@ import android.view.LayoutInflater;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 
-public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeListener {
+public class BookmarkFragment
+		extends OpenFragment
+		implements OnBookMarkChangeListener
+{
 	
 	private static OpenBookmarks mBookmarks;
 	
@@ -88,6 +93,11 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 
 	@Override
 	public CharSequence getTitle() {
+		return null;
+	}
+	
+	@Override
+	public Drawable getIcon() {
 		return null;
 	}
 
