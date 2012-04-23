@@ -17,6 +17,7 @@
 	    <ProgressBar
 	        android:id="@android:id/progress"
 	        style="@android:style/Widget.ProgressBar.Horizontal"
+	        android:indeterminate="true"
 	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
 	        android:layout_alignParentLeft="true"
@@ -24,7 +25,22 @@
 	        android:layout_margin="4dp" />
 	    
 	</RelativeLayout>
-
+	
+	<ScrollView android:id="@+id/text_scroller"
+	    android:layout_height="match_parent"
+	    android:layout_alignParentLeft="true"
+	    android:visibility="gone"
+	    android:layout_width="match_parent">
+	    <TextView
+	        android:id="@+id/text_view"
+	        android:layout_width="match_parent" 
+	        android:layout_height="wrap_content"
+	        android:typeface="monospace"
+	        android:textSize="10dp"
+	        android:gravity="top|left"
+	        />
+	</ScrollView>
+	
     <EditText
     	android:layout_width="fill_parent"
     	android:layout_height="fill_parent"
@@ -34,7 +50,6 @@
 		android:textSize="10dp"
 		android:gravity="top|left"
 		android:bufferType="normal"
-		android:editable="false"
 		android:inputType="textNoSuggestions|textMultiLine"
 		android:layout_alignParentLeft="true">
         <requestFocus></requestFocus>
