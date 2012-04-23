@@ -1,7 +1,21 @@
 package org.brandroid.openmanager.activities;
 
-import org.brandroid.utils.Logger;
+import java.io.IOException;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.MimeTypeParser;
+import org.brandroid.openmanager.util.MimeTypes;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.Preferences;
+import org.xmlpull.v1.XmlPullParserException;
+
+import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.XmlResourceParser;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +25,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 public class OpenFragmentActivity
 			extends FragmentActivity
@@ -18,6 +33,9 @@ public class OpenFragmentActivity
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
+	public static Thread UiThread = Thread.currentThread();
+	private Preferences mPreferences = null;
+	
 	
 	public String getClassName()
 	{
@@ -30,6 +48,11 @@ public class OpenFragmentActivity
 	
 	public void onClick(int id) {
 		Logger.LogDebug("View onClick(0x" + Integer.toHexString(id) + ") / " + getClassName());
+	}
+	
+	public boolean onClick(int id, MenuItem item, View from)
+	{
+		return false;
 	}
 	
 	public boolean onLongClick(View v) {
@@ -66,6 +89,56 @@ public class OpenFragmentActivity
 		} else return getWindowManager().getDefaultDisplay().getWidth();
 	}
 	
+	public Preferences getPreferences() {
+		if(mPreferences == null)
+			mPreferences = new Preferences(getApplicationContext());
+		return mPreferences;
+	}
+
+	public String getSetting(OpenPath file, String key, String defValue)
+	{
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public Boolean getSetting(OpenPath file, String key, Boolean defValue)
+	{
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public Integer getSetting(OpenPath file, String key, Integer defValue)
+	{
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
+	public void setSetting(OpenPath file, String key, String value)
+	{
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+	public boolean setSetting(OpenPath file, String key, Boolean value)
+	{
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
+		return value;
+	}
+	public void setSetting(OpenPath file, String key, Integer value)
+	{
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+	
+
+	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
+	public void showToast(final String message)  {
+		showToast(message, Toast.LENGTH_SHORT);
+	}
+	public void showToast(final int iStringResource) { showToast(getResources().getString(iStringResource)); }
+	public void showToast(final String message, final int toastLength)  {
+		Logger.LogInfo("Made toast: " + message);
+		runOnUiThread(new Runnable() {
+			public void run() {
+				Toast.makeText(getBaseContext(), message, toastLength).show();
+			}
+		});
+	}
+	public void showToast(final int resId, final int length)  {
+		showToast(getString(resId), length);
+	}
+
 	/*
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,

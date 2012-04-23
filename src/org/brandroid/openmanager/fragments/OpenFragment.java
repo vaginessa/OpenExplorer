@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.adapters.FileSystemAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
@@ -20,6 +21,7 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.IconAnimationPanel;
 import org.brandroid.utils.BitmapUtils;
 import org.brandroid.utils.Logger;
@@ -62,12 +64,10 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 
 public abstract class OpenFragment
 			extends Fragment
-			implements View.OnClickListener, View.OnLongClickListener,
-				OpenPathFragmentInterface
+			implements View.OnClickListener, View.OnLongClickListener
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
-	protected OpenPath mPath;
 	protected boolean mActionModeSelected = false;
 	protected Object mActionMode = null;
 	protected BaseAdapter mContentAdapter;
@@ -135,6 +135,33 @@ public abstract class OpenFragment
 				IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal);
 		}
 	}
+	
+	public boolean showMenu(int menuId, View from)
+	{
+		MenuBuilder menu = IconContextMenu.newMenu(getActivity(), R.menu.text_view_flat);
+		if(menu == null) return false;
+		onPrepareOptionsMenu(menu);
+		IconContextMenu mOpenMenu = new IconContextMenu(getActivity(), menu, from, null, null);
+		mOpenMenu.setMenu(menu);
+		mOpenMenu.setAnchor(from);
+		mOpenMenu.setNumColumns(1);
+		mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+			public void onIconContextItemSelected(MenuItem item, Object info, View view) {
+				//showToast(item.getTitle().toString());
+				if(item.getItemId() == R.id.menu_sort)
+					showMenu(R.menu.menu_sort, view);
+				else if(item.getItemId() == R.id.menu_view)
+					showMenu(R.menu.menu_view, view);
+				else
+					onClick(item.getItemId());
+				//mOpenMenu.dismiss();
+				//mMenuPopup.dismiss();
+			}
+		});
+		return true;
+	}
+	
+	public boolean onBackPressed() { return false; }
 	
 	public boolean onItemLongClick(AdapterView<?> list, final View view ,int pos, long id) {
 		mMenuContextItemIndex = pos;
@@ -321,6 +348,10 @@ public abstract class OpenFragment
 		if(path != null && path.getPath() != null && getExplorer() != null && getExplorer().getPreferences() != null)
 			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
+	protected Integer getSetting(OpenPath file, String key, Integer defValue)
+	{
+		return getFragmentActivity().getSetting(file, key, defValue);
+	}
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -336,8 +367,6 @@ public abstract class OpenFragment
 		MenuUtils.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
 		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
 		//menu.findItem(R.id.menu_context_unzip).setVisible(file.isArchive());
-		if(!mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 	}
 	
 
@@ -587,8 +616,6 @@ public abstract class OpenFragment
 		return this.getClass().getSimpleName();
 	}
 	
-	public OpenPath getPath() { return mPath; }
-	
 	public static void setAlpha(float alpha, View... views)
 	{
 		for(View kid : views)
@@ -621,6 +648,7 @@ public abstract class OpenFragment
 		return OpenExplorer.getFileManager();
 	}
 	
+	public OpenFragmentActivity getFragmentActivity() { return (OpenFragmentActivity)getActivity(); }
 	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
 	public static EventHandler getEventHandler() { return OpenExplorer.getEventHandler(); }
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
@@ -648,6 +676,7 @@ public abstract class OpenFragment
 		super.onCreate(savedInstanceState);
 	}
 
+	public abstract Drawable getIcon();
 	public abstract CharSequence getTitle();
 	
 	/*

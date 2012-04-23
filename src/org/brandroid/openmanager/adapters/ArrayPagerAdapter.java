@@ -20,6 +20,8 @@ import com.viewpagerindicator.TabPageIndicator.TabView;
 
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -64,17 +66,53 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	@Override
+	public Parcelable saveState() {
+		Bundle state = new Bundle();
+		if(getCount() > 0)
+		{
+			OpenPath[] items = new OpenPath[getCount()];
+			for(int i = 0; i < getCount(); i++)
+				if(getItem(i) instanceof OpenPathFragmentInterface)
+					items[i] = ((OpenPathFragmentInterface)getItem(i)).getPath();
+			state.putParcelableArray("pages", items);
+		}
+		return state;
+	}
+	
+	@Override
+	public void restoreState(Parcelable state, ClassLoader loader) {
+		if(state != null)
+		{
+			Bundle bundle = (Bundle)state;
+			bundle.setClassLoader(loader);
+			if(!bundle.containsKey("pages")) return;
+			Parcelable[] items = bundle.getParcelableArray("pages");
+			mFrags.clear();
+			for(int i = 0; i < items.length; i++)
+				if(items[i] != null && items[i] instanceof OpenPath)
+				{
+					OpenPath path = (OpenPath)items[i];
+					if(path.isDirectory())
+						mFrags.add(ContentFragment.getInstance(path));
+					else if(path.isTextFile() || path.length() < 500000)
+						mFrags.add(new TextEditorFragment(path));
+				}
+		}
+	}
+	
+	@Override
 	public int getItemPosition(Object object) {
 		if(object instanceof OpenPathFragmentInterface)
 		{
 			OpenPath tofind = ((OpenPathFragmentInterface)object).getPath();
+			if(tofind == null) return super.getItemPosition(object);
 			for(int i = 0; i < getCount(); i++)
 			{
 				Fragment f = getItem(i);
 				if(f instanceof OpenPathFragmentInterface)
 				{
 					OpenPath tocheck = ((OpenPathFragmentInterface)f).getPath();
-					if(tocheck.getPath().equals(tofind.getPath()))
+					if(tocheck != null && tocheck.getPath().equals(tofind.getPath()))
 						return i;
 				}
 			}
