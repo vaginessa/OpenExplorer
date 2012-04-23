@@ -440,9 +440,9 @@ public class DialogHandler extends DialogFragment {
 			//numDir.setText("-");
 		//}
 		
-		((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
+		//((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
 		((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
-		((TextView)v.findViewById(R.id.info_path_label)).setText(file.getParent() != null ? file.getParent().getPath() : "");
+		((TextView)v.findViewById(R.id.info_path_label)).setText(file.getPath());
 		((TextView)v.findViewById(R.id.info_read_perm)).setText(file.canRead() + "");
 		((TextView)v.findViewById(R.id.info_write_perm)).setText(file.canWrite() + "");
 		((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
@@ -650,7 +650,9 @@ public class DialogHandler extends DialogFragment {
 		new AlertDialog.Builder(mContext)
 			.setView(createFileInfoDialog((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE), path))
 			.setTitle(path.getName())
-			.setIcon(new BitmapDrawable(path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize).get()))
+			.setIcon(new BitmapDrawable(mContext.getResources(),
+						path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize)
+							.get()))
 			.create()
 			.show();
 		//DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
