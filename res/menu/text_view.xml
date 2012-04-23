@@ -7,12 +7,16 @@
         android:checkable="true"
         android:showAsAction="ifRoom|withText"
         />
-    <group>
-        <item android:id="@+id/menu_view_font_small"
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/menu_view_font_small"
+            android:checked="true"
             android:title="@string/menu_view_font_small" />
-        <item android:id="@+id/menu_view_font_medium"
+        <item
+            android:id="@+id/menu_view_font_medium"
             android:title="@string/menu_view_font_medium" />
-        <item android:id="@+id/menu_view_font_large"
+        <item
+            android:id="@+id/menu_view_font_large"
             android:title="@string/menu_view_font_large" />
 	</group>
 	<item
@@ -22,5 +26,6 @@
 	<item
 	    android:id="@+id/menu_view_split"
 	    android:checkable="true"
+	    android:enabled="@bool/prehoneycomb"
 	    android:title="@string/s_pref_basebar" />
 </menu>
