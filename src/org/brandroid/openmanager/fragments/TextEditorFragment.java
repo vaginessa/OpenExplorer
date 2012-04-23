@@ -3,6 +3,8 @@ package org.brandroid.openmanager.fragments;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,6 +16,9 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -22,14 +27,25 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService.InputMethodImpl;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.Spanned;
+import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -43,24 +59,25 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 
 public class TextEditorFragment extends OpenFragment
-	implements OnClickListener, OpenPathFragmentInterface
+	implements OnClickListener, OpenPathFragmentInterface, TextWatcher
 {
 	private EditText mEditText;
-	private ProgressBar mProgress;
+	private TextView mViewText;
+	private ProgressBar mProgress = null;
+	private ScrollView mViewScroller;
 	
 	private OpenPath mPath = null;
 	private String mData = null;
+	private float mTextSize = 10f;
 	
 	private AsyncTask mTask = null;
 	
-	private boolean bShowKeyboard = true;
-	
-	public static int[] USED_MENUS = new int[]{R.id.menu_save, R.id.menu_close, R.id.menu_context_info, R.id.menu_view,
-			R.id.menu_view_font_large, R.id.menu_view_font_medium, R.id.menu_view_font_small,
-			R.id.menu_view_keyboard_toggle, R.id.menu_settings};
+	private boolean mEditMode = false;
 	
 	public TextEditorFragment() { }
 	public TextEditorFragment(OpenPath path)
@@ -68,9 +85,23 @@ public class TextEditorFragment extends OpenFragment
 		mPath = path;
 		Bundle b = new Bundle();
 		if(path != null && path.getPath() != null)
-			b.putString("edit_path", path.getPath().toString());
+			b.putString("edit_path", path.getPath());
 		setArguments(b);
 		setHasOptionsMenu(true);
+	}
+
+	public void setProgressVisibility(boolean visible)
+	{
+		if(mProgress != null)
+			mProgress.setVisibility(visible ? View.VISIBLE : View.GONE);
+		if(getExplorer() != null)
+			getExplorer().setProgressBarVisibility(visible);
+	}
+	
+	@Override
+	public boolean onBackPressed() {
+		doClose();
+		return true;
 	}
 	
 	@Override
@@ -79,10 +110,18 @@ public class TextEditorFragment extends OpenFragment
 		Bundle bundle = savedInstanceState;
 		if(getArguments() != null)
 			bundle = getArguments();
-		if(bundle != null && bundle.containsKey("edit_path"))
+		if(mPath == null && bundle != null && bundle.containsKey("edit_path"))
 		{
 			String path = bundle.getString("edit_path");
-			mPath = new OpenFile(path);
+			if(path.startsWith("content://"))
+				mPath = new OpenContent(Uri.parse(path), getActivity());
+			else
+				try {
+					mPath = FileManager.getOpenCache(path, false, null);
+				} catch (IOException e) {
+					Logger.LogWarning("Couldn't get cache to edit.", e);
+					mPath = new OpenFile(path);
+				}
 			Logger.LogDebug("load text editor (" + path + ")");
 			if(bundle.containsKey("edit_data"))
 				mData = bundle.getString("edit_data");
@@ -101,24 +140,13 @@ public class TextEditorFragment extends OpenFragment
 						mPath = new OpenFTP(mPath.getPath(), null, man);
 					}
 				}
-			} else if (path.indexOf("ftp:/") > -1)
+			} else //if (path.indexOf("ftp:/") > -1)
 			{
-				path = path.substring(path.lastIndexOf("/", path.indexOf(":/") + 2) + 1);
-				String host = path;
-				if(path.indexOf("/") > -1)
-				{
-					host = path.substring(0, path.indexOf("/"));
-					path = path.substring(path.indexOf("/"));
+				try {
+					mPath = FileManager.getOpenCache(path, false, null);
+				} catch (IOException e) {
+					Logger.LogError("Couldn't get Path to edit.", e);
 				}
-				OpenServers servers = SettingsActivity.LoadDefaultServers(getActivity());
-				for(int i=0; i < servers.size(); i++)
-					if(servers.get(i).getHost().equals(host))
-					{
-						OpenServer server = servers.get(i);
-						FTPManager man = new FTPManager(server.getHost(), server.getUser(), server.getPassword(), server.getPath());
-						Logger.LogDebug("Searched & Found server - " + server.getName());
-						mPath = new OpenFTP(mPath.getPath(), null, man);
-					}
 			}
 		}
 	}
@@ -126,13 +154,23 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		inflater.inflate(R.menu.text_editor, menu);
+		if(!menu.hasVisibleItems())
+			inflater.inflate(R.menu.text_editor, menu);
+		if(Build.VERSION.SDK_INT > 10 && menu.findItem(R.id.menu_view) != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
+			inflater.inflate(R.menu.text_view, menu.findItem(R.id.menu_view).getSubMenu());
 	}
 	
 	public void onPrepareOptionsMenu(Menu menu) {
 		super.onPrepareOptionsMenu(menu);
-		MenuUtils.setMenuVisible(menu, false);
-		MenuUtils.setMenuVisible(menu, true, USED_MENUS);
+		MenuUtils.setMenuVisible(menu, mPath.canWrite(), R.id.menu_save);
+		MenuUtils.setMenuChecked(menu, mEditMode, R.id.menu_view_keyboard_toggle);
+		if(mTextSize >= 30f)
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_large, R.id.menu_view_font_medium, R.id.menu_view_font_small);
+		else if(mTextSize >= 20f)
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_medium, R.id.menu_view_font_large, R.id.menu_view_font_small);
+		else
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_small, R.id.menu_view_font_medium, R.id.menu_view_font_large);
+		//MenuUtils.setMenuVisible(menu, false);
 	}
 	
 	@Override
@@ -145,38 +183,80 @@ public class TextEditorFragment extends OpenFragment
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.edit_text, null);
 		mEditText = (EditText)view.findViewById(R.id.text_edit);
+		mViewText = (TextView)view.findViewById(R.id.text_view);
+		mViewScroller = (ScrollView)view.findViewById(R.id.text_scroller);
 		mProgress = ((ProgressBar)view.findViewById(android.R.id.progress));
+		mEditText.addTextChangedListener(new TextWatcher() {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				//mData = s.toString();
+			}
+			
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+			public void afterTextChanged(Editable s) { }
+		});
 		return view;
+	}
+	
+	public void setTextSize(float sz)
+	{
+		mTextSize = sz;
+		mEditText.setTextSize(sz);
+		mViewText.setTextSize(sz);
+	}
+	public void setText(final String txt)
+	{
+		mData = txt;
+		if(mEditMode)
+			mEditText.post(new Runnable() {
+				public void run() {
+					mEditText.setText(txt);
+				}
+			});
+		else
+			mViewText.post(new Runnable() {
+				public void run() {
+					mViewText.setText(txt);
+				}
+			});
 	}
 	
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		mEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
-			public void onFocusChange(View v, boolean hasFocus) {
-				/*if(hasFocus)
-				{
-					InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.showSoftInput(v, 0);
-				}*/
-			}
-		});
+		setEditable(mEditMode);
+		if(savedInstanceState != null && savedInstanceState.containsKey("edit_data"))
+			mData = savedInstanceState.getString("edit_data");
 		if(mPath != null && mData == null)
-			mTask = new FileLoadTask().execute(mPath);
-		else if (mData != null)
-			mEditText.setText(mData);
+		{
+			if(mPath instanceof OpenFile && mPath.length() < 500000)
+			{
+				//new Thread(new Runnable() {public void run() {
+					try {
+						FileReader fr = new FileReader(((OpenFile)mPath).getFile());
+						char[] data = new char[(int) mPath.length()];
+						fr.read(data);
+						setText(new String(data));
+					} catch (FileNotFoundException e) {
+						Logger.LogError("Couldn't find file to load - " + mPath.getPath(), e);
+					} catch (IOException e) {
+						Logger.LogError("Couldn't read from file - " + mPath.getPath(), e);
+					}
+				}
+				//}).start();
+			else
+				mTask = new FileLoadTask().execute(mPath);
+		} else if (mData != null)
+			setText(mData);
 	}
 	
 	@Override
 	public void onPause() {
 		super.onPause();
-		mData = mEditText.getText().toString();
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
-		mData = mEditText.getText().toString();
 	}
 	
 	@Override
@@ -193,11 +273,32 @@ public class TextEditorFragment extends OpenFragment
 		} else Logger.LogDebug("No server #");
 	}
 	
-	public void save()
+	public void doSave()
 	{
+		if(!mEditMode) return;
 		cancelTask();
 		mTask = new FileSaveTask(mPath);
 		((FileSaveTask)mTask).execute(mEditText.getText().toString());
+	}
+	public void doClose()
+	{
+		cancelTask();
+		if(getExplorer() != null && getExplorer().isViewPagerEnabled())
+		{
+			final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
+			final ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
+			final int pos = pager.getCurrentItem() - 1;
+			if(pos < 0)
+				getActivity().finish();
+			else
+				pager.post(new Runnable() {public void run() {
+					adapter.remove(TextEditorFragment.this);
+					pager.setAdapter(adapter);
+					pager.setCurrentItem(pos, false);
+				}});
+		} else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
+			getFragmentManager().popBackStack();
+		else getActivity().finish();
 	}
 	
 	public void cancelTask() {
@@ -220,30 +321,49 @@ public class TextEditorFragment extends OpenFragment
 			DialogHandler.showFileInfo(getExplorer(), getPath());
 			return true;
 		case R.id.menu_save:
-			save();
+			doSave();
+			return true;
+			
+		case R.id.menu_view_font_large:
+			setTextSize(30f);
+			return true;
+		case R.id.menu_view_font_medium:
+			setTextSize(20f);
+			return true;
+		case R.id.menu_view_font_small:
+			setTextSize(10f);
 			return true;
 			
 		case R.id.menu_close:
-			cancelTask();
-			if(getExplorer().isViewPagerEnabled())
-			{
-				final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
-				final ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
-				final int pos = pager.getCurrentItem() - 1;
-				pager.post(new Runnable() {public void run() {
-					adapter.remove(TextEditorFragment.this);
-					pager.setAdapter(adapter);
-					pager.setCurrentItem(pos, false);
-					}});
-			} else
-				getFragmentManager().popBackStack();
+			doClose();
 			return true;
+		case R.id.menu_view:
+			View from = getView().findViewById(id);
+			showMenu(R.menu.text_view, from);
+			return true;
+			
 		case R.id.menu_view_keyboard_toggle:
-			//if(((InputMethodManager)getActivity()).getInputMethodList().
-			((InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(mEditText, 0);
+			setEditable(!mEditMode);
 			return true;
 		}
 		return false;
+	}
+	
+	private void setEditable(boolean editable)
+	{
+		mEditMode = editable;
+		if(editable)
+		{
+			mViewScroller.setVisibility(View.GONE);
+			mEditText.setVisibility(View.VISIBLE);
+			mEditText.removeTextChangedListener(this);
+			setText(mData);
+			mEditText.addTextChangedListener(this);
+		} else {
+			mEditText.removeTextChangedListener(this);
+			mEditText.setVisibility(View.GONE);
+			mViewScroller.setVisibility(View.VISIBLE);
+		}
 	}
 
 	
@@ -283,16 +403,14 @@ public class TextEditorFragment extends OpenFragment
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			if(mProgress != null)
-				mProgress.setVisibility(View.VISIBLE);
+			setProgressVisibility(true);
 			setEnabled(false, mEditText);
 		}
 		
 		@Override
 		protected void onPostExecute(String result) {
 			super.onPostExecute(result);
-			if(mProgress != null)
-				mProgress.setVisibility(View.GONE);
+			setProgressVisibility(false);
 			setEnabled(true, mEditText);
 		}
 		
@@ -387,28 +505,37 @@ public class TextEditorFragment extends OpenFragment
 		protected void onPreExecute() {
 			super.onPreExecute();
 			setEnabled(false, mEditText);
-			if(mProgress != null)
-				mProgress.setVisibility(View.VISIBLE);
+			setProgressVisibility(true);
 		}
 		
 		@Override
 		protected void onPostExecute(String result) {
-			if(mEditText != null)
-				mEditText.setText(result);
-			if(mProgress != null)
-				mProgress.setVisibility(View.GONE);
+			setText(result);
+			setProgressVisibility(false);
 			setEnabled(true, mEditText);
 			mData = result;
 		}
 	}
 
 	public OpenPath getPath() {
-		// TODO Auto-generated method stub
 		return mPath;
+	}
+	@Override
+	public Drawable getIcon() {
+		if(getActivity() != null)
+			return new BitmapDrawable(getResources(),
+				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), false));
+		else return null;
 	}
 	@Override
 	public CharSequence getTitle() {
 		// TODO Auto-generated method stub
 		return getPath().getName();
+	}
+	
+	public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+	public void onTextChanged(CharSequence s, int start, int before, int count) { }
+	public void afterTextChanged(Editable s) {
+		mData = s.toString();
 	}
 }
