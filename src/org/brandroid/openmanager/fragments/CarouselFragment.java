@@ -38,7 +38,7 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
-public class CarouselFragment extends OpenFragment {
+public class CarouselFragment extends OpenFragment implements OpenPathFragmentInterface {
 	private static final String TAG = "CarouselTestActivity";
 	private static final int CARD_SLOTS = 56;
 	private static final int SLOTS_VISIBLE = 7;
@@ -58,6 +58,7 @@ public class CarouselFragment extends OpenFragment {
 	private Bitmap mGlossyOverlay;
 	private Bitmap mBorder;
 	
+	private OpenPath mPath;
 	private OpenPath[] mPathItems;
 	
 	public int size() {
@@ -314,6 +315,18 @@ public class CarouselFragment extends OpenFragment {
 	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
+	}
+
+	@Override
+	public OpenPath getPath() {
+		return mPath;
+	}
+
+	@Override
+	public Drawable getIcon() {
+		if(getActivity() != null)
+			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 32, 32));
+		else return null;
 	}
 
 }

@@ -113,6 +113,8 @@ public class ThumbnailCreator extends Thread {
 		//{
 		//	return setThumbnail((RemoteImageView)mImage, file, mWidth, mHeight);
 		//}
+		if(file == null) return false;
+		if(mImage == null) return false;
 		final String mName = file.getName();
 		final String ext = mName.substring(mName.lastIndexOf(".") + 1);
 		final String sPath2 = mName.toLowerCase();
@@ -245,7 +247,9 @@ public class ThumbnailCreator extends Thread {
 
 	public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c)
 	{
-		return c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+		if(c != null && c.getResources() != null)
+			return c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+		else return null;
 	}
 	public static int getDefaultResourceId(OpenPath file, int mWidth, int mHeight)
 	{

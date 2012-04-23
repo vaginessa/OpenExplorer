@@ -2019,6 +2019,8 @@ public class OpenExplorer
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		if(menu != null)
+			menu.clear();
 		//Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
 		return super.onCreateOptionsMenu(menu);
 	}

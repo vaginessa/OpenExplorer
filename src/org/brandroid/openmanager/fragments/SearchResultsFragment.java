@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.FileSystemAdapter;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.FileManager;
@@ -14,9 +15,11 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -181,9 +184,26 @@ public class SearchResultsFragment
 			public void onClick(View v) {
 				if(mTask.getStatus() != Status.FINISHED && !mTask.isCancelled())
 					mTask.cancel(false);
-				else getExplorer().removeFragment(SearchResultsFragment.this);
+				if(getExplorer() != null && getExplorer().isViewPagerEnabled())
+				{
+					final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
+					final ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
+					final int pos = pager.getCurrentItem() - 1;
+					pager.post(new Runnable() {public void run() {
+						adapter.remove(SearchResultsFragment.this);
+						pager.setAdapter(adapter);
+						pager.setCurrentItem(pos, false);
+						}});
+				} else if(getFragmentManager() != null)
+					getFragmentManager().popBackStack();
 			}
 		});
+	}
+	
+	public Drawable getIcon() {
+		if(getActivity() != null)
+			return getActivity().getResources().getDrawable(R.drawable.sm_folder_search);
+		else return null;
 	}
 
 	@Override
