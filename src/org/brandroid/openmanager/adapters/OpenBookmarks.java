@@ -17,6 +17,7 @@ import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -36,6 +37,7 @@ import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
+import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import android.animation.Animator;
@@ -208,7 +210,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		for(int i = 0; i < servers.size(); i++)
 		{
 			OpenServer server = servers.get(i);
-			SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+			SimpleUserInfo info = new SimpleUserInfo();
 			info.setPassword(server.getPassword());
 			OpenNetworkPath onp = null;
 			if(server.getType().equalsIgnoreCase("ftp"))
@@ -747,12 +749,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 			ret.setTag(mHolder);
 		
-			TextView mCountText = (TextView)ret.findViewById(R.id.content_count);
+			final TextView mCountText = (TextView)ret.findViewById(R.id.content_count);
 			if(mCountText != null)
 			{
 				if(path instanceof OpenCursor)
 				{
-					((OpenCursor)path).setContentCountTextView(mCountText);
+					((OpenCursor)path).setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
+						public void updateBookmarkText(String txt) {
+							mCountText.setText(txt);
+						}
+					});
 				} else mCountText.setVisibility(View.GONE);
 			}
 				
@@ -762,7 +768,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			else 
 				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);
 			
-			ImageView mIcon = (ImageView)ret.findViewById(R.id.bookmark_icon);
+			final ImageView mIcon = (ImageView)ret.findViewById(R.id.bookmark_icon);
 			
 			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(path));
 			
@@ -775,7 +781,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					});
 				mIcon.setImageDrawable(ld);
 			} else
-				ThumbnailCreator.setThumbnail(mIcon, path, 36, 36);
+				ThumbnailCreator.setThumbnail(mIcon, new OnUpdateImageListener() {
+					public void updateImage(Drawable d) { mIcon.setImageDrawable(d); }
+					public Context getContext() { return mIcon.getContext(); }
+					}, path, 36, 36);
 			
             return ret;
 		}

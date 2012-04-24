@@ -67,6 +67,12 @@ public class RemoteImageView extends ImageView
                 pThis.fCallback = null; // our callback ended; remove reference
             }
         }
+
+		@Override
+		public Context getContext() {
+			// TODO Auto-generated method stub
+			return pThis.getContext();
+		}
     }
     
     public void setImageFromFile(OpenPath path, int mWidth, int mHeight)

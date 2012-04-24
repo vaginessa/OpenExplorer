@@ -71,7 +71,6 @@ public class ThumbnailCreator extends Thread {
 	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>(200);
 	private Handler mHandler;
 	
-	private static Context mContext;
 	private boolean mStop = false;
 	private static int iVideoThumbErrors = 0;
 	
@@ -79,7 +78,7 @@ public class ThumbnailCreator extends Thread {
 	public static boolean showThumbPreviews = true;
 	
 	private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
-	private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
+	//private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
 	
 	public static void postImageBitmap(final ImageView image, final Bitmap bmp)
 	{
@@ -103,11 +102,13 @@ public class ThumbnailCreator extends Thread {
 	{
 		mImage.post(new Runnable() {
 			public void run() {
-				mImage.setImageBitmap(getFileExtIcon(file.getExtension(), mContext, useLarge));
+				mImage.setImageBitmap(getFileExtIcon(file.getExtension(), mImage.getContext(), useLarge));
 			}
 		});
 	}
-	public static boolean setThumbnail(final ImageView mImage, OpenPath file, int mWidth, int mHeight)
+	public static boolean setThumbnail(final ImageView mImage,
+			final ThumbnailStruct.OnUpdateImageListener mListener,
+			OpenPath file, int mWidth, int mHeight)
 	{
 		//if(mImage instanceof RemoteImageView)
 		//{
@@ -129,17 +130,15 @@ public class ThumbnailCreator extends Thread {
 		
 		if(file.hasThumbnail())
 		{
-			if(showThumbPreviews && !file.requiresThread()) {
-
-				if(mContext == null)
-					ThumbnailCreator.setContext(mContext);
-				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
+			if(showThumbPreviews && !file.requiresThread())
+			{
+				Bitmap thumb = ThumbnailCreator.getThumbnailCache(mImage.getContext(), file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)
 				{
 					mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 					ThumbnailTask task = new ThumbnailTask();
-					ThumbnailStruct struct = new ThumbnailStruct(file, mImage, mWidth, mHeight);
+					ThumbnailStruct struct = new ThumbnailStruct(file, mListener, mWidth, mHeight);
 					if(mImage.getTag() != null && mImage.getTag() instanceof ThumbnailTask)
 						((ThumbnailTask)mImage.getTag()).cancel(true);
 					
@@ -188,11 +187,10 @@ public class ThumbnailCreator extends Thread {
 		
 		if(file.hasThumbnail())
 		{
-			if(showThumbPreviews && !file.requiresThread()) {
+			if(showThumbPreviews && !file.requiresThread())
+			{
 
-				if(mContext == null)
-					ThumbnailCreator.setContext(mContext);
-				Bitmap thumb = ThumbnailCreator.getThumbnailCache(file.getPath(), mWidth, mHeight);
+				Bitmap thumb = ThumbnailCreator.getThumbnailCache(mImage.getContext(), file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)
 				{
@@ -339,17 +337,15 @@ public class ThumbnailCreator extends Thread {
 			return (useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
 	}
 	
-	public static void setContext(Context c) { mContext = c; }
-	
 	public static boolean hasThumbnailCached(OpenPath file, int w, int h)
 	{
 		return mCacheMap.containsKey(getCacheFilename(file.getPath(), w, h));
 	}
-	public static Bitmap getThumbnailCache(OpenPath file, int w, int h)
+	public static Bitmap getThumbnailCache(Context mContext, OpenPath file, int w, int h)
 	{
-		return getThumbnailCache(getCacheFilename(file.getPath(), w, h), w, h);
+		return getThumbnailCache(mContext, getCacheFilename(file.getPath(), w, h), w, h);
 	}
-	public static Bitmap getThumbnailCache(String name, int w, int h) {
+	public static Bitmap getThumbnailCache(Context mContext, String name, int w, int h) {
 		String cacheName = getCacheFilename(name, w, h);
 		if(!mCacheMap.containsKey(cacheName))
 		{
@@ -372,10 +368,8 @@ public class ThumbnailCreator extends Thread {
 		return w + "x" + h + "_" + path.replaceAll("[^A-Za-z0-9]", "-") + ".jpg";
 	}
 	
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight) { return generateThumb(file, mWidth, mHeight, true, true, mContext); }
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, final boolean readCache, final boolean writeCache) { return generateThumb(file, mWidth, mHeight, readCache, writeCache, mContext); }
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, Context context) { return generateThumb(file, mWidth, mHeight, true, true, context); }
-	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, boolean readCache, boolean writeCache, Context context)
+	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, boolean readCache, boolean writeCache, Context mContext)
 	{
 		final boolean useLarge = mWidth > 72;
 		//SoftReference<Bitmap> mThumb = null;
@@ -391,19 +385,19 @@ public class ThumbnailCreator extends Thread {
 		if(mParent != null && (fails.containsKey(mParent) && fails.get(mParent) > 10))
 			useGeneric = true;
 		
-		if(context != null)
+		if(mContext != null)
 		{
 			if(!file.isDirectory() && file.isTextFile())
-				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), context, mWidth > 72));
+				return new SoftReference<Bitmap>(getFileExtIcon(file.getName().substring(file.getName().lastIndexOf(".") + 1).toUpperCase(), mContext, mWidth > 72));
 			
-			bmp = BitmapFactory.decodeResource(context.getResources(), getDefaultResourceId(file, mWidth, mHeight));
+			bmp = BitmapFactory.decodeResource(mContext.getResources(), getDefaultResourceId(file, mWidth, mHeight));
 			if(file.requiresThread() || useGeneric)
 				return new SoftReference<Bitmap>(bmp);
 		}
 		
 		String path = file.getPath();
 		
-		if((file.isImageFile() || file.isVideoFile() || file.isAPKFile()) && (bmp = getThumbnailCache(path, mWidth, mHeight)) != null)
+		if((file.isImageFile() || file.isVideoFile() || file.isAPKFile()) && (bmp = getThumbnailCache(mContext, path, mWidth, mHeight)) != null)
 			return new SoftReference<Bitmap>(bmp);
 		
 		String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
@@ -412,7 +406,7 @@ public class ThumbnailCreator extends Thread {
 		if (mCacheMap.get(mCacheFilename) != null) 
 			return new SoftReference<Bitmap>(mCacheMap.get(mCacheFilename));
 		if(readCache && bmp == null)
-			bmp = loadThumbnail(mCacheFilename);
+			bmp = loadThumbnail(mContext, mCacheFilename);
 		
 		if(bmp == null && !useGeneric && !OpenExplorer.LOW_MEMORY)
 		{
@@ -499,7 +493,7 @@ public class ThumbnailCreator extends Thread {
 					if(bmp == null)
 						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
 					else
-						saveThumbnail(mCacheFilename, bmp);
+						saveThumbnail(mContext, mCacheFilename, bmp);
 				} catch(IOException ix) {
 					Logger.LogError("Invalid APK: " + file.getPath(), ix);
 				}
@@ -567,7 +561,7 @@ public class ThumbnailCreator extends Thread {
 		if(bmp != null)
 		{
 			if(writeCache && !useGeneric)
-				saveThumbnail(mCacheFilename, bmp);
+				saveThumbnail(mContext, mCacheFilename, bmp);
 			mCacheMap.put(mCacheFilename, bmp);
 		} else
 			fails.put(mParent, fails.containsKey(mParent) ? fails.get(mParent) + 1 : 1);
@@ -575,14 +569,14 @@ public class ThumbnailCreator extends Thread {
 		return new SoftReference<Bitmap>(bmp);
 	}
 	
-	private static Bitmap loadThumbnail(String file)
+	private static Bitmap loadThumbnail(Context mContext, String file)
 	{
 		if(mContext != null)
 			return BitmapFactory.decodeFile(file);
 		return null;
 	}
 	
-	private static void saveThumbnail(String file, Bitmap bmp)
+	private static void saveThumbnail(Context mContext, String file, Bitmap bmp)
 	{
 		//Logger.LogVerbose("Saving thumb for " + file);
 		FileOutputStream os = null;
@@ -600,7 +594,7 @@ public class ThumbnailCreator extends Thread {
 	}
 	
 	
-	private void sendThumbBack(SoftReference<Bitmap> mThumb, String path)
+	private void sendThumbBack(Context mContext, SoftReference<Bitmap> mThumb, String path)
 	{
 		final Bitmap d = mThumb.get();
 		new BitmapDrawable(mContext.getResources(), d).setGravity(Gravity.CENTER);
@@ -616,17 +610,13 @@ public class ThumbnailCreator extends Thread {
 		});
 	}
 
-	public static void flushCache(boolean deleteFiles) {
+	public static void flushCache(Context mContext, boolean deleteFiles) {
 		//Logger.LogInfo("Flushing" + mCacheMap.size() + " from memory & " + mContext.fileList().length + " from disk.");
 		mCacheMap.clear();
 		if(!deleteFiles) return;
 		for(String s : mContext.fileList())
 			if(!s.toLowerCase().endsWith(".json"))
 				mContext.deleteFile(s);
-	}
-
-	public static boolean hasContext() {
-		return mContext != null;
 	}
 	
 

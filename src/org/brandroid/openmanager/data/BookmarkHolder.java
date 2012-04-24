@@ -95,7 +95,7 @@ public class BookmarkHolder {
 		OpenPath file = ts.File;
 		if(!file.getPath().equals(mFile.getPath())) {
 			int w = ts.Width, h = ts.Height;
-			Bitmap bmp = ThumbnailCreator.getThumbnailCache(mFile.getPath(), w, h);
+			Bitmap bmp = ThumbnailCreator.getThumbnailCache(mIcon.getContext(), mFile.getPath(), w, h);
 			if(bmp != null)
 			{
 				BitmapDrawable bd = new BitmapDrawable(bmp);
@@ -182,7 +182,7 @@ public class BookmarkHolder {
 			return getIconView().getDrawable();
 		if(getOpenPath() != null)
 		{
-			Bitmap bmp = ThumbnailCreator.getThumbnailCache(getOpenPath(), ContentFragment.mListImageSize, ContentFragment.mListImageSize);
+			Bitmap bmp = ThumbnailCreator.getThumbnailCache(mIcon.getContext(), getOpenPath(), ContentFragment.mListImageSize, ContentFragment.mListImageSize);
 			if(bmp != null)
 				return new BitmapDrawable(bmp);
 		}

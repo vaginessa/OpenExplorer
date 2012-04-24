@@ -27,28 +27,30 @@ import com.jcraft.jsch.UserInfo;
 public class SimpleUserInfo implements UserInfo
 {
 	//private final Uri mUri;
-	private final Activity mActivity;
+	//private final Activity mActivity;
 	private String mPassword = null;
-	private UserInfoInteractionCallback callback;
+	private static UserInfoInteractionCallback callback;
 	
 	public interface UserInfoInteractionCallback
 	{
+		boolean promptPassword(final String message);
+		boolean promptYesNo(final String message);
 		void onPasswordEntered(String password);
 		void onYesNoAnswered(boolean yes);
 	}
 	
-	public void setInteractionCallback(UserInfoInteractionCallback listener)
+	public static void setInteractionCallback(UserInfoInteractionCallback listener)
 	{
 		callback = listener;
 	}
 	
-	public SimpleUserInfo(Activity activity)
+	public SimpleUserInfo()
 	{
 		//mUri = uri;
-		mActivity = activity;
+		//mActivity = activity;
 	}
 	
-	public Activity getActivity() { return mActivity; }
+	//public Activity getActivity() { return mActivity; }
 
 	@Override
 	public String getPassphrase() {
@@ -69,55 +71,7 @@ public class SimpleUserInfo implements UserInfo
 	@Override
 	public boolean promptPassword(final String message) {
 		if(mPassword != null) return true;
-		final boolean[] result = new boolean[]{false,false}; 
-		Runnable runnable = new Runnable() {
-			@Override
-			public void run() {
-			
-				View view = ((LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-						.inflate(R.layout.prompt_password, null);
-				TextView tv = (TextView)view.findViewById(android.R.id.message);
-				tv.setText(message);
-				final EditText text1 = ((EditText)view.findViewById(android.R.id.text1));
-				final CheckBox checkpw = (CheckBox)view.findViewById(android.R.id.checkbox);
-				checkpw.setOnCheckedChangeListener(new OnCheckedChangeListener(){
-				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					if(isChecked)
-					{
-						text1.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-						text1.setTransformationMethod(new SingleLineTransformationMethod());
-					} else {
-						text1.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-						text1.setTransformationMethod(new PasswordTransformationMethod());
-					}
-				}});
-				
-				AlertDialog dlg = new AlertDialog.Builder(mActivity)
-					.setTitle(R.string.s_prompt_password)
-					.setView(view)
-					.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							mPassword = text1.getText().toString();
-							result[0] = result[1] = true;
-							if(callback != null)
-								callback.onPasswordEntered(mPassword);
-						}
-					})
-					.setNegativeButton(android.R.string.no, new OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							result[1] = false;
-							result[0] = true;
-						}
-					})
-					.create();
-				dlg.show();
-			}};
-		mActivity.runOnUiThread(runnable);
-		
-		while(!result[0]){}
-		return result[1];
+		return callback.promptPassword(message);
 	}
 
 	@Override
@@ -127,36 +81,7 @@ public class SimpleUserInfo implements UserInfo
 
 	@Override
 	public boolean promptYesNo(final String message) {
-		final boolean[] result = new boolean[]{false,false};
-		mActivity.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				AlertDialog dlg = new AlertDialog.Builder(mActivity)
-					.setMessage(message)
-					.setPositiveButton(android.R.string.yes, new OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							result[0] = result[1] = true;
-							if(callback != null)
-								callback.onYesNoAnswered(true);
-						}
-					})
-					.setNegativeButton(android.R.string.no, new OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							result[1] = false;
-							result[0] = true;
-							if(callback != null)
-								callback.onYesNoAnswered(false);
-						}
-					})
-					.create();
-				dlg.show();
-			}
-		});
-		while(!result[0]){}
-		Logger.LogVerbose("YesNo result: " + (result[1] ? "true" : "false"));
-		return result[1];
+		return callback.promptYesNo(message);
 	}
 
 	@Override

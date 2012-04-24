@@ -15,6 +15,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Parcel;
@@ -90,8 +91,8 @@ public abstract class OpenPath
 	{
 		return compare(this, other);
 	}
-	public SoftReference<Bitmap> getThumbnail(int w, int h) { return ThumbnailCreator.generateThumb(this, w, h); }
-	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read, Boolean write) { return ThumbnailCreator.generateThumb(this, w, h, read, write); }
+	public SoftReference<Bitmap> getThumbnail(Context mContext, int w, int h) { return ThumbnailCreator.generateThumb(this, w, h, mContext); }
+	public SoftReference<Bitmap> getThumbnail(Context mContext, int w, int h, Boolean read, Boolean write) { return ThumbnailCreator.generateThumb(this, w, h, read, write, mContext); }
 	public static int compare(OpenPath fa, OpenPath fb)
 	{
 		try {
@@ -147,16 +148,6 @@ public abstract class OpenPath
 			Logger.LogError("Unable to sort.", e);
 			return 0;
 		}
-	}
-	
-	private void writeObject(ObjectOutputStream out) throws IOException
-	{
-		out.writeChars(getPath());
-	}
-
-	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
-	{
-		setPath(in.readLine());
 	}
 
 	public String getExtension() {

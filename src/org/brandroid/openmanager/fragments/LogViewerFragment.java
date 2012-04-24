@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.LinedArrayAdapter;
 
 import android.content.Context;
@@ -25,7 +26,7 @@ import android.widget.TextView;
 
 public class LogViewerFragment extends OpenFragment implements OnClickListener
 {
-	private ArrayList<CharSequence> mData = new ArrayList<CharSequence>();
+	private static ArrayList<CharSequence> mData = new ArrayList<CharSequence>();
 	private ArrayAdapter<CharSequence> mAdapter = null;
 	
 	public LogViewerFragment() {
@@ -33,13 +34,20 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	
 	public void print(final String txt, final int color)
 	{
-		getActivity().runOnUiThread(new Runnable(){public void run(){
 		mData.add(0, colorify(txt, color));
 		if(mData.size() > 100)
 			mData.removeAll(mData.subList(80, mData.size()));
-		if(mAdapter != null)
-			mAdapter.notifyDataSetChanged();
-		}});
+
+		if(getActivity() == null) return;
+		//getActivity().runOnUiThread(
+		Runnable doPrint = new Runnable(){public void run(){
+			if(mAdapter != null)
+				mAdapter.notifyDataSetChanged();
+			}};
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+			getActivity().runOnUiThread(doPrint);
+		else
+			doPrint.run();
 		/*
 		builder.insert(0, colorify(txt, color));
 		if(builderLines++ > 100)
@@ -66,13 +74,16 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setHasOptionsMenu(true);
+		//setHasOptionsMenu(true);
 	}
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		if(menu == null || inflater == null) return;
+		if(!isVisible()) return;
+		if(isDetached()) return;
 		super.onCreateOptionsMenu(menu, inflater);
+		menu.clear();
 		inflater.inflate(R.menu.text_editor, menu);
 	}
 	
@@ -112,6 +123,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 
 	@Override
 	public Drawable getIcon() {
+		if(isDetached()) return null;
 		return getResources().getDrawable(R.drawable.ic_paper);
 	}
 

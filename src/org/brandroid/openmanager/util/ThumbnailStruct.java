@@ -2,16 +2,13 @@ package org.brandroid.openmanager.util;
 
 import java.lang.ref.SoftReference;
 
-import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.views.RemoteImageView;
-import org.brandroid.utils.ImageUtils;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.Gravity;
-import android.view.View;
-import android.widget.ImageView;
 
 
 
@@ -21,31 +18,24 @@ public class ThumbnailStruct
 	public int Width = 0, Height = 0;
 	//public BookmarkHolder Holder;
 	private SoftReference<Bitmap> mBitmap; 
-	public final View ImageView; 
 	//public Handler Handler;
-	public ThumbnailStruct(OpenPath path, BookmarkHolder holder, int width, int height)
+	private final OnUpdateImageListener mListener;
+	
+	public interface OnUpdateImageListener
+	{
+		void updateImage(Drawable d);
+		Context getContext();
+	}
+	public ThumbnailStruct(OpenPath path, OnUpdateImageListener listener, int width, int height)
 	{
 		File = path;
 		//Holder = holder;
-		ImageView = holder.getIconView();
+		mListener = listener;
 		//Handler = handler;
 		Width = width;
 		Height = height;
 	}
-	public ThumbnailStruct(OpenPath path, RemoteImageView view, int width, int height)
-	{
-		File = path;
-		ImageView = view;
-		Width = width;
-		Height = height;
-	}
-	public ThumbnailStruct(OpenPath path, ImageView view, int width, int height)
-	{
-		File = path;
-		ImageView = view;
-		Width = width;
-		Height = height;
-	}
+	public Context getContext() { return mListener.getContext(); }
 	
 	public void setBitmap(SoftReference<Bitmap> thumb)
 	{
@@ -59,7 +49,8 @@ public class ThumbnailStruct
 			bd.setGravity(Gravity.CENTER);
 			//if(Holder != null) Holder.setIconDrawable(bd, this);
 			//ImageView.setImageDrawable(bd);
-			ImageUtils.fadeToDrawable(ImageView, bd);
+			//ImageUtils.fadeToDrawable(ImageView, bd);
+			mListener.updateImage(bd);
 		}
 	}
 }

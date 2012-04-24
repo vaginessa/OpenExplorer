@@ -455,7 +455,7 @@ public class FileManager {
 				Uri uri = Uri.parse(path);
 				OpenServer server = OpenServers.DefaultServers.findByHost("sftp", uri.getHost());
 				ret = new OpenSFTP(uri);
-				SimpleUserInfo info = new SimpleUserInfo(DefaultUserInfo.getActivity());
+				SimpleUserInfo info = new SimpleUserInfo();
 				if(server != null)
 					info.setPassword(server.getPassword());
 				((OpenSFTP)ret).setUserInfo(info);

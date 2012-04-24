@@ -17,6 +17,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.utils.Logger;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -30,6 +31,7 @@ public class Cache
     {
         void onImageLoaded(OpenPath path, Bitmap bitmap);
         void onFailure(OpenPath path, Exception th);
+        Context getContext();
     }
 
     /**
@@ -93,7 +95,7 @@ public class Cache
             	if(q.path.exists())
             	{
             		Logger.LogDebug("***Found image to load!");
-            		SoftReference<Bitmap> sr = ThumbnailCreator.generateThumb(qq.path, qq.Width, qq.Height);
+            		SoftReference<Bitmap> sr = ThumbnailCreator.generateThumb(qq.path, qq.Width, qq.Height, qq.callback.getContext());
             		final Bitmap bmp = sr != null ? sr.get() : null;
             		if(bmp != null)
             		{

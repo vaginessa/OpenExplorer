@@ -204,12 +204,6 @@ public class OpenMediaStore extends OpenPath
 		return Long.parseLong(id);
 	}
 	
-	
-	@Override
-	public SoftReference<Bitmap> getThumbnail(int w, int h, Boolean read, Boolean write) {
-		return super.getThumbnail(w, h, read, write);
-	}
-	
 	@Override
 	public void setPath(String path) {
 		

@@ -21,9 +21,9 @@ public class OpenCursor extends OpenPath
 	private String mTitle;
 	private Long mTotalSize = 0l;
 	private boolean loaded = false;
-	private TextView mBookmarkText = null;
 	private Long mModified = Long.MIN_VALUE;
 	public static int LoadedCursors = 0;
+	private UpdateBookmarkTextListener mListener = null;
 	
 	public OpenCursor(String name)
 	{
@@ -31,16 +31,16 @@ public class OpenCursor extends OpenPath
 		loaded = false;
 	}
 	
+	public void setUpdateBookmarkTextListener(UpdateBookmarkTextListener listener)
+	{
+		mListener = listener;
+	}
+	
 	public boolean isLoaded() { return loaded; }
 	
-	public void setContentCountTextView(TextView tv)
+	public interface UpdateBookmarkTextListener
 	{
-		mBookmarkText = tv;
-		if(loaded)
-		{
-			tv.setVisibility(View.VISIBLE);
-			tv.setText("(" + mChildren.length + ")");
-		} else tv.setVisibility(View.GONE);
+		void updateBookmarkText(String txt);
 	}
 	
 	public void setCursor(Cursor c)
@@ -62,8 +62,8 @@ public class OpenCursor extends OpenPath
 		}
 		mChildren = new OpenMediaStore[kids.size()];
 		mChildren = kids.toArray(mChildren);
-		if(mBookmarkText != null)
-			mBookmarkText.setText("(" + mChildren.length + ")");
+		if(mListener != null)
+			mListener.updateBookmarkText("(" + mChildren.length + ")");
 		Logger.LogInfo(getName() + " found " + mChildren.length);
 		loaded = true;
 	}

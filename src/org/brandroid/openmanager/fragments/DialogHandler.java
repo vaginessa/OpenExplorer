@@ -451,11 +451,11 @@ public class DialogHandler extends DialogFragment {
 		if (file.isDirectory())
 			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.lg_folder);
 		else
-			((ImageView)v.findViewById(R.id.info_icon)).setImageDrawable(getFileIcon(file, false));
+			((ImageView)v.findViewById(R.id.info_icon)).setImageDrawable(getFileIcon(v.getContext(), file, false));
 	}
 	
-	public static Drawable getFileIcon(OpenPath file, boolean largeSize) {
-		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96).get());
+	public static Drawable getFileIcon(Context mContext, OpenPath file, boolean largeSize) {
+		return new BitmapDrawable(ThumbnailCreator.generateThumb(file, 96, 96, mContext).get());
 	}
 	
 	public static class CountAllFilesTask extends AsyncTask<OpenPath, Integer, String[]>
@@ -652,7 +652,7 @@ public class DialogHandler extends DialogFragment {
 			.setView(createFileInfoDialog((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE), path))
 			.setTitle(path.getName())
 			.setIcon(new BitmapDrawable(mContext.getResources(),
-						path.getThumbnail(ContentFragment.mListImageSize, ContentFragment.mListImageSize)
+						path.getThumbnail(mContext, ContentFragment.mListImageSize, ContentFragment.mListImageSize)
 							.get()))
 			.create()
 			.show();

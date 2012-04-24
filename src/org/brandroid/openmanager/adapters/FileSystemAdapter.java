@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -12,10 +13,12 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
@@ -39,7 +42,7 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
 	
-	public FileSystemAdapter(OpenExplorer explorer, int layout, ArrayList<OpenPath> data) {
+	public FileSystemAdapter(OpenExplorer explorer, int layout, List<OpenPath> data) {
 		super(explorer, layout, data);
 		mExplorer = explorer;
 	}
@@ -141,7 +144,7 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 						
 		//if(!mHolder.getTitle().equals(mName))
 		//	mHolder.setTitle(mName);
-		ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+		final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
 		//RemoteImageView mIcon = (RemoteImageView)view.findViewById(R.id.content_icon);
 		
 		if(mIcon != null)
@@ -172,7 +175,10 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 				}
 			} else {
-				ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight);
+				ThumbnailCreator.setThumbnail(mIcon, new OnUpdateImageListener() {
+					public void updateImage(Drawable d) { mIcon.setImageDrawable(d); }
+					public Context getContext() { return mIcon.getContext(); }
+					}, file, mWidth, mHeight);
 			}
 		}
 		

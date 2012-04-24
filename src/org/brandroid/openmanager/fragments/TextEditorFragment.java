@@ -139,7 +139,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setHasOptionsMenu(true);
+		//setHasOptionsMenu(true);
 		Bundle bundle = savedInstanceState;
 		if(getArguments() != null)
 			bundle = getArguments();

@@ -28,7 +28,8 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.FileIOTask;
+import org.brandroid.openmanager.util.NetworkIOTask;
+import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
@@ -68,15 +69,16 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 public class ContentFragment extends OpenFragment
-				implements OnItemClickListener, OnItemLongClickListener,
-							OnWorkerUpdateListener, OpenPathFragmentInterface
+		implements OnItemClickListener, OnItemLongClickListener,
+					OnWorkerUpdateListener, OpenPathFragmentInterface,
+					OnTaskUpdateListener
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
 	//private LinearLayout mPathView;
 	//private SlidingDrawer mMultiSelectDrawer;
 	//private GridView mMultiSelectView;
-	private GridView mGrid = null;
+	protected GridView mGrid = null;
 	//private View mProgressBarLoading = null;
 	
 	private OpenPath[] mData; 
@@ -97,12 +99,18 @@ public class ContentFragment extends OpenFragment
 	private int mTopIndex = 0;
 	private OpenPath mTopPath = null;
 	private OpenPath mPath = null;
+	private OnPathChangeListener mPathListener = null;
 	
 	private Bundle mBundle;
 	
 	protected Integer mViewMode = null;
 	
 	private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
+	
+	public interface OnPathChangeListener
+	{
+		public void changePath(OpenPath newPath);
+	}
 
 	public ContentFragment() {
 		if(getArguments() != null && getArguments().containsKey("last"))
@@ -163,29 +171,22 @@ public class ContentFragment extends OpenFragment
 
 	public static void cancelAllTasks()
 	{
-		FileIOTask.cancelAllTasks();
+		NetworkIOTask.cancelAllTasks();
 	}
 	
 	public int getViewMode() {
 		if(mViewMode == null)
-		{
-			if(getExplorer() != null && mPath != null)
-				mViewMode = getViewSetting(mPath, "view", getGlobalViewMode());
-			else mViewMode = getGlobalViewMode();
-		}
+			mViewMode = getViewSetting(mPath, "view", getGlobalViewMode());
 		return mViewMode;
 	}
 	public int getGlobalViewMode() {
-		if(getExplorer() != null)
-		{
-			String pref = getExplorer().getSetting(null, "pref_view", "list");
-			if(pref == "list")
-				return OpenExplorer.VIEW_LIST;
-			if(pref == "grid")
-				return OpenExplorer.VIEW_GRID;
-			if(pref == "carousel")
-				return OpenExplorer.VIEW_CAROUSEL;
-		}
+		String pref = getSetting(null, "pref_view", "list");
+		if(pref.equals("list"))
+			return OpenExplorer.VIEW_LIST;
+		if(pref.equals("grid"))
+			return OpenExplorer.VIEW_GRID;
+		if(pref.equals("carousel"))
+			return OpenExplorer.VIEW_CAROUSEL;
 		return OpenExplorer.VIEW_LIST;
 	}
 
@@ -377,12 +378,12 @@ public class ContentFragment extends OpenFragment
 	public void runUpdateTask(boolean reconnect)
 	{
 		String sPath = mPath.getPath();
-		FileIOTask.cancelTask(sPath);
+		NetworkIOTask.cancelTask(sPath);
 		if(reconnect && (mPath instanceof OpenNetworkPath))
 			((OpenNetworkPath)mPath).disconnect();
 		Logger.LogDebug("Running Task for " + sPath);
-		final FileIOTask task = new FileIOTask(getExplorer(), this);
-		FileIOTask.addTask(sPath, task);
+		final NetworkIOTask task = new NetworkIOTask(this);
+		NetworkIOTask.addTask(sPath, task);
 		task.execute(mPath);
 		new Thread(new Runnable(){
 			@Override
@@ -423,6 +424,11 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	@Override
+	public boolean onBackPressed() {
+		return false;
+	}
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		if(item == null) return false;
@@ -448,10 +454,11 @@ public class ContentFragment extends OpenFragment
 	@TargetApi(11)
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		if(!isVisible() || isDetached()) return;
 		super.onCreateOptionsMenu(menu, inflater);
 		if(mPath == null || !mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
-		//Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
+		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		if(!menu.hasVisibleItems())
 			inflater.inflate(R.menu.main_menu, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
@@ -504,6 +511,7 @@ public class ContentFragment extends OpenFragment
 		//Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
 		if(getActivity() == null) return;
 		if(menu == null) return;
+		if(!isAdded() || isDetached() || !isVisible()) return;
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
@@ -867,9 +875,9 @@ public class ContentFragment extends OpenFragment
 						file = new OpenFile(fileName);
 					
 					if (file.isDirectory()) {
-						getExplorer().changePath(file, true);
+						pushPath(file);
 					} else {
-						getExplorer().changePath(file.getParent(), true);
+						pushPath(file.getParent());
 					}
 				}
 			});
@@ -894,7 +902,7 @@ public class ContentFragment extends OpenFragment
 				}
 			else {
 				//if(mProgressBarLoading == null) mProgressBarLoading = getView().findViewById(R.id.content_progress);
-				new FileIOTask(getExplorer(), this).execute(mPath);
+				new NetworkIOTask(this).execute(mPath);
 			}
 			
 			//changePath(mPath, false);
@@ -918,6 +926,12 @@ public class ContentFragment extends OpenFragment
 	public void changePath(OpenPath path) {
 		mPath = path;
 		refreshData(null, false);
+	}
+	
+	private void pushPath(OpenPath path)
+	{
+		if(mPathListener != null)
+			mPathListener.changePath(path);
 	}
 	
 	private void saveTopPath()
@@ -1054,7 +1068,7 @@ public class ContentFragment extends OpenFragment
 	}
 	@Override
 	public CharSequence getTitle() {
-		return mPath.getName() + (mPath.isDirectory() && !mPath.getName().endsWith("/") ? "/" : "");
+		return mPath.getName() + ((mPath instanceof OpenFile || mPath instanceof OpenNetworkPath) && mPath.isDirectory() && !mPath.getName().endsWith("/") ? "/" : "");
 	}
 	
 	@Override
@@ -1066,9 +1080,10 @@ public class ContentFragment extends OpenFragment
 	public Drawable getIcon() {
 		if(isDetached()) return null;
 		if(getActivity() != null && getResources() != null)
-			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 32, 32));
+			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 36, 36));
 		return null;
 	}
+	
 }
 
 

@@ -27,6 +27,7 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
@@ -319,28 +320,30 @@ public abstract class OpenFragment
 
 	protected String getViewSetting(OpenPath path, String key, String def)
 	{
-		return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
+			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
+		return def;
 	}
 	protected Boolean getViewSetting(OpenPath path, String key, Boolean def)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null)
+		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
 			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
 		return def;
 	}
 	protected Integer getViewSetting(OpenPath path, String key, Integer def)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null)
+		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
 			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
 		return def;
 	}
 	protected void setViewSetting(OpenPath path, String key, String value)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null)
+		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
 			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 	protected void setViewSetting(OpenPath path, String key, Boolean value)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null)
+		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
 			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
 	}
 	protected void setViewSetting(OpenPath path, String key, Integer value)
@@ -350,13 +353,20 @@ public abstract class OpenFragment
 	}
 	protected Integer getSetting(OpenPath file, String key, Integer defValue)
 	{
+		if(getActivity() == null) return defValue; 
+		return getFragmentActivity().getSetting(file, key, defValue);
+	}
+	protected String getSetting(OpenPath file, String key, String defValue)
+	{
+		if(getActivity() == null) return defValue;
 		return getFragmentActivity().getSetting(file, key, defValue);
 	}
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		if(!isVisible()) return;
 		super.onCreateContextMenu(menu, v, menuInfo);
-		Logger.LogDebug("OpenFragment.onCreateContextMenu");
+		//Logger.LogDebug("OpenFragment.onCreateContextMenu");
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = null;
@@ -367,6 +377,12 @@ public abstract class OpenFragment
 		MenuUtils.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
 		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
 		//menu.findItem(R.id.menu_context_unzip).setVisible(file.isArchive());
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		Logger.LogDebug("OpenFragment.onCreateOptionsMenu");
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 	
 
@@ -648,8 +664,15 @@ public abstract class OpenFragment
 		return OpenExplorer.getFileManager();
 	}
 	
+	public Drawable getDrawable(int resId)
+	{
+		if(getActivity() == null) return null;
+		if(getResources() == null) return null;
+		return getResources().getDrawable(resId);
+	}
 	public OpenFragmentActivity getFragmentActivity() { return (OpenFragmentActivity)getActivity(); }
 	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
+	public Context getApplicationContext() { return getActivity().getApplicationContext(); }
 	public static EventHandler getEventHandler() { return OpenExplorer.getEventHandler(); }
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
 	protected OpenClipboard getClipboard() {

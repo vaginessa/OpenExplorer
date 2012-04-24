@@ -18,7 +18,7 @@ public class ThumbnailTask extends AsyncTask<ThumbnailStruct, Void, ThumbnailStr
 			ret[i] = params[i];
 			if(ret == null) continue;
 			//Logger.LogDebug("Getting thumb for " + ret[i].File.getName());
-			ret[i].setBitmap(ThumbnailCreator.generateThumb(ret[i].File, ret[i].Width, ret[i].Height));
+			ret[i].setBitmap(ThumbnailCreator.generateThumb(ret[i].File, ret[i].Width, ret[i].Height, ret[i].getContext()));
 		}
 		return ret;
 	}

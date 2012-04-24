@@ -35,6 +35,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
@@ -60,9 +61,12 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.InputType;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
 import android.view.ContextMenu;
@@ -85,8 +89,12 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.CheckedTextView;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -157,6 +165,8 @@ import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
+import org.brandroid.openmanager.util.SimpleUserInfo.UserInfoInteractionCallback;
+import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
@@ -348,18 +358,7 @@ public class OpenExplorer
 				IS_DEBUG_BUILD = false;
 		} catch (NameNotFoundException e1) { }
 
-		FileManager.DefaultUserInfo = new SimpleUserInfo(this);
-		try {
-			OpenSFTP.DefaultJSch.setHostKeyRepository(
-					new SimpleHostKeyRepo(
-						OpenSFTP.DefaultJSch,
-						FileManager.DefaultUserInfo,
-						Preferences.getPreferences(getApplicationContext(), "hosts")));
-			OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
-		} catch (JSchException e) {
-			Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
-		}
-		ThumbnailCreator.setContext(getApplicationContext());
+		handleNetworking();
 		
 		//refreshCursors();
 
@@ -526,6 +525,99 @@ public class OpenExplorer
 
 		if(!getPreferences().getBoolean("global", "pref_splash", false))
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
+	}
+	
+	private void handleNetworking()
+	{
+		FileManager.DefaultUserInfo = new SimpleUserInfo();
+		SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
+			
+			public boolean promptPassword(String message) {
+				String mPassword = null;
+				View view = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+						.inflate(R.layout.prompt_password, null);
+				TextView tv = (TextView)view.findViewById(android.R.id.message);
+				tv.setText(message);
+				final EditText text1 = ((EditText)view.findViewById(android.R.id.text1));
+				final CheckBox checkpw = (CheckBox)view.findViewById(android.R.id.checkbox);
+				checkpw.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					if(isChecked)
+					{
+						text1.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+						text1.setTransformationMethod(new SingleLineTransformationMethod());
+					} else {
+						text1.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+						text1.setTransformationMethod(new PasswordTransformationMethod());
+					}
+				}});
+				
+				AlertDialog dlg = new AlertDialog.Builder(getApplicationContext())
+					.setTitle(R.string.s_prompt_password)
+					.setView(view)
+					.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							String mPassword = text1.getText().toString();
+							onPasswordEntered(mPassword);
+							onYesNoAnswered(true);
+						}
+					})
+					.setNegativeButton(android.R.string.no, new OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							onYesNoAnswered(false);
+						}
+					})
+					.create();
+				dlg.show();
+				return true;
+			}
+			
+			@Override
+			public void onYesNoAnswered(boolean yes) {
+			}
+			
+			@Override
+			public void onPasswordEntered(String password) {
+			}
+
+			@Override
+			public boolean promptYesNo(final String message) {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						AlertDialog dlg = new AlertDialog.Builder(getApplicationContext())
+							.setMessage(message)
+							.setPositiveButton(android.R.string.yes, new OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									onYesNoAnswered(true);
+								}
+							})
+							.setNegativeButton(android.R.string.no, new OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									onYesNoAnswered(false);
+								}
+							})
+							.create();
+						dlg.show();
+					}
+				});
+				return true;
+			}
+		});
+		try {
+			OpenSFTP.DefaultJSch.setHostKeyRepository(
+					new SimpleHostKeyRepo(
+						OpenSFTP.DefaultJSch,
+						FileManager.DefaultUserInfo,
+						Preferences.getPreferences(getApplicationContext(), "hosts")));
+			OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
+		} catch (JSchException e) {
+			Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
+		}
 	}
 
 	private MimeTypes getMimeTypes()
@@ -1147,7 +1239,7 @@ public class OpenExplorer
 		super.onLowMemory();
 		LOW_MEMORY = true;
 		showToast(R.string.s_msg_low_memory);
-		ThumbnailCreator.flushCache(false);
+		ThumbnailCreator.flushCache(getApplicationContext(), false);
 		FileManager.clearOpenCache();
 		EventHandler.cancelRunningTasks();
 	}
@@ -1163,7 +1255,8 @@ public class OpenExplorer
 		Logger.LogVerbose("OpenExplorer.onStart");
 		setupLoggingDb();
 		submitStats();
-		refreshCursors();
+		new Thread(new Runnable(){public void run() {refreshCursors();}});
+		//refreshCursors();
 		mBookmarks.scanBookmarks();
 	}
 	
@@ -1237,8 +1330,11 @@ public class OpenExplorer
 			else {
 				mViewPager.postDelayed(new Runnable(){
 					public void run() {
-						mViewPagerAdapter.add(mLogFragment);
-						mViewPager.setAdapter(mViewPagerAdapter);
+						if(mViewPagerAdapter.getItemPosition(mLogFragment) > -1)
+						{
+							mViewPagerAdapter.add(mLogFragment);
+							mViewPager.setAdapter(mViewPagerAdapter);
+						}
 					}}, 500);
 			}
 		}
@@ -1885,7 +1981,9 @@ public class OpenExplorer
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		Logger.LogDebug("<-- OpenExplorer.onCreateContextMenu");
 		super.onCreateContextMenu(menu, v, menuInfo);
+		
 		switch(v.getId())
 		{
 		case R.menu.menu_view_flat:
@@ -1909,6 +2007,8 @@ public class OpenExplorer
 			Logger.LogWarning("Submenu not found for " + v.getId());
 			break;
 		}
+		Logger.LogDebug("--> OpenExplorer.onCreateContextMenu");
+		
 	}
 	
 	@Override
@@ -1923,9 +2023,9 @@ public class OpenExplorer
 			mMainMenu.clearAll();
 		//getMenuInflater().inflate(R.menu.main_menu, mMainMenu);
 		try {
-		getSelectedFragment().onCreateOptionsMenu(mMainMenu, getMenuInflater());
-		Logger.LogVerbose("Setting up base bar (" + mMainMenu.size() + ")...");
-		onPrepareOptionsMenu(mMainMenu);
+			getSelectedFragment().onCreateOptionsMenu(mMainMenu, getMenuInflater());
+			Logger.LogVerbose("Setting up base bar (" + mMainMenu.size() + ")...");
+			onPrepareOptionsMenu(mMainMenu);
 		} catch(Exception e) {
 			Logger.LogError("Couldn't set up base bar.", e);
 		}
@@ -2320,7 +2420,7 @@ public class OpenExplorer
 				}
 				return true;
 			case R.id.menu_flush:
-				ThumbnailCreator.flushCache(true);
+				ThumbnailCreator.flushCache(getApplicationContext(), true);
 				OpenPath.flushDbCache();
 				goHome();
 				return true;
@@ -2723,9 +2823,12 @@ public class OpenExplorer
 		} else
 			setViewVisibility(false, false, R.id.frag_log);
 		
-		ImageView icon = (ImageView)findViewById(R.id.title_icon);
+		final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
-			ThumbnailCreator.setThumbnail(icon, path, 32, 32);
+			ThumbnailCreator.setThumbnail(icon,new OnUpdateImageListener() {
+				public void updateImage(Drawable d) { icon.setImageDrawable(d); }
+				public Context getContext() { return icon.getContext(); }
+				}, path, 32, 32);
 		
 		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);
@@ -2966,6 +3069,7 @@ public class OpenExplorer
 		@Override
 		protected Void doInBackground(OpenPath... params) {
 			//int done = 0;
+			final Context c = getApplicationContext();
 			for(OpenPath path : params)
 			{
 				if(path.isDirectory())
@@ -2973,18 +3077,16 @@ public class OpenExplorer
 					try {
 						for(OpenPath kid : path.list())
 						{
-							ThumbnailCreator.generateThumb(kid, 36, 36);
-							ThumbnailCreator.generateThumb(kid, 128, 128);
+							ThumbnailCreator.generateThumb(kid, 36, 36, c);
+							ThumbnailCreator.generateThumb(kid, 128, 128, c);
 							//done++;
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				} else {
-					if(!ThumbnailCreator.hasContext())
-						ThumbnailCreator.setContext(getApplicationContext());
-					ThumbnailCreator.generateThumb(path, 36, 36);
-					ThumbnailCreator.generateThumb(path, 128, 128);
+					ThumbnailCreator.generateThumb(path, 36, 36, c);
+					ThumbnailCreator.generateThumb(path, 128, 128, c);
 					//done++;
 				}
 			}
@@ -3370,7 +3472,7 @@ public class OpenExplorer
 		final OpenFragment f = getSelectedFragment();
 		if(!f.isDetached())
 		{
-			final Drawable d = ((OpenFragment)f).getIcon();
+			final Drawable d = f.getIcon();
 			final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 			if(icon != null && d != null)
 				icon.post(new Runnable() {
