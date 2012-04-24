@@ -5,7 +5,9 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -22,11 +24,16 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SearchView;
 
 import org.brandroid.carousel.CarouselViewHelper;
 import org.brandroid.carousel.CarouselView;
@@ -34,9 +41,13 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
 
 public class CarouselFragment extends OpenFragment implements OpenPathFragmentInterface {
 	private static final String TAG = "CarouselTestActivity";
@@ -53,6 +64,10 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 	private CarouselView mView;
 	private Paint mPaint = new Paint();
 	private Paint mBlackPaint = new Paint();
+	
+	private boolean mShowHiddenFiles = false;
+	private boolean mFoldersFirst = true;
+	private SortType mSorting = SortType.ALPHA;
 	
 	private CarouselViewHelper mHelper;
 	private Bitmap mGlossyOverlay;
@@ -188,7 +203,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			return bitmap;
 		}
 	};
-
+	
 	private Runnable mAddCardRunnable = new Runnable() {
 		public void run() {
 			if (mView.getCardCount() < size()) {
@@ -216,10 +231,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 	public void setPath(OpenPath path)
 	{
 		mPath = path;
-		try {
-			mPathItems = path.listFiles();
-			Arrays.sort(mPathItems);
-		} catch(IOException e) { Logger.LogError("Couldn't set carousel path.", e); }
+		refreshData(null, false);
 	}
 	
 	public CarouselFragment()
@@ -234,14 +246,170 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		{
 			Logger.LogError("Who is making me?", new Exception("WTF!"));
 		}
+		mPath = mParent;
 		//getExplorer().updateTitle(mParent.getPath());
-		mBlackPaint.setColor(Color.BLACK);
-		try {
-			mPathItems = mParent.list();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		refreshData(getArguments(), false);
+	}
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		if(!isVisible() || isDetached()) return;
+		super.onCreateOptionsMenu(menu, inflater);
+		if(mPath == null || !mPath.isFile() || !IntentManager.isIntentAvailable(mPath, getExplorer()))
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
+		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
+		if(!menu.hasVisibleItems())
+			inflater.inflate(R.menu.main_menu, menu);
+		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
+		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
+		{
+			MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
+			try {
+			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
+			if(mSearchView != null)
+				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+					@TargetApi(11)
+					public boolean onQueryTextSubmit(String query) {
+						mSearchView.clearFocus();
+						Intent intent = getExplorer().getIntent();
+						if(intent == null)
+							intent = new Intent();
+						intent.setAction(Intent.ACTION_SEARCH);
+						Bundle appData = new Bundle();
+						appData.putString("path", getExplorer().getDirContentFragment(false).getPath().getPath());
+						intent.putExtra(SearchManager.APP_DATA, appData);
+						intent.putExtra(SearchManager.QUERY, query);
+						getExplorer().handleIntent(intent);
+						return true;
+					}
+					public boolean onQueryTextChange(String newText) {
+						return false;
+					}
+				});
+			} catch(NullPointerException e) {
+				Logger.LogError("Couldn't set up Search ActionView", e);
+			}
 		}
+		//MenuInflater inflater = new MenuInflater(mContext);
+		if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			MenuItem sort = menu.findItem(R.id.menu_sort);
+			if(sort != null && sort.getSubMenu() != null && !sort.getSubMenu().hasVisibleItems())
+				inflater.inflate(R.menu.menu_sort, sort.getSubMenu());
+			MenuItem view = menu.findItem(R.id.menu_view);
+			if(view != null && view.getSubMenu() != null && !view.getSubMenu().hasVisibleItems())
+				inflater.inflate(R.menu.menu_view, view.getSubMenu());
+			MenuItem paste = menu.findItem(R.id.menu_paste);
+			if(paste != null && paste.getSubMenu() != null && !paste.getSubMenu().hasVisibleItems())
+				inflater.inflate(R.menu.multiselect, paste.getSubMenu());
+		}
+	}
+	
+	private SortType getSorting() { return mSorting; }
+	
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		//Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
+		if(getActivity() == null) return;
+		if(menu == null) return;
+		if(!isAdded() || isDetached() || !isVisible()) return;
+		super.onPrepareOptionsMenu(menu);
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
+		
+		switch(getSorting())
+		{
+		case ALPHA:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
+			break;
+		case ALPHA_DESC:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_desc);
+			break;
+		case DATE:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_asc);
+			break;
+		case DATE_DESC:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_desc);
+			break;
+		case SIZE:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_asc);
+			break;
+		case SIZE_DESC:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_desc);
+			break;
+		case TYPE:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
+			break;
+		}
+		
+		MenuUtils.setMenuChecked(menu, mFoldersFirst, R.id.menu_sort_folders_first);
+		
+		if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
+			menu.findItem(R.id.menu_multi).setIcon(null);
+		
+		//if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
+		//	menu.findItem(R.id.menu_context_unzip).setVisible(false);
+		
+		if(getClipboard() == null || getClipboard().size() == 0)
+		{
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_paste);
+		} else {
+			MenuItem mPaste = menu.findItem(R.id.menu_paste);
+			if(mPaste != null && getClipboard() != null && !isDetached())
+				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
+			if(getClipboard().isMultiselect())
+			{
+				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
+				d.getDrawable(1).setAlpha(127);
+				if(menu.findItem(R.id.menu_paste) != null)
+					menu.findItem(R.id.menu_paste).setIcon(d);
+			}
+			if(mPaste != null)
+				mPaste.setVisible(true);
+		}
+		
+		MenuUtils.setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
+		
+		MenuUtils.setMenuChecked(menu, getShowHiddenFiles(), R.id.menu_view_hidden);
+		MenuUtils.setMenuVisible(menu, false, R.id.menu_view_thumbs);
+		MenuUtils.setMenuVisible(menu, !OpenExplorer.BEFORE_HONEYCOMB, R.id.menu_view_carousel);
+		
+		if(RootManager.Default.isRoot())
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_root);	
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		if(item == null) return false;
+		switch(item.getItemId())
+		{
+		case R.id.menu_sort_name_asc:	onSortingChanged(FileManager.SortType.ALPHA); return true; 
+		case R.id.menu_sort_name_desc:	onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
+		case R.id.menu_sort_date_asc: 	onSortingChanged(FileManager.SortType.DATE); return true;
+		case R.id.menu_sort_date_desc: 	onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
+		case R.id.menu_sort_size_asc: 	onSortingChanged(FileManager.SortType.SIZE); return true; 
+		case R.id.menu_sort_size_desc: 	onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
+		case R.id.menu_sort_type: 		onSortingChanged(FileManager.SortType.TYPE); return true;
+		case R.id.menu_view_hidden:
+			onHiddenFilesChanged(!getShowHiddenFiles());
+			return true;
+		case R.id.menu_sort_folders_first:
+			onFoldersFirstChanged(!getFoldersFirst());
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean getFoldersFirst() { return mFoldersFirst; }
+	public boolean getShowHiddenFiles() {
+		return mShowHiddenFiles;
 	}
 	
 	@Override
@@ -252,7 +420,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		
 		mView = (CarouselView)mParent.findViewById(R.id.carousel);
 		if(!OpenExplorer.BEFORE_HONEYCOMB)
-			mHelper = new LocalCarouselViewHelper(getActivity());
+			mHelper = new LocalCarouselViewHelper(getActivity().getApplicationContext());
 		
 		return mParent;
 	}
@@ -328,5 +496,60 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 32, 32));
 		else return null;
 	}
+	
+	public void refreshData(Bundle data, boolean allowSkips)
+	{
+		//ArrayList<OpenPath> mData = new ArrayList<OpenPath>();
 
+		try {
+			mPathItems = mPath.listFiles();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Arrays.sort(mPathItems);
+		
+		//mPathItems = mData.toArray(new OpenPath[mData.size()]);
+		//rerun();
+	}
+
+	public void onFoldersFirstChanged(boolean first)
+	{
+		setFoldersFirst(first);
+		refreshData(null, false);
+	}
+	public void onHiddenFilesChanged()
+	{
+		onHiddenChanged(!getShowHiddenFiles());
+	}
+	//@Override
+	public void onHiddenFilesChanged(boolean toShow)
+	{
+		Logger.LogInfo("onHiddenFilesChanged(" + toShow + ")");
+		setShowHiddenFiles(toShow);
+		//getManager().setShowHiddenFiles(state);
+		refreshData(null, false);
+	}
+	//@Override
+	public void onSortingChanged(SortType type) {
+		setSorting(type);
+		//getManager().setSorting(type);
+		refreshData(null, false);
+	}
+	public void setFoldersFirst(boolean first) {
+		mFoldersFirst = first;
+		setViewSetting(mPath, "folders", first);
+	}
+	public void setShowHiddenFiles(boolean show)
+	{
+		mShowHiddenFiles = show;
+		setViewSetting(mPath, "show", show);
+	}
+	
+	public void setSorting(SortType type)
+	{
+		mSorting = type;
+		setViewSetting(mPath, "sort", type.toString());
+	}
+	
 }

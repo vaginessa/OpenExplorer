@@ -1992,7 +1992,7 @@ public class OpenExplorer
 		case R.menu.menu_view:
 		case R.id.menu_view:
 			getMenuInflater().inflate(R.menu.menu_view, menu);
-			if(Build.VERSION.SDK_INT < 11)
+			if(Build.VERSION.SDK_INT < 11 || Build.VERSION.SDK_INT > 13)
 				MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 			break;
 		case R.menu.menu_sort_flat:
@@ -2208,7 +2208,7 @@ public class OpenExplorer
 			}
 		}
 		
-		if(BEFORE_HONEYCOMB)
+		if(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13)
 		{
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 			setupBaseBarButtons(menu, false);
@@ -2599,7 +2599,7 @@ public class OpenExplorer
 		}
 		//Logger.LogVerbose("Changing view mode to " + newView);
 		int oldView = mViewMode;
-		if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
+		if(newView == VIEW_CAROUSEL && (BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13))
 			newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
 		//setViewMode(newView);
 		if(doSet)
@@ -2620,7 +2620,7 @@ public class OpenExplorer
 			getDirContentFragment(true).onViewChanged(newView);
 			if(!BEFORE_HONEYCOMB)
 				invalidateOptionsMenu();
-		} else if(newView == VIEW_CAROUSEL && oldView != VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
+		} else if(newView == VIEW_CAROUSEL && oldView != VIEW_CAROUSEL && !(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13))
 		{
  			Logger.LogDebug("Switching to carousel!");
 			if(mViewPagerEnabled)
@@ -2635,7 +2635,7 @@ public class OpenExplorer
 				.setBreadCrumbTitle(path.getPath())
 				.commit();
 			updateTitle(path.getPath());
-		} else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && !BEFORE_HONEYCOMB) { // if we need to transition from carousel
+		} else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && !(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13)) { // if we need to transition from carousel
 			Logger.LogDebug("Switching from carousel!");
 			if(mViewPagerEnabled)
 			{
@@ -2956,7 +2956,7 @@ public class OpenExplorer
 				ft.addToBackStack("path");
 			} else Logger.LogVerbose("Covertly changing to " + path.getPath());
 			OpenFragment content = ContentFragment.getInstance(path, newView);
-			if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
+			if(newView == VIEW_CAROUSEL && !(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13))
 			{
 				content = new CarouselFragment(path);
 				ft.replace(R.id.content_frag, content);

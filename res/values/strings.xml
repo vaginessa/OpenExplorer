@@ -248,4 +248,5 @@
     <string name="s_status_remaining">Remaining:</string>
     <string name="s_pref_logview">Network Log</string>
     <string name="s_alert_dirty" formatted="false">The contents of %s have changed. Would you like to save?</string>
+    <string name="s_menu_sort_folders">Folders First</string>
 </resources>
