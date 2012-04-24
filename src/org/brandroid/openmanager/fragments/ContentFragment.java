@@ -83,7 +83,6 @@ public class ContentFragment extends OpenFragment
 	
 	private OpenPath[] mData; 
 	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
-	private Context mContext;
 	private boolean mShowThumbnails = true;
 	private boolean mReadyToUpdate = true;
 	private boolean mShowHiddenFiles = false;
@@ -115,6 +114,7 @@ public class ContentFragment extends OpenFragment
 	public ContentFragment() {
 		if(getArguments() != null && getArguments().containsKey("last"))
 		{
+			Logger.LogDebug("ContentFragment Restoring to " + getArguments().getString("last"));
 			setPath(getArguments().getString("last"));
 		}
 	}
@@ -214,8 +214,6 @@ public class ContentFragment extends OpenFragment
 		
 		setHasOptionsMenu(true);
 		
-		mContext = getActivity();
-		
 		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
 		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
 		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
@@ -227,7 +225,7 @@ public class ContentFragment extends OpenFragment
 		{
 			String last = mBundle.getString("last");
 			if(last.startsWith("content://"))
-				mPath = new OpenContent(Uri.parse(last), mContext);
+				mPath = new OpenContent(Uri.parse(last), getApplicationContext());
 			else if(last.startsWith("/"))
 				mPath = new OpenFile(last).setRoot();
 			else if(last.equalsIgnoreCase("Photos"))
@@ -281,6 +279,8 @@ public class ContentFragment extends OpenFragment
 	}
 	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
+		if(!isVisible()) return;
+		Logger.LogDebug("Refreshing Data for " + mPath.getPath());
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
 		else
@@ -641,7 +641,7 @@ public class ContentFragment extends OpenFragment
 		if(mGrid == null)
 		{
 			Logger.LogWarning("This shouldn't happen");
-			mGrid = (GridView)((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.content_grid, null);
+			mGrid = (GridView)((LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.content_grid, null);
 			((ViewGroup)getView()).addView(mGrid);
 			setupGridView();
 		}
@@ -850,11 +850,11 @@ public class ContentFragment extends OpenFragment
 		Logger.LogVerbose("Need to refresh!");
 		if(type == EventHandler.SEARCH_TYPE) {
 			if(results == null || results.size() < 1) {
-				Toast.makeText(mContext, "Sorry, zero items found", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "Sorry, zero items found", Toast.LENGTH_LONG).show();
 				return;
 			}
 			
-			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.DialogType.SEARCHRESULT_DIALOG, mContext);
+			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.DialogType.SEARCHRESULT_DIALOG, getApplicationContext());
 			ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 			for(String s : results)
 				files.add(new OpenFile(s));

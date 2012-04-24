@@ -1092,7 +1092,9 @@ public class OpenExplorer
 		if(mViewPager != null)
 		{
 			try {
-				mViewPager.setAdapter(adapter);
+				if(!adapter.equals(mViewPager.getAdapter()))
+					mViewPager.setAdapter(adapter);
+				else mViewPager.notifyDataSetChanged();
 			} catch(IndexOutOfBoundsException e) {
 				Logger.LogError("Why is this happening?", e);
 			} catch(IllegalStateException e) {
@@ -2877,7 +2879,7 @@ public class OpenExplorer
 					} catch(Exception e) { Logger.LogError("Downloads?", e); }
 					tmp = tmp.getParent();
 				}
-				Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
+				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				final int index = mViewPagerAdapter.getCount() - iNonContentPages - 1;
 				setViewPageAdapter(mViewPagerAdapter);
@@ -2989,7 +2991,7 @@ public class OpenExplorer
 			updateTitle(path.getPath());
 			changeViewMode(getSetting(path, "view", 0), false); // bug fix
 		}
-		refreshContent();
+		//refreshContent();
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		/*if(content instanceof ContentFragment)
@@ -3007,7 +3009,7 @@ public class OpenExplorer
 	private void refreshContent()
 	{
 		ContentFragment frag = getDirContentFragment(false);
-		if(frag != null)
+		if(frag != null && frag.getPath() instanceof OpenNetworkPath)
 		{
 			frag.refreshData(null, false);
 			frag.runUpdateTask();
@@ -3467,6 +3469,7 @@ public class OpenExplorer
 
 	@Override
 	public void onPageSelected(int position) {
+		Logger.LogDebug("onPageSelected(" + position + ")");
 		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
 		final OpenFragment f = getSelectedFragment();
