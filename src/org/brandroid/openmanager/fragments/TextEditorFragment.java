@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
@@ -35,7 +36,9 @@ import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService.InputMethodImpl;
@@ -57,12 +60,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -88,6 +95,8 @@ public class TextEditorFragment extends OpenFragment
 	
 	private OpenPath mPath = null;
 	private String mData = null;
+	private boolean mDirty = false;
+	private long lastClick = 0l;
 	private float mTextSize = 10f;
 	
 	private AsyncTask mTask = null;
@@ -137,6 +146,11 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public boolean onBackPressed() {
+		if(mEditMode)
+		{
+			setEditable(false);
+			return true;
+		}
 		doClose();
 		return true;
 	}
@@ -244,96 +258,6 @@ public class TextEditorFragment extends OpenFragment
 		//mViewText.setTextSize(sz);
 	}
 	
-	/*
-	private String getDataHTML()
-	{
-		StringBuilder sb = new StringBuilder();
-		sb.append(getHTMLHead());
-		sb.append(TextUtils.htmlEncode(mData));
-		sb.append(getHTMLFoot());
-		return sb.toString();
-	}
-	private String getLanguage() {
-		String ext = getPath().getExtension().toLowerCase();
-		if(ext.endsWith("ml")) return "xml";
-		if(ext.equals("js")) return "js";
-		if(ext.equals("css")) return "css";
-		if(ext.equals("php")) return "php";
-		if(ext.equals("java")) return "java";
-		return "text";
-	}
-	private String getHTMLHead() {
-		return getHTMLHead(getLanguage());
-	}
-	private String getHTMLHead(String language)
-	{
-		return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n" +
-			"<html><head>" +
-			"<script src=\"sh/scripts/shCore.js\" type=\"text/javascript\"></script>"
-			+ "<script type=\"text/javascript\" src=\"sh/scripts/shBrushJScript.js\"></script>"
-			+ "<link href=\"sh/styles/shCore.css\" type=\"text/css\" rel=\"stylesheet\" />"
-			+ "<link href=\"sh/styles/shThemeDefault.css\" type=\"text/css\" rel=\"stylesheet\" />"
-			//+ "<style>body,textarea,pre{margin:0px;padding:0px;border:0px;}textarea{width:100%;height:100%;}</style>"
-			+ "<script type=\"text/javascript\">SyntaxHighlighter.all()</script>"
-			+ "</head><body>"
-			+ "<pre class=\"brush: " + language + ";\">";
-	}
-	private String getHTMLFoot()
-	{
-		return "</pre></body></html>";
-	}
-	private void refreshWebText()
-	{
-		new Thread(new Runnable(){
-			public void run() {
-				final String mDataHTML = getDataHTML();
-				mWebText.post(new Runnable() {
-					public void run() {
-						mWebText.loadDataWithBaseURL("file:///android_asset/",
-								mDataHTML, "text/html", "utf-8", null);
-					}
-				});
-			}
-		}).start();
-	}
-	*/
-	
-	private void refreshTable2()
-	{
-		final Context c = getActivity();
-		if(c == null) return;
-		final LayoutInflater inflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		if(inflater == null) return;
-		setProgressVisibility(true);
-		new Thread(new Runnable(){
-			public void run() {
-				String[] lines = mData.split("\n");
-				int i = 1;
-				final ArrayList<View> rows = new ArrayList<View>();
-				for(String line : lines)
-				{
-					TableRow row = (TableRow)inflater.inflate(R.layout.edit_text_view_row, null);
-					
-					TextView txtLine = (TextView)row.findViewById(R.id.text_line);
-					txtLine.setTextSize(mTextSize-1);
-					txtLine.setText(((Integer)i++).toString());
-					
-					TextView txtData = (TextView)row.findViewById(R.id.text_data);
-					txtData.setTextSize(mTextSize);
-					txtData.setText(line);
-					
-					rows.add(row);
-				}
-				mViewTable.post(new Runnable() {
-					public void run() {
-						mViewTable.removeAllViews();
-						for(View row : rows)
-							mViewTable.addView(row);
-						mViewTable.invalidate();
-						setProgressVisibility(false);
-					}});
-		}}).start();
-	}
 	private void refreshList()
 	{
 		mViewListAdapter.setLines(mData.split("\n"));
@@ -382,6 +306,22 @@ public class TextEditorFragment extends OpenFragment
 		if(savedInstanceState != null && savedInstanceState.containsKey("size"))
 			setTextSize(savedInstanceState.getFloat("size"));
 		mViewList.setAdapter(mViewListAdapter);
+		mViewList.setLongClickable(true);
+		mViewList.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				long time = new Date().getTime();
+				if(time - lastClick < 500)
+					setEditable(true);
+				else lastClick = time;
+			}
+		});
+		mViewList.setOnItemLongClickListener(new OnItemLongClickListener() {
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				setEditable(true);
+				return true;
+			}
+		});
 	}
 	
 	@Override
@@ -488,6 +428,7 @@ public class TextEditorFragment extends OpenFragment
 	
 	private void setEditable(boolean editable)
 	{
+		if(mEditMode == editable) return;
 		mEditMode = editable;
 		if(editable)
 		{
@@ -501,11 +442,35 @@ public class TextEditorFragment extends OpenFragment
 			mEditText.addTextChangedListener(this);
 		} else {
 			mEditText.removeTextChangedListener(this);
-			mEditText.setVisibility(View.GONE);
-			//mViewScroller.setVisibility(View.VISIBLE);
-			//mWebText.setVisibility(View.VISIBLE);
-			//mViewScroller.setVisibility(View.VISIBLE);
-			mViewList.setVisibility(View.VISIBLE);
+			if(mPath.canWrite() && mDirty)
+			{
+				DialogHandler.showConfirmationDialog(getActivity(),
+						getString(R.string.s_alert_dirty, mPath.getName()),
+						getText(R.string.s_save).toString() + "?",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								doSave();
+								mEditText.setVisibility(View.GONE);
+								mViewList.setVisibility(View.VISIBLE);
+							}
+						},
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								dialog.cancel();
+								mEditText.setVisibility(View.GONE);
+								mViewList.setVisibility(View.VISIBLE);
+							}
+						},
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								setEditable(true);
+							}
+						}
+					);
+			} else {
+				mEditText.setVisibility(View.GONE);
+				mViewList.setVisibility(View.VISIBLE);
+			}
 		}
 	}
 
@@ -683,6 +648,7 @@ public class TextEditorFragment extends OpenFragment
 	public void onTextChanged(CharSequence s, int start, int before, int count) { }
 	public void afterTextChanged(Editable s) {
 		mData = s.toString();
+		mDirty = true;
 	}
 	
 	

@@ -671,7 +671,7 @@ public abstract class OpenFragment
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Logger.LogDebug("<-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		Logger.LogDebug("<-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 		//CONTENT_FRAGMENT_FREE = false;
 		super.onCreate(savedInstanceState);
 	}

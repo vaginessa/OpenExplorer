@@ -343,6 +343,8 @@ public class OpenExplorer
 			IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), 0)
 					.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) ==
 						ApplicationInfo.FLAG_DEBUGGABLE;
+			if(IS_DEBUG_BUILD && Build.MANUFACTURER.equals("RIM"))
+				IS_DEBUG_BUILD = false;
 		} catch (NameNotFoundException e1) { }
 
 		FileManager.DefaultUserInfo = new SimpleUserInfo(this);
@@ -1905,20 +1907,6 @@ public class OpenExplorer
 		return onClick(item.getItemId(), item, null);
 	}
 	
-	public AlertDialog showConfirmationDialog(String msg, String title, DialogInterface.OnClickListener onYes)
-	{
-		return new AlertDialog.Builder(this)
-			.setTitle(title)
-			.setMessage(msg)
-			.setNegativeButton(R.string.s_no, new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-				}
-			})
-			.setPositiveButton(R.string.s_yes, onYes)
-			.show();
-	}
-	
 	private void setupBaseBarButtons() {
 		if(mMainMenu == null)
 			mMainMenu = new MenuBuilder(this);
@@ -2366,7 +2354,7 @@ public class OpenExplorer
 				return true;
 			
 			case R.id.menu_multi_all_delete:
-				showConfirmationDialog(
+				DialogHandler.showConfirmationDialog(this,
 						getResources().getString(R.string.s_confirm_delete, getClipboard().getCount() + " " + getResources().getString(R.string.s_files)),
 						getResources().getString(R.string.s_menu_delete_all),
 						new DialogInterface.OnClickListener() { // yes

@@ -28,6 +28,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -660,6 +661,25 @@ public class DialogHandler extends DialogFragment {
 		//dialogInfo.show(fragmentManager, "info");
 	}
 
+	public static AlertDialog showConfirmationDialog(final Context context, String msg, String title, DialogInterface.OnClickListener onYes)
+	{
+		return showConfirmationDialog(context, msg, title, onYes, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			}, null);
+	}
+	public static AlertDialog showConfirmationDialog(final Context context, String msg, String title, DialogInterface.OnClickListener onYes, DialogInterface.OnClickListener onNo, DialogInterface.OnClickListener onCancel)
+	{
+		return new AlertDialog.Builder(context)
+			.setTitle(title)
+			.setMessage(msg)
+			.setNegativeButton(R.string.s_no, onNo)
+			.setPositiveButton(R.string.s_yes, onYes)
+			.setNeutralButton(R.string.s_cancel, onCancel)
+			.show();
+	}
+	
 	public static void showAboutDialog(final Context mContext)
 	{
 		LayoutInflater li = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
