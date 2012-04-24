@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.utils.Logger;
 
 import com.viewpagerindicator.PageIndicator;
 import android.content.Context;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
@@ -82,7 +82,12 @@ public class OpenViewPager extends ViewPager
 			mIndicatorListener.onPageIndicatorChange();
 	}
 	
-	public Fragment getCurrentFragment() {
+	public OpenFragment getCurrentFragment() {
 		return ((ArrayPagerAdapter)getAdapter()).getItem(getCurrentItem());
+	}
+
+	public void notifyDataSetChanged() {
+		getAdapter().notifyDataSetChanged();
+		mIndicator.notifyDataSetChanged();
 	}
 }

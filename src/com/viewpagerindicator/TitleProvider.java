@@ -29,7 +29,6 @@ public interface TitleProvider {
      * @param position
      * @return
      */
-    public String getTitle(final int position);
+    public CharSequence getPageTitle(final int position);
     public boolean modifyTab(TabView tab, final int position);
-    public Drawable[] getIcons(final int position);
 }

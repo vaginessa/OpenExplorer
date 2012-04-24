@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
@@ -40,7 +41,7 @@ public class EditorActivity extends OpenFragmentActivity
 			Toast.makeText(this, R.string.s_error_no_intents, Toast.LENGTH_LONG);
 			//finish();
 		} else {
-			Fragment mContentFragment = new TextEditorFragment(file);
+			OpenFragment mContentFragment = new TextEditorFragment(file);
 			getSupportFragmentManager().beginTransaction()
 				.replace(android.R.id.widget_frame, mContentFragment)
 				.commit();

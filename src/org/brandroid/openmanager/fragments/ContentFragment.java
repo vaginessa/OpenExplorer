@@ -1054,7 +1054,7 @@ public class ContentFragment extends OpenFragment
 	}
 	@Override
 	public CharSequence getTitle() {
-		return mPath.getName();
+		return mPath.getName() + (mPath.isDirectory() && !mPath.getName().endsWith("/") ? "/" : "");
 	}
 	
 	@Override

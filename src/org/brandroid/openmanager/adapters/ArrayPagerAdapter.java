@@ -32,7 +32,7 @@ import android.view.View.OnLongClickListener;
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider {
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
-	private List<Fragment> mFrags = new ArrayList<Fragment>();
+	private List<OpenFragment> mFrags = new ArrayList<OpenFragment>();
 	private OnPageTitleClickListener mListener = null;
 
 	public ArrayPagerAdapter(FragmentManager fm) {
@@ -50,13 +50,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	@Override
-	public Fragment getItem(int pos) {
+	public OpenFragment getItem(int pos) {
 		if(pos < getCount())
 			return mFrags.get(pos);
 		else return null;
 	}
 
-	public Fragment getLastItem() {
+	public OpenFragment getLastItem() {
 		return mFrags.get(getCount() - 1);
 	}
 
@@ -108,7 +108,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			if(tofind == null) return super.getItemPosition(object);
 			for(int i = 0; i < getCount(); i++)
 			{
-				Fragment f = getItem(i);
+				OpenFragment f = getItem(i);
 				if(f instanceof OpenPathFragmentInterface)
 				{
 					OpenPath tocheck = ((OpenPathFragmentInterface)f).getPath();
@@ -122,10 +122,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 
 	@Override
 	public CharSequence getPageTitle(int position) {
-		Fragment f = getItem(position);
+		OpenFragment f = getItem(position);
+		if(f != null) return f.getTitle();
+		return null;
 		
-		CharSequence ret = null;
+		//CharSequence ret = null;
 		
+		/*
 		if(f instanceof TextEditorFragment)
 			return ((TextEditorFragment)f).getPath().getName();
 		else if(f instanceof SearchResultsFragment)
@@ -146,11 +149,12 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		else if(path.isDirectory() && !path.getName().endsWith("/"))
 			return path.getName() + "/";
 		else return path.getName();
+		*/
 	}
 	
 	public boolean checkForContentFragmentWithPath(OpenPath path) {
 		if(mFrags == null) return false;
-		for (Fragment f : mFrags)
+		for (OpenFragment f : mFrags)
 			if (f instanceof OpenPathFragmentInterface
 					&& ((OpenPathFragmentInterface) f).getPath() != null
 					&& ((OpenPathFragmentInterface) f).getPath().equals(path))
@@ -158,13 +162,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return false;
 	}
 
-	public boolean add(Fragment frag) {
+	public boolean add(OpenFragment frag) {
 		if (frag == null)
 			return false;
 		if (mFrags.contains(frag))
 			return false;
-		if (frag instanceof ContentFragment
-				&& checkForContentFragmentWithPath(((ContentFragment) frag).getPath()))
+		if (frag instanceof OpenPathFragmentInterface
+				&& checkForContentFragmentWithPath(((OpenPathFragmentInterface) frag).getPath()))
 			return false;
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
 		boolean ret = mFrags.add(frag);
@@ -172,7 +176,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return ret;
 	}
 
-	public void add(int index, Fragment frag) {
+	public void add(int index, OpenFragment frag) {
 		if (frag == null)
 			return;
 		if (mFrags.contains(frag))
@@ -185,28 +189,28 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		try { notifyDataSetChanged(); }
 		catch(IllegalStateException eew) { }
 		catch(IndexOutOfBoundsException e) {
-			ArrayList<Fragment> recoveryArray = new ArrayList<Fragment>(mFrags);
+			ArrayList<OpenFragment> recoveryArray = new ArrayList<OpenFragment>(mFrags);
 			//recoveryArray.add(Math.max(0, Math.min(getCount() - 1, index)), frag);
 			mFrags.clear();
-			for(Fragment f : recoveryArray)
+			for(OpenFragment f : recoveryArray)
 				mFrags.add(f);
 			notifyDataSetChanged();
 		}
 	}
 
-	public boolean remove(Fragment frag) {
+	public boolean remove(OpenFragment frag) {
 		boolean ret = mFrags.remove(frag);
 		notifyDataSetChanged();
 		return ret;
 	}
-	public Fragment remove(int index) {
+	public OpenFragment remove(int index) {
 		return mFrags.remove(index);
 	}
 
 	public int removeOfType(Class c) {
 		int ret = 0;
 		for (int i = getCount() - 1; i >= 0; i--) {
-			Fragment f = getItem(i);
+			OpenFragment f = getItem(i);
 			if (f.getClass().equals(c))
 				mFrags.remove(i);
 		}
@@ -218,21 +222,14 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		mFrags.clear();
 	}
 
-	public List<Fragment> getFragments() {
+	public List<OpenFragment> getFragments() {
 		return mFrags;
 	}
 
-	public void set(int index, Fragment frag) {
+	public void set(int index, OpenFragment frag) {
 		if(index < getCount())
 			mFrags.set(index, frag);
 		else mFrags.add(frag);
-	}
-
-	@Override
-	public String getTitle(int position) {
-		if (getPageTitle(position) == null)
-			return position + "?";
-		return getPageTitle(position).toString();
 	}
 
 	public int getLastPositionOfType(Class class1) {
@@ -240,18 +237,6 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			if(getItem(i).getClass().equals(class1))
 				return i;
 		return 0;
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public Drawable[] getIcons(int position) {
-		Fragment f = getItem(position);
-		if(f == null) return new Drawable[0];
-		if (f instanceof TextEditorFragment)
-			return new Drawable[]{new BitmapDrawable(ThumbnailCreator.getFileExtIcon(
-					((TextEditorFragment) f).getPath().getExtension(), f
-							.getActivity().getApplicationContext(), false))};
-		return new Drawable[0];
 	}
 
 	@Override
@@ -269,7 +254,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return true;
 	}
 
-	public void replace(Fragment old, Fragment newFrag) {
+	public void replace(OpenFragment old, OpenFragment newFrag) {
 		int pos = getItemPosition(old);
 		if(pos == -1)
 			mFrags.add(newFrag);

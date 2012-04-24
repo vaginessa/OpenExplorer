@@ -11,15 +11,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
-import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.LinesAdapter;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -32,64 +28,49 @@ import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.inputmethodservice.InputMethodService.InputMethodImpl;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
-import android.text.InputFilter;
-import android.text.Spanned;
-import android.text.TextUtils;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
+import android.text.style.ImageSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnFocusChangeListener;
-import android.view.View.OnLongClickListener;
-import android.view.inputmethod.InputMethodInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
-import android.widget.TextView.OnEditorActionListener;
 
 public class TextEditorFragment extends OpenFragment
-	implements OnClickListener, OpenPathFragmentInterface, TextWatcher
+	implements OnClickListener, OpenPathFragmentInterface, TextWatcher,
+		OpenFragment.OnFragmentTitleLongClickListener
 {
 	private EditText mEditText;
 	private ListView mViewList;
 	private LinesAdapter mViewListAdapter = null;
 	//private WebView mWebText;
-	private TableLayout mViewTable;
+	//private TableLayout mViewTable;
 	//private ScrollView mViewScroller;
 	private ProgressBar mProgress = null;
 	
@@ -99,7 +80,7 @@ public class TextEditorFragment extends OpenFragment
 	private long lastClick = 0l;
 	private float mTextSize = 10f;
 	
-	private AsyncTask mTask = null;
+	private AsyncTask<?, ?, ?> mTask = null;
 	
 	private boolean mEditMode = false;
 	
@@ -152,7 +133,7 @@ public class TextEditorFragment extends OpenFragment
 			return true;
 		}
 		doClose();
-		return true;
+		return super.onBackPressed();
 	}
 	
 	@Override
@@ -633,23 +614,39 @@ public class TextEditorFragment extends OpenFragment
 	}
 	@Override
 	public Drawable getIcon() {
-		if(getActivity() != null)
-			return new BitmapDrawable(getResources(),
-				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), false));
-		else return null;
+		if(getActivity() == null) return null;
+		LayerDrawable ld = new LayerDrawable(new Drawable[]{
+			new BitmapDrawable(getResources(),
+				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), false)),
+			new ColorDrawable(R.color.transparent)});
+		if(mDirty)
+			ld.setDrawableByLayerId(1, getResources().getDrawable(R.drawable.ic_menu_save));
+		return ld;
 	}
 	@Override
 	public CharSequence getTitle() {
-		// TODO Auto-generated method stub
-		return getPath().getName();
+		SpannableString ret = new SpannableString(getPath().getName());
+		if(mDirty)
+			ret.setSpan(new StyleSpan(Typeface.ITALIC), 0, ret.length(), 0);
+		//ret.setSpan(new ImageSpan(getActivity(), R.drawable.ic_menu_save), 0, 1, 0);
+		Logger.LogDebug("TextEditorFragment.getTitle() = " + ret.toString());
+		return ret;
 	}
 	
 	public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-	public void onTextChanged(CharSequence s, int start, int before, int count) { }
-	public void afterTextChanged(Editable s) {
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		if(count == 0) return;
 		mData = s.toString();
 		mDirty = true;
+		if(getExplorer() != null)
+			getExplorer().notifyPager();
+	}
+	public void afterTextChanged(Editable s) {
 	}
 	
+	@Override
+	public boolean onTitleLongClick(View titleView) {
+		return showMenu(R.menu.text_editor, titleView);
+	}
 	
 }

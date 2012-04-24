@@ -142,7 +142,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         mTabLayout.addView(tabView, new LinearLayout.LayoutParams(0, LayoutParams.FILL_PARENT, 1));
         return tabView;
     }
-    private TabView addTab(String text, int index) {
+    private TabView addTab(CharSequence text, int index) {
         //Workaround for not being able to pass a defStyle on pre-3.0
         final TabView tabView = (TabView)mInflater.inflate(R.layout.vpi__tab, null);
         tabView.init(this, text, index);
@@ -199,7 +199,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
 	        TitleProvider adapter = (TitleProvider)mViewPager.getAdapter();
 	        final int count = ((PagerAdapter)adapter).getCount();
 	        for (int i = 0; i < count; i++) {
-	        	adapter.modifyTab(addTab(adapter.getTitle(i), i), i);
+	        	adapter.modifyTab(addTab(adapter.getPageTitle(i), i), i);
 	        }
 	        if (mSelectedTabIndex > count) {
 	            mSelectedTabIndex = count - 1;
@@ -246,7 +246,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
             super(context, attrs);
         }
 
-        public void init(TabPageIndicator parent, String text, int index) {
+        public void init(TabPageIndicator parent, CharSequence text, int index) {
             mParent = parent;
             mIndex = index;
 

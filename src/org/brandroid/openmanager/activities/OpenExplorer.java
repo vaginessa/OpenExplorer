@@ -50,7 +50,6 @@ import android.graphics.drawable.LayerDrawable;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
 
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
@@ -140,6 +139,8 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.LogViewerFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentTitleLongClickListener;
+import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
@@ -209,7 +210,7 @@ public class OpenExplorer
 	private static boolean mRunningCursorEnsure = false;
 	private Boolean mSinglePane = false;
 	
-	private static Fragment mContentFragment = null;
+	private static OpenFragment mContentFragment = null;
 	private static LogViewerFragment mLogFragment = null;
 	private static boolean mLogViewEnabled = true;
 	private OpenViewPager mViewPager;
@@ -1008,6 +1009,7 @@ public class OpenExplorer
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	public static void launchTranslator(Activity a)
 	{
 		new Preferences(a).setSetting("warn", "translate", true);
@@ -1101,7 +1103,7 @@ public class OpenExplorer
 		SpannableStringBuilder ssb = new SpannableStringBuilder();
 		for(int i = 0; i < page; i++)
 		{
-			Fragment f = mViewPagerAdapter.getItem(i);
+			OpenFragment f = mViewPagerAdapter.getItem(i);
 			if(f instanceof ContentFragment)
 			{
 				OpenPath p = ((ContentFragment)f).getPath();
@@ -1114,7 +1116,7 @@ public class OpenExplorer
 		srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
 		ssb.append(srLeft);
 		//ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(), Spanned.SPAN_COMPOSING);
-		Fragment curr = mViewPagerAdapter.getItem(page);
+		OpenFragment curr = mViewPagerAdapter.getItem(page);
 		if(curr instanceof ContentFragment)
 		{
 			OpenPath pCurr = ((ContentFragment)curr).getPath();
@@ -1125,7 +1127,7 @@ public class OpenExplorer
 		String right = "";
 		for(int i = page + 1; i < mViewPagerAdapter.getCount(); i++)
 		{
-			Fragment f = mViewPagerAdapter.getItem(i);
+			OpenFragment f = mViewPagerAdapter.getItem(i);
 			if(f instanceof ContentFragment)
 			{
 				OpenPath p = ((ContentFragment)f).getPath();
@@ -1222,7 +1224,7 @@ public class OpenExplorer
 				logview.post(new Runnable(){
 					public void run() {
 						logview.setVisibility(View.VISIBLE);
-						Fragment f = fragmentManager.findFragmentById(R.id.frag_log);
+						OpenFragment f = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
 						if(f == null || !(f instanceof LogViewerFragment))
 							fragmentManager.beginTransaction()
 								.replace(R.id.frag_log, mLogFragment)
@@ -1232,6 +1234,13 @@ public class OpenExplorer
 						logview.setLayoutParams(lp);
 				}});
 			} //else mLogFragment.show(fragmentManager, "log");
+			else {
+				mViewPager.postDelayed(new Runnable(){
+					public void run() {
+						mViewPagerAdapter.add(mLogFragment);
+						mViewPager.setAdapter(mViewPagerAdapter);
+					}}, 500);
+			}
 		}
 		if(mLogFragment != null)
 			mLogFragment.print(txt, color);
@@ -1705,7 +1714,7 @@ public class OpenExplorer
 	public ContentFragment getDirContentFragment(Boolean activate, OpenPath path)
 	{
 		//Logger.LogDebug("getDirContentFragment");
-		Fragment ret = null;
+		OpenFragment ret = null;
 		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
 		if(mViewPagerAdapter != null && mViewPager != null)
@@ -1722,7 +1731,7 @@ public class OpenExplorer
 			}
 		}
 		if(ret == null)
-			ret = fragmentManager.findFragmentById(R.id.content_frag);
+			ret = (OpenFragment)fragmentManager.findFragmentById(R.id.content_frag);
 		if(ret == null || !ret.getClass().equals(ContentFragment.class))
 		{
 			Logger.LogWarning("Do I need to create a new ContentFragment?");
@@ -1754,9 +1763,9 @@ public class OpenExplorer
 			return (ContentFragment)ret;
 		else return null;
 	}
-	public Fragment getSelectedFragment()
+	public OpenFragment getSelectedFragment()
 	{
-		Fragment ret = null;
+		OpenFragment ret = null;
 		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
 		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
 		if(mViewPagerAdapter != null && mViewPager != null)
@@ -1771,7 +1780,7 @@ public class OpenExplorer
 			}
 		}
 		if(ret == null && fragmentManager != null)
-			ret = fragmentManager.findFragmentById(R.id.content_frag);
+			ret = (OpenFragment)fragmentManager.findFragmentById(R.id.content_frag);
 		
    		return ret;
 	}
@@ -1800,7 +1809,7 @@ public class OpenExplorer
 		StringBuilder editing = new StringBuilder(",");
 		for(int i = 0; i < mViewPagerAdapter.getCount(); i++)
 		{
-			Fragment f = mViewPagerAdapter.getItem(i);
+			OpenFragment f = mViewPagerAdapter.getItem(i);
 			if(f instanceof TextEditorFragment)
 			{
 				TextEditorFragment tf = (TextEditorFragment)f;
@@ -1936,7 +1945,7 @@ public class OpenExplorer
 	{
 		TableLayout tbl = (TableLayout)findViewById(R.id.base_bar);
 		mToolbarButtons = (ViewGroup)findViewById(R.id.base_row);
-		Fragment f = getSelectedFragment();
+		OpenFragment f = getSelectedFragment();
 		boolean topButtons = false;
 		if(!(getSetting(null, "pref_basebar", true) || tbl == null || mToolbarButtons == null) && findViewById(R.id.title_buttons) != null)
 		{
@@ -2172,15 +2181,6 @@ public class OpenExplorer
 
 				return true;
 				
-			case R.id.log_close:
-				getPreferences().setSetting(null, "pref_logview", false);
-				mLogViewEnabled = false;
-				if(findViewById(R.id.frag_log) != null)
-					findViewById(R.id.frag_log).setVisibility(View.GONE);
-				else
-					mLogFragment.dismiss();
-				break;
-			
 			case R.id.menu_new_folder:
 				mEvHandler.createNewFolder(getDirContentFragment(false).getPath().getPath(), this);
 				return true;
@@ -2282,18 +2282,20 @@ public class OpenExplorer
 						if(findViewById(R.id.frag_log) != null)
 							findViewById(R.id.frag_log).setVisibility(View.GONE);
 						else
-							mLogFragment.dismiss();
+							mViewPagerAdapter.remove(mLogFragment);
 					}
 				} else {
 					if(findViewById(R.id.frag_log) != null)
 					{
 						findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
-						Fragment f = fragmentManager.findFragmentById(R.id.frag_log);
+						OpenFragment f = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
 						if(f == null || !(f instanceof LogViewerFragment))
 							fragmentManager.beginTransaction()
 								.replace(R.id.frag_log, f).commit();
-					} else
-						mLogFragment.show(fragmentManager, "log");
+					} else {
+						mViewPagerAdapter.add(mLogFragment);
+						mViewPager.setAdapter(mViewPagerAdapter);
+					}
 				}
 				return true;
 					
@@ -2398,7 +2400,7 @@ public class OpenExplorer
 				return true;
 				
 			default:
-				Fragment f = getSelectedFragment();
+				OpenFragment f = getSelectedFragment();
 				if(f instanceof ContentFragment)
 				{
 					if(!((ContentFragment)f).onContextItemSelected(item) &&
@@ -2647,7 +2649,7 @@ public class OpenExplorer
 	
 	@Override
 	public void onBackPressed() {
-		if(getSelectedFragment() instanceof OpenFragment && ((OpenFragment)getSelectedFragment()).onBackPressed())
+		if(getSelectedFragment().onBackPressed())
 			return;
 		super.onBackPressed();
 	}
@@ -2737,7 +2739,7 @@ public class OpenExplorer
 				int common = 0;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 				{
-					Fragment f = mViewPagerAdapter.getItem(i);
+					OpenFragment f = mViewPagerAdapter.getItem(i);
 					if(f != null)
 					{
 						if(!(f instanceof ContentFragment)) continue;
@@ -2848,7 +2850,7 @@ public class OpenExplorer
 				//mFileManager.pushStack(path);
 				ft.addToBackStack("path");
 			} else Logger.LogVerbose("Covertly changing to " + path.getPath());
-			Fragment content = ContentFragment.getInstance(path, newView);
+			OpenFragment content = ContentFragment.getInstance(path, newView);
 			if(newView == VIEW_CAROUSEL && !BEFORE_HONEYCOMB)
 			{
 				content = new CarouselFragment(path);
@@ -2908,14 +2910,14 @@ public class OpenExplorer
 			frag.runUpdateTask();
 		}
 	}
-	private String getFragmentPaths(List<Fragment> frags)
+	private String getFragmentPaths(List<OpenFragment> frags)
 	{
 		String ret = "";
 		for(int i = 0; i < frags.size(); i++)
 		{
-			Fragment f = frags.get(i);
-			if(f instanceof ContentFragment)
-				ret += ((ContentFragment)f).getPath().getPath();
+			OpenFragment f = frags.get(i);
+			if(f instanceof OpenPathFragmentInterface)
+				ret += ((OpenPathFragmentInterface)f).getPath().getPath();
 			else
 				ret += f.getClass().toString();
 			if(i < frags.size() - 1)
@@ -2928,12 +2930,13 @@ public class OpenExplorer
 		String ret = "";
 		for(int i = 0; i < mViewPagerAdapter.getCount(); i++)
 		{
-			ret += mViewPagerAdapter.getTitle(i);
+			ret += mViewPagerAdapter.getPageTitle(i);
 			if(i < mViewPagerAdapter.getCount() - 1)
 				ret += ",";
 		}
 		return ret;
 	}
+	@SuppressWarnings("deprecation")
 	public void setLights(Boolean on)
 	{
 		try {
@@ -3136,7 +3139,9 @@ public class OpenExplorer
 	@Override
 	public boolean onPageTitleLongClick(int position, View titleView) {
 		try {
-			Fragment f = mViewPagerAdapter.getItem(position);
+			OpenFragment f = mViewPagerAdapter.getItem(position);
+			if(f instanceof OnFragmentTitleLongClickListener)
+				return ((OnFragmentTitleLongClickListener)f).onTitleLongClick(titleView);
 			if(f instanceof TextEditorFragment) return false;
 			if(!(f instanceof ContentFragment)) return false;
 			OpenPath path = ((ContentFragment)mViewPagerAdapter.getItem(position)).getPath();
@@ -3345,7 +3350,7 @@ public class OpenExplorer
 		MenuUtils.setViewsVisible(this, visible, android.R.id.progress, R.id.title_progress);
 	}
 
-	public void removeFragment(Fragment frag) {
+	public void removeFragment(OpenFragment frag) {
 		setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
 		mViewPagerAdapter.remove(frag);
 		setViewPageAdapter(mViewPagerAdapter);
@@ -3353,18 +3358,17 @@ public class OpenExplorer
 	}
 
 	@Override
-	public void onPageScrolled(int position, float positionOffset,
-			int positionOffsetPixels) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+	@Override
+	public void onPageScrollStateChanged(int state) { }
 
 	@Override
 	public void onPageSelected(int position) {
 		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
-		final Fragment f = getSelectedFragment();
-		if(f instanceof OpenFragment)
+		final OpenFragment f = getSelectedFragment();
+		if(!f.isDetached())
 		{
 			final Drawable d = ((OpenFragment)f).getIcon();
 			final ImageView icon = (ImageView)findViewById(R.id.title_icon);
@@ -3374,15 +3378,13 @@ public class OpenExplorer
 						icon.setImageDrawable(d);
 					}
 				});
-			if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath))
-				((ContentFragment)f).refreshData(null, false);
 		}
+		if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath))
+			((ContentFragment)f).refreshData(null, false);
 	}
 
-	@Override
-	public void onPageScrollStateChanged(int state) {
-		// TODO Auto-generated method stub
-		
+	public void notifyPager() {
+		mViewPager.notifyDataSetChanged();
 	}
 
 }

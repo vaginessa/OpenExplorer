@@ -1,64 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     >
-<TextView android:id="@android:id/title"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentLeft="true"
-    android:layout_alignParentTop="true"
-    android:layout_alignBottom="@+id/log_close"
-    android:gravity="left|center_vertical"
-    android:layout_toLeftOf="@+id/log_close"
-    android:paddingLeft="4dp"
-    android:text="@string/s_pref_logview"
-    />
-<ImageButton
-    android:id="@+id/log_close"
-    android:background="@drawable/list_selector_background"
-    android:layout_alignParentRight="true"
-    android:src="@drawable/ic_menu_close_clear_cancel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    />
-<ScrollView
-    android:layout_below="@+id/log_close"
-    android:layout_above="@+id/log_buttons"
-    android:layout_width="match_parent"
-    android:background="@android:color/background_light"
-    android:layout_height="match_parent">
-    
-    <TextView
-        android:id="@+id/log_text"
-        style="@style/Small"
-        android:layout_gravity="top|left"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:bufferType="normal"
-        android:editable="false"
-        android:inputType="none"
-        />
-
-</ScrollView>
-<LinearLayout android:id="@+id/log_buttons"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    >
-    <Button
-        android:id="@+id/log_clear"
-        android:layout_weight="1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/s_clear"
-        />
-    <Button
-        android:id="@+id/log_copy"
-        android:layout_weight="1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/s_menu_copy"
-        />
-</LinearLayout>
-</RelativeLayout>
+	<ListView 
+	    android:id="@android:id/list"
+	    android:layout_width="wrap_content"
+	    android:layout_height="match_parent"
+	    />
+</HorizontalScrollView>

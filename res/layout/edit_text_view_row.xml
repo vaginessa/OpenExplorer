@@ -28,9 +28,9 @@
 
     <TextView
         android:id="@+id/text_data"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/s_warn_pager"
+        android:text="@string/app_name"
         android:textColor="@color/white"
         android:textSize="@dimen/text_size_small"
         android:typeface="monospace" />

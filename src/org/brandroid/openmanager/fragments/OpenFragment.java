@@ -21,43 +21,27 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.views.IconAnimationPanel;
-import org.brandroid.utils.BitmapUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 
-import com.jcraft.jsch.UserInfo;
-
-import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
-import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.ContextMenu;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -72,6 +56,11 @@ public abstract class OpenFragment
 	protected Object mActionMode = null;
 	protected BaseAdapter mContentAdapter;
 	protected int mMenuContextItemIndex = -1;
+	
+	public interface OnFragmentTitleLongClickListener
+	{
+		public boolean onTitleLongClick(View titleView);
+	}
 
 	//@Override
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
@@ -138,7 +127,9 @@ public abstract class OpenFragment
 	
 	public boolean showMenu(int menuId, View from)
 	{
-		MenuBuilder menu = IconContextMenu.newMenu(getActivity(), R.menu.text_view_flat);
+		Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
+		if(getActivity() == null) return false;
+		MenuBuilder menu = IconContextMenu.newMenu(getActivity(), menuId);
 		if(menu == null) return false;
 		onPrepareOptionsMenu(menu);
 		IconContextMenu mOpenMenu = new IconContextMenu(getActivity(), menu, from, null, null);
@@ -161,7 +152,16 @@ public abstract class OpenFragment
 		return true;
 	}
 	
-	public boolean onBackPressed() { return false; }
+	public boolean onBackPressed() {
+		if(getExplorer() != null)
+		{
+			try {
+				getExplorer().removeFragment(this);
+				return true;
+			} catch(Exception e) { }
+		}
+		return false;
+	}
 	
 	public boolean onItemLongClick(AdapterView<?> list, final View view ,int pos, long id) {
 		mMenuContextItemIndex = pos;
@@ -678,6 +678,12 @@ public abstract class OpenFragment
 
 	public abstract Drawable getIcon();
 	public abstract CharSequence getTitle();
+	
+	public void notifyPager()
+	{
+		if(getExplorer() != null)
+			getExplorer().notifyPager();
+	}
 	
 	/*
 	 * 

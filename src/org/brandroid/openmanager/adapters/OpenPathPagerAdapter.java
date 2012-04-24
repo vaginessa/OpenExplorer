@@ -4,17 +4,17 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 {
 	private OpenPath mPath = new OpenFile("/mnt/sdcard");
-	private Fragment mFirst = null;
+	private OpenFragment mFirst = null;
 	//private List<OpenPath> mChildren = new ArrayList<OpenPath>();
 
 	public OpenPathPagerAdapter(FragmentManager fm) {
@@ -27,13 +27,13 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 		return this;
 	}
 	
-	public OpenPathPagerAdapter setFirstFragment(Fragment f)
+	public OpenPathPagerAdapter setFirstFragment(OpenFragment f)
 	{
 		mFirst = f;
 		return this;
 	}
 	
-	public Fragment getLastItem() { return getItem(getCount() - 1); }
+	public OpenFragment getLastItem() { return getItem(getCount() - 1); }
 	
 	@Override
 	public CharSequence getPageTitle(int position) {
@@ -56,7 +56,7 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 	}
 
 	@Override
-	public Fragment getItem(int pos) {
+	public OpenFragment getItem(int pos) {
 		if(pos == getCount() - 1 && mPath.isTextFile())
 		{
 			Logger.LogVerbose("Getting TextEditor Fragment.");
