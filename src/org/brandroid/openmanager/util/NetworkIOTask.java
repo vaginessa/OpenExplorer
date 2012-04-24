@@ -21,21 +21,21 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.utils.Logger;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
+public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 {
 	private OpenPath[] params = null;
 	private boolean isCancellable = false;
 	private boolean instanceRunning = false;
 	public static int instanceNumber = 0;
-	private final OpenExplorer mExplorer;
-	private final ContentFragment mFragment;
-	private final static Hashtable<String, FileIOTask> mFileTasks = new Hashtable<String, FileIOTask>();
+	private final OnTaskUpdateListener mListener;
+	private final static Hashtable<String, NetworkIOTask> mFileTasks = new Hashtable<String, NetworkIOTask>();
 	
-	public final static Hashtable<String, FileIOTask> getTasks() { return mFileTasks; }
+	public final static Hashtable<String, NetworkIOTask> getTasks() { return mFileTasks; }
 	public final static boolean isTaskRunning(String path) { return mFileTasks.containsKey(path); }
 	public final static void cancelTask(String path) {
 		if(isTaskRunning(path))
@@ -45,19 +45,24 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 		}
 	}
 	public final static void cancelAllTasks() {
-		for(FileIOTask task : mFileTasks.values())
+		for(NetworkIOTask task : mFileTasks.values())
 			task.doCancel(true);
 		mFileTasks.clear();
 	}
-	public final static void addTask(String path, FileIOTask task)
+	public final static void addTask(String path, NetworkIOTask task)
 	{
 		mFileTasks.put(path, task);
 	}
 	
-	public FileIOTask(OpenExplorer explorer, ContentFragment fragment)
+	public interface OnTaskUpdateListener
 	{
-		mExplorer = explorer;
-		mFragment = fragment;
+		public void setProgressVisibility(boolean visible);
+		public void updateData(OpenPath[] result);
+	}
+	
+	public NetworkIOTask(OnTaskUpdateListener listener)
+	{
+		mListener = listener;
 	}
 	
 	@Override
@@ -92,8 +97,6 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 		cancel(mayInterrupt);
 	}
 	
-	private OpenExplorer getExplorer() { return mExplorer; }
-	
 	@Override
 	protected OpenPath[] doInBackground(OpenPath... params) {
 		if(instanceRunning) return null;
@@ -107,7 +110,7 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 			Logger.LogVerbose("FileIOTask on " + path.getPath());
 			if(path.requiresThread())
 			{
-				SimpleUserInfo info = new SimpleUserInfo(getExplorer());
+				SimpleUserInfo info = new SimpleUserInfo();
 				OpenServer server = null; 
 				if(path instanceof OpenNetworkPath)
 				{
@@ -140,12 +143,11 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 						success = list != null;
 					} catch(IOException e3) {
 						Logger.LogError("Error listing SMB Files", e3);
-						getExplorer().showToast(R.string.s_error_ftp);
+						//getExplorer().showToast(R.string.s_error_ftp);
 					}
 				} catch (IOException e2) {
 					Logger.LogError("Couldn't get Cache", e2);
-					if(getExplorer() != null)
-						getExplorer().showToast(R.string.s_error_ftp);
+					//if(getExplorer() != null) getExplorer().showToast(R.string.s_error_ftp);
 					cachePath = path;
 				} catch(Exception e) {
 					Logger.LogError("Null 1?", e);
@@ -184,8 +186,8 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 					for(OpenPath f : list)
 						ret.add(f);
 				} else {
-					if(getExplorer() != null)
-						getExplorer().showToast(R.string.s_error_ftp);
+					Logger.LogError("Why is list still null?");
+					//if(getExplorer() != null) getExplorer().showToast(R.string.s_error_ftp);
 				}
 			} else {
 				try {
@@ -209,13 +211,13 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 	protected void onPreExecute() {
 		super.onPreExecute();
 		//mData.clear();
-		mFragment.setProgressVisibility(true);
+		mListener.setProgressVisibility(true);
 	}
 	
 	@Override
 	protected void onProgressUpdate(Integer... values) {
 		super.onProgressUpdate(values);
-		mFragment.setProgressVisibility(true);
+		mListener.setProgressVisibility(true);
 	}
 	
 	@Override
@@ -246,9 +248,9 @@ public class FileIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 							params[0].getPath()
 							);
 				}}).start();
-			mFragment.updateData(result);
+			mListener.updateData(result);
 		}
-		mFragment.setProgressVisibility(false);
+		mListener.setProgressVisibility(false);
 		//onCancelled(result);
 		//mData2.clear();
 	}
