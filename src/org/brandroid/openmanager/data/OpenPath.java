@@ -7,6 +7,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
@@ -14,6 +16,11 @@ import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+
+import com.android.gallery3d.data.MediaObject;
+import com.android.gallery3d.data.Path;
+import com.android.gallery3d.util.IdentityCache;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -26,6 +33,9 @@ public abstract class OpenPath
 {
 	public static SortType Sorting = SortType.DATE_DESC;
 	
+    private WeakReference<MediaObject> mObject;
+    private IdentityCache<String, Path> mChildren;
+	
 	private static final long serialVersionUID = 332701810738149106L;
 	private Object mTag = null;
 	private OpenPathThreadUpdater mUpdater;
@@ -37,8 +47,21 @@ public abstract class OpenPath
 	public abstract void setPath(String path);
 	public abstract long length();
 	public abstract OpenPath getParent();
+	public String getPrefix() {
+		if(getParent() == null) return null;
+		return getParent().getPath();
+	}
 	public abstract OpenPath getChild(String name);
-	public OpenPath getChild(int index) throws IOException { return ((OpenPath[])list())[index]; }
+	public OpenPath getChild(int index) {
+		try {
+		return ((OpenPath[])list())[index];
+		} catch(IOException e) { return null; }
+		}
+	public OpenPath getChild(long index) {
+		try {
+		return ((OpenPath[])list())[(int) index];
+		} catch(IOException e) { return null; }
+		}
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
 	public static String getParent(String path)
@@ -348,4 +371,87 @@ public abstract class OpenPath
 	public int getAttributes() {
 		return 0;
 	}
+
+    public void setObject(MediaObject object) {
+        synchronized (Path.class) {
+            Utils.assertTrue(mObject == null || mObject.get() == null);
+            mObject = new WeakReference<MediaObject>(object);
+        }
+    }
+
+    public MediaObject getObject() {
+        synchronized (Path.class) {
+            return (mObject == null) ? null : mObject.get();
+        }
+    }
+	public static OpenPath fromString(String path) {
+		return FileManager.getOpenCache(path);
+	}
+
+    public String[] split() {
+        synchronized (Path.class) {
+            return split(getPath());
+        }
+    }
+
+    public static String[] split(String s) {
+        int n = s.length();
+        if (n == 0) return new String[0];
+        if (s.charAt(0) != '/') {
+            throw new RuntimeException("malformed path:" + s);
+        }
+        ArrayList<String> segments = new ArrayList<String>();
+        int i = 1;
+        while (i < n) {
+            int brace = 0;
+            int j;
+            for (j = i; j < n; j++) {
+                char c = s.charAt(j);
+                if (c == '{') ++brace;
+                else if (c == '}') --brace;
+                else if (brace == 0 && c == '/') break;
+            }
+            if (brace != 0) {
+                throw new RuntimeException("unbalanced brace in path:" + s);
+            }
+            segments.add(s.substring(i, j));
+            i = j + 1;
+        }
+        String[] result = new String[segments.size()];
+        segments.toArray(result);
+        return result;
+    }
+
+    // Splits a string to an array of strings.
+    // For example, "{foo,bar,baz}" -> {"foo","bar","baz"}.
+    public static String[] splitSequence(String s) {
+        int n = s.length();
+        if (s.charAt(0) != '{' || s.charAt(n-1) != '}') {
+            throw new RuntimeException("bad sequence: " + s);
+        }
+        ArrayList<String> segments = new ArrayList<String>();
+        int i = 1;
+        while (i < n - 1) {
+            int brace = 0;
+            int j;
+            for (j = i; j < n - 1; j++) {
+                char c = s.charAt(j);
+                if (c == '{') ++brace;
+                else if (c == '}') --brace;
+                else if (brace == 0 && c == ',') break;
+            }
+            if (brace != 0) {
+                throw new RuntimeException("unbalanced brace in path:" + s);
+            }
+            segments.add(s.substring(i, j));
+            i = j + 1;
+        }
+        String[] result = new String[segments.size()];
+        segments.toArray(result);
+        return result;
+    }
+	public String getSuffix() {
+		return getName();
+	}
+    
 }
