@@ -116,29 +116,29 @@ public class Logger
 		if(dbLog != null)
 			dbLog.clear();
 	}
-	public static void LogError(String msg)
+	public static int LogError(String msg)
 	{
-		if(CheckLastLog(msg, Log.ERROR)) return;
+		if(CheckLastLog(msg, Log.ERROR)) return 0;
 		LogToDB(Log.ERROR, msg, "");
-		Log.e(LOG_KEY, msg);
+		return Log.e(LOG_KEY, msg);
 	}
-	public static void LogError(String msg, Error ex)
+	public static int LogError(String msg, Error ex)
 	{
-		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return;
+		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(ex);
 		ex.setStackTrace(trace);
 		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
-		Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
+		return Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
-	public static void LogError(String msg, Exception ex)
+	public static int LogError(String msg, Exception ex)
 	{
-		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return;
+		if(CheckLastLog(ex.getMessage(), Log.ERROR)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(ex);
 		if(trace.length == 0)
 			trace = ex.getStackTrace();
 		ex.setStackTrace(trace);
 		LogToDB(Log.ERROR, msg, Log.getStackTraceString(ex));
-		Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
+		return Log.e(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
 	public static boolean checkWTF()
 	{
@@ -170,7 +170,7 @@ public class Logger
 		if(crp == null || !crp.exists()) return null;
 		return full ? crp.readAscii() : crp.readHead(1); 
 	}
-	public static void LogWTF(String msg, Throwable ex)
+	public static int LogWTF(String msg, Throwable ex)
 	{
 		if(hasDb())
 			LogToDB(Log.ASSERT, msg, Log.getStackTraceString(ex));
@@ -209,95 +209,108 @@ public class Logger
 			else
 				Logger.LogWarning("Crash file written, but we can't find it!");
 		} else Logger.LogWarning("Crash file is null!");
-		Log.wtf(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
+		return Log.wtf(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), ex);
 	}
-	public static void LogWarning(String msg)
+	public static int LogWarning(String msg)
 	{
-		if(CheckLastLog(msg, Log.WARN)) return;
+		if(CheckLastLog(msg, Log.WARN)) return 0;
 		LogToDB(Log.WARN, msg, "");
-		Log.w(LOG_KEY, msg);
+		return Log.w(LOG_KEY, msg);
 	}
-	public static void LogWarning(String msg, Error w)
+	public static int LogWarning(String msg, Throwable w)
 	{
-		if(CheckLastLog(w.getMessage(), Log.WARN)) return;
+		if(CheckLastLog(w.getMessage(), Log.WARN)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(w);
 		w.setStackTrace(trace);
 		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
-		Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
+		return Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
 	}
-	public static void LogWarning(String msg, Exception w)
+	public static int LogWarning(String msg, Exception w)
 	{
-		if(CheckLastLog(w.getMessage(), Log.WARN)) return;
+		if(CheckLastLog(w.getMessage(), Log.WARN)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(w);
 		w.setStackTrace(trace);
 		LogToDB(Log.WARN, msg, Log.getStackTraceString(w));
-		Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
+		return Log.w(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), w);
 	}
 	/*
 	 * Used for usage tracking
 	 */
-	public static void LogInfo(String msg)
+	public static int LogInfo(String msg)
 	{
-		if(CheckLastLog(msg, Log.INFO)) return;
+		if(CheckLastLog(msg, Log.INFO)) return 0;
 		LogToDB(Log.INFO, msg, "");
-		Log.i(LOG_KEY, msg);
+		return Log.i(LOG_KEY, msg);
 	}
-	public static void LogInfo(String msg, String stack)
+	public static int LogInfo(String msg, String stack)
 	{
-		if(CheckLastLog(msg, Log.INFO)) return;
+		if(CheckLastLog(msg, Log.INFO)) return 0;
 		LogToDB(Log.DEBUG, msg, stack);
-		Log.d(LOG_KEY, msg);
+		return Log.d(LOG_KEY, msg);
 	}
-	public static void LogInfo(String msg, Error e)
+	public static int LogInfo(String msg, Throwable t)
 	{
-		if(CheckLastLog(e.getMessage(), Log.INFO)) return;
+		if(CheckLastLog(msg, Log.INFO)) return 0;
+		LogToDB(Log.DEBUG, msg, Log.getStackTraceString(t));
+		return Log.d(LOG_KEY, msg, t);
+	}
+	public static int LogInfo(String msg, Error e)
+	{
+		if(CheckLastLog(e.getMessage(), Log.INFO)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(e);
 		e.setStackTrace(trace);
 		LogToDB(Log.INFO, msg, Log.getStackTraceString(e));
-		Log.i(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+		return Log.i(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
 	}
-	public static void LogInfo(String msg, Exception e)
+	public static int LogInfo(String msg, Exception e)
 	{
-		if(CheckLastLog(e.getMessage(), Log.INFO)) return;
+		if(CheckLastLog(e.getMessage(), Log.INFO)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(e);
 		e.setStackTrace(trace);
 		LogToDB(Log.INFO, msg, Log.getStackTraceString(e));
-		Log.i(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+		return Log.i(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
 	}
-	public static void LogDebug(String msg)
+	public static int LogDebug(String msg)
 	{
-		if(CheckLastLog(msg, Log.DEBUG)) return;
+		if(CheckLastLog(msg, Log.DEBUG)) return 0;
 		LogToDB(Log.DEBUG, msg, "");
-		Log.d(LOG_KEY, msg);
+		return Log.d(LOG_KEY, msg);
 	}
-	public static void LogDebug(String msg, String stack)
+	public static int LogDebug(String msg, String stack)
 	{
-		if(CheckLastLog(msg, Log.DEBUG)) return;
+		if(CheckLastLog(msg, Log.DEBUG)) return 0;
 		LogToDB(Log.DEBUG, msg, stack);
-		Log.d(LOG_KEY, msg);
+		return Log.d(LOG_KEY, msg);
 	}
-	public static void LogDebug(String msg, Error e)
+	public static int LogDebug(String msg, Throwable e)
 	{
-		if(CheckLastLog(e.getMessage(), Log.DEBUG)) return;
+		if(CheckLastLog(e.getMessage(), Log.DEBUG)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(e);
 		e.setStackTrace(trace);
 		LogToDB(Log.DEBUG, msg, Log.getStackTraceString(e));
-		Log.d(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+		return Log.d(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
 	}
-	public static void LogDebug(String msg, Exception e)
+	public static int LogDebug(String msg, Exception e)
 	{
-		if(CheckLastLog(e.getMessage(), Log.DEBUG)) return;
+		if(CheckLastLog(e.getMessage(), Log.DEBUG)) return 0;
 		StackTraceElement[] trace = getMyStackTrace(e);
 		e.setStackTrace(trace);
 		LogToDB(Log.DEBUG, msg, Log.getStackTraceString(e));
-		Log.d(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
+		return Log.d(LOG_KEY, msg + (trace.length > 0 ? " (" + trace[0].getFileName() + ":" + trace[0].getLineNumber() + ")" : ""), e);
 	}
 	
-	public static void LogVerbose(String msg)
+	public static int LogVerbose(String msg)
 	{
-		if(CheckLastLog(msg, Log.VERBOSE)) return;
+		if(CheckLastLog(msg, Log.VERBOSE)) return 0;
 		LogToDB(Log.VERBOSE, msg, "");
-		Log.v(LOG_KEY, msg);
+		return Log.v(LOG_KEY, msg);
+	}
+	
+	public static int LogVerbose(String msg, Throwable t)
+	{
+		if(CheckLastLog(msg, Log.VERBOSE)) return 0;
+		LogToDB(Log.VERBOSE, msg, Log.getStackTraceString(t));
+		return Log.v(LOG_KEY, msg, t);
 	}
 
 	public static void closeDb() {
