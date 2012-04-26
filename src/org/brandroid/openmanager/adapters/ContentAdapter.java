@@ -13,7 +13,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
+import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 
@@ -37,7 +37,7 @@ import android.widget.TextView;
 /**
  * 
  */
-public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
+public class ContentAdapter extends ArrayAdapter<OpenPath> {
 	private final int KB = 1024;
 	private final int MG = KB * KB;
 	private final int GB = MG * KB;
@@ -46,7 +46,7 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
 	
-	public FileSystemAdapter(OpenExplorer explorer, int layout, List<OpenPath> data) {
+	public ContentAdapter(OpenExplorer explorer, int layout, List<OpenPath> data) {
 		super(explorer, layout, data);
 		mExplorer = explorer;
 	}
@@ -150,6 +150,14 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 		//	mHolder.setTitle(mName);
 		final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
 		//RemoteImageView mIcon = (RemoteImageView)view.findViewById(R.id.content_icon);
+		if(mIcon.getWidth() > 0)
+			mWidth = mIcon.getWidth();
+		else if(mIcon.getMeasuredWidth() > 0)
+			mWidth = mIcon.getMeasuredWidth();
+		if(mIcon.getHeight() > 0)
+			mHeight = mIcon.getHeight();
+		else if(mIcon.getMeasuredHeight() > 0)
+			mHeight = mIcon.getMeasuredHeight();
 		
 		if(mIcon != null)
 		{
@@ -178,19 +186,20 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 				} else {
 					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 				}
-			} else if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath())) {
-				ThumbnailCreator.setThumbnail(mIcon, new OnUpdateImageListener() {
-					public void updateImage(Bitmap b) {
-						if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-						{
-							BitmapDrawable d = new BitmapDrawable(getResources(), b);
-							d.setGravity(Gravity.CENTER);
-							ImageUtils.fadeToDrawable(mIcon, d);
-							mIcon.setTag(file.getPath());
+			} else { //if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath())) {
+				//Logger.LogDebug("Bitmapping " + file.getPath());
+				ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight,
+					new OnUpdateImageListener() {
+						public void updateImage(Bitmap b) {
+							//if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
+							{
+								BitmapDrawable d = new BitmapDrawable(getResources(), b);
+								d.setGravity(Gravity.CENTER);
+								ImageUtils.fadeToDrawable(mIcon, d);
+								mIcon.setTag(file.getPath());
+							}
 						}
-					}
-					public Context getContext() { return mIcon.getContext(); }
-					}, file, mWidth, mHeight);
+					});
 			}
 		}
 		

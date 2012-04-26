@@ -30,18 +30,17 @@
 		android:layout_width="match_parent"
 		android:layout_alignParentBottom="true"
 		android:src="@drawable/lg_folder_full"
-		android:scaleType="centerCrop"
+		android:scaleType="fitCenter"
 		android:layout_gravity="right"
 		/>
 	<TextView
 		android:id="@+id/content_text"
 		android:gravity="bottom|center_horizontal"
 		style="@style/Small"
-		android:background="@color/darkGray"
+		android:background="@color/translucent_gray"
 		android:alpha="0.5"
 		android:layout_width="match_parent"
-		android:layout_marginLeft="5dp"
-		android:layout_marginRight="5dp"
+		android:layout_margin="5dp"
 		android:layout_alignBottom="@+id/content_icon"
 		android:ellipsize="none"
 		/>

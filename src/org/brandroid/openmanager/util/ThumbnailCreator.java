@@ -26,6 +26,9 @@ import android.graphics.Matrix;
 import android.graphics.Paint.Align;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -80,6 +83,11 @@ public class ThumbnailCreator extends Thread {
 	
 	private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
 	//private static Hashtable<String, Drawable> defaultDrawables = new Hashtable<String, Drawable>();
+
+	public interface OnUpdateImageListener
+	{
+		void updateImage(Bitmap d);
+	}
 	
 	public static void postImageBitmap(final ImageView image, final Bitmap bmp)
 	{
@@ -108,8 +116,8 @@ public class ThumbnailCreator extends Thread {
 		});
 	}
 	public static boolean setThumbnail(final ImageView mImage,
-			final ThumbnailStruct.OnUpdateImageListener mListener,
-			final OpenPath file, final int mWidth, final int mHeight)
+			final OpenPath file, final int mWidth, final int mHeight,
+			final OnUpdateImageListener mListener)
 	{
 		//if(mImage instanceof RemoteImageView)
 		//{
@@ -126,30 +134,40 @@ public class ThumbnailCreator extends Thread {
 		
 		if(!file.isDirectory() && file.isTextFile())
 			postImageFromPath(mImage, file, useLarge);
-		else //if(mImage.getDrawable() == null)
+		else if(mImage.getTag() == null)
 			postImageResource(mImage, getDefaultResourceId(file, mWidth, mHeight));
 		
 		if(file.hasThumbnail())
 		{
 			if(showThumbPreviews && !file.requiresThread())
 			{
-				Bitmap thumb = ThumbnailCreator.getThumbnailCache(mImage.getContext(), file.getPath(), mWidth, mHeight);
+				Bitmap thumb = //!mCacheMap.containsKey(file.getPath()) ? null :
+					getThumbnailCache(mContext, file.getPath(), mWidth, mHeight);
 				
 				if(thumb == null)
 				{
-					mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
+					//mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 					//ThumbnailTask task = new ThumbnailTask();
 					//ThumbnailStruct struct = new ThumbnailStruct(file, mListener, mWidth, mHeight);
 					//if(mImage.getTag() != null && mImage.getTag() instanceof ThumbnailTask) ((ThumbnailTask)mImage.getTag()).cancel(true);
 					
 					try {
-						new Thread(new Runnable(){
-							public void run() {
-								SoftReference<Bitmap> gen = generateThumb(file, mWidth, mHeight, mContext);
-								if(gen != null && gen.get() != null)
-									mListener.updateImage(gen.get());
-							}
-						}).start();
+						if(!fails.containsKey(file.getPath()))
+						{
+							if(!mCacheMap.containsKey(file.getPath()))
+								new Thread(new Runnable(){
+									public void run() {
+										SoftReference<Bitmap> gen = generateThumb(file, mWidth, mHeight, mContext);
+										if(gen != null && gen.get() != null)
+											mListener.updateImage(gen.get());
+										else Logger.LogWarning("Couldn't generate thumb for " + file.getPath());
+									}
+								}).start();
+							else 
+								//new Thread(new Runnable() {public void run() {
+										mListener.updateImage(getThumbnailCache(mContext, file.getPath(), mWidth, mHeight));
+								//}}).start();
+						}
 						//mImage.setTag(task);
 						//if(struct != null) task.execute(struct);
 					} catch(RejectedExecutionException rej) {
@@ -158,14 +176,18 @@ public class ThumbnailCreator extends Thread {
 				}
 				if(thumb != null)
 				{
-					final BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), thumb);
-					bd.setGravity(Gravity.CENTER);
+					//final BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), thumb);
+					//bd.setGravity(Gravity.CENTER);
+					//mListener.updateImage(thumb);
+					mImage.setImageBitmap(thumb);
+					mImage.setTag(file.getPath());
+					/*
 					mImage.post(new Runnable(){
 						public void run() {
 							ImageUtils.fadeToDrawable(mImage, bd);	
 							mImage.setTag(file.getPath());
 						}
-					});
+					});*/
 				}
 			
 			}
@@ -534,31 +556,15 @@ public class ThumbnailCreator extends Thread {
 				}
 			} else if (!valid && file.isImageFile() && !useGeneric) {
 				//mHeight *= 2; mWidth *= 2;
-				long len_kb = file.length() / 1024;
+				//long len_kb = file.length() / 1024;
 				
 				BitmapFactory.Options options = new BitmapFactory.Options();
-				options.outWidth = mWidth;
-				options.outHeight = mHeight;
+				options.inJustDecodeBounds = true;
+				BitmapFactory.decodeFile(file.getPath(), options);
+				options.inSampleSize = Math.min(options.outWidth / mWidth, options.outHeight / mHeight);
+				options.inJustDecodeBounds = false;
 				options.inPurgeable = true;
-										
-				if (len_kb > 500 && len_kb < 2000) {
-					options.inSampleSize = mWidth > 64 ? 8 : 16;
-					bmp = BitmapFactory.decodeFile(file.getPath(), options);
-										
-				} else if (len_kb >= 2000) {
-					options.inSampleSize = options.inSampleSize = mWidth > 64 ? 16 : 32;
-					bmp = BitmapFactory.decodeFile(file.getPath(), options);
-									
-				} else if (len_kb <= 500) {
-					bmp = BitmapFactory.decodeFile(file.getPath());
-					
-					if (bmp == null) 
-					{
-						bmp = BitmapFactory.decodeResource(mContext.getResources(), useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
-						useGeneric = true;
-					}
-					
-				}
+				bmp = BitmapFactory.decodeFile(file.getPath(), options);
 			} else if (bmp == null && file.getClass().equals(OpenFile.class))
 			{
 				useGeneric = true;
@@ -569,27 +575,60 @@ public class ThumbnailCreator extends Thread {
 			}
 		}
 		
-		if(bmp != null)
-			if(bmp.getHeight() > mHeight && mHeight > 0)
-			{
-				int w = (int) Math.floor(mHeight * ((double)bmp.getWidth() / (double)bmp.getHeight())); 
-				bmp = Bitmap.createBitmap(bmp, (bmp.getWidth() / 2) - (mWidth / 2), (bmp.getHeight() / 2) - (mHeight / 2), mWidth, mHeight, new Matrix(), false); 
-			} else if (bmp.getWidth() > mWidth && mWidth > 0)
-			{
-				int h = (int) Math.floor(mWidth * ((double)bmp.getHeight() / (double)bmp.getWidth())); 
-				//bmp = Bitmap.createScaledBitmap(bmp, mWidth, h, false);
-				bmp = Bitmap.createBitmap(bmp, (bmp.getWidth() / 2) - (mWidth / 2), (bmp.getHeight() / 2) - (mHeight / 2), mWidth, mHeight, new Matrix(), false);
-			}
+		if(bmp != null) bmp = cropBitmap(bmp, mWidth, mHeight);
 		
 		if(bmp != null)
 		{
-			if(writeCache && !useGeneric)
-				saveThumbnail(mContext, mCacheFilename, bmp);
+			if(writeCache && !useGeneric) saveThumbnail(mContext, mCacheFilename, bmp);
 			mCacheMap.put(mCacheFilename, bmp);
-		} else
+		} else {
 			fails.put(mParent, fails.containsKey(mParent) ? fails.get(mParent) + 1 : 1);
+			rememberFailure(file.getPath());
+		}
 		//Logger.LogDebug("Created " + bmp.getWidth() + "x" + bmp.getHeight() + " thumb (" + mWidth + "x" + mHeight + ")");
 		return new SoftReference<Bitmap>(bmp);
+	}
+	
+	private static void rememberFailure(String path)
+	{
+		fails.put(path, 1);
+	}
+	
+	private static Bitmap cropBitmap(Bitmap src, int dw, int dh)
+	{
+		int sw = src.getWidth(),
+			sh = src.getHeight();
+		if(sw < dw && sh < dh) return src;
+		//return Bitmap.createBitmap(src, (sw / 2) - (dh / 2), (sh / 2) - (dh / 2), dw, dh, new Matrix(), false);
+		Matrix m = new Matrix();
+		float scale = Math.max(1, Math.min((float)dh / (float)sh, (float)dw / (float)sw));
+		int ox = 0, oy = 0;
+		if(sw - dw < sh - dh) // More Width needs to be cropped
+		{
+			ox = (sw / 2) - (dw / 2);
+			if(ox >= 0)
+				dw = Math.min(dw, Math.max(sw, sw - ox));
+			else {
+				ox = 0;
+				oy = (sh / 2) - (dh / 2);
+				dh = Math.min(dh, Math.max(sh, sw - oy));
+			}
+		} else {
+			oy = (sh / 2) - (dh / 2);
+			if(oy >= 0)
+				dh = Math.min(dh, Math.max(sh, sw - oy));
+			else {
+				oy = 0;
+				ox = (sw / 2) - (dw / 2);
+				dw = Math.min(dw, Math.max(sw, sw - ox));
+			} 
+		}
+		Logger.LogDebug("cropBitmap:(" + sw + "x" + sh + "):(" + ox + "," + oy + ":" + dw + "x" + dh + ") @ " + scale);
+		m.postScale(scale, scale);
+		return Bitmap.createBitmap(src,
+				Math.max(0,  ox), Math.max(0,  oy),
+				Math.min(sw, dw), Math.min(sh, dh),
+				m, scale != 1.0); 
 	}
 	
 	private static Bitmap loadThumbnail(Context mContext, String file)

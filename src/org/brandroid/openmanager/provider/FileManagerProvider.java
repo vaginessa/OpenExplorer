@@ -18,7 +18,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
-import org.brandroid.openmanager.provider.MediaStore;
+import android.provider.MediaStore;
 import android.util.Log;
 
 public class FileManagerProvider extends ContentProvider {
