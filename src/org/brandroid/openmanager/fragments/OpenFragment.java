@@ -57,6 +57,7 @@ public abstract class OpenFragment
 	protected Object mActionMode = null;
 	protected BaseAdapter mContentAdapter;
 	protected int mMenuContextItemIndex = -1;
+	private boolean mHasOptions = false;
 	
 	public interface OnFragmentTitleLongClickListener
 	{
@@ -151,6 +152,16 @@ public abstract class OpenFragment
 			}
 		});
 		return true;
+	}
+	
+	@Override
+	public void setHasOptionsMenu(boolean hasMenu) {
+		super.setHasOptionsMenu(hasMenu);
+		mHasOptions = hasMenu;
+	}
+	public boolean hasOptionsMenu()
+	{
+		return mHasOptions;
 	}
 	
 	public boolean onBackPressed() {

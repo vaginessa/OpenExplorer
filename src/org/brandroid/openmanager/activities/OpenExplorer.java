@@ -43,6 +43,7 @@ import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -360,7 +361,7 @@ public class OpenExplorer
 
 		handleNetworking();
 		
-		//refreshCursors();
+		refreshCursors();
 
 		try {
 			if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
@@ -909,7 +910,14 @@ public class OpenExplorer
 			if(path == null)
 				path = new OpenFile(intent.getDataString());
 			if(path != null && path.exists() && (path.isTextFile() || path.length() < 500000))
+			{
 				editFile(path);
+				return true;
+			}
+		}else if(intent.hasExtra("state"))
+		{
+			Bundle state = intent.getBundleExtra("state");
+			onRestoreInstanceState(state);
 		}
 		return false;
 	}
@@ -1257,7 +1265,7 @@ public class OpenExplorer
 		Logger.LogVerbose("OpenExplorer.onStart");
 		setupLoggingDb();
 		submitStats();
-		new Thread(new Runnable(){public void run() {refreshCursors();}});
+		//new Thread(new Runnable(){public void run() {refreshCursors();}}).start();;
 		//refreshCursors();
 		mBookmarks.scanBookmarks();
 	}
@@ -1870,7 +1878,7 @@ public class OpenExplorer
 		{
 			if(mViewPager.getCurrentItem() > -1)
 			{
-				Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount());
+				//Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount());
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
 			} else {
 				Logger.LogWarning("Couldn't find current Page. Using last.");
@@ -1971,12 +1979,16 @@ public class OpenExplorer
 	
 	public void goHome()
 	{
+		Bundle b = new Bundle();
+		b.putString("last", mLastPath.getPath());
+		onSaveInstanceState(b);
 		Intent intent = new Intent(this, OpenExplorer.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		//intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		if(mLastPath != null)
 			intent.putExtra("last", mLastPath.getPath());
 		else if(getDirContentFragment(false) != null)
 			intent.putExtra("last", getDirContentFragment(false).getPath().getPath());
+		intent.putExtra("state", b);
 		finish();
 		startActivity(intent);
 	}
@@ -2181,9 +2193,12 @@ public class OpenExplorer
 			MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
 			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
 		}
-		//Fragment f = getSelectedFragment();
-		//if(f != null && !f.isDetached())
-		//	f.onPrepareOptionsMenu(menu);
+		//if(BEFORE_HONEYCOMB)
+		{
+			OpenFragment f = getSelectedFragment();
+			if(f != null && f.hasOptionsMenu() && !f.isDetached())
+				f.onPrepareOptionsMenu(menu);
+		}
 		
 		if(menu != null && menu.findItem(R.id.menu_paste) != null && getClipboard() != null && getClipboard().size() > 0)
 		{
@@ -2828,7 +2843,11 @@ public class OpenExplorer
 		final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
 			ThumbnailCreator.setThumbnail(icon,new OnUpdateImageListener() {
-				public void updateImage(Drawable d) { icon.setImageDrawable(d); }
+				public void updateImage(Bitmap b) {
+					BitmapDrawable d = new BitmapDrawable(getResources(), b);
+					d.setGravity(Gravity.CENTER);
+					icon.setImageDrawable(d);
+				}
 				public Context getContext() { return icon.getContext(); }
 				}, path, 32, 32);
 		
@@ -3442,6 +3461,9 @@ public class OpenExplorer
 			mParent = mDownloadParent;
 		mParent.setCursor(c);
 		mBookmarks.refresh();
+		OpenFragment f = getSelectedFragment();
+		if(f instanceof ContentFragment)
+			((ContentFragment)f).refreshData(null, false);
 	}
 
 	@Override
