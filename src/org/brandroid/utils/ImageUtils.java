@@ -30,9 +30,11 @@ public class ImageUtils {
 			ObjectAnimator.ofFloat(dest, "alpha", 0.0f, 1.0f).setDuration(100).start();
 		} else {
 			*/
-			TransitionDrawable td = new TransitionDrawable(new Drawable[]{mImage.getDrawable(),dest});
+			final TransitionDrawable td = new TransitionDrawable(new Drawable[]{mImage.getDrawable(),dest});
 			td.setCrossFadeEnabled(true);
-			mImage.setImageDrawable(td);
+			mImage.post(new Runnable(){public void run() {
+				mImage.setImageDrawable(td);
+			}});
 			td.startTransition(100);
 		//}
 	}

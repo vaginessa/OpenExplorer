@@ -14,13 +14,17 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
+import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -174,9 +178,17 @@ public class FileSystemAdapter extends ArrayAdapter<OpenPath> {
 				} else {
 					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 				}
-			} else {
+			} else if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath())) {
 				ThumbnailCreator.setThumbnail(mIcon, new OnUpdateImageListener() {
-					public void updateImage(Drawable d) { mIcon.setImageDrawable(d); }
+					public void updateImage(Bitmap b) {
+						if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
+						{
+							BitmapDrawable d = new BitmapDrawable(getResources(), b);
+							d.setGravity(Gravity.CENTER);
+							ImageUtils.fadeToDrawable(mIcon, d);
+							mIcon.setTag(file.getPath());
+						}
+					}
 					public Context getContext() { return mIcon.getContext(); }
 					}, file, mWidth, mHeight);
 			}

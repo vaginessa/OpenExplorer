@@ -23,7 +23,7 @@ public class ThumbnailStruct
 	
 	public interface OnUpdateImageListener
 	{
-		void updateImage(Drawable d);
+		void updateImage(Bitmap d);
 		Context getContext();
 	}
 	public ThumbnailStruct(OpenPath path, OnUpdateImageListener listener, int width, int height)
@@ -45,12 +45,12 @@ public class ThumbnailStruct
 	{
 		if(mBitmap != null && mBitmap.get() != null)
 		{
-			BitmapDrawable bd = new BitmapDrawable(mBitmap.get());
-			bd.setGravity(Gravity.CENTER);
+			//BitmapDrawable bd = new BitmapDrawable(mBitmap.get());
+			//bd.setGravity(Gravity.CENTER);
 			//if(Holder != null) Holder.setIconDrawable(bd, this);
 			//ImageView.setImageDrawable(bd);
 			//ImageUtils.fadeToDrawable(ImageView, bd);
-			mListener.updateImage(bd);
+			mListener.updateImage(mBitmap.get());
 		}
 	}
 }

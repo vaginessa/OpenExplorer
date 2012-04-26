@@ -43,7 +43,7 @@ public class BookmarkHolder {
 	private String sTitle;
 	private String sPath;
 	private OpenPath mFile;
-	private ThumbnailTask mTask;
+	//private ThumbnailTask mTask;
 	private int mode;
 	
 	public BookmarkHolder(String path, View view, int mode) {
@@ -172,10 +172,10 @@ public class BookmarkHolder {
 		if(mPath != null)
 			mPath.setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
-	public void setTask(ThumbnailTask task) {
+	/*public void setTask(ThumbnailTask task) {
 		mTask = task;
-	}
-	public void cancelTask() { if(mTask!=null) mTask.cancel(true); }
+	}*/
+	//public void cancelTask() { if(mTask!=null) mTask.cancel(true); }
 	
 	public Drawable getIcon() {
 		if(getIconView() != null && getIconView().getDrawable() != null)

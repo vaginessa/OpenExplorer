@@ -45,6 +45,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -754,11 +755,24 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			{
 				if(path instanceof OpenCursor)
 				{
-					((OpenCursor)path).setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
-						public void updateBookmarkText(String txt) {
-							mCountText.setText(txt);
-						}
-					});
+					OpenCursor oc = (OpenCursor)path;
+					if(oc.isLoaded() && !mCountText.isShown())
+					{
+						mCountText.setText("(" + oc.length() + ")");
+						mCountText.setVisibility(View.VISIBLE);
+					} else if(!oc.hasListener()) {
+						mCountText.setVisibility(View.GONE);
+						((OpenCursor)path).setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
+							public void updateBookmarkText(final String txt) {
+								mCountText.post(new Runnable() {
+									public void run() {
+										mCountText.setText(txt);
+										mCountText.setVisibility(View.VISIBLE);
+									}
+								});
+							}
+						});
+					}
 				} else mCountText.setVisibility(View.GONE);
 			}
 				
@@ -782,7 +796,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				mIcon.setImageDrawable(ld);
 			} else
 				ThumbnailCreator.setThumbnail(mIcon, new OnUpdateImageListener() {
-					public void updateImage(Drawable d) { mIcon.setImageDrawable(d); }
+					public void updateImage(Bitmap b) {
+						mIcon.setImageBitmap(b);
+					}
 					public Context getContext() { return mIcon.getContext(); }
 					}, path, 36, 36);
 			
