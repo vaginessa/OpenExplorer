@@ -70,6 +70,8 @@ import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 
+import com.android.gallery3d.data.ImageCacheService;
+
 public class ThumbnailCreator extends Thread {
 	//private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();
 	private static LruCache<String, Bitmap> mCacheMap = new LruCache<String, Bitmap>(200);
@@ -575,7 +577,13 @@ public class ThumbnailCreator extends Thread {
 			}
 		}
 		
-		if(bmp != null) bmp = cropBitmap(bmp, mWidth, mHeight);
+		if(bmp != null && (mWidth < bmp.getWidth() || mHeight < bmp.getHeight()))
+		{
+			if(file.isImageFile())
+				bmp = cropBitmap(bmp, mWidth, mHeight);
+			else
+				bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false);
+		}
 		
 		if(bmp != null)
 		{
