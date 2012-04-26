@@ -425,6 +425,14 @@ public class FileManager {
 	public static boolean hasOpenCache(String path) { return mOpenCache != null && mOpenCache.containsKey(path); }
 	public static OpenPath removeOpenCache(String path) { return mOpenCache.remove(path); }
 	
+	public static OpenPath getOpenCache(String path)
+	{
+		OpenPath ret = null;
+		try {
+			ret = getOpenCache(path, false, null);
+		} catch(IOException e) { }
+		return ret;
+	}
 	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles, SortType sort)
 			throws IOException //, SmbAuthException, SmbException
 	{
@@ -493,7 +501,7 @@ public class FileManager {
 			else if(path.equals("Downloads"))
 				ret = OpenExplorer.getDownloadParent();
 			if(ret == null) return ret;
-			if(!ret.requiresThread() || bGetNetworkedFiles)
+			if(ret.requiresThread() && bGetNetworkedFiles)
 			{
 				if(ret.listFiles() != null)
 					setOpenCache(path, ret);

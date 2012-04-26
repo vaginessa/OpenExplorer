@@ -21,8 +21,6 @@ package org.brandroid.openmanager.data;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.ThumbnailStruct;
-import org.brandroid.openmanager.util.ThumbnailTask;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
@@ -91,27 +89,6 @@ public class BookmarkHolder {
 	
 	public RemoteImageView getIconView() { ensureViews(); return mIcon; }
 	public void setIconResource(int res) { ensureViews(); if(mIcon != null) mIcon.setImageDrawable(mParentView.getResources().getDrawable(res)); }
-	public void setIconDrawable(Drawable d, ThumbnailStruct ts) {
-		OpenPath file = ts.File;
-		if(!file.getPath().equals(mFile.getPath())) {
-			int w = ts.Width, h = ts.Height;
-			Bitmap bmp = ThumbnailCreator.getThumbnailCache(mIcon.getContext(), mFile.getPath(), w, h);
-			if(bmp != null)
-			{
-				BitmapDrawable bd = new BitmapDrawable(bmp);
-				bd.setGravity(Gravity.CENTER);
-				d = bd;
-			} else {
-				try {
-					mParentView.notify();
-				} catch(Exception e) { }
-				Logger.LogWarning("Bad path " + mFile.getName() + " != " + file.getName());
-				return;
-			}
-		}
-		ensureViews();
-		if(mIcon != null) mIcon.setImageDrawable(d);
-	}
 	public void setIconDrawable(Drawable d) { mIcon.setImageDrawable(d); }
 	
 	public void setEjectClickListener(View.OnClickListener listener)

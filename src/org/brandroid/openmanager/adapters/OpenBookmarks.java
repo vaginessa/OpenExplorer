@@ -37,7 +37,7 @@ import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
-import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
+import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import android.animation.Animator;
@@ -795,12 +795,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					});
 				mIcon.setImageDrawable(ld);
 			} else
-				ThumbnailCreator.setThumbnail(mIcon, new OnUpdateImageListener() {
-					public void updateImage(Bitmap b) {
-						mIcon.setImageBitmap(b);
-					}
-					public Context getContext() { return mIcon.getContext(); }
-					}, path, 36, 36);
+				ThumbnailCreator.setThumbnail(mIcon, path, 36, 36,
+					new OnUpdateImageListener() {
+						public void updateImage(Bitmap b) {
+							mIcon.setImageBitmap(b);
+						}
+					});
 			
             return ret;
 		}

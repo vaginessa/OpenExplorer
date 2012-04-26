@@ -9,7 +9,7 @@ import java.util.List;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.OpenFragmentActivity;
-import org.brandroid.openmanager.adapters.FileSystemAdapter;
+import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenClipboard;
@@ -33,6 +33,7 @@ import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.ContextMenu;
@@ -156,7 +157,8 @@ public abstract class OpenFragment
 	
 	@Override
 	public void setHasOptionsMenu(boolean hasMenu) {
-		super.setHasOptionsMenu(hasMenu);
+		if(Build.VERSION.SDK_INT > 13)
+			super.setHasOptionsMenu(hasMenu);
 		mHasOptions = hasMenu;
 	}
 	public boolean hasOptionsMenu()
@@ -213,8 +215,8 @@ public abstract class OpenFragment
 				cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
 					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
 						OpenPath path = null;
-						if(mContentAdapter instanceof FileSystemAdapter)
-							path = ((FileSystemAdapter)mContentAdapter).getItem((Integer)info);
+						if(mContentAdapter instanceof ContentAdapter)
+							path = ((ContentAdapter)mContentAdapter).getItem((Integer)info);
 						executeMenu(item.getItemId(), path);
 						cm.dismiss();
 					}
@@ -381,8 +383,8 @@ public abstract class OpenFragment
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = null;
-		if(mContentAdapter instanceof FileSystemAdapter)
-			file = ((FileSystemAdapter)mContentAdapter).getItem(info != null ? info.position : mMenuContextItemIndex);
+		if(mContentAdapter instanceof ContentAdapter)
+			file = ((ContentAdapter)mContentAdapter).getItem(info != null ? info.position : mMenuContextItemIndex);
 		else return;
 		new MenuInflater(v.getContext()).inflate(R.menu.context_file, menu);
 		MenuUtils.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
@@ -404,8 +406,8 @@ public abstract class OpenFragment
 		//if(o != null && o instanceof OpenPath)
 		//	path = (OpenPath)o;
 		//else
-		if(mMenuContextItemIndex > -1 && mContentAdapter instanceof FileSystemAdapter)
-			path = ((FileSystemAdapter)mContentAdapter).getItem(mMenuContextItemIndex);
+		if(mMenuContextItemIndex > -1 && mContentAdapter instanceof ContentAdapter)
+			path = ((ContentAdapter)mContentAdapter).getItem(mMenuContextItemIndex);
 		else return false;
 		Logger.LogDebug("Showing context for " + path.getName() + "?");
 		return executeMenu(item.getItemId(), path);

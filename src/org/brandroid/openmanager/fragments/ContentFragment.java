@@ -20,7 +20,7 @@ package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.FileSystemAdapter;
+import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -47,6 +47,8 @@ import android.net.Uri;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.annotation.TargetApi;
 import android.app.SearchManager;
 import android.content.Context;
@@ -142,11 +144,15 @@ public class ContentFragment extends OpenFragment
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
 		ContentFragment ret = new ContentFragment(path, mode);
+		if(path instanceof OpenFile) return ret;
 		Bundle args = ret.getArguments();
 		if(args == null)
 			args = new Bundle();
-		args.putString("last", path.getPath());
-		ret.setArguments(args);
+		if(path != null)
+		{
+			args.putString("last", path.getPath());
+			ret.setArguments(args);
+		} else return null;
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
 		return ret;
 	}
@@ -156,8 +162,11 @@ public class ContentFragment extends OpenFragment
 		Bundle args = ret.getArguments();
 		if(args == null)
 			args = new Bundle();
-		args.putString("last", path.getPath());
-		ret.setArguments(args);
+		if(path != null)
+		{
+			args.putString("last", path.getPath());
+			ret.setArguments(args);
+		} else return null;
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
 		return ret;
 	}
@@ -190,11 +199,11 @@ public class ContentFragment extends OpenFragment
 		Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
-			if(FileSystemAdapter.class.equals(mContentAdapter.getClass()))
+			if(ContentAdapter.class.equals(mContentAdapter.getClass()))
 			{
 				mGrid.setAdapter(null);
-				mContentAdapter = new FileSystemAdapter(getExplorer(), mViewMode, mData2);
-				((FileSystemAdapter)mContentAdapter).setViewMode(getViewMode());
+				mContentAdapter = new ContentAdapter(getExplorer(), mViewMode, mData2);
+				((ContentAdapter)mContentAdapter).setViewMode(getViewMode());
 				//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
 				mGrid.setAdapter(mContentAdapter);
 			}
@@ -583,6 +592,17 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	@Override
+	public void setInitialSavedState(SavedState state) {
+		super.setInitialSavedState(state);
+		if(state == null) return;
+		Bundle b = state.getBundle();
+		if(b != null && b.containsKey("last") && mPath == null)
+			setPath(b.getString("last"));
+		
+		Logger.LogVerbose("setInitialSavedState :: " + state.toString());
+	}
+	
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		try {
 			super.onSaveInstanceState(outState);
@@ -596,7 +616,7 @@ public class ContentFragment extends OpenFragment
 			if(mGrid != null)
 				outState.putParcelable("grid", mGrid.onSaveInstanceState());
 		} catch(NullPointerException e) {
-			// Not sure why this is causing NPE crashes
+			Logger.LogError("Not sure why this is causing NPE crashes", e);
 		}
 
 		/*
@@ -673,8 +693,8 @@ public class ContentFragment extends OpenFragment
 			mData2 = new ArrayList<OpenPath>();
 		//mContentAdapter = new OpenPathAdapter(mPath, getViewMode(), getExplorer());
 		//Logger.LogDebug("Setting up grid w/ " + mData2.size() + " items");
-		mContentAdapter = new FileSystemAdapter(getExplorer(), mLayoutID, mData2);
-		((FileSystemAdapter)mContentAdapter).setViewMode(getViewMode());
+		mContentAdapter = new ContentAdapter(getExplorer(), mLayoutID, mData2);
+		((ContentAdapter)mContentAdapter).setViewMode(getViewMode());
 		/*
 		if(OpenCursor.class.equals(mPath.getClass())) {
 			if(mContentAdapter != null && OpenCursorAdapter.class.equals(mContentAdapter.getClass()))

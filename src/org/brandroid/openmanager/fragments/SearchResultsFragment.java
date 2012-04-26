@@ -7,7 +7,7 @@ import java.util.List;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
-import org.brandroid.openmanager.adapters.FileSystemAdapter;
+import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSearch;
@@ -90,7 +90,7 @@ public class SearchResultsFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mContentAdapter = new FileSystemAdapter(getExplorer(), R.layout.list_content_layout, mSearch.getResults());
+		mContentAdapter = new ContentAdapter(getExplorer(), R.layout.list_content_layout, mSearch.getResults());
 	}
 	
 	@Override

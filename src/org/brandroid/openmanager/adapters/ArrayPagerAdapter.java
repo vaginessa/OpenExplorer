@@ -23,6 +23,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.Fragment.SavedState;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.view.View;
@@ -67,7 +68,18 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	@Override
 	public Parcelable saveState() {
+		Parcelable psuper = null;
+		try {
+			psuper = super.saveState();
+		} catch(Exception e) { Logger.LogError("Couldn't save ArrayPagerAdapter state.", e); }
 		Bundle state = new Bundle();
+		if(psuper != null)
+		{
+			if(psuper instanceof Bundle)
+				state = (Bundle)psuper;
+			else
+				state.putParcelable("super", psuper);
+		}
 		if(getCount() > 0)
 		{
 			OpenPath[] items = new OpenPath[getCount()];
@@ -80,24 +92,36 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	@Override
+	public void destroyItem(ViewGroup container, int position, Object object) {
+		// TODO Auto-generated method stub
+		super.destroyItem(container, position, object);
+	}
+	
+	@Override
 	public void restoreState(Parcelable state, ClassLoader loader) {
-		if(state != null)
-		{
-			Bundle bundle = (Bundle)state;
-			bundle.setClassLoader(loader);
-			if(!bundle.containsKey("pages")) return;
-			Parcelable[] items = bundle.getParcelableArray("pages");
-			mFrags.clear();
-			for(int i = 0; i < items.length; i++)
-				if(items[i] != null && items[i] instanceof OpenPath)
-				{
-					OpenPath path = (OpenPath)items[i];
-					if(path.isDirectory())
-						mFrags.add(ContentFragment.getInstance(path));
-					else if(path.isTextFile() || path.length() < 500000)
-						mFrags.add(new TextEditorFragment(path));
-				}
-		}
+		if(state == null) return;
+		Bundle bundle = null;
+		if(state instanceof Bundle)
+			bundle = (Bundle)state;
+		else if (state instanceof SavedState)
+			bundle = ((SavedState)state).getBundle();
+		else bundle = new Bundle();
+		
+		if(bundle.containsKey("super"))
+			super.restoreState(bundle.getParcelable("super"), loader);
+		bundle.setClassLoader(loader);
+		if(!bundle.containsKey("pages")) return;
+		Parcelable[] items = bundle.getParcelableArray("pages");
+		mFrags.clear();
+		for(int i = 0; i < items.length; i++)
+			if(items[i] != null && items[i] instanceof OpenPath)
+			{
+				OpenPath path = (OpenPath)items[i];
+				if(path.isDirectory())
+					mFrags.add(ContentFragment.getInstance(path));
+				else if(path.isTextFile() || path.length() < 500000)
+					mFrags.add(new TextEditorFragment(path));
+			}
 	}
 	
 	@Override
@@ -185,10 +209,12 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 				&& checkForContentFragmentWithPath(((ContentFragment) frag)
 						.getPath()))
 			return;
+		mFrags.remove(frag);
 		mFrags.add(Math.max(0, Math.min(getCount(), index)), frag);
 		try { notifyDataSetChanged(); }
-		catch(IllegalStateException eew) { }
+		catch(IllegalStateException eew) { Logger.LogWarning("Illegal ArrayPagerAdapter", eew); }
 		catch(IndexOutOfBoundsException e) {
+			Logger.LogWarning("Recovering Adapter", e);
 			ArrayList<OpenFragment> recoveryArray = new ArrayList<OpenFragment>(mFrags);
 			//recoveryArray.add(Math.max(0, Math.min(getCount() - 1, index)), frag);
 			mFrags.clear();

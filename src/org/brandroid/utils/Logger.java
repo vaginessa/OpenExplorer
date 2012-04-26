@@ -56,7 +56,7 @@ public class Logger
 	{
 		int ret = 0;
 		for(int i = 0; i < els.length; i++)
-			if(els[i].getClassName().contains("brandroid"))
+			if(isMyClass(els[i].getClassName(), i))
 				ret++;
 		return ret;
 	}
@@ -66,7 +66,7 @@ public class Logger
 		StackTraceElement[] ret = new StackTraceElement[getMyStackTraceCount(elArray)];
 		int j = 0;
 		for(int i = 0; i < elArray.length; i++)
-			if(elArray[i].getClassName().contains("brandroid"))
+			if(isMyClass(elArray[i].getClassName(), i))
 				ret[j++] = elArray[i];
 		return ret;
 	}
@@ -76,9 +76,16 @@ public class Logger
 		StackTraceElement[] ret = new StackTraceElement[getMyStackTraceCount(elArray)];
 		int j = 0;
 		for(int i = 0; i < elArray.length; i++)
-			if(elArray[i].getClassName().contains("brandroid"))
+			if(isMyClass(elArray[i].getClassName(), i))
 				ret[j++] = elArray[i];
 		return ret;
+	}
+	private static boolean isMyClass(String className, int index)
+	{
+		if(className.startsWith("java")) return false;
+		if(className.contains("android") && !className.contains("support")) return false;
+		if(className.contains("brandroid")) return true;
+		return index < 2;
 	}
 	private static void LogToDB(int level, String msg, String stack)
 	{

@@ -293,6 +293,8 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
         SavedState(Bundle state) {
             mState = state;
         }
+        
+        public Bundle getBundle() { return mState; }
 
         SavedState(Parcel in, ClassLoader loader) {
             mState = in.readBundle();
@@ -503,6 +505,7 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
     public void setInitialSavedState(SavedState state) {
         if (mIndex >= 0) {
         	Logger.LogError("Fragment already active", new IllegalStateException("Fragment already active"));
+        	return;
         }
         mSavedFragmentState = state != null && state.mState != null
                 ? state.mState : null;

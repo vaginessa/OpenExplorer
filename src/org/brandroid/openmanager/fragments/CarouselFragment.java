@@ -252,6 +252,11 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 	}
 	
 	@Override
+	public boolean onBackPressed() {
+		return false;
+	}
+	
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);

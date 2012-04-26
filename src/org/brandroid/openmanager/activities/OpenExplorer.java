@@ -167,8 +167,8 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.SimpleUserInfo.UserInfoInteractionCallback;
-import org.brandroid.openmanager.util.ThumbnailStruct.OnUpdateImageListener;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.utils.CustomExceptionHandler;
@@ -655,12 +655,15 @@ public class OpenExplorer
 	private void setCurrentItem(final int page, final boolean smooth)
 	{
 		try {
-		if(mViewPager.getCurrentItem() != page)
-			mViewPager.post(new Runnable() {
-				public void run() {
-					mViewPager.setCurrentItem(page, smooth);
-				}
-			});
+			if(!Thread.currentThread().equals(UiThread))
+				mViewPager.post(new Runnable() {
+					public void run() {
+						if(mViewPager.getCurrentItem() != page)
+							mViewPager.setCurrentItem(page, smooth);
+					}
+				});
+			else if(mViewPager.getCurrentItem() != page)
+				mViewPager.setCurrentItem(page, smooth);
 		} catch(Exception e) {
 			Logger.LogError("Couldn't set ViewPager page to " + page, e);
 		}
@@ -924,6 +927,7 @@ public class OpenExplorer
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
+		if(outState == null) return;
 		super.onSaveInstanceState(outState);
 		if(mViewPagerAdapter != null)
 		{
@@ -1095,20 +1099,28 @@ public class OpenExplorer
 		}
 	}
 
-	private void setViewPageAdapter(PagerAdapter adapter)
+	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, false); }
+	private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload)
 	{
 		if(mViewPager != null)
 		{
 			try {
-				if(!adapter.equals(mViewPager.getAdapter()))
+				if(!adapter.equals(mViewPager.getAdapter()) || reload)
 					mViewPager.setAdapter(adapter);
 				else mViewPager.notifyDataSetChanged();
+				return true;
 			} catch(IndexOutOfBoundsException e) {
 				Logger.LogError("Why is this happening?", e);
+				return false;
 			} catch(IllegalStateException e) {
 				Logger.LogError("Error trying to set ViewPageAdapter", e);
+				return false;
+			} catch(Exception e) {
+				Logger.LogError("Please stop!", e);
+				return false;
 			}
 		}
+		return false;
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -2793,28 +2805,24 @@ public class OpenExplorer
 					{
 						Logger.LogDebug("last path set to " + mLastPath.getPath());
 						changePath(mLastPath, false);
-						updateTitle(mLastPath.getPath());
+						//updateTitle(mLastPath.getPath());
 					} else finish();
 					
 				} 
 				else {
-					Logger.LogWarning("No Breadcrumb Title");
-					updateTitle("");
+					fragmentManager.popBackStack();
 				}
-			} else if (mSinglePane) {
-				//finish();
 			}
 			else {
-				updateTitle("");
-				//showToast("Press back again to exit.");
+				//updateTitle("");
+				showToast(R.string.s_alert_back_to_exit);
 			}
 		}
 		mLastBackIndex = i;
 	}
 
-	public void changePath(OpenPath path) { changePath(path, true, false); }
-	public void changePath(OpenPath path, Boolean addToStack) { changePath(path, addToStack, false); }
-	public void changePath(OpenPath path, Boolean addToStack, Boolean force)
+	private void changePath(OpenPath path, Boolean addToStack) { changePath(path, addToStack, false); }
+	private void changePath(OpenPath path, Boolean addToStack, Boolean force)
 	{
 		try {
 			//if(mLastPath != null && !mLastPath.equals(path) && mLastPath instanceof OpenNetworkPath)
@@ -2825,13 +2833,18 @@ public class OpenExplorer
 		toggleBookmarks(false);
 		if(path == null) path = mLastPath;
 		if(path == null) return;
+		if(mLastPath == null && getDirContentFragment(false) != null)
+			mLastPath = getDirContentFragment(false).getPath();
+		if(!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
+			force = true;
+		if(!BEFORE_HONEYCOMB)
+			force = true;
 		//if(!force)
 			//if(!addToStack && path.getPath().equals("/")) return;
 			//if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
 		//boolean isNew = !mLastPath.equals(path);
-		//int oldView = getSetting(mLastPath, "view", 0);
-		mLastPath = path;
+		int oldView = getSetting(mLastPath, "view", 0);
 		
 		if(path instanceof OpenNetworkPath)
 		{
@@ -2842,52 +2855,78 @@ public class OpenExplorer
 		
 		final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
-			ThumbnailCreator.setThumbnail(icon,new OnUpdateImageListener() {
-				public void updateImage(Bitmap b) {
-					BitmapDrawable d = new BitmapDrawable(getResources(), b);
-					d.setGravity(Gravity.CENTER);
-					icon.setImageDrawable(d);
-				}
-				public Context getContext() { return icon.getContext(); }
-				}, path, 32, 32);
+			ThumbnailCreator.setThumbnail(icon, path, 32, 32,
+				new OnUpdateImageListener() {
+					public void updateImage(Bitmap b) {
+						BitmapDrawable d = new BitmapDrawable(getResources(), b);
+						d.setGravity(Gravity.CENTER);
+						icon.setImageDrawable(d);
+					}
+				});
 		
 		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);
-		if(mViewPager != null && mViewPagerEnabled &&
-				(BEFORE_HONEYCOMB || newView != VIEW_CAROUSEL))
+		//if(!BEFORE_HONEYCOMB && Build.VERSION.SDK_INT < 14 && newView == VIEW_CAROUSEL) {
+			
+			//setViewVisibility(true, false, R.id.content_pager_frame);
+			//setViewVisibility(false, false, R.id.content_frag);
+		if(addToStack)
 		{
-			setViewVisibility(true, false, R.id.content_pager_frame);
-			setViewVisibility(false, false, R.id.content_frag);
+			int bsCount = fragmentManager.getBackStackEntryCount();
+			String last = null;
+			if(bsCount > 0)
+			{
+				BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
+				last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString() : "";
+				Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
+			} else
+				Logger.LogVerbose("First changePath to " + path.getPath());
+			if(last == null || !last.equalsIgnoreCase(path.getPath()))
+			{
+				fragmentManager
+					.beginTransaction()
+					.setBreadCrumbTitle(path.getPath())
+					.addToBackStack("path")
+					.commit();
+			}
+		}
 			if(force || addToStack || path.requiresThread())
 			{
 				int common = 0;
-				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
+				if(force)
 				{
-					OpenFragment f = mViewPagerAdapter.getItem(i);
-					if(f != null)
+					mViewPagerAdapter.clear();
+				} else {
+					for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 					{
-						if(!(f instanceof ContentFragment)) continue;
-						if((path.getPath()+"/").startsWith(((ContentFragment)f).getPath().getPath()+"/"))
+						OpenFragment f = mViewPagerAdapter.getItem(i);
+						if(f != null)
 						{
-							common = i + 1;
-							break;
+							if(!(f instanceof ContentFragment)) continue;
+							if((path.getPath()+"/").startsWith(((ContentFragment)f).getPath().getPath()+"/"))
+							{
+								common = i + 1;
+								break;
+							}
 						}
+						mViewPagerAdapter.remove(i);
 					}
-					mViewPagerAdapter.remove(i);
 				}
 				mViewPagerAdapter.notifyDataSetChanged();
 				//mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
-				try {
-					mViewPagerAdapter.add(common, ContentFragment.getInstance(path, newView));
-				} catch(IllegalStateException e)
-				{
-					Logger.LogWarning("Fragment already active?", e); // crash fix
-				}
+				OpenFragment f = newView == VIEW_CAROUSEL ?
+						new CarouselFragment(path) :
+						ContentFragment.getInstance(path, newView);
+				if(common == 0)
+					mViewPagerAdapter.add(f);
+				else
+					mViewPagerAdapter.add(common, f);
 				OpenPath tmp = path.getParent();
-				while(tmp != null) 
+				while(tmp != null && newView != VIEW_CAROUSEL) 
 				{
+					Logger.LogDebug("Adding Parent: " + tmp.getPath());
 					try {
 						if(common > 0)
 							if(tmp.getPath().equals(((ContentFragment)mViewPagerAdapter.getItem(common - 1)).getPath()))
@@ -2901,33 +2940,11 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				final int index = mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter);
+				setViewPageAdapter(mViewPagerAdapter, force);
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				setCurrentItem(index, true);
 				updatePagerTitle(index);
-				if(addToStack)
-				{
-					int bsCount = fragmentManager.getBackStackEntryCount();
-					if(bsCount > 0)
-					{
-						BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
-						String last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString() : "";
-						Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
-						if(!last.equalsIgnoreCase(path.getPath()))
-						{
-							try {
-								fragmentManager
-									.beginTransaction()
-									.setBreadCrumbTitle(path.getPath())
-									.addToBackStack("path")
-									.commit();
-							} catch(IllegalStateException e) {
-								Logger.LogError("Couldn't add frag to stack", e);
-							}
-						}
-					}
-				}
 			} else {
 				OpenPath commonBase = null;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
@@ -2953,63 +2970,7 @@ public class OpenExplorer
 				mViewPager.setAdapter(mViewPagerAdapter);
 				setCurrentItem(path.getDepth() - 1, false);
 			}
-		} else {
-			setViewVisibility(false, false, R.id.content_pager_frame);
-			setViewVisibility(true, false, R.id.content_frag);
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-			ft.setBreadCrumbTitle(path.getPath());
-			updateTitle(path.getPath());
-			if(addToStack)
-			{
-				int bsCount = fragmentManager.getBackStackEntryCount();
-				if(bsCount > 0)
-				{
-					BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
-					String last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString() : "";
-					Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
-					if(last.equalsIgnoreCase(path.getPath()))
-						return;
-				}
-				//mFileManager.pushStack(path);
-				ft.addToBackStack("path");
-			} else Logger.LogVerbose("Covertly changing to " + path.getPath());
-			OpenFragment content = ContentFragment.getInstance(path, newView);
-			if(newView == VIEW_CAROUSEL && !(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13))
-			{
-				content = new CarouselFragment(path);
-				ft.replace(R.id.content_frag, content);
-				updateTitle(path.getPath());
-			} else {
-				if(newView == VIEW_CAROUSEL && BEFORE_HONEYCOMB)
-					newView = VIEW_LIST;
-				if(!BEFORE_HONEYCOMB && (content == null || content instanceof CarouselFragment))
-				{
-					content = ContentFragment.getInstance(path, getSetting(path, "view", 0));
-					ft.replace(R.id.content_frag, content);
-				} else if(content instanceof ContentFragment) {
-					//((ContentFragment)content).changePath(path); // the main selection
-					//ft.replace(R.id.content_frag, content);
-					if(mContentFragment.isVisible())
-						((ContentFragment)mContentFragment).changePath(path);
-					else
-						ft.replace(R.id.content_frag, content);
-				}
-			}
-			if(mViewPagerAdapter != null)
-			{
-				mViewPagerAdapter.clear();
-				mViewPagerAdapter.add(getDirContentFragment(false, path));
-				setViewPageAdapter(mViewPagerAdapter);
-			}
-			try {
-				ft.commit();
-			} catch(IllegalStateException e) {
-				Logger.LogWarning("Trying to commit after onSave", e);
-			}
-			updateTitle(path.getPath());
-			changeViewMode(getSetting(path, "view", 0), false); // bug fix
-		}
+		//}
 		//refreshContent();
 		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
@@ -3024,6 +2985,7 @@ public class OpenExplorer
 		//ft.replace(R.id.content_frag, content);
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
+		mLastPath = path;
 	}
 	private void refreshContent()
 	{
@@ -3071,7 +3033,7 @@ public class OpenExplorer
 		} catch(Exception e) { }
 	}
 	public void onChangeLocation(OpenPath path) {
-		changePath(path, true, true);
+		changePath(path, true, false);
 	}
 
 	public static final FileManager getFileManager() {

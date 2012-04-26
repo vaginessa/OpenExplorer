@@ -60,6 +60,7 @@ public class OpenViewPager extends ViewPager
 		try {
 			super.setAdapter(a);
 			setIndicator(mIndicator);
+			notifyDataSetChanged();
 		} catch(Exception e) { Logger.LogError("Couldn't set ViewPager adapter.", e); }
 	}
 	
