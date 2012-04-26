@@ -255,24 +255,7 @@ public class ContentFragment extends OpenFragment
 		else Logger.LogDebug("Creating ContentFragment @ " + mPath.getPath());
 		
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
-		if(mGrid != null)
-		{
-			if(mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0)
-			{
-				Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
-				mGrid.scrollTo(0, mBundle.getInt("scroll"));
-			} else if(mBundle.containsKey("grid"))
-				mGrid.onRestoreInstanceState(mBundle.getParcelable("grid"));
-			if(mBundle.containsKey("first"))
-			{
-				Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
-				mGrid.setSelection(mBundle.getInt("first"));
-			}
-		}
-	}
-	@Override
-	public void onResume() {
-		super.onResume();
+		
 	}
 	
 	public void notifyDataSetChanged() {
@@ -498,7 +481,8 @@ public class ContentFragment extends OpenFragment
 			}
 		}
 		//MenuInflater inflater = new MenuInflater(mContext);
-		if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
+		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
+		if(menu instanceof Menu)
 		{
 			MenuItem sort = menu.findItem(R.id.menu_sort);
 			if(sort != null && sort.getSubMenu() != null && !sort.getSubMenu().hasVisibleItems())
@@ -635,6 +619,9 @@ public class ContentFragment extends OpenFragment
 		if(mBundle == null && savedInstanceState != null)
 			mBundle = savedInstanceState;
 		
+		if(mBundle == null)
+			mBundle = new Bundle();
+		
 		//mPathView = (LinearLayout)v.findViewById(R.id.scroll_path);
 		//if(mGrid == null)
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
@@ -649,6 +636,21 @@ public class ContentFragment extends OpenFragment
 			updateGridView();
 		
 		refreshData(mBundle, true);
+		
+		if(mGrid != null)
+		{
+			if(mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0)
+			{
+				Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
+				mGrid.scrollTo(0, mBundle.getInt("scroll"));
+			} else if(mBundle.containsKey("grid"))
+				mGrid.onRestoreInstanceState(mBundle.getParcelable("grid"));
+			if(mBundle.containsKey("first"))
+			{
+				Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
+				mGrid.setSelection(mBundle.getInt("first"));
+			}
+		}
 	}
 
 	@TargetApi(11)

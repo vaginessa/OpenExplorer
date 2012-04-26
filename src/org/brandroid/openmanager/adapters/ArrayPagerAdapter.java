@@ -101,15 +101,17 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	public void restoreState(Parcelable state, ClassLoader loader) {
 		if(state == null) return;
 		Bundle bundle = null;
-		if(state instanceof Bundle)
-			bundle = (Bundle)state;
-		else if (state instanceof SavedState)
+		if (state instanceof SavedState)
+		{
+			super.restoreState(state, loader);
 			bundle = ((SavedState)state).getBundle();
+		} else if(state instanceof Bundle)
+			bundle = (Bundle)state;
 		else bundle = new Bundle();
 		
+		bundle.setClassLoader(loader);
 		if(bundle.containsKey("super"))
 			super.restoreState(bundle.getParcelable("super"), loader);
-		bundle.setClassLoader(loader);
 		if(!bundle.containsKey("pages")) return;
 		Parcelable[] items = bundle.getParcelableArray("pages");
 		mFrags.clear();
