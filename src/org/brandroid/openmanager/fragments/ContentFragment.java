@@ -37,6 +37,7 @@ import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -482,7 +483,7 @@ public class ContentFragment extends OpenFragment
 		}
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
-		if(menu instanceof Menu)
+		if(!(menu instanceof MenuBuilder))
 		{
 			MenuItem sort = menu.findItem(R.id.menu_sort);
 			if(sort != null && sort.getSubMenu() != null && !sort.getSubMenu().hasVisibleItems())

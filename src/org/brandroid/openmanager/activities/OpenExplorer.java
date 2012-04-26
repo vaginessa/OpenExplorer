@@ -197,7 +197,7 @@ public class OpenExplorer
 	private static final int REQ_SPLASH = 7;
 	public static final int VIEW_LIST = 0;
 	public static final int VIEW_GRID = 1;
-	public static final int VIEW_CAROUSEL = Build.VERSION.SDK_INT > 11 ? 2 : 1;
+	public static final int VIEW_CAROUSEL = 2;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	public static boolean USE_ACTION_BAR = false;
@@ -699,7 +699,7 @@ public class OpenExplorer
 			openOptionsMenu();
 		//showMenu(R.menu.main_menu_top);
 	}
-	public void showMenu(int menuId, final View from)
+	public boolean showMenu(int menuId, final View from)
 	{
 		Logger.LogVerbose("showMenu(0x" + Integer.toHexString(menuId) + "," + (from != null ? from.toString() : "NULL") + ")");
 		//if(mMenuPopup == null)
@@ -713,13 +713,16 @@ public class OpenExplorer
 			{
 				from.setOnCreateContextMenuListener(this);
 				if(from.showContextMenu())
-					return;
+					return true;
 				if(showContextMenu(R.menu.menu_sort_flat, findViewById(R.id.title_menu)) != null)
-					return;
+					return true;
 			}
-			showContextMenu(R.menu.menu_sort_flat, from);
+			if(showContextMenu(R.menu.menu_sort_flat, from) != null)
+				return true;
+			else if(from != null && from.showContextMenu()) return true;
+			else showToast("Oops");
 		}
-		else if(menuId == R.id.menu_view
+		if(menuId == R.id.menu_view
 				|| menuId == R.menu.menu_view
 				|| menuId == R.menu.menu_view_flat)
 		{
@@ -727,26 +730,32 @@ public class OpenExplorer
 			{
 				from.setOnCreateContextMenuListener(this);
 				if(from.showContextMenu())
-					return;
+					return true;
 				if(showContextMenu(R.menu.menu_view_flat, findViewById(R.id.title_menu)) != null)
-					return;
+					return true;
 			}
-			showContextMenu(R.menu.menu_view_flat, from);
+			if(showContextMenu(R.menu.menu_view_flat, from) != null)
+				return true;
+			else if(from != null && from.showContextMenu()) return true;
+			else showToast("Oops");
 		} else if(menuId == R.menu.text_view)
 		{
 			if(from != null && !USE_SPLIT_ACTION_BAR)
 			{
 				from.setOnCreateContextMenuListener(this);
 				if(from.showContextMenu())
-					return;
+					return true;
 				if(showContextMenu(R.menu.text_view, findViewById(R.id.title_menu)) != null)
-					return;
+					return true;
 			}
-			showContextMenu(R.menu.text_view_flat, from);
+			if(showContextMenu(R.menu.text_view_flat, from) != null)
+				return true;
 		}
 		else if(from != null && !(from instanceof CheckedTextView) && 
-				showContextMenu(menuId, from instanceof CheckedTextView ? null : from) == null)
-			showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
+				showContextMenu(menuId, from instanceof CheckedTextView ? null : from) != null)
+			return true;
+		showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
+		return false;
 	}
 
 	public void showMenu(MenuBuilder menu, final View from)
@@ -2135,7 +2144,7 @@ public class OpenExplorer
 			mToolbarButtons.setTag(f.getClass());
 			if(Build.VERSION.SDK_INT > 10)
 				MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
-			else if(menu.size() > 0)
+			else if(menu.size() > 0 && menu.findItem(R.id.title_menu) instanceof MenuItemImpl)
 			{
 				MenuItemImpl item = (MenuItemImpl)menu.findItem(R.id.title_menu);
 				if(item != null)
@@ -2178,6 +2187,12 @@ public class OpenExplorer
 	public boolean onCreateOptionsMenu(Menu menu) {
 		if(menu != null)
 			menu.clear();
+		else return false;
+		if(BEFORE_HONEYCOMB)
+		{
+			getSelectedFragment().onCreateOptionsMenu(menu, getMenuInflater());
+			
+		}
 		//Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -2364,18 +2379,18 @@ public class OpenExplorer
 				
 			case R.id.menu_sort:
 				//if(!USE_ACTION_BAR)
-					showMenu(from instanceof MenuItem ? R.menu.menu_sort : R.menu.menu_sort_flat, from);
-				return true;
+				return showMenu(from instanceof MenuItem ? R.menu.menu_sort : R.menu.menu_sort_flat, from);
 				
 			case R.id.menu_view:
 				//if(BEFORE_HONEYCOMB)
 				//	showMenu(item.getSubMenu(), from);
 				//if(!USE_ACTION_BAR)
-				if(getSelectedFragment() instanceof ContentFragment)
-					showMenu(from instanceof MenuItem ? R.menu.menu_view : R.menu.menu_view_flat, from);
-				else if(getSelectedFragment() instanceof TextEditorFragment)
-					showMenu(from instanceof MenuItem ? R.menu.text_view : R.menu.text_view_flat, from);
-				return true;
+				OpenFragment f = getSelectedFragment();
+				if(f instanceof ContentFragment)
+					return showMenu(from instanceof MenuItem ? R.menu.menu_view : R.menu.menu_view_flat, from);
+				else if(f instanceof TextEditorFragment)
+					return showMenu(from instanceof MenuItem ? R.menu.text_view : R.menu.text_view_flat, from);
+				else return false;
 				
 			case R.id.menu_view_grid:
 				changeViewMode(OpenExplorer.VIEW_GRID, true);
@@ -2417,10 +2432,10 @@ public class OpenExplorer
 					if(findViewById(R.id.frag_log) != null)
 					{
 						findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
-						OpenFragment f = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
-						if(f == null || !(f instanceof LogViewerFragment))
+						OpenFragment lf = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
+						if(lf == null || !(lf instanceof LogViewerFragment))
 							fragmentManager.beginTransaction()
-								.replace(R.id.frag_log, f).commit();
+								.replace(R.id.frag_log, lf).commit();
 					} else {
 						mViewPagerAdapter.add(mLogFragment);
 						mViewPager.setAdapter(mViewPagerAdapter);
@@ -2529,20 +2544,20 @@ public class OpenExplorer
 				return true;
 				
 			default:
-				OpenFragment f = getSelectedFragment();
-				if(f instanceof ContentFragment)
+				OpenFragment sf = getSelectedFragment();
+				if(sf instanceof ContentFragment)
 				{
-					if(!((ContentFragment)f).onContextItemSelected(item) &&
-						!((ContentFragment)f).onOptionsItemSelected(item))
-					return ((ContentFragment)f).executeMenu(id, getDirContentFragment(false).getPath());
+					if(!((ContentFragment)sf).onContextItemSelected(item) &&
+						!((ContentFragment)sf).onOptionsItemSelected(item))
+					return ((ContentFragment)sf).executeMenu(id, getDirContentFragment(false).getPath());
 				}
-				else if(f instanceof TextEditorFragment)
-					((TextEditorFragment)f).onClick(id);
-				else if(f.onOptionsItemSelected(item)) return true;
-				return true;
+				else if(sf instanceof TextEditorFragment)
+					((TextEditorFragment)sf).onClick(id);
+				else if(sf.onOptionsItemSelected(item)) return true;
 		}
 		
-		return true;
+		showToast("oops");
+		return false;
 		//return super.onOptionsItemSelected(item);
 	}
 	
@@ -2843,6 +2858,11 @@ public class OpenExplorer
 			//if(!addToStack && path.getPath().equals("/")) return;
 			//if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
+		if(BEFORE_HONEYCOMB && newView == VIEW_CAROUSEL)
+		{
+			setSetting(path, "view", VIEW_LIST);
+			newView = VIEW_LIST;
+		}
 		//boolean isNew = !mLastPath.equals(path);
 		int oldView = getSetting(mLastPath, "view", 0);
 		

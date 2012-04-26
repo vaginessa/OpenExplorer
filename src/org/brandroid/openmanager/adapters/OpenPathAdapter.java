@@ -47,12 +47,7 @@ public class OpenPathAdapter extends BaseAdapter
 
 	@Override
 	public OpenPath getItem(int position) {
-		try {
-			return mPath.getChild(position);
-		} catch (IOException e) {
-			Logger.LogError("Error getting OpenPathAdapter.getItem(" + position + ")", e);
-			return null;
-		}
+		return mPath.getChild(position);
 	}
 
 	@Override

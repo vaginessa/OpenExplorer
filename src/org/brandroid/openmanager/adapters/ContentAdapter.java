@@ -161,7 +161,7 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		
 		if(mIcon != null)
 		{
-			mIcon.invalidate();
+			//mIcon.invalidate();
 			if(file.isHidden())
 				mIcon.setAlpha(100);
 			else
@@ -188,15 +188,27 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 				}
 			} else { //if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath())) {
 				//Logger.LogDebug("Bitmapping " + file.getPath());
+				//if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
 				ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight,
 					new OnUpdateImageListener() {
-						public void updateImage(Bitmap b) {
+						public void updateImage(final Bitmap b) {
 							//if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
 							{
-								BitmapDrawable d = new BitmapDrawable(getResources(), b);
-								d.setGravity(Gravity.CENTER);
-								ImageUtils.fadeToDrawable(mIcon, d);
-								mIcon.setTag(file.getPath());
+								Runnable doit = new Runnable(){public void run(){
+									if(!OpenExplorer.BEFORE_HONEYCOMB)
+									{
+										BitmapDrawable d = new BitmapDrawable(getResources(), b);
+										d.setGravity(Gravity.CENTER);
+										ImageUtils.fadeToDrawable(mIcon, d);
+									} else {
+										mIcon.setImageBitmap(b);
+										//mIcon.setAlpha(255);
+									}
+									mIcon.setTag(file.getPath());
+								}};
+								if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+									mIcon.post(doit);
+								else doit.run();
 							}
 						}
 					});

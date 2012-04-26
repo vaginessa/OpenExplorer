@@ -48,7 +48,11 @@ public class IconContextMenu
     
     public static MenuBuilder newMenu(Context context, int menuId) {
     	MenuBuilder menu = new MenuBuilder(context);
-    	new MenuInflater(context).inflate(menuId, menu);
+    	try {
+    		new MenuInflater(context).inflate(menuId, menu);
+    	} catch(ClassCastException e) {
+    		return null;
+    	}
     	return menu;
     }
 
