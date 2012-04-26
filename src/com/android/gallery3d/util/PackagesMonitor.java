@@ -1,4 +1,4 @@
-package org.brandroid.openmanager.util;
+package com.android.gallery3d.util;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
