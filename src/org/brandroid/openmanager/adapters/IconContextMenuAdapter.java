@@ -20,7 +20,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
     private MenuBuilder myMenu;
     private boolean hasIcons = false;
     private boolean hasChecks = false;
-    private int textLayoutId = android.R.layout.simple_list_item_multiple_choice;
+    private int textLayoutId = R.layout.simple_list_item_multiple_choice;
     
     public IconContextMenuAdapter(Context context, Menu menu) {
 		this.context = context;
@@ -76,14 +76,9 @@ public class IconContextMenuAdapter extends BaseAdapter {
     //@Override
     public View getView(int position, View convertView, ViewGroup parent) {
         MenuItem item = getItem(position);
-        //if(item == null)
-        //	return convertView;
-        TextView res = (TextView)convertView;
-        //if (res == null) {
-       		res = (TextView)LayoutInflater.from(context).inflate(
+        TextView res = (TextView)LayoutInflater.from(context).inflate(
        				textLayoutId
        				, parent, false);
-        //}
         
         if(!item.isVisible())
         	res.setVisibility(View.GONE);

@@ -105,7 +105,7 @@ public class ContentFragment extends OpenFragment
 	
 	protected Integer mViewMode = null;
 	
-	private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
+	//private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 	
 	public interface OnPathChangeListener
 	{
@@ -142,7 +142,9 @@ public class ContentFragment extends OpenFragment
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
 		ContentFragment ret = new ContentFragment(path, mode);
-		Bundle args = new Bundle();
+		Bundle args = ret.getArguments();
+		if(args == null)
+			args = new Bundle();
 		args.putString("last", path.getPath());
 		ret.setArguments(args);
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
@@ -150,24 +152,14 @@ public class ContentFragment extends OpenFragment
 	}
 	public static ContentFragment getInstance(OpenPath path)
 	{
-		if(instances == null)
-			instances = new Hashtable<OpenPath, ContentFragment>();
-		if(path == null)
-		{
-			Logger.LogWarning("Why is path null?");
-			return new ContentFragment();
-		}
-		if(!instances.containsKey(path))
-		{
-			ContentFragment ret = new ContentFragment(path);
-			Bundle args = new Bundle();
-			args.putString("last", path.getPath());
-			ret.setArguments(args);
-			//return ret;
-			instances.put(path, ret);
-		}
+		ContentFragment ret = new ContentFragment(path);
+		Bundle args = ret.getArguments();
+		if(args == null)
+			args = new Bundle();
+		args.putString("last", path.getPath());
+		ret.setArguments(args);
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
-		return instances.get(path);
+		return ret;
 	}
 
 	public static void cancelAllTasks()
@@ -463,6 +455,8 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
+		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
+		menu.clear();
 		inflater.inflate(R.menu.main_menu, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
@@ -519,6 +513,8 @@ public class ContentFragment extends OpenFragment
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 		
+		MenuUtils.setMenuChecked(menu, mFoldersFirst, R.id.menu_sort_folders_first);
+		
 		switch(getSorting())
 		{
 		case ALPHA:
@@ -543,8 +539,6 @@ public class ContentFragment extends OpenFragment
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
 			break;
 		}
-		
-		MenuUtils.setMenuChecked(menu, mFoldersFirst, R.id.menu_sort_folders_first);
 		
 		if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
 			menu.findItem(R.id.menu_multi).setIcon(null);
@@ -650,6 +644,7 @@ public class ContentFragment extends OpenFragment
 			((ViewGroup)getView()).addView(mGrid);
 			setupGridView();
 		}
+		mGrid.invalidateViews();
 		mViewMode = getViewMode();
 		if(getExplorer() == null) return;
 		//mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
@@ -799,7 +794,10 @@ public class ContentFragment extends OpenFragment
 			}
 		}
 		
-		mData2.clear();
+		if(mData2 == null)
+			mData2 = new ArrayList<OpenPath>();
+		else
+			mData2.clear();
 		
 		int folder_index = 0;
 		if(items != null)

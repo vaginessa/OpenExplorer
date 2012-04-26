@@ -35,6 +35,7 @@ public class OpenCursor extends OpenPath
 	{
 		mListener = listener;
 	}
+	public boolean hasListener() { return mListener != null; }
 	
 	public boolean isLoaded() { return loaded; }
 	
@@ -66,6 +67,7 @@ public class OpenCursor extends OpenPath
 			mListener.updateBookmarkText("(" + mChildren.length + ")");
 		Logger.LogInfo(getName() + " found " + mChildren.length);
 		loaded = true;
+		c.close();
 	}
 
 	@Override
