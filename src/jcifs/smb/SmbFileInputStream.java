@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
-import jcifs.util.transport.TransportException;
+import jcifs.util.TransportException;
 
 /**
  * This InputStream can read bytes from a file on an SMB file server. Offsets are 64 bits.

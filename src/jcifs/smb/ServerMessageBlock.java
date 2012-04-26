@@ -18,16 +18,12 @@
 
 package jcifs.smb;
 
-import jcifs.Config;
-import java.io.InputStream;
-import java.io.PushbackInputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Calendar;
 import java.util.Date;
 import jcifs.util.Hexdump;
 import jcifs.util.LogStream;
-import jcifs.util.transport.*;
+import jcifs.util.Request;
+import jcifs.util.Response;
 
 public abstract class ServerMessageBlock extends Response implements Request, SmbConstants {
 

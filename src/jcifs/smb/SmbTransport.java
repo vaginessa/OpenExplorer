@@ -26,7 +26,6 @@ import java.util.*;
 import jcifs.*;
 import jcifs.netbios.*;
 import jcifs.util.*;
-import jcifs.util.transport.*;
 import jcifs.dcerpc.*;
 import jcifs.dcerpc.msrpc.*;
 
