@@ -300,12 +300,11 @@ public class OpenFile extends OpenPath
 	public OpenFile[] listFiles(boolean grandPeek) {
 		if(mChildren == null)
 		{
+			mChildren = getOpenPaths(mFile.listFiles());
 			if(!grandPeek)
 			{
-				mChildren = getOpenPaths(mFile.listFiles());
 				//Logger.LogDebug(mFile.getPath() + " has " + mChildren.length + " children");
-			} else
-				mChildren = listFilesNative(mFile);
+			} //else mChildren = listFilesNative(mFile);
 			if((mChildren == null || mChildren.length == 0) && isDirectory())
 			{
 				if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
