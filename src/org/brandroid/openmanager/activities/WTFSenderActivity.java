@@ -43,7 +43,7 @@ public class WTFSenderActivity extends Activity
 		findViewById(R.id.wtf_preview).setOnClickListener(this);
 		findViewById(R.id.wtf_remember).setOnClickListener(this);
 		findViewById(R.id.wtf_report).setVisibility(View.GONE);
-		prefs.setSetting("global", "prefs_autowtf", true);
+		prefs.setSetting("global", "pref_autowtf", true);
 		crashFile = Logger.getCrashFile();
 		/*if(crashFile != null && crashFile.exists())
 		{
