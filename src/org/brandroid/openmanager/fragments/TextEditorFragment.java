@@ -31,6 +31,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
@@ -103,7 +104,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		mViewListAdapter = new LinesAdapter(activity, mData != null ? mData.split("\n") : new String[]{});
+		mViewListAdapter = new LinesAdapter(activity, new String[]{});
 	}
 
 	private void setPath(String path)
@@ -146,6 +147,7 @@ public class TextEditorFragment extends OpenFragment
 		if(mPath == null && bundle != null && bundle.containsKey("edit_path"))
 		{
 			String path = bundle.getString("edit_path");
+			mData = null;
 			if(path.startsWith("content://"))
 				mPath = new OpenContent(Uri.parse(path), getActivity());
 			else
@@ -156,7 +158,7 @@ public class TextEditorFragment extends OpenFragment
 					mPath = new OpenFile(path);
 				}
 			Logger.LogDebug("load text editor (" + path + ")");
-			if(bundle.containsKey("edit_data"))
+			if(mData == null && bundle.containsKey("edit_data"))
 				mData = bundle.getString("edit_data");
 			if(bundle.containsKey("edit_server"))
 			{
@@ -261,11 +263,11 @@ public class TextEditorFragment extends OpenFragment
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		setEditable(mEditMode);
-		if(savedInstanceState != null && savedInstanceState.containsKey("edit_data"))
+		if(mData == null && savedInstanceState != null && savedInstanceState.containsKey("edit_data") && (mPath == null || mPath.getPath().equals(savedInstanceState.get("edit_path"))))
 			mData = savedInstanceState.getString("edit_data");
 		if(mPath != null && mData == null)
 		{
-			mData = getString(R.string.s_status_loading);
+			//mData = getString(R.string.s_status_loading);
 			if(mPath instanceof OpenFile)
 			{
 				//new Thread(new Runnable() {public void run() {
@@ -316,6 +318,12 @@ public class TextEditorFragment extends OpenFragment
 	}
 	
 	@Override
+	public void setInitialSavedState(SavedState state) {
+		super.setInitialSavedState(state);
+		Logger.LogInfo("setInitialSavedState @ TextEditor (" + mPath.getPath() + ")");
+	}
+	
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
@@ -356,7 +364,8 @@ public class TextEditorFragment extends OpenFragment
 				}});
 		} else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
 			getFragmentManager().popBackStack();
-		else getActivity().finish();
+		else if(getActivity() != null)
+			getActivity().finish();
 	}
 	
 	public void cancelTask() {
@@ -373,30 +382,37 @@ public class TextEditorFragment extends OpenFragment
 		onClickItem(id);
 	}
 	public boolean onClickItem(int id) {
+		Context c = getActivity();
 		switch(id)
 		{
 		case R.id.menu_context_info:
-			DialogHandler.showFileInfo(getExplorer(), getPath());
+			if(c != null)
+				DialogHandler.showFileInfo(c, getPath());
 			return true;
 		case R.id.menu_save:
 			doSave();
 			return true;
 			
 		case R.id.menu_view_font_large:
-			setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_large));
+			if(c != null)
+				setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_large));
 			return true;
 		case R.id.menu_view_font_medium:
-			setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_medium));
+			if(c != null)
+				setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_medium));
 			return true;
 		case R.id.menu_view_font_small:
-			setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_small));
+			if(c != null)
+				setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_small));
 			return true;
 			
 		case R.id.menu_close:
 			doClose();
 			return true;
 		case R.id.menu_view:
-			View from = getView().findViewById(id);
+			View from = null; 
+			if(c != null)
+				from = getView().findViewById(id);
 			showMenu(R.menu.text_view, from);
 			return true;
 			
@@ -629,7 +645,7 @@ public class TextEditorFragment extends OpenFragment
 		if(mDirty)
 			ret.setSpan(new StyleSpan(Typeface.ITALIC), 0, ret.length(), 0);
 		//ret.setSpan(new ImageSpan(getActivity(), R.drawable.ic_menu_save), 0, 1, 0);
-		Logger.LogDebug("TextEditorFragment.getTitle() = " + ret.toString());
+		//Logger.LogDebug("TextEditorFragment.getTitle() = " + ret.toString());
 		return ret;
 	}
 	
