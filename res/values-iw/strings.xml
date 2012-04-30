@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="s_menu_more">אפשרויות נוספות</string>
+    <string name="s_menu_delete_all">מחק הכל</string>
+    <string name="s_menu_move_all">העבר לכאן</string>
+    <string name="s_menu_copy_all">העתק לכאן</string>
+    <string name="s_menu_refresh">רענן תיקיה</string>
+    <string name="s_menu_exit">יציאה</string>
+</resources>

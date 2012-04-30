@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="s_menu_favorites">ブックマークに追加</string>
+    <string name="s_menu_sort">並び替え</string>
+    <string name="s_menu_sort_name_asc">名前で並び替え(昇順)</string>
+    <string name="s_menu_sort_name_desc">名前で並び替え(降順)</string>
+</resources>

@@ -7,37 +7,37 @@
     <string name="s_downloads" auto="1">Downloads</string>
     <string name="s_external" auto="1">Extern</string>
     <string name="s_internal" auto="1">Intern</string>
-    <string name="s_view">Ansehen </string>
-    <string name="s_bookmarks">Lesezeichen </string>
-    <string name="s_menu_favorites" auto="1">Toggle Bookmarks</string>
+    <string name="s_view">Ansehen</string>
+    <string name="s_bookmarks">Lesezeichen</string>
+    <string name="s_menu_favorites">Lesezeichen durchblättern</string>
     <string name="s_menu_sort">Sortieren </string>
     <string name="s_menu_sort_name_asc" auto="1">Sortieren nach Name (A-Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">Sortieren nach Name (Z-A)</string>
     <string name="s_menu_sort_date_asc" auto="1">Sortieren nach Neueste</string>
     <string name="s_menu_sort_date_desc" auto="1">Sortieren nach Älteste</string>
     <string name="s_menu_sort_size_asc" auto="1">Sortieren nach Größte</string>
-    <string name="s_menu_sort_size_desc" auto="1">Sortieren nach Smallest</string>
+    <string name="s_menu_sort_size_desc">Sortieren nach Kleinste</string>
     <string name="s_menu_sort_type" auto="1">Sortieren nach Dateityp</string>
-    <string name="s_menu_multi" auto="1">Multi-Select</string>
-    <string name="s_menu_grid" auto="1">Grid View</string>
-    <string name="s_menu_list" auto="1">List View</string>
+    <string name="s_menu_multi">Mehrfachauswahl</string>
+    <string name="s_menu_grid">Rasteransicht</string>
+    <string name="s_menu_list">Listenansicht</string>
     <string name="s_menu_carousel" auto="1">Karussell</string>
     <string name="s_menu_hidden" auto="1">Versteckte Dateien anzeigen</string>
-    <string name="s_menu_thumbs" auto="1">Show Image Thumbnails</string>
+    <string name="s_menu_thumbs">Miniaturbilder anzeigen</string>
     <string name="s_menu_new_folder" auto="1">Neuer Ordner</string>
     <string name="s_menu_other" auto="1">Andere Einstellungen</string>
-    <string name="s_menu_flush" auto="1">Flush Cache</string>
+    <string name="s_menu_flush">Speicher löschen</string>
     <string name="s_menu_root">Root </string>
     <string name="s_menu_prefs_folder">Ordner Einstellungen</string>
     <string name="s_menu_prefs_global" auto="1">Globale Einstellungen</string>
     <string name="s_menu_info" auto="1">Info</string>
-    <string name="s_menu_copy" auto="1">Kopie</string>
+    <string name="s_menu_copy">Kopieren</string>
     <string name="s_menu_cut">Ausschneiden</string>
     <string name="s_menu_paste">Einfügen </string>
     <string name="s_menu_delete" auto="1">Löschen</string>
-    <string name="s_menu_share" auto="1">Senden / Share ...</string>
+    <string name="s_menu_share">Senden / Teilen ...</string>
     <string name="s_menu_zip" auto="1">Zip-Datei (en) ...</string>
-    <string name="s_menu_unzip" auto="1">Entpacken Sie ...</string>
+    <string name="s_menu_unzip">Entpacke ...</string>
     <string name="s_menu_rename" auto="1">Umbenennen ...</string>
     <string name="s_menu_bookmark" auto="1">Lesezeichen hinzufügen</string>
     <string name="s_save">Speichern </string>
@@ -53,19 +53,19 @@
     <string name="s_pref_thumbs" auto="1">Show Image Thumbnails</string>
     <string name="s_pref_thumbs_summary" auto="1">Zeigen Sie eine Vorschau für Bild / Video / App-Dateien</string>
     <string name="s_pref_view" auto="1">Ansichtsmodus</string>
-    <string name="s_pref_view_summary" auto="1">Anzeige von Dateien in einem Raster, Liste oder Karussell (Honeycomb nur)</string>
+    <string name="s_pref_view_summary">Anzeige von Dateien in einem Raster, Liste oder Karussell (nur Honeycomb)</string>
     <string name="s_pref_sort" auto="1">Sortierung</string>
     <string name="s_pref_sort_summary" auto="1">Wählen Sie, wie Sie Dateien und Ordner sortieren</string>
     <string name="s_pref_advanced" auto="1">Fortgeschritten</string>
     <string name="s_pref_server_name" auto="1">Server-Namen</string>
-    <string name="s_pref_server_name_summary" auto="1">Geben Sie Server-Name</string>
+    <string name="s_pref_server_name_summary">Geben Sie den Server-Namen ein</string>
     <string name="s_pref_server_url" auto="1">Server URL</string>
-    <string name="s_pref_server_url_summary" auto="1">Geben Sie die vollständige URL des Servers</string>
+    <string name="s_pref_server_url_summary">Geben Sie die vollständige URL des Servers ein</string>
     <string name="s_pref_server_host" auto="1">Server-Host</string>
     <string name="s_pref_server_user" auto="1">Benutzer</string>
     <string name="s_pref_server_user_summary" auto="1">Benutzername</string>
     <string name="s_pref_server_password" auto="1">Kennwort</string>
-    <string name="s_pref_server_password_summary" auto="1">Login Passwort</string>
+    <string name="s_pref_server_password_summary">Login Kennwort</string>
     <string name="s_pref_server_path" auto="1">Unterverzeichnis</string>
     <string name="s_pref_server_path_summary" auto="1">Geben Sie Standard-Login-Pfad</string>
     <string name="s_pref_server_extras" auto="1">Weitere Einstellungen</string>
@@ -86,10 +86,10 @@
     <string name="s_title_zipping" auto="1">Zipping</string>
     <string name="s_title_unzipping" auto="1">Entpacken</string>
     <string name="s_title_wait" auto="1">Bitte warten ...</string>
-    <string name="s_alert_confirm_delete" auto="1">Löschen%skann nicht rückgängig gemacht werden. Sind Sie sicher, dass Sie den Vorgang fortsetzen?</string>
+    <string name="s_alert_confirm_delete" auto="1">Löschen %s kann nicht rückgängig gemacht werden. Sind Sie sicher, dass Sie den Vorgang fortsetzen?</string>
     <string name="s_alert_rename" auto="1">Bitte geben Sie den neuen Namen dieser Datei</string>
     <string name="s_alert_newfolder" auto="1">Geben Sie den Namen des Ordners, den Sie erstellen möchten.</string>
-    <string name="s_alert_unzip" auto="1">Möchten Sie%shier oder einem anderen Ordner entpacken?</string>
+    <string name="s_alert_unzip" auto="1">Möchten Sie %s hier oder einem anderen Ordner entpacken?</string>
     <string name="s_button_unzip_here" auto="1">Entpacken Sie hier</string>
     <string name="s_button_unzip_else" auto="1">Entpacken Sie woanders ...</string>
     <string name="s_msg_none" auto="1">Datei (en) konnte nicht</string>
@@ -235,8 +235,8 @@
     <string name="s_wtf_context" auto="1">Bitte beschreiben Kontext der Crash:</string>
     <string name="thanks" auto="1">Vielen Dank!</string>
     <string name="menu_view_font_small" auto="1">Schriftgröße Klein</string>
-    <string name="menu_view_font_medium" auto="1">Schriftgröße Medium</string>
-    <string name="menu_view_font_large" auto="1">Schriftgröße große</string>
+    <string name="menu_view_font_medium">Schriftgröße Mittel</string>
+    <string name="menu_view_font_large">Schriftgröße Groß</string>
     <string name="app_description" auto="1">Öffnen Sie den Explorer - Open-Source-Dateimanager für alle Geräte! (Tabletten, Handys, Google-TVs, Sandwiches!) \n-Complete-Dateisystem Management \n-USB, SD-und andere externe Medien \n-Netzwerk anschließbar (FTP, SFTP, SMB / Samba / Windows / LAN / WIFI) \n - Text-Editor \n-Smart Folders, dass Scan für verschiedene Arten von Medien (Videos, Fotos, Musik, Downloads) \n-View Pager-Verzeichnis-Navigation (Swipe rechts hinauf ein Verzeichnis) \n-Superuser / Root Fähigkeit zur Liste / lesen Systemordner (kein System noch schreiben) \n \nFeatures zu kommen: \n-Tabbed-Text-Editor \n-Mehr Netzwerkfähigkeit (Dropbox, Box.net, Sky-Laufwerk) \n-Offline-Cache-Datei-Struktur, werden sich erinnern, welche Dateien Sie haben an verschiedenen Orten, ohne dass eine Verbindung herstellen \n-Speicherplatz Heat Map zeigt, wo Ihre größten Dateien sind \n \n * HINWEIS: Diese App ist im Beta Stadium. Es gibt noch viele Bugs. Wenn Sie nicht möchten, dass diese Fehler auftreten, bitte nicht herunterladen Diese App. Wenn Sie möchten, mir zu helfen, diese Fehler zu finden, mailen Sie mich an oder kooperieren mit mir auf GitHub (https://github.com/BrandoCommando/OpenExplorer/). Bitte denken Sie daran schlechten Ratings helfen, niemand.</string>
     <string name="alert_translate_google" auto="1">Hallo, dies ist eine Übersetzung von Google Translate zur Verfügung gestellt. Wenn Sie Englisch als auch %s wissen, und möchte in eine bessere Übersetzung zu helfen, klicken Sie bitte auf diesen Button:</string>
     <string name="alert_translate_none" auto="1">Hallo, scheint es, dass Sie mit einer nicht unterstützten Sprache. Weißt du, Englisch und %s? Wenn Sie möchten Sie bei der Bereitstellung einer richtigen Übersetzung zu helfen, bitte hier klicken:</string>

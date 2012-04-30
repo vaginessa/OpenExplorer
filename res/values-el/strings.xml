@@ -58,7 +58,7 @@
     <string name="s_pref_sort_summary">Επιλέξετε προβολή αρχείων και φακελων </string>
     <string name="s_pref_advanced">Προηγμένα </string>
     <string name="s_pref_server_name">Όνομα διακομιστή </string>
-    <string name="s_pref_server_name_summary">Πληκτρογηστε το ονομα του διακομιστη</string>
+    <string name="s_pref_server_name_summary">Πληκτρογηστε το ονομα του διακομιστή </string>
     <string name="s_pref_server_url">URL διακομιστή </string>
     <string name="s_pref_server_url_summary">Πληκτρολογηστε το πλήρες URL του διακομιστή </string>
     <string name="s_pref_server_host">Διεύθυνση διακομιστή </string>
@@ -150,6 +150,7 @@
     <string name="s_pref_fullscreen_summary_off">Προβολή μπάρας πληροφόρησης </string>
     <string name="s_pref_pagers">Προβολή δεικτών </string>
     <string name="s_pref_pagers_summary_on">Οριζόντιο </string>
+    <string name="s_pref_pagers_summary_off">Το οριζόντιο συρσιμο είναι απενεργοποιημενο</string>
     <string name="s_alert_new_media">Προστέθηκε νέο μέσο! </string>
     <string name="s_warn_pager_title">Νέα λειτουργία: προβολή δεικτών </string>
     <string name="s_warn_pager">Σύρετε από αριστερά προς τα δεξιά για να πάτε ψηλότερα στους φακέλους και δεξιά προς τα αριστερά για επιστροφή στον προηγούμενο φάκελο.Δοκιμάστε το (σε εξωτερικό μέσο αποθήκευσης)!</string>
@@ -177,6 +178,8 @@
     <string name="s_prompt_unzip">Εισάγετε το φάκελο που θα γίνει η αποσυμπίεση </string>
     <string name="s_pref_hardware_accel">Ενεργοποιηστε την επιταχυνση υλικού </string>
     <string name="s_pref_honeyplus">Ρυθμίσεις για Android 3.0+ </string>
+    <string name="s_pref_actionmode">Προβολή ενέργειας </string>
+    <string name="s_pref_actionmode_enabled">Χρησιμοποιηστε την προβολή ενέργειας </string>
     <string name="s_pref_actionmode_disabled">Χρησιμοποιησε κλασσικό μενού </string>
     <string name="s_server_smb">SMB/Windows</string>
     <string name="s_bookmark_drives">Δίσκοι </string>
@@ -210,10 +213,14 @@
     <string name="s_search_files">Αναζήτηση στο σύστημα αρχείων </string>
     <string name="s_menu_exit">Έξοδος </string>
     <string name="s_warn_wtf_message">Ωπ! Εμφανίστηκε ένα απρόσμενο σφάλμα! Αυτό είναι σύνηθες σε πολλές εφαρμογές που βρίσκονται σε στάδιο εξέλιξης, ο μόνος τρόπος απασφαλματωσης είναι η λήψη αναφορών από διαφορετικές συσκευές, όπως και η δική σας, για να μπορέσουμε να διορθώσουμε το πρόβλημα.Θα θέλατε να αποστείλετε μια αναφορά του προβληματος,χωρίς να συμπεριλαμβανονται προσωπικές πληροφορίες,στον προγραμματιστη της εφαρμογής;</string>
+    <string name="s_warn_wtf_ps">***Παρακαλώ σημειώστε ότι αυτή η εφαρμογή είναι ακόμη σε στάδιο εξέλιξης.Μην αφήνετε αρνητικές βαθμολογίες λόγω του οτι δεν είναι σταθερή.Αν σας ενοχλεί απλά διαγράψτε τη.</string>
     <string name="s_yes">Ναι </string>
     <string name="s_no">Όχι </string>
     <string name="s_wtf_preview">Πρόβαλε την αναφορά </string>
     <string name="s_wtf_remember">Να μην ερωτηθείτε ξανά </string>
+    <string name="s_pref_basebar">Διαχωρισμός μπάρας ενεργειών </string>
+    <string name="s_pref_basebar_on">Πλήκτρα ενεργειών στο πάνω μέρος της οθόνης σε προβολή πορτραίτου</string>
+    <string name="s_pref_basebar_off">Πλήκτρα ενεργειών στο πάνω μέρος της οθόνης. (όπου αυτό είναι δυνατό)</string>
     <string name="s_pref_autowtf">Αυτόματη αποστολή αναφοράς σφαλματων</string>
     <string name="s_pref_autowtf_summary">Όταν συμβαίνει αναπάντεχο σφαλμα στείλε την αναφορά αυτόματα.</string>
     <string name="s_split_auto">Αυτόματο </string>
@@ -230,6 +237,7 @@
     <string name="menu_view_font_small">Μικρή γραμματοσειρα</string>
     <string name="menu_view_font_medium">Μεσαία γραμματοσειρα </string>
     <string name="menu_view_font_large">Μεγάλη γραματοσειρα </string>
+    <string name="alert_translate_google">Γειά σας, αυτή η μετάφραση έγινε από το Google Translate.Αν γνωρίζετε Αγγλικά και %s , και θέλετε να βοηθήσετε στη μετάφραση, παρακαλώ πατήστε εδώ:</string>
     <string name="alert_translate_none">Γειά σας,φαίνεται πως χρησιμοποιεί μια γλώσσα που δεν υποστηρίζετε.Μιλάτε Αγγλικά και %s; θα θέλατε να βοηθήσετε στο να δώσετε μια σωστή μετάφραση; Αν ναι κανέτε κλικ εδώ:</string>
     <string name="button_translate">Μετάφραση </string>
 </resources>

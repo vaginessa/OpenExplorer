@@ -9,6 +9,7 @@
     <string name="s_internal">Intern</string>
     <string name="s_view">Weergave</string>
     <string name="s_bookmarks">Bladwijzers</string>
+    <string name="s_menu_favorites">Wissel bladwijzers</string>
     <string name="s_menu_sort">Sorteren</string>
     <string name="s_menu_sort_name_asc">Sorteer op naam (A-Z)</string>
     <string name="s_menu_sort_name_desc">Sorteer op naam (Z-A)</string>
@@ -99,4 +100,23 @@
     <string name="s_remove">Gerwijderd</string>
     <string name="s_eject">Uitgeworpen</string>
     <string name="s_update">Geupdatet</string>
+    <string name="s_menu_about">Over</string>
+    <string name="s_about_version">versie</string>
+    <string name="s_about_author">auteur</string>
+    <string name="s_about_site">website</string>
+    <string name="s_about_email">e-mail</string>
+    <string name="s_about_recent">recente updates</string>
+    <string name="s_chooser_email">verstuur feedback</string>
+    <string name="s_status_loading">laden...</string>
+    <string name="s_menu_open">Openen met...</string>
+    <string name="s_menu_edit">Bewerk met...</string>
+    <string name="s_menu_root_disabled">Root uitgeschakeld</string>
+    <string name="s_text_intro_body">Kies je startscherm</string>
+    <string name="s_menu_more">Meer opties</string>
+    <string name="s_menu_delete_all">Wis Alles</string>
+    <string name="s_menu_move_all">Verplaats naar hier</string>
+    <string name="s_menu_copy_all">kopieer hier</string>
+    <string name="s_menu_up">ga omhoog</string>
+    <string name="s_menu_refresh">vernieuwen</string>
+    <string name="s_menu_exit">stoppen</string>
 </resources>
