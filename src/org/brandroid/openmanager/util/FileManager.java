@@ -314,25 +314,20 @@ public class FileManager {
 	 * @param newName
 	 * @return
 	 */
-	public int renameTarget(String filePath, String newName) {
+	public boolean renameTarget(String filePath, String newName) {
 		File src = new File(filePath);
-		String ext = "";
 		File dest;
 		
-		if(src.isFile())
-			/*get file extension*/
-			ext = filePath.substring(filePath.lastIndexOf("."), filePath.length());
-		
 		if(newName.length() < 1)
-			return -1;
+			return false;
 	
 		String temp = filePath.substring(0, filePath.lastIndexOf("/"));
 		
-		dest = new File(temp + "/" + newName + ext);
+		dest = new File(temp + "/" + newName);
 		if(src.renameTo(dest))
-			return 0;
+			return true;
 		else
-			return -1;
+			return false;
 	}
 	
 	/**
