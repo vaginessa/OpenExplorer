@@ -490,7 +490,7 @@ public abstract class OpenFragment
 				return true;
 				
 			case R.id.menu_context_rename:
-				getHandler().renameFile(file.getPath(), true, getActivity());
+				getHandler().renameFile(file, true, getActivity());
 				finishMode(mode);
 				return true;
 				

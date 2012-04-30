@@ -518,7 +518,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		int addStrId = iServersIndex >= 0 ? R.string.s_update : R.string.s_add;
 		final AlertDialog dialog = new AlertDialog.Builder(getExplorer())
 			.setView(v)
-			.setIcon(mHolder != null && mHolder.getIcon() != null ? mHolder.getIcon() : getExplorer().getResources().getDrawable(R.drawable.sm_ftp))
+			.setIcon(mHolder != null && mHolder.getIcon(getExplorer()) != null ? mHolder.getIcon(getExplorer()) : getExplorer().getResources().getDrawable(R.drawable.sm_ftp))
 			.setNegativeButton(getExplorer().getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
@@ -571,7 +571,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		
 		final InputDialog builder = new InputDialog(getExplorer())
 			.setTitle(R.string.s_title_bookmark_prefix)
-			.setIcon(mHolder != null ? mHolder.getIcon() : null)
+			.setIcon(mHolder != null ? mHolder.getIcon(getExplorer()) : null)
 			.setDefaultText(getPathTitle(mPath))
 			.setMessage(R.string.s_alert_bookmark_rename)
 			.setNeutralButton(removeId, new DialogInterface.OnClickListener() {

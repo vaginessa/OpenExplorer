@@ -170,22 +170,7 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 				mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(), getContext(), mWidth > 72));
 			else if(!mShowThumbnails||!file.hasThumbnail())
 			{
-				if(file.isDirectory())
-				{
-					boolean bCountHidden = false;// !getExplorer().getSetting(file, "hide", true);
-					try {
-						if(!file.requiresThread() && file.getChildCount(bCountHidden) > 0)
-							mIcon.setImageDrawable(getResources().getDrawable(mWidth > 72 ? R.drawable.lg_folder_full : R.drawable.sm_folder_full));
-						else if(!file.requiresThread())
-							mIcon.setImageDrawable(getResources().getDrawable(mWidth > 72 ? R.drawable.lg_folder : R.drawable.sm_folder));
-						else
-							mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-					} catch (Exception e) {
-						mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-					}
-				} else {
-					mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-				}
+				mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
 			} else { //if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath())) {
 				//Logger.LogDebug("Bitmapping " + file.getPath());
 				//if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);

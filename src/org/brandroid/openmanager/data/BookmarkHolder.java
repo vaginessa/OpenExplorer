@@ -25,6 +25,7 @@ import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
 //import org.brandroid.utils.Logger;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -154,12 +155,12 @@ public class BookmarkHolder {
 	}*/
 	//public void cancelTask() { if(mTask!=null) mTask.cancel(true); }
 	
-	public Drawable getIcon() {
+	public Drawable getIcon(Context context) {
 		if(getIconView() != null && getIconView().getDrawable() != null)
 			return getIconView().getDrawable();
-		if(getOpenPath() != null)
+		if(mIcon != null && getOpenPath() != null)
 		{
-			Bitmap bmp = ThumbnailCreator.getThumbnailCache(mIcon.getContext(), getOpenPath(), ContentFragment.mListImageSize, ContentFragment.mListImageSize);
+			Bitmap bmp = ThumbnailCreator.getThumbnailCache(context, getOpenPath(), ContentFragment.mListImageSize, ContentFragment.mListImageSize);
 			if(bmp != null)
 				return new BitmapDrawable(bmp);
 		}

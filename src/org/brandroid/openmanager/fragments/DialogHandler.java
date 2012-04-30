@@ -648,6 +648,7 @@ public class DialogHandler extends DialogFragment {
 
 
 	public static void showFileInfo(final Context mContext, final OpenPath path) {
+		try {
 		new AlertDialog.Builder(mContext)
 			.setView(createFileInfoDialog((LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE), path))
 			.setTitle(path.getName())
@@ -656,6 +657,9 @@ public class DialogHandler extends DialogFragment {
 							.get()))
 			.create()
 			.show();
+		} catch(Exception e) {
+			Logger.LogError("Couldn't show File Info.", e);
+		}
 		//DialogHandler dialogInfo = DialogHandler.newDialog(DialogHandler.DialogType.FILEINFO_DIALOG, this);
 		//dialogInfo.setFilePath(path.getPath());
 		//dialogInfo.show(fragmentManager, "info");

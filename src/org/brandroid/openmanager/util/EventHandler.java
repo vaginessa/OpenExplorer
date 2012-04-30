@@ -216,46 +216,30 @@ public class EventHandler {
 		alert.show();
 	}
 	
-	public void renameFile(final String path, boolean isFolder, Context mContext) {
-		LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View view = inflater.inflate(R.layout.input_dialog_layout, null);
-		String name = path.substring(path.lastIndexOf("/") + 1, path.length());
-		
-		final EditText text = (EditText)view.findViewById(R.id.dialog_input);	
-		TextView msg = (TextView)view.findViewById(R.id.dialog_message);
-		msg.setText(getResourceString(mContext, R.string.s_alert_rename));
-		
-		if(!isFolder) {
-			TextView type = (TextView)view.findViewById(R.id.dialog_ext);
-			type.setVisibility(View.VISIBLE);
-			type.setText(path.substring(path.lastIndexOf("."), path.length()));
-		}
-		
-		new AlertDialog.Builder(mContext)
-			.setPositiveButton(getResourceString(mContext, R.string.s_menu_rename), new OnClickListener() {
+	public void renameFile(final OpenPath path, boolean isFolder, Context mContext) {
+		final InputDialog dRename = new InputDialog(mContext)
+			.setIcon(R.drawable.ic_rename)
+			.setTitle(R.string.s_menu_rename)
+			.setCancelable(true)
+			.setMessage(R.string.s_alert_rename)
+			.setDefaultText(path.getName());
+		dRename
+			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					String name = text.getText().toString();
-					
-					if(name.length() > 0) {
-						mFileMang.renameTarget(path, name);
-						if(mThreadListener != null)
+					if(dRename.getInputText().toString().length() > 0)
+					{
+						if(mFileMang.renameTarget(path.getPath(), dRename.getInputText().toString())
+							&& mThreadListener != null)
 							mThreadListener.onWorkerThreadComplete(RENAME_TYPE, null);
-					} else {
-						dialog.dismiss();
-					}
+					} else dialog.dismiss();
 				}
 			})
-			.setNegativeButton(getResourceString(mContext, R.string.s_cancel), new OnClickListener() {
+			.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
 			})
-			.setView(view)
-			.setTitle(getResourceString(mContext, R.string.s_menu_rename) + " " + name)
-			.setCancelable(false)
-			.setIcon(R.drawable.ic_rename)
-			.create()
-			.show();
+			.create().show();
 	}
 
 	/**

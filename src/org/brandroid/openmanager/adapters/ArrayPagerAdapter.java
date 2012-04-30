@@ -239,7 +239,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		int ret = 0;
 		for (int i = getCount() - 1; i >= 0; i--) {
 			OpenFragment f = getItem(i);
-			if (f.getClass().equals(c))
+			if (f == null || f.getClass() == null || (f.getClass().equals(c)))
 				mFrags.remove(i);
 		}
 		notifyDataSetChanged();
@@ -252,6 +252,14 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 
 	public List<OpenFragment> getFragments() {
 		return mFrags;
+	}
+	
+	public List<OpenFragment> getNonContentFragments() {
+		ArrayList<OpenFragment> ret = new ArrayList<OpenFragment>();
+		for(OpenFragment f : mFrags)
+			if(f != null && !(f instanceof ContentFragment))
+				ret.add(f);
+		return ret;
 	}
 
 	public void set(int index, OpenFragment frag) {
@@ -288,5 +296,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			mFrags.add(newFrag);
 		else
 			mFrags.set(pos, newFrag);
+	}
+
+	public void add(List<OpenFragment> newFrags) {
+		for(OpenFragment f : newFrags)
+			mFrags.add(f);
 	}
 }

@@ -655,15 +655,15 @@ public class OpenExplorer
 	private void setCurrentItem(final int page, final boolean smooth)
 	{
 		try {
-			if(!Thread.currentThread().equals(UiThread))
+			//if(!Thread.currentThread().equals(UiThread))
 				mViewPager.post(new Runnable() {
 					public void run() {
 						if(mViewPager.getCurrentItem() != page)
 							mViewPager.setCurrentItem(page, smooth);
 					}
 				});
-			else if(mViewPager.getCurrentItem() != page)
-				mViewPager.setCurrentItem(page, smooth);
+			//else if(mViewPager.getCurrentItem() != page)
+			//	mViewPager.setCurrentItem(page, smooth);
 		} catch(Exception e) {
 			Logger.LogError("Couldn't set ViewPager page to " + page, e);
 		}
@@ -2173,7 +2173,7 @@ public class OpenExplorer
 					tbl.setVisibility(View.GONE);
 				else tbl.setStretchAllColumns(true);
 			}
-		} else Logger.LogWarning("No Base Row!?");
+		} else if(BEFORE_HONEYCOMB) Logger.LogWarning("No Base Row!?");
 	}
 	
 	private boolean checkArray(int needle, int[] hayStack) {
@@ -2852,8 +2852,7 @@ public class OpenExplorer
 			mLastPath = getDirContentFragment(false).getPath();
 		if(!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
 			force = true;
-		if(!BEFORE_HONEYCOMB)
-			force = true;
+		//if(!BEFORE_HONEYCOMB) force = true;
 		//if(!force)
 			//if(!addToStack && path.getPath().equals("/")) return;
 			//if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
@@ -2915,7 +2914,9 @@ public class OpenExplorer
 				int common = 0;
 				if(force)
 				{
+					List<OpenFragment> nonContent = mViewPagerAdapter.getNonContentFragments();
 					mViewPagerAdapter.clear();
+					mViewPagerAdapter.add(nonContent);
 				} else {
 					for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 					{
@@ -2939,7 +2940,7 @@ public class OpenExplorer
 				OpenFragment f = newView == VIEW_CAROUSEL ?
 						new CarouselFragment(path) :
 						ContentFragment.getInstance(path, newView);
-				if(common == 0)
+				if(common < 0)
 					mViewPagerAdapter.add(f);
 				else
 					mViewPagerAdapter.add(common, f);
@@ -2960,7 +2961,7 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				final int index = mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, force);
+				setViewPageAdapter(mViewPagerAdapter, force || !BEFORE_HONEYCOMB);
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				setCurrentItem(index, true);
