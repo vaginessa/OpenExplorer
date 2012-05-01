@@ -227,6 +227,7 @@ public class ContentFragment extends OpenFragment
 		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || mPath.getPath().equals(mBundle.getString("last"))))
 		{
 			String last = mBundle.getString("last");
+			Logger.LogDebug("Unbundling " + last);
 			if(last.startsWith("content://"))
 				mPath = new OpenContent(Uri.parse(last), getApplicationContext());
 			else if(last.startsWith("/"))
@@ -575,6 +576,7 @@ public class ContentFragment extends OpenFragment
 		
 	}
 	
+	/*
 	@Override
 	public void setInitialSavedState(SavedState state) {
 		super.setInitialSavedState(state);
@@ -585,6 +587,7 @@ public class ContentFragment extends OpenFragment
 		
 		Logger.LogVerbose("setInitialSavedState :: " + state.toString());
 	}
+	*/
 	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {

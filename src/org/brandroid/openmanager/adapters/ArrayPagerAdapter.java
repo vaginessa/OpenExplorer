@@ -1,6 +1,9 @@
 package org.brandroid.openmanager.adapters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.brandroid.openmanager.data.OpenFile;
@@ -67,6 +70,21 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	@Override
+	public void notifyDataSetChanged() {
+		Collections.sort(mFrags, new Comparator<OpenFragment>() {
+			@Override
+			public int compare(OpenFragment a, OpenFragment b) {
+				if(b instanceof ContentFragment && !(a instanceof ContentFragment)) return 1;
+				if(a instanceof ContentFragment && !(b instanceof ContentFragment)) return 1;
+				if(!(a instanceof ContentFragment) || !(b instanceof ContentFragment)) return 0;
+				return ((ContentFragment)a).getPath().getDepth() > 
+						((ContentFragment)b).getPath().getDepth() ? 1 : 0;
+			}
+		});
+		super.notifyDataSetChanged();
+	}
+	
+	@Override
 	public Parcelable saveState() {
 		Parcelable psuper = null;
 		try {
@@ -92,12 +110,6 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 	
 	@Override
-	public void destroyItem(ViewGroup container, int position, Object object) {
-		// TODO Auto-generated method stub
-		super.destroyItem(container, position, object);
-	}
-	
-	@Override
 	public void restoreState(Parcelable state, ClassLoader loader) {
 		if(state == null) return;
 		Bundle bundle = null;
@@ -113,6 +125,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		if(bundle.containsKey("super"))
 			super.restoreState(bundle.getParcelable("super"), loader);
 		if(!bundle.containsKey("pages")) return;
+		Logger.LogDebug("ArrayPagerAdapter restore :: " + bundle.getParcelableArray("pages").toString());
 		Parcelable[] items = bundle.getParcelableArray("pages");
 		mFrags.clear();
 		for(int i = 0; i < items.length; i++)
@@ -195,23 +208,32 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			return false;
 		if (frag instanceof OpenPathFragmentInterface
 				&& checkForContentFragmentWithPath(((OpenPathFragmentInterface) frag).getPath()))
+		{
+			Logger.LogInfo("ArrayPagerAdapter already contains Path " + ((ContentFragment)frag).getPath().getPath());
 			return false;
+		}
 		Logger.LogVerbose("MyPagerAdapter Count: " + (getCount() + 1));
 		boolean ret = mFrags.add(frag);
 		notifyDataSetChanged();
 		return ret;
 	}
 
-	public void add(int index, OpenFragment frag) {
+	public synchronized void add(int index, OpenFragment frag) {
 		if (frag == null)
 			return;
 		if (mFrags.contains(frag))
+		{
+			Logger.LogInfo("ArrayPagerAdapter already contains fragment");
 			return;
+		}
 		if (frag instanceof ContentFragment
 				&& checkForContentFragmentWithPath(((ContentFragment) frag)
 						.getPath()))
+		{
+			Logger.LogInfo("ArrayPagerAdapter already contains Path " + ((ContentFragment)frag).getPath().getPath());
 			return;
-		mFrags.remove(frag);
+		}
+		//mFrags.remove(frag);
 		mFrags.add(Math.max(0, Math.min(getCount(), index)), frag);
 		try { notifyDataSetChanged(); }
 		catch(IllegalStateException eew) { Logger.LogWarning("Illegal ArrayPagerAdapter", eew); }
@@ -226,12 +248,16 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		}
 	}
 
-	public boolean remove(OpenFragment frag) {
+	public synchronized boolean remove(OpenFragment frag) {
 		boolean ret = mFrags.remove(frag);
-		notifyDataSetChanged();
+		if(!ret && mFrags.indexOf(frag) > -1)
+		{
+			mFrags.remove(mFrags.indexOf(frag));
+			ret = true;
+		}
 		return ret;
 	}
-	public OpenFragment remove(int index) {
+	public synchronized OpenFragment remove(int index) {
 		return mFrags.remove(index);
 	}
 
@@ -246,7 +272,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return ret;
 	}
 
-	public void clear() {
+	public synchronized void clear() {
 		mFrags.clear();
 	}
 

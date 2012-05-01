@@ -113,6 +113,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -722,7 +724,7 @@ public class OpenExplorer
 			if(showContextMenu(R.menu.menu_sort_flat, from) != null)
 				return true;
 			else if(from != null && from.showContextMenu()) return true;
-			else showToast("Oops");
+			//else showToast("Oops");
 		}
 		if(menuId == R.id.menu_view
 				|| menuId == R.menu.menu_view
@@ -739,7 +741,7 @@ public class OpenExplorer
 			if(showContextMenu(R.menu.menu_view_flat, from) != null)
 				return true;
 			else if(from != null && from.showContextMenu()) return true;
-			else showToast("Oops");
+			//else showToast("Oops");
 		} else if(menuId == R.menu.text_view)
 		{
 			if(from != null && !USE_SPLIT_ACTION_BAR)
@@ -2000,6 +2002,12 @@ public class OpenExplorer
 		//addTab(editor, path.getName(), true);
 	}
 	
+	@Override
+	public void startActivity(Intent intent) {
+		if(handleIntent(intent)) return;
+		super.startActivity(intent);
+	}
+	
 	public void goHome()
 	{
 		Bundle b = new Bundle();
@@ -2558,7 +2566,7 @@ public class OpenExplorer
 				else if(sf.onOptionsItemSelected(item)) return true;
 		}
 		
-		showToast("oops");
+		//showToast("oops");
 		return false;
 		//return super.onOptionsItemSelected(item);
 	}
@@ -2919,6 +2927,7 @@ public class OpenExplorer
 					List<OpenFragment> nonContent = mViewPagerAdapter.getNonContentFragments();
 					mViewPagerAdapter.clear();
 					mViewPagerAdapter.add(nonContent);
+					common = -1;
 				} else {
 					for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 					{
@@ -2963,7 +2972,7 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				final int index = mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, force || !BEFORE_HONEYCOMB);
+				setViewPageAdapter(mViewPagerAdapter, true);
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				setCurrentItem(index, true);
@@ -2990,7 +2999,8 @@ public class OpenExplorer
 					tmp = tmp.getParent();
 					if(tmp == null) break;
 				}
-				mViewPager.setAdapter(mViewPagerAdapter);
+				setViewPageAdapter(mViewPagerAdapter, false);
+				//mViewPager.setAdapter(mViewPagerAdapter);
 				setCurrentItem(path.getDepth() - 1, false);
 			}
 		//}
@@ -3258,13 +3268,16 @@ public class OpenExplorer
 			if(path instanceof OpenCursor)
 				parent = new OpenPathArray(new OpenPath[]{mVideoParent,mPhotoParent,mMusicParent,mDownloadParent});
 			if(parent == null) parent = new OpenPathArray(new OpenPath[]{path});
-			OpenPath.Sorting = SortType.ALPHA;
-			SortedSet<OpenPath> arr = new TreeSet<OpenPath>();
+			ArrayList<OpenPath> arr = new ArrayList<OpenPath>();
 			for(OpenPath kid : parent.list())
 				if((path.equals(kid) || kid.isDirectory()) && !kid.isHidden())
 					arr.add(kid);
-			OpenPath[] siblings = new OpenPath[arr.size()];
-			siblings = arr.toArray(new OpenPath[0]);
+			Collections.sort(arr, new Comparator<OpenPath>() {
+				public int compare(OpenPath a, OpenPath b) {
+					return a.getName().compareTo(b.getName());
+				}
+			});
+			OpenPath[] siblings = arr.toArray(new OpenPath[arr.size()]);
 			ArrayList<OpenPath> siblingArray = new ArrayList<OpenPath>();
 			siblingArray.addAll(arr);
 			OpenPath foster = new OpenPathArray(siblings);
@@ -3295,7 +3308,7 @@ public class OpenExplorer
 					mSiblingPopup.setOnDismissListener(new OnDismissListener() {
 						@Override
 						public void onDismiss() {
-							changePath(path, false);
+							changePath(path, true);
 						}
 					});
 					mSiblingPopup.dismiss();
@@ -3463,7 +3476,8 @@ public class OpenExplorer
 
 	public void removeFragment(OpenFragment frag) {
 		setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
-		mViewPagerAdapter.remove(frag);
+		if(!mViewPagerAdapter.remove(frag))
+			Logger.LogWarning("Unable to remove fragment");
 		setViewPageAdapter(mViewPagerAdapter);
 		refreshContent();
 	}
@@ -3480,6 +3494,7 @@ public class OpenExplorer
 		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
 		final OpenFragment f = getSelectedFragment();
+		if(f == null) return;
 		if(!f.isDetached())
 		{
 			final Drawable d = f.getIcon();

@@ -210,7 +210,7 @@ public class TextEditorFragment extends OpenFragment
 		super.onPrepareOptionsMenu(menu);
 		MenuUtils.setMenuVisible(menu, mPath.canWrite(), R.id.menu_save);
 		MenuUtils.setMenuChecked(menu, mEditMode, R.id.menu_view_keyboard_toggle);
-		if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_medium))
+		if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_large))
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_large, R.id.menu_view_font_medium, R.id.menu_view_font_small);
 		else if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_medium))
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_medium, R.id.menu_view_font_large, R.id.menu_view_font_small);
@@ -641,13 +641,8 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public Drawable getIcon() {
 		if(getActivity() == null) return null;
-		LayerDrawable ld = new LayerDrawable(new Drawable[]{
-			new BitmapDrawable(getResources(),
-				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), false)),
-			new ColorDrawable(R.color.transparent)});
-		if(mDirty)
-			ld.setDrawableByLayerId(1, getResources().getDrawable(R.drawable.ic_menu_save));
-		return ld;
+		return new BitmapDrawable(getResources(),
+				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), false));
 	}
 	@Override
 	public CharSequence getTitle() {

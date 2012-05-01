@@ -124,8 +124,8 @@ public abstract class OpenFragment
 				return;
 			} else if(file.isTextFile() && Preferences.Pref_Text_Internal)
 				getExplorer().editFile(file);
-			else
-				IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal);
+			else if(!IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal))
+				getExplorer().editFile(file);
 		}
 	}
 	

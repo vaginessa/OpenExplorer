@@ -148,7 +148,7 @@ public class ThumbnailCreator extends Thread {
 				
 				if(thumb == null)
 				{
-					//mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
+					mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
 					//ThumbnailTask task = new ThumbnailTask();
 					//ThumbnailStruct struct = new ThumbnailStruct(file, mListener, mWidth, mHeight);
 					//if(mImage.getTag() != null && mImage.getTag() instanceof ThumbnailTask) ((ThumbnailTask)mImage.getTag()).cancel(true);
@@ -221,7 +221,7 @@ public class ThumbnailCreator extends Thread {
 					mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
 				}
 			});
-		} else if(!file.isImageFile() || mImage.getDrawable() == null)
+		} else if(mImage.getDrawable() == null)
 			mImage.setImageDrawable(mContext.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight)));
 		
 		if(file.hasThumbnail())
@@ -405,11 +405,6 @@ public class ThumbnailCreator extends Thread {
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, Context context) { return generateThumb(file, mWidth, mHeight, true, true, context); }
 	public static SoftReference<Bitmap> generateThumb(final OpenPath file, int mWidth, int mHeight, boolean readCache, boolean writeCache, Context mContext)
 	{
-		if(file.isImageFile())
-		{
-			//mWidth *= mContext.getResources().getDimension(R.dimen.one_dp);
-			//mHeight *= mContext.getResources().getDimension(R.dimen.one_dp);
-		}
 		final boolean useLarge = mWidth > 72;
 		//SoftReference<Bitmap> mThumb = null;
 		Bitmap bmp = null;

@@ -11,6 +11,7 @@ import org.brandroid.openmanager.util.OpenIntentChooser.IntentSelectedListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
@@ -72,8 +73,8 @@ public class IntentManager
 		return ret;
 	}
 
-	public static boolean startIntent(OpenPath file, Context activity) { return startIntent(file, activity, Preferences.Pref_Intents_Internal); } 
-	public static boolean startIntent(final OpenPath file, final Context activity, boolean bInnerChooser)
+	public static boolean startIntent(OpenPath file, Activity activity) { return startIntent(file, activity, Preferences.Pref_Intents_Internal); } 
+	public static boolean startIntent(final OpenPath file, final Activity activity, boolean bInnerChooser)
 	{
 		if(!isIntentAvailable(file, activity))
 		{
@@ -119,6 +120,7 @@ public class IntentManager
 								}
 								//Intent activityIntent = new Intent();
 								intent.setClassName(packInfo != null ? packInfo.packageName : item.activityInfo.packageName, item.activityInfo.name);
+								
 								//intent.setData(file.getUri());
 								//intent.setType(file.ge)
 								activity.startActivity(intent);
