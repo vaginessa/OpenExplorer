@@ -18,12 +18,7 @@
 
 package org.brandroid.openmanager.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Stack;
 import java.io.File;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -31,18 +26,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import jcifs.smb.SmbAuthException;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
-
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -52,19 +42,11 @@ import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.data.OpenStack;
-import org.brandroid.openmanager.ftp.FTPManager;
-import org.brandroid.openmanager.ftp.FTPFileComparer;
-import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 
-import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.UserInfo;
 
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 
 /**

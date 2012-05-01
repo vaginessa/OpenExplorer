@@ -17,6 +17,7 @@
 	<item
 		android:id="@+id/menu_view_carousel"
 		android:checkable="true"
+		android:visible="false"
 		android:title="@string/s_menu_carousel" />
 	<item
 		android:id="@+id/menu_view_hidden"

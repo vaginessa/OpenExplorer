@@ -1,4 +1,4 @@
-package org.brandroid.openmanager.ftp;
+package org.brandroid.openmanager.data;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +15,6 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
-import org.brandroid.openmanager.data.OpenFTP;
-import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;

@@ -136,6 +136,7 @@ import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
+import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -155,7 +156,6 @@ import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
-import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
@@ -202,6 +202,7 @@ public class OpenExplorer
 	public static final int VIEW_CAROUSEL = 2;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
+	public static final boolean CAN_DO_CAROUSEL = false;
 	public static boolean USE_ACTION_BAR = false;
 	public static boolean USE_ACTIONMODE = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
@@ -2035,7 +2036,7 @@ public class OpenExplorer
 		case R.menu.menu_view:
 		case R.id.menu_view:
 			getMenuInflater().inflate(R.menu.menu_view, menu);
-			if(Build.VERSION.SDK_INT < 11 || Build.VERSION.SDK_INT > 13)
+			if(!CAN_DO_CAROUSEL)
 				MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 			break;
 		case R.menu.menu_sort_flat:
@@ -2260,11 +2261,10 @@ public class OpenExplorer
 			}
 		}
 		
-		if(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13)
-		{
+		if(!CAN_DO_CAROUSEL)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
+		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons(menu, false);
-		}
 		
 		return true;
 	}
@@ -2642,7 +2642,12 @@ public class OpenExplorer
 		//win.setContentView(root)
 	}
 	
-	public OpenPath getCurrentPath() { return getDirContentFragment(false).getPath(); }
+	public OpenPath getCurrentPath() {
+		OpenFragment f = getSelectedFragment();
+		if(f instanceof OpenPathFragmentInterface)
+			return ((OpenPathFragmentInterface)f).getPath();
+		return null;
+	}
 	
 	public void changeViewMode(int newView, boolean doSet) {
 		int mViewMode = getSetting(getCurrentPath(), "view", 0);
@@ -2652,8 +2657,8 @@ public class OpenExplorer
 		}
 		//Logger.LogVerbose("Changing view mode to " + newView);
 		int oldView = mViewMode;
-		if(newView == VIEW_CAROUSEL && (BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13))
-			newView = mViewMode == VIEW_LIST ? VIEW_GRID : VIEW_LIST;
+		if(newView == VIEW_CAROUSEL && !CAN_DO_CAROUSEL)
+			newView = oldView;
 		//setViewMode(newView);
 		if(doSet)
 			setSetting(getCurrentPath(), "view", newView);
@@ -2670,10 +2675,12 @@ public class OpenExplorer
 				setViewVisibility(true, false, R.id.content_frag);
 				changePath(getCurrentPath(), false);
 			}
-			getDirContentFragment(true).onViewChanged(newView);
+			ContentFragment cf = getDirContentFragment(true);
+			if(cf != null)
+				cf.onViewChanged(newView);
 			if(!BEFORE_HONEYCOMB)
 				invalidateOptionsMenu();
-		} else if(newView == VIEW_CAROUSEL && oldView != VIEW_CAROUSEL && !(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13))
+		} else if(newView == VIEW_CAROUSEL && oldView != VIEW_CAROUSEL && CAN_DO_CAROUSEL)
 		{
  			Logger.LogDebug("Switching to carousel!");
 			if(mViewPagerEnabled)
@@ -2688,7 +2695,7 @@ public class OpenExplorer
 				.setBreadCrumbTitle(path.getPath())
 				.commit();
 			updateTitle(path.getPath());
-		} else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && !(BEFORE_HONEYCOMB || Build.VERSION.SDK_INT > 13)) { // if we need to transition from carousel
+		} else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && CAN_DO_CAROUSEL) { // if we need to transition from carousel
 			Logger.LogDebug("Switching from carousel!");
 			if(mViewPagerEnabled)
 			{
@@ -2868,7 +2875,7 @@ public class OpenExplorer
 			//if(!addToStack && path.getPath().equals("/")) return;
 			//if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
 		int newView = getSetting(path, "view", 0);
-		if(BEFORE_HONEYCOMB && newView == VIEW_CAROUSEL)
+		if(!CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL)
 		{
 			setSetting(path, "view", VIEW_LIST);
 			newView = VIEW_LIST;
@@ -2946,7 +2953,7 @@ public class OpenExplorer
 				//mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
-				OpenFragment f = newView == VIEW_CAROUSEL ?
+				OpenFragment f = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
 						new CarouselFragment(path) :
 						ContentFragment.getInstance(path, newView);
 				if(common < 0)
@@ -2975,7 +2982,7 @@ public class OpenExplorer
 				mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
-				setCurrentItem(index, true);
+				setCurrentItem(index, addToStack);
 				//updatePagerTitle(index);
 			} else {
 				OpenPath commonBase = null;

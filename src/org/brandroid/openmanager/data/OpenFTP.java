@@ -18,7 +18,6 @@ import jcifs.smb.SmbFile;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.ftp.FTPManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.SimpleUserInfo;
@@ -410,5 +409,39 @@ public class OpenFTP extends OpenNetworkPath
 	public boolean isConnected() throws IOException {
 		if(mManager == null) return false;
 		return mManager.isConnected();
+	}
+	
+	@Override
+	public boolean copyFrom(OpenFile f, NetworkListener l) {
+		try {
+			connect();
+			boolean ret = mManager.getClient().remoteStore(f.getPath());
+			if(!ret)
+				throw new IOException("Unable to download from FTP.");
+			if(l != null)
+				l.OnNetworkCopyFinished(this, f);
+			return ret;
+		} catch(Exception e) {
+			if(l != null)
+				l.OnNetworkFailure(this, f, e);
+			return false;
+		}
+	}
+	@Override
+	public boolean copyTo(OpenFile f, NetworkListener l) {
+
+		try {
+			connect();
+			boolean ret = mManager.getClient().remoteRetrieve(f.getPath());
+			if(!ret)
+				throw new IOException("Unable to upload to FTP.");
+			if(l != null)
+				l.OnNetworkCopyFinished(this, f);
+			return ret;
+		} catch(Exception e) {
+			if(l != null)
+				l.OnNetworkFailure(this, f, e);
+			return false;
+		}
 	}
 }

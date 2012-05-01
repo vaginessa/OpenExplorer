@@ -16,6 +16,7 @@
 			android:title="@string/s_menu_list" />
 		<item
 			android:id="@+id/menu_view_carousel"
+			android:visible="false"
 			android:title="@string/s_menu_carousel" />
 	</group>
 	<item

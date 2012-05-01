@@ -21,6 +21,13 @@ public abstract class OpenNetworkPath extends OpenPath
 	public static int Timeout = 20000;
 	protected String mName = null;
 	
+	public interface NetworkListener
+	{
+		public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest);
+		public void OnNetworkCopyUpdate(int... progress);
+		public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e);
+	}
+	
 	@Override
 	public Boolean requiresThread() {
 		return true;
@@ -33,6 +40,9 @@ public abstract class OpenNetworkPath extends OpenPath
 	public void disconnect() {
 		Logger.LogVerbose("Disconnecting OpenNetworkPath");
 	}
+	
+	public boolean copyFrom(OpenFile f, NetworkListener l) { return false; }
+	public boolean copyTo(OpenFile f, NetworkListener l) { return false; }
 	
 	public abstract boolean isConnected() throws IOException;
 

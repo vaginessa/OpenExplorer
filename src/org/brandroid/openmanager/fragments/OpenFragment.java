@@ -177,7 +177,7 @@ public abstract class OpenFragment
 	
 	@Override
 	public void setHasOptionsMenu(boolean hasMenu) {
-		if(Build.VERSION.SDK_INT > 13)
+		if(!OpenExplorer.BEFORE_HONEYCOMB)
 			super.setHasOptionsMenu(hasMenu);
 		mHasOptions = hasMenu;
 	}
