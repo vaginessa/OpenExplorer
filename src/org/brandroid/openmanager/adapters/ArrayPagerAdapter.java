@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -36,7 +38,7 @@ import android.view.View.OnLongClickListener;
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider {
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
-	private List<OpenFragment> mFrags = new ArrayList<OpenFragment>();
+	private ArrayList<OpenFragment> mFrags = new ArrayList<OpenFragment>();
 	private OnPageTitleClickListener mListener = null;
 
 	public ArrayPagerAdapter(FragmentManager fm) {
@@ -55,7 +57,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	@Override
 	public OpenFragment getItem(int pos) {
-		if(pos < getCount())
+		if(pos < getCount() && pos >= 0)
 			return mFrags.get(pos);
 		else return null;
 	}
@@ -69,18 +71,19 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return mFrags.size();
 	}
 	
-	@Override
-	public void notifyDataSetChanged() {
+	public synchronized void sort()
+	{
 		Collections.sort(mFrags, new Comparator<OpenFragment>() {
 			@Override
 			public int compare(OpenFragment a, OpenFragment b) {
-				if(b instanceof ContentFragment && !(a instanceof ContentFragment)) return 1;
-				if(a instanceof ContentFragment && !(b instanceof ContentFragment)) return 1;
-				if(!(a instanceof ContentFragment) || !(b instanceof ContentFragment)) return 0;
-				return ((ContentFragment)a).getPath().getDepth() > 
-						((ContentFragment)b).getPath().getDepth() ? 1 : 0;
+				return a.compareTo(b);
 			}
 		});
+	}
+	
+	@Override
+	public void notifyDataSetChanged() {
+		sort();
 		super.notifyDataSetChanged();
 	}
 	
@@ -288,10 +291,11 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return ret;
 	}
 
-	public void set(int index, OpenFragment frag) {
+	public synchronized void set(int index, OpenFragment frag) {
 		if(index < getCount())
 			mFrags.set(index, frag);
 		else mFrags.add(frag);
+		notifyDataSetChanged();
 	}
 
 	public int getLastPositionOfType(Class class1) {
@@ -316,7 +320,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return true;
 	}
 
-	public void replace(OpenFragment old, OpenFragment newFrag) {
+	public synchronized void replace(OpenFragment old, OpenFragment newFrag) {
 		int pos = getItemPosition(old);
 		if(pos == -1)
 			mFrags.add(newFrag);

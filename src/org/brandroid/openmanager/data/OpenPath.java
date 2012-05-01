@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
@@ -312,29 +313,18 @@ public abstract class OpenPath
 		return parent.list();
 	}
 	
-	public OpenPath[] getAncestors(boolean zeroCurrent)
+	public List<OpenPath> getAncestors(boolean andSelf)
 	{
-		OpenPath[] ret = new OpenPath[getDepth()];
+		ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
 		OpenPath tmp = this;
-		int i = 0;
+		if(!andSelf)
+			tmp = tmp.getParent();
 		while(tmp != null)
 		{
-			i++;
-			ret[zeroCurrent ? i - 1 : ret.length - i] = tmp;
+			ret.add(tmp);
 			tmp = tmp.getParent();
 		}
 		return ret;
-	}
-	public OpenPath getCommonDenominator(OpenPath other)
-	{
-		OpenPath[] myAncestors = getAncestors(true);
-		for(int i = 0; i < myAncestors.length; i++)
-		{
-			OpenPath mine = myAncestors[i];
-			if(other.getPath().contains(mine.getPath()))
-				return mine;
-		}
-		return null;
 	}
 	
 	

@@ -446,7 +446,8 @@ public class ThumbnailCreator extends Thread {
 		{
 			Boolean valid = false;
 			if ((file instanceof OpenMediaStore || file instanceof OpenCursor)
-					&& (!fails.containsKey(mParent) || fails.get(mParent) < 10))
+					&& (!fails.containsKey(mParent) || fails.get(mParent) < 10)
+					&& !new File(mCacheFilename).exists())
 			{
 				if(!fails.containsKey(mParent))
 					fails.put(mParent, 0);
@@ -579,6 +580,7 @@ public class ThumbnailCreator extends Thread {
 			if(writeCache && !useGeneric) saveThumbnail(mContext, mCacheFilename, bmp);
 			mCacheMap.put(mCacheFilename, bmp);
 		} else {
+			saveThumbnail(mContext, mCacheFilename, null);
 			fails.put(mParent, fails.containsKey(mParent) ? fails.get(mParent) + 1 : 1);
 			rememberFailure(file.getPath());
 		}
@@ -641,7 +643,8 @@ public class ThumbnailCreator extends Thread {
 		FileOutputStream os = null;
 		try {
 			os = mContext.openFileOutput(file, 0);
-			bmp.compress(CompressFormat.JPEG, 98, os);
+			if(bmp != null)
+				bmp.compress(CompressFormat.JPEG, 98, os);
 		} catch(IOException e) {
 			Logger.LogError("Unable to save thumbnail for " + file, e);
 		} finally {

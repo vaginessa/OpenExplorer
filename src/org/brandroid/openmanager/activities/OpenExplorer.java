@@ -2487,6 +2487,7 @@ public class OpenExplorer
 					FileManager.removeOpenCache(content.getPath().getPath());
 					content.getPath().deleteFolderFromDb();
 					content.runUpdateTask(true);
+					changePath(content.getPath(), false, true);
 				}
 				mBookmarks.refresh();
 				return true;
@@ -2647,7 +2648,7 @@ public class OpenExplorer
 		int mViewMode = getSetting(getCurrentPath(), "view", 0);
 		if(mViewMode == newView) {
 			Logger.LogWarning("changeViewMode called unnecessarily! " + newView + " = " + mViewMode);
-			return;
+			//return;
 		}
 		//Logger.LogVerbose("Changing view mode to " + newView);
 		int oldView = mViewMode;
@@ -2899,6 +2900,9 @@ public class OpenExplorer
 			
 			//setViewVisibility(true, false, R.id.content_pager_frame);
 			//setViewVisibility(false, false, R.id.content_frag);
+		
+		List<OpenPath> familyTree = path.getAncestors(false);
+		
 		if(addToStack)
 		{
 			int bsCount = fragmentManager.getBackStackEntryCount();
@@ -2932,16 +2936,10 @@ public class OpenExplorer
 					for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 					{
 						OpenFragment f = mViewPagerAdapter.getItem(i);
-						if(f != null)
-						{
-							if(!(f instanceof ContentFragment)) continue;
-							if((path.getPath()+"/").startsWith(((ContentFragment)f).getPath().getPath()+"/"))
-							{
-								common = i + 1;
-								break;
-							}
-						}
-						mViewPagerAdapter.remove(i);
+						if(f == null || !(f instanceof ContentFragment)) continue;
+						if(!familyTree.contains(((ContentFragment)f).getPath()))
+							mViewPagerAdapter.remove(i);
+						else common++;
 					}
 				}
 				mViewPagerAdapter.notifyDataSetChanged();
@@ -2971,12 +2969,14 @@ public class OpenExplorer
 				}
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
-				final int index = mViewPagerAdapter.getCount() - iNonContentPages - 1;
+				int index = mViewPagerAdapter.getItemPosition(f);
+				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
 				setViewPageAdapter(mViewPagerAdapter, true);
+				mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				setCurrentItem(index, true);
-				updatePagerTitle(index);
+				//updatePagerTitle(index);
 			} else {
 				OpenPath commonBase = null;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)

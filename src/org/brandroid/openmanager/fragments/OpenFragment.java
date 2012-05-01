@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.brandroid.openmanager.R;
@@ -52,6 +53,8 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 public abstract class OpenFragment
 			extends Fragment
 			implements View.OnClickListener, View.OnLongClickListener
+				, Comparable<OpenFragment>
+				, Comparator<OpenFragment>
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
@@ -64,6 +67,22 @@ public abstract class OpenFragment
 	public interface OnFragmentTitleLongClickListener
 	{
 		public boolean onTitleLongClick(View titleView);
+	}
+	
+	@Override
+	public int compareTo(OpenFragment b) {
+		return compare(this, b);
+	}
+	
+	@Override
+	public int compare(OpenFragment a, OpenFragment b) {
+		Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
+		if(b instanceof ContentFragment && !(a instanceof ContentFragment)) return 1;
+		if(a instanceof ContentFragment && !(b instanceof ContentFragment)) return -1;
+		if(!(a instanceof ContentFragment) || !(b instanceof ContentFragment)) return 0;
+		OpenPath pa = ((ContentFragment)a).getPath();
+		OpenPath pb = ((ContentFragment)b).getPath();
+		return pa.getPath().compareTo(pb.getPath());
 	}
 
 	//@Override
