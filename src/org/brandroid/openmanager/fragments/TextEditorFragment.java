@@ -88,17 +88,25 @@ public class TextEditorFragment extends OpenFragment
 	public TextEditorFragment() {
 		if(getArguments() != null && getArguments().containsKey("edit_path"))
 		{
+			Logger.LogDebug("Creating TextEditorFragment @ " + getArguments().getString("edit_path") + " from scratch");
 			setPath(getArguments().getString("edit_path"));
-		}
+		} else Logger.LogWarning("Creating orphan TextEditorFragment");
 	}
+	
 	public TextEditorFragment(OpenPath path)
 	{
 		mPath = path;
+		Logger.LogDebug("Creating TextEditorFragment @ " + mPath + " from path");
 		Bundle b = new Bundle();
 		if(path != null && path.getPath() != null)
 			b.putString("edit_path", path.getPath());
-		setArguments(b);
+		//setArguments(b);
 		setHasOptionsMenu(true);
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
 	}
 	
 	@Override
@@ -132,9 +140,10 @@ public class TextEditorFragment extends OpenFragment
 		{
 			setEditable(false);
 			return true;
+		} else {
+			doClose();
+			return true;
 		}
-		doClose();
-		return super.onBackPressed();
 	}
 	
 	@Override
@@ -314,6 +323,7 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public void onStop() {
+		mData = null;
 		super.onStop();
 	}
 	

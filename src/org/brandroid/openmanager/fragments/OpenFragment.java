@@ -26,6 +26,7 @@ import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -376,6 +377,18 @@ public abstract class OpenFragment
 	}
 	
 	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		Logger.LogDebug("}-- onAttach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		Logger.LogDebug("{-- onDetach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+	}
+	
+	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		if(!isVisible()) return;
 		super.onCreateContextMenu(menu, v, menuInfo);
@@ -394,7 +407,7 @@ public abstract class OpenFragment
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		Logger.LogDebug("OpenFragment.onCreateOptionsMenu");
+		Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 	

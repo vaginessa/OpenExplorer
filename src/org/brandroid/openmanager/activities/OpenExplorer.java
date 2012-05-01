@@ -375,6 +375,8 @@ public class OpenExplorer
 			if(getPreferences().getSetting("global", "pref_root", false) ||
 					Preferences.getPreferences(getApplicationContext(), "global").getBoolean("pref_root", false))
 				RootManager.Default.requestRoot();
+			else if(RootManager.Default.isRoot())
+				RootManager.Default.exitRoot();
 		} catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
 		
 		if(!BEFORE_HONEYCOMB)

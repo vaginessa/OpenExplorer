@@ -448,7 +448,6 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		menu.clear();
 		inflater.inflate(R.menu.main_menu, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
