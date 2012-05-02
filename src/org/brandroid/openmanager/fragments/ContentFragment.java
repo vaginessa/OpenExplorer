@@ -154,7 +154,7 @@ public class ContentFragment extends OpenFragment
 			ret = (ContentFragment) fm.findFragmentByTag(path.getPath());
 		if(ret == null)
 			ret = new ContentFragment(path, mode);
-		if(path instanceof OpenFile) return ret;
+		//if(path instanceof OpenFile) return ret;
 		Bundle args = ret.getArguments();
 		if(args == null)
 			args = new Bundle();
@@ -275,8 +275,11 @@ public class ContentFragment extends OpenFragment
 	}
 	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
-		if(!isVisible()) return;
-		Logger.LogDebug("Refreshing Data for " + mPath.getPath());
+		if(!isVisible()) {
+			Logger.LogDebug("I'm invisible! " + mPath);
+			return;
+		}
+		Logger.LogDebug("Refreshing Data for " + mPath);
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
 		else
@@ -1114,6 +1117,8 @@ public class ContentFragment extends OpenFragment
 	}
 	@Override
 	public CharSequence getTitle() {
+		if(mPath == null)
+			return "???";
 		return mPath.getName() + ((mPath instanceof OpenFile || mPath instanceof OpenNetworkPath) && mPath.isDirectory() && !mPath.getName().endsWith("/") ? "/" : "");
 	}
 	

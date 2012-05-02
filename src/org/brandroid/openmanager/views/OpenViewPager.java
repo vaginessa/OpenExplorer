@@ -70,6 +70,8 @@ public class OpenViewPager extends ViewPager
 		mListeners.add(listener);
 	}
 	
+	public PageIndicator getIndicator() { return mIndicator; }
+	
 	public void setIndicator(PageIndicator indicator)
 	{	
 		if(mIndicator != null && indicator != null && !mIndicator.equals(indicator)) return;

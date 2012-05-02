@@ -1,7 +1,9 @@
 package org.brandroid.utils;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.views.RemoteImageView;
 
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.view.View;
@@ -17,7 +19,8 @@ public class ImageUtils {
 		td.startTransition(100);
 	}
 
-	public static void fadeToDrawable(final ImageView mImage, final Drawable dest)
+	public static void fadeToDrawable(ImageView mImage, Drawable dest) { fadeToDrawable(mImage, dest, 100); }
+	public static void fadeToDrawable(final ImageView mImage, final Drawable dest, final int speed)
 	{
 		/*
 		if(!OpenExplorer.BEFORE_HONEYCOMB)
@@ -30,12 +33,30 @@ public class ImageUtils {
 			ObjectAnimator.ofFloat(dest, "alpha", 0.0f, 1.0f).setDuration(100).start();
 		} else {
 			*/
-			final TransitionDrawable td = new TransitionDrawable(new Drawable[]{mImage.getDrawable(),dest});
+		if(mImage == null) return;
+		Drawable src = mImage.getDrawable();
+		if(src == null)
+		{
+			mImage.post(new Runnable(){public void run() {
+				mImage.setImageDrawable(dest);
+			}});
+			return;
+		} else if (dest == null)
+			return;
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+			mImage.post(new Runnable(){public void run() {
+				mImage.setImageDrawable(dest);
+			}});
+		else {
+			final TransitionDrawable td = new TransitionDrawable(new Drawable[]{
+					src, dest
+					});
 			td.setCrossFadeEnabled(true);
 			mImage.post(new Runnable(){public void run() {
 				mImage.setImageDrawable(td);
 			}});
-			td.startTransition(100);
+			td.startTransition(speed);
+		}
 		//}
 	}
 

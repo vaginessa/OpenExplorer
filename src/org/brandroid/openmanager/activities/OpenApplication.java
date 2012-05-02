@@ -1,9 +1,11 @@
 package org.brandroid.openmanager.activities;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.utils.DiskLruCache;
+import org.brandroid.utils.Logger;
 
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
@@ -85,4 +87,22 @@ public class OpenApplication extends Application implements OpenApp
         }
         return mDownloadCache;
     }
+
+	@Override
+	public synchronized LruCache<String, Bitmap> getMemoryCache() {
+		if(mBitmapCache == null)
+			mBitmapCache = new LruCache<String, Bitmap>(200);
+		return mBitmapCache;
+	}
+
+	@Override
+	public DiskLruCache getDiskCache() {
+		if(mBitmapDiskCache == null)
+			try {
+				mBitmapDiskCache = DiskLruCache.open(getFilesDir(), 1, 10, 200);
+			} catch (IOException e) {
+				Logger.LogError("Couldn't instantiate Disk Cache");
+			}
+		return mBitmapDiskCache;
+	}
 }

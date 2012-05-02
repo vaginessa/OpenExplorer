@@ -1,56 +1,66 @@
 package org.brandroid.openmanager.adapters;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
-import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
-import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
+
+import com.viewpagerindicator.TabPageIndicator;
 import com.viewpagerindicator.TitleProvider;
 import com.viewpagerindicator.TabPageIndicator.TabView;
 
 import android.content.Context;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.Fragment.SavedState;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
 
-public class ArrayPagerAdapter extends FragmentStatePagerAdapter
+public class PagerTabsAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider
 {
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
-	private ArrayList<OpenFragment> mFrags = new ArrayList<OpenFragment>();
+	private ArrayList<TabInfo> mTabs = new ArrayList<TabInfo>();
 	private OnPageTitleClickListener mListener = null;
 	private final ViewPager mViewPager;
 	private final Context mContext;
+	private final TabPageIndicator mTabBar;
+	
+	static final class TabInfo {
+		private final Class<? extends OpenFragment> clss;
+		private final Bundle args;
+		TabInfo(Class<? extends OpenFragment> _class, Bundle _args) {
+			clss = _class;
+			args = _args;
+		}
+		public int compareTo(TabInfo b) {
+			if(args.containsKey("last") && b.args.containsKey("last"))
+			{
+				OpenPath pa = FileManager.getOpenCache(args.getString("last"));
+				OpenPath pb = FileManager.getOpenCache(args.getString("last"));
+				return pa.getPath().compareTo(pb.getPath());
+			}
+			return 0;
+		}
+	}
 
-	public ArrayPagerAdapter(FragmentActivity activity, ViewPager pager) {
+	public PagerTabsAdapter(FragmentActivity activity, ViewPager pager, TabPageIndicator tabBar) {
 		super(activity.getSupportFragmentManager());
 		mViewPager = pager;
 		mContext = activity;
+		mTabBar = tabBar;
 	}
 	
 	public interface OnPageTitleClickListener
@@ -65,25 +75,25 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	@Override
 	public OpenFragment getItem(int pos) {
-		if(pos < getCount() && pos >= 0)
-			return mFrags.get(pos);
-		else return null;
+		if(pos >= getCount() || pos < 0) return null;
+		TabInfo info = mTabs.get(pos);
+		return OpenFragment.instantiate(mContext, info.clss.getName(), info.args);
 	}
 
 	public OpenFragment getLastItem() {
-		return mFrags.get(getCount() - 1);
+		return getItem(getCount() - 1);
 	}
 
 	@Override
 	public int getCount() {
-		return mFrags.size();
+		return mTabs.size();
 	}
 	
 	public synchronized void sort()
 	{
-		Collections.sort(mFrags, new Comparator<OpenFragment>() {
+		Collections.sort(mTabs, new Comparator<TabInfo>() {
 			@Override
-			public int compare(OpenFragment a, OpenFragment b) {
+			public int compare(TabInfo a, TabInfo b) {
 				return a.compareTo(b);
 			}
 		});
@@ -120,6 +130,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return state;
 	}
 	
+	/*
 	@Override
 	public void restoreState(Parcelable state, ClassLoader loader) {
 		if(state == null) return;
@@ -138,7 +149,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		if(!bundle.containsKey("pages")) return;
 		Logger.LogDebug("ArrayPagerAdapter restore :: " + bundle.getParcelableArray("pages").toString());
 		Parcelable[] items = bundle.getParcelableArray("pages");
-		mFrags.clear();
+		mTabs.clear();
 		for(int i = 0; i < items.length; i++)
 			if(items[i] != null && items[i] instanceof OpenPath)
 			{
@@ -149,6 +160,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 					mFrags.add(new TextEditorFragment(path));
 			}
 	}
+	*/
 	
 	@Override
 	public int getItemPosition(Object object) {
@@ -202,109 +214,76 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		*/
 	}
 	
-	public boolean checkForContentFragmentWithPath(OpenPath path) {
-		if(mFrags == null) return false;
-		for (OpenFragment f : mFrags)
-			if (f instanceof OpenPathFragmentInterface
-					&& ((OpenPathFragmentInterface) f).getPath() != null
-					&& ((OpenPathFragmentInterface) f).getPath().equals(path))
-				return true;
-		return false;
+	public List<OpenFragment> getNonContentFragments() {
+		ArrayList<OpenFragment> ret = new ArrayList<OpenFragment>();
+		for(int i = 0; i < getCount(); i++)
+		{
+			OpenFragment f = getItem(i);
+			if(!(f instanceof ContentFragment))
+				ret.add(f);
+		}
+		return ret;
 	}
 
-	public boolean add(OpenFragment frag) {
-		add(getCount() - 1, frag);
+	public boolean add(OpenFragment frag)
+	{
+		return add(frag.getClass(), frag.getArguments());
+	}
+	public void add(int index, OpenFragment frag)
+	{
+		add(index, frag.getClass(), frag.getArguments());
+	}
+	public boolean add(Class<? extends OpenFragment> clss, Bundle args) {
+		add(getCount() - 1, clss, args);
 		return true;
 	}
 	
-	public synchronized void add(int index, OpenFragment frag)
+	public synchronized void add(int index, Class<? extends OpenFragment> clss, Bundle args)
 	{
-		if (frag == null)
+		if(args == null)
+			args = new Bundle();
+		TabInfo info = new TabInfo(clss, args);
+		mTabs.add(info);
+		OpenFragment frag = getItem(index);
+		if(mTabBar != null && frag != null)
 		{
-			Logger.LogWarning("Cannot add null fragment");
-			return;
-		}
-		if (mFrags.contains(frag))
-		{
-			Logger.LogInfo("ArrayPagerAdapter already contains fragment");
-			return;
-		}
-		if (frag instanceof ContentFragment
-				&& checkForContentFragmentWithPath(((ContentFragment) frag)
-						.getPath()))
-		{
-			Logger.LogInfo("ArrayPagerAdapter already contains Path " + ((ContentFragment)frag).getPath().getPath());
-			return;
-		}
-		//mFrags.remove(frag);
-		mFrags.add(Math.max(0, Math.min(getCount(), index)), frag);
-		//try {
-			//notifyDataSetChanged();
-		/*
-		}
-		catch(IllegalStateException eew) { Logger.LogWarning("Illegal ArrayPagerAdapter", eew); }
-		catch(IndexOutOfBoundsException e) {
-			Logger.LogWarning("Recovering Adapter", e);
-			ArrayList<OpenFragment> recoveryArray = new ArrayList<OpenFragment>(mFrags);
-			//recoveryArray.add(Math.max(0, Math.min(getCount() - 1, index)), frag);
-			mFrags.clear();
-			for(OpenFragment f : recoveryArray)
-				mFrags.add(f);
-			notifyDataSetChanged();
-		}*/
-	}
-
-	public boolean remove(OpenFragment frag) {
-		return remove(mFrags.indexOf(frag)) != null;
-	}
-	public synchronized OpenFragment remove(int index) {
-		if(index < 0 || index >= mFrags.size()) return null;
-		OpenFragment frag = mFrags.remove(index);
-		//destroyItem(mViewPager, index, frag);
-		return frag;
-	}
-
-	public int removeOfType(Class c) {
-		int ret = 0;
-		for (int i = getCount() - 1; i >= 0; i--) {
-			OpenFragment f = getItem(i);
-			if (f == null || f.getClass() == null || (f.getClass().equals(c)))
-				remove(i);
+			TabView tab = mTabBar.addTab(frag.getTitle(), index);
+			tab.setTag(info);
 		}
 		notifyDataSetChanged();
+	}
+	
+	public void add(List<OpenFragment> frags)
+	{
+		for(OpenFragment f : frags)
+			add(f);
+	}
+	
+	public OpenFragment remove(int index)
+	{
+		OpenFragment ret = getItem(index);
+		mTabs.remove(index);
 		return ret;
+	}
+	
+	public boolean remove(OpenFragment frag)
+	{
+		for(int i = getCount() - 1; i >= 0; i--)
+		{
+			OpenFragment f = getItem(i);
+			if(f.equals(frag))
+			{
+				remove(i);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public synchronized void clear() {
-		mFrags.clear();
-	}
-
-	public List<OpenFragment> getFragments() {
-		return mFrags;
+		mTabs.clear();
 	}
 	
-	public List<OpenFragment> getNonContentFragments() {
-		ArrayList<OpenFragment> ret = new ArrayList<OpenFragment>();
-		for(OpenFragment f : mFrags)
-			if(f != null && !(f instanceof ContentFragment))
-				ret.add(f);
-		return ret;
-	}
-
-	public synchronized void set(int index, OpenFragment frag) {
-		if(index < getCount())
-			mFrags.set(index, frag);
-		else mFrags.add(frag);
-		notifyDataSetChanged();
-	}
-
-	public int getLastPositionOfType(Class class1) {
-		for(int i = getCount() - 1; i > 0; i--)
-			if(getItem(i).getClass().equals(class1))
-				return i;
-		return 0;
-	}
-
 	@Override
 	public boolean modifyTab(TabView tab, final int position) {
 		if(mListener != null)
@@ -320,16 +299,16 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		return true;
 	}
 
-	public synchronized void replace(OpenFragment old, OpenFragment newFrag) {
-		int pos = getItemPosition(old);
-		if(pos == -1)
-			mFrags.add(newFrag);
-		else
-			mFrags.set(pos, newFrag);
+	public int getLastPositionOfType(Class<? extends OpenFragment> clss) {
+		for(int i = getCount() - 1; i >= 0; i--)
+			if(mTabs.get(i).clss.equals(clss))
+				return i;
+		return -1;
 	}
 
-	public void add(List<OpenFragment> newFrags) {
-		for(OpenFragment f : newFrags)
-			mFrags.add(f);
+	public void set(int index, OpenFragment ret) {
+		if(getCount() > index)
+			mTabs.remove(index);
+		add(index, ret);
 	}
 }
