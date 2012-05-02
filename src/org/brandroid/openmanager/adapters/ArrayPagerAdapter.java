@@ -36,7 +36,8 @@ import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
 
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter
-		implements TitleProvider {
+		implements TitleProvider
+{
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
 	private ArrayList<OpenFragment> mFrags = new ArrayList<OpenFragment>();
 	private OnPageTitleClickListener mListener = null;
@@ -238,7 +239,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		}
 		//mFrags.remove(frag);
 		mFrags.add(Math.max(0, Math.min(getCount(), index)), frag);
-		try { notifyDataSetChanged(); }
+		//try {
+			//notifyDataSetChanged();
+		/*
+		}
 		catch(IllegalStateException eew) { Logger.LogWarning("Illegal ArrayPagerAdapter", eew); }
 		catch(IndexOutOfBoundsException e) {
 			Logger.LogWarning("Recovering Adapter", e);
@@ -248,7 +252,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			for(OpenFragment f : recoveryArray)
 				mFrags.add(f);
 			notifyDataSetChanged();
-		}
+		}*/
 	}
 
 	public synchronized boolean remove(OpenFragment frag) {

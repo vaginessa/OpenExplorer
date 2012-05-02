@@ -741,6 +741,7 @@ public abstract class OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		Logger.LogDebug("<-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 		//CONTENT_FRAGMENT_FREE = false;
+		setRetainInstance(true);
 		super.onCreate(savedInstanceState);
 	}
 

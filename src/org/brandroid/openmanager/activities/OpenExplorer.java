@@ -1116,12 +1116,15 @@ public class OpenExplorer
 	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, false); }
 	private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload)
 	{
+		if(adapter == null) adapter = mViewPager.getAdapter();
 		if(mViewPager != null)
 		{
 			try {
 				if(!adapter.equals(mViewPager.getAdapter()) || reload)
 					mViewPager.setAdapter(adapter);
-				else mViewPager.notifyDataSetChanged();
+				else {
+					mViewPager.notifyDataSetChanged();
+				}
 				return true;
 			} catch(IndexOutOfBoundsException e) {
 				Logger.LogError("Why is this happening?", e);
@@ -2976,12 +2979,12 @@ public class OpenExplorer
 				}
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
-				int index = mViewPagerAdapter.getItemPosition(f);
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, true);
+				setViewPageAdapter(mViewPagerAdapter, false);
 				mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
+				int index = mViewPagerAdapter.getItemPosition(f);
 				setCurrentItem(index, addToStack);
 				//updatePagerTitle(index);
 			} else {

@@ -26,9 +26,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint.Align;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -44,7 +41,6 @@ import android.view.Gravity;
 import android.widget.ImageView;
 
 import java.lang.ref.SoftReference;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.jar.JarEntry;
@@ -69,8 +65,6 @@ import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
-
-import com.android.gallery3d.data.ImageCacheService;
 
 public class ThumbnailCreator extends Thread {
 	//private static HashMap<String, Bitmap> mCacheMap = new HashMap<String, Bitmap>();

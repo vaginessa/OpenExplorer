@@ -57,6 +57,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -144,7 +145,15 @@ public class ContentFragment extends OpenFragment
 	}
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
-		ContentFragment ret = new ContentFragment(path, mode);
+		return getInstance(path, mode, null);
+	}
+	public static ContentFragment getInstance(OpenPath path, int mode, FragmentManager fm)
+	{
+		ContentFragment ret = null;
+		if(fm != null)
+			ret = (ContentFragment) fm.findFragmentByTag(path.getPath());
+		if(ret == null)
+			ret = new ContentFragment(path, mode);
 		if(path instanceof OpenFile) return ret;
 		Bundle args = ret.getArguments();
 		if(args == null)
