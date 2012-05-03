@@ -14,6 +14,7 @@ import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenClipboard;
+import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
@@ -38,6 +39,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.Fragment.InstantiationException;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -69,6 +71,56 @@ public abstract class OpenFragment
 		public boolean onTitleLongClick(View titleView);
 	}
 	
+	public static OpenFragment instantiate(Context context, String fname, Bundle args) {
+        try {
+        	if(fname.endsWith("ContentFragment"))
+        	{
+        		String sPath = args.getString("last");
+        		OpenPath path = null;
+        		if(sPath.startsWith("content://"))
+        			path = new OpenContent(Uri.parse(sPath), context);
+        		else
+        			path = FileManager.getOpenCache(sPath);
+        		ContentFragment ret = ContentFragment.getInstance(path);
+        		return ret;
+        	} else if(fname.endsWith("TextEditorFragment"))
+        	{
+        		String sPath = args.getString("edit_path");
+        		OpenPath path = null;
+        		if(sPath.startsWith("content://"))
+        			path = new OpenContent(Uri.parse(sPath), context);
+        		else
+        			path = FileManager.getOpenCache(sPath);
+        		TextEditorFragment ret = new TextEditorFragment(path);
+        		return ret;
+        	}
+            Class<?> clazz = sClassMap.get(fname);
+            if (clazz == null) {
+                // Class not found in the cache, see if it's real, and try to add it
+                clazz = context.getClassLoader().loadClass(fname);
+                sClassMap.put(fname, clazz);
+            }
+            OpenFragment f = (OpenFragment)clazz.newInstance();
+            if (args != null) {
+                args.setClassLoader(f.getClass().getClassLoader());
+                f.mArguments = args;
+            }
+            return f;
+        } catch (ClassNotFoundException e) {
+            throw new InstantiationException("Unable to instantiate fragment " + fname
+                    + ": make sure class name exists, is public, and has an"
+                    + " empty constructor that is public", e);
+        } catch (java.lang.InstantiationException e) {
+            throw new InstantiationException("Unable to instantiate fragment " + fname
+                    + ": make sure class name exists, is public, and has an"
+                    + " empty constructor that is public", e);
+        } catch (IllegalAccessException e) {
+            throw new InstantiationException("Unable to instantiate fragment " + fname
+                    + ": make sure class name exists, is public, and has an"
+                    + " empty constructor that is public", e);
+        }
+    }
+	
 	@Override
 	public int compareTo(OpenFragment b) {
 		return compare(this, b);
@@ -76,7 +128,7 @@ public abstract class OpenFragment
 	
 	@Override
 	public int compare(OpenFragment a, OpenFragment b) {
-		Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
+		//Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
 		if(b instanceof ContentFragment && !(a instanceof ContentFragment)) return 1;
 		if(a instanceof ContentFragment && !(b instanceof ContentFragment)) return -1;
 		if(!(a instanceof ContentFragment) || !(b instanceof ContentFragment)) return 0;
@@ -152,10 +204,9 @@ public abstract class OpenFragment
 	{
 		Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
 		if(getActivity() == null) return false;
-		MenuBuilder menu = IconContextMenu.newMenu(getActivity(), menuId);
-		if(menu == null) return false;
-		onPrepareOptionsMenu(menu);
-		IconContextMenu mOpenMenu = new IconContextMenu(getActivity(), menu, from, null, null);
+		IconContextMenu mOpenMenu = IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
+		if(mOpenMenu == null) return false;
+		MenuBuilder menu = mOpenMenu.getMenu();
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);

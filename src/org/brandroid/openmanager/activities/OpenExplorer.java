@@ -130,6 +130,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.adapters.PagerTabsAdapter;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
@@ -174,6 +175,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.utils.CustomExceptionHandler;
+import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuBuilder;
@@ -185,6 +187,7 @@ import org.brandroid.utils.SubmitStatsTask;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.PageIndicator;
+import com.viewpagerindicator.TabPageIndicator;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -197,6 +200,7 @@ public class OpenExplorer
 
 	private static final int PREF_CODE =		0x6;
 	private static final int REQ_SPLASH = 7;
+	private static final int REQ_INTENT = 8;
 	public static final int VIEW_LIST = 0;
 	public static final int VIEW_GRID = 1;
 	public static final int VIEW_CAROUSEL = 2;
@@ -223,6 +227,7 @@ public class OpenExplorer
 	//private static long mLastCursorEnsure = 0;
 	private static boolean mRunningCursorEnsure = false;
 	private Boolean mSinglePane = false;
+	private Boolean mStateReady = true;
 	
 	private static OpenFragment mContentFragment = null;
 	private static LogViewerFragment mLogFragment = null;
@@ -693,6 +698,7 @@ public class OpenExplorer
 
 	@Override
 	protected void onNewIntent(Intent intent) {
+		Logger.LogDebug("New Intent! " + intent.toString());
 		setIntent(intent);
 		handleIntent(intent);
 	}
@@ -763,6 +769,9 @@ public class OpenExplorer
 		return false;
 	}
 
+	/*
+	 * This should only be used with the "main" menu
+	 */
 	public void showMenu(MenuBuilder menu, final View from)
 	{
 		if(from != null){
@@ -770,6 +779,7 @@ public class OpenExplorer
 				openOptionsMenu();
 		} else openOptionsMenu();
 	}
+	
 	public IconContextMenu showContextMenu(int menuId, final View from)
 	{
 		try {
@@ -803,12 +813,10 @@ public class OpenExplorer
 			{
 				//IconContextMenu icm1 = new IconContextMenu(getApplicationContext(), menu, from, null, null);
 				//MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
-				MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
-				onPrepareOptionsMenu(menu);
-				mOpenMenu = new IconContextMenu(this, menu, from, null, null);
-				mOpenMenu.setMenu(menu);
+				mOpenMenu = IconContextMenu.getInstance(this, menuId, from, null, null);
+				onPrepareOptionsMenu(mOpenMenu.getMenu());
 				mOpenMenu.setAnchor(from);
-				if(menu.findItem(R.id.menu_context_copy) != null)
+				if(mOpenMenu.getMenu().findItem(R.id.menu_context_copy) != null)
 				{
 					mOpenMenu.setNumColumns(2);
 					//icm.setPopupWidth(getResources().getDimensionPixelSize(R.dimen.popup_width) / 2);
@@ -926,7 +934,7 @@ public class OpenExplorer
 				}
 			if(path == null)
 				path = new OpenFile(intent.getDataString());
-			if(path != null && path.exists() && (path.isTextFile() || path.length() < 500000))
+			if(path != null) // && path.exists() && (path.isTextFile() || path.length() < 500000))
 			{
 				editFile(path);
 				return true;
@@ -942,6 +950,9 @@ public class OpenExplorer
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		if(outState == null) return;
+		mStateReady = false;
+		if(mLogFragment != null)
+			fragmentManager.beginTransaction().remove(mLogFragment).commit();
 		super.onSaveInstanceState(outState);
 		if(mViewPagerAdapter != null)
 		{
@@ -958,6 +969,7 @@ public class OpenExplorer
 	@Override
 	protected void onRestoreInstanceState(Bundle state) {
 		super.onRestoreInstanceState(state);
+		mStateReady = true;
 		if(state != null && state.containsKey("oe_fragments"))
 		{
 			mViewPagerAdapter.restoreState(state, getClassLoader());
@@ -1016,6 +1028,7 @@ public class OpenExplorer
 	private void initPager()
 	{
 		mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
+		TabPageIndicator indicator = null;
 		if(mViewPagerEnabled && mViewPager != null)
 		{
 			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
@@ -1031,9 +1044,11 @@ public class OpenExplorer
 			{
 				Logger.LogError("Couldn't load pager animation.", e);
 			}
-			PageIndicator indicator = (PageIndicator)findViewById(R.id.content_pager_indicator);
+			indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
 			if(indicator != null)
 				mViewPager.setIndicator(indicator);
+			else
+				Logger.LogError("Couldn't find indicator!");
 			//mViewPager = new ViewPager(getApplicationContext());
 			//((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
 			//findViewById(R.id.content_frag).setId(R.id.fake_content_id);
@@ -1047,8 +1062,8 @@ public class OpenExplorer
 		if(mViewPager != null && mViewPagerEnabled)
 		{
 			Logger.LogVerbose("Setting up ViewPager");
-			mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-			mViewPagerAdapter.setOnPageTitleClickListener(this);
+			mViewPagerAdapter = //new PagerTabsAdapter(this, mViewPager, indicator);
+					new ArrayPagerAdapter(this, mViewPager);
 			setViewPageAdapter(mViewPagerAdapter);
 		}
 
@@ -1297,6 +1312,7 @@ public class OpenExplorer
 		//new Thread(new Runnable(){public void run() {refreshCursors();}}).start();;
 		//refreshCursors();
 		mBookmarks.scanBookmarks();
+		mStateReady = true;
 	}
 	
 	/*
@@ -1880,10 +1896,10 @@ public class OpenExplorer
 			if(mViewPagerAdapter != null && mViewPager != null)
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
 		}
-		if(ret == null)
+		if(ret == null && path != null)
 		{
 			ret = ContentFragment.getInstance(path, getSetting(path, "view", 0));
-			if(mViewPager != null)
+			if(mViewPager != null && ret != null)
 			{
 				//if(mViewPagerAdapter instanceof ArrayPagerAdapter)
 					mViewPagerAdapter.set(mViewPager.getCurrentItem(), ret);
@@ -2008,7 +2024,7 @@ public class OpenExplorer
 	
 	@Override
 	public void startActivity(Intent intent) {
-		if(handleIntent(intent)) return;
+		//if(handleIntent(intent)) return;
 		super.startActivity(intent);
 	}
 	
@@ -2793,6 +2809,8 @@ public class OpenExplorer
 						changePath(new OpenFile("/").setRoot(), true);
 				}
 			}
+		} else if (requestCode == REQ_INTENT) {
+			
 		}
 	}
 
@@ -2814,7 +2832,7 @@ public class OpenExplorer
 	
 	@Override
 	public void onBackPressed() {
-		if(getSelectedFragment().onBackPressed())
+		if(mViewPagerAdapter.getCount() > 0 && getSelectedFragment().onBackPressed())
 			return;
 		super.onBackPressed();
 	}
@@ -2924,7 +2942,7 @@ public class OpenExplorer
 				Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? " + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
 			} else
 				Logger.LogVerbose("First changePath to " + path.getPath());
-			if(last == null || !last.equalsIgnoreCase(path.getPath()))
+			if(mStateReady && (last == null || !last.equalsIgnoreCase(path.getPath())))
 			{
 				fragmentManager
 					.beginTransaction()
@@ -2980,12 +2998,14 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, false);
+				setViewPageAdapter(mViewPagerAdapter, true);
 				mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				int index = mViewPagerAdapter.getItemPosition(f);
 				setCurrentItem(index, addToStack);
+				if(f instanceof ContentFragment)
+					((ContentFragment)f).refreshData(null, false);
 				//updatePagerTitle(index);
 			} else {
 				OpenPath commonBase = null;
@@ -3012,6 +3032,7 @@ public class OpenExplorer
 				setViewPageAdapter(mViewPagerAdapter, false);
 				//mViewPager.setAdapter(mViewPagerAdapter);
 				setCurrentItem(path.getDepth() - 1, false);
+				getDirContentFragment(false).refreshData(null, false);
 			}
 		//}
 		//refreshContent();
@@ -3506,16 +3527,7 @@ public class OpenExplorer
 		final OpenFragment f = getSelectedFragment();
 		if(f == null) return;
 		if(!f.isDetached())
-		{
-			final Drawable d = f.getIcon();
-			final ImageView icon = (ImageView)findViewById(R.id.title_icon);
-			if(icon != null && d != null)
-				icon.post(new Runnable() {
-					public void run() {
-						icon.setImageDrawable(d);
-					}
-				});
-		}
+			ImageUtils.fadeToDrawable((ImageView)findViewById(R.id.title_icon), f.getIcon());
 		if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath))
 			((ContentFragment)f).refreshData(null, false);
 	}

@@ -469,6 +469,8 @@ public class FileManager {
 				}
 			} else if(path.startsWith("/"))
 				ret = new OpenFile(path);
+			else if(path.startsWith("file://"))
+				ret = new OpenFile(path.replace("file://", ""));
 			else if(path.equals("Videos"))
 				ret = OpenExplorer.getVideoParent();
 			else if(path.equals("Photos"))

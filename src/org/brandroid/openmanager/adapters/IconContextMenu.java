@@ -4,6 +4,7 @@ import java.util.Hashtable;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuBuilderNew;
@@ -37,7 +38,8 @@ public class IconContextMenu
 	protected View anchor;
 	private int maxColumns = 2;
 	private int mWidth = 0;
-	private static Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>(); 
+	private static final Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>();
+	private static final Hashtable<Integer, Integer> mHeights = new Hashtable<Integer, Integer>();
 	
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
@@ -155,11 +157,29 @@ public class IconContextMenu
 	public void setTitle(int stringId) {
 		popup.setTitle(stringId);
 	}
+	
+	private int getMenuSignature() {
+		return maxColumns * 100 + getAdapter().getCount();
+	}
 
     public boolean show()
     {
     	//popup.showLikeQuickAction();
-    	return popup.showLikePopDownMenu();
+    	final int menuSig = getMenuSignature();
+    	if(mHeights.containsKey(menuSig))
+    	{
+    		Logger.LogDebug("Menu Signature (" + menuSig + ") found = " + mHeights.get(menuSig));
+    		popup.setPopupHeight(mHeights.get(menuSig));
+    	}
+    	popup.setPopupShownListener(new OnPopupShownListener() {
+			@Override
+			public void OnPopupShown(int width, int height) {
+				Logger.LogVerbose("Popup Height: " + height);
+				mHeights.put(menuSig, height);
+			}
+		});
+    	boolean ret = popup.showLikePopDownMenu();
+    	return ret;
     }
     public boolean show(int left, int top)
     {
@@ -191,6 +211,7 @@ public class IconContextMenu
 			View from, View top, View bottom) {
 		if(!mInstances.containsKey(menuId))
 			mInstances.put(menuId, new IconContextMenu(c, menuId, from, top, bottom));
+		else Logger.LogDebug("IContextMenu Instance Height: " + mInstances.get(menuId).popup.getPopupHeight());
 		IconContextMenu ret = mInstances.get(menuId);
 		ret.setAnchor(from);
 		return ret;

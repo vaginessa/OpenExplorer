@@ -21,6 +21,7 @@ import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -142,7 +143,8 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         mTabLayout.addView(tabView, new LinearLayout.LayoutParams(0, LayoutParams.FILL_PARENT, 1));
         return tabView;
     }
-    private TabView addTab(CharSequence text, int index) {
+    
+    public TabView addTab(CharSequence text, int index) {
         //Workaround for not being able to pass a defStyle on pre-3.0
         final TabView tabView = (TabView)mInflater.inflate(R.layout.vpi__tab, null);
         tabView.init(this, text, index);
@@ -236,6 +238,12 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
     @Override
     public void setOnPageChangeListener(OnPageChangeListener listener) {
         mListener = listener;
+    }
+    
+    public interface TabListener {
+        public void onTabSelected(TabView tab, FragmentTransaction ft);
+        public void onTabUnselected(TabView tab, FragmentTransaction ft);
+        public void onTabReselected(TabView tab, FragmentTransaction ft);
     }
 
     public static class TabView extends LinearLayout {

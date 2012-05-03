@@ -330,7 +330,7 @@ public abstract class OpenPath
 	
 	@Override
 	public String toString() {
-		return getName();
+		return getPath();
 	}
 	
 	public static OpenPathDbAdapter getDb() { if(AllowDBCache) return mDb; return null; }
