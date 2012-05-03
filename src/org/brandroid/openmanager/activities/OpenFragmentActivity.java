@@ -36,7 +36,6 @@ public class OpenFragmentActivity
 	public static Thread UiThread = Thread.currentThread();
 	private Preferences mPreferences = null;
 	
-	
 	public String getClassName()
 	{
 		return this.getClass().getSimpleName();

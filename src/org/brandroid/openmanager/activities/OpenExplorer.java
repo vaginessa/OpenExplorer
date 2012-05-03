@@ -18,6 +18,8 @@
 
 package org.brandroid.openmanager.activities;
 
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -60,6 +62,7 @@ import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.util.LruCache;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.InputType;
@@ -157,6 +160,7 @@ import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
@@ -175,6 +179,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.utils.CustomExceptionHandler;
+import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
@@ -184,6 +189,10 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SubmitStatsTask;
 
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.PageIndicator;
@@ -195,7 +204,8 @@ public class OpenExplorer
 		extends OpenFragmentActivity
 		implements OnBackStackChangedListener, OnClipboardUpdateListener,
 			OnWorkerUpdateListener,
-			OnPageTitleClickListener, LoaderCallbacks<Cursor>, OnPageChangeListener
+			OnPageTitleClickListener, LoaderCallbacks<Cursor>, OnPageChangeListener,
+			OpenApp
 	{
 
 	private static final int PREF_CODE =		0x6;
@@ -338,8 +348,8 @@ public class OpenExplorer
 		setupFilesDb();
 		
 		super.onCreate(savedInstanceState);
-		
 		setContentView(R.layout.main_fragments);
+		getWindow().setBackgroundDrawableResource(R.drawable.background_holo_dark);
 		
 		try {
 			upgradeViewSettings();
@@ -391,19 +401,20 @@ public class OpenExplorer
 		{
 			if(Build.VERSION.SDK_INT < 15)
 			{
-			getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
-			setViewVisibility(false, false, R.id.title_underline);
+				getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
+				setViewVisibility(false, false, R.id.title_underline);
 			}
 			//if(USE_ACTION_BAR)
 			//	setViewVisibility(false, false, R.id.title_bar, R.id.title_underline, R.id.title_underline_2);
-		} else {
-			setTheme(android.R.style.Theme_Black_NoTitleBar);
 		}
 		if(BEFORE_HONEYCOMB || !USE_ACTION_BAR)
 		{
 			ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
 			if(mTitleStub != null)
+			{
 				mTitleStub.inflate();
+				setViewVisibility(true, false, R.id.title_underline);
+			}
 			ViewStub mBaseStub = (ViewStub)findViewById(R.id.base_stub);
 			if(mBaseStub != null)
 				mBaseStub.inflate();
@@ -1536,6 +1547,7 @@ public class OpenExplorer
 			Logger.closeDb();
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void submitStats()
 	{
 		if(!Logger.isLoggingEnabled()) return;
@@ -1544,6 +1556,12 @@ public class OpenExplorer
 		long lastSubmit = getPreferences().getSetting("flags", "last_stat_submit", 0l);
 		if(new Date().getTime() - lastSubmit < 6000)
 			return;
+		lastSubmit = new Date().getTime();
+		ConnectivityManager conman = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		if(!conman.getBackgroundDataSetting()) return;
+		NetworkInfo ni = conman.getActiveNetworkInfo();
+		if(ni == null) return;
+		if(!ni.isAvailable() || !ni.isConnected()) return;
 		String logs = Logger.getDbLogs(false);
 		if(logs == null || logs == "") logs = "[]";
 		//if(logs != null && logs != "") {
@@ -1984,16 +2002,11 @@ public class OpenExplorer
 			if(s.startsWith("content://"))
 				path = new OpenContent(Uri.parse(s), this);
 			else
-				try {
-					path = FileManager.getOpenCache(s, false, null);
-				} catch (IOException e) {
-					path = new OpenFile(s);
-				}
+				path = FileManager.getOpenCache(s);
 			if(path == null) continue;
 			editFile(path, true);
 		}
-		mViewPagerAdapter.notifyDataSetChanged();
-		setViewPageAdapter(mViewPagerAdapter);
+		setViewPageAdapter(mViewPagerAdapter, true);
 	}
 	
 	public void editFile(OpenPath path) { editFile(path, false); }
@@ -2006,13 +2019,15 @@ public class OpenExplorer
 			if(pos == -1)
 			{
 				mViewPagerAdapter.add(editor);
+				setViewPageAdapter(mViewPagerAdapter, !batch);
 				if(!batch)
 				{
 					saveOpenedEditors();
-					mViewPager.setAdapter(mViewPagerAdapter);
-					setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
+					pos = mViewPagerAdapter.getItemPosition(editor);
+					if(pos > -1)
+						setCurrentItem(pos, true);
 				}
-			} else if(!batch) setCurrentItem(pos, false);
+			} else if(!batch) setCurrentItem(pos, true);
 		} else
 			fragmentManager.beginTransaction()
 				.replace(R.id.content_frag, editor)
@@ -2951,15 +2966,18 @@ public class OpenExplorer
 					.commit();
 			}
 		}
+		OpenFragment cf = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
+			new CarouselFragment(path) :
+			ContentFragment.getInstance(path, newView);
+				
 			if(force || addToStack || path.requiresThread())
 			{
 				int common = 0;
 				if(force)
 				{
-					List<OpenFragment> nonContent = mViewPagerAdapter.getNonContentFragments();
-					mViewPagerAdapter.clear();
-					mViewPagerAdapter.add(nonContent);
-					common = -1;
+					mViewPagerAdapter.remove(cf);
+					mViewPagerAdapter.add(cf);
+					notifyPager();
 				} else {
 					for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 					{
@@ -2974,15 +2992,12 @@ public class OpenExplorer
 				//mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
-				OpenFragment f = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
-						new CarouselFragment(path) :
-						ContentFragment.getInstance(path, newView);
 				if(common < 0)
-					mViewPagerAdapter.add(f);
+					mViewPagerAdapter.add(cf);
 				else
-					mViewPagerAdapter.add(common, f);
+					mViewPagerAdapter.add(common, cf);
 				OpenPath tmp = path.getParent();
-				while(tmp != null && newView != VIEW_CAROUSEL) 
+				while(tmp != null) 
 				{
 					Logger.LogDebug("Adding Parent: " + tmp.getPath());
 					try {
@@ -3002,10 +3017,10 @@ public class OpenExplorer
 				mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
-				int index = mViewPagerAdapter.getItemPosition(f);
+				int index = mViewPagerAdapter.getItemPosition(cf);
 				setCurrentItem(index, addToStack);
-				if(f instanceof ContentFragment)
-					((ContentFragment)f).refreshData(null, false);
+				if(cf instanceof ContentFragment)
+					((ContentFragment)cf).refreshData(null, false);
 				//updatePagerTitle(index);
 			} else {
 				OpenPath commonBase = null;
@@ -3534,6 +3549,46 @@ public class OpenExplorer
 
 	public void notifyPager() {
 		mViewPager.notifyDataSetChanged();
+	}
+	
+	public OpenApplication getOpenApplication()
+	{
+		return (OpenApplication)getApplication();
+	}
+
+	@Override
+	public DataManager getDataManager() {
+		return getOpenApplication().getDataManager();
+	}
+
+	@Override
+	public ImageCacheService getImageCacheService() {
+		return getOpenApplication().getImageCacheService();
+	}
+
+	@Override
+	public DownloadCache getDownloadCache() {
+		return getOpenApplication().getDownloadCache();
+	}
+
+	@Override
+	public ThreadPool getThreadPool() {
+		return getOpenApplication().getThreadPool();
+	}
+
+	@Override
+	public LruCache<String, Bitmap> getMemoryCache() {
+		return getOpenApplication().getMemoryCache();
+	}
+
+	@Override
+	public DiskLruCache getDiskCache() {
+		return getOpenApplication().getDiskCache();
+	}
+
+	@Override
+	public Context getAndroidContext() {
+		return getOpenApplication().getAndroidContext();
 	}
 
 }

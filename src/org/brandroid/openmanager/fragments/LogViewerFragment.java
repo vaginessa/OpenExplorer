@@ -32,6 +32,13 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	public LogViewerFragment() {
 	}
 	
+	public static LogViewerFragment getInstance(Bundle args)
+	{
+		LogViewerFragment ret = new LogViewerFragment();
+		ret.setArguments(args);
+		return ret;
+	}
+	
 	public void print(final String txt, final int color)
 	{
 		mData.add(0, colorify(txt, color));

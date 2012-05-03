@@ -18,28 +18,39 @@ import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.Fragment.InstantiationException;
+import android.support.v4.util.LruCache;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -55,8 +66,9 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 public abstract class OpenFragment
 			extends Fragment
 			implements View.OnClickListener, View.OnLongClickListener
-				, Comparable<OpenFragment>
 				, Comparator<OpenFragment>
+				, Comparable<OpenFragment>
+				, OpenApp
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
@@ -72,56 +84,28 @@ public abstract class OpenFragment
 	}
 	
 	public static OpenFragment instantiate(Context context, String fname, Bundle args) {
-        try {
+        String sPath = null;
+    	if(args.containsKey("last"))
+    		sPath = args.getString("last");
+    	if(args.containsKey("edit_path"))
+    		sPath = args.getString("edit_path");
+    	OpenPath path = null;
+    	if(sPath != null)
+    	{
+    		if(sPath.startsWith("content://"))
+    			path = new OpenContent(Uri.parse(sPath), context);
+    		else
+    			path = FileManager.getOpenCache(sPath);
         	if(fname.endsWith("ContentFragment"))
-        	{
-        		String sPath = args.getString("last");
-        		OpenPath path = null;
-        		if(sPath.startsWith("content://"))
-        			path = new OpenContent(Uri.parse(sPath), context);
-        		else
-        			path = FileManager.getOpenCache(sPath);
-        		ContentFragment ret = ContentFragment.getInstance(path);
-        		return ret;
-        	} else if(fname.endsWith("TextEditorFragment"))
-        	{
-        		String sPath = args.getString("edit_path");
-        		OpenPath path = null;
-        		if(sPath.startsWith("content://"))
-        			path = new OpenContent(Uri.parse(sPath), context);
-        		else
-        			path = FileManager.getOpenCache(sPath);
-        		TextEditorFragment ret = new TextEditorFragment(path);
-        		return ret;
-        	}
-            Class<?> clazz = sClassMap.get(fname);
-            if (clazz == null) {
-                // Class not found in the cache, see if it's real, and try to add it
-                clazz = context.getClassLoader().loadClass(fname);
-                sClassMap.put(fname, clazz);
-            }
-            OpenFragment f = (OpenFragment)clazz.newInstance();
-            if (args != null) {
-                args.setClassLoader(f.getClass().getClassLoader());
-                f.mArguments = args;
-            }
-            return f;
-        } catch (ClassNotFoundException e) {
-            throw new InstantiationException("Unable to instantiate fragment " + fname
-                    + ": make sure class name exists, is public, and has an"
-                    + " empty constructor that is public", e);
-        } catch (java.lang.InstantiationException e) {
-            throw new InstantiationException("Unable to instantiate fragment " + fname
-                    + ": make sure class name exists, is public, and has an"
-                    + " empty constructor that is public", e);
-        } catch (IllegalAccessException e) {
-            throw new InstantiationException("Unable to instantiate fragment " + fname
-                    + ": make sure class name exists, is public, and has an"
-                    + " empty constructor that is public", e);
-        }
+        		return ContentFragment.getInstance(path, args);
+        	else if(fname.endsWith("TextEditorFragment"))
+        		return TextEditorFragment.getInstance(path, args);
+        	else if(fname.endsWith("CarouselFragment"))
+        		return CarouselFragment.getInstance(args);
+    	}
+        return null;
     }
 	
-	@Override
 	public int compareTo(OpenFragment b) {
 		return compare(this, b);
 	}
@@ -803,6 +787,51 @@ public abstract class OpenFragment
 	{
 		if(getExplorer() != null)
 			getExplorer().notifyPager();
+	}
+	
+	@Override
+	public Context getAndroidContext() {
+		return getExplorer().getAndroidContext();
+	}
+	
+	@Override
+	public DataManager getDataManager() {
+		return getExplorer().getDataManager();
+	}
+	
+	@Override
+	public DiskLruCache getDiskCache() {
+		return getExplorer().getDiskCache();
+	}
+	
+	@Override
+	public DownloadCache getDownloadCache() {
+		return getExplorer().getDownloadCache();
+	}
+	
+	@Override
+	public ImageCacheService getImageCacheService() {
+		return getExplorer().getImageCacheService();
+	}
+	
+	@Override
+	public ContentResolver getContentResolver() {
+		return getExplorer().getContentResolver();
+	}
+	
+	@Override
+	public Looper getMainLooper() {
+		return getExplorer().getMainLooper();
+	}
+	
+	@Override
+	public LruCache<String, Bitmap> getMemoryCache() {
+		return getExplorer().getMemoryCache();
+	}
+	
+	@Override
+	public ThreadPool getThreadPool() {
+		return getExplorer().getThreadPool();
 	}
 	
 	/*

@@ -556,5 +556,11 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		mSorting = type;
 		setViewSetting(mPath, "sort", type.toString());
 	}
+
+	public static CarouselFragment getInstance(Bundle args) {
+		CarouselFragment ret = new CarouselFragment();
+		ret.setArguments(args);
+		return ret;
+	}
 	
 }

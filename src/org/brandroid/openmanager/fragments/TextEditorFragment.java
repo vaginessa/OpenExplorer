@@ -104,6 +104,19 @@ public class TextEditorFragment extends OpenFragment
 		setHasOptionsMenu(true);
 	}
 	
+	public static TextEditorFragment getInstance(OpenPath path, Bundle args)
+	{
+		TextEditorFragment ret = getInstance(args);
+		ret.setPath(path);
+		return ret;
+	}
+	public static TextEditorFragment getInstance(Bundle args)
+	{
+		TextEditorFragment ret = new TextEditorFragment();
+		ret.setArguments(args);
+		return ret;
+	}
+	
 	@Override
 	public void onDetach() {
 		super.onDetach();
@@ -125,6 +138,10 @@ public class TextEditorFragment extends OpenFragment
 			} catch (IOException e) {
 				mPath = new OpenFile(path);
 			}
+	}
+	private void setPath(OpenPath path)
+	{
+		mPath = path;
 	}
 	public void setProgressVisibility(boolean visible)
 	{

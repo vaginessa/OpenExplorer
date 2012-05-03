@@ -471,7 +471,7 @@ public class BetterPopupWindow {
 				View icon = anchor.findViewById(R.id.content_icon);
 				arrowOffset = 0;
 				arrowOffset += icon.getLeft();
-				arrowOffset += icon.getWidth() / 2;
+				//arrowOffset += icon.getWidth() / 2;
 			}
 			
 			arrowOffset -= (int)(16 * mContext.getResources().getDimension(R.dimen.one_dp));

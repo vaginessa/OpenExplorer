@@ -213,7 +213,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	}
 
 	public boolean add(OpenFragment frag) {
-		add(getCount() - 1, frag);
+		add(getCount(), frag);
 		return true;
 	}
 	
@@ -237,7 +237,12 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			return;
 		}
 		//mFrags.remove(frag);
-		mFrags.add(Math.max(0, Math.min(getCount(), index)), frag);
+		//mFrags.add(Math.min(0, Math.max(getCount(), index)), frag);
+		if(index >= getCount())
+			mFrags.add(frag);
+		else if(index < 0)
+			mFrags.add(0, frag);
+		else mFrags.add(index, frag);
 		//try {
 			//notifyDataSetChanged();
 		/*

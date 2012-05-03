@@ -33,37 +33,23 @@ public class SearchResultsFragment
 		extends ContentFragment
 		implements OnItemClickListener, OnItemLongClickListener, SearchProgressUpdateListener
 {
-	private final OpenSearch mSearch;
+	private OpenSearch mSearch;
 	private TextView mTextSummary;
 	private ProgressBar mProgressBar;
 	private Button mCancel;
 	
 	public SearchResultsFragment()
 	{
-		Bundle b = getArguments();
-		if(b != null)
-		{
-			String q = getArguments().getString("query");
-			OpenPath path = null;
-			try {
-				path = FileManager.getOpenCache(getArguments().getString("path"), false, null);
-			} catch(IOException e) { path = new OpenFile(getArguments().getString("path")); }
-			ArrayList<Parcelable> results = null;
-			if(b.containsKey("results"))
-			{
-				results = getParcelableArrayList("results");
-				mSearch = new OpenSearch(q, path, results);
-			} else {
-				mSearch = new OpenSearch(q, path, this);
-				mSearch.start();
-			}
-		}
-		else mSearch = null;
+		
 	}
-	private ArrayList<Parcelable> getParcelableArrayList(String string) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	public static SearchResultsFragment getInstance(Bundle args)
+	{
+		SearchResultsFragment ret = new SearchResultsFragment();
+		ret.setArguments(args);
+		return ret;
 	}
+	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -90,6 +76,25 @@ public class SearchResultsFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Bundle b = getArguments();
+		if(b != null)
+		{
+			String q = getArguments().getString("query");
+			OpenPath path = null;
+			try {
+				path = FileManager.getOpenCache(getArguments().getString("path"), false, null);
+			} catch(IOException e) { path = new OpenFile(getArguments().getString("path")); }
+			ArrayList<Parcelable> results = null;
+			if(b.containsKey("results"))
+			{
+				results = b.getParcelableArrayList("results");
+				mSearch = new OpenSearch(q, path, results);
+			} else {
+				mSearch = new OpenSearch(q, path, this);
+				mSearch.start();
+			}
+		}
+		else mSearch = null;
 		mContentAdapter = new ContentAdapter(getExplorer(), R.layout.list_content_layout, mSearch.getResults());
 	}
 	

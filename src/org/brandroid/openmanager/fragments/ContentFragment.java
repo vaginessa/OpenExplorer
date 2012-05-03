@@ -168,16 +168,23 @@ public class ContentFragment extends OpenFragment
 	}
 	public static ContentFragment getInstance(OpenPath path)
 	{
+		return getInstance(path, new Bundle());
+	}
+	public static ContentFragment getInstance(OpenPath path, Bundle args)
+	{
 		ContentFragment ret = new ContentFragment(path);
-		Bundle args = ret.getArguments();
-		if(args == null)
-			args = new Bundle();
-		if(path != null)
+		if(path != null && !args.containsKey("last"))
 		{
 			args.putString("last", path.getPath());
 			ret.setArguments(args);
 		} else return null;
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
+		return ret;
+	}
+	public static ContentFragment getInstance(Bundle args)
+	{
+		ContentFragment ret = new ContentFragment();
+		ret.setArguments(args);
 		return ret;
 	}
 
