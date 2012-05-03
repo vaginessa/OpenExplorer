@@ -42,6 +42,7 @@ import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.UserInfo;
@@ -228,13 +229,18 @@ public class FileManager {
 									  new FileOutputStream(((OpenFile)zip).getFile()), BUFFER));
 			
 			int total = 0;
+			OpenPath relPath = files[0].getParent();
 			for(OpenPath file : files)
+			{
+				if(relPath == null || (file.getParent() != null && relPath.getPath().startsWith(file.getParent().getPath())))
+					relPath = file.getParent();
 				total += file.length();
+			}
 			Logger.LogDebug("Zipping " + total + " bytes!");
 			for(OpenPath file : files)
 			{
 				try {
-					zipIt(file, zout, total);
+					zipIt(file, zout, total, relPath.getPath() + (relPath.getPath().endsWith("/") ? "" : "/"));
 				} catch(IOException e) {
 					Logger.LogError("Error zipping file.", e);
 				}
@@ -252,12 +258,11 @@ public class FileManager {
 				try {
 					zout.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Logger.LogError("Error closing zip file", e);
 				}
 		}
 	}
-	private void zipIt(OpenPath file, ZipOutputStream zout, int totalSize) throws IOException
+	private void zipIt(OpenPath file, ZipOutputStream zout, int totalSize, String relativePath) throws IOException
 	{
 		byte[] data = new byte[BUFFER];
 		int read;
@@ -265,10 +270,13 @@ public class FileManager {
 		
 		
 		if(file.isFile()){
-			ZipEntry entry = new ZipEntry(file.getName());
+			String name = file.getPath();
+			if(relativePath != null && name.startsWith(relativePath))
+				name = name.substring(relativePath.length());
+			ZipEntry entry = new ZipEntry(name);
 			zout.putNextEntry(entry);
 			BufferedInputStream instream = new BufferedInputStream(file.getInputStream());
-			Logger.LogVerbose("zip_folder file name = " + entry.getName());
+			//Logger.LogVerbose("zip_folder file name = " + entry.getName());
 			int size = (int)file.length();
 			int pos = 0;
 			while((read = instream.read(data, 0, BUFFER)) != -1)
@@ -282,11 +290,11 @@ public class FileManager {
 			instream.close();
 		
 		} else if (file.isDirectory()) {
-			Log.e("File Manager", "zip_folder dir name = " + file.getPath());
+			//Logger.LogDebug("zip_folder dir name = " + file.getPath());
 			for(OpenPath kid : file.list())
 				totalSize += kid.length();
 			for(OpenPath kid : file.list())
-				zipIt(kid, zout, totalSize);
+				zipIt(kid, zout, totalSize, relativePath);
 		}
 	}
 	
@@ -480,6 +488,8 @@ public class FileManager {
 			else if(path.equals("Downloads"))
 				ret = OpenExplorer.getDownloadParent();
 			if(ret == null) return ret;
+			if(ret instanceof OpenFile && ret.isArchive())
+				ret = new OpenZip((OpenFile)ret);
 			if(ret.requiresThread() && bGetNetworkedFiles)
 			{
 				if(ret.listFiles() != null)

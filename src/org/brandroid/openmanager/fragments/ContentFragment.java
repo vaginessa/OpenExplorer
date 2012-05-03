@@ -240,12 +240,12 @@ public class ContentFragment extends OpenFragment
 			mBundle = savedInstanceState;
 		if(getArguments() != null && getArguments().containsKey("last"))
 			mBundle = getArguments();
-		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || mPath.getPath().equals(mBundle.getString("last"))))
+		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || !mPath.getPath().equals(mBundle.getString("last"))))
 		{
 			String last = mBundle.getString("last");
 			Logger.LogDebug("Unbundling " + last);
 			if(last.startsWith("content://"))
-				mPath = new OpenContent(Uri.parse(last), getApplicationContext());
+				mPath = new OpenContent(Uri.parse(last), getAndroidContext());
 			else if(last.startsWith("/"))
 				mPath = new OpenFile(last).setRoot();
 			else if(last.equalsIgnoreCase("Photos"))
@@ -270,7 +270,7 @@ public class ContentFragment extends OpenFragment
 		
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
-		else Logger.LogDebug("Creating ContentFragment @ " + mPath.getPath());
+		else Logger.LogDebug("Creating ContentFragment @ " + mPath);
 		
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		
@@ -284,22 +284,22 @@ public class ContentFragment extends OpenFragment
 	{
 		if(!isVisible()) {
 			Logger.LogDebug("I'm invisible! " + mPath);
-			return;
+			//return;
 		}
-		Logger.LogDebug("Refreshing Data for " + mPath);
 		if(mData2 == null)
 			mData2 = new ArrayList<OpenPath>();
 		else
 			mData2.clear();
 		
+		if(savedInstanceState == null && getArguments() != null)
+			savedInstanceState = getArguments();
+		
 		OpenPath path = mPath;
 		if(path == null)
-		{
 			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
 				path = new OpenFile(savedInstanceState.getString("last"));
-			else
-				path = new OpenFile(Environment.getExternalStorageDirectory());
-		}
+		
+		if(path == null) return;
 		
 		if(path instanceof OpenFile && !path.getPath().startsWith("/"))
 		{
@@ -313,6 +313,8 @@ public class ContentFragment extends OpenFragment
 				path = OpenExplorer.getDownloadParent();
 		}
 		mPath = path;
+		
+		Logger.LogDebug("Refreshing Data for " + mPath);
 		
 		mActionModeSelected = false;
 		try {

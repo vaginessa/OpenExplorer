@@ -5,6 +5,7 @@ import org.brandroid.openmanager.R;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -105,6 +106,12 @@ public class InputDialog extends Builder
 	@Override
 	public InputDialog setPositiveButton(int text, OnClickListener listener) {
 		super.setPositiveButton(text, listener);
+		return this;
+	}
+	
+	@Override
+	public InputDialog setOnCancelListener(OnCancelListener onCancelListener) {
+		super.setOnCancelListener(onCancelListener);
 		return this;
 	}
 	

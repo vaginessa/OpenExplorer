@@ -35,9 +35,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -45,9 +43,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
-import android.text.style.ImageSpan;
 import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -269,11 +265,13 @@ public class TextEditorFragment extends OpenFragment
 	
 	private void refreshList()
 	{
-		mViewListAdapter.setLines(mData.split("\n"));
+		if(mViewListAdapter != null)
+			mViewListAdapter.setLines(mData.split("\n"));
 		
 	}
 	public void setText(final String txt)
 	{
+		if(txt == null) return;
 		mData = txt;
 		if(mEditMode)
 			mEditText.post(new Runnable() {
@@ -357,11 +355,14 @@ public class TextEditorFragment extends OpenFragment
 		outState.putString("edit_path", mPath.getPath());
 		if(mData != null && mData.length() < 500000)
 			outState.putString("edit_data", mData);
-		if(mPath instanceof OpenNetworkPath && ((OpenNetworkPath)mPath).getServersIndex() > -1)
+		if(mPath instanceof OpenNetworkPath)
 		{
-			Logger.LogDebug("Saving server #" + ((OpenNetworkPath)mPath).getServersIndex());
-			outState.putInt("edit_server", ((OpenNetworkPath)mPath).getServersIndex());
-		} else Logger.LogDebug("No server #");
+			if(((OpenNetworkPath)mPath).getServersIndex() > -1)
+			{
+				Logger.LogDebug("Saving server #" + ((OpenNetworkPath)mPath).getServersIndex());
+				outState.putInt("edit_server", ((OpenNetworkPath)mPath).getServersIndex());
+			} else Logger.LogWarning("No server #");
+		}
 		outState.putFloat("size", mTextSize);
 	}
 	
@@ -572,12 +573,12 @@ public class TextEditorFragment extends OpenFragment
 					doClose();
 				} catch (Exception e) {
 					Logger.LogError("Couldn't find file - " + path, e);
+					doClose();
 				} finally {
 					try {
 						if(is != null)
 							is.close();
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					if(mPath instanceof OpenNetworkPath)
@@ -646,7 +647,8 @@ public class TextEditorFragment extends OpenFragment
 		
 		@Override
 		protected void onPostExecute(String result) {
-			setText(result);
+			if(result != null)
+				setText(result);
 			setProgressVisibility(false);
 			setEnabled(true, mEditText);
 		}

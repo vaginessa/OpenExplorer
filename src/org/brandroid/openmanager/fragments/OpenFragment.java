@@ -18,6 +18,7 @@ import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.EventHandler;
@@ -40,6 +41,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.Bitmap;
@@ -123,9 +125,12 @@ public abstract class OpenFragment
 
 	//@Override
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
-		final OpenPath file = (OpenPath)list.getItemAtPosition(pos);
+		OpenPath file = (OpenPath)list.getItemAtPosition(pos);
 		
 		Logger.LogDebug("File clicked: " + file.getPath());
+		
+		if(file.isArchive() && file instanceof OpenFile)
+			file = new OpenZip((OpenFile)file);
 		
 		if(getClipboard().isMultiselect()) {
 			if(getClipboard().contains(file))
@@ -616,8 +621,19 @@ public abstract class OpenFragment
 					.setDefaultTop(folder.getPath())
 					.setMessage(R.string.s_prompt_zip)
 					.setCancelable(true)
-					.setNegativeButton(android.R.string.no, null);
+					.setNegativeButton(android.R.string.no, new OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							if(getClipboard().size() <= 1)
+								getClipboard().clear();
+						}
+					});
 				dZip
+					.setOnCancelListener(new OnCancelListener() {
+						public void onCancel(DialogInterface dialog) {
+							if(getClipboard().size() <= 1)
+								getClipboard().clear();
+						}
+					})
 					.setPositiveButton(android.R.string.ok,
 						new OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {

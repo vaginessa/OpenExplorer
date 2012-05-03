@@ -150,6 +150,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -216,7 +217,7 @@ public class OpenExplorer
 	public static final int VIEW_CAROUSEL = 2;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
-	public static final boolean CAN_DO_CAROUSEL = false;
+	public static boolean CAN_DO_CAROUSEL = false;
 	public static boolean USE_ACTION_BAR = false;
 	public static boolean USE_ACTIONMODE = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
@@ -239,7 +240,6 @@ public class OpenExplorer
 	private Boolean mSinglePane = false;
 	private Boolean mStateReady = true;
 	
-	private static OpenFragment mContentFragment = null;
 	private static LogViewerFragment mLogFragment = null;
 	private static boolean mLogViewEnabled = true;
 	private OpenViewPager mViewPager;
@@ -477,8 +477,6 @@ public class OpenExplorer
 
 		if(mViewPagerEnabled && findViewById(R.id.content_pager_frame_stub) != null)
 			((ViewStub)findViewById(R.id.content_pager_frame_stub)).inflate();
-		
-		mContentFragment = ContentFragment.getInstance(path, mViewMode);
 		
 		if(fragmentManager == null)
 		{
@@ -776,7 +774,8 @@ public class OpenExplorer
 		else if(from != null && !(from instanceof CheckedTextView) && 
 				showContextMenu(menuId, from instanceof CheckedTextView ? null : from) != null)
 			return true;
-		showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
+		if(IS_DEBUG_BUILD && BEFORE_HONEYCOMB)
+			showToast("Invalid option (" + menuId + ")" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : ""));
 		return false;
 	}
 
@@ -1916,7 +1915,7 @@ public class OpenExplorer
 		}
 		if(ret == null && path != null)
 		{
-			ret = ContentFragment.getInstance(path, getSetting(path, "view", 0));
+			ret = ContentFragment.getInstance(path, getSetting(path, "view", 0), getSupportFragmentManager());
 			if(mViewPager != null && ret != null)
 			{
 				//if(mViewPagerAdapter instanceof ArrayPagerAdapter)
@@ -2318,9 +2317,9 @@ public class OpenExplorer
 		if(item.isCheckable())
 			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
 		
-		//Fragment f = getSelectedFragment();
-		//if(f != null && f.onOptionsItemSelected(item))
-		//	return true;
+		OpenFragment f = getSelectedFragment();
+		if(f != null && f.onOptionsItemSelected(item))
+			return true;
 		
 		return onClick(item.getItemId(), item, null);
 	}
@@ -2739,7 +2738,7 @@ public class OpenExplorer
 				changePath(getCurrentPath(), false, true);
 			} else {
 				fragmentManager.beginTransaction()
-					.replace(R.id.content_frag, ContentFragment.getInstance(getCurrentPath(), mViewMode))
+					.replace(R.id.content_frag, ContentFragment.getInstance(getCurrentPath(), mViewMode, getSupportFragmentManager()))
 					.setBreadCrumbTitle(getCurrentPath().getAbsolutePath())
 					//.addToBackStack(null)
 					.commit();
@@ -2906,6 +2905,7 @@ public class OpenExplorer
 			mLastPath = getDirContentFragment(false).getPath();
 		if(!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
 			force = true;
+		
 		//if(!BEFORE_HONEYCOMB) force = true;
 		//if(!force)
 			//if(!addToStack && path.getPath().equals("/")) return;
@@ -2968,27 +2968,29 @@ public class OpenExplorer
 		}
 		OpenFragment cf = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
 			new CarouselFragment(path) :
-			ContentFragment.getInstance(path, newView);
+			ContentFragment.getInstance(path, newView, getSupportFragmentManager());
 				
 			if(force || addToStack || path.requiresThread())
 			{
 				int common = 0;
+
+				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
+				{
+					OpenFragment f = mViewPagerAdapter.getItem(i);
+					if(f == null || !(f instanceof ContentFragment)) continue;
+					if(!familyTree.contains(((ContentFragment)f).getPath()))
+						mViewPagerAdapter.remove(i);
+					else common++;
+				}
+				
 				if(force)
 				{
 					mViewPagerAdapter.remove(cf);
 					mViewPagerAdapter.add(cf);
-					notifyPager();
-				} else {
-					for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
-					{
-						OpenFragment f = mViewPagerAdapter.getItem(i);
-						if(f == null || !(f instanceof ContentFragment)) continue;
-						if(!familyTree.contains(((ContentFragment)f).getPath()))
-							mViewPagerAdapter.remove(i);
-						else common++;
-					}
+					//notifyPager();
 				}
-				mViewPagerAdapter.notifyDataSetChanged();
+				
+				//mViewPagerAdapter.notifyDataSetChanged();
 				//mViewPagerAdapter.removeOfType(ContentFragment.class);
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
@@ -3006,7 +3008,7 @@ public class OpenExplorer
 								break;
 					} catch(Exception e) { Logger.LogError("I don't trust this!", e); }
 					try {
-						mViewPagerAdapter.add(common, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView)));
+						mViewPagerAdapter.add(common, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView), getSupportFragmentManager()));
 					} catch(Exception e) { Logger.LogError("Downloads?", e); }
 					tmp = tmp.getParent();
 				}
@@ -3014,7 +3016,7 @@ public class OpenExplorer
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
 				setViewPageAdapter(mViewPagerAdapter, true);
-				mViewPagerAdapter.notifyDataSetChanged();
+				//mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				int index = mViewPagerAdapter.getItemPosition(cf);
@@ -3040,7 +3042,7 @@ public class OpenExplorer
 				while(tmp != null && (commonBase == null || !tmp.equals(commonBase)))
 				{
 					mViewPagerAdapter.add(depth,
-						ContentFragment.getInstance(path));
+						ContentFragment.getInstance(path, getSetting(path, "view", newView), getSupportFragmentManager()));
 					tmp = tmp.getParent();
 					if(tmp == null) break;
 				}

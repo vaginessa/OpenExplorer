@@ -178,8 +178,8 @@ public class BetterPopupWindow {
 					if(backgroundView.getPaddingBottom() > 0)
 						h += backgroundView.getPaddingBottom();
 					h += 4;
-					backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-					h = Math.max(h, backgroundView.getMeasuredHeight());
+					//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+					h = Math.max(h, backgroundView.getHeight());
 					h = Math.max(getPreferredMinHeight(), h);
 					if(mHeight > 0 && h <= mHeight) return;
 					Logger.LogDebug("Popup Layout Change: (" + (right - left) + "x" + h + ")@(" + left + "," + top + ") from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
@@ -192,9 +192,9 @@ public class BetterPopupWindow {
 		this.popup.setContentView(backgroundView);
 		
 		if(mHeight == 0)
-			mHeight = getPreferredMinHeight();
-		//this.popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
-		popup.setHeight(mHeight);
+			popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+		else
+			popup.setHeight(mHeight);
 		//this.popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
@@ -470,9 +470,9 @@ public class BetterPopupWindow {
 			{
 				View icon = anchor.findViewById(R.id.content_icon);
 				arrowOffset = 0;
-				arrowOffset += icon.getLeft();
-				//arrowOffset += icon.getWidth() / 2;
-			}
+				//arrowOffset += getOffsetLeft(icon);
+				arrowOffset += icon.getWidth() / 2;
+			} //else 
 			
 			arrowOffset -= (int)(16 * mContext.getResources().getDimension(R.dimen.one_dp));
 			
@@ -515,6 +515,12 @@ public class BetterPopupWindow {
 		}
 	}
 
+	private int getOffsetLeft(View v) {
+		int ret = getAbsoluteLeft(v);
+		if(v.getParent() != null)
+			ret -= getAbsoluteLeft((View)v.getParent());
+		return ret;
+	}
 	private int getAbsoluteLeft(View v) {
 		try {
 			int[] ret = new int[2];

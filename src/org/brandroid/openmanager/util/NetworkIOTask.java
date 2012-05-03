@@ -191,7 +191,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 				}
 			} else {
 				try {
-					for(OpenPath f : path.list())
+					for(OpenPath f : path.listFiles())
 						ret.add(f);
 				} catch (IOException e) {
 					Logger.LogError("IOException listing children inside FileIOTask", e);
@@ -202,7 +202,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 			//	((OpenNetworkPath)path).disconnect();
 			//getManager().pushStack(path);
 		}
-		Logger.LogDebug("Found " + ret.size() + " items.");
+		Logger.LogDebug("NetworkIOTask found " + ret.size() + " items.");
 		instanceRunning = false;
 		return ret.toArray(new OpenPath[1]);
 	}

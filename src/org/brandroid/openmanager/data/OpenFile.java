@@ -1,44 +1,30 @@
 package org.brandroid.openmanager.data;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
 import java.nio.channels.FileChannel;
 import java.util.HashSet;
-import java.util.Hashtable;
-
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager.SortType;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.FileUtils;
 import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
-import android.app.AlertDialog.Builder;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
-import android.text.format.Formatter;
 
 public class OpenFile extends OpenPath
 {
+	private static final long serialVersionUID = 6436156952322586833L;
 	private File mFile;
 	private OpenFile[] mChildren = null;
 	private boolean bGrandPeeked = false;
@@ -387,6 +373,8 @@ public class OpenFile extends OpenPath
 	}
 	@Override
 	public OpenPath[] list() {
+		if(mChildren != null)
+			return mChildren;
 		return listFiles();
 	}
 	

@@ -65,19 +65,25 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	@Override
 	public OpenFragment getItem(int pos) {
-		if(pos < getCount() && pos >= 0)
+		if(pos < mFrags.size() && pos >= 0)
 			return mFrags.get(pos);
 		else return null;
 	}
 
 	public OpenFragment getLastItem() {
-		return mFrags.get(getCount() - 1);
+		return mFrags.get(mFrags.size() - 1);
 	}
 
 	@Override
 	public int getCount() {
 		return mFrags.size();
 	}
+	
+	/*
+	@Override
+	public Object instantiateItem(ViewGroup container, int position) {
+		return OpenFragment.instantiate(mContext, getItem(position).getClassName(), new Bundle());
+	}*/
 	
 	public synchronized void sort()
 	{

@@ -260,7 +260,7 @@ public abstract class OpenPath
 		return false;
 	}
 	public boolean isArchive() {
-		return getExtension().equals("zip");
+		return getExtension().equalsIgnoreCase("zip") || getExtension().equalsIgnoreCase("jar");
 	}
 	
 	public boolean isVideoFile() { return isVideoFile(getName()); }
