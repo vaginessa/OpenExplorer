@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.activities;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.utils.DiskLruCache;
@@ -38,6 +39,15 @@ public class OpenApplication extends Application implements OpenApp
     @Override
     public void onTerminate() {
     	super.onTerminate();
+    	if(mBitmapCache != null)
+    		mBitmapCache.evictAll();
+    	if(mBitmapDiskCache != null)
+			try {
+				mBitmapDiskCache.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     }
 
     @Override
