@@ -121,9 +121,9 @@ public class WebViewFragment
 		@Override
 		public void onPageFinished(WebView view, String url) {
 			super.onPageFinished(view, url);
-			if(getShowsDialog())
+			if(getShowsDialog() && getDialog() != null && view != null)
 				getDialog().setTitle(view.getTitle());
-			else if(mTitle != null)
+			else if(mTitle != null && view != null)
 				mTitle.setText(view.getTitle());
 			view.setEnabled(true);
 		}
