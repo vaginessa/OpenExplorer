@@ -37,6 +37,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -78,7 +79,8 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
 
-public class EventHandler {
+public class EventHandler
+{
 	public static final int SEARCH_TYPE =		0x00;
 	public static final int COPY_TYPE =			0x01;
 	public static final int UNZIP_TYPE =		0x02;
@@ -94,10 +96,8 @@ public class EventHandler {
 	private static NotificationManager mNotifier = null;
 	private static int EventCount = 0;
 	
-	private OnWorkerUpdateListener mThreadListener;
+	private List<OnWorkerUpdateListener> mThreadListeners;
 	private FileManager mFileMang;
-	private ProgressBar mExtraProgress;
-	private TextView mExtraStatus, mExtraPercent;
 	
 	private static ArrayList<BackgroundWork> mTasks = new ArrayList<BackgroundWork>();
 	public static ArrayList<BackgroundWork> getTaskList() { return mTasks; }
@@ -127,22 +127,30 @@ public class EventHandler {
 		public void onWorkerProgressUpdate(int pos, int total);
 	}
 	
-	public void setExtraViews(ProgressBar pb, TextView status, TextView percent)
+	private synchronized void OnWorkerProgressUpdate(int pos, int total) {
+		if(mThreadListeners == null) return;
+		for(OnWorkerUpdateListener l : mThreadListeners)
+			l.onWorkerProgressUpdate(pos, total);
+	}
+	
+	private synchronized void OnWorkerThreadComplete(int type, ArrayList<String> results)
 	{
-		mExtraProgress = pb;
-		mExtraStatus = status;
-		mExtraPercent = percent;
+		if(mThreadListeners == null) return;
+		for(OnWorkerUpdateListener l : mThreadListeners)
+		{
+			l.onWorkerThreadComplete(type, results);
+			mThreadListeners.remove(l);
+		}
+	}
+	
+	public void setUpdateListener(OnWorkerUpdateListener e) {
+		if(mThreadListeners == null)
+			mThreadListeners = new ArrayList<EventHandler.OnWorkerUpdateListener>();
+		mThreadListeners.add(e);
 	}
 	
 	public EventHandler(FileManager filemanager) {
 		mFileMang = filemanager;
-	}
-	
-	public void setUpdateListener(OnWorkerUpdateListener e) {
-		mThreadListener = e;
-	}
-	public OnWorkerUpdateListener getUpdateListener() {
-		return mThreadListener;
 	}
 
 	public static String getResourceString(Context mContext, int... resIds)
@@ -228,9 +236,8 @@ public class EventHandler {
 				public void onClick(DialogInterface dialog, int which) {
 					if(dRename.getInputText().toString().length() > 0)
 					{
-						if(mFileMang.renameTarget(path.getPath(), dRename.getInputText().toString())
-							&& mThreadListener != null)
-							mThreadListener.onWorkerThreadComplete(RENAME_TYPE, null);
+						if(mFileMang.renameTarget(path.getPath(), dRename.getInputText().toString()))
+							OnWorkerThreadComplete(RENAME_TYPE, null);
 					} else dialog.dismiss();
 				}
 			})
@@ -265,8 +272,7 @@ public class EventHandler {
 				if(name.length() > 0) {
 					if(mFileMang != null)
 						mFileMang.createDir(directory, name);
-					if(mThreadListener != null)
-						mThreadListener.onWorkerThreadComplete(MKDIR_TYPE, null);
+					OnWorkerThreadComplete(MKDIR_TYPE, null);
 				} else {
 					dialog.dismiss();
 				}
@@ -352,12 +358,14 @@ public class EventHandler {
 		new BackgroundWork(SEARCH_TYPE, mContext, dir, query).execute();
 	}
 	
-	public void zipFile(OpenPath into, List<OpenPath> files, Context mContext)
+	public BackgroundWork zipFile(OpenPath into, List<OpenPath> files, Context mContext)
 	{
-		zipFile(into, files.toArray(new OpenPath[0]), mContext);
+		return zipFile(into, files.toArray(new OpenPath[0]), mContext);
 	}
-	public void zipFile(OpenPath into, OpenPath[] files, Context mContext) {
-		new BackgroundWork(ZIP_TYPE, mContext, into).execute(files);
+	public BackgroundWork zipFile(OpenPath into, OpenPath[] files, Context mContext) {
+		BackgroundWork bw = new BackgroundWork(ZIP_TYPE, mContext, into);
+		bw.execute(files);
+		return bw;
 	}
 	
 	public void unzipFile(final OpenPath file, final Context mContext) {
@@ -373,7 +381,7 @@ public class EventHandler {
 						if(!path.exists()&&!path.mkdir())
 						{
 							Logger.LogError("Couldn't locate output path for unzip! " + path.getPath());
-							mThreadListener.onWorkerThreadComplete(ERROR_TYPE, null);
+							OnWorkerThreadComplete(ERROR_TYPE, null);
 							return;
 						}
 						Logger.LogVerbose("Unzipping " + file.getPath() + " into " + path);
@@ -395,7 +403,9 @@ public class EventHandler {
 	 * Do work on second thread class
 	 * @author Joe Berria
 	 */
-	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> implements OnProgressUpdateCallback {
+	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer>
+		implements OnProgressUpdateCallback
+	{
 		private final int mType;
 		private final Context mContext;
 		private final String[] mInitParams;
@@ -411,6 +421,23 @@ public class EventHandler {
 		private long mRemain = 0l;
 		private boolean notifReady = false;
 		private final int[] mLastProgress = new int[3];
+		private int notifIcon;
+		
+		private OnWorkerUpdateListener mListener;
+		
+		public void setWorkerUpdateListener(OnWorkerUpdateListener listener) { mListener = listener; }
+
+		public void OnWorkerThreadComplete(int type, ArrayList<String> results) {
+			if(mListener != null)
+				mListener.onWorkerThreadComplete(type, results);
+			EventHandler.this.OnWorkerThreadComplete(type, results);
+		}
+
+		public void OnWorkerProgressUpdate(int pos, int total) {
+			if(mListener != null)
+				mListener.onWorkerProgressUpdate(pos, total);
+			EventHandler.this.OnWorkerProgressUpdate(pos, total);
+		}
 		
 		public BackgroundWork(int type, Context context, OpenPath intoPath, String... params) {
 			mType = type;
@@ -425,7 +452,7 @@ public class EventHandler {
 			mNotifyId = BACKGROUND_NOTIFICATION_ID + EventCount++;
 		}
 		
-		private String getTitle()
+		public String getTitle()
 		{
 			String title = getResourceString(mContext, R.string.s_title_executing).toString();
 			switch(mType) {
@@ -452,14 +479,14 @@ public class EventHandler {
 			title += " -> " + mIntoPath.getPath();
 			return title;
 		}
-		private String getSubtitle()
+		public String getSubtitle()
 		{
 			String subtitle = "";
 			if(mInitParams != null && mInitParams.length > 0)
 				subtitle = (mInitParams.length > 1 ? mInitParams.length + " " + mContext.getString(R.string.s_files) : mInitParams[0]);
 			return subtitle;
 		}
-		private String getLastRate()
+		public String getLastRate()
 		{
 			if(mRemain > 0)
 			{
@@ -485,7 +512,7 @@ public class EventHandler {
 			boolean showDialog = true,
 					showNotification = false,
 					isCancellable = true;
-			int notifIcon = R.drawable.icon;
+			notifIcon = R.drawable.icon;
 			switch(mType) {
 				case DELETE_TYPE:
 					showDialog = false;
@@ -532,6 +559,8 @@ public class EventHandler {
 			}
 		}
 		
+		public int getNotifIconResId() { return notifIcon; }
+		
 		public void showNotification()
 		{
 			if(!notifReady)
@@ -539,6 +568,7 @@ public class EventHandler {
 			mNotifier.notify(mNotifyId, mNote);
 		}
 		
+		@SuppressWarnings("deprecation")
 		public void prepareNotification(int notifIcon, boolean isCancellable)
 		{
 			boolean showProgress = true;
@@ -581,24 +611,32 @@ public class EventHandler {
 			}
 		}
 
-		public void updateView(View view) {
+		public void updateView(final View view) {
 			if(view == null) return;
-			if(view.findViewById(android.R.id.title) != null)
-				((TextView)view.findViewById(android.R.id.title)).setText(getTitle());
-			if(view.findViewById(android.R.id.text1) != null)
-				((TextView)view.findViewById(android.R.id.text1)).setText(getLastRate());
-			if(view.findViewById(android.R.id.text2) != null)
-				((TextView)view.findViewById(android.R.id.text2)).setText(getTitle());
-			if(view.findViewById(android.R.id.progress) != null)
-			{
-				int progA = (int)(((float)mLastProgress[0] / (float)mLastProgress[1]) * 1000f);
-				int progB = (int)(((float)mLastProgress[0] / (float)mLastProgress[2]) * 1000f);
-				ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
-				pb.setIndeterminate(mLastRate == 0);
-				pb.setMax(1000);
-				pb.setProgress(progA);
-				pb.setSecondaryProgress(progB);
-			}
+			Runnable runnable = new Runnable(){public void run() {
+				if(view.findViewById(android.R.id.icon) != null)
+					((ImageView)view.findViewById(android.R.id.icon)).setImageResource(getNotifIconResId());
+				if(view.findViewById(android.R.id.title) != null)
+					((TextView)view.findViewById(android.R.id.title)).setText(getTitle());
+				if(view.findViewById(android.R.id.text1) != null)
+					((TextView)view.findViewById(android.R.id.text1)).setText(getLastRate());
+				if(view.findViewById(android.R.id.text2) != null)
+					((TextView)view.findViewById(android.R.id.text2)).setText(getSubtitle());
+				if(view.findViewById(android.R.id.progress) != null)
+				{
+					int progA = (int)(((float)mLastProgress[0] / (float)mLastProgress[1]) * 1000f);
+					int progB = (int)(((float)mLastProgress[0] / (float)mLastProgress[2]) * 1000f);
+					ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
+					pb.setIndeterminate(mLastRate == 0);
+					pb.setMax(1000);
+					pb.setProgress(progA);
+					pb.setSecondaryProgress(progB);
+				}
+			}};
+			if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+				view.post(runnable);
+			else
+				runnable.run();
 		}
 		
 		public void searchDirectory(OpenPath dir, String pattern, ArrayList<String> aList)
@@ -880,6 +918,7 @@ public class EventHandler {
 		public void publish(int current, int size, int total)
 		{
 			publishProgress(current, size, total);
+			OnWorkerProgressUpdate(current, total);
 		}
 		
 		private long lastPublish = 0l;
@@ -943,19 +982,6 @@ public class EventHandler {
 				}
 			} catch(Exception e) { }
 			
-			if(mExtraProgress != null)
-			{
-				if(values.length == 0)
-					mExtraProgress.setIndeterminate(true);
-				else
-				{
-					mExtraProgress.setIndeterminate(false);
-					mExtraProgress.setMax(1000);
-					mExtraProgress.setProgress(progA);
-					mExtraProgress.setSecondaryProgress(progB);	
-				}
-			}
-
 			try {
 				RemoteViews noteView = mNote.contentView;
 				noteView.setTextViewText(android.R.id.text1, getLastRate());
@@ -998,8 +1024,7 @@ public class EventHandler {
 				break;
 				
 			case SEARCH_TYPE:
-				if(mThreadListener != null)
-					mThreadListener.onWorkerThreadComplete(mType, mSearchResults);
+				OnWorkerThreadComplete(mType, mSearchResults);
 				return;
 				
 			case COPY_TYPE:
@@ -1029,8 +1054,7 @@ public class EventHandler {
 			case ZIP_TYPE:
 				break;
 			}
-			if(mThreadListener != null)
-				mThreadListener.onWorkerThreadComplete(mType, null);
+			OnWorkerThreadComplete(mType, null);
 		}
 	}
 

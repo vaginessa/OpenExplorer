@@ -12,8 +12,8 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
-import org.brandroid.openmanager.data.OpenClipboard;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
@@ -114,7 +114,7 @@ public abstract class OpenFragment
 	
 	@Override
 	public int compare(OpenFragment a, OpenFragment b) {
-		//Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
+		Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
 		if(b instanceof ContentFragment && !(a instanceof ContentFragment)) return 1;
 		if(a instanceof ContentFragment && !(b instanceof ContentFragment)) return -1;
 		if(!(a instanceof ContentFragment) || !(b instanceof ContentFragment)) return 0;
@@ -129,7 +129,7 @@ public abstract class OpenFragment
 		
 		Logger.LogDebug("File clicked: " + file.getPath());
 		
-		if(file.isArchive() && file instanceof OpenFile)
+		if(file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
 			file = new OpenZip((OpenFile)file);
 		
 		if(getClipboard().isMultiselect()) {
@@ -586,10 +586,13 @@ public abstract class OpenFragment
 				}
 				OpenClipboard cb = getClipboard();
 				if(cb.size() > 0)
+				{
 					if(cb.DeleteSource)
 						getHandler().cutFile(cb, into, getActivity());
 					else
 						getHandler().copyFile(cb, into, getActivity());
+					refreshOperations();
+				}
 				
 				cb.DeleteSource = false;
 				if(cb.ClearAfter)
@@ -643,6 +646,7 @@ public abstract class OpenFragment
 								OpenPath zipFile = zFolder.getChild(dZip.getInputText());
 								Logger.LogVerbose("Zipping " + getClipboard().size() + " items to " + zipFile.getPath());
 								getHandler().zipFile(zipFile, getClipboard(), getExplorer());
+								refreshOperations();
 								finishMode(mode);
 							}
 						})
@@ -679,6 +683,12 @@ public abstract class OpenFragment
 	//			return true;
 			}
 		return true;
+	}
+	
+	private void refreshOperations()
+	{
+		if(getExplorer() != null)
+			getExplorer().refreshOperations();
 	}
 	
 	public void changeMultiSelectState(boolean multiSelectOn) {

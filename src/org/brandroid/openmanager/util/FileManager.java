@@ -44,6 +44,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 
 import com.jcraft.jsch.UserInfo;
 
@@ -488,7 +489,7 @@ public class FileManager {
 			else if(path.equals("Downloads"))
 				ret = OpenExplorer.getDownloadParent();
 			if(ret == null) return ret;
-			if(ret instanceof OpenFile && ret.isArchive())
+			if(ret instanceof OpenFile && ret.isArchive() && Preferences.Pref_Zip_Internal)
 				ret = new OpenZip((OpenFile)ret);
 			if(ret.requiresThread() && bGetNetworkedFiles)
 			{
