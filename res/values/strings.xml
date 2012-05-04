@@ -252,4 +252,8 @@
     <string name="s_alert_back_to_exit">Press Back again to exit</string>
     <string name="details_ms">%1$02d:%2$02d</string>
 	<string name="details_hms">%1$d:%2$02d:%3$02d</string>
+	<string name="s_pref_zip_internal">Handle Zip Files</string>
+	<string name="s_pref_zip_internal_on">Treat zip files like folders</string>
+	<string name="s_pref_zip_internal_off">Treat zip files like files</string>
+	<string name="s_title_operations">File Operations</string>
 </resources>

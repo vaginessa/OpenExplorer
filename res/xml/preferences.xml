@@ -154,6 +154,13 @@
 	            android:defaultValue="true" 
 	            />
 	        <CheckBoxPreference
+	            android:key="pref_zip_internal"
+	            android:title="@string/s_pref_zip_internal"
+	            android:summaryOn="@string/s_pref_zip_internal_on"
+	            android:summaryOff="@string/s_pref_zip_internal_off"
+	            android:defaultValue="true"
+	            />
+	        <CheckBoxPreference
 	            android:key="pref_text_internal"
 	            android:title="@string/s_pref_text_internal"
 	            android:defaultValue="true" 

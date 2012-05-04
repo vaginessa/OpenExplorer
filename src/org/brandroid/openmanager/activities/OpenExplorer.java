@@ -54,6 +54,7 @@ import android.graphics.drawable.LayerDrawable;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
 
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
@@ -132,14 +133,14 @@ import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
+import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.adapters.PagerTabsAdapter;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
-import org.brandroid.openmanager.data.OpenClipboard;
-import org.brandroid.openmanager.data.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -156,6 +157,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.LogViewerFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.OperationsFragment;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentTitleLongClickListener;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
@@ -280,6 +282,7 @@ public class OpenExplorer
 		
 		Preferences.Pref_Intents_Internal = prefs.getBoolean("global", "pref_intent_internal", true);
 		Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
+		Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
 		
 		USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus", USE_PRETTY_MENUS);
 		USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", USE_PRETTY_CONTEXT_MENUS);
@@ -962,7 +965,14 @@ public class OpenExplorer
 		if(outState == null) return;
 		mStateReady = false;
 		if(mLogFragment != null)
-			fragmentManager.beginTransaction().remove(mLogFragment).commit();
+			try {
+				fragmentManager.beginTransaction().remove(mLogFragment).commitAllowingStateLoss();
+			} catch(Exception e) { }
+		try {
+			Fragment f = fragmentManager.findFragmentByTag("ops");
+			if(f != null)
+				fragmentManager.beginTransaction().remove(f).commitAllowingStateLoss();
+		} catch(Exception e) { }
 		super.onSaveInstanceState(outState);
 		if(mViewPagerAdapter != null)
 		{
@@ -1074,6 +1084,7 @@ public class OpenExplorer
 			Logger.LogVerbose("Setting up ViewPager");
 			mViewPagerAdapter = //new PagerTabsAdapter(this, mViewPager, indicator);
 					new ArrayPagerAdapter(this, mViewPager);
+			mViewPagerAdapter.setOnPageTitleClickListener(this);
 			setViewPageAdapter(mViewPagerAdapter);
 		}
 
@@ -1865,6 +1876,22 @@ public class OpenExplorer
 		else
 			mBookmarks.setVisibility(mBookmarks.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
 	}
+
+	public void refreshOperations() {
+		Fragment f = fragmentManager.findFragmentByTag("ops");
+		if(f == null)
+			f = new OperationsFragment();
+		OperationsFragment ops = (OperationsFragment)f;
+		if(findViewById(R.id.frag_log) != null)
+			fragmentManager
+				.beginTransaction()
+				.replace(R.id.frag_log, ops)
+				.commit();
+		else {
+			mViewPagerAdapter.add(ops);
+			mViewPagerAdapter.notifyDataSetChanged();
+		}
+	}
 	
 	public void refreshBookmarks()
 	{
@@ -2011,6 +2038,8 @@ public class OpenExplorer
 	public void editFile(OpenPath path) { editFile(path, false); }
 	public void editFile(OpenPath path, boolean batch)
 	{
+		if(path == null) return;
+		if(!path.exists()) return;
 		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null)
 		{
@@ -3297,7 +3326,7 @@ public class OpenExplorer
 		View pb = findViewById(R.id.title_paste);
 		if(pb != null)
 			pb.setVisibility(View.GONE);
-		else if(!BEFORE_HONEYCOMB)
+		if(!BEFORE_HONEYCOMB)
 			invalidateOptionsMenu();
 		getDirContentFragment(false).notifyDataSetChanged();
 	}
