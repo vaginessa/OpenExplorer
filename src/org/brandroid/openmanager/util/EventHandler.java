@@ -96,7 +96,7 @@ public class EventHandler
 	private static NotificationManager mNotifier = null;
 	private static int EventCount = 0;
 	
-	private List<OnWorkerUpdateListener> mThreadListeners;
+	private OnWorkerUpdateListener mThreadListener;
 	private FileManager mFileMang;
 	
 	private static ArrayList<BackgroundWork> mTasks = new ArrayList<BackgroundWork>();
@@ -128,25 +128,19 @@ public class EventHandler
 	}
 	
 	private synchronized void OnWorkerProgressUpdate(int pos, int total) {
-		if(mThreadListeners == null) return;
-		for(OnWorkerUpdateListener l : mThreadListeners)
-			l.onWorkerProgressUpdate(pos, total);
+		if(mThreadListener == null) return;
+		mThreadListener.onWorkerProgressUpdate(pos, total);
 	}
 	
 	private synchronized void OnWorkerThreadComplete(int type, ArrayList<String> results)
 	{
-		if(mThreadListeners == null) return;
-		for(OnWorkerUpdateListener l : mThreadListeners)
-		{
-			l.onWorkerThreadComplete(type, results);
-			mThreadListeners.remove(l);
-		}
+		if(mThreadListener == null) return;
+		mThreadListener.onWorkerThreadComplete(type, results);
+		mThreadListener = null;
 	}
 	
 	public void setUpdateListener(OnWorkerUpdateListener e) {
-		if(mThreadListeners == null)
-			mThreadListeners = new ArrayList<EventHandler.OnWorkerUpdateListener>();
-		mThreadListeners.add(e);
+		mThreadListener = e;
 	}
 	
 	public EventHandler(FileManager filemanager) {

@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/view_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,31 +24,20 @@
     >
     
     
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-	<ViewStub android:layout="@layout/title_bar" android:id="@+id/title_stub" android:inflatedId="@+id/title_bar"
-	      android:layout_width="fill_parent"
-	      android:layout_height="@dimen/actionbar_compat_height"
-	      />
-	
-	<ViewStub
-	    android:id="@id/base_stub"
-	    android:layout="@layout/base_bar"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    />
-	
-	</LinearLayout>
+    
+	<ViewStub android:layout="@layout/title_bar"
+	    android:id="@+id/title_stub"
+	    android:inflatedId="@+id/title_bar"
+		android:layout_width="match_parent"
+		android:layout_height="@dimen/actionbar_compat_height"
+		/>
     
     <View android:background="@color/blue"
         android:layout_height="1dp"
         android:layout_width="match_parent"
-        android:layout_below="@id/title_bar"
-        android:id="@+id/title_underline"
+        android:layout_alignBottom="@+id/title_bar"
         android:layout_alignWithParentIfMissing="true"
+        android:id="@+id/title_underline"
         />
    
 	<LinearLayout
@@ -57,24 +46,56 @@
 	    android:orientation="horizontal"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:layout_alignParentBottom="true"
+	    android:layout_above="@id/base_bar"
 	    android:layout_alignParentLeft="true"
-	    android:layout_alignParentRight="true"
+	    android:layout_toLeftOf="@+id/frag_log"
 	    android:baselineAligned="false">
 	    
 	    
 	    <FrameLayout android:id="@+id/list_frag"
-	        android:layout_width="@dimen/bookmarks_width"
+	        android:layout_weight="3"
+	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
 	       	/>
 	    
-	    <ViewStub
-	        android:id="@+id/content_pager_frame_stub"
-	        android:layout="@layout/viewpager"
+	    <RelativeLayout
+	        android:layout_weight="1"
 	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
-	        />
-	    
-	</LinearLayout>
+	        >	
+		    <FrameLayout
+		        android:id="@+id/content_frag"
+		    	android:layout_height="match_parent"
+		    	android:layout_width="match_parent"
+		    	/>
 	
-</LinearLayout>
+		    <ViewStub
+		        android:id="@+id/content_pager_frame_stub"
+		        android:layout="@layout/viewpager"
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent"
+		        />
+		</RelativeLayout>
+	
+	
+	</LinearLayout>
+		
+		    <FrameLayout
+				android:id="@+id/frag_log"
+		        android:layout_width="@dimen/bookmarks_width"
+		        android:layout_height="match_parent"
+		        android:layout_alignParentRight="true"
+		        android:layout_alignWithParentIfMissing="true"
+		        >
+		    	<include layout="@layout/log_viewer" />
+		    </FrameLayout>
+	
+	<ViewStub
+	    android:id="@+id/base_stub"
+	    android:layout="@layout/base_bar"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentBottom="true"
+	    />
+	
+</RelativeLayout>

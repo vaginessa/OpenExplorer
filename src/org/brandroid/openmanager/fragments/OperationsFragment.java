@@ -8,6 +8,7 @@ import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.utils.Logger;
 
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -91,7 +92,10 @@ public class OperationsFragment extends OpenFragment
 
 	@Override
 	public Drawable getIcon() {
-		return getDrawable(R.drawable.sm_gear);
+		LayerDrawable ld = (LayerDrawable)getDrawable(R.drawable.sm_gear);
+		AnimationDrawable ad = (AnimationDrawable)ld.getDrawable(ld.getNumberOfLayers() - 1);
+		ad.start();
+		return ld;
 	}
 
 	@Override

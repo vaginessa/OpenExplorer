@@ -2,5 +2,5 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:drawable="@drawable/ic_back" />
     <item android:drawable="@drawable/ic_front" />
-    <item android:drawable="@drawable/sm_gear_anim" />
+    <item android:drawable="@drawable/sm_gear_anim" android:id="@+id/gear" />
 </layer-list>

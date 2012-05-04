@@ -966,12 +966,12 @@ public class OpenExplorer
 		mStateReady = false;
 		if(mLogFragment != null)
 			try {
-				fragmentManager.beginTransaction().remove(mLogFragment).commitAllowingStateLoss();
+				//fragmentManager.beginTransaction().remove(mLogFragment).disallowAddToBackStack().commitAllowingStateLoss();
 			} catch(Exception e) { }
 		try {
 			Fragment f = fragmentManager.findFragmentByTag("ops");
-			if(f != null)
-				fragmentManager.beginTransaction().remove(f).commitAllowingStateLoss();
+			//if(f != null)
+			//	fragmentManager.beginTransaction().remove(f).disallowAddToBackStack().commitAllowingStateLoss();
 		} catch(Exception e) { }
 		super.onSaveInstanceState(outState);
 		if(mViewPagerAdapter != null)
@@ -1883,13 +1883,20 @@ public class OpenExplorer
 			f = new OperationsFragment();
 		OperationsFragment ops = (OperationsFragment)f;
 		if(findViewById(R.id.frag_log) != null)
+		{
 			fragmentManager
 				.beginTransaction()
 				.replace(R.id.frag_log, ops)
-				.commit();
-		else {
-			mViewPagerAdapter.add(ops);
-			mViewPagerAdapter.notifyDataSetChanged();
+				.disallowAddToBackStack()
+				.commitAllowingStateLoss();
+			findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
+		} else {
+			int pos = mViewPagerAdapter.getItemPosition(ops);
+			if(pos < 0)
+			{
+				mViewPagerAdapter.add(ops);
+				mViewPagerAdapter.notifyDataSetChanged();
+			}
 		}
 	}
 	
@@ -2040,6 +2047,7 @@ public class OpenExplorer
 	{
 		if(path == null) return;
 		if(!path.exists()) return;
+		if(path.length() > getResources().getInteger(R.integer.max_text_editor_size)) return;
 		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null)
 		{
@@ -2507,7 +2515,7 @@ public class OpenExplorer
 						OpenFragment lf = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
 						if(lf == null || !(lf instanceof LogViewerFragment))
 							fragmentManager.beginTransaction()
-								.replace(R.id.frag_log, lf).commit();
+								.replace(R.id.frag_log, lf).commitAllowingStateLoss();
 					} else {
 						mViewPagerAdapter.add(mLogFragment);
 						mViewPager.setAdapter(mViewPagerAdapter);
