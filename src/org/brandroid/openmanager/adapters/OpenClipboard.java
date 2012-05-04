@@ -1,4 +1,4 @@
-package org.brandroid.openmanager.data;
+package org.brandroid.openmanager.adapters;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -9,7 +9,8 @@ import java.util.ListIterator;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.RemoteImageView;
 
