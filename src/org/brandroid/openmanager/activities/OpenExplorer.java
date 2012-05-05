@@ -25,6 +25,7 @@ import android.net.NetworkInfo.State;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.os.StatFs;
@@ -140,6 +141,7 @@ import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.adapters.PagerTabsAdapter;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.OpenBookmarks.BookmarkType;
 import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
@@ -153,7 +155,9 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenZip;
+import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -270,8 +274,10 @@ public class OpenExplorer
 			mPhotoParent = new OpenCursor("Photos"),
 			mVideoParent = new OpenCursor("Videos"),
 			mMusicParent = new OpenCursor("Music"),
-			mDownloadParent = new OpenCursor("Downloads"),
 			mApkParent = new OpenCursor("Apps");
+	private final static OpenSmartFolder
+			mDownloadParent = new OpenSmartFolder("Downloads");
+
 	
 	public boolean isViewPagerEnabled() { return mViewPagerEnabled; }
 	
@@ -1723,7 +1729,7 @@ public class OpenExplorer
 		return mMusicParent;
 	}
 
-	public static OpenCursor getDownloadParent() {
+	public static final OpenSmartFolder getDownloadParent() {
 		return mDownloadParent;
 	}
 	
@@ -1775,10 +1781,35 @@ public class OpenExplorer
 		if(!mDownloadParent.isLoaded())
 		{
 			mDownloadParent.setName(getString(R.string.s_downloads));
-			Logger.LogVerbose("Finding Downloads");
-			try {
-				getSupportLoaderManager().initLoader(4, null, this);
-			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Downloads.", e); }
+			new Thread(new Runnable(){public void run(){
+				OpenFile extDrive = OpenFile.getExternalMemoryDrive(false);
+				OpenFile intDrive = OpenFile.getInternalMemoryDrive();
+				boolean mHasExternal = false;
+				boolean mHasInternal = false;
+				if(extDrive != null && extDrive.exists())
+					mHasExternal = true;
+				if(intDrive != null && intDrive.exists())
+					mHasInternal = true;
+					//OpenSmartFolder dlSmart = new OpenSmartFolder("Downloads");
+				
+				for(String dl : new String[]{"Download","Downloads"})
+				{
+					if(mHasExternal)
+					{
+						if(extDrive.getChild(dl).exists())
+							mDownloadParent.addSearch(new SmartSearch(extDrive.getChild(dl)));
+						else if(extDrive.getChild(dl.toLowerCase()).exists())
+							mDownloadParent.addSearch(new SmartSearch(extDrive.getChild(dl.toLowerCase())));
+					}
+					if(mHasInternal)
+					{
+						if(intDrive.getChild(dl).exists())
+							mDownloadParent.addSearch(new SmartSearch(intDrive.getChild(dl)));
+						else if(intDrive.getChild(dl.toLowerCase()).exists())
+							mDownloadParent.addSearch(new SmartSearch(intDrive.getChild(dl.toLowerCase())));
+					}
+				}
+			}}).start();
 		}
 		Logger.LogVerbose("Done finding cursors");
 		return true;
@@ -3569,8 +3600,6 @@ public class OpenExplorer
 			mParent = mMusicParent;
 		else if(l.getId() == 3)
 			mParent = mApkParent;
-		else if(l.getId() == 4)
-			mParent = mDownloadParent;
 		mParent.setCursor(c);
 		mBookmarks.refresh();
 		OpenFragment f = getSelectedFragment();

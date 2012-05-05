@@ -24,11 +24,14 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager;
@@ -156,31 +159,22 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		//mBookmarksArray.clear();
 		clearBookmarks();
 		
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getExternalMemoryDrive(false)))
+			mHasInternal = true;
+		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getInternalMemoryDrive()))
+			mHasExternal = true;
+		
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getVideoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
 		checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
-		try {
-			if(getExplorer().getSetting(null, "pref_show_downloads", true))
-			{
-			if(OpenExplorer.getDownloadParent() != null && OpenExplorer.getDownloadParent().getChildCount(true) > 0)
-				checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
-			else {
-				OpenFile downloads = new OpenFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-				if(downloads.exists())
-					checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, downloads);
-			}
-			}
-		} catch (IOException e) { }
+		if(getExplorer().getSetting(null, "pref_show_downloads", true))
+			checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
 		
 		checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
 		
 		//checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, storage.getChild("Download"));
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getInternalMemoryDrive()))
-			mHasInternal = true;
-		if(checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getExternalMemoryDrive(false)))
-			mHasExternal = true;
 		Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
 		mAllDataSize = 0l;
 		for(String sItem : df.keySet())
@@ -281,9 +275,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 	private boolean hasBookmark(OpenPath path)
 	{
+		if(path == null) return true;
+		if(path.getPath() == null) return false;
 		for(ArrayList<OpenPath> arr : mBookmarksArray.values())
 			for(OpenPath p : arr)
-				if(p.getPath().replaceAll("/", "").equals(path.getPath().replaceAll("/", "")))
+				if(p.getPath() != null && p.getPath().replaceAll("/", "").equals(path.getPath().replaceAll("/", "")))
 					return true;
 		return false;
 	}
@@ -393,6 +389,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(hasBookmark(path)) return false;
 		if(path instanceof OpenCursor ||
 				path instanceof OpenNetworkPath ||
+				path instanceof OpenSmartFolder ||
 				path.exists())
 		{
 			addBookmark(type, path);
@@ -753,6 +750,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			final TextView mCountText = (TextView)ret.findViewById(R.id.content_count);
 			if(mCountText != null)
 			{
+				if(path instanceof OpenSmartFolder)
+				{
+					mCountText.setVisibility(View.VISIBLE);
+					mCountText.setText("(" + path.length() + ")");
+				}
 				if(path instanceof OpenCursor)
 				{
 					OpenCursor oc = (OpenCursor)path;

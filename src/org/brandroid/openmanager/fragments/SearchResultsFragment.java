@@ -95,7 +95,7 @@ public class SearchResultsFragment
 			}
 		}
 		else mSearch = null;
-		mContentAdapter = new ContentAdapter(getExplorer(), R.layout.list_content_layout, mSearch.getResults());
+		mContentAdapter = new ContentAdapter(getExplorer(), R.layout.list_content_layout, mSearch.getResults(), mSearch);
 	}
 	
 	@Override

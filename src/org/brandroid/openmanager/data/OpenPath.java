@@ -65,6 +65,14 @@ public abstract class OpenPath
 		}
 	public abstract OpenPath[] list() throws IOException;
 	public abstract OpenPath[] listFiles() throws IOException;
+	public List<OpenPath> listFilesCollection() throws IOException
+	{
+		OpenPath[] files = listFiles();
+		ArrayList<OpenPath> ret = new ArrayList<OpenPath>(files.length);
+		for(OpenPath f : files)
+			ret.add(f);
+		return ret;
+	}
 	public static String getParent(String path)
 	{
 		if(path.equals("/")) return null;

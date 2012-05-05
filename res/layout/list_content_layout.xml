@@ -48,19 +48,21 @@
 		android:ellipsize="start"
 		android:singleLine="true"
 		android:layout_width="wrap_content"
+		android:layout_alignWithParentIfMissing="true"
 		android:gravity="left" />
 	<TextView
 		android:id="@+id/content_info"
 		android:layout_alignParentRight="true"
 		android:layout_below="@+id/content_text"
-		android:layout_toRightOf="@+id/content_icon"
 		android:gravity="right"
 		android:layout_marginLeft="4dp"
 		android:text="0 B"
 		android:singleLine="true"
 		android:ellipsize="marquee"
 		android:typeface="monospace"
-		style="@style/Small" />
+		style="@style/Small"
+		android:layout_width="wrap_content"
+		/>
 	<ImageView
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content" 

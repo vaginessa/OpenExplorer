@@ -13,6 +13,7 @@ import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -70,13 +71,13 @@ public abstract class OpenFragment
 			implements View.OnClickListener, View.OnLongClickListener
 				, Comparator<OpenFragment>
 				, Comparable<OpenFragment>
-				, OpenApp
+				, OpenApp, CheckClipboardListener
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
 	protected boolean mActionModeSelected = false;
 	protected Object mActionMode = null;
-	protected BaseAdapter mContentAdapter;
+	protected ContentAdapter mContentAdapter;
 	protected int mMenuContextItemIndex = -1;
 	private boolean mHasOptions = false;
 	
@@ -822,6 +823,10 @@ public abstract class OpenFragment
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
 	protected OpenClipboard getClipboard() {
 		return OpenExplorer.getClipboard();
+	}
+	@Override
+	public boolean checkClipboard(OpenPath file) {
+		return getClipboard().contains(file);
 	}
 	
 	public void onClick(View v) {

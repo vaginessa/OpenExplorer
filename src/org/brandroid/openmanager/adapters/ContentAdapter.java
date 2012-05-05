@@ -8,8 +8,10 @@ import java.util.List;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -42,19 +44,26 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 	private final int MG = KB * KB;
 	private final int GB = MG * KB;
 	
-	private final OpenExplorer mExplorer; 
+	private final OpenPath mParent;
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
+	public boolean bCountHidden = false;
+	private CheckClipboardListener mClipper;
 	
-	public ContentAdapter(OpenExplorer explorer, int layout, List<OpenPath> data) {
-		super(explorer, layout, data);
-		mExplorer = explorer;
+	public ContentAdapter(Context context, int layout, List<OpenPath> data, OpenPath parent) {
+		super(context, layout, data);
+		mParent = parent;
 	}
+	
+	public interface CheckClipboardListener
+	{
+		public boolean checkClipboard(OpenPath file);
+	}
+	public void setCheckClipboardListener(CheckClipboardListener l) { mClipper = l; }
 	
 	public Resources getResources() { return super.getContext().getResources(); }
 	public int getViewMode() { return mViewMode; }
 	public void setViewMode(int mode) { mViewMode = mode; } 
-	public OpenExplorer getExplorer() { return mExplorer; }
 	
 	@Override
 	public void notifyDataSetChanged() {
@@ -120,12 +129,11 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
 		if(mPathView != null)
 		{
-			if(file.getClass().equals(OpenMediaStore.class))
+			if(mParent instanceof OpenSmartFolder || mParent instanceof OpenCursor)
 			{
-				mPathView.setText(file.getPath());
+				String s = file.getPath().replace(file.getName(), "");
 				mPathView.setVisibility(View.VISIBLE);
-				//mHolder.setPath(file.getPath());
-				//mHolder.showPath(true);
+				mPathView.setText(s);
 			}
 			else
 				mPathView.setVisibility(View.GONE);
@@ -136,7 +144,7 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		if(mNameView != null)
 			mNameView.setText(mName);
 
-		if(getExplorer().getClipboard().contains(file))
+		if(mClipper != null && mClipper.checkClipboard(file))
 			mNameView.setTextAppearance(getContext(), R.style.Highlight);
 		else
 			mNameView.setTextAppearance(getContext(),  R.style.Large);
@@ -218,7 +226,6 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		
 		if(file.isDirectory() && !file.requiresThread()) {
 			try {
-				boolean bCountHidden = getExplorer().getPreferences().getSetting("views", "show_" + file.getPath(), false);
 				deets += file.getChildCount(bCountHidden) + " " + getContext().getString(R.string.s_files) + " | ";
 				//deets = file.list().length + " items";
 			} catch (IOException e) {

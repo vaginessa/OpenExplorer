@@ -21,6 +21,7 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
+import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -221,8 +222,9 @@ public class ContentFragment extends OpenFragment
 			if(ContentAdapter.class.equals(mContentAdapter.getClass()))
 			{
 				mGrid.setAdapter(null);
-				mContentAdapter = new ContentAdapter(getExplorer(), mViewMode, mData2);
-				((ContentAdapter)mContentAdapter).setViewMode(getViewMode());
+				mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, mData2, mPath);
+				mContentAdapter.setCheckClipboardListener(this);
+				mContentAdapter.setViewMode(getViewMode());
 				//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
 				mGrid.setAdapter(mContentAdapter);
 			}
@@ -735,7 +737,7 @@ public class ContentFragment extends OpenFragment
 			mData2 = new ArrayList<OpenPath>();
 		//mContentAdapter = new OpenPathAdapter(mPath, getViewMode(), getExplorer());
 		//Logger.LogDebug("Setting up grid w/ " + mData2.size() + " items");
-		mContentAdapter = new ContentAdapter(getExplorer(), mLayoutID, mData2);
+		mContentAdapter = new ContentAdapter(getExplorer(), mLayoutID, mData2, mPath);
 		((ContentAdapter)mContentAdapter).setViewMode(getViewMode());
 		/*
 		if(OpenCursor.class.equals(mPath.getClass())) {

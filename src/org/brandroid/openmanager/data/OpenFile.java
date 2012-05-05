@@ -390,11 +390,9 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	@Override
 	public OpenFile getChild(String name)
 	{
-		File base = getFile();
-		if(!base.isDirectory())
-			base = base.getParentFile();
-		OpenFile ret = new OpenFile(new File(base, name));
-		return ret;
+		//if(!base.isDirectory())
+		//	base = base.getParentFile();
+		return new OpenFile(new File(getFile(), name));
 	}
 	@Override
 	public Boolean isFile() {

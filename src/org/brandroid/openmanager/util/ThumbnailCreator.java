@@ -524,7 +524,7 @@ public class ThumbnailCreator extends Thread {
 					else
 						saveThumbnail(mContext, mCacheFilename, bmp);
 				} catch(IOException ix) {
-					Logger.LogError("Invalid APK: " + file.getPath(), ix);
+					Logger.LogWarning("Invalid APK: " + file.getPath());
 				}
 				finally {
 					try {
