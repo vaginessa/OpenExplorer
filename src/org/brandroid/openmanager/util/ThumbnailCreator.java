@@ -471,7 +471,7 @@ public class ThumbnailCreator extends Thread {
 				if(bmp != null) {
 					//Logger.LogDebug("Bitmap is " + bmp.getWidth() + "x" + bmp.getHeight() + " to " + mWidth + "x" + mHeight);
 					valid = true;
-				} else Logger.LogError("Unable to create MediaStore thumbnail.");
+				} else Logger.LogError("Unable to create MediaStore thumbnail for " + file);
 			}
 			if (!valid && file.isAPKFile() && !useGeneric)
 			{

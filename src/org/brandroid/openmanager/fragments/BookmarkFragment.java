@@ -54,6 +54,11 @@ public class BookmarkFragment
 		super.onViewCreated(view, savedInstanceState);
 	}
 	
+	@Override
+	public int getPagerPriority() {
+		return 0;
+	}
+	
 	public ExpandableListView getListView() { return (ExpandableListView) getView().findViewById(android.R.id.list); }
 	public void setListAdapter(ExpandableListAdapter adapter) { getListView().setAdapter(adapter); }
 	

@@ -155,7 +155,7 @@ public class OpenMediaStore extends OpenPath
 
 	@Override
 	public Boolean canRead() {
-		return mFile == null ? true : mFile.canRead();
+		return mFile == null ? false : mFile.canRead();
 	}
 
 	@Override
@@ -165,7 +165,7 @@ public class OpenMediaStore extends OpenPath
 
 	@Override
 	public Boolean canExecute() {
-		return mFile == null ? true : mFile.canExecute();
+		return mFile == null ? false : mFile.canExecute();
 	}
 
 	@Override

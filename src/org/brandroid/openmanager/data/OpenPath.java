@@ -299,6 +299,11 @@ public abstract class OpenPath
 		public void update(int progress, int total);
 		public void update(String status);
 	}
+	
+	public interface OpenPathCopyable
+	{
+		public boolean copyFrom(OpenPath file);
+	}
 
 	public String getMimeType() {
 		if(MimeTypes.Default != null)

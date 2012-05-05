@@ -72,9 +72,7 @@ public class MenuUtils {
 	{
 		if(menu == null) return;
 		if(ids.length == 0)
-			for(int i = 0; i < menu.size(); i++)
-				menu.getItem(i).setVisible(visible);
-		else
+			setMenuVisible(menu, visible, getMenuIDs(menu));
 		for(int id : ids)
 			if(menu.findItem(id) != null && !visible)
 				menu.removeItem(id);
@@ -92,11 +90,26 @@ public class MenuUtils {
 				menu.findItem(id).setShowAsAction(show);
 	}
 	
+	public static int[] getMenuIDs(Menu menu)
+	{
+		int[] ret = new int[menu.size()];
+		for(int i = 0; i < ret.length; i++)
+			ret[i] = menu.getItem(i).getItemId();
+		return ret;
+	}
+	
 	public static void setMenuEnabled(Menu menu, boolean enabled, int... ids)
 	{
+		if(ids.length == 0)
+			setMenuEnabled(menu, enabled, getMenuIDs(menu));
 		for(int id : ids)
-			if(menu.findItem(id) != null)
-				menu.findItem(id).setEnabled(enabled);
+		{
+			MenuItem item = menu.findItem(id);
+			if(item == null) continue;
+			item.setEnabled(enabled);
+			if(enabled)
+				item.setVisible(true);
+		}
 	}
 	
 }

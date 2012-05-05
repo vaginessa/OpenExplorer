@@ -284,6 +284,11 @@ public class TextEditorFragment extends OpenFragment
 	}
 	
 	@Override
+	public int getPagerPriority() {
+		return 6;
+	}
+	
+	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		setEditable(mEditMode);
@@ -566,6 +571,9 @@ public class TextEditorFragment extends OpenFragment
 					String line;
 					while((line = br.readLine()) != null)
 						sb.append(line + "\n");
+				} catch(SecurityException s) {
+					Logger.LogError("Couldn't open file due to security. " + path, s);
+					doClose();
 				} catch (RuntimeException r) {
 					Logger.LogError("File too large?", r);
 					if(getExplorer() != null)

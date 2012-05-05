@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.view.*;
 import android.widget.*;
 
@@ -112,11 +113,10 @@ public class IconContextMenuAdapter extends BaseAdapter {
         //res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
         //res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
         
-        Drawable icon = item.getIcon();
-        if(icon == null)
-        	icon = new ColorDrawable(android.R.color.white);
-        if(icon instanceof BitmapDrawable)
-        	((BitmapDrawable)icon).setGravity(Gravity.CENTER);
+        Drawable src = item.getIcon();
+        if(src != null && src instanceof BitmapDrawable)
+        	((BitmapDrawable)src).setGravity(Gravity.CENTER);
+        Drawable icon = new LayerDrawable(new Drawable[]{src != null ? src : new ColorDrawable(android.R.color.white)});
         
         if(!item.isEnabled())
         {
@@ -124,7 +124,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
         	res.setLongClickable(false);
         	res.setTextColor(context.getResources().getColor(R.color.lightgray));
         	icon.setAlpha(128);
-        }
+        } else icon.setAlpha(255);
         
         res.setTag(item);
         res.setText(item.getTitle());

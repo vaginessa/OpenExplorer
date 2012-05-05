@@ -24,7 +24,7 @@ public class OpenZip extends OpenPath
 		mFile = zipFile;
 		try {
 			mZip = new ZipFile(mFile.getPath());
-			Logger.LogInfo("Zip file " + zipFile + " has " + length() + " entries");
+			//Logger.LogInfo("Zip file " + zipFile + " has " + length() + " entries");
 		} catch (IOException e) {
 			Logger.LogError("Couldn't open zip file (" + zipFile + ")");
 		}
@@ -91,7 +91,7 @@ public class OpenZip extends OpenPath
 		while(entries.hasMoreElements())
 		{
 			mChildren[i++] = new OpenZipEntry(this, entries.nextElement());
-			Logger.LogDebug("Zip Entry #" + i + " = " + mChildren[i - 1].getName());
+			//Logger.LogDebug("Zip Entry #" + i + " = " + mChildren[i - 1].getName());
 		}
 		return mChildren;
 	}

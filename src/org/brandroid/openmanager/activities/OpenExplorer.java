@@ -21,6 +21,7 @@ package org.brandroid.openmanager.activities;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.NetworkInfo.State;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -84,6 +85,7 @@ import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.SubMenu;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup.LayoutParams;
@@ -697,7 +699,7 @@ public class OpenExplorer
 		{
 			if(!getSetting(null, "pref_autowtf", false))
 				showWTFIntent();
-			else
+			else if(isNetworkConnected())
 				new SubmitStatsTask(this).execute(
 						Logger.getCrashReport(true));
 		}
@@ -739,6 +741,7 @@ public class OpenExplorer
 					return true;
 				if(showContextMenu(R.menu.menu_sort_flat, findViewById(R.id.title_menu)) != null)
 					return true;
+				from.setOnCreateContextMenuListener(null);
 			}
 			if(showContextMenu(R.menu.menu_sort_flat, from) != null)
 				return true;
@@ -756,6 +759,7 @@ public class OpenExplorer
 					return true;
 				if(showContextMenu(R.menu.menu_view_flat, findViewById(R.id.title_menu)) != null)
 					return true;
+				from.setOnCreateContextMenuListener(null);
 			}
 			if(showContextMenu(R.menu.menu_view_flat, from) != null)
 				return true;
@@ -1557,6 +1561,17 @@ public class OpenExplorer
 			Logger.closeDb();
 	}
 	
+	public boolean isNetworkConnected()
+	{
+		ConnectivityManager conman = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		if(!conman.getBackgroundDataSetting()) return false;
+		NetworkInfo ni = conman.getActiveNetworkInfo();
+		if(ni == null) return false;
+		if(!ni.isAvailable() || !ni.isConnected()) return false;
+		if(ni.getState() == State.CONNECTING) return false;
+		return true;
+	}
+	
 	@SuppressWarnings("deprecation")
 	private void submitStats()
 	{
@@ -1567,11 +1582,8 @@ public class OpenExplorer
 		if(new Date().getTime() - lastSubmit < 6000)
 			return;
 		lastSubmit = new Date().getTime();
-		ConnectivityManager conman = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		if(!conman.getBackgroundDataSetting()) return;
-		NetworkInfo ni = conman.getActiveNetworkInfo();
-		if(ni == null) return;
-		if(!ni.isAvailable() || !ni.isConnected()) return;
+		if(!isNetworkConnected()) return;
+		
 		String logs = Logger.getDbLogs(false);
 		if(logs == null || logs == "") logs = "[]";
 		//if(logs != null && logs != "") {
@@ -2213,6 +2225,14 @@ public class OpenExplorer
 						btn.setImageDrawable(d);
 						btn.setId(item.getItemId());
 						btn.setOnClickListener(this);
+						btn.setLongClickable(true);
+						btn.setOnLongClickListener(new OnLongClickListener() {
+							@Override
+							public boolean onLongClick(View v) {
+								showToast(item.getTitle());
+								return true;
+							}
+						});
 						if(!USE_PRETTY_MENUS || topButtons)
 							btn.setOnCreateContextMenuListener(this);
 						mToolbarButtons.addView(btn);
@@ -2227,7 +2247,7 @@ public class OpenExplorer
 				MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
 			else if(menu.size() > 0 && menu.findItem(R.id.title_menu) instanceof MenuItemImpl)
 			{
-				MenuItemImpl item = (MenuItemImpl)menu.findItem(R.id.title_menu);
+				final MenuItemImpl item = (MenuItemImpl)menu.findItem(R.id.title_menu);
 				if(item != null)
 				{
 					ImageButton btn = (ImageButton)getLayoutInflater()
@@ -2241,6 +2261,14 @@ public class OpenExplorer
 					btn.setId(item.getItemId());
 					btn.setTag(item);
 					btn.setOnClickListener(this);
+					btn.setLongClickable(true);
+					btn.setOnLongClickListener(new OnLongClickListener() {
+						@Override
+						public boolean onLongClick(View v) {
+							showToast(item.getTitle());
+							return true;
+						}
+					});
 					if(!USE_PRETTY_MENUS)
 						btn.setOnCreateContextMenuListener(this);
 					mToolbarButtons.addView(btn);
@@ -2274,6 +2302,7 @@ public class OpenExplorer
 			getSelectedFragment().onCreateOptionsMenu(menu, getMenuInflater());
 			
 		}
+		MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
 		//Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -2649,6 +2678,7 @@ public class OpenExplorer
 		*/
 		//*
 		mEvHandler.copyFile(new OpenFile("/mnt/sdcard/cm9-droid3-20120316-0330.zip"), new OpenFile("/mnt/sdcard/Download"), this);
+		refreshOperations();
 		//*/
 	}
 	
@@ -3315,9 +3345,8 @@ public class OpenExplorer
 					.setImageResource(getClipboard().isMultiselect() ?
 							R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_paste
 							);
-				if(getClipboard().isMultiselect())
-					((LayerDrawable)((ImageView)pb.findViewById(R.id.title_paste_icon)).getDrawable())
-						.getDrawable(1).setAlpha(127);
+				((LayerDrawable)((ImageView)pb.findViewById(R.id.title_paste_icon)).getDrawable())
+					.getDrawable(1).setAlpha(getClipboard().isMultiselect()?127:0);
 			}
 		}
 		if(!BEFORE_HONEYCOMB)

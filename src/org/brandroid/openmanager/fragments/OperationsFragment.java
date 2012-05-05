@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -52,17 +53,27 @@ public class OperationsFragment extends OpenFragment
 						R.layout.notification, parent, false);
 				//convertView.findViewById(android.R.id.icon).setVisibility(View.GONE);
 			}
+			((ImageView)convertView.findViewById(android.R.id.icon)).setImageResource(bw.getNotifIconResId());
 			final View view = convertView;
+			final ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
+			final TextView text1 = (TextView)view.findViewById(android.R.id.text1);
 			bw.updateView(view);
 			bw.setWorkerUpdateListener(new OnWorkerUpdateListener() {
 				public void onWorkerThreadComplete(int type, ArrayList<String> results) {
 					bw.setWorkerUpdateListener(null);
-					view.findViewById(android.R.id.progress).setVisibility(View.GONE);
-					((TextView)view.findViewById(android.R.id.text1)).setText(R.string.s_toast_complete);
+					view.post(new Runnable(){public void run(){
+						pb.setVisibility(View.GONE);
+						text1.setText(R.string.s_toast_complete);
+						notifyDataSetChanged();
+					}});
 				}
-				public void onWorkerProgressUpdate(int pos, int total) {
-					Logger.LogDebug("Operations onProgressUpdate(" + pos + "," + total + ")");
-					bw.updateView(view);
+				public void onWorkerProgressUpdate(final int pos, final int total) {
+					view.post(new Runnable(){public void run(){
+						Logger.LogDebug("Operations onProgressUpdate(" + pos + "," + total + " :: " + bw.getProgressA() + "," + bw.getProgressB() + ")");
+						pb.setProgress(bw.getProgressA());
+						pb.setSecondaryProgress(bw.getProgressB());
+						text1.setText(bw.getLastRate());
+					}});
 				}
 			});
 			return view;
@@ -92,15 +103,15 @@ public class OperationsFragment extends OpenFragment
 
 	@Override
 	public Drawable getIcon() {
-		LayerDrawable ld = (LayerDrawable)getDrawable(R.drawable.sm_gear);
-		AnimationDrawable ad = (AnimationDrawable)ld.getDrawable(ld.getNumberOfLayers() - 1);
-		ad.start();
-		return ld;
+		return getDrawable(R.drawable.sm_gear_anim);
 	}
 
 	@Override
 	public CharSequence getTitle() {
-		return getString(R.string.s_title_operations);
+		if(getExplorer() != null)
+			return getExplorer().getString(R.string.s_title_operations);
+		else
+			return "File Operations";
 	}
 
 }

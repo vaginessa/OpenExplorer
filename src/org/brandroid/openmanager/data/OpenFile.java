@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.HashSet;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.RootManager;
@@ -22,7 +23,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
 
-public class OpenFile extends OpenPath
+public class OpenFile extends OpenPath implements OpenPathCopyable
 {
 	private static final long serialVersionUID = 6436156952322586833L;
 	private File mFile;
@@ -441,6 +442,7 @@ public class OpenFile extends OpenPath
 			ret = true;
 		} catch(IOException e) {
 			Logger.LogError("Couldn't CopyFrom (" + sourceFile.getPath() + " -> " + getPath() + ")", e);
+			ret = false;
 		} finally {
 			if(source != null)
 				try {
@@ -509,5 +511,12 @@ public class OpenFile extends OpenPath
 			newFile.delete();
 		Logger.LogDebug("Renaming " + getPath() + " to " + newFile.getPath());
 		mFile.renameTo(newFile);
+	}
+
+	@Override
+	public boolean copyFrom(OpenPath file) {
+		if(file instanceof OpenFile)
+			return copyFrom((OpenFile)file);
+		return false;
 	}
 }

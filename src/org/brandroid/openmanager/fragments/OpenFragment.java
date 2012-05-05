@@ -85,6 +85,13 @@ public abstract class OpenFragment
 		public boolean onTitleLongClick(View titleView);
 	}
 	
+	public class OpenContextMenuInfo implements ContextMenuInfo
+	{
+		private final OpenPath file;
+		public OpenContextMenuInfo(OpenPath path) { file = path; }
+		public OpenPath getPath() { return file; }
+	}
+	
 	public static OpenFragment instantiate(Context context, String fname, Bundle args) {
         String sPath = null;
     	if(args.containsKey("last"))
@@ -115,13 +122,22 @@ public abstract class OpenFragment
 	@Override
 	public int compare(OpenFragment a, OpenFragment b) {
 		Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
-		if(b instanceof ContentFragment && !(a instanceof ContentFragment)) return 1;
-		if(a instanceof ContentFragment && !(b instanceof ContentFragment)) return -1;
-		if(!(a instanceof ContentFragment) || !(b instanceof ContentFragment)) return 0;
-		OpenPath pa = ((ContentFragment)a).getPath();
-		OpenPath pb = ((ContentFragment)b).getPath();
-		return pa.getPath().compareTo(pb.getPath());
+		int priA = a.getPagerPriority();
+		int priB = b.getPagerPriority();
+		if(priA != priB)
+			return priA > priB ? 1 : 0;
+		if(a instanceof ContentFragment && b instanceof ContentFragment)
+		{
+			OpenPath pa = ((ContentFragment)a).getPath();
+			OpenPath pb = ((ContentFragment)b).getPath();
+			return pa.getPath().compareTo(pb.getPath());
+		} else return 0;
 	}
+	
+	/*
+	 * Return priority for ordering in ViewPager (Low to High)
+	 */
+	public int getPagerPriority() { return 5; }
 
 	//@Override
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
@@ -237,6 +253,13 @@ public abstract class OpenFragment
 		return false;
 	}
 	
+	public MenuInflater getMenuInflater()
+	{
+		if(getActivity() != null)
+			return (MenuInflater)getActivity().getMenuInflater();
+		else return null;
+	}
+	
 	public boolean onItemLongClick(AdapterView<?> list, final View view ,int pos, long id) {
 		mMenuContextItemIndex = pos;
 		//view.setBackgroundResource(R.drawable.selector_blue);
@@ -245,6 +268,8 @@ public abstract class OpenFragment
 		
 		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 		final String name = file.getName();
+		
+		final OpenContextMenuInfo info = new OpenContextMenuInfo(file);
 		
 		if(!OpenExplorer.USE_PRETTY_CONTEXT_MENUS)
 		{
@@ -257,6 +282,14 @@ public abstract class OpenFragment
 				//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 				//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
 				MenuBuilder cmm = IconContextMenu.newMenu(list.getContext(), R.menu.context_file);
+				if(!file.canRead())
+				{
+					MenuUtils.setMenuEnabled(cmm, false);
+					MenuUtils.setMenuEnabled(cmm, true, R.id.menu_context_info);
+				}
+				MenuUtils.setMenuEnabled(cmm, file.canWrite(), R.id.menu_context_paste, R.id.menu_context_cut, R.id.menu_context_delete, R.id.menu_context_rename);
+				onPrepareOptionsMenu(cmm);
+				
 				//if(!file.isArchive()) hideItem(cmm, R.id.menu_context_unzip);
 				if(getClipboard().size() > 0)
 					MenuUtils.setMenuVisible(cmm, false, R.id.menu_multi);
@@ -451,7 +484,7 @@ public abstract class OpenFragment
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		if(!isVisible()) return;
 		super.onCreateContextMenu(menu, v, menuInfo);
-		//Logger.LogDebug("OpenFragment.onCreateContextMenu");
+		Logger.LogDebug("OpenFragment.onCreateContextMenu");
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE) return;
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		OpenPath file = null;
@@ -460,6 +493,12 @@ public abstract class OpenFragment
 		else return;
 		new MenuInflater(v.getContext()).inflate(R.menu.context_file, menu);
 		MenuUtils.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
+		if(!file.canRead())
+		{
+			MenuUtils.setMenuEnabled(menu, false);
+			MenuUtils.setMenuEnabled(menu, true, R.id.menu_context_info);
+		}
+		MenuUtils.setMenuEnabled(menu, file.canWrite(), R.id.menu_context_paste, R.id.menu_context_cut, R.id.menu_context_delete, R.id.menu_context_rename);
 		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
 		//menu.findItem(R.id.menu_context_unzip).setVisible(file.isArchive());
 	}

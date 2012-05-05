@@ -58,12 +58,14 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.support.v4.app.FragmentManager;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.SearchView;
@@ -519,16 +521,25 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		onPrepareOptionsMenu(menu);
+	}
+	
+	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		//Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
 		if(getActivity() == null) return;
 		if(menu == null) return;
-		if(!isAdded() || isDetached() || !isVisible()) return;
+		if(isDetached() || !isVisible()) return;
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 		
 		MenuUtils.setMenuChecked(menu, mFoldersFirst, R.id.menu_sort_folders_first);
+		
+		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
 		
 		switch(getSorting())
 		{
@@ -553,10 +564,13 @@ public class ContentFragment extends OpenFragment
 		case TYPE:
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
 			break;
+		default:
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
+			break;
 		}
 		
-		if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
-			menu.findItem(R.id.menu_multi).setIcon(null);
+		//if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
+		//	menu.findItem(R.id.menu_multi).setIcon(null);
 		
 		//if(menu.findItem(R.id.menu_context_unzip) != null && getClipboard().getCount() == 0)
 		//	menu.findItem(R.id.menu_context_unzip).setVisible(false);
@@ -578,6 +592,8 @@ public class ContentFragment extends OpenFragment
 			if(mPaste != null)
 				mPaste.setVisible(true);
 		}
+		
+		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view, R.id.menu_sort);
 		
 		int mViewMode = getViewMode();
 		MenuUtils.setMenuChecked(menu, true, 0, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
@@ -886,6 +902,11 @@ public class ContentFragment extends OpenFragment
 		//if(getView() != null) getView().invalidate();
 		
 		//}}).run();
+	}
+	
+	@Override
+	public int getPagerPriority() {
+		return 1;
 	}
 	
 	/*

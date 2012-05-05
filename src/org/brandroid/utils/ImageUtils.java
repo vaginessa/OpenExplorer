@@ -3,6 +3,7 @@ package org.brandroid.utils;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.views.RemoteImageView;
 
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
@@ -57,6 +58,8 @@ public class ImageUtils {
 			}});
 			td.startTransition(speed);
 		}
+		if(dest instanceof AnimationDrawable)
+			((AnimationDrawable)dest).start();
 		//}
 	}
 

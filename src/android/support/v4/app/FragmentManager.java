@@ -864,7 +864,7 @@ final class FragmentManagerImpl extends FragmentManager {
                             if (f.mContainerId != 0) {
                                 container = (ViewGroup)mActivity.findViewById(f.mContainerId);
                                 if (container == null && !f.mRestored) {
-                                    throw new IllegalArgumentException("No view found for id 0x"
+                                    Logger.LogError("No view found for id 0x"
                                             + Integer.toHexString(f.mContainerId)
                                             + " for fragment " + f);
                                 }
@@ -1702,6 +1702,7 @@ final class FragmentManagerImpl extends FragmentManager {
             for (int i=0; i<nonConfig.size(); i++) {
                 Fragment f = nonConfig.get(i);
                 if (DEBUG) Log.v(TAG, "restoreAllState: re-attaching retained " + f);
+                if(f.mIndex >= fms.mActive.length) continue;
                 FragmentState fs = fms.mActive[f.mIndex];
                 fs.mInstance = f;
                 f.mSavedViewState = null;

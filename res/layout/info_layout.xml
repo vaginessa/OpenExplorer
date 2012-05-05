@@ -22,37 +22,38 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:padding="6dip">
-	<LinearLayout
-		android:orientation="horizontal"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:paddingBottom="10dip">
-		<ImageView
-			android:id="@+id/info_icon"
-			android:layout_width="64dp"
-			android:layout_height="64dp"
-			android:contentDescription="Icon"
-			android:adjustViewBounds="true"
-			android:layout_gravity="left"/>
-		<LinearLayout
-			android:orientation="vertical"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-				android:paddingRight="4dip">
-			<TextView
-				android:id="@+id/info_path_label"
-				style="@style/Mid"
-				android:layout_width="fill_parent"
-				android:layout_height="wrap_content"
-				android:gravity="center"/>
-		</LinearLayout>
-	</LinearLayout>
 	
 	<ScrollView
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:padding="8dip"
 		android:layout_weight="2">
+		<LinearLayout android:orientation="vertical" android:layout_height="wrap_content" android:layout_width="match_parent">
+			<LinearLayout
+				android:orientation="horizontal"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:paddingBottom="10dip">
+				<ImageView
+					android:id="@+id/info_icon"
+					android:layout_width="64dp"
+					android:layout_height="64dp"
+					android:contentDescription="Icon"
+					android:adjustViewBounds="true"
+					android:layout_gravity="left"/>
+				<LinearLayout
+					android:orientation="vertical"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+						android:paddingRight="4dip">
+					<TextView
+						android:id="@+id/info_path_label"
+						style="@style/Mid"
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:gravity="center"/>
+				</LinearLayout>
+			</LinearLayout>
 			<TableLayout
 				android:orientation="vertical"
 				android:layout_width="match_parent"
@@ -61,166 +62,184 @@
 				android:shrinkColumns="*">
 				<TableRow>
 					<TextView
+						style="@style/Mid"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_info_num_folders"/>
 					<TextView
+						style="@style/Mid"
 						android:id="@+id/info_dirs_label"
 						android:layout_width="fill_parent"
 						android:layout_height="wrap_content"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:textColor="@color/white"
+						
+						
 						android:gravity="right"/>
 				</TableRow>
 				<TableRow>
 					<TextView
+						style="@style/Mid"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_info_num_files"/>
 					<TextView
+						style="@style/Mid"
 						android:id="@+id/info_files_label"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
+						
 						android:gravity="right"/>
 				</TableRow>
 				<TableRow>
 					<TextView
+						style="@style/Mid"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_size"/>
 					<TextView
+						style="@style/Mid"
 						android:id="@+id/info_size"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
+						
 						android:gravity="right"/>
 				</TableRow>
 				<TableRow>
+				    <RelativeLayout android:layout_span="2" android:layout_width="match_parent" android:layout_height="wrap_content">
 					<TextView
-						android:layout_span="2"
-						android:layout_width="match_parent"
+						style="@style/Mid"
+						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="@string/s_info_last_modified"/>
-				</TableRow>
-				<TableRow>
+						
+						android:layout_toLeftOf="@+id/info_time_stamp"
+						android:layout_alignParentLeft="true"
+						android:text="@string/s_info_last_modified" />
 					<TextView
-					    android:layout_span="2"
+						style="@style/Mid"
+						android:layout_alignParentRight="true"
 						android:id="@+id/info_time_stamp"
-						android:layout_width="match_parent"
+						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
+						
 						android:gravity="right"/>
+					</RelativeLayout>
 				</TableRow>
 				<TableRow>
 					<TextView
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="@string/s_info_totalspace"/>
-					<TextView
-						android:id="@+id/info_total_size"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:gravity="right"/>
-				</TableRow>
-				<TableRow>
-					<TextView
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:text="@string/s_info_freespace"/>
-					<TextView
-						android:id="@+id/info_free_size"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
-						android:gravity="right"/>
-				</TableRow>
-				<TableRow>
-					<TextView
+						style="@style/Mid"
 					    android:layout_marginTop="8dp"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
 						android:layout_span="2"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_info_permissions"/>
 				</TableRow>
 				<TableRow>
 					<TextView
+						style="@style/Mid"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:paddingLeft="10dip"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_info_permission_read"/>
 					<TextView
+						style="@style/Mid"
 						android:id="@+id/info_read_perm"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
+						
 						android:gravity="right"/>
 				</TableRow>
 				<TableRow>
 					<TextView
+						style="@style/Mid"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:paddingLeft="10dip"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_info_permission_write"/>
 					<TextView
+						style="@style/Mid"
 						android:id="@+id/info_write_perm"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
+						
 						android:gravity="right"/>
 				</TableRow>
 				<TableRow>
 					<TextView
+						style="@style/Mid"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:paddingLeft="10dip"
-						android:textColor="@color/white"
+						
 						android:gravity="left"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
 						android:text="@string/s_info_permission_execute"/>
 					<TextView
+						style="@style/Mid"
 						android:id="@+id/info_execute_perm"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:textColor="@color/white"
-						android:textAppearance="?android:attr/textAppearanceMedium"
+						
+						
+						android:gravity="right"/>
+				</TableRow>
+				
+				<TableRow>
+				    <View android:layout_span="2" android:layout_height="1dp" android:background="@color/blue" />
+				</TableRow>
+				
+				<TableRow>
+					<TextView
+						style="@style/Mid"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:gravity="left"
+						android:text="@string/s_info_totalspace"/>
+					<TextView
+						android:id="@+id/info_total_size"
+						style="@style/Mid"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:gravity="right"/>
+				</TableRow>
+				<TableRow>
+					<TextView
+						style="@style/Mid"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:gravity="left"
+						android:text="@string/s_info_freespace"/>
+					<TextView
+						android:id="@+id/info_free_size"
+						style="@style/Mid"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
 						android:gravity="right"/>
 				</TableRow>
 			</TableLayout>
+		</LinearLayout>
 	</ScrollView>
 </LinearLayout>

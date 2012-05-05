@@ -122,11 +122,11 @@ public class OpenFragmentActivity
 	
 
 	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
-	public void showToast(final String message)  {
+	public void showToast(final CharSequence message)  {
 		showToast(message, Toast.LENGTH_SHORT);
 	}
 	public void showToast(final int iStringResource) { showToast(getResources().getString(iStringResource)); }
-	public void showToast(final String message, final int toastLength)  {
+	public void showToast(final CharSequence message, final int toastLength)  {
 		Logger.LogInfo("Made toast: " + message);
 		runOnUiThread(new Runnable() {
 			public void run() {
