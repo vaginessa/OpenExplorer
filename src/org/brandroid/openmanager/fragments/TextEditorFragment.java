@@ -76,6 +76,7 @@ public class TextEditorFragment extends OpenFragment
 	private boolean mDirty = false;
 	private long lastClick = 0l;
 	private float mTextSize = 10f;
+	private boolean mSalvage = true;
 	
 	private AsyncTask<?, ?, ?> mTask = null;
 	
@@ -111,6 +112,11 @@ public class TextEditorFragment extends OpenFragment
 		TextEditorFragment ret = new TextEditorFragment();
 		ret.setArguments(args);
 		return ret;
+	}
+	
+	public void setSalvagable(boolean doSave)
+	{
+		mSalvage = doSave;
 	}
 	
 	@Override
@@ -356,6 +362,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
+		if(!mSalvage) return;
 		Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
 		outState.putString("edit_path", mPath.getPath());
 		if(mData != null && mData.length() < 500000)
@@ -381,6 +388,7 @@ public class TextEditorFragment extends OpenFragment
 	
 	public void doClose()
 	{
+		mSalvage = false;
 		cancelTask();
 		if(getExplorer() != null && getExplorer().isViewPagerEnabled())
 		{
@@ -695,6 +703,10 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public boolean onTitleLongClick(View titleView) {
 		return showMenu(R.menu.text_editor, titleView);
+	}
+
+	public boolean isSalvagable() {
+		return mSalvage;
 	}
 	
 }
