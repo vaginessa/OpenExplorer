@@ -7,9 +7,11 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.DisplayMetrics;
@@ -48,6 +50,7 @@ public class BetterPopupWindow {
 	private static final boolean ALLOW_HORIZONTAL_MODE = true;
 	private int layout;
 	private Point exact = null;
+	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
 	/**
 	 * Create a BetterPopupWindow
@@ -63,6 +66,7 @@ public class BetterPopupWindow {
 		if(anchor != null && anchor.findViewById(android.R.id.icon) != null)
 			anchor = anchor.findViewById(android.R.id.icon);
 		this.popup = new PopupWindow(mContext);
+		//popup.setClippingEnabled(true);
 		//this.popup.setAnimationStyle(anim);
 		//this.popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
 
@@ -126,20 +130,25 @@ public class BetterPopupWindow {
 
 	private void OnPopupShown(int w, int h)
 	{
+		if(forcedHeight) return;
 		if(mShownListener != null)
 			mShownListener.OnPopupShown(w, h);
-		if(popup.getHeight() < h)
+		if(popup.getHeight() < h || popup.getHeight() >= getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height))
+		{
 			popup.update(w, h);
+		}
 	}
 	
-
 	private void preShow(int xPos, final int yPos) {
 		if(this.root == null) {
 				throw new IllegalStateException("setContentView was not called with a view to display.");
 		}
 		onShow();
 
-		this.popup.setBackgroundDrawable(new BitmapDrawable());
+		if(DEBUG)
+			popup.setBackgroundDrawable(new ColorDrawable(mContext.getResources().getColor(R.color.translucent_gray)));
+		else
+			popup.setBackgroundDrawable(new BitmapDrawable());
 		
 		// if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
 		// otherwise you need to set the background of the root viewgroup
@@ -147,8 +156,12 @@ public class BetterPopupWindow {
 		layout = yPos + (anchor != null ? anchor.getHeight() : 0) > getWindowRect().centerY() ?
 				R.layout.context_bottom : R.layout.contextmenu_layout;
 		
-		if(getWindowHeight() > yPos + anchor.getHeight() + getPreferredMinHeight())
+		if(getAvailableHeight() > yPos + anchor.getHeight() + Math.max(mHeight, getPreferredMinHeight()))
 			layout = R.layout.contextmenu_layout;
+		else layout = R.layout.context_bottom;
+		
+		if(popup.isAboveAnchor())
+			layout = R.layout.context_bottom;
 		
 		if(backgroundView == null)
 		{
@@ -161,40 +174,63 @@ public class BetterPopupWindow {
 					.findViewById(android.R.id.widget_frame))
 					.addView(this.root);
 
-			final Runnable fixHeight = new Runnable(){public void run() {
-				int h = root.getHeight();
-				int w = root.getWidth();
-				int left = root.getLeft();
-				int top = root.getTop();
-				if(getArrow() != null)
-					h += getArrow().getHeight();
-				if(backgroundView.getPaddingTop() > 0)
-					h += backgroundView.getPaddingTop();
-				if(backgroundView.getPaddingBottom() > 0)
-					h += backgroundView.getPaddingBottom();
-				h += 4;
-				//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-				h = Math.max(h, backgroundView.getHeight());
-				h = Math.max(getPreferredMinHeight(), h);
-				int l = 0, t = 0;
-				if(exact != null)
-				{
-					l = exact.x;
-					t = exact.y;
-				}
-				if(mHeight > 0 && h <= mHeight) return;
-				Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ")"); // from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
-				OnPopupShown(w, h);
-			}};
 			if(OpenExplorer.BEFORE_HONEYCOMB)
 			{
-				root.postDelayed(fixHeight, mContext.getResources().getInteger(android.R.integer.config_mediumAnimTime));
+				root.postDelayed(new Runnable(){public void run() {
+					int h = root.getHeight();
+					int w = popup.getWidth();
+					int left = root.getLeft();
+					int top = root.getTop();
+					if(getArrow() != null)
+						h += getArrow().getHeight();
+					if(backgroundView.getPaddingTop() > 0)
+						h += backgroundView.getPaddingTop();
+					if(backgroundView.getPaddingBottom() > 0)
+						h += backgroundView.getPaddingBottom();
+					h += 4;
+					//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+					h = Math.max(h, backgroundView.getHeight());
+					h = Math.max(getPreferredMinHeight(), h);
+					int l = 0, t = 0;
+					if(exact != null)
+					{
+						l = exact.x;
+						t = exact.y;
+					}
+					if(mHeight > 0 && h <= mHeight) return;
+					if(DEBUG)
+						Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ")"); // from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
+					OnPopupShown(w, h);
+				}}, mContext.getResources().getInteger(android.R.integer.config_mediumAnimTime));
 			} else
 				root.addOnLayoutChangeListener(new OnLayoutChangeListener() {
 				@Override
 				public void onLayoutChange(View v, int left, int top, int right,
 						int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-					fixHeight.run();
+					int h = bottom - top;
+					int w = Math.max(popup.getWidth(), right - left);
+					if(getArrow() != null)
+						h += getArrow().getHeight();
+					if(backgroundView.getPaddingTop() > 0)
+						h += backgroundView.getPaddingTop();
+					if(backgroundView.getPaddingBottom() > 0)
+						h += backgroundView.getPaddingBottom();
+					h += 4;
+					//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+					h = Math.min(h, backgroundView.getHeight());
+					//h = Math.max(getPreferredMinHeight(), h);
+					int l = 0, t = 0;
+					if(exact != null)
+					{
+						l = exact.x;
+						t = exact.y;
+					}
+					//if(h < getPreferredMinHeight()) return;
+					//if(mHeight > 0 && h <= mHeight) return;
+					if(DEBUG)
+						Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ") from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
+					if(h > getPreferredMinHeight())
+						OnPopupShown(w, h);
 				}
 			});
 		}
@@ -203,6 +239,7 @@ public class BetterPopupWindow {
 		//if(mHeight == 0) popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		if(mHeight > 0)
 			popup.setHeight(mHeight);
+		else popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		//this.popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
@@ -359,8 +396,8 @@ public class BetterPopupWindow {
 			boolean fromRight = ancLeft + xOffset > getWindowRect().centerX();
 			boolean fromBottom = layout == R.layout.context_bottom; // ancTop + yOffset > getWindowRect().centerY();
 			//if(!fromBottom && pop)
-			int spaceVertical = fromBottom ? ancTop : getWindowHeight() - (ancTop + anchor.getHeight()); 
-			int spaceHorizontal = fromRight ? ancLeft : getWindowWidth() - (ancLeft + anchor.getWidth());
+			int spaceVertical = fromBottom ? ancTop : getAvailableHeight() - (ancTop + anchor.getHeight()); 
+			int spaceHorizontal = fromRight ? ancLeft : getAvailableWidth() - (ancLeft + anchor.getWidth());
 			
 			if(popup.getWidth() == 0)
 				popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
@@ -388,9 +425,9 @@ public class BetterPopupWindow {
 			
 			if(ALLOW_HORIZONTAL_MODE && (
 				(ancLeft == 0 && ancTop > 0
-					//&& ancTop < getWindowHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height)
+					&& ancTop < getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height)
 					)
-				|| (getWindowHeight() / dp < 600 &&
+				|| (getAvailableHeight() / dp < 600 &&
 					spaceHorizontal > spaceVertical * 1.2f &&
 					spaceVertical < bgHeight * 2))) // Go Horizontal
 			{
@@ -413,6 +450,8 @@ public class BetterPopupWindow {
 				}*/
 				xOffset = fromRight ? ancLeft - popup.getWidth() : ancLeft + anchor.getWidth();
 				yOffset = forcePadding;
+				if(!fromBottom)
+					yOffset += ancTop;
 				
 				//if(ancTop > getWindowHeight() * (3f / 4f))
 					//popup.setHeight((int) (getWindowHeight() * (9f / 10f)));
@@ -422,9 +461,11 @@ public class BetterPopupWindow {
 				ancLeft = getAbsoluteLeft(anchor);
 				ancTop = getAbsoluteTop(anchor);
 				//yOffset = getWindowHeight() - getAvailableHeight();
-				Logger.LogInfo("Switching to absolute popup! " +
+				if(DEBUG)
+					Logger.LogInfo("Switching to absolute popup! " +
 						"anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/" +
 						"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
+						"avail=" + getAvailableWidth() + "x" + getAvailableHeight() + "/" +
 						"off=" + xOffset + "," + yOffset + "/" +
 						"root=" + rootWidth + "x" + rootHeight + "/" +
 						"bg=" + bgWidth + "x" + bgHeight + "," + padLeft + "/" +
@@ -438,12 +479,13 @@ public class BetterPopupWindow {
 			
 			if(!popup.isAboveAnchor() && bgHeight + ancTop + anchor.getHeight() > getWindowHeight())
 			{
-				int newHeight = getWindowHeight() - (ancTop + anchor.getHeight());
-				newHeight = Math.max(newHeight, popup.getMaxAvailableHeight(anchor));
+				int newHeight = getPreferredMinHeight(); //getWindowHeight() - (ancTop + anchor.getHeight());
+				//newHeight = Math.max(newHeight, popup.getMaxAvailableHeight(anchor));
 				newHeight -= forcePadding;
 				if(newHeight > bgHeight && mHeight == 0)
 				{
-					Logger.LogDebug("Need to increase height (" + newHeight + ")");
+					if(DEBUG)
+						Logger.LogDebug("Need to increase height (" + newHeight + ")");
 					forcedHeight = true;
 					popup.setHeight(newHeight);
 					
@@ -454,7 +496,8 @@ public class BetterPopupWindow {
 				}
 			}
 
-			Logger.LogInfo("Widths: " +
+			if(DEBUG)
+				Logger.LogInfo("Widths: " +
 						"space(x,y)=" + spaceHorizontal + "," + spaceVertical + "/" +
 						"anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/" +
 						"win=" + getWindowWidth() + "x" + getWindowHeight() + "/" +
@@ -683,7 +726,7 @@ public class BetterPopupWindow {
 		if(anchorRect.top > windowManager.getDefaultDisplay().getHeight() / 2)
 			grav = Gravity.BOTTOM;
 		
-		Logger.LogDebug("Showing Popup @ " + xPos + "," + yPos + " root:" + rootWidth + "x" + rootHeight + " screen:" + screenWidth + "x" + screenHeight + " anchor:" + anchorRect.toString());
+		//Logger.LogDebug("Showing Popup @ " + xPos + "," + yPos + " root:" + rootWidth + "x" + rootHeight + " screen:" + screenWidth + "x" + screenHeight + " anchor:" + anchorRect.toString());
 
 		//popup.showAsDropDown(this.anchor, xPos, yPos);
 		this.popup.showAtLocation(this.anchor, grav, xPos, yPos);
