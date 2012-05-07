@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.os.Environment;
@@ -88,13 +89,7 @@ public class ContentFragment extends OpenFragment
 	protected GridView mGrid = null;
 	//private View mProgressBarLoading = null;
 	
-	private OpenPath[] mData; 
-	private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
-	private boolean mShowThumbnails = true;
-	private boolean mReadyToUpdate = true;
-	private boolean mShowHiddenFiles = false;
-	private boolean mFoldersFirst = true;
-	private SortType mSorting = SortType.ALPHA;
+	//private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
 	private int mListScrollingState = 0;
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
@@ -107,10 +102,12 @@ public class ContentFragment extends OpenFragment
 	private OpenPath mTopPath = null;
 	private OpenPath mPath = null;
 	private OnPathChangeListener mPathListener = null;
+	private boolean mRefreshReady = true;
 	
 	private Bundle mBundle;
 	
 	protected Integer mViewMode = null;
+	protected ContentAdapter mContentAdapter;
 	
 	//private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 	
@@ -219,15 +216,14 @@ public class ContentFragment extends OpenFragment
 		Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
-			if(ContentAdapter.class.equals(mContentAdapter.getClass()))
-			{
-				mGrid.setAdapter(null);
-				mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, mData2, mPath);
-				mContentAdapter.setCheckClipboardListener(this);
-				mContentAdapter.setViewMode(getViewMode());
-				//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
-				mGrid.setAdapter(mContentAdapter);
-			}
+			mGrid.setAdapter(null);
+			mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, mPath);
+			mContentAdapter.setCheckClipboardListener(this);
+			//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
+			mGrid.setAdapter(mContentAdapter);
+		} else {
+			mContentAdapter.setViewMode(mode);
+			notifyDataSetChanged();
 		}
 	}
 	
@@ -258,16 +254,10 @@ public class ContentFragment extends OpenFragment
 				mPath = OpenExplorer.getVideoParent();
 			else if(last.equalsIgnoreCase("Music"))
 				mPath = OpenExplorer.getMusicParent();
-			else {
-				try {
-					mPath = FileManager.getOpenCache(last, false, mSorting);
-				} catch (IOException e) {
-					Logger.LogWarning("Couldn't get Cache in Fragment", e);
-					if(last.startsWith("sftp:/"))
-						mPath = new OpenSFTP(last);
-					mPath = new OpenFile(last);
-				}
-			}
+			else if(last.equalsIgnoreCase("Downloads"))
+				mPath = OpenExplorer.getDownloadParent();
+			else
+				mPath = FileManager.getOpenCache(last);
 		}
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
@@ -280,20 +270,24 @@ public class ContentFragment extends OpenFragment
 		
 	}
 	
-	public void notifyDataSetChanged() {
-		if(mContentAdapter != null)
-			mContentAdapter.notifyDataSetChanged();
+	public synchronized void notifyDataSetChanged() {
+		//if(mContentAdapter == null) return;
+		//if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+		//	getActivity().runOnUiThread(new Runnable(){public void run(){mContentAdapter.updateData();}});
+		//else
+			mContentAdapter.updateData();
 	}
-	public void refreshData(Bundle savedInstanceState, boolean allowSkips)
+	public synchronized void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
+		if(!mRefreshReady) return;
 		if(!isVisible()) {
 			Logger.LogDebug("I'm invisible! " + mPath);
 			//return;
 		}
-		if(mData2 == null)
-			mData2 = new ArrayList<OpenPath>();
-		else
-			mData2.clear();
+		
+		if(getAndroidContext() == null) {
+			return;
+		}
 		
 		if(savedInstanceState == null && getArguments() != null)
 			savedInstanceState = getArguments();
@@ -305,6 +299,11 @@ public class ContentFragment extends OpenFragment
 		
 		if(path == null) return;
 		
+		mRefreshReady = false;
+		
+		if(mContentAdapter == null)
+			mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, path);
+
 		if(path instanceof OpenFile && !path.getPath().startsWith("/"))
 		{
 			if(path.getPath().equals("Photos"))
@@ -322,29 +321,28 @@ public class ContentFragment extends OpenFragment
 		
 		mActionModeSelected = false;
 		try {
-			mShowHiddenFiles = getViewSetting(path, "show",
+			mContentAdapter.mCountHidden = getViewSetting(path, "show",
 						getExplorer() != null ? 
 								getExplorer().getSetting(null, "pref_show", false)
 								: false);
-			mShowThumbnails = getViewSetting(path, "thumbs", 
+			mContentAdapter.mShowThumbnails = getViewSetting(path, "thumbs", 
 						getExplorer() != null ?
 								getExplorer().getSetting(null, "pref_thumbs", true)
 								: true);
-			mFoldersFirst = getViewSetting(path, "folders", getExplorer() != null ?
+			mContentAdapter.mFoldersFirst = getViewSetting(path, "folders", getExplorer() != null ?
 								getExplorer().getSetting(null, "pref_folders", true)
 								: true);
 		} catch(NullPointerException npe) {
 			Logger.LogWarning("Null while getting prefs", npe);
-			mShowHiddenFiles = false;
-			mShowThumbnails = true;
-			mFoldersFirst = true;
 		}
-		if(getExplorer() != null)
-			mSorting = FileManager.parseSortType(
-				getViewSetting(path, "sort",
-					getExplorer().getSetting(null, "pref_sorting", mSorting != null ? mSorting.toString() : SortType.ALPHA.toString())));
 		
-		Logger.LogVerbose("View options for " + path.getPath() + " : " + (mShowHiddenFiles ? "show" : "hide") + " + " + (mShowThumbnails ? "thumbs" : "icons") + " + " + mSorting.toString());
+		if(getExplorer() != null)
+			mContentAdapter.setSorting(FileManager.parseSortType(
+				getViewSetting(path, "sort",
+					getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString())
+			)));
+		
+		//Logger.LogVerbose("View options for " + path.getPath() + " : " + (mShowHiddenFiles ? "show" : "hide") + " + " + (mShowThumbnails ? "thumbs" : "icons") + " + " + mSorting.toString());
 
 		//if(path.getClass().equals(OpenCursor.class) && !OpenExplorer.BEFORE_HONEYCOMB)
 		//	mShowThumbnails = true;
@@ -355,32 +353,26 @@ public class ContentFragment extends OpenFragment
 
 		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
-				mData = path.listFiles();
-				updateData(mData, allowSkips);
+				path.listFiles();
 			} catch (IOException e) {
 				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
 		else {
-			mData2.clear();
-			mData = new OpenPath[0];
-			if(mContentAdapter != null)
-				mContentAdapter.notifyDataSetChanged();
 			setProgressVisibility(true);
-			if(path.listFromDb(mSorting))
+			if(path.listFromDb(mContentAdapter.getSorting()))
 			{
-				try {
-					mData = path.list();
-				} catch (IOException e) {
-					Logger.LogError("Error listing from path " + path.getPath(), e);
-				}
-				if(getExplorer() != null)
-					getExplorer().sendToLogView("Loaded " + mData.length + " entries from cache", Color.DKGRAY);
+				sendToLogView("Loaded " + mContentAdapter.getCount() + " entries from cache", Color.DKGRAY);
+				runUpdateTask();
 			} else if(path instanceof OpenFile)
-				mData = ((OpenFile)path).listFiles();
-			updateData(mData, allowSkips);
+				((OpenFile)path).listFiles();
+			//updateData(mData, allowSkips);
 			//cancelAllTasks();
 			
 		}
+		
+		notifyDataSetChanged();
+		
+		mRefreshReady = true;
 		
 		//OpenExplorer.setOnSettingsChangeListener(this);
 		
@@ -394,7 +386,7 @@ public class ContentFragment extends OpenFragment
 	public void runUpdateTask(boolean reconnect)
 	{
 		String sPath = mPath.getPath();
-		NetworkIOTask.cancelTask(sPath);
+		//NetworkIOTask.cancelTask(sPath);
 		if(reconnect && (mPath instanceof OpenNetworkPath))
 			((OpenNetworkPath)mPath).disconnect();
 		Logger.LogDebug("Running Task for " + sPath);
@@ -539,36 +531,37 @@ public class ContentFragment extends OpenFragment
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 		
-		MenuUtils.setMenuChecked(menu, mFoldersFirst, R.id.menu_sort_folders_first);
+		MenuUtils.setMenuChecked(menu, mContentAdapter != null ? mContentAdapter.mFoldersFirst : true, R.id.menu_sort_folders_first);
 		
 		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
 		
+		if(mContentAdapter != null)
 		switch(getSorting())
 		{
-		case ALPHA:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
-			break;
-		case ALPHA_DESC:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_desc);
-			break;
-		case DATE:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_asc);
-			break;
-		case DATE_DESC:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_desc);
-			break;
-		case SIZE:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_asc);
-			break;
-		case SIZE_DESC:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_desc);
-			break;
-		case TYPE:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
-			break;
-		default:
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
-			break;
+			case ALPHA:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
+				break;
+			case ALPHA_DESC:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_desc);
+				break;
+			case DATE:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_asc);
+				break;
+			case DATE_DESC:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_date_desc);
+				break;
+			case SIZE:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_asc);
+				break;
+			case SIZE_DESC:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_size_desc);
+				break;
+			case TYPE:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_type);
+				break;
+			default:
+				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
+				break;
 		}
 		
 		//if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
@@ -674,7 +667,6 @@ public class ContentFragment extends OpenFragment
 		if(mGrid == null)
 			Logger.LogError("WTF, where are they?");
 		else
-			//refreshData(null);
 			updateGridView();
 		
 		refreshData(mBundle, true);
@@ -715,61 +707,24 @@ public class ContentFragment extends OpenFragment
 		//mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hide", true));
 		//mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", getExplorer().getPreferences().getSetting("global", "pref_thumbs", true));
 		
-		if(!OpenExplorer.BEFORE_HONEYCOMB)
-			getExplorer().invalidateOptionsMenu();
+		invalidateOptionsMenu();
 		
-		//Logger.LogVerbose("Check View Mode: " + mViewMode);
-		if(getViewMode() == OpenExplorer.VIEW_GRID) {
-			mLayoutID = R.layout.grid_content_layout;
-			int iColWidth = getResources().getDimensionPixelSize(R.dimen.grid_width);
-			//Logger.LogVerbose("Grid Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
-			mGrid.setColumnWidth(iColWidth);
-			//mGrid.setNumColumns(getActivity().getWindowManager().getDefaultDisplay().getWidth() / iColWidth);
-		} else {
-			mLayoutID = R.layout.list_content_layout;
-			int iColWidth = getResources().getDimensionPixelSize(R.dimen.list_width);
-			//Logger.LogVerbose("List Widths: " + iColWidth + " :: " + getActivity().getWindowManager().getDefaultDisplay().getWidth());
-			mGrid.setColumnWidth(iColWidth);
-			//mGrid.setNumColumns(GridView.AUTO_FIT);
-		}
+		if(getViewMode() == OpenExplorer.VIEW_GRID)
+			mGrid.setColumnWidth(getResources().getDimensionPixelSize(R.dimen.grid_width));
+		else
+			mGrid.setColumnWidth(getResources().getDimensionPixelSize(R.dimen.list_width));
+		
 		if(mGrid == null) return;
-		if(mData2 == null)
-			mData2 = new ArrayList<OpenPath>();
-		//mContentAdapter = new OpenPathAdapter(mPath, getViewMode(), getExplorer());
-		//Logger.LogDebug("Setting up grid w/ " + mData2.size() + " items");
-		mContentAdapter = new ContentAdapter(getExplorer(), mLayoutID, mData2, mPath);
-		((ContentAdapter)mContentAdapter).setViewMode(getViewMode());
-		/*
-		if(OpenCursor.class.equals(mPath.getClass())) {
-			if(mContentAdapter != null && OpenCursorAdapter.class.equals(mContentAdapter.getClass()))
-			{
-				((OpenCursorAdapter)mContentAdapter)
-					.setLayout(mLayoutID)
-					.setParent((OpenCursor)mPath);
-				//getLoaderManager().initLoader(((OpenCursor)mPath).getCursorType(), null, this);
-			}
-			else
-			{
-				mContentAdapter = new OpenCursorAdapter(mContext, (OpenCursor)mPath, 0, (OpenCursor)mPath, mLayoutID);
-				mGrid.setAdapter(mContentAdapter);
-			}
-		} else {
-			if(mContentAdapter != null && OpenCursorAdapter.class.equals(mContentAdapter.getClass()))
-				((OpenCursorAdapter)mContentAdapter).swapCursor(null);
-			mContentAdapter = new OpenArrayAdapter(mContext, mLayoutID, mData2);
-		}*/
+
+		mContentAdapter = new ContentAdapter(getExplorer(), mViewMode, mPath);
+		mContentAdapter.setCheckClipboardListener(this);
+
 		mGrid.setAdapter(mContentAdapter);
-		mContentAdapter.notifyDataSetChanged();
+		notifyDataSetChanged();
 		setupGridView();
 	}
 	public void setupGridView()
 	{
-		//if(mGrid.getTag() == null)
-		//	mGrid.setTag(true);
-		//else return; // only do the following the first time
-		
-		//mGrid.setSelector(R.drawable.selector_blue);
-		//mGrid.setDrawSelectorOnTop(true);
 		mGrid.setVisibility(View.VISIBLE);
 		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
@@ -823,88 +778,6 @@ public class ContentFragment extends OpenFragment
 		//Logger.LogDebug("Visible items " + mData2.get(mListVisibleStartIndex).getName() + " - " + mData2.get().getName());
 	}
 	*/
-	
-
-	
-	public void updateData(final OpenPath[] items) { updateData(items, true); }
-	private void updateData(final OpenPath[] items, boolean allowSkips)
-	{
-		if(items == null) return;
-		updateData(items,
-				!allowSkips || (items.length < 500),
-				mFoldersFirst,
-				mShowHiddenFiles //getManager().getShowHiddenFiles())
-				);
-	}
-	private void updateData(final OpenPath[] items,
-			final boolean doSort,
-			final boolean foldersFirst,
-			final boolean showHidden) {
-		if(!mReadyToUpdate) return;
-		if(items == null) return;
-		mReadyToUpdate = false;
-		
-		//new Thread(new Runnable(){public void run() {
-		Logger.LogVerbose("updateData on " + items.length + " items : " + (showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files") + " + " + (doSort ? mSorting.toString() : "no sort"));
-
-		if(doSort)
-		{
-			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
-			OpenPath.Sorting = mSorting; //getManager().getSorting();
-			try {
-				Arrays.sort(items);
-			} catch(Exception e) {
-				//Logger.LogError("Couldn't sort.", e);
-			}
-		}
-		
-		if(mData2 == null)
-			mData2 = new ArrayList<OpenPath>();
-		else
-			mData2.clear();
-		
-		int folder_index = 0;
-		if(items != null)
-		for(OpenPath f : items)
-		{
-			if(f == null) continue;
-			if(!showHidden && f.isHidden()) continue;
-			if(!f.requiresThread())
-			{
-				if(!f.exists()) continue;
-				if(f.isFile() && !(f.length() >= 0)) continue;
-			}
-			if(foldersFirst && f.isDirectory())
-				mData2.add(folder_index++, f);
-			else
-				mData2.add(f);
-		}
-		
-
-		setProgressVisibility(false);
-		
-		//Logger.LogDebug("mData has " + mData2.size());
-		if(mContentAdapter != null)
-			mContentAdapter.notifyDataSetChanged();
-		
-		mReadyToUpdate = true;
-		
-		if(mGrid != null)
-			updateGridView();
-		
-		if(mData2.size() > 0)
-		{
-			if(!restoreTopPath())
-				Logger.LogWarning("Unable to restore top path");
-		}
-		/*
-		mPathView.removeAllViews();
-		mBackPathIndex = 0;	
-		 */
-		//if(getView() != null) getView().invalidate();
-		
-		//}}).run();
-	}
 	
 	@Override
 	public int getPagerPriority() {
@@ -967,7 +840,7 @@ public class ContentFragment extends OpenFragment
 			if(!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
 				try {
 					if(mPath.requiresThread())
-						mPath = FileManager.getOpenCache(mPath.getAbsolutePath(), false, mSorting);
+						mPath = FileManager.getOpenCache(mPath.getPath());
 					updateData(mPath.list());
 				} catch (IOException e) {
 					Logger.LogWarning("Couldn't update data after thread completion", e);
@@ -1075,24 +948,24 @@ public class ContentFragment extends OpenFragment
 		refreshData(null, false);
 	}
 	public void setFoldersFirst(boolean first) {
-		mFoldersFirst = first;
+		mContentAdapter.mFoldersFirst = first;
 		setViewSetting(mPath, "folders", first);
 	}
 	public void setShowHiddenFiles(boolean show)
 	{
-		mShowHiddenFiles = show;
+		mContentAdapter.mCountHidden = show;
 		setViewSetting(mPath, "show", show);
 	}
 	
 	public void setSorting(SortType type)
 	{
-		mSorting = type;
+		mContentAdapter.setSorting(type);
 		setViewSetting(mPath, "sort", type.toString());
 	}
 	
 	public void setShowThumbnails(boolean thumbs)
 	{
-		mShowThumbnails = thumbs;
+		mContentAdapter.mShowThumbnails = thumbs;
 		setViewSetting(mPath, "thumbs", thumbs);
 	}
 	
@@ -1138,14 +1011,14 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	public SortType getSorting() {
-		return mSorting;
+		return mContentAdapter != null ? mContentAdapter.getSorting() : SortType.ALPHA;
 	}
-	public boolean getFoldersFirst() { return mFoldersFirst; }
+	public boolean getFoldersFirst() { return mContentAdapter != null ? mContentAdapter.mFoldersFirst : true; }
 	public boolean getShowHiddenFiles() {
-		return mShowHiddenFiles;
+		return mContentAdapter != null ? mContentAdapter.mCountHidden : false;
 	}
 	public boolean getShowThumbnails() {
-		return mShowThumbnails;
+		return mContentAdapter != null ? mContentAdapter.mShowThumbnails : true;
 	}
 	@Override
 	public CharSequence getTitle() {
@@ -1165,6 +1038,11 @@ public class ContentFragment extends OpenFragment
 		if(getActivity() != null && getResources() != null)
 			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 36, 36));
 		return null;
+	}
+	@Override
+	public void updateData(OpenPath[] result) {
+		mContentAdapter.updateData(result);
+		//notifyDataSetChanged();
 	}
 	
 }

@@ -77,9 +77,9 @@ public abstract class OpenFragment
 	//public boolean isFragmentValid = true;
 	protected boolean mActionModeSelected = false;
 	protected Object mActionMode = null;
-	protected ContentAdapter mContentAdapter;
 	protected int mMenuContextItemIndex = -1;
 	private boolean mHasOptions = false;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	
 	public interface OnFragmentTitleLongClickListener
 	{
@@ -122,17 +122,39 @@ public abstract class OpenFragment
 	
 	@Override
 	public int compare(OpenFragment a, OpenFragment b) {
-		Logger.LogDebug("Comparing " + a.getTitle() + " to " + b.getTitle());
 		int priA = a.getPagerPriority();
 		int priB = b.getPagerPriority();
+		if(DEBUG)
+			Logger.LogDebug("Comparing " + a.getTitle() + "(" + priA + ") to " + b.getTitle() + "(" + priB + ")");
 		if(priA != priB)
-			return priA > priB ? 1 : 0;
+		{
+			if(priA > priB)
+			{
+				//Logger.LogDebug("Switch!");
+				return 1;
+			} else {
+				//Logger.LogDebug("Stay!");
+				return -1;
+			}
+		}
 		if(a instanceof ContentFragment && b instanceof ContentFragment)
 		{
 			OpenPath pa = ((ContentFragment)a).getPath();
 			OpenPath pb = ((ContentFragment)b).getPath();
-			return pa.getPath().compareTo(pb.getPath());
-		} else return 0;
+			priA = pa.getPath().length();
+			priB = pb.getPath().length();
+			if(priA > priB)
+			{
+				//Logger.LogDebug("Switch 2!");
+				return 1;
+			} else {
+				//Logger.LogDebug("Stay 2!");
+				return -1;
+			}
+		} else {
+			//Logger.LogDebug("0!");
+			return 0;
+		}
 	}
 	
 	/*
@@ -206,6 +228,8 @@ public abstract class OpenFragment
 		}
 	}
 	
+	protected ContentAdapter getContentAdapter() { return null; }
+	
 	public boolean showMenu(int menuId, View from)
 	{
 		Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
@@ -270,6 +294,8 @@ public abstract class OpenFragment
 		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 		final String name = file.getName();
 		
+		Logger.LogDebug("Long click: " + file);
+		
 		final OpenContextMenuInfo info = new OpenContextMenuInfo(file);
 		
 		if(!OpenExplorer.USE_PRETTY_CONTEXT_MENUS)
@@ -308,10 +334,9 @@ public abstract class OpenFragment
 				});
 				cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
 					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
-						OpenPath path = null;
-						if(mContentAdapter instanceof ContentAdapter)
-							path = ((ContentAdapter)mContentAdapter).getItem((Integer)info);
-						executeMenu(item.getItemId(), path);
+						if(item != null)
+							executeMenu(item.getItemId(), null, file);
+						else Logger.LogWarning("MenuItem null for onContextItemSelected");
 						cm.dismiss();
 					}
 				});
@@ -472,26 +497,25 @@ public abstract class OpenFragment
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		Logger.LogDebug("}-- onAttach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		//Logger.LogDebug("}-- onAttach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 	}
 	
 	@Override
 	public void onDetach() {
 		super.onDetach();
-		Logger.LogDebug("{-- onDetach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		//Logger.LogDebug("{-- onDetach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 	}
 	
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		if(!isVisible()) return;
 		super.onCreateContextMenu(menu, v, menuInfo);
-		Logger.LogDebug("OpenFragment.onCreateContextMenu");
+		//Logger.LogDebug("OpenFragment.onCreateContextMenu");
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE) return;
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
-		OpenPath file = null;
-		if(mContentAdapter instanceof ContentAdapter)
-			file = ((ContentAdapter)mContentAdapter).getItem(info != null ? info.position : mMenuContextItemIndex);
-		else return;
+		OpenContextMenuInfo info = (OpenContextMenuInfo)menuInfo;
+		OpenPath file = info.getPath();
+		if(file == null && mMenuContextItemIndex > -1 && getContentAdapter() != null)
+			file = getContentAdapter().getItem(mMenuContextItemIndex);
 		new MenuInflater(v.getContext()).inflate(R.menu.context_file, menu);
 		MenuUtils.setMenuEnabled(menu, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
 		if(!file.canRead())
@@ -506,47 +530,29 @@ public abstract class OpenFragment
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
+		//Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 	
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		OpenPath path = null;
-		//Object o = mGrid.getSelectedItem();
-		//if(o != null && o instanceof OpenPath)
-		//	path = (OpenPath)o;
-		//else
-		if(mMenuContextItemIndex > -1 && mContentAdapter instanceof ContentAdapter)
-			path = ((ContentAdapter)mContentAdapter).getItem(mMenuContextItemIndex);
-		else return false;
-		Logger.LogDebug("Showing context for " + path.getName() + "?");
-		return executeMenu(item.getItemId(), path);
-		//return super.onContextItemSelected(item);
+		OpenContextMenuInfo info = (OpenContextMenuInfo) item.getMenuInfo();
+		OpenPath path = info.getPath();
+		if(path == null && mMenuContextItemIndex > -1 && getContentAdapter() != null)
+			path = getContentAdapter().getItem(mMenuContextItemIndex);
+		return executeMenu(item.getItemId(), null, path);
 	}
 	
-	public boolean executeMenu(final int id, OpenPath file)
+	public boolean executeMenu(final int id, final Object mode, final OpenPath file)
 	{
-		return executeMenu(id, null, file);
-	}
-	public boolean executeMenu(final int id, Object mode, OpenPath file)
-	{
-		ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-		files.add(file);
-		return executeMenu(id, mode, file, getClipboard());
-	}
-	public boolean executeMenu(final int id, final Object mode, final OpenPath file, List<OpenPath> fileList)
-	{
+		Logger.LogInfo("executeMenu(0x" + Integer.toHexString(id) + ") on " + file);
 		final String path = file != null ? file.getPath() : null;
 		OpenPath parent = file != null ? file.getParent() : null;
 		if(parent == null || parent instanceof OpenCursor)
 			parent = OpenFile.getExternalMemoryDrive(true);
 		final OpenPath folder = parent;
 		String name = file != null ? file.getName() : null;
-		if(fileList == null)
-			fileList = getClipboard();
-		final OpenPath[] fileArray = fileList.toArray(new OpenPath[fileList.size()]);
 		
 		onClick(id);
 		
@@ -598,7 +604,8 @@ public abstract class OpenFragment
 				//fileList.add(file);
 				getHandler().deleteFile(file, getActivity(), true);
 				finishMode(mode);
-				mContentAdapter.notifyDataSetChanged();
+				if(getContentAdapter() != null)
+					getContentAdapter().notifyDataSetChanged();
 				return true;
 				
 			case R.id.menu_context_rename:
@@ -818,12 +825,15 @@ public abstract class OpenFragment
 	}
 	public OpenFragmentActivity getFragmentActivity() { return (OpenFragmentActivity)getActivity(); }
 	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
-	public Context getApplicationContext() { return getActivity().getApplicationContext(); }
+	public Context getApplicationContext() { if(getActivity() != null) return getActivity().getApplicationContext(); else return null; }
 	public static EventHandler getEventHandler() { return OpenExplorer.getEventHandler(); }
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
-	protected OpenClipboard getClipboard() {
-		return OpenExplorer.getClipboard();
+	
+	@Override
+	public OpenClipboard getClipboard() {
+		return getExplorer().getClipboard();
 	}
+	
 	@Override
 	public boolean checkClipboard(OpenPath file) {
 		return getClipboard().contains(file);
@@ -844,10 +854,16 @@ public abstract class OpenFragment
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Logger.LogDebug("<-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		//Logger.LogDebug("<-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 		//CONTENT_FRAGMENT_FREE = false;
 		setRetainInstance(true);
 		super.onCreate(savedInstanceState);
+	}
+	
+	public void invalidateOptionsMenu()
+	{
+		if(getExplorer() == null) return;
+		getExplorer().invalidateOptionsMenu();
 	}
 
 	public abstract Drawable getIcon();
@@ -859,9 +875,17 @@ public abstract class OpenFragment
 			getExplorer().notifyPager();
 	}
 	
+	public void sendToLogView(String txt, int color)
+	{
+		if(getExplorer() != null)
+			getExplorer().sendToLogView(txt, color);
+	}
+	
 	@Override
 	public Context getAndroidContext() {
-		return getExplorer().getAndroidContext();
+		if(getExplorer() != null)
+			return getExplorer().getAndroidContext();
+		else return getApplicationContext();
 	}
 	
 	@Override
