@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="left|center_vertical"
@@ -15,6 +15,9 @@
 	    />
 		
 	<LinearLayout
+	    android:id="@+id/layout"
+	    android:layout_toRightOf="@android:id/icon"
+	    android:layout_toLeftOf="@android:id/closeButton"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:orientation="vertical">
@@ -61,4 +64,16 @@
 		    android:singleLine="true"
 		    />
 	</LinearLayout>
-</LinearLayout>
+	
+	<ImageButton
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:layout_alignBottom="@id/layout"
+	    android:layout_width="54dp"
+	    android:layout_height="wrap_content"
+	    android:id="@android:id/closeButton"
+	    android:src="@drawable/ic_menu_stop"
+	    android:background="@color/transparent"
+	    android:contentDescription="@string/s_menu_stop"
+	    />
+</RelativeLayout>

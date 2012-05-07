@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
+    <string name="app_name">Open Explorer</string>
     <string name="s_photos">Фотографии</string>
     <string name="s_videos">Видео</string>
     <string name="s_music">Музыка</string>
@@ -98,7 +99,7 @@
     <string name="s_msg_copied">скопированы</string>
     <string name="s_remove">Удалить</string>
     <string name="s_eject" auto="1">Извлечь</string>
-    <string name="s_update" auto="1">Обновление</string>
+    <string name="s_update">Обновить</string>
     <string name="s_alert_bookmark_rename" auto="1">Изменение названия закладки.</string>
     <string name="s_title_bookmark_prefix">Управление закладкам</string>
     <string name="s_alert_remove_safe">Теперь вы можете безопасно извлечь носитель данных</string>
@@ -117,11 +118,13 @@
     <string name="s_pref_stats_summary" auto="1">Отправлять анонимную статистику использования. Это не относится к какой-либо информации, которая может быть использована для идентификации пользователя.</string>
     <string name="s_error_no_intents">Ни одно из установленных приложений не может открыть этот файл</string>
     <string name="s_menu_root_disabled">Root отключен</string>
-    <string name="s_pref_start" auto="1">Начиная Папка</string>
+    <string name="s_pref_start">Начальная Папка</string>
     <string name="s_pref_start_summary" auto="1">Показывает, в какой папке OpenExplorer начинается в</string>
-    <string name="s_custom" auto="1">Custom ...</string>
+    <string name="s_custom">Пользовательский ...</string>
     <string name="s_text_intro_top" auto="1">Добро пожаловать в OpenExplorer!</string>
-    <string name="s_text_intro_body" auto="1">Цель OpenExplorer, чтобы сделать вашу работу более продуктивной в пределах файловой системы Android и в облаке. Если вам нужно управлять видео или фотографий из нескольких местах или управлять удаленно через веб-сервер FTP, OpenExplorer может удовлетворить ваши потребности \n \nВыберите стартовой пути.:</string>
+    <string name="s_text_intro_body">Цель OpenExplorer, чтобы сделать вашу работу более продуктивной в пределах файловой системы Android и в облаке. Если вам нужно управлять видео или фотографиями из нескольких мест или управлять удаленно через веб-сервер FTP, OpenExplorer может удовлетворить ваши потребности 
+\n 
+\nВыберите папку, которая будет открываться при запуске программы:</string>
     <string name="s_info_num_folders" auto="1">Количество папок:</string>
     <string name="s_info_num_files" auto="1">Количество файлов:</string>
     <string name="s_info_last_modified" auto="1">Последнее изменение:</string>
@@ -138,10 +141,10 @@
     <string name="s_msg_low_memory" auto="1">Недостаточно памяти!</string>
     <string name="s_clear" auto="1">Очистить</string>
     <string name="s_menu_delete_all" auto="1">Удалить все</string>
-    <string name="s_menu_move_all" auto="1">переместить сюда</string>
-    <string name="s_menu_copy_all" auto="1">Копировать</string>
+    <string name="s_menu_move_all">Переместить сюда</string>
+    <string name="s_menu_copy_all">Копировать сюда</string>
     <string name="s_confirm_delete" auto="1">Вы уверены, что хотите удалить порно?</string>
-    <string name="s_error_same_destination" auto="1">Каталог назначения то же самое.</string>
+    <string name="s_error_same_destination">Каталог назначения тот же самый.</string>
     <string name="s_sample_notification" auto="1">Копирование -&gt; SDCard: \n ^ 3 файлов</string>
     <string name="s_pref_fullscreen">На полный экран</string>
     <string name="s_pref_fullscreen_summary_on" auto="1">Скрыть панель уведомлений</string>
@@ -172,7 +175,7 @@
     <string name="s_default" auto="1">умолчание</string>
     <string name="s_pref_timeout" auto="1">Тайм-аут</string>
     <string name="s_pref_timeout_summary" auto="1">Тайм-аут в секундах</string>
-    <string name="s_menu_up" auto="1">подниматься</string>
+    <string name="s_menu_up">Вверх</string>
     <string name="s_prompt_unzip" auto="1">Введите путь для распаковки в:</string>
     <string name="s_pref_hardware_accel" auto="1">Включить аппаратное ускорение</string>
     <string name="s_pref_honeyplus" auto="1">Android 3.0 + Настройка</string>
@@ -206,7 +209,7 @@
     <string name="s_msg_event_cancelled" auto="1">Событие отменено.</string>
     <string name="s_alert_newfolder_folder" auto="1">Создайте новую папку:</string>
     <string name="s_pref_fancy_category" auto="1">Необычные настройки экрана</string>
-    <string name="s_pref_fancy_menus" auto="1">Необычные меню</string>
+    <string name="s_pref_fancy_menus">Необычное меню</string>
     <string name="s_pref_fancy_context" auto="1">Необычные контекстное меню</string>
     <string name="s_search_files" auto="1">Поиск файловой системы</string>
     <string name="s_menu_exit" auto="1">Выход</string>
@@ -228,15 +231,29 @@
     <string name="s_split_none" auto="1">Поместите все кнопки в меню системы</string>
     <string name="s_about_screensize" auto="1">Размер экрана</string>
     <string name="s_about_density" auto="1">Плотность</string>
-    <string name="s_menu_location_int" auto="1">Внутренний Путь памяти</string>
-    <string name="s_menu_location_ext" auto="1">Внешний путь памяти</string>
+    <string name="s_menu_location_int">Путь к временной памяти</string>
+    <string name="s_menu_location_ext">Путь к внешней памяти</string>
     <string name="s_wtf_context" auto="1">Пожалуйста, опишите контекст аварии:</string>
     <string name="thanks" auto="1">Спасибо!</string>
-    <string name="menu_view_font_small" auto="1">Малый размер шрифта</string>
-    <string name="menu_view_font_medium" auto="1">Средний размер шрифта</string>
+    <string name="menu_view_font_small">Малый размер шрифта</string>
+    <string name="menu_view_font_medium">Средний размер шрифта</string>
     <string name="menu_view_font_large">Большой размер шрифта</string>
-    <string name="app_description" auto="1">Откройте Проводник - Открытый исходный файл менеджер для всех устройств! (Таблетки, телефоны, телевизоры Google, бутерброды!) \n-полной файловой системе управления \n-USB, SD и других внешних носителей \n-сеть Возможность подключения (FTP, SFTP, SMB / Samba / Windows / Lan / Wi-Fi) \n - Text Editor \n-Smart папки, сканирование для различных типов носителей (Видео, фото, музыка, Загрузки) \n-View пейджер каталог навигации (салфетки право подняться каталогом) н-суперпользователя / Root способность к списку / читать системные папки (без системы записи еще нет) \n \nFeatures впереди: \n-вкладками Text Editor \n-больше возможностей сети (Dropbox, Box.net, Sky диск) \n-файл автономных структура кэша, вспомните, какие файлы Вы имеете в разных местах без необходимости подключения \n-Disk карта пространство тепло показывает, где для вас самым большим файлы \n \n * ПРИМЕЧАНИЕ: Это приложение находится в бета-версии. Есть еще много ошибок. Если вы не хотите, чтобы испытать эти ошибки, пожалуйста, не загружайте это приложение. Если вы хотите, чтобы помочь мне найти эти ошибки, пожалуйста, напишите мне или сотрудничать со мной на GitHub (https://github.com/BrandoCommando/OpenExplorer/). Пожалуйста, помните, плохих оценок помочь никто.</string>
-    <string name="alert_translate_google">Здравствуйте, данный перевод сделан с помощью переводчика Google. Если вы достаточно хорошо владеете английским и %s, а так же хотите помочь сделать перевод, то нажмите сюда:</string>
+    <string name="app_description">OpenExplorer - универсальное приложение для всех устройств (планшеты, телефоны, телевизоры Google)
+\n- Управление файлами
+\n- поддержка USB и других внешних носителей
+\n- Возможность подключения к FTP серверам
+\n- Текстовый редактор
+\n- Умные папки, содержат файлы определённых типов: видео, фото, музыка, загрузки
+\n- Текстовый редактор с вкладками
+\n
+\nСкоро будет реализовано:
+\n- Больше возможностей сети (Dropbox, Box.net, Sky диск, Samba, WiFi)
+\n- Автономный кэш файловой системы (хранение списка файлов и директорий без необходимости подключения к удаленному серверу)
+\n- Анализатор используемого места на носителях
+\n
+\n    ПРИМЕЧАНИЕ: Это приложение находится в бета-версии. Есть еще много ошибок. Если Вы не хотите сталкиваться с возможными ошибками, пожалуйста, не загружайте это приложение. Если Вы хотите, чтобы помочь найти эти ошибки, пожалуйста, напишите мне.
+</string>
+    <string name="alert_translate_google">Здравствуйте, данный перевод сделан с помощью переводчика Google. Если вы достаточно хорошо владеете английским и %s,а так же хотите помочь сделать перевод, то нажмите сюда:</string>
     <string name="alert_translate_none">Здравствуйте, вы используете не поддерживаемый язык.если у вас есть знания английского языка,а так же хотите помочь сделать перевод, то нажмите сюда:</string>
     <string name="button_translate">Перевести</string>
 </resources>

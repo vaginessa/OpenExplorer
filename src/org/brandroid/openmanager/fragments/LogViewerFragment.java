@@ -29,6 +29,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 {
 	private static ArrayList<CharSequence> mData = new ArrayList<CharSequence>();
 	private LinedArrayAdapter mAdapter = null;
+	private boolean mAdded;
 	
 	public LogViewerFragment() {
 	}
@@ -39,6 +40,9 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 		ret.setArguments(args);
 		return ret;
 	}
+	
+	public boolean getAdded() { return mAdded; } 
+	public void setAdded(boolean added) { mAdded = added; }
 	
 	public void print(final String txt, final int color)
 	{
@@ -71,6 +75,11 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		//setHasOptionsMenu(true);
+	}
+	
+	@Override
+	public boolean hasOptionsMenu() {
+		return true;
 	}
 	
 	@Override
@@ -119,7 +128,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	{
 		switch(id)
 		{
-			default: if(getExplorer() != null) getExplorer().onClick(id, item, from);
+			//default: if(getExplorer() != null) getExplorer().onClick(id, item, from);
 		}
 	}
 
@@ -131,8 +140,36 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 
 	@Override
 	public CharSequence getTitle() {
-		return getString(R.string.s_pref_logview);
+		if(isDetached()) return "Network Log";
+		if(getActivity() == null) return "Network Log";
+		String ret = getResources().getString(R.string.s_pref_logview);
+		if(ret == null)
+			ret = "Network Log";
+		return ret;
 	}
 	
 	
+	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

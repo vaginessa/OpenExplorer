@@ -14,9 +14,13 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -58,28 +62,46 @@ public class OperationsFragment extends OpenFragment
 			final View view = convertView;
 			final ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
 			final TextView text1 = (TextView)view.findViewById(android.R.id.text1);
+			final ImageButton closeButton = (ImageButton)view.findViewById(android.R.id.closeButton);
+			if(closeButton != null)
+			{
+				closeButton.setOnClickListener(new OnClickListener() {
+					public void onClick(View v) {
+						bw.cancel(true);
+					}
+				});
+			}
 			bw.updateView(view);
 			bw.setWorkerUpdateListener(new OnWorkerUpdateListener() {
 				public void onWorkerThreadComplete(int type, ArrayList<String> results) {
-					bw.setWorkerUpdateListener(null);
-					view.post(new Runnable(){public void run(){
-						pb.setVisibility(View.GONE);
-						text1.setText(R.string.s_toast_complete);
-						notifyDataSetChanged();
-					}});
+					notifyDataSetChanged();
 				}
 				public void onWorkerProgressUpdate(final int pos, final int total) {
-					view.post(new Runnable(){public void run(){
-						Logger.LogDebug("Operations onProgressUpdate(" + pos + "," + total + " :: " + bw.getProgressA() + "," + bw.getProgressB() + ")");
-						pb.setProgress(bw.getProgressA());
-						pb.setSecondaryProgress(bw.getProgressB());
-						text1.setText(bw.getLastRate());
-					}});
+					notifyDataSetChanged();
 				}
 			});
 			return view;
 		}
 		
+	}
+	
+	@Override
+	public boolean hasOptionsMenu() {
+		return true;
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		menu.clear();
+		inflater.inflate(R.menu.operations, menu);
+	}
+	
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		boolean isRunning = getHandler().getRunningTasks().length > 0;
+		MenuUtils.setMenuEnabled(menu, isRunning, R.id.menu_ops_stop);
 	}
 	
 	@Override

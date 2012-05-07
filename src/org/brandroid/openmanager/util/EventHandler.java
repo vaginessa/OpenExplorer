@@ -20,6 +20,7 @@ package org.brandroid.openmanager.util;
 
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
+import android.os.Build;
 import android.provider.MediaStore.Images;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -57,6 +58,7 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
@@ -74,6 +76,8 @@ public class EventHandler {
 	public static final int CUT_TYPE = 0x08;
 	public static final int ERROR_TYPE = 0x09;
 	public static final int BACKGROUND_NOTIFICATION_ID = 123;
+	
+	public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.IS_BLACKBERRY && Build.VERSION.SDK_INT > 10;
 
 	private static NotificationManager mNotifier = null;
 	private static int EventCount = 0;
@@ -493,7 +497,7 @@ public class EventHandler {
 						.toString();
 				break;
 			}
-			title += " → " + mIntoPath.getPath();
+			title += " " + '\u2192' + " " + mIntoPath.getPath();
 			return title;
 		}
 
@@ -506,6 +510,12 @@ public class EventHandler {
 		}
 
 		public String getLastRate() {
+			if(getStatus() == Status.FINISHED)
+				return getResourceString(mContext, R.string.s_complete);
+			else if (getStatus() == Status.PENDING)
+				return getResourceString(mContext, R.string.s_pending);
+			if(isCancelled())
+				return getResourceString(mContext, R.string.s_cancelled);
 			if (mRemain > 0) {
 				Integer min = (int) (mRemain / 60);
 				Integer sec = (int) (mRemain % 60);
@@ -611,9 +621,13 @@ public class EventHandler {
 					noteView.setImageViewResource(android.R.id.icon,
 							R.drawable.icon);
 					noteView.setTextViewText(android.R.id.title, getTitle());
-					noteView.setTextViewText(android.R.id.text1, getLastRate());
 					noteView.setTextViewText(android.R.id.text2, getSubtitle());
-					noteView.setProgressBar(android.R.id.progress, 100, 0, true);
+					noteView.setViewVisibility(android.R.id.closeButton, View.GONE);
+					if(SHOW_NOTIFICATION_STATUS)
+					{
+						noteView.setTextViewText(android.R.id.text1, getLastRate());
+						noteView.setProgressBar(android.R.id.progress, 100, 0, true);
+					}
 					// noteView.setViewVisibility(R.id.title_search, View.GONE);
 					// noteView.setViewVisibility(R.id.title_path, View.GONE);
 					mNote.contentView = noteView;
@@ -641,7 +655,6 @@ public class EventHandler {
 					if (p.getName().matches(pattern))
 						aList.add(p.getPath());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			try {
@@ -649,7 +662,6 @@ public class EventHandler {
 					if (p.isDirectory())
 						searchDirectory(p, pattern, aList);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -772,12 +784,18 @@ public class EventHandler {
 					return false;
 				}
 			}
+			OpenPath newDir = intoDir;
+			if(intoDir instanceof OpenSmartFolder)
+			{
+				newDir = ((OpenSmartFolder)intoDir).getFirstDir();
+				if(old instanceof OpenFile && newDir instanceof OpenFile)
+					return copyFileToDirectory((OpenFile)old, (OpenFile)newDir, total);
+			}
 			Logger.LogDebug("Trying to copy [" + old.getPath() + "] to ["
 					+ intoDir.getPath() + "]...");
 			if (old.getPath().equals(intoDir.getPath())) {
 				return false;
 			}
-			OpenPath newDir = intoDir;
 			if (old.isDirectory()) {
 				newDir = newDir.getChild(old.getName());
 				if (!newDir.exists() && !newDir.mkdir()) {
@@ -904,7 +922,7 @@ public class EventHandler {
 
 		public void publish(int current, int size, int total) {
 			publishProgress(current, size, total);
-			OnWorkerProgressUpdate(current, total);
+			//OnWorkerProgressUpdate(current, total);
 		}
 
 		private long lastPublish = 0l;
@@ -924,6 +942,7 @@ public class EventHandler {
 			return (int) (((float) mLastProgress[0] / (float) mLastProgress[2]) * 1000f);
 		}
 
+		@SuppressWarnings("unused")
 		@Override
 		protected void onProgressUpdate(Integer... values) {
 			int current = 0, size = 0, total = 0;
@@ -933,8 +952,6 @@ public class EventHandler {
 				size = total = values[1];
 			if (values.length > 2)
 				total = Math.max(total, values[2]);
-			
-			publish(current, size, total);
 
 			// if(mThreadListener != null)
 			// mThreadListener.onWorkerProgressUpdate(current, size);
@@ -958,6 +975,9 @@ public class EventHandler {
 					mRemain = Utils.getAverage(mRemain, (long) (size - current)
 							/ mLastRate);
 			}
+			
+			//publish(current, size, total);
+			OnWorkerProgressUpdate(current, total);
 
 			// Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", "
 			// + total + ")-("
@@ -979,6 +999,8 @@ public class EventHandler {
 				}
 			} catch (Exception e) {
 			}
+			
+			if(SHOW_NOTIFICATION_STATUS) {
 
 			try {
 				RemoteViews noteView = mNote.contentView;
@@ -996,6 +1018,8 @@ public class EventHandler {
 				// noteView.
 			} catch (Exception e) {
 				Logger.LogWarning("Couldn't update notification progress.", e);
+			}
+			
 			}
 		}
 
@@ -1021,10 +1045,14 @@ public class EventHandler {
 						int progB = (int) (((float) mLastProgress[0] / (float) mLastProgress[2]) * 1000f);
 						ProgressBar pb = (ProgressBar) view
 								.findViewById(android.R.id.progress);
-						pb.setIndeterminate(mLastRate == 0);
-						pb.setMax(1000);
-						pb.setProgress(progA);
-						pb.setSecondaryProgress(progB);
+						if(getStatus() == Status.FINISHED)
+							pb.setVisibility(View.GONE);
+						else {
+							pb.setIndeterminate(mLastRate == 0);
+							pb.setMax(1000);
+							pb.setProgress(progA);
+							pb.setSecondaryProgress(progB);
+						}
 					}
 				}
 			};

@@ -256,4 +256,9 @@
 	<string name="s_pref_zip_internal_on">Treat zip files like folders</string>
 	<string name="s_pref_zip_internal_off">Treat zip files like files</string>
 	<string name="s_title_operations">File Operations</string>
+	<string name="s_menu_stop">Stop</string>
+	<string name="s_menu_stop_all">Stop All</string>
+	<string name="s_cancelled">Cancelled</string>
+	<string name="s_pending">Pending</string>
+	<string name="s_complete">Complete</string>
 </resources>
