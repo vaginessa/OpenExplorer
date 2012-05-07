@@ -429,7 +429,7 @@ public class FileManager {
 		OpenPath ret = mOpenCache.get(path);
 		if(ret == null)
 		{
-			if(path.startsWith("ftp:/"))
+			if(path.startsWith("ftp:/") && OpenServers.DefaultServers != null)
 			{
 				Logger.LogDebug("Checking cache for " + path);
 				FTPManager man = new FTPManager(path);
@@ -444,7 +444,7 @@ public class FileManager {
 			{
 				Uri uri = Uri.parse(path);
 				ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
-			} else if(path.startsWith("sftp:/"))
+			} else if(path.startsWith("sftp:/") && OpenServers.DefaultServers != null)
 			{
 				Uri uri = Uri.parse(path);
 				OpenServer server = OpenServers.DefaultServers.findByHost("sftp", uri.getHost());
@@ -453,7 +453,7 @@ public class FileManager {
 				if(server != null)
 					info.setPassword(server.getPassword());
 				((OpenSFTP)ret).setUserInfo(info);
-			} else if(path.startsWith("smb:/"))
+			} else if(path.startsWith("smb:/") && OpenServers.DefaultServers != null)
 			{
 				try {
 					Uri uri = Uri.parse(path);

@@ -51,7 +51,8 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 	}
 	public final static void addTask(String path, NetworkIOTask task)
 	{
-		mFileTasks.put(path, task);
+		if(!isTaskRunning(path))
+			mFileTasks.put(path, task);
 	}
 	
 	public interface OnTaskUpdateListener
@@ -163,15 +164,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 				}
 				if(!success || list == null || list.length == 0)
 					try {
-						try {
-							list = cachePath.listFiles();
-						} catch(SocketException e) {
-							if(cachePath instanceof OpenNetworkPath)
-							{
-								((OpenNetworkPath)cachePath).connect();
-								list = cachePath.listFiles();
-							}
-						}
+						list = cachePath.listFiles();
 						if(list != null)
 							FileManager.setOpenCache(cachePath.getPath(), cachePath);
 					} catch(SmbAuthException e) {

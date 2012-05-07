@@ -2,8 +2,12 @@ package org.brandroid.openmanager.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
+import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
 import org.brandroid.utils.Logger;
+
+import android.os.Environment;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -23,6 +27,23 @@ public abstract class OpenNetworkPath extends OpenPath
 	
 	public interface NetworkListener
 	{
+		public static final NetworkListener DefaultListener = new NetworkListener() {
+			
+			@Override
+			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {
+				Logger.LogWarning("Network Failure for " + np);
+			}
+			
+			@Override
+			public void OnNetworkCopyUpdate(int[] progress) {
+				
+			}
+			
+			@Override
+			public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest) {
+				Logger.LogDebug("Network Copy Finished for " + np + " \u2661 " + dest);
+			}
+		};
 		public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest);
 		public void OnNetworkCopyUpdate(int... progress);
 		public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e);
@@ -39,6 +60,34 @@ public abstract class OpenNetworkPath extends OpenPath
 	}
 	public void disconnect() {
 		Logger.LogVerbose("Disconnecting OpenNetworkPath");
+	}
+	
+	public String getTempFileName()
+	{
+		return getPath().replaceAll("[^A-Za-z0-9\\.]", "-");
+	}
+	public OpenFile getTempFile()
+	{
+		OpenFile root = OpenFile.getTempFileRoot();
+		if(root != null)
+			return root.getChild(getTempFileName());
+		return null;
+	}
+	public void syncTempFileDown() throws IOException
+	{
+		OpenFile tmp = getTempFile();
+		if(!tmp.exists())
+			tmp.create();
+		else if(lastModified() <= tmp.lastModified())
+			return;
+		copyTo(tmp, NetworkListener.DefaultListener);
+	}
+	public void syncTempFileUp() throws IOException
+	{
+		OpenFile tmp = getTempFile();
+		if(!tmp.exists()) return;
+		if(lastModified() > tmp.lastModified()) return;
+		copyFrom(tmp, NetworkListener.DefaultListener);
 	}
 	
 	public boolean copyFrom(OpenFile f, NetworkListener l) { return false; }

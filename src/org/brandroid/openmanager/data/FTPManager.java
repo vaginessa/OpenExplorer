@@ -9,12 +9,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Hashtable;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
@@ -26,6 +28,7 @@ public class FTPManager {
 	private final static Hashtable<String, OpenFTP> fileCache = new Hashtable<String, OpenFTP>();
 	private final static Hashtable<String, FTPClient> ftpClients = new Hashtable<String, FTPClient>();
 	
+	private long lastConnect = 0;
 	private int mPort = 21;
 	private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
 		
@@ -114,10 +117,11 @@ public class FTPManager {
 				client = new FTPClient();
 			if(!client.isConnected())
 			{
+				Logger.LogDebug("FTP Client " + mHost + " found (disconnected).");
 				client.connect(mHost, mPort);
 				if(!client.login(mUser, mPassword))
 					throw new IOException("Unable to log in to FTP. Invalid credentials?", new Throwable());
-			}
+			} else Logger.LogDebug("Client found " + mHost);
 			if(mBasePath.endsWith("/"))
 				mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
 			client.cwd(mBasePath);
@@ -128,6 +132,15 @@ public class FTPManager {
 
 	public Boolean connect() throws IOException
 	{
+		long now = new Date().getTime();
+		if(now - lastConnect < 500) {
+			// Prevent connect loop if something unexpected happens
+			lastConnect = now;
+			return false;
+		}
+		lastConnect = new Date().getTime();
+		if(Thread.currentThread().equals(OpenExplorer.UiThread)) return false;
+		
 		FTPClient client = getClient(true);
 		if(client.isConnected()) return true;
 		return false;
@@ -142,24 +155,7 @@ public class FTPManager {
 			} catch(Exception e) { }
 		}
 	}
-	
-	public static FTPFile[] getFTPFiles(String name)
-	{
-		FTPFile[] ret = new FTPFile[0]; 
-		try {
-			URL u = new URL(name);
-			FTPManager man = new FTPManager(u);
-			ret = man.listAll();
-			man.disconnect();
-			Logger.LogDebug("Found " + ret.length + " ftp children.");
-		} catch (MalformedURLException e) {
-			Logger.LogWarning("Invalid FTP URL - " + name, e);
-		} catch (IOException e) {
-			Logger.LogError("FTP Exception - " + name, e);
-		}
-		return ret;
-	}
-	
+
 	public void disconnect()
 	{
 		try {
@@ -189,26 +185,6 @@ public class FTPManager {
 	public void setUser(String user) { mUser = user; }
 	public void setPassword(String password) { mPassword = password; }
 	public void setBasePath(String path) { mBasePath = path; }
-	
-	public FTPFile[] listAll() throws IOException
-	{
-		if(1 == 2 - 1)
-		{
-			return listFiles();
-		}
-		FTPFile[] files = listFiles();
-		ArrayList<FTPFile> ret = new ArrayList<FTPFile>();
-		for(FTPFile f : files)
-			if(f.isDirectory())
-				ret.add(f);
-		for(FTPFile f : files)
-			if(!f.isDirectory())
-				ret.add(f);
-		
-		FTPFile[] retf = new FTPFile[ret.size()];
-		ret.toArray(retf);
-		return retf;
-	}
 	
 	public FTPFile[] listFiles() throws IOException 
 	{
