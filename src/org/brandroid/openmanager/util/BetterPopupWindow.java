@@ -130,11 +130,13 @@ public class BetterPopupWindow {
 
 	private void OnPopupShown(int w, int h)
 	{
-		if(forcedHeight) return;
+		//if(forcedHeight) return;
 		if(mShownListener != null)
 			mShownListener.OnPopupShown(w, h);
-		if(popup.getHeight() < h || popup.getHeight() >= getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height))
+		if(Math.abs(popup.getHeight() - h) > 10 || popup.getHeight() >= getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height))
 		{
+			if(exact != null && exact.y + h > getAvailableHeight())
+				h -= Math.abs(getAvailableHeight() - exact.y) + 10;
 			popup.update(w, h);
 		}
 	}
@@ -215,9 +217,9 @@ public class BetterPopupWindow {
 						h += backgroundView.getPaddingTop();
 					if(backgroundView.getPaddingBottom() > 0)
 						h += backgroundView.getPaddingBottom();
-					h += 4;
+					h += 14 * mContext.getResources().getDimension(R.dimen.one_dp);
 					//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-					h = Math.min(h, backgroundView.getHeight());
+					//h = Math.max(h, backgroundView.getHeight());
 					//h = Math.max(getPreferredMinHeight(), h);
 					int l = 0, t = 0;
 					if(exact != null)
@@ -226,7 +228,8 @@ public class BetterPopupWindow {
 						t = exact.y;
 					}
 					//if(h < getPreferredMinHeight()) return;
-					//if(mHeight > 0 && h <= mHeight) return;
+					if(mHeight > 0 && h <= mHeight) return;
+					if(h > popup.getMaxAvailableHeight(anchor, t)) return;
 					if(DEBUG)
 						Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ") from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
 					if(h > getPreferredMinHeight())
@@ -479,8 +482,9 @@ public class BetterPopupWindow {
 			
 			if(!popup.isAboveAnchor() && bgHeight + ancTop + anchor.getHeight() > getWindowHeight())
 			{
-				int newHeight = getPreferredMinHeight(); //getWindowHeight() - (ancTop + anchor.getHeight());
-				//newHeight = Math.max(newHeight, popup.getMaxAvailableHeight(anchor));
+				int newHeight = getPreferredMinHeight();
+				newHeight = Math.max(newHeight, getWindowHeight() - (ancTop + anchor.getHeight()));
+				newHeight = Math.max(newHeight, popup.getMaxAvailableHeight(anchor));
 				newHeight -= forcePadding;
 				if(newHeight > bgHeight && mHeight == 0)
 				{
