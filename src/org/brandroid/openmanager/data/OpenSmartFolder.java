@@ -102,7 +102,7 @@ public class OpenSmartFolder extends OpenPath
 
 	@Override
 	public String getAbsolutePath() {
-		return mName;
+		return getFirstDir().getAbsolutePath();
 	}
 
 	@Override
@@ -154,6 +154,14 @@ public class OpenSmartFolder extends OpenPath
 			doSearch(search);
 		return mChildren.toArray(new OpenPath[mChildren.size()]);
 	}
+	
+	public OpenPath getFirstDir()
+	{
+		for(SmartSearch s : mSearches)
+			if(s.mParent instanceof OpenFile)
+				return s.mParent;
+		return mSearches.get(0).mParent;
+	}
 
 	@Override
 	public Boolean isDirectory() {
@@ -172,12 +180,12 @@ public class OpenSmartFolder extends OpenPath
 
 	@Override
 	public Uri getUri() {
-		return null;
+		return getFirstDir().getUri();
 	}
 
 	@Override
 	public Long lastModified() {
-		return null;
+		return getFirstDir().lastModified();
 	}
 
 	@Override
@@ -187,17 +195,17 @@ public class OpenSmartFolder extends OpenPath
 
 	@Override
 	public Boolean canWrite() {
-		return false;
+		return getFirstDir().canWrite();
 	}
 
 	@Override
 	public Boolean canExecute() {
-		return false;
+		return getFirstDir().canExecute();
 	}
 
 	@Override
 	public Boolean exists() {
-		return true;
+		return getFirstDir().exists();
 	}
 
 	@Override
@@ -212,17 +220,17 @@ public class OpenSmartFolder extends OpenPath
 
 	@Override
 	public Boolean mkdir() {
-		return false;
+		return getFirstDir().mkdir();
 	}
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return null;
+		return getFirstDir().getInputStream();
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return null;
+		return getFirstDir().getOutputStream();
 	}
 
 }
