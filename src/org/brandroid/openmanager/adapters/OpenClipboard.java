@@ -33,9 +33,9 @@ public class OpenClipboard
 	private static final long serialVersionUID = 8847538312028343319L;
 	public boolean DeleteSource = false;
 	public boolean ClearAfter = true;
-	private final ArrayList<OpenPath> list;
+	private final ArrayList<OpenPath> list = new ArrayList<OpenPath>();
 	private final Context mContext;
-	private OnClipboardUpdateListener listener;
+	private OnClipboardUpdateListener listener = null;
 	private boolean mMultiselect = false;
 	
 	public interface OnClipboardUpdateListener
@@ -58,19 +58,20 @@ public class OpenClipboard
 		ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
 		StringBuilder clipText = new StringBuilder();
 		for(int i = 0; i < size(); i++)
-			clipText.append(get(i).getAbsolutePath() + "\n");
-		clip.setText(clipText);
+			if(get(i) != null)
+				clipText.append(get(i).getPath() + "\n");
 		if(!OpenExplorer.BEFORE_HONEYCOMB)
 		{
 			ClipData data = ClipData.newPlainText("files", clipText);
 			((android.content.ClipboardManager)clip).setPrimaryClip(data);
+		} else {
+			clip.setText(clipText);
 		}
 	}
 	
 	public OpenClipboard(Context context)
 	{
 		super();
-		list = new ArrayList<OpenPath>();
 		this.mContext = context;
 		readSystemClipboard();
 	}
@@ -136,7 +137,8 @@ public class OpenClipboard
 		return 0;
 	}
 
-	public View getView(int position, View convertView, ViewGroup parent) {
+	public View getView(int position, View convertView, ViewGroup parent)
+	{
 
 		View ret = convertView;
 		if(ret == null)
@@ -149,6 +151,7 @@ public class OpenClipboard
 		//double sz = (double)w * 0.7;
 		
 		final OpenPath file = (OpenPath)getItem(position);
+		if(file == null) return ret;
 		
 		TextView text = (TextView)ret.findViewById(R.id.content_text);
 		if(text != null)
@@ -160,10 +163,14 @@ public class OpenClipboard
 			check.setVisibility(View.VISIBLE);
 			
 			info.setVisibility(View.GONE);
-			text.setText(file.getName());
-			pathView.setText(file.getPath());
-			ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w * (3f/4f)), (int)(w * (3f/4f)));
-			
+			if(file != null)
+			{
+				if(file.getName() != null)
+					text.setText(file.getName());
+				if(file.getPath() != null)
+					pathView.setText(file.getPath());
+				ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w * (3f/4f)), (int)(w * (3f/4f)));
+			}
 		} else if(ret instanceof TextView) {
 			text = (TextView)ret;
 			text.setText(file.getName());
@@ -197,18 +204,23 @@ public class OpenClipboard
 	}
 
 	public void add(int index, OpenPath path) {
+		if(path == null) return;
 		list.add(index, path);
 		onClipboardUpdate();
 	}
 
 	public boolean addAll(Collection<? extends OpenPath> collection) {
 		boolean ret = list.addAll(collection);
+		list.remove(null);
 		onClipboardUpdate();
 		return ret;
 	}
 
 	public boolean addAll(int index, Collection<? extends OpenPath> collection) {
-		return list.addAll(index, collection);
+		boolean ret = list.addAll(index, collection);
+		list.remove(null);
+		onClipboardUpdate();
+		return ret;
 	}
 
 	public void clear() {

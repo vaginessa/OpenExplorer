@@ -5,7 +5,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -113,7 +115,7 @@ public class OpenPathAdapter extends BaseAdapter
 		if(mNameView != null)
 			mNameView.setText(mName);
 
-		if(OpenExplorer.getClipboard().contains(file))
+		if(((OpenApplication)((OpenFragmentActivity)mContext).getApplication()).getClipboard().contains(file))
 			mNameView.setTextAppearance(mContext, R.style.Highlight);
 		else
 			mNameView.setTextAppearance(mContext,  R.style.Large);

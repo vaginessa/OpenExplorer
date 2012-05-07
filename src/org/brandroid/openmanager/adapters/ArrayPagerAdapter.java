@@ -104,9 +104,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	@Override
 	public Parcelable saveState() {
 		Parcelable psuper = null;
-		try {
-			psuper = super.saveState();
-		} catch(Exception e) { Logger.LogError("Couldn't save ArrayPagerAdapter state.", e); }
+		try { psuper = super.saveState(); } catch(Exception e) { Logger.LogError("Couldn't save ArrayPagerAdapter state.", e); }
 		Bundle state = new Bundle();
 		if(psuper != null)
 		{
@@ -115,14 +113,19 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			else
 				state.putParcelable("super", psuper);
 		}
-		if(getCount() > 0)
+		List<OpenPath> items = new ArrayList<OpenPath>();
+		for(OpenFragment f : mFrags)
 		{
-			OpenPath[] items = new OpenPath[getCount()];
-			for(int i = 0; i < getCount(); i++)
-				if(getItem(i) instanceof OpenPathFragmentInterface)
-					items[i] = ((OpenPathFragmentInterface)getItem(i)).getPath();
-			state.putParcelableArray("pages", items);
+			if(f.isDetached()) continue;
+			if(!f.isAdded()) continue;
+			if(f instanceof OpenPathFragmentInterface)
+			{
+				OpenPath p = ((OpenPathFragmentInterface)f).getPath();
+				Logger.LogDebug("ArrayPagerAdapter.savingState(" + p + ")");
+				items.add(p);
+			}
 		}
+		state.putParcelableArray("pages", items.toArray(new OpenPath[items.size()]));
 		return state;
 	}
 	

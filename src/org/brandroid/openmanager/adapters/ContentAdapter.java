@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.brandroid.openmanager.R;
@@ -14,7 +17,9 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
@@ -31,6 +36,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -39,20 +45,26 @@ import android.widget.TextView;
 /**
  * 
  */
-public class ContentAdapter extends ArrayAdapter<OpenPath> {
+public class ContentAdapter extends BaseAdapter {
 	private final int KB = 1024;
 	private final int MG = KB * KB;
 	private final int GB = MG * KB;
 	
 	private final OpenPath mParent;
+	private final ArrayList<OpenPath> mData2 = new ArrayList<OpenPath>();
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
-	public boolean bCountHidden = false;
+	public boolean mCountHidden = false;
+	public boolean mFoldersFirst = true;
+	private SortType mSorting = SortType.ALPHA;
 	private CheckClipboardListener mClipper;
+	private Context mContext;
 	
-	public ContentAdapter(Context context, int layout, List<OpenPath> data, OpenPath parent) {
-		super(context, layout, data);
+	public ContentAdapter(Context context, int mode, OpenPath parent) {
+		//super(context, layout, data);
+		mContext = context;
 		mParent = parent;
+		mViewMode = mode;
 	}
 	
 	public interface CheckClipboardListener
@@ -61,20 +73,74 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 	}
 	public void setCheckClipboardListener(CheckClipboardListener l) { mClipper = l; }
 	
-	public Resources getResources() { return super.getContext().getResources(); }
+	public Context getContext() { return mContext; }
+	public Resources getResources() { if(mContext != null) return mContext.getResources(); else return null; }
 	public int getViewMode() { return mViewMode; }
-	public void setViewMode(int mode) { mViewMode = mode; } 
+	public void setViewMode(int mode) { mViewMode = mode; notifyDataSetChanged(); }
 	
-	@Override
-	public void notifyDataSetChanged() {
-		//Logger.LogDebug("Data set changed for FileSystemAdapter - Size = " + getCount() + ". (" + mPath.getPath() + ")");
-		try {
-			//if(getManager() != null)
-			//	getExplorer().updateTitle(getManager().peekStack().getPath());
-			super.notifyDataSetChanged();
-		} catch(NullPointerException npe) {
-			Logger.LogError("Null found while notifying data change.", npe);
+	public void setSorting(SortType sort) { mSorting = sort; notifyDataSetChanged(); }
+	public SortType getSorting() { return mSorting; }
+	
+	public void updateData() { updateData(getList()); } 
+	public void updateData(final OpenPath[] items) { updateData(items, true); }
+	private void updateData(final OpenPath[] items, boolean allowSkips)
+	{
+		if(items == null) return;
+		updateData(items,
+				!allowSkips || (items.length < 500),
+				mFoldersFirst,
+				mCountHidden //getManager().getShowHiddenFiles())
+				);
+	}
+	private void updateData(final OpenPath[] items,
+			final boolean doSort,
+			final boolean foldersFirst,
+			final boolean showHidden) {
+		if(items == null) return;
+		
+		//new Thread(new Runnable(){public void run() {
+		Logger.LogVerbose("updateData on " + items.length + " items (for " + mParent + ") : " + (showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files") + " + " + (doSort ? mSorting.toString() : "no sort"));
+		
+		mData2.clear();
+		
+		int folder_index = 0;
+		if(items != null)
+		for(OpenPath f : items)
+		{
+			if(f == null) continue;
+			if(!showHidden && f.isHidden()) continue;
+			if(!f.requiresThread())
+			{
+				if(!f.exists()) continue;
+				if(f.isFile() && !(f.length() >= 0)) continue;
+			}
+			mData2.add(f);
 		}
+
+		if(doSort)
+		{
+			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
+			OpenPath.Sorting = mSorting; //getManager().getSorting();
+			try {
+				Collections.sort(mData2, new Comparator<OpenPath>() {
+					@Override
+					public int compare(OpenPath lhs, OpenPath rhs) {
+						if(foldersFirst)
+						{
+							if(!lhs.isDirectory() && rhs.isDirectory())
+								return 1;
+							if(lhs.isDirectory() && !rhs.isDirectory())
+								return -1;
+						}
+						return OpenPath.compare(lhs, rhs);
+					}
+				});
+			} catch(Exception e) {
+				//Logger.LogError("Couldn't sort.", e);
+			}
+		}
+		
+		notifyDataSetChanged();
 	}
 	
 	private final Handler handler = new Handler(new Handler.Callback() {
@@ -84,10 +150,21 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		}
 	});
 	
+	private OpenPath[] getList() {
+		try {
+			return mParent.list();
+		} catch (IOException e) {
+			Logger.LogError("Couldn't getList in ContentAdapter");
+			return null;
+		}
+	}
+	
 	////@Override
 	public View getView(int position, View view, ViewGroup parent)
 	{
-		final OpenPath file = super.getItem(position);
+		final OpenPath file = getItem(position); //super.getItem(position);
+		if(file == null) return null;
+		
 		final String mName = file.getName();
 		
 		int mWidth = getResources().getInteger(R.integer.content_list_image_size);
@@ -226,7 +303,7 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		
 		if(file.isDirectory() && !file.requiresThread()) {
 			try {
-				deets += file.getChildCount(bCountHidden) + " " + getContext().getString(R.string.s_files) + " | ";
+				deets += file.getChildCount(mCountHidden) + " " + getContext().getString(R.string.s_files) + " | ";
 				//deets = file.list().length + " items";
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -255,6 +332,21 @@ public class ContentAdapter extends ArrayAdapter<OpenPath> {
 		*/
 		
 		return deets;
+	}
+
+	@Override
+	public int getCount() {
+		return mData2.size();
+	}
+
+	@Override
+	public OpenPath getItem(int position) {
+		return mData2.get(position);
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return position;
 	}
 	
 }
