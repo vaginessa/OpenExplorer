@@ -306,7 +306,11 @@ public class OpenServer
 				if(!isChecked)
 					server.setPort(-1);
 				else
-					server.setPort(Integer.parseInt(mTextPort.getText().toString()));
+				{
+					try { 
+						server.setPort(Integer.parseInt(mTextPort.getText().toString()));
+					} catch(Exception e) { Logger.LogWarning("Invalid Port: " + mTextPort.getText().toString()); }
+				}
 			}
 		});
 	}

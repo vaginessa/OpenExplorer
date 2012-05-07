@@ -285,39 +285,36 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	}
 	
 	public OpenFile[] listFiles(boolean grandPeek) {
-		if(mChildren == null)
+		mChildren = getOpenPaths(mFile.listFiles());
+		if(!grandPeek)
 		{
-			mChildren = getOpenPaths(mFile.listFiles());
-			if(!grandPeek)
+			//Logger.LogDebug(mFile.getPath() + " has " + mChildren.length + " children");
+		} //else mChildren = listFilesNative(mFile);
+		if((mChildren == null || mChildren.length == 0) && isDirectory())
+		{
+			if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
 			{
-				//Logger.LogDebug(mFile.getPath() + " has " + mChildren.length + " children");
-			} //else mChildren = listFilesNative(mFile);
-			if((mChildren == null || mChildren.length == 0) && isDirectory())
-			{
-				if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
+				Logger.LogDebug("Trying to list " + mFile.getPath() + " via Su");
+				HashSet<String> files = RootManager.Default.execute("ls " + mFile.getPath());
+				if(files != null)
 				{
-					Logger.LogDebug("Trying to list " + mFile.getPath() + " via Su");
-					HashSet<String> files = RootManager.Default.execute("ls " + mFile.getPath());
-					if(files != null)
+					mChildren = new OpenFile[files.size()];
+					int i = 0;
+					for(String s : files)
 					{
-						mChildren = new OpenFile[files.size()];
-						int i = 0;
-						for(String s : files)
-						{
-							mChildren[i++] = new OpenFile(getPath() + "/" + s);
-							if(grandPeek && mChildren[i].isDirectory())
-								mChildren[i++].listFiles();
-						}
-						return mChildren;
+						mChildren[i++] = new OpenFile(getPath() + "/" + s);
+						if(grandPeek && mChildren[i].isDirectory())
+							mChildren[i++].listFiles();
 					}
+					return mChildren;
 				}
 			}
-			if((mChildren == null || mChildren.length == 0) && !isDirectory() && mFile.getParentFile() != null)
-				mChildren = getParent().listFiles(grandPeek);
-			
-			if(mChildren == null)
-				return new OpenFile[0];
 		}
+		if((mChildren == null || mChildren.length == 0) && !isDirectory() && mFile.getParentFile() != null)
+			mChildren = getParent().listFiles(grandPeek);
+		
+		if(mChildren == null)
+			return new OpenFile[0];
 
 		if(grandPeek && !bGrandPeeked && mChildren != null && mChildren.length > 0)
 		{

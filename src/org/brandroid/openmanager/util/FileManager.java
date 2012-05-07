@@ -508,6 +508,7 @@ public class FileManager {
 	
 	public static OpenPath setOpenCache(String path, OpenPath file)
 	{
+		Logger.LogDebug("FileManager.setOpenCache(" + path + ")");
 		mOpenCache.put(path, file);
 		return file;
 	}
