@@ -7,6 +7,7 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
 
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -53,7 +54,7 @@ public class OperationsFragment extends OpenFragment
 						R.layout.notification, parent, false);
 				//convertView.findViewById(android.R.id.icon).setVisibility(View.GONE);
 			}
-			((ImageView)convertView.findViewById(android.R.id.icon)).setImageResource(bw.getNotifIconResId());
+			MenuUtils.setViewsVisible(convertView, false, android.R.id.icon);
 			final View view = convertView;
 			final ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
 			final TextView text1 = (TextView)view.findViewById(android.R.id.text1);

@@ -493,7 +493,7 @@ public class EventHandler {
 						.toString();
 				break;
 			}
-			title += " -> " + mIntoPath.getPath();
+			title += " → " + mIntoPath.getPath();
 			return title;
 		}
 
