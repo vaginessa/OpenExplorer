@@ -230,6 +230,7 @@ public class OpenExplorer
 	public static boolean USE_ACTIONMODE = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
 	public static boolean IS_DEBUG_BUILD = false;
+	public static boolean IS_BLACKBERRY = Build.MANUFACTURER.equals("RIM");
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
 	public static boolean USE_PRETTY_MENUS = true;
@@ -384,9 +385,8 @@ public class OpenExplorer
 			*/
 			IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), 0)
 					.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) ==
-						ApplicationInfo.FLAG_DEBUGGABLE;
-			if(IS_DEBUG_BUILD && Build.MANUFACTURER.equals("RIM"))
-				IS_DEBUG_BUILD = false;
+						ApplicationInfo.FLAG_DEBUGGABLE
+					|| IS_BLACKBERRY;
 		} catch (NameNotFoundException e1) { }
 
 		handleNetworking();
@@ -1160,7 +1160,7 @@ public class OpenExplorer
 		}
 	}
 
-	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, true); }
+	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, false); }
 	private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload)
 	{
 		if(adapter == null) adapter = mViewPager.getAdapter();
@@ -1415,11 +1415,12 @@ public class OpenExplorer
 						logview.setLayoutParams(lp);
 				}});
 			} //else mLogFragment.show(fragmentManager, "log");
-			else {
-				//mViewPager.postDelayed(new Runnable(){public void run(){
+			else if(!mLogFragment.getAdded()) {
+				mViewPager.post(new Runnable(){public void run(){
+					mLogFragment.setAdded(true);
 					if(mViewPagerAdapter.add(mLogFragment))
-						setViewPageAdapter(mViewPagerAdapter);
-				//}}, 500);
+						setViewPageAdapter(mViewPagerAdapter, true);
+				}});
 			}
 		}
 		if(mLogFragment != null && mLogFragment.getView() != null)
@@ -3185,7 +3186,7 @@ public class OpenExplorer
 		if(frag != null && frag.getPath() instanceof OpenNetworkPath)
 		{
 			frag.refreshData(null, false);
-			frag.runUpdateTask();
+			frag.runUpdateTask(false);
 		}
 	}
 	private String getFragmentPaths(List<OpenFragment> frags)

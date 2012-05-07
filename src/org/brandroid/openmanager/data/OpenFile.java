@@ -33,6 +33,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	private OutputStream output = null;
 	private static OpenFile mInternalDrive = null;
 	private static OpenFile mExternalDrive = null;
+	private static OpenFile mTempDir = null;
 	
 	public OpenFile setRoot() {
 		/// TODO fix this
@@ -462,6 +463,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 
 	public boolean create() throws IOException
 	{
+		mFile.mkdirs();
 		return mFile.createNewFile();
 	}
 
@@ -513,5 +515,17 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 		if(file instanceof OpenFile)
 			return copyFrom((OpenFile)file);
 		return false;
+	}
+
+	public static OpenFile getTempFileRoot() {
+		if(mTempDir != null)
+			return mTempDir;
+		if(Environment.getExternalStorageDirectory() != null && Environment.getExternalStorageDirectory().exists())
+			return new OpenFile(Environment.getExternalStorageDirectory()).getChild("temp");
+		if(mExternalDrive != null)
+			return mExternalDrive.getChild("OpenExplorer").getChild("temp");
+		if(mInternalDrive != null)
+			return mInternalDrive.getChild("OpenExplorer").getChild("temp");
+		return null;
 	}
 }
