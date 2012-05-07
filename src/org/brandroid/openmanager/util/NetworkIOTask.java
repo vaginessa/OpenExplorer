@@ -159,7 +159,6 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 						&& ((OpenNetworkPath)cachePath).getUserInfo() == null
 						)
 				{
-					Uri uri = Uri.parse(path.getPath());
 					((OpenNetworkPath)cachePath).setUserInfo(info);
 				}
 				if(!success || list == null || list.length == 0)
@@ -204,7 +203,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 		}
 		Logger.LogDebug("NetworkIOTask found " + ret.size() + " items.");
 		instanceRunning = false;
-		return ret.toArray(new OpenPath[1]);
+		return ret.toArray(new OpenPath[ret.size()]);
 	}
 	
 	@Override

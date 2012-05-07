@@ -8,6 +8,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.LinedArrayAdapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.SpannableString;
@@ -27,7 +28,7 @@ import android.widget.TextView;
 public class LogViewerFragment extends OpenFragment implements OnClickListener
 {
 	private static ArrayList<CharSequence> mData = new ArrayList<CharSequence>();
-	private ArrayAdapter<CharSequence> mAdapter = null;
+	private LinedArrayAdapter mAdapter = null;
 	
 	public LogViewerFragment() {
 	}
@@ -41,11 +42,10 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	
 	public void print(final String txt, final int color)
 	{
-		mData.add(0, colorify(txt, color));
-		if(mData.size() > 100)
-			mData.removeAll(mData.subList(80, mData.size()));
-
 		if(getActivity() == null) return;
+
+		mData.add(0, colorify(txt, color));
+
 		//getActivity().runOnUiThread(
 		Runnable doPrint = new Runnable(){public void run(){
 			if(mAdapter != null)
@@ -55,27 +55,16 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 			getActivity().runOnUiThread(doPrint);
 		else
 			doPrint.run();
-		/*
-		builder.insert(0, colorify(txt, color));
-		if(builderLines++ > 100)
-		{
-			builder.delete(80, 100);
-			builderLines -= 20;
-		}
-		if(isVisible())
-			getActivity().runOnUiThread(new Runnable() {public void run() {
-				if(mTextLog != null)
-					mTextLog.setText(builder);
-			}});*/
 	}
+	
 	private CharSequence colorify(String txt, int color)
 	{
 		if(color != 0)
 		{
-			SpannableString line = new SpannableString(txt + "\n");
+			SpannableString line = new SpannableString(txt);
 			line.setSpan(new ForegroundColorSpan(color), 0, line.length(), Spanned.SPAN_COMPOSING);
 			return line;
-		} else return txt + "\n";
+		} else return txt;
 	}
 	
 	@Override
@@ -95,6 +84,11 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	}
 	
 	@Override
+	public int getPagerPriority() {
+		return 100;
+	}
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		onClick(item.getItemId(), item, null);
 		return super.onOptionsItemSelected(item);
@@ -110,6 +104,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		mAdapter = new LinedArrayAdapter(getActivity(), R.layout.edit_text_view_row, mData);
+		mAdapter.setShowLineNumbers(false);
 		getListView().setAdapter(mAdapter);
 	}
 	

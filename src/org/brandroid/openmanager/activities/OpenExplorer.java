@@ -234,10 +234,10 @@ public class OpenExplorer
 	public static final boolean SHOW_FILE_DETAILS = false;
 	public static boolean USE_PRETTY_MENUS = true;
 	public static boolean USE_PRETTY_CONTEXT_MENUS = true;
+	public static boolean IS_FULL_SCREEN = false;
 	
 	private static MimeTypes mMimeTypes;
 	private Object mActionMode;
-	private static OpenClipboard mClipboard;
 	private int mLastBackIndex = -1;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
@@ -314,9 +314,11 @@ public class OpenExplorer
 		{
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 								 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			IS_FULL_SCREEN = true;
 		} //else getWindow().addFlags(WindowManager.LayoutParams.FLAG
 		else {
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			IS_FULL_SCREEN = false;
 		}
 		
 		loadPreferences();
@@ -371,8 +373,7 @@ public class OpenExplorer
 		
 		mEvHandler.setUpdateListener(this);
 		
-		mClipboard = new OpenClipboard(this);
-		mClipboard.setClipboardUpdateListener(this);
+		getClipboard().setClipboardUpdateListener(this);
 		
 		try {
 			/*
@@ -1159,7 +1160,7 @@ public class OpenExplorer
 		}
 	}
 
-	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, false); }
+	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, true); }
 	private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload)
 	{
 		if(adapter == null) adapter = mViewPager.getAdapter();
@@ -1394,6 +1395,7 @@ public class OpenExplorer
 	
 	public void sendToLogView(final String txt, final int color)
 	{
+		try {
 		Logger.LogVerbose(txt);
 		if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isVisible())
 		{
@@ -1414,18 +1416,19 @@ public class OpenExplorer
 				}});
 			} //else mLogFragment.show(fragmentManager, "log");
 			else {
-				mViewPager.postDelayed(new Runnable(){
-					public void run() {
-						if(mViewPagerAdapter.getItemPosition(mLogFragment) > -1)
-						{
-							mViewPagerAdapter.add(mLogFragment);
-							mViewPager.setAdapter(mViewPagerAdapter);
-						}
-					}}, 500);
+				//mViewPager.postDelayed(new Runnable(){public void run(){
+					if(mViewPagerAdapter.add(mLogFragment))
+						setViewPageAdapter(mViewPagerAdapter);
+				//}}, 500);
 			}
 		}
-		if(mLogFragment != null)
-			mLogFragment.print(txt, color);
+		if(mLogFragment != null && mLogFragment.getView() != null)
+		{
+			mLogFragment.getView().post(new Runnable(){public void run(){
+				mLogFragment.print(txt, color);
+			}});
+		}
+		} catch(Exception e) { Logger.LogWarning("Couldn't send to Log Viewer"); }
 	}
 	private void setupLoggingDb()
 	{
@@ -1563,6 +1566,7 @@ public class OpenExplorer
 	@Override
 	protected void onStop() {
 		super.onStop();
+		saveOpenedEditors();
 		if(Logger.isLoggingEnabled() && Logger.hasDb())
 			Logger.closeDb();
 	}
@@ -1684,9 +1688,11 @@ public class OpenExplorer
 			unregisterReceiver(storageReceiver);
 	}
 	
-	public static OpenClipboard getClipboard() {
-		return mClipboard;
+	@Override
+	public OpenClipboard getClipboard() {
+		return getOpenApplication().getClipboard();
 	}
+	
 	public void updateClipboard()
 	{
 		if(BEFORE_HONEYCOMB || !USE_ACTION_BAR)
@@ -1695,25 +1701,23 @@ public class OpenExplorer
 			if(paste_view != null)
 			{
 				TextView paste_text = (TextView)findViewById(R.id.title_paste_text);
-				if(mClipboard.size() > 0)
+				if(getClipboard().size() > 0)
 				{
 					paste_view.setVisibility(View.VISIBLE);
-					paste_text.setText("("+mClipboard.size()+")");
+					paste_text.setText("("+getClipboard().size()+")");
 				} else paste_view.setVisibility(View.GONE);
 			}
 		}
 	}
 	public void addHoldingFile(OpenPath path) { 
-		mClipboard.add(path);
-		if(!BEFORE_HONEYCOMB)
-			invalidateOptionsMenu();
+		getClipboard().add(path);
+		invalidateOptionsMenu();
 		updateClipboard();
 	}
 	public void clearHoldingFiles() {
-		mClipboard.clear();
+		getClipboard().clear();
 		updateClipboard();
-		if(!BEFORE_HONEYCOMB)
-			invalidateOptionsMenu();
+		invalidateOptionsMenu();
 	}
 	
 	public static final OpenCursor getPhotoParent() {
@@ -2058,6 +2062,7 @@ public class OpenExplorer
 			if(f instanceof TextEditorFragment)
 			{
 				TextEditorFragment tf = (TextEditorFragment)f;
+				if(!tf.isSalvagable()) continue;
 				OpenPath path = tf.getPath();
 				if(editing.indexOf(","+path.getPath()+",") == -1)
 					editing.append(path + ",");
@@ -2175,7 +2180,15 @@ public class OpenExplorer
 		return onClick(item.getItemId(), item, null);
 	}
 	
-	private void setupBaseBarButtons() {
+	@Override
+	public void invalidateOptionsMenu() {
+		if(BEFORE_HONEYCOMB)
+			setupBaseBarButtons();
+		else
+			super.invalidateOptionsMenu();
+	}
+	
+	public void setupBaseBarButtons() {
 		if(mMainMenu == null)
 			mMainMenu = new MenuBuilder(this);
 		else
@@ -2364,7 +2377,7 @@ public class OpenExplorer
 		//if(BEFORE_HONEYCOMB)
 		{
 			OpenFragment f = getSelectedFragment();
-			if(f != null && f.hasOptionsMenu() && !f.isDetached())
+			if(f != null && f.hasOptionsMenu() && !f.isDetached() && f.isVisible())
 				f.onPrepareOptionsMenu(menu);
 		}
 		
@@ -2511,7 +2524,7 @@ public class OpenExplorer
 							getClipboard().clear();
 						
 							return getDirContentFragment(false)
-									.executeMenu(item.getItemId(), mode, file, mClipboard);
+									.executeMenu(item.getItemId(), mode, file);
 						}
 					});
 				}
@@ -2656,13 +2669,13 @@ public class OpenExplorer
 				return true;
 
 			case R.id.menu_multi_all_copy:
-				mClipboard.DeleteSource = false;
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, getDirContentFragment(false).getPath(), mClipboard);
+				getClipboard().DeleteSource = false;
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, getDirContentFragment(false).getPath());
 				break;
 				
 			case R.id.menu_multi_all_move:
-				mClipboard.DeleteSource = true;
-				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, getDirContentFragment(false).getPath(), mClipboard);
+				getClipboard().DeleteSource = true;
+				getDirContentFragment(false).executeMenu(R.id.menu_paste, null, getDirContentFragment(false).getPath());
 				break;
 				
 			case R.id.title_paste:
@@ -2690,7 +2703,7 @@ public class OpenExplorer
 				{
 					if(!((ContentFragment)sf).onContextItemSelected(item) &&
 						!((ContentFragment)sf).onOptionsItemSelected(item))
-					return ((ContentFragment)sf).executeMenu(id, getDirContentFragment(false).getPath());
+					return ((ContentFragment)sf).executeMenu(id, null, getDirContentFragment(false).getPath());
 				}
 				else if(sf instanceof TextEditorFragment)
 					((TextEditorFragment)sf).onClick(id);
@@ -2728,7 +2741,7 @@ public class OpenExplorer
 				.inflate(R.layout.multiselect, null);
 		GridView cmds = (GridView)root.findViewById(R.id.multiselect_command_grid);
 		final ListView items = (ListView)root.findViewById(R.id.multiselect_item_list);
-		items.setAdapter(mClipboard);
+		items.setAdapter(getClipboard());
 		items.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, final int pos, long id) {
 				//OpenPath file = mClipboard.get(pos);
@@ -2738,9 +2751,9 @@ public class OpenExplorer
 				//anim.setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
 				list.getChildAt(pos).startAnimation(anim);
 				new Handler().postDelayed(new Runnable(){public void run() {
-					mClipboard.remove(pos);
+					getClipboard().remove(pos);
 					items.invalidate();
-					if(mClipboard.getCount() == 0)
+					if(getClipboard().getCount() == 0)
 						clipdrop.dismiss();
 				}}, anim.getDuration());
 				//else
@@ -3113,7 +3126,7 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, true);
+				setViewPageAdapter(mViewPagerAdapter, true); // TODO: I really want to set this to false, as it will speed up the app considerably
 				//mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
@@ -3370,14 +3383,16 @@ public class OpenExplorer
 			if(pb.findViewById(R.id.title_paste_text) != null)
 				((TextView)pb.findViewById(R.id.title_paste_text))
 					.setText(""+getClipboard().size());
-			if(pb.findViewById(R.id.title_paste_icon) != null)
+			ImageView picon = (ImageView)pb.findViewById(R.id.title_paste_icon);
+			if(picon != null)
 			{
-				((ImageView)pb.findViewById(R.id.title_paste_icon))
+				picon
 					.setImageResource(getClipboard().isMultiselect() ?
 							R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_paste
 							);
-				((LayerDrawable)((ImageView)pb.findViewById(R.id.title_paste_icon)).getDrawable())
-					.getDrawable(1).setAlpha(getClipboard().isMultiselect()?127:0);
+				if(picon.getDrawable() instanceof LayerDrawable)
+					((LayerDrawable)(picon.getDrawable()))
+						.getDrawable(1).setAlpha(getClipboard().isMultiselect()?127:0);
 			}
 		}
 		if(!BEFORE_HONEYCOMB)
@@ -3622,7 +3637,7 @@ public class OpenExplorer
 		if(!mViewPagerAdapter.remove(frag))
 			Logger.LogWarning("Unable to remove fragment");
 		setViewPageAdapter(mViewPagerAdapter);
-		refreshContent();
+		//refreshContent();
 	}
 
 	@Override
