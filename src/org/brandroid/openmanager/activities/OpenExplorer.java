@@ -173,6 +173,7 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
+import org.brandroid.openmanager.util.EventHandler.TaskChangeListener;
 import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
@@ -1446,6 +1447,7 @@ public class OpenExplorer
 	{
 		try {
 		Logger.LogVerbose(txt);
+		MenuUtils.setViewsVisible(this, true, R.id.menu_log);
 		if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isVisible())
 		{
 			final View logview = findViewById(R.id.frag_log);
@@ -1974,16 +1976,20 @@ public class OpenExplorer
 			mOpsFragment = new OperationsFragment();
 		if(findViewById(R.id.frag_log) != null)
 		{
-			fragmentManager
-				.beginTransaction()
-				.replace(R.id.frag_log, mOpsFragment)
-				.disallowAddToBackStack()
-				.commitAllowingStateLoss();
-			findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
+			if(fragmentManager.findFragmentByTag("ops") == null)
+				fragmentManager.beginTransaction().add(mOpsFragment, "ops");
+			if(fragmentManager.findFragmentById(R.id.frag_log) != mOpsFragment)
+				fragmentManager
+					.beginTransaction()
+					.replace(R.id.frag_log, mOpsFragment)
+					.disallowAddToBackStack()
+					.commitAllowingStateLoss();
 		} else {
 			initOpsPopup();
-			mOpsFragment.getPopup().showLikePopDownMenu();
 		}
+		int tasks = EventHandler.getRunningTasks().length;
+		MenuUtils.setViewsVisible(this, tasks > 0, R.id.menu_ops);
+		MenuUtils.setText(this, ""+tasks, R.id.menu_ops_text);
 	}
 	
 	public void refreshBookmarks()
@@ -2607,8 +2613,16 @@ public class OpenExplorer
 				goHome();
 				return true;
 				
+			case R.id.menu_ops_text:
+			case R.id.menu_ops_icon:
 			case R.id.menu_ops:
 				refreshOperations();
+				if(mSinglePane)
+					mOpsFragment.getPopup().showLikePopDownMenu();
+				else
+					MenuUtils.setViewsVisible(this,
+							findViewById(R.id.frag_log).getVisibility() == View.GONE,
+							R.id.frag_log);
 				return true;
 				
 			case R.id.menu_log:

@@ -36,9 +36,15 @@ public class LogViewerFragment extends OpenFragment
 	private LinedArrayAdapter mAdapter = null;
 	private boolean mAdded;
 	private BetterPopupWindow mPopup = null;
+	private View myView = null;
 	private ListView mListView = null;
 	
 	public LogViewerFragment() {
+	}
+	
+	@Override
+	public View getView() {
+		return myView;
 	}
 	
 	public static LogViewerFragment getInstance(Bundle args)
@@ -113,7 +119,8 @@ public class LogViewerFragment extends OpenFragment
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		return getListView();
+		myView = getListView();
+		return myView;
 	}
 	
 	@Override
@@ -181,9 +188,9 @@ public class LogViewerFragment extends OpenFragment
 			mPopup = new BetterPopupWindow(c, anchor);
 			if(mListView == null)
 			{
-				mListView = new ListView(c);
-				LayoutParams lp = mListView.getLayoutParams();
-				lp.height = lp.width = LayoutParams.MATCH_PARENT;
+				myView = mListView = new ListView(c);
+				LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+				mListView.setLayoutParams(lp);
 			}
 			mListView.setAdapter(getAdapter(c));
 			mPopup.setContentView(mListView);

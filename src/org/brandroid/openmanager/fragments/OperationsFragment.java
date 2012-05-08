@@ -125,8 +125,12 @@ public class OperationsFragment
 	
 	private BackgroundTaskAdapter getTaskAdapter()
 	{
-		if(mList != null && mList.getAdapter() != null && mList.getAdapter() instanceof BackgroundTaskAdapter)
+		if(mList != null)
+		{
+			if(mList.getAdapter() == null || !(mList.getAdapter() instanceof BackgroundTaskAdapter))
+				mList.setAdapter(new BackgroundTaskAdapter());
 			return (BackgroundTaskAdapter)mList.getAdapter();
+		}
 		return new BackgroundTaskAdapter();
 	}
 	

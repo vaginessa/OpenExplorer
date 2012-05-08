@@ -61,6 +61,7 @@ import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
+import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Utils;
@@ -84,6 +85,7 @@ public class EventHandler {
 	private static int EventCount = 0;
 
 	private OnWorkerUpdateListener mThreadListener;
+	private TaskChangeListener mTaskListener;
 	private FileManager mFileMang;
 
 	private static ArrayList<BackgroundWork> mTasks = new ArrayList<BackgroundWork>();
@@ -97,7 +99,7 @@ public class EventHandler {
 		for (BackgroundWork bw : mTasks)
 			if (bw.getStatus() != Status.FINISHED)
 				ret.add(bw);
-		return ret.toArray(new BackgroundWork[0]);
+		return ret.toArray(new BackgroundWork[ret.size()]);
 	}
 
 	public static boolean hasRunningTasks() {
@@ -114,10 +116,14 @@ public class EventHandler {
 		if (mNotifier != null)
 			mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
 	}
+	
+	public void setTaskChangeListener(TaskChangeListener l) { mTaskListener = l; }
 
+	public interface TaskChangeListener {
+		public void OnTasksChanged(int taskCount);
+	}
 	public interface OnWorkerUpdateListener {
 		public void onWorkerThreadComplete(int type, ArrayList<String> results);
-
 		public void onWorkerProgressUpdate(int pos, int total);
 	}
 
@@ -133,6 +139,8 @@ public class EventHandler {
 			return;
 		mThreadListener.onWorkerThreadComplete(type, results);
 		mThreadListener = null;
+		if(mTaskListener != null)
+			mTaskListener.OnTasksChanged(getTaskList().size());
 	}
 
 	public void setUpdateListener(OnWorkerUpdateListener e) {
@@ -466,6 +474,8 @@ public class EventHandler {
 			mTasks.add(this);
 			mStart = new Date();
 			mNotifyId = BACKGROUND_NOTIFICATION_ID + EventCount++;
+			if(mTaskListener != null)
+				mTaskListener.OnTasksChanged(getRunningTasks().length);
 		}
 
 		public String getTitle() {
@@ -1072,7 +1082,7 @@ public class EventHandler {
 			// NotificationManager mNotifier =
 			// (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 			BackgroundWork[] tasks = getRunningTasks();
-			if (tasks.length == 0 || tasks[0].equals(this))
+			if (tasks.length == 0 || (tasks.length == 1 && tasks[0].equals(BackgroundWork.this)))
 				mNotifier.cancel(mNotifyId);
 
 			if (mPDialog != null && mPDialog.isShowing())

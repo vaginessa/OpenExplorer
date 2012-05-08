@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class MenuUtils {
 	public static void transferMenu(Menu from, Menu to) { transferMenu(from, to, true); }
@@ -53,9 +54,9 @@ public class MenuUtils {
 			if(a == null) return;
 			final View v = a.findViewById(id);
 			if(v != null)
-				v.post(new Runnable(){public void run(){
+				//v.post(new Runnable(){public void run(){
 					v.setVisibility(visible ? View.VISIBLE : View.GONE);
-				}});
+				//}});
 		}
 	}
 
@@ -109,6 +110,14 @@ public class MenuUtils {
 			item.setEnabled(enabled);
 			if(enabled)
 				item.setVisible(true);
+		}
+	}
+	public static void setText(Activity activity, String string, int... textViewID) {
+		for(int id : textViewID)
+		{
+			View v = activity.findViewById(id);
+			if(v != null && v instanceof TextView)
+				((TextView)v).setTag(string);
 		}
 	}
 	
