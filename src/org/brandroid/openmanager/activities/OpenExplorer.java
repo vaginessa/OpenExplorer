@@ -1443,7 +1443,7 @@ public class OpenExplorer
 		try {
 		
 		if(txt != null)
-			Logger.LogDebug("LogView(" + color + "): " + txt);
+			Logger.LogDebug("Log: " + txt);
 		MenuUtils.setViewsVisible(this, true, R.id.menu_log);
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();

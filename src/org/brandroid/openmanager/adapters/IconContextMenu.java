@@ -38,6 +38,7 @@ public class IconContextMenu
 	protected View anchor;
 	private int maxColumns = 2;
 	private int mWidth = 0;
+	private int rotation = 0;
 	private static final Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>();
 	private static final Hashtable<Integer, Integer> mHeights = new Hashtable<Integer, Integer>();
 	
@@ -64,6 +65,7 @@ public class IconContextMenu
 		//root.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         menu = newMenu;
 		anchor = from;
+		rotation = ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
         //this.dialog = new AlertDialog.Builder(context);
         popup = new BetterPopupWindow(context, anchor);
         mGrid = new GridView(context);
@@ -159,7 +161,10 @@ public class IconContextMenu
 	}
 	
 	private int getMenuSignature() {
-		return maxColumns * 100 + getAdapter().getCount();
+		return
+			rotation * 1000 +
+			maxColumns * 100 +
+			getAdapter().getCount();
 	}
 
     public boolean show()

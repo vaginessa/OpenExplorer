@@ -6,7 +6,6 @@
     android:showDividers="middle"
     android:layout_alignParentRight="true"
     android:layout_alignWithParentIfMissing="true"
-    android:background="@color/translucent_gray"
 >   
 
 	<RelativeLayout

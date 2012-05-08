@@ -79,7 +79,7 @@ public class EventHandler {
 	public static final int ERROR_TYPE = 0x09;
 	public static final int BACKGROUND_NOTIFICATION_ID = 123;
 	
-	public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.IS_BLACKBERRY && Build.VERSION.SDK_INT > 10;
+	public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.IS_BLACKBERRY && Build.VERSION.SDK_INT > 9;
 
 	private static NotificationManager mNotifier = null;
 	private static int EventCount = 0;
