@@ -3,12 +3,15 @@ package org.brandroid.openmanager.fragments;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
+import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 
+import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -27,13 +30,16 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class OperationsFragment extends OpenFragment
+public class OperationsFragment
+	extends OpenFragment
+	implements Poppable
 {
 	private ListView mList;
+	private BetterPopupWindow mPopup = null;
 	
 	class BackgroundTaskAdapter extends BaseAdapter
 	{
-
+		
 		@Override
 		public int getCount() {
 			return EventHandler.getTaskList().size();
@@ -114,10 +120,22 @@ public class OperationsFragment extends OpenFragment
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		mList = (ListView)view.findViewById(android.R.id.list);
-		mList.setAdapter(new BackgroundTaskAdapter());
+		mList.setAdapter(getTaskAdapter());
 	}
 	
-	private BaseAdapter getAdapter() { return (BaseAdapter)mList.getAdapter(); }
+	private BackgroundTaskAdapter getTaskAdapter()
+	{
+		if(mList != null && mList.getAdapter() != null && mList.getAdapter() instanceof BackgroundTaskAdapter)
+			return (BackgroundTaskAdapter)mList.getAdapter();
+		return new BackgroundTaskAdapter();
+	}
+	
+	public ListView getListView() { return mList; }
+	public void setListView(ListView lv) { mList = lv; }  
+	
+	public BaseAdapter getAdapter() {
+		return getTaskAdapter();
+	}
 	private void notifyDataSetChanged()
 	{
 		getAdapter().notifyDataSetChanged();
@@ -135,6 +153,29 @@ public class OperationsFragment extends OpenFragment
 			return getExplorer().getString(R.string.s_title_operations);
 		else
 			return "File Operations";
+	}
+
+	@Override
+	public void setupPopup(Context c, View anchor) {
+		if(mPopup == null)
+		{
+			mPopup = new BetterPopupWindow(c, anchor);
+			View v = getView();
+			if(v == null)
+				v = ((LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+					.inflate(R.layout.operations_layout, null);
+			if(mList == null)
+				mList = (ListView)v.findViewById(android.R.id.list);
+			if(mList.getAdapter() == null)
+				mList.setAdapter(getAdapter());
+			mPopup.setContentView(mList);
+		} else
+			mPopup.setAnchor(anchor);
+	}
+
+	@Override
+	public BetterPopupWindow getPopup() {
+		return mPopup;
 	}
 
 }

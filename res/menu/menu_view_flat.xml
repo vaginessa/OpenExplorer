@@ -37,9 +37,4 @@
 	    android:checkable="true"
 	    android:title="@string/s_pref_basebar"
 	    android:visible="@bool/prehoneycomb" />
-	<item
-	    android:id="@+id/menu_view_logview"
-	    android:checkable="true"
-	    android:title="@string/s_pref_logview"
-	    />
 </menu>

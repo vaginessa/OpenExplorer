@@ -250,6 +250,7 @@ public class OpenExplorer
 	private Boolean mStateReady = true;
 	
 	private static LogViewerFragment mLogFragment = null;
+	private static OperationsFragment mOpsFragment = null;
 	private static boolean mLogViewEnabled = true;
 	private OpenViewPager mViewPager;
 	private static ArrayPagerAdapter mViewPagerAdapter;
@@ -433,6 +434,7 @@ public class OpenExplorer
 		}
 		setViewVisibility(false, false, R.id.title_paste);
 		setOnClicks(
+				R.id.menu_ops, R.id.menu_log,
 				R.id.title_icon, R.id.title_menu,
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
@@ -443,6 +445,11 @@ public class OpenExplorer
 			mSinglePane = true;
 		else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			mSinglePane = true;
+		
+		if(mSinglePane)
+		{
+			MenuUtils.setViewsVisible(this, false, R.id.menu_log, R.id.menu_ops);
+		}
 
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
@@ -501,6 +508,8 @@ public class OpenExplorer
 		{
 			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
 			findViewById(R.id.frag_log).setVisibility(View.GONE);
+		} else {
+			initLogPopup();
 		}
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
@@ -1056,6 +1065,46 @@ public class OpenExplorer
 			mBookmarksList.expandGroup(i);
 	}
 	
+	private void initLogPopup()
+	{
+		if(findViewById(R.id.frag_log) != null)
+			return;
+		if(mLogFragment == null)
+			mLogFragment = new LogViewerFragment();
+		View anchor = null;
+		if(anchor == null)
+			anchor = findViewById(R.id.menu_log);
+		if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
+			anchor = getActionBar().getCustomView();
+		if(anchor == null)
+			anchor = findViewById(R.id.title_bar);
+		if(anchor == null)
+			anchor = findViewById(R.id.base_bar);
+		if(anchor == null)
+			anchor = findViewById(R.id.base_row);
+		mLogFragment.setupPopup(this, anchor);
+	}
+	
+	private void initOpsPopup()
+	{
+		if(findViewById(R.id.frag_log) != null)
+			return;
+		if(mOpsFragment == null)
+			mOpsFragment = new OperationsFragment();
+		View anchor = null;
+		if(anchor == null)
+			anchor = findViewById(R.id.menu_ops);
+		if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
+			anchor = getActionBar().getCustomView();
+		if(anchor == null)
+			anchor = findViewById(R.id.title_bar);
+		if(anchor == null)
+			anchor = findViewById(R.id.base_bar);
+		if(anchor == null)
+			anchor = findViewById(R.id.base_row);
+		mOpsFragment.setupPopup(this, anchor);
+	}
+	
 	private void initPager()
 	{
 		mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
@@ -1415,13 +1464,6 @@ public class OpenExplorer
 						logview.setLayoutParams(lp);
 				}});
 			} //else mLogFragment.show(fragmentManager, "log");
-			else if(!mLogFragment.getAdded()) {
-				mViewPager.post(new Runnable(){public void run(){
-					mLogFragment.setAdded(true);
-					if(mViewPagerAdapter.add(mLogFragment))
-						setViewPageAdapter(mViewPagerAdapter, true);
-				}});
-			}
 		}
 		if(mLogFragment != null && mLogFragment.getView() != null)
 		{
@@ -1926,25 +1968,21 @@ public class OpenExplorer
 	}
 
 	public void refreshOperations() {
-		Fragment f = fragmentManager.findFragmentByTag("ops");
-		if(f == null)
-			f = new OperationsFragment();
-		OperationsFragment ops = (OperationsFragment)f;
+		if(mOpsFragment == null)
+			mOpsFragment = (OperationsFragment)fragmentManager.findFragmentByTag("ops");
+		if(mOpsFragment == null)
+			mOpsFragment = new OperationsFragment();
 		if(findViewById(R.id.frag_log) != null)
 		{
 			fragmentManager
 				.beginTransaction()
-				.replace(R.id.frag_log, ops)
+				.replace(R.id.frag_log, mOpsFragment)
 				.disallowAddToBackStack()
 				.commitAllowingStateLoss();
 			findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
 		} else {
-			int pos = mViewPagerAdapter.getItemPosition(ops);
-			if(pos < 0)
-			{
-				mViewPagerAdapter.add(ops);
-				mViewPagerAdapter.notifyDataSetChanged();
-			}
+			initOpsPopup();
+			mOpsFragment.getPopup().showLikePopDownMenu();
 		}
 	}
 	
@@ -2366,7 +2404,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
 		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
-		MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
+		//MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
@@ -2569,30 +2607,30 @@ public class OpenExplorer
 				goHome();
 				return true;
 				
-			case R.id.menu_view_logview:
+			case R.id.menu_ops:
+				refreshOperations();
+				return true;
+				
+			case R.id.menu_log:
 				boolean lvenabled = setSetting(null, "pref_logview", !getSetting(null, "pref_logview", true));
 				if(mLogFragment == null)
 					mLogFragment = new LogViewerFragment();
-				if (!lvenabled || !getSetting(null,  "pref_logview", true))
-				{
-					if(mLogFragment.isVisible())
-					{
-						if(findViewById(R.id.frag_log) != null)
-							findViewById(R.id.frag_log).setVisibility(View.GONE);
-						else
-							mViewPagerAdapter.remove(mLogFragment);
-					}
-				} else {
+				if (findViewById(R.id.frag_log) != null)
+					findViewById(R.id.frag_log).setVisibility(findViewById(R.id.frag_log).getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+				else {
 					if(findViewById(R.id.frag_log) != null)
 					{
 						findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
 						OpenFragment lf = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
 						if(lf == null || !(lf instanceof LogViewerFragment))
+						{
+							lf = mLogFragment;
 							fragmentManager.beginTransaction()
-								.replace(R.id.frag_log, lf).commitAllowingStateLoss();
+								.replace(R.id.frag_log, mLogFragment).commitAllowingStateLoss();
+						}
 					} else {
-						mViewPagerAdapter.add(mLogFragment);
-						mViewPager.setAdapter(mViewPagerAdapter);
+						initLogPopup();
+						mLogFragment.getPopup().showLikePopDownMenu();
 					}
 				}
 				return true;

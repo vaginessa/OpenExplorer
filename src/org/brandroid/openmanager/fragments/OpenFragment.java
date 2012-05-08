@@ -22,6 +22,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ActionModeHelper;
+import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
@@ -84,6 +85,12 @@ public abstract class OpenFragment
 	public interface OnFragmentTitleLongClickListener
 	{
 		public boolean onTitleLongClick(View titleView);
+	}
+	
+	public interface Poppable
+	{
+		public void setupPopup(Context c, View anchor);
+		public BetterPopupWindow getPopup();
 	}
 	
 	public class OpenContextMenuInfo implements ContextMenuInfo

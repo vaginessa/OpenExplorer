@@ -62,6 +62,7 @@ import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Utils;
 
 public class EventHandler {
@@ -1043,11 +1044,11 @@ public class EventHandler {
 					if (view.findViewById(android.R.id.progress) != null) {
 						int progA = (int) (((float) mLastProgress[0] / (float) mLastProgress[1]) * 1000f);
 						int progB = (int) (((float) mLastProgress[0] / (float) mLastProgress[2]) * 1000f);
-						ProgressBar pb = (ProgressBar) view
-								.findViewById(android.R.id.progress);
 						if(getStatus() == Status.FINISHED)
-							pb.setVisibility(View.GONE);
+							MenuUtils.setViewsVisible(view, false, android.R.id.closeButton, android.R.id.progress);
 						else {
+							ProgressBar pb = (ProgressBar) view
+									.findViewById(android.R.id.progress);
 							pb.setIndeterminate(mLastRate == 0);
 							pb.setMax(1000);
 							pb.setProgress(progA);
