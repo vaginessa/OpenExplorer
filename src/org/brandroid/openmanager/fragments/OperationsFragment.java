@@ -36,6 +36,7 @@ public class OperationsFragment
 {
 	private ListView mList;
 	private BetterPopupWindow mPopup = null;
+	private LayoutInflater mInflater = null;
 	
 	class BackgroundTaskAdapter extends BaseAdapter
 	{
@@ -60,7 +61,7 @@ public class OperationsFragment
 			final BackgroundWork bw = getItem(position);
 			if(convertView == null)
 			{
-				convertView = getLayoutInflater(getArguments()).inflate(
+				convertView = mInflater.inflate(
 						R.layout.notification, parent, false);
 				//convertView.findViewById(android.R.id.icon).setVisibility(View.GONE);
 			}
@@ -113,6 +114,7 @@ public class OperationsFragment
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		mInflater = inflater;
 		return inflater.inflate(R.layout.operations_layout, container, false);
 	}
 	
@@ -120,7 +122,7 @@ public class OperationsFragment
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		mList = (ListView)view.findViewById(android.R.id.list);
-		mList.setAdapter(getTaskAdapter());
+		mList.setAdapter(new BackgroundTaskAdapter());
 	}
 	
 	private BackgroundTaskAdapter getTaskAdapter()
@@ -163,16 +165,11 @@ public class OperationsFragment
 	public void setupPopup(Context c, View anchor) {
 		if(mPopup == null)
 		{
+			mInflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			View view = onCreateView(mInflater, null, getArguments()); 
+			onViewCreated(view, getArguments());
 			mPopup = new BetterPopupWindow(c, anchor);
-			View v = getView();
-			if(v == null)
-				v = ((LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-					.inflate(R.layout.operations_layout, null);
-			if(mList == null)
-				mList = (ListView)v.findViewById(android.R.id.list);
-			if(mList.getAdapter() == null)
-				mList.setAdapter(getAdapter());
-			mPopup.setContentView(mList);
+			mPopup.setContentView(view);
 		} else
 			mPopup.setAnchor(anchor);
 	}

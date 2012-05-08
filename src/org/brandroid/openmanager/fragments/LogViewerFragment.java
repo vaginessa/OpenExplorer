@@ -8,7 +8,10 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.LinedArrayAdapter;
 import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.utils.Logger;
 
+import android.R.anim;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -25,6 +28,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -32,19 +36,15 @@ import android.widget.TextView;
 public class LogViewerFragment extends OpenFragment
 	implements OnClickListener, Poppable
 {
-	private static ArrayList<CharSequence> mData = new ArrayList<CharSequence>();
+	private final static ArrayList<CharSequence> mData = new ArrayList<CharSequence>();
 	private LinedArrayAdapter mAdapter = null;
 	private boolean mAdded;
 	private BetterPopupWindow mPopup = null;
-	private View myView = null;
 	private ListView mListView = null;
+	private LayoutInflater mInflater = null;
+	private Context mContext;
 	
 	public LogViewerFragment() {
-	}
-	
-	@Override
-	public View getView() {
-		return myView;
 	}
 	
 	public static LogViewerFragment getInstance(Bundle args)
@@ -54,22 +54,25 @@ public class LogViewerFragment extends OpenFragment
 		return ret;
 	}
 	
+	public void notifyDataSetChanged()
+	{
+		if(mAdapter != null)
+			mAdapter.notifyDataSetChanged();
+	}
+	
 	public boolean getAdded() { return mAdded; } 
 	public void setAdded(boolean added) { mAdded = added; }
 	
 	public void print(final String txt, final int color)
 	{
-		if(getActivity() == null) return;
-
-		mData.add(0, colorify(txt, color));
-
 		//getActivity().runOnUiThread(
 		Runnable doPrint = new Runnable(){public void run(){
+			mData.add(0, colorify(txt, color));
 			if(mAdapter != null)
 				mAdapter.notifyDataSetChanged();
 			}};
-		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
-			getActivity().runOnUiThread(doPrint);
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread) && mListView != null)
+			mListView.post(doPrint);
 		else
 			doPrint.run();
 	}
@@ -82,12 +85,6 @@ public class LogViewerFragment extends OpenFragment
 			line.setSpan(new ForegroundColorSpan(color), 0, line.length(), Spanned.SPAN_COMPOSING);
 			return line;
 		} else return txt;
-	}
-	
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		//setHasOptionsMenu(true);
 	}
 	
 	@Override
@@ -117,16 +114,27 @@ public class LogViewerFragment extends OpenFragment
 	}
 	
 	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mContext = activity;
+	}
+	
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		myView = getListView();
-		return myView;
+		mInflater = inflater; 
+		View ret = inflater.inflate(R.layout.log_viewer, null);
+		if(ret.findViewById(android.R.id.button1) != null)
+			((Button)ret.findViewById(android.R.id.button1))
+				.setOnClickListener(this);
+		mListView = (ListView)ret.findViewById(android.R.id.list);
+		return ret;
 	}
 	
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		mAdapter = new LinedArrayAdapter(getActivity(), R.layout.edit_text_view_row, mData);
+		mAdapter = new LinedArrayAdapter(mContext, R.layout.edit_text_view_row, mData);
 		mAdapter.setShowLineNumbers(false);
 		getListView().setAdapter(mAdapter);
 	}
@@ -152,6 +160,10 @@ public class LogViewerFragment extends OpenFragment
 	{
 		switch(id)
 		{
+		case android.R.id.button1:
+			mData.clear();
+			notifyDataSetChanged();
+			break;
 			//default: if(getExplorer() != null) getExplorer().onClick(id, item, from);
 		}
 	}
@@ -185,16 +197,13 @@ public class LogViewerFragment extends OpenFragment
 	public void setupPopup(Context c, View anchor) {
 		if(mPopup == null)
 		{
+			mContext = c;
+			mInflater = (LayoutInflater)c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			View view = onCreateView(mInflater, null, getArguments()); 
+			onViewCreated(view, getArguments());
 			mPopup = new BetterPopupWindow(c, anchor);
-			if(mListView == null)
-			{
-				myView = mListView = new ListView(c);
-				LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-				mListView.setLayoutParams(lp);
-			}
-			mListView.setAdapter(getAdapter(c));
-			mPopup.setContentView(mListView);
-		}
+			mPopup.setContentView(view);
+		} else mPopup.setAnchor(anchor);
 	}
 	
 	public BetterPopupWindow getPopup() { return mPopup; }

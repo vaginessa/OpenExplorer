@@ -433,10 +433,10 @@ public class OpenExplorer
 			if(mBaseStub != null)
 				mBaseStub.inflate();
 		}
-		setViewVisibility(false, false, R.id.title_paste);
+		setViewVisibility(false, false, R.id.title_paste, R.id.menu_ops, R.id.menu_log);
 		setOnClicks(
-				R.id.menu_ops, R.id.menu_log,
-				R.id.title_icon, R.id.title_menu,
+				R.id.menu_ops, R.id.menu_ops_icon, R.id.menu_ops_text,
+				R.id.menu_log, R.id.title_icon, R.id.title_menu,
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
@@ -446,11 +446,6 @@ public class OpenExplorer
 			mSinglePane = true;
 		else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			mSinglePane = true;
-		
-		if(mSinglePane)
-		{
-			MenuUtils.setViewsVisible(this, false, R.id.menu_log, R.id.menu_ops);
-		}
 
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
@@ -1210,7 +1205,7 @@ public class OpenExplorer
 		}
 	}
 
-	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, false); }
+	private boolean setViewPageAdapter(PagerAdapter adapter) { return setViewPageAdapter(adapter, true); }
 	private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload)
 	{
 		if(adapter == null) adapter = mViewPager.getAdapter();
@@ -1446,33 +1441,29 @@ public class OpenExplorer
 	public void sendToLogView(final String txt, final int color)
 	{
 		try {
-		Logger.LogVerbose(txt);
+		
+		if(txt != null)
+			Logger.LogDebug("LogView(" + color + "): " + txt);
 		MenuUtils.setViewsVisible(this, true, R.id.menu_log);
-		if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isVisible())
+		if(mLogFragment == null)
+			mLogFragment = new LogViewerFragment();
+		if(!mLogFragment.isVisible())
 		{
 			final View logview = findViewById(R.id.frag_log);
-			if(logview != null)
+			if(logview != null && !mLogFragment.getAdded())
 			{
-				logview.post(new Runnable(){
-					public void run() {
-						logview.setVisibility(View.VISIBLE);
-						OpenFragment f = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
-						if(f == null || !(f instanceof LogViewerFragment))
-							fragmentManager.beginTransaction()
-								.replace(R.id.frag_log, mLogFragment)
-								.commit();
-						LayoutParams lp = logview.getLayoutParams();
-						lp.width = getResources().getDimensionPixelSize(R.dimen.bookmarks_width);
-						logview.setLayoutParams(lp);
-				}});
+				Fragment fl = fragmentManager.findFragmentById(R.id.frag_log);
+				if(!(fl instanceof LogViewerFragment))
+					fragmentManager.beginTransaction()
+						.replace(R.id.frag_log, mLogFragment)
+						.disallowAddToBackStack()
+						.commitAllowingStateLoss();
+				logview.setVisibility(View.VISIBLE);
+				mLogFragment.setAdded(true);
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
-		if(mLogFragment != null && mLogFragment.getView() != null)
-		{
-			mLogFragment.getView().post(new Runnable(){public void run(){
-				mLogFragment.print(txt, color);
-			}});
-		}
+		if(mLogFragment != null && txt != null)
+			mLogFragment.print(txt, color);
 		} catch(Exception e) { Logger.LogWarning("Couldn't send to Log Viewer"); }
 	}
 	private void setupLoggingDb()
@@ -1974,6 +1965,12 @@ public class OpenExplorer
 			mOpsFragment = (OperationsFragment)fragmentManager.findFragmentByTag("ops");
 		if(mOpsFragment == null)
 			mOpsFragment = new OperationsFragment();
+		int tasks = EventHandler.getRunningTasks().length;
+		if(tasks <= 0)
+		{
+			MenuUtils.setViewsVisible(this, false, R.id.frag_log, R.id.menu_ops);
+			return;
+		}
 		if(findViewById(R.id.frag_log) != null)
 		{
 			if(fragmentManager.findFragmentByTag("ops") == null)
@@ -1987,7 +1984,6 @@ public class OpenExplorer
 		} else {
 			initOpsPopup();
 		}
-		int tasks = EventHandler.getRunningTasks().length;
 		MenuUtils.setViewsVisible(this, tasks > 0, R.id.menu_ops);
 		MenuUtils.setText(this, ""+tasks, R.id.menu_ops_text);
 	}
@@ -2626,26 +2622,15 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_log:
-				boolean lvenabled = setSetting(null, "pref_logview", !getSetting(null, "pref_logview", true));
 				if(mLogFragment == null)
 					mLogFragment = new LogViewerFragment();
 				if (findViewById(R.id.frag_log) != null)
+				{
 					findViewById(R.id.frag_log).setVisibility(findViewById(R.id.frag_log).getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
-				else {
-					if(findViewById(R.id.frag_log) != null)
-					{
-						findViewById(R.id.frag_log).setVisibility(View.VISIBLE);
-						OpenFragment lf = (OpenFragment)fragmentManager.findFragmentById(R.id.frag_log);
-						if(lf == null || !(lf instanceof LogViewerFragment))
-						{
-							lf = mLogFragment;
-							fragmentManager.beginTransaction()
-								.replace(R.id.frag_log, mLogFragment).commitAllowingStateLoss();
-						}
-					} else {
-						initLogPopup();
-						mLogFragment.getPopup().showLikePopDownMenu();
-					}
+					sendToLogView(null, 0);
+				} else {
+					initLogPopup();
+					mLogFragment.getPopup().showLikePopDownMenu();
 				}
 				return true;
 					
@@ -3210,7 +3195,7 @@ public class OpenExplorer
 					tmp = tmp.getParent();
 					if(tmp == null) break;
 				}
-				setViewPageAdapter(mViewPagerAdapter, false);
+				setViewPageAdapter(mViewPagerAdapter, true);
 				//mViewPager.setAdapter(mViewPagerAdapter);
 				setCurrentItem(path.getDepth() - 1, false);
 				getDirContentFragment(false).refreshData(null, false);

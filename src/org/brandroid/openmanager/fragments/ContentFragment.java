@@ -1041,7 +1041,8 @@ public class ContentFragment extends OpenFragment
 	}
 	@Override
 	public void updateData(OpenPath[] result) {
-		mContentAdapter.updateData(result);
+		if(mContentAdapter != null)
+			mContentAdapter.updateData(result);
 		//notifyDataSetChanged();
 	}
 	

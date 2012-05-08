@@ -301,6 +301,7 @@ public class BetterPopupWindow {
 	}
 	
 	public BetterPopupWindow setContentView(View root) {
+		//Logger.LogDebug("BetterPopupWindow.setContentView(" + root.toString() + ")");
 		this.root = root;
 		this.popup.setContentView(root);
 		return this;
