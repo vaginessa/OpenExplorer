@@ -82,6 +82,8 @@
 		
 		    <FrameLayout
 				android:id="@+id/frag_log"
+				android:layout_above="@id/base_bar"
+				android:layout_below="@id/title_bar"
 		        android:layout_width="@dimen/bookmarks_width"
 		        android:layout_height="match_parent"
 		        android:layout_alignParentRight="true"

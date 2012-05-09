@@ -125,7 +125,7 @@ public class LogViewerFragment extends OpenFragment
 		mInflater = inflater; 
 		View ret = inflater.inflate(R.layout.log_viewer, null);
 		if(ret.findViewById(android.R.id.button1) != null)
-			((Button)ret.findViewById(android.R.id.button1))
+			ret.findViewById(android.R.id.button1)
 				.setOnClickListener(this);
 		mListView = (ListView)ret.findViewById(android.R.id.list);
 		return ret;

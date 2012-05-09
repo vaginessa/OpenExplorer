@@ -435,7 +435,7 @@ public class OpenExplorer
 		}
 		setViewVisibility(false, false, R.id.title_paste, R.id.menu_ops, R.id.menu_log);
 		setOnClicks(
-				R.id.menu_ops, R.id.menu_ops_icon, R.id.menu_ops_text,
+				R.id.menu_ops, //R.id.menu_ops_icon, R.id.menu_ops_text,
 				R.id.menu_log, R.id.title_icon, R.id.title_menu,
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
@@ -1444,10 +1444,13 @@ public class OpenExplorer
 		
 		if(txt != null)
 			Logger.LogDebug("Log: " + txt);
+		if(mLogFragment.getAdded()) return;
 		MenuUtils.setViewsVisible(this, true, R.id.menu_log);
+		MenuUtils.setMenuVisible(mMainMenu, true, R.id.menu_log);
+		invalidateOptionsMenu();
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
-		if(!mLogFragment.isVisible())
+		if(!mLogFragment.getAdded() && !mLogFragment.isVisible())
 		{
 			final View logview = findViewById(R.id.frag_log);
 			if(logview != null && !mLogFragment.getAdded())
@@ -1969,6 +1972,8 @@ public class OpenExplorer
 		if(tasks <= 0)
 		{
 			MenuUtils.setViewsVisible(this, false, R.id.frag_log, R.id.menu_ops);
+			MenuUtils.setMenuVisible(mMainMenu, true, R.id.menu_ops);
+			invalidateOptionsMenu();
 			return;
 		}
 		if(findViewById(R.id.frag_log) != null)
@@ -1985,7 +1990,7 @@ public class OpenExplorer
 			initOpsPopup();
 		}
 		MenuUtils.setViewsVisible(this, tasks > 0, R.id.menu_ops);
-		MenuUtils.setText(this, ""+tasks, R.id.menu_ops_text);
+		MenuUtils.setText(this, ""+tasks, R.id.menu_ops);
 	}
 	
 	public void refreshBookmarks()
@@ -2415,6 +2420,8 @@ public class OpenExplorer
 			MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
 			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
 		}
+		MenuUtils.setMenuVisible(menu, EventHandler.getRunningTasks().length > 0, R.id.menu_ops);
+		
 		//if(BEFORE_HONEYCOMB)
 		{
 			OpenFragment f = getSelectedFragment();
@@ -2609,8 +2616,8 @@ public class OpenExplorer
 				goHome();
 				return true;
 				
-			case R.id.menu_ops_text:
-			case R.id.menu_ops_icon:
+			//case R.id.menu_ops_text:
+			//case R.id.menu_ops_icon:
 			case R.id.menu_ops:
 				refreshOperations();
 				if(mSinglePane)
@@ -3368,6 +3375,36 @@ public class OpenExplorer
 		{
 			case R.id.title_icon:
 				goHome();
+				return true;
+			case R.id.menu_ops:
+				if(!BEFORE_HONEYCOMB)
+					MenuUtils.setMenuShowAsAction(mMainMenu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_ops);
+				else {
+					mMainMenu.add(0, R.id.menu_ops, 0, R.string.s_title_operations)
+						.setIcon(R.drawable.ic_gear);
+					if(mToolbarButtons.findViewById(R.id.menu_ops) != null)
+						mToolbarButtons.removeView(mToolbarButtons.findViewById(R.id.menu_ops));
+				}
+				return true;
+			case R.id.menu_log:
+				mLogFragment.setAdded(true);
+				MenuUtils.setMenuShowAsAction(mMainMenu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_log);
+				if(BEFORE_HONEYCOMB)
+				{
+					mToolbarButtons.removeView(mToolbarButtons.findViewById(R.id.menu_log));
+					mMainMenu.add(0, R.id.menu_log, 0, R.string.s_pref_logview)
+						.setIcon(R.drawable.ic_paper);
+				}
+				return true;
+				
+			case R.id.menu_favorites:
+				MenuUtils.setMenuShowAsAction(mMainMenu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_favorites);
+				if(BEFORE_HONEYCOMB)
+				{
+					mToolbarButtons.removeView(mToolbarButtons.findViewById(R.id.menu_favorites));
+					mMainMenu.add(0, R.id.menu_favorites, 0, R.string.s_menu_favorites)
+						.setIcon(R.drawable.ic_favorites);
+				}
 				return true;
 		}
 		return false;

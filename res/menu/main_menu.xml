@@ -8,6 +8,18 @@
     	android:showAsAction="always|withText"
     	android:icon="@drawable/ic_menu_paste">
     </item>
+  	<item android:id="@+id/menu_ops"
+  	    android:showAsAction="always"
+  	    android:icon="@drawable/ic_gear"
+  	    android:title="@string/s_title_operations"
+  	    android:visible="false"
+  	    />
+  	<item android:id="@+id/menu_log"
+  	    android:showAsAction="always"
+  	    android:icon="@drawable/ic_paper"
+  	    android:title="@string/s_pref_logview"
+  	    android:visible="false"
+  	    />
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@drawable/ic_menu_search"
@@ -49,17 +61,18 @@
 	    >
 	    <menu />
 	</item>
+  	<item
+  	    android:id="@+id/menu_favorites"
+  	    android:showAsAction="ifRoom"
+  	    android:icon="@drawable/ic_menu_star"
+  	    android:title="@string/s_menu_favorites"
+  	    />
 	<item
   	    android:id="@+id/menu_debug"
   	    android:showAsAction="never|withText"
   	    android:icon="@drawable/ic_menu_upload"
   	    android:title="DEBUG Test"
   	    />
-  	<item
-  	    android:id="@+id/menu_favorites"
-  	    android:showAsAction="never"
-  	    android:icon="@drawable/ic_menu_star"
-  	    android:title="@string/s_menu_favorites" />
 	<item
 		android:id="@+id/menu_up"
 		android:icon="@drawable/ic_up"
