@@ -12,9 +12,11 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.ArrayList;
 
+import org.apache.http.util.ByteArrayBuffer;
 import org.brandroid.utils.ByteQueue;
 import org.brandroid.utils.Logger;
 
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -66,6 +68,7 @@ public class ShellSession {
 	public interface UpdateCallback
 	{
 		void onUpdate();
+		void onReceiveMessage(String msg);
 	}
 	
 	public void setUpdateCallback(UpdateCallback listener)
@@ -80,7 +83,7 @@ public class ShellSession {
             @Override
             public void run() {
                Logger.LogInfo("waiting for: " + mProcId);
-               int result = Exec.waitFor(mProcId);
+               int result = 0; //Exec.waitFor(mProcId);
                Logger.LogInfo("Subprocess exited: " + result);
                mMsgHandler.sendMessage(mMsgHandler.obtainMessage(PROCESS_EXITED, result));
             }
@@ -132,19 +135,27 @@ public class ShellSession {
             finish();
         } else if (mProcessExitMessage != null) {
         	*/
-            try {
-                byte[] msg = ("\r\n[" + mProcessExitMessage + "]").getBytes("UTF-8");
+            //try {
+                String sMsg = "\r\n[" + mProcessExitMessage + "]";
                // mEmulator.append(msg, 0, msg.length);
-                mNotify.onUpdate();
-            } catch (UnsupportedEncodingException e) {
+                //mNotify.onUpdate();
+                if(mNotify != null)
+                	mNotify.onReceiveMessage(sMsg);
+            //} catch (UnsupportedEncodingException e) {
                 // Never happens
-            }
+            //}
         //}
+    }
+    
+    public void start()
+    {
+    	mIsRunning = true;
+    	mPollingThread.start();
     }
 
     public void finish() {
-        Exec.hangupProcessGroup(mProcId);
-        Exec.close(mFd);
+        //Exec.hangupProcessGroup(mProcId);
+        //Exec.close(mFd);
         mIsRunning = false;
         //mTranscriptScreen.finish();
     }
@@ -157,6 +168,8 @@ public class ShellSession {
         int bytesToRead = Math.min(bytesAvailable, mReceiveBuffer.length);
         try {
             int bytesRead = mByteQueue.read(mReceiveBuffer, 0, bytesToRead);
+            if(mNotify != null)
+            	mNotify.onReceiveMessage(new String(mReceiveBuffer));
             //mEmulator.append(mReceiveBuffer, 0, bytesRead);
         } catch (InterruptedException e) {
         }
@@ -176,7 +189,8 @@ public class ShellSession {
         String[] env = new String[1];
         env[0] = "TERM=" + termType;
 
-        mFd = Exec.createSubprocess(arg0, args, env, processId);
+        //Environment
+        //mFd = Exec.createSubprocess(arg0, args, env, processId);
     }
     
 
