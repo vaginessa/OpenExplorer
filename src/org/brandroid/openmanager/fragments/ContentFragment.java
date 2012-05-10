@@ -35,7 +35,8 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
-import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
@@ -79,7 +80,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 public class ContentFragment extends OpenFragment
 		implements OnItemClickListener, OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
-					OnTaskUpdateListener
+					OnTaskUpdateListener, UpdateCallback
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -386,6 +387,16 @@ public class ContentFragment extends OpenFragment
 	public void runUpdateTask(boolean reconnect)
 	{
 		String sPath = mPath.getPath();
+		if(RootManager.Default.isRoot() &&
+				(mPath.getName().equalsIgnoreCase("data") ||
+					sPath.indexOf("/data") > -1 ||
+					sPath.indexOf("/system") > -1))
+		{
+			Logger.LogDebug("Trying to list " + sPath + " via Su");
+			RootManager.Default.setUpdateCallback(this);
+			RootManager.Default.write("ls " + sPath);
+			return;
+		}
 		//NetworkIOTask.cancelTask(sPath);
 		if(reconnect && (mPath instanceof OpenNetworkPath))
 			((OpenNetworkPath)mPath).disconnect();
@@ -442,13 +453,13 @@ public class ContentFragment extends OpenFragment
 		if(item == null) return false;
 		switch(item.getItemId())
 		{
-		case R.id.menu_sort_name_asc:	onSortingChanged(FileManager.SortType.ALPHA); return true; 
-		case R.id.menu_sort_name_desc:	onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
-		case R.id.menu_sort_date_asc: 	onSortingChanged(FileManager.SortType.DATE); return true;
-		case R.id.menu_sort_date_desc: 	onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
-		case R.id.menu_sort_size_asc: 	onSortingChanged(FileManager.SortType.SIZE); return true; 
-		case R.id.menu_sort_size_desc: 	onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
-		case R.id.menu_sort_type: 		onSortingChanged(FileManager.SortType.TYPE); return true;
+		case R.id.menu_sort_name_asc:	onSortingChanged(SortType.ALPHA); return true; 
+		case R.id.menu_sort_name_desc:	onSortingChanged(SortType.ALPHA_DESC); return true; 
+		case R.id.menu_sort_date_asc: 	onSortingChanged(SortType.DATE); return true;
+		case R.id.menu_sort_date_desc: 	onSortingChanged(SortType.DATE_DESC); return true; 
+		case R.id.menu_sort_size_asc: 	onSortingChanged(SortType.SIZE); return true; 
+		case R.id.menu_sort_size_desc: 	onSortingChanged(SortType.SIZE_DESC); return true; 
+		case R.id.menu_sort_type: 		onSortingChanged(SortType.TYPE); return true;
 		case R.id.menu_view_hidden:
 			onHiddenFilesChanged(!getShowHiddenFiles());
 			return true;
@@ -536,7 +547,7 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
 		
 		if(mContentAdapter != null)
-		switch(getSorting())
+		switch(getSorting().getType())
 		{
 			case ALPHA:
 				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
@@ -857,6 +868,7 @@ public class ContentFragment extends OpenFragment
 			refreshData(null, false);
 			//changePath(getManager().peekStack(), false);
 		}
+		setProgressVisibility(false);
 	}
 	
 	@Override
@@ -1044,6 +1056,31 @@ public class ContentFragment extends OpenFragment
 		if(mContentAdapter != null)
 			mContentAdapter.updateData(result);
 		//notifyDataSetChanged();
+	}
+	@Override
+	public void addFiles(OpenPath[] files) {
+		for(OpenPath f : files)
+			mContentAdapter.add(f);
+	}
+	@Override
+	public void onUpdate() {
+		Logger.LogDebug("CF onUpdate");
+	}
+	@Override
+	public void onReceiveMessage(String msg) {
+		String sPath = mPath.getPath();
+		if(!sPath.endsWith("/"))
+			sPath += "/";
+		if(msg.startsWith("/"))
+			sPath = msg;
+		else sPath += msg;
+		OpenFile f = new OpenFile(sPath);
+		if(f.getName() == null || f.getName() == "") return;
+		mContentAdapter.add(f);
+	}
+	@Override
+	public void onExit() {
+		Logger.LogDebug("CF onExit");
 	}
 	
 }

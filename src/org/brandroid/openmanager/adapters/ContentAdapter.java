@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -18,11 +19,12 @@ import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.SortedArrayList;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -51,7 +53,7 @@ public class ContentAdapter extends BaseAdapter {
 	private final int GB = MG * KB;
 	
 	private final OpenPath mParent;
-	private final ArrayList<OpenPath> mData2 = new ArrayList<OpenPath>();
+	private final ArrayList<OpenPath> mData2 = new ArrayList();
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
 	public boolean mCountHidden = false;
@@ -119,25 +121,8 @@ public class ContentAdapter extends BaseAdapter {
 
 		if(doSort)
 		{
-			//Logger.LogVerbose("~Sorting by " + mSorting.toString());
-			OpenPath.Sorting = mSorting; //getManager().getSorting();
-			try {
-				Collections.sort(mData2, new Comparator<OpenPath>() {
-					@Override
-					public int compare(OpenPath lhs, OpenPath rhs) {
-						if(foldersFirst)
-						{
-							if(!lhs.isDirectory() && rhs.isDirectory())
-								return 1;
-							if(lhs.isDirectory() && !rhs.isDirectory())
-								return -1;
-						}
-						return OpenPath.compare(lhs, rhs);
-					}
-				});
-			} catch(Exception e) {
-				//Logger.LogError("Couldn't sort.", e);
-			}
+			OpenPath.Sorting = mSorting;
+			Collections.sort(mData2);
 		}
 		
 		notifyDataSetChanged();
@@ -347,6 +332,11 @@ public class ContentAdapter extends BaseAdapter {
 	@Override
 	public long getItemId(int position) {
 		return position;
+	}
+
+	public void add(OpenPath f)
+	{
+		mData2.add(f);
 	}
 	
 }

@@ -76,17 +76,6 @@ public class FileManager {
 	public static UserInfo DefaultUserInfo;
 	private OnProgressUpdateCallback mCallback = null;
 	
-	public static enum SortType {
-		NONE,
-		ALPHA,
-		TYPE,
-		SIZE,
-		SIZE_DESC,
-		DATE,
-		DATE_DESC,
-		ALPHA_DESC
-	}
-	
 	public interface OnProgressUpdateCallback
 	{
 		public void onProgressUpdateCallback(Integer... vals);
@@ -528,9 +517,9 @@ public class FileManager {
 	}
 
 	public static SortType parseSortType(String setting) {
-		for(SortType type : SortType.values())
+		for(SortType.Type type : SortType.Type.values())
 			if(type.toString().equalsIgnoreCase(setting))
-				return type;
+				return new SortType(type);
 		return SortType.ALPHA;	
 	}
 }

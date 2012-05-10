@@ -41,11 +41,10 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 
@@ -328,7 +327,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 		
-		switch(getSorting())
+		switch(getSorting().getType())
 		{
 		case ALPHA:
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
@@ -395,13 +394,13 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		if(item == null) return false;
 		switch(item.getItemId())
 		{
-		case R.id.menu_sort_name_asc:	onSortingChanged(FileManager.SortType.ALPHA); return true; 
-		case R.id.menu_sort_name_desc:	onSortingChanged(FileManager.SortType.ALPHA_DESC); return true; 
-		case R.id.menu_sort_date_asc: 	onSortingChanged(FileManager.SortType.DATE); return true;
-		case R.id.menu_sort_date_desc: 	onSortingChanged(FileManager.SortType.DATE_DESC); return true; 
-		case R.id.menu_sort_size_asc: 	onSortingChanged(FileManager.SortType.SIZE); return true; 
-		case R.id.menu_sort_size_desc: 	onSortingChanged(FileManager.SortType.SIZE_DESC); return true; 
-		case R.id.menu_sort_type: 		onSortingChanged(FileManager.SortType.TYPE); return true;
+		case R.id.menu_sort_name_asc:	onSortingChanged(SortType.ALPHA); return true; 
+		case R.id.menu_sort_name_desc:	onSortingChanged(SortType.ALPHA_DESC); return true; 
+		case R.id.menu_sort_date_asc: 	onSortingChanged(SortType.DATE); return true;
+		case R.id.menu_sort_date_desc: 	onSortingChanged(SortType.DATE_DESC); return true; 
+		case R.id.menu_sort_size_asc: 	onSortingChanged(SortType.SIZE); return true; 
+		case R.id.menu_sort_size_desc: 	onSortingChanged(SortType.SIZE_DESC); return true; 
+		case R.id.menu_sort_type: 		onSortingChanged(SortType.TYPE); return true;
 		case R.id.menu_view_hidden:
 			onHiddenFilesChanged(!getShowHiddenFiles());
 			return true;

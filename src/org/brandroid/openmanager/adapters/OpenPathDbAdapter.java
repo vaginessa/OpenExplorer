@@ -3,7 +3,7 @@ package org.brandroid.openmanager.adapters;
 import java.sql.Date;
 
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import android.content.ContentValues;
 import android.content.Context;
@@ -236,7 +236,7 @@ public class OpenPathDbAdapter
     {
     	boolean asc = true;
     	String col = "";
-    	switch(sort)
+    	switch(sort.getType())
     	{
 	    	case ALPHA_DESC:
 	    		asc = false;

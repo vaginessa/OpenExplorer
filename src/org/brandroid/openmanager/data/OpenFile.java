@@ -9,12 +9,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.HashSet;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.util.DFInfo;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
@@ -206,23 +208,6 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	}
 	*/
 	
-	private OpenFile[] listFilesNative(File file)
-	{
-		Logger.LogDebug("Trying to list " + mFile.getPath() + " via NoRoot");
-		StringBuilder sbfiles = RootManager.Default.executeNoRoot("ls " + mFile.getPath() + "/");
-		if(sbfiles != null)
-		{
-			String[] files = sbfiles.toString().split("\n");
-			OpenFile[] mChildren = new OpenFile[files.length];
-			int i = 0;
-			for(String s : files)
-			{
-				mChildren[i++] = new OpenFile(getPath() + "/" + s);
-			}
-			return mChildren;
-		}
-		return getOpenPaths(file.listFiles());
-	}
 	public static void setExternalMemoryDrive(OpenFile root) { mExternalDrive = root; }
 	public static OpenFile getExternalMemoryDrive(boolean fallbackToInternal) // sd
 	{
@@ -291,26 +276,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 		{
 			//Logger.LogDebug(mFile.getPath() + " has " + mChildren.length + " children");
 		} //else mChildren = listFilesNative(mFile);
-		if((mChildren == null || mChildren.length == 0) && isDirectory())
-		{
-			if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
-			{
-				Logger.LogDebug("Trying to list " + mFile.getPath() + " via Su");
-				HashSet<String> files = RootManager.Default.execute("ls " + mFile.getPath());
-				if(files != null)
-				{
-					mChildren = new OpenFile[files.size()];
-					int i = 0;
-					for(String s : files)
-					{
-						mChildren[i++] = new OpenFile(getPath() + "/" + s);
-						if(grandPeek && mChildren[i].isDirectory())
-							mChildren[i++].listFiles();
-					}
-					return mChildren;
-				}
-			}
-		}
+		
 		if((mChildren == null || mChildren.length == 0) && !isDirectory() && mFile.getParentFile() != null)
 			mChildren = getParent().listFiles(grandPeek);
 		
@@ -379,6 +345,8 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	
 	@Override
 	public Boolean requiresThread() {
+		if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
+			return true;
 		return false;
 	}
 	@Override

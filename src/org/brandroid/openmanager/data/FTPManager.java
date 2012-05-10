@@ -17,7 +17,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 
@@ -32,6 +33,7 @@ public class OpenApplication extends Application implements OpenApp
     private LruCache<String, Bitmap> mBitmapCache;
     private DiskLruCache mBitmapDiskCache;
     private OpenClipboard mClipboard;
+    private ShellSession mShell;
     
     @Override
     public void onCreate() {
@@ -68,6 +70,12 @@ public class OpenApplication extends Application implements OpenApp
     	if(mClipboard == null)
     		mClipboard = new OpenClipboard(this);
     	return mClipboard;
+    }
+    
+    public synchronized ShellSession getShellSession() {
+    	if(mShell == null)
+    		mShell = new ShellSession();
+    	return mShell;
     }
 
     public synchronized DataManager getDataManager() {

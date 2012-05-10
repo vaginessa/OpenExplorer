@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import jcifs.smb.SmbAuthException;
@@ -13,12 +14,14 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
@@ -26,7 +29,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
+public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> implements UpdateCallback
 {
 	private OpenPath[] params = null;
 	private boolean isCancellable = false;
@@ -59,6 +62,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 	{
 		public void setProgressVisibility(boolean visible);
 		public void updateData(OpenPath[] result);
+		public void addFiles(OpenPath[] files);
 	}
 	
 	public NetworkIOTask(OnTaskUpdateListener listener)
@@ -103,7 +107,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 		if(instanceRunning) return null;
 		instanceRunning = true;
 		this.params = params;
-		publishProgress(0);
+		publishProgress();
 		Logger.LogDebug("Beginning #" + (++instanceNumber) + ". Listing " + params[0].getPath());
 		ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
 		for(OpenPath path : params)
@@ -207,9 +211,10 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 	}
 	
 	@Override
-	protected void onProgressUpdate(Integer... values) {
+	protected void onProgressUpdate(OpenPath... values) {
 		super.onProgressUpdate(values);
 		mListener.setProgressVisibility(true);
+		mListener.addFiles(values);
 	}
 	
 	@Override
@@ -245,6 +250,18 @@ public class NetworkIOTask extends AsyncTask<OpenPath, Integer, OpenPath[]>
 		mListener.setProgressVisibility(false);
 		//onCancelled(result);
 		//mData2.clear();
+	}
+	@Override
+	public void onUpdate() {
+		Logger.LogDebug("onUpdate");
+	}
+	@Override
+	public void onReceiveMessage(String msg) {
+		Logger.LogDebug("Message Received: " + msg);
+	}
+	@Override
+	public void onExit() {
+		Logger.LogDebug("onExit");
 	}
 	
 }

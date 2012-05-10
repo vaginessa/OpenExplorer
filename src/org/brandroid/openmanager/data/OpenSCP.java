@@ -7,7 +7,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.util.FileManager.SortType;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.Channel;

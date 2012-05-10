@@ -616,7 +616,7 @@ public class ThumbnailCreator extends Thread {
 				dw = Math.min(dw, Math.max(sw, sw - ox));
 			} 
 		}
-		Logger.LogDebug("cropBitmap:(" + sw + "x" + sh + "):(" + ox + "," + oy + ":" + dw + "x" + dh + ") @ " + scale);
+		//Logger.LogDebug("cropBitmap:(" + sw + "x" + sh + "):(" + ox + "," + oy + ":" + dw + "x" + dh + ") @ " + scale);
 		m.postScale(scale, scale);
 		return Bitmap.createBitmap(src,
 				Math.max(0,  ox), Math.max(0,  oy),

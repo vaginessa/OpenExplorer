@@ -69,6 +69,7 @@ public class ShellSession {
 	{
 		void onUpdate();
 		void onReceiveMessage(String msg);
+		void onExit();
 	}
 	
 	public void setUpdateCallback(UpdateCallback listener)

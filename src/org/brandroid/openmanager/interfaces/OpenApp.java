@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.interfaces;
 
 import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 
 import com.android.gallery3d.data.DataManager;
@@ -23,6 +24,7 @@ public interface OpenApp {
     public LruCache<String, Bitmap> getMemoryCache();
     public DiskLruCache getDiskCache();
     public OpenClipboard getClipboard();
+    public ShellSession getShellSession();
 
     public Context getAndroidContext();
     public Looper getMainLooper();

@@ -27,6 +27,7 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
@@ -937,6 +938,11 @@ public abstract class OpenFragment
 	@Override
 	public ThreadPool getThreadPool() {
 		return getExplorer().getThreadPool();
+	}
+	
+	@Override
+	public ShellSession getShellSession() {
+		return getExplorer().getShellSession();
 	}
 	
 	/*

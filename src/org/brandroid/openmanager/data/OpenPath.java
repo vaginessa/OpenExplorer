@@ -14,8 +14,8 @@ import java.util.List;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MimeTypes;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
@@ -134,6 +134,13 @@ public abstract class OpenPath
 				return 0;
 			if(fb == null || fa == null)
 				return 0;
+			if(Sorting.folderFirst())
+			{
+				if(fb.isDirectory() && !fa.isDirectory())
+					return 1;
+				if(fa.isDirectory() && !fb.isDirectory())
+					return -1;
+			}
 			String a = fa.getName();
 			String b = fb.getName();
 			Long sa = fa.length();
@@ -144,7 +151,7 @@ public abstract class OpenPath
 				return 1;
 			if(a == null || b == null)
 				return 0;
-			switch(Sorting)
+			switch(Sorting.getType())
 			{
 				case ALPHA_DESC:
 					return b.toLowerCase().compareTo(a.toLowerCase());

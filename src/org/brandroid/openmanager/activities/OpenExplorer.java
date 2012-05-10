@@ -174,16 +174,17 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.EventHandler.TaskChangeListener;
-import org.brandroid.openmanager.util.FileManager.SortType;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.SimpleUserInfo.UserInfoInteractionCallback;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
@@ -230,7 +231,7 @@ public class OpenExplorer
 	public static boolean USE_ACTION_BAR = false;
 	public static boolean USE_ACTIONMODE = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
-	public static boolean IS_DEBUG_BUILD = false;
+	public static boolean IS_DEBUG_BUILD = true;
 	public static boolean IS_BLACKBERRY = Build.MANUFACTURER.equals("RIM");
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
@@ -407,7 +408,7 @@ public class OpenExplorer
 			if(getPreferences().getSetting("global", "pref_root", false) ||
 					Preferences.getPreferences(getApplicationContext(), "global").getBoolean("pref_root", false))
 				RootManager.Default.requestRoot();
-			else if(RootManager.Default.isRoot())
+			else
 				RootManager.Default.exitRoot();
 		} catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
 		
@@ -3777,6 +3778,10 @@ public class OpenExplorer
 	@Override
 	public Context getAndroidContext() {
 		return getOpenApplication().getAndroidContext();
+	}
+	
+	public ShellSession getShellSession() {
+		return getOpenApplication().getShellSession();
 	}
 
 }
