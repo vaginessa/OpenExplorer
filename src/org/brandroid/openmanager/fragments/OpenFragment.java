@@ -838,12 +838,16 @@ public abstract class OpenFragment
 	
 	@Override
 	public OpenClipboard getClipboard() {
-		return getExplorer().getClipboard();
+		if(getExplorer() != null)
+			return getExplorer().getClipboard();
+		else return null;
 	}
 	
 	@Override
 	public boolean checkClipboard(OpenPath file) {
-		return getClipboard().contains(file);
+		if(getClipboard() != null)
+			return getClipboard().contains(file);
+		else return false;
 	}
 	
 	public void onClick(View v) {

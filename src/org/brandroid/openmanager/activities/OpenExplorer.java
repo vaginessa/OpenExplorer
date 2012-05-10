@@ -2410,7 +2410,7 @@ public class OpenExplorer
 		} else
 			MenuUtils.setMenuVisible(menu,  false, R.id.menu_paste);
 		
-		MenuUtils.setMenuChecked(menu, getSetting(null, "pref_basebar", true), R.id.menu_view_split);
+		MenuUtils.setMenuChecked(menu, USE_SPLIT_ACTION_BAR, R.id.menu_view_split);
 		//MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
@@ -2612,7 +2612,7 @@ public class OpenExplorer
 				return true;
 
 			case R.id.menu_view_split:
-				setSetting(null, "pref_basebar", !getSetting(null, "pref_basebar", true));
+				setSetting(null, "pref_basebar", !USE_SPLIT_ACTION_BAR);
 				goHome();
 				return true;
 				
@@ -2765,7 +2765,8 @@ public class OpenExplorer
 		int bad = 2 / 0;
 		Logger.LogInfo("HEY! We know how to divide by 0! It is " + bad);
 		*/
-		//*
+		startActivity(new Intent(this, Authenticator.class));
+		/*
 		mEvHandler.copyFile(new OpenFile("/mnt/sdcard/cm9-droid3-20120316-0330.zip"), new OpenFile("/mnt/sdcard/Download"), this);
 		refreshOperations();
 		//*/

@@ -7,6 +7,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,30 +29,20 @@ import android.widget.Spinner;
 
 public class OpenServer
 {
-	private String mName = "",
-				mType = "ftp",
-				mHost = "",
-				mPath = "",
-				mUser = "",
-				mPassword = "";
-	private int mPort = 0;
-	//private Hashtable<String, String> mData = new Hashtable<String, String>();
+	private final JSONObject mData;
 	
 	public OpenServer() {
+		mData = new JSONObject();
 		//mData = new Hashtable<String, String>();
 	}
 	public OpenServer(JSONObject obj, String decryptPW)
 	{
-		mName = obj.optString("name");
-		mHost = obj.optString("host");
-		mPath = obj.optString("dir");
-		mUser = obj.optString("user");
-		mType = obj.optString("type", mType);
-		mPassword = obj.optString("password");
-		mPort = obj.optInt("port", mPort);
+		mData = obj;
 		if(decryptPW != null && decryptPW != "")
 			try {
+				String mPassword = mData.optString("password");
 				mPassword = SimpleCrypto.decrypt(decryptPW, mPassword);
+				mData.put("password", mPassword);
 			} catch (Exception e) {
 				Logger.LogError("Error decrypting password.", e);
 			}
@@ -68,29 +59,38 @@ public class OpenServer
 	}
 	public OpenServer(String host, String path, String user, String password)
 	{
+		mData = new JSONObject();
 		//mData = new Hashtable<String, String>();
 		setHost(host);
 		setPath(path);
 		setUser(user);
 		setPassword(password);
 	}
-	public boolean isValid() { return mHost != null; }
+	public boolean isValid() { return mData != null && mData.has("host"); }
 	
+	private static String[] getNames(JSONObject o)
+	{
+		JSONArray a = o.names();
+		String[] ret = new String[a.length()];
+		for(int i = 0; i < ret.length; i++)
+			ret[i] = a.optString(i, a.opt(i).toString());
+		return ret;
+	}
 	public JSONObject getJSONObject(Boolean encryptPW, Context context) {
-		JSONObject ret = new JSONObject();
+		JSONObject ret = null;
 		try {
-			ret.put("name", getName());
-			ret.put("host", getHost());
-			ret.put("user", getUser());
-			ret.put("type", getType());
+			ret = new JSONObject(mData, getNames(mData));
+		} catch (JSONException e1) {
+			return null;
+		}
+		try {
 			if(encryptPW && context != null)
 				try {
+					String mPassword = ret.optString("password");
 					ret.put("password", SimpleCrypto.encrypt(SettingsActivity.GetSignatureKey(context), getPassword()));
 				} catch (Exception e) {
-					ret.put("password", getPassword());
+					//ret.put("password", getPassword());
 				}
-			else
-				ret.put("password", getPassword());
 			ret.put("dir", getPath());
 		} catch(JSONException e) { }
 		/*for(String s : mData.keySet())
@@ -103,10 +103,17 @@ public class OpenServer
 		return ret;
 	}
 	public String getType() {
-		return mType;
+		return mData.optString("type");
 	}
 	public OpenServer setSetting(String key, String value)
 	{
+		try {
+			mData.put(key, value);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*
 		if(key.equalsIgnoreCase("name"))
 			mName = value;
 		else if(key.equalsIgnoreCase("host"))
@@ -120,7 +127,7 @@ public class OpenServer
 		else if(key.equalsIgnoreCase("type"))
 			mType = value;
 		else if(key.equalsIgnoreCase("port"))
-			mPort = Integer.parseInt(value);
+			mPort = Integer.parseInt(value);*/
 		/*else if(key != null && value != null) {
 			if(mData == null)
 				mData = new Hashtable<String, String>();
@@ -130,51 +137,55 @@ public class OpenServer
 	}
 	public String getHost()
 	{
-		return mHost;
+		return mData.optString("host");
 	}
 	public String getPath()
 	{
+		String mPath = mData.optString("dir");
 		return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
 	}
 	public String getUser()
 	{
-		return mUser;
+		return mData.optString("user");
 	}
 	public String getPassword()
 	{
-		return mPassword;
+		return mData.optString("password");
 	}
-	public String getName() { return mName != null && !mName.equals("") ? mName : mHost; }
+	public String getName() {
+		String mName = mData.optString("name");
+		return mName != null && !mName.equals("") ? mName : getHost();
+	}
 	public OpenServer setHost(String host) {
-		mHost = host;
-		if(mName == null || mName.equals(""))
-			mName = host;
+		setSetting("host", host);
 		return this;
 	}
 	public OpenServer setPath(String path) {
-		mPath = path;
+		setSetting("path", path);
 		return this;
 	}
 	public OpenServer setUser(String user) {
-		mUser = user;
+		setSetting("user", user);
 		return this;
 	}
 	public OpenServer setPassword(String password) {
-		mPassword = password;
+		setSetting("password", password);
 		return this;
 	}
 	public OpenServer setName(String name) {
-		mName = name;
+		setSetting("name", name);
 		return this;
 	}
 	public OpenServer setType(String type) {
-		mType = type;
+		setSetting("type", type);
 		return this;
 	}
 	public OpenServer setPort(int port) {
-		mPort = port;
+		setSetting("port", ""+port);
 		return this;
 	}
+	public boolean has(String name) { return mData.has(name); }
+	public String get(String name, String defValue) { return mData.optString(name, defValue); } 
 	public String getString(String key) {
 		if(key.equals("name")) return getName();
 		if(key.equals("host")) return getHost();
@@ -184,7 +195,7 @@ public class OpenServer
 		if(key.equals("password")) return getPassword();
 		if(key.equals("type")) return getType();
 		if(key.equals("port")) return ""+getPort();
-		return null;
+		return mData.optString(key);
 	}
 	
 	public static void setupServerDialog(final OpenServer server, final int iServersIndex,
@@ -315,6 +326,10 @@ public class OpenServer
 		});
 	}
 	public int getPort() {
-		return mPort;
+		try {
+			return Integer.parseInt(mData.optString("port"));
+		} catch(NumberFormatException e) {
+			return -1;
+		}
 	}
 }

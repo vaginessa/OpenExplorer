@@ -49,6 +49,7 @@ public class Preferences {
 		//else throw new NullPointerException("Couldn't create Preferences @ " + file);
 		return prefs;
 	}
+	public static void setContext(Context c) { mContext = c; }
 	private static String getPreferenceFilename(String file)
 	{
 		return file.replaceAll("[^A-Za-z0-9\\-]", "_");
