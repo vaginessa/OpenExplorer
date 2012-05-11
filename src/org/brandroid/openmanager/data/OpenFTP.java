@@ -138,6 +138,7 @@ public class OpenFTP extends OpenNetworkPath
 	public void setName(String name) {
 		mName = name;
 	}
+	
 	@Override
 	public String getName() {
 		if(mName != null)
@@ -147,6 +148,13 @@ public class OpenFTP extends OpenNetworkPath
 			mName = uri.getLastPathSegment();
 		else mName = uri.getHost();
 		return mName;
+	}
+	
+	@Override
+	public int getPort() {
+		int ret = super.getPort();
+		if(ret > 0) return ret;
+		return 21;
 	}
 
 	@Override

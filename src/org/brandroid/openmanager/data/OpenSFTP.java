@@ -36,7 +36,6 @@ public class OpenSFTP extends OpenNetworkPath
 	private InputStream in = null;
 	private OutputStream out = null;
 	private final String mHost, mUser, mRemotePath;
-	private int mPort = 22;
 	private SftpATTRS mAttrs = null;
 	private String mName = null;
 	protected OpenSFTP mParent = null;
@@ -52,7 +51,7 @@ public class OpenSFTP extends OpenNetworkPath
 		mUser = uri.getUserInfo();
 		mRemotePath = uri.getPath();
 		if(uri.getPort() > 0)
-			mPort = uri.getPort();
+			setPort(uri.getPort());
 		mUserInfo = FileManager.DefaultUserInfo;
 	}
 	public OpenSFTP(Uri uri)
@@ -62,7 +61,7 @@ public class OpenSFTP extends OpenNetworkPath
 		mUser = uri.getUserInfo();
 		mRemotePath = uri.getPath();
 		if(uri.getPort() > 0)
-			mPort = uri.getPort();
+			setPort(uri.getPort());
 	}
 	public OpenSFTP(String host, String user, String path)
 	{
@@ -105,8 +104,6 @@ public class OpenSFTP extends OpenNetworkPath
 		mSize = (long)size;
 		mModified = (long)modified;
 	}
-	public int getPort() { return mPort; }
-	public void setPort(int port) { mPort = port; }
 	public String getHost() { return mHost; }
 	public String getUser() { return mUser; }
 	public String getRemotePath() { return mRemotePath; }
@@ -126,6 +123,13 @@ public class OpenSFTP extends OpenNetworkPath
 	@Override
 	public String toString() {
 		return getName();
+	}
+	
+	@Override
+	public int getPort() {
+		int port = super.getPort();
+		if(port > 0) return port;
+		return 22;
 	}
 
 	@Override
@@ -231,7 +235,7 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Uri getUri() {
-		return Uri.parse("sftp://" + mHost + (mPort > 0 ? ":" + mPort : "") + (!mRemotePath.startsWith("/") ? "/" : "") + mRemotePath);
+		return Uri.parse("sftp://" + mHost + ":" + getPort() + (!mRemotePath.startsWith("/") ? "/" : "") + mRemotePath);
 	}
 
 	@Override
@@ -342,7 +346,7 @@ public class OpenSFTP extends OpenNetworkPath
 		//try {
 		if(mSession == null || !mSession.isConnected())
 		{
-			mSession = DefaultJSch.getSession(mUser, mHost, 22);
+			mSession = DefaultJSch.getSession(mUser, mHost, getPort());
 			if(mUserInfo != null)
 				mSession.setUserInfo(mUserInfo);
 			else

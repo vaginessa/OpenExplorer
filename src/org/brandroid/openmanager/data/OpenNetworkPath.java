@@ -24,6 +24,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	public static final JSch DefaultJSch = new JSch();
 	public static int Timeout = 20000;
 	protected String mName = null;
+	protected int mPort = -1;
 	
 	public interface NetworkListener
 	{
@@ -119,6 +120,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	}
 
 	public void setPort(int port) {
-		
+		mPort = port;
 	}
+	public int getPort() { return mPort; }
 }
