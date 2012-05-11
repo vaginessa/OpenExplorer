@@ -48,7 +48,7 @@ public class RootManager implements UpdateCallback
     private static final int NEW_INPUT = 1;
     private static final int PROCESS_EXITED = 2;
     
-	public static RootManager Default = new RootManager();
+	public static final RootManager Default = new RootManager();
 
     private boolean mIsRunning = false;
     private Handler mMsgHandler = new Handler() {
@@ -112,6 +112,7 @@ public class RootManager implements UpdateCallback
 					result = myProcess.waitFor();
 				} catch (InterruptedException e) { }
 				Logger.LogInfo("Subprocess exited: " + result);
+				onExit();
 				mMsgHandler.sendMessage(mMsgHandler.obtainMessage(PROCESS_EXITED, result));
             }
        };

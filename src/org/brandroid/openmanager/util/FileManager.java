@@ -34,6 +34,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -465,7 +466,9 @@ public class FileManager {
 				} catch(Exception e) {
 					Logger.LogError("Couldn't get samba from cache.", e);
 				}
-			} else if(path.startsWith("/"))
+			} else if(path.startsWith("/data") || path.startsWith("/system"))
+				ret = new OpenFileRoot(path);
+			else if(path.startsWith("/"))
 				ret = new OpenFile(path);
 			else if(path.startsWith("file://"))
 				ret = new OpenFile(path.replace("file://", ""));
