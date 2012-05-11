@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSmartFolder;
@@ -126,6 +127,12 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		
 		notifyDataSetChanged();
+	}
+	
+	public void sort()
+	{
+		OpenPath.Sorting = mSorting;
+		Collections.sort(mData2);
 	}
 	
 	private final Handler handler = new Handler(new Handler.Callback() {
@@ -337,6 +344,14 @@ public class ContentAdapter extends BaseAdapter {
 	public void add(OpenPath f)
 	{
 		mData2.add(f);
+	}
+
+	public boolean contains(OpenPath f) {
+		return mData2.contains(f);
+	}
+
+	public ArrayList<OpenPath> getAll() {
+		return mData2;
 	}
 	
 }

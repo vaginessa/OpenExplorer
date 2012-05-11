@@ -566,6 +566,11 @@ public abstract class OpenFragment
 		
 		switch(id)
 		{
+			case R.id.menu_context_selectall:
+				if(getContentAdapter() == null) return false;
+				getClipboard().addAll(getContentAdapter().getAll());
+				return true;
+				
 			case R.id.menu_context_view:
 				Intent vintent = IntentManager.getIntent(file, getExplorer(), Intent.ACTION_VIEW);
 				if(vintent != null)
@@ -577,6 +582,7 @@ public abstract class OpenFragment
 						getExplorer().editFile(file);
 				}
 				break;
+				
 			case R.id.menu_context_edit:
 				Intent intent = IntentManager.getIntent(file, getExplorer(), Intent.ACTION_EDIT);
 				if(intent != null)

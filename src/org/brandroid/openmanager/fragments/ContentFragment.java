@@ -23,6 +23,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
 import org.brandroid.openmanager.data.OpenContent;
+import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -44,6 +45,7 @@ import org.brandroid.utils.MenuUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Hashtable;
 
 import android.net.Uri;
@@ -80,7 +82,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 public class ContentFragment extends OpenFragment
 		implements OnItemClickListener, OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
-					OnTaskUpdateListener, UpdateCallback
+					OnTaskUpdateListener
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -192,6 +194,11 @@ public class ContentFragment extends OpenFragment
 	public static void cancelAllTasks()
 	{
 		NetworkIOTask.cancelAllTasks();
+	}
+	
+	@Override
+	protected ContentAdapter getContentAdapter() {
+		return mContentAdapter;
 	}
 	
 	public int getViewMode() {
@@ -393,8 +400,49 @@ public class ContentFragment extends OpenFragment
 					sPath.indexOf("/system") > -1))
 		{
 			Logger.LogDebug("Trying to list " + sPath + " via Su");
-			RootManager.Default.setUpdateCallback(this);
+			final long[] last = new long[]{new Date().getTime()};
+			RootManager.Default.setUpdateCallback(new UpdateCallback() {
+				@Override
+				public void onUpdate() {
+					Logger.LogDebug("CF onUpdate");
+				}
+				@Override
+				public void onReceiveMessage(String msg) {
+					if(msg.indexOf("\n") > -1)
+					{
+						for(String s : msg.split("\n"))
+							onReceiveMessage(s);
+						return;
+					}
+					last[0] = new Date().getTime();
+					String sPath = mPath.getPath();
+					if(!sPath.endsWith("/"))
+						sPath += "/";
+					if(msg.startsWith("/"))
+						sPath = msg;
+					else sPath += msg;
+					OpenFileRoot f = new OpenFileRoot(sPath);
+					if(!f.exists()) {
+						Logger.LogWarning(sPath + " doesn't exist");
+						return;
+					}
+					if(f.getName() == null || f.getName() == "") return;
+					if(!mContentAdapter.contains(f))
+						mContentAdapter.add(f);
+				}
+				@Override
+				public void onExit() {
+					Logger.LogDebug("CF onExit");
+				}
+			});
 			RootManager.Default.write("ls " + sPath);
+			new Thread(new Runnable(){public void run(){
+				do {
+					try { Thread.sleep(50); }
+					catch(InterruptedException e) { }
+				} while(new Date().getTime() - last[0] < 200);
+				mContentAdapter.sort();
+			}}).start();
 			return;
 		}
 		//NetworkIOTask.cancelTask(sPath);
@@ -1061,26 +1109,6 @@ public class ContentFragment extends OpenFragment
 	public void addFiles(OpenPath[] files) {
 		for(OpenPath f : files)
 			mContentAdapter.add(f);
-	}
-	@Override
-	public void onUpdate() {
-		Logger.LogDebug("CF onUpdate");
-	}
-	@Override
-	public void onReceiveMessage(String msg) {
-		String sPath = mPath.getPath();
-		if(!sPath.endsWith("/"))
-			sPath += "/";
-		if(msg.startsWith("/"))
-			sPath = msg;
-		else sPath += msg;
-		OpenFile f = new OpenFile(sPath);
-		if(f.getName() == null || f.getName() == "") return;
-		mContentAdapter.add(f);
-	}
-	@Override
-	public void onExit() {
-		Logger.LogDebug("CF onExit");
 	}
 	
 }

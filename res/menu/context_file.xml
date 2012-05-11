@@ -12,17 +12,17 @@
 		android:icon="@drawable/ic_menu_edit" />
     <item
 		android:id="@+id/menu_context_copy"
-		android:title="@string/s_menu_copy"
+		android:title="@android:string/copy"
     	android:showAsAction="always|withText"
 		android:icon="@drawable/ic_menu_copy" />
     <item
 		android:id="@+id/menu_context_cut"
-		android:title="@string/s_menu_cut"
+		android:title="@android:string/cut"
     	android:showAsAction="ifRoom|withText"
     	android:icon="@drawable/ic_menu_cut" />
     <item
 		android:id="@+id/menu_context_paste"
-		android:title="@string/s_menu_paste"
+		android:title="@android:string/paste"
     	android:showAsAction="always|withText"
     	android:icon="@drawable/ic_menu_paste" />
     <item
@@ -30,6 +30,11 @@
 		android:title="@string/s_menu_delete"
     	android:showAsAction="ifRoom|withText"
 		android:icon="@drawable/ic_menu_delete" />
+    <item
+        android:id="@+id/menu_context_selectall"
+        android:title="@android:string/selectAll"
+        android:showAsAction="ifRoom"
+        android:icon="@drawable/ic_menu_selectall_holo_dark" />
     <item
 		android:id="@+id/menu_context_info"
 		android:title="@string/s_menu_info"
