@@ -2231,8 +2231,9 @@ public class OpenExplorer
 	public void invalidateOptionsMenu() {
 		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
-		else
+		else try {
 			super.invalidateOptionsMenu();
+		} catch(Exception e) { }
 	}
 	
 	public void setupBaseBarButtons() {
@@ -3695,7 +3696,7 @@ public class OpenExplorer
 		mParent.setCursor(c);
 		mBookmarks.refresh();
 		OpenFragment f = getSelectedFragment();
-		if(f instanceof ContentFragment)
+		if(f instanceof ContentFragment && ((ContentFragment)f).getPath().equals(mParent))
 			((ContentFragment)f).refreshData(null, false);
 	}
 
@@ -3732,8 +3733,7 @@ public class OpenExplorer
 		if(f == null) return;
 		if(!f.isDetached())
 			ImageUtils.fadeToDrawable((ImageView)findViewById(R.id.title_icon), f.getIcon());
-		if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath))
-			((ContentFragment)f).refreshData(null, false);
+		//if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath)) ((ContentFragment)f).refreshData(null, false);
 	}
 
 	public void notifyPager() {

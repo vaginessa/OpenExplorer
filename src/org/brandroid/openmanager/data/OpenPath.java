@@ -73,6 +73,7 @@ public abstract class OpenPath
 			ret.add(f);
 		return ret;
 	}
+	
 	public static String getParent(String path)
 	{
 		if(path.equals("/")) return null;
@@ -134,7 +135,7 @@ public abstract class OpenPath
 				return 0;
 			if(fb == null || fa == null)
 				return 0;
-			if(Sorting.folderFirst())
+			if(Sorting.foldersFirst())
 			{
 				if(fb.isDirectory() && !fa.isDirectory())
 					return 1;
@@ -313,6 +314,15 @@ public abstract class OpenPath
 	{
 		public void update(int progress, int total);
 		public void update(String status);
+	}
+	
+	public interface OpenContentUpdater
+	{
+		public void add(OpenPath file);
+	}
+	public interface OpenPathUpdateListener
+	{
+		public void list(OpenContentUpdater callback) throws IOException;
 	}
 	
 	public interface OpenPathCopyable

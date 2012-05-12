@@ -467,7 +467,7 @@ public class FileManager {
 					Logger.LogError("Couldn't get samba from cache.", e);
 				}
 			} else if(path.startsWith("/data") || path.startsWith("/system"))
-				ret = new OpenFileRoot(path);
+				ret = new OpenFileRoot(new OpenFile(path));
 			else if(path.startsWith("/"))
 				ret = new OpenFile(path);
 			else if(path.startsWith("file://"))

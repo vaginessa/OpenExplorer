@@ -345,8 +345,6 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	
 	@Override
 	public Boolean requiresThread() {
-		if(RootManager.Default.isRoot() && (mFile.getName().equalsIgnoreCase("data") || mFile.getPath().indexOf("/data") > -1 || mFile.getPath().indexOf("/system") > -1))
-			return true;
 		return false;
 	}
 	@Override

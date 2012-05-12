@@ -4,14 +4,21 @@ public class SortType {
 	
 	Type mWhich = Type.NONE;
 	boolean mFoldersFirst = true;
+	boolean mShowHiddenFiles = false;
 	
 	public SortType(Type which)
 	{
 		mWhich = which;
 	}
 	
-	public boolean folderFirst() { return mFoldersFirst; }
+	public boolean showHidden() { return mShowHiddenFiles; }
+	public boolean foldersFirst() { return mFoldersFirst; }
 	public Type getType() { return mWhich; }
+	
+	@Override
+	public String toString() {
+		return getType().toString() + " (" + (mFoldersFirst ? "FF" : "FM") + ")";
+	}
 	
 	public enum Type
 	{

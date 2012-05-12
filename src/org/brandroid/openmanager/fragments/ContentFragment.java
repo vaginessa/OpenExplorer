@@ -27,6 +27,8 @@ import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
+import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.util.EventHandler;
@@ -323,6 +325,13 @@ public class ContentFragment extends OpenFragment
 			if(path.getPath().equals("Downloads"))
 				path = OpenExplorer.getDownloadParent();
 		}
+		
+		if(path instanceof OpenFile &&
+				(path.getName().equalsIgnoreCase("data") ||
+				path.getPath().indexOf("/data") > -1 ||
+				path.getPath().indexOf("/system") > -1))
+			path = new OpenFileRoot(path);
+		
 		mPath = path;
 		
 		Logger.LogDebug("Refreshing Data for " + mPath);
@@ -366,13 +375,13 @@ public class ContentFragment extends OpenFragment
 				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
 		else {
-			setProgressVisibility(true);
 			if(path.listFromDb(mContentAdapter.getSorting()))
 			{
 				sendToLogView("Loaded " + mContentAdapter.getCount() + " entries from cache", Color.DKGRAY);
 				runUpdateTask();
 			} else if(path instanceof OpenFile)
 				((OpenFile)path).listFiles();
+			else runUpdateTask();
 			//updateData(mData, allowSkips);
 			//cancelAllTasks();
 			
@@ -393,63 +402,32 @@ public class ContentFragment extends OpenFragment
 	public void runUpdateTask() { runUpdateTask(false); }
 	public void runUpdateTask(boolean reconnect)
 	{
-		String sPath = mPath.getPath();
-		if(RootManager.Default.isRoot() &&
-				(mPath.getName().equalsIgnoreCase("data") ||
-					sPath.indexOf("/data") > -1 ||
-					sPath.indexOf("/system") > -1))
+		if(mPath instanceof OpenPathUpdateListener)
 		{
-			Logger.LogDebug("Trying to list " + sPath + " via Su");
-			final long[] last = new long[]{new Date().getTime()};
-			RootManager.Default.setUpdateCallback(new UpdateCallback() {
-				@Override
-				public void onUpdate() {
-					Logger.LogDebug("CF onUpdate");
-				}
-				@Override
-				public void onReceiveMessage(String msg) {
-					if(msg.indexOf("\n") > -1)
-					{
-						for(String s : msg.split("\n"))
-							onReceiveMessage(s);
-						return;
+			try {
+				((OpenPathUpdateListener)mPath).list(new OpenContentUpdater() {
+					public void add(OpenPath file) {
+						if(!mContentAdapter.contains(file))
+						{
+							mContentAdapter.add(file);
+							mContentAdapter.sort();
+							mContentAdapter.notifyDataSetChanged();
+						}
 					}
-					last[0] = new Date().getTime();
-					String sPath = mPath.getPath();
-					if(!sPath.endsWith("/"))
-						sPath += "/";
-					if(msg.startsWith("/"))
-						sPath = msg;
-					else sPath += msg;
-					OpenFileRoot f = new OpenFileRoot(sPath);
-					if(!f.exists()) {
-						Logger.LogWarning(sPath + " doesn't exist");
-						return;
-					}
-					if(f.getName() == null || f.getName() == "") return;
-					if(!mContentAdapter.contains(f))
-						mContentAdapter.add(f);
-				}
-				@Override
-				public void onExit() {
-					Logger.LogDebug("CF onExit");
-				}
-			});
-			RootManager.Default.write("ls " + sPath);
-			new Thread(new Runnable(){public void run(){
-				do {
-					try { Thread.sleep(50); }
-					catch(InterruptedException e) { }
-				} while(new Date().getTime() - last[0] < 200);
-				mContentAdapter.sort();
-			}}).start();
-			return;
+				});
+				return;
+			} catch (IOException e) {
+				Logger.LogError("Couldn't list with ContentUpdater");
+			}
 		}
+		final String sPath = mPath.getPath();
 		//NetworkIOTask.cancelTask(sPath);
+		final NetworkIOTask task = new NetworkIOTask(this);
+		if(NetworkIOTask.isTaskRunning(sPath)) return;
+		setProgressVisibility(true);
 		if(reconnect && (mPath instanceof OpenNetworkPath))
 			((OpenNetworkPath)mPath).disconnect();
 		Logger.LogDebug("Running Task for " + sPath);
-		final NetworkIOTask task = new NetworkIOTask(this);
 		NetworkIOTask.addTask(sPath, task);
 		task.execute(mPath);
 		new Thread(new Runnable(){

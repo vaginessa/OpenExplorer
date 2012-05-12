@@ -40,13 +40,12 @@ public class RootManager implements UpdateCallback
 	private UpdateCallback mNotify = null;
 	private DataInputStream is;
 	private DataOutputStream os;
-	private Thread mWatcherThread;
 	private Thread mPollingThread;
 	private ByteQueue mByteQueue;
     private byte[] mReceiveBuffer;
+    private final static int BufferLength = 32 * 1024;
 
     private static final int NEW_INPUT = 1;
-    private static final int PROCESS_EXITED = 2;
     
 	public static final RootManager Default = new RootManager();
 
@@ -55,12 +54,11 @@ public class RootManager implements UpdateCallback
         @Override
         public void handleMessage(Message msg) {
             if (!mIsRunning) {
+            	Logger.LogWarning("Handler exited");
                 return;
             }
             if (msg.what == NEW_INPUT) {
                 readFromProcess();
-            } else if (msg.what == PROCESS_EXITED) {
-            	onExit();
             }
         }
     };
@@ -87,9 +85,6 @@ public class RootManager implements UpdateCallback
 
 	@Override
 	public void onReceiveMessage(String msg) {
-		if(msg.indexOf("\n") > -1)
-			for(String s : msg.replace("\r", "").split("\n"))
-				onReceiveMessage(s);
 		if(mNotify != null)
 			mNotify.onReceiveMessage(msg);
 	}
@@ -102,41 +97,31 @@ public class RootManager implements UpdateCallback
 	
 	public RootManager()
 	{
-        mWatcherThread = new Thread() {
-            @Override
-            public void run() {
-				Logger.LogInfo("waiting for: " + myProcess);
-				int result = -1;
-				try {
-					while(myProcess == null) { }
-					result = myProcess.waitFor();
-				} catch (InterruptedException e) { }
-				Logger.LogInfo("Subprocess exited: " + result);
-				onExit();
-				mMsgHandler.sendMessage(mMsgHandler.obtainMessage(PROCESS_EXITED, result));
-            }
-       };
 
-       mReceiveBuffer = new byte[4 * 1024];
-       mByteQueue = new ByteQueue(4 * 1024);
+       mReceiveBuffer = new byte[BufferLength];
+       mByteQueue = new ByteQueue(BufferLength);
 
        mPollingThread = new Thread() {
-           private byte[] mBuffer = new byte[4096];
+           private byte[] mBuffer = new byte[BufferLength];
 
            @Override
            public void run() {
                try {
                    while(true) {
-                       int read = is.read(mBuffer);
+                	   int read = is.read(mBuffer);
                        if (read == -1) {
                            // EOF -- process exited
                     	   onExit();
                            return;
                        }
-                       onReceiveMessage(new String(mBuffer));
+                       mByteQueue.write(mBuffer, 0, read);
+                       mMsgHandler.sendMessage(mMsgHandler.obtainMessage(NEW_INPUT));
                    }
                } catch (IOException e) {
-               }
+            	   Logger.LogError("Polling couldn't write", e);
+               } catch (InterruptedException e) {
+            	   Logger.LogError("Polling interrupted", e);
+				}
            }
        };
 	}
@@ -146,15 +131,21 @@ public class RootManager implements UpdateCallback
      */
     private void readFromProcess() {
         int bytesAvailable = mByteQueue.getBytesAvailable();
-        int bytesToRead = Math.min(bytesAvailable, mReceiveBuffer.length);
+        mReceiveBuffer = new byte[bytesAvailable];
+        int bytesToRead = bytesAvailable; // Math.min(bytesAvailable, mReceiveBuffer.length);
         try {
             int bytesRead = mByteQueue.read(mReceiveBuffer, 0, bytesToRead);
-            onReceiveMessage(new String(mReceiveBuffer));
+            if(bytesRead == 0) return;
+            if(mReceiveBuffer[0] == 0)
+            	onUpdate();
+            else
+            	onReceiveMessage(new String(mReceiveBuffer));
+            if(mReceiveBuffer[mReceiveBuffer.length - 1] == 0)
+            	onUpdate();
             //mEmulator.append(mReceiveBuffer, 0, bytesRead);
         } catch (InterruptedException e) {
+        	Logger.LogError("readFromProcess interrupted?", e);
         }
-
-        onUpdate();
     }
     
 	public Process getSuProcess() throws IOException
@@ -195,16 +186,27 @@ public class RootManager implements UpdateCallback
 			} catch(Exception e) { }
 		}
 	}
+	private void stop()
+	{
+		if(!mIsRunning) return;
+		mIsRunning = false;
+		if(mPollingThread != null && mPollingThread.getState() == State.WAITING)
+			mPollingThread.stop();
+	}
+	private void start()
+	{
+		if(mIsRunning) return;
+		mIsRunning = true;
+		mPollingThread.start();
+	}
 	public void write(String cmd)
 	{
 		try {
 			getSuProcess();
 		
-			if(mPollingThread.getState() == State.NEW)
-				mPollingThread.start();
-			if(mWatcherThread.getState() == State.NEW)
-				mWatcherThread.start();
+			start();
 		
+			is.skip(is.available());
 			if(os == null)
 				os = new DataOutputStream(myProcess.getOutputStream());
 
@@ -230,10 +232,7 @@ public class RootManager implements UpdateCallback
 			if(is == null)
 				is = new DataInputStream(suProcess.getInputStream());
 			
-			if(mPollingThread.getState() == State.NEW)
-				mPollingThread.start();
-			if(mWatcherThread.getState() == State.NEW)
-				mWatcherThread.start();
+			start();
 			
 			if(null != os && null != is)
 			{
@@ -245,8 +244,8 @@ public class RootManager implements UpdateCallback
 				//os.writeBytes("exit\n");
 				//os.flush();
 				
-				//int retVal = suProcess.waitFor();
-				//Logger.LogDebug("Root return value: " + retVal);
+				int retVal = suProcess.waitFor();
+				Logger.LogDebug("Root return value: " + retVal);
 				
 				String line = null;
 				while((line = is.readLine()) != null)
@@ -257,7 +256,7 @@ public class RootManager implements UpdateCallback
 					if(ret.size() > 500) break;
 				}
 				
-				//Logger.LogDebug("Root done reading");
+				Logger.LogDebug("Root done reading");
 			} else {
 				Logger.LogWarning("One of the streams was null.");
 				return null;
@@ -274,18 +273,16 @@ public class RootManager implements UpdateCallback
 		if(rootRequested) return rootEnabled;
 		try
 		{
-			Process suProcess = myProcess != null ? myProcess :
-				Runtime.getRuntime().exec("su");
-			
-			if(mPollingThread.getState() == State.RUNNABLE)
-				mPollingThread.start();
-			if(mWatcherThread.getState() == State.RUNNABLE)
-				mWatcherThread.start();
-			
+			if(myProcess == null)
+				myProcess = Runtime.getRuntime().exec("su");
+
+
 			if(os == null)
-				os = new DataOutputStream(suProcess.getOutputStream());
+				os = new DataOutputStream(myProcess.getOutputStream());
 			if(is == null)
-				is = new DataInputStream(suProcess.getInputStream());
+				is = new DataInputStream(myProcess.getInputStream());
+			
+			start();
 			
 			if (null != os && null != is)
 			{
@@ -316,7 +313,6 @@ public class RootManager implements UpdateCallback
 				if(!rootEnabled)
 				{
 					mPollingThread.stop();
-					mWatcherThread.stop();
 				}
 				if (exitSu)
 				{
@@ -400,6 +396,7 @@ public class RootManager implements UpdateCallback
 
 	@Override
 	public void onExit() {
+		mIsRunning = false;
 		if(mNotify != null)
 			mNotify.onExit();
 	}
