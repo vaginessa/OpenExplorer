@@ -41,6 +41,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
@@ -232,7 +233,6 @@ public class OpenExplorer
 	public static boolean USE_ACTIONMODE = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
 	public static boolean IS_DEBUG_BUILD = true;
-	public static boolean IS_BLACKBERRY = Build.MANUFACTURER.equals("RIM");
 	public static boolean LOW_MEMORY = false;
 	public static final boolean SHOW_FILE_DETAILS = false;
 	public static boolean USE_PRETTY_MENUS = true;
@@ -242,6 +242,7 @@ public class OpenExplorer
 	private static MimeTypes mMimeTypes;
 	private Object mActionMode;
 	private int mLastBackIndex = -1;
+	private static long lastSubmit = 0l;
 	private OpenPath mLastPath = null;
 	private BroadcastReceiver storageReceiver = null;
 	private Handler mHandler = new Handler();  // handler for the main thread
@@ -386,31 +387,19 @@ public class OpenExplorer
 				if(sig.toCharsString().indexOf("4465627567") > -1) // check for "Debug" in signature
 					IS_DEBUG_BUILD = true;
 			*/
-			IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), 0)
+			IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), PackageManager.GET_META_DATA)
 					.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) ==
-						ApplicationInfo.FLAG_DEBUGGABLE
-					|| IS_BLACKBERRY;
+						ApplicationInfo.FLAG_DEBUGGABLE;
+			if(isBlackBerry())
+				IS_DEBUG_BUILD = false;
 		} catch (NameNotFoundException e1) { }
-
-		handleNetworking();
 		
+		handleNetworking();
 		refreshCursors();
 
-		try {
-			if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
-			{
-				showToast("Welcome, GoogleTV user!");
-				getPreferences().setSetting("global", "welcome", true);
-			}
-		} catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
+		checkWelcome();
 		
-		try {
-			if(getPreferences().getSetting("global", "pref_root", false) ||
-					Preferences.getPreferences(getApplicationContext(), "global").getBoolean("pref_root", false))
-				RootManager.Default.requestRoot();
-			else
-				RootManager.Default.exitRoot();
-		} catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
+		checkRoot();
 		
 		if(!BEFORE_HONEYCOMB)
 		{
@@ -448,6 +437,7 @@ public class OpenExplorer
 		else if(findViewById(R.id.list_frag).getVisibility() == View.GONE)
 			mSinglePane = true;
 
+		Logger.LogDebug("Looking for path");
 		OpenPath path = mLastPath;
 		if(savedInstanceState == null || path == null)
 		{	
@@ -456,43 +446,20 @@ public class OpenExplorer
 			if(savedInstanceState != null && savedInstanceState.containsKey("last") && !savedInstanceState.getString("last").equals(""))
 				start = savedInstanceState.getString("last");
 
-			if(start.startsWith("/"))
-				path = new OpenFile(start);
-			else if(start.startsWith("ftp:/"))
-				path = new OpenFTP(start, null, new FTPManager());
-			else if(start.startsWith("sftp:/"))
-				path = new OpenSFTP(start);
-			else if(start.equals("Videos"))
-				path = mVideoParent;
-			else if(start.equals("Photos"))
-				path = mPhotoParent;
-			else if(start.equals("Music"))
-				path = mMusicParent;
-			else if(start.equals("Downloads"))
-				path = mDownloadParent;
-			else if(start.equals("External") && !checkForNoMedia(OpenFile.getExternalMemoryDrive(false)))
-				path = OpenFile.getExternalMemoryDrive(false);
-			else if(start.equals("Internal") || start.equals("External"))
-				path = OpenFile.getInternalMemoryDrive();
-			else
-				path = new OpenFile(start);
-			if(path == null || !path.exists())
-				path = OpenFile.getInternalMemoryDrive();
-			if(path == null || !path.exists())
-				path = new OpenFile("/");
+			path = FileManager.getOpenCache(start, this);
 		}
 		
-		if(checkForNoMedia(path))
+		if(FileManager.checkForNoMedia(path))
 			showToast(R.string.s_error_no_media, Toast.LENGTH_LONG);
 		
 		mLastPath = path;
 		
 		boolean bAddToStack = true;
 
-		int mViewMode = getSetting(path, "view", 0);
-
-		if(mViewPagerEnabled && findViewById(R.id.content_pager_frame_stub) != null)
+		if(findViewById(R.id.content_pager_frame_stub) != null)
 			((ViewStub)findViewById(R.id.content_pager_frame_stub)).inflate();
+		
+		Logger.LogDebug("Pager inflated");
 		
 		if(fragmentManager == null)
 		{
@@ -501,13 +468,6 @@ public class OpenExplorer
 		}
 		
 		mLogFragment = new LogViewerFragment();
-		if(findViewById(R.id.frag_log) != null)
-		{
-			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
-			findViewById(R.id.frag_log).setVisibility(View.GONE);
-		} else {
-			initLogPopup();
-		}
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 
@@ -522,23 +482,6 @@ public class OpenExplorer
 			bAddToStack = false;
 		}
 		
-		/*if(findViewById(R.id.content_frag) != null && !mViewPagerEnabled)
-		{
-			if(bAddToStack)
-			{
-				if(fragmentManager.getBackStackEntryCount() == 0 ||
-						!mLastPath.getPath().equals(fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getBreadCrumbTitle()))
-					ft
-						.addToBackStack("path")
-					.replace(R.id.content_frag, mContentFragment)
-					.setBreadCrumbTitle(path.getPath());
-			else Logger.LogWarning("Damn it dog, stay!");
-			} else {
-				ft.replace(R.id.content_frag, mContentFragment);
-				ft.disallowAddToBackStack();
-			}
-			updateTitle(mLastPath.getPath());
-		} else */
 		if(mViewPager != null && mViewPagerAdapter != null && path != null)
 		{
 			//mViewPagerAdapter.add(mContentFragment);
@@ -546,18 +489,14 @@ public class OpenExplorer
 			changePath(path, bAddToStack, true);
 			setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
 			restoreOpenedEditors();
-		}
+		} else Logger.LogWarning("Nothing to show?!");
 
 		ft.commit();
 
-		setupBaseBarButtons();
+		invalidateOptionsMenu();
 		initBookmarkDropdown();
 		
 		setOnClicks(R.id.menu_view, R.id.menu_sort);
-		
-		//updateTitle(mLastPath.getPath());
-		if(!BEFORE_HONEYCOMB)
-			invalidateOptionsMenu();
 		
 		handleMediaReceiver();
 
@@ -565,9 +504,54 @@ public class OpenExplorer
 			showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
 	}
 	
+	private void checkWelcome()
+	{
+		try {
+			if(isBlackBerry() && !getPreferences().getBoolean("global", "welcome_bb", false))
+			{
+				showToast("Welcome, PlayBook user!");
+				getPreferences().setSetting("global", "welcome_bb", true);
+			}
+		} catch(Exception e) { }
+		try {
+			if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
+			{
+				showToast("Welcome, GoogleTV user!");
+				getPreferences().setSetting("global", "welcome", true);
+			}
+		} catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
+	}
+	
+	private void checkRoot()
+	{
+		try {
+			if(getPreferences().getSetting("global", "pref_root", false)
+					&& (RootManager.Default == null || !RootManager.Default.isRoot()))
+				requestRoot();
+			else if(RootManager.Default != null)
+				exitRoot();
+		} catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
+	}
+	
+	private void requestRoot()
+	{
+		//new Thread(new Runnable(){public void run(){
+			RootManager.Default.requestRoot();
+		//}}).start();
+	}
+	
+	private void exitRoot()
+	{
+		if(RootManager.Default == null) return;
+		new Thread(new Runnable(){public void run(){
+			RootManager.Default.exitRoot();
+		}}).start();
+	}
+	
 	private void handleNetworking()
 	{
 		FileManager.DefaultUserInfo = new SimpleUserInfo();
+		final Context c = this;
 		SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
 			
 			public boolean promptPassword(String message) {
@@ -590,7 +574,7 @@ public class OpenExplorer
 					}
 				}});
 				
-				AlertDialog dlg = new AlertDialog.Builder(getApplicationContext())
+				AlertDialog dlg = new AlertDialog.Builder(c)
 					.setTitle(R.string.s_prompt_password)
 					.setView(view)
 					.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -625,7 +609,7 @@ public class OpenExplorer
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						AlertDialog dlg = new AlertDialog.Builder(getApplicationContext())
+						AlertDialog dlg = new AlertDialog.Builder(c)
 							.setMessage(message)
 							.setPositiveButton(android.R.string.yes, new OnClickListener() {
 								@Override
@@ -712,9 +696,9 @@ public class OpenExplorer
 		{
 			if(!getSetting(null, "pref_autowtf", false))
 				showWTFIntent();
-			else if(isNetworkConnected())
-				new SubmitStatsTask(this).execute(
-						Logger.getCrashReport(true));
+			//else if(isNetworkConnected())
+			//	new SubmitStatsTask(this).execute(
+			//			Logger.getCrashReport(true));
 		}
 	}
 
@@ -953,22 +937,9 @@ public class OpenExplorer
 		else if ((Intent.ACTION_VIEW.equals(intent.getAction()) || Intent.ACTION_EDIT.equals(intent.getAction()))
 				&& intent.getData() != null)
 		{
-			OpenPath path = null;
-			if(intent.getDataString().startsWith("content://"))
-				path = new OpenContent(intent.getData(), this);
-			else
-				try {
-					path = FileManager.getOpenCache(intent.getDataString(), false, null);
-				} catch (IOException e) {
-					Logger.LogError("Couldn't get file from cache.", e);
-				}
-			if(path == null)
-				path = new OpenFile(intent.getDataString());
-			if(path != null) // && path.exists() && (path.isTextFile() || path.length() < 500000))
-			{
-				editFile(path);
+			OpenPath path = FileManager.getOpenCache(intent.getDataString(), this);
+			if(editFile(path))
 				return true;
-			}
 		}else if(intent.hasExtra("state"))
 		{
 			Bundle state = intent.getBundleExtra("state");
@@ -1145,26 +1116,6 @@ public class OpenExplorer
 			setViewPageAdapter(mViewPagerAdapter);
 		}
 
-	}
-	
-	private boolean checkForNoMedia(OpenPath defPath)
-	{
-		if(defPath == null) return true;
-		if(defPath instanceof OpenFile)
-		{
-			StatFs sf = new StatFs(defPath.getPath());
-			if(sf.getBlockCount() == 0)
-				return true;
-			else return false;
-		} else {
-			try {
-				return defPath.list() == null || defPath.list().length == 0;
-			} catch(IOException e)
-			{
-				Logger.LogError("Error Checking for Media.", e);
-				return true;
-			}
-		}
 	}
 
 	public void setViewVisibility(final boolean visible, final boolean allowAnimation, int... ids) {
@@ -1382,14 +1333,26 @@ public class OpenExplorer
 	}
 	
 	@Override
+	public void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		handleNetworking();
+	}
+	
+	@Override
 	protected void onStart() {
 		super.onStart();
 		Logger.LogVerbose("OpenExplorer.onStart");
-		setupLoggingDb();
-		submitStats();
+		if(findViewById(R.id.frag_log) != null)
+		{
+			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
+			findViewById(R.id.frag_log).setVisibility(View.GONE);
+		} else {
+			initLogPopup();
+		}
+		//submitStats();
 		//new Thread(new Runnable(){public void run() {refreshCursors();}}).start();;
 		//refreshCursors();
-		mBookmarks.scanBookmarks();
+		//mBookmarks.scanBookmarks();
 		mStateReady = true;
 	}
 	
@@ -1628,7 +1591,6 @@ public class OpenExplorer
 		if(!Logger.isLoggingEnabled()) return;
 		setupLoggingDb();
 		if(IS_DEBUG_BUILD) return;
-		long lastSubmit = getPreferences().getSetting("flags", "last_stat_submit", 0l);
 		if(new Date().getTime() - lastSubmit < 6000)
 			return;
 		lastSubmit = new Date().getTime();
@@ -2126,23 +2088,19 @@ public class OpenExplorer
 		for(String s : editing.split(","))
 		{
 			if(s == null || s == "") continue;
-			OpenPath path = null;
-			if(s.startsWith("content://"))
-				path = new OpenContent(Uri.parse(s), this);
-			else
-				path = FileManager.getOpenCache(s);
+			OpenPath path = FileManager.getOpenCache(s, this);
 			if(path == null) continue;
 			editFile(path, true);
 		}
 		setViewPageAdapter(mViewPagerAdapter, true);
 	}
 	
-	public void editFile(OpenPath path) { editFile(path, false); }
-	public void editFile(OpenPath path, boolean batch)
+	public boolean editFile(OpenPath path) { return editFile(path, false); }
+	public boolean editFile(OpenPath path, boolean batch)
 	{
-		if(path == null) return;
-		if(!path.exists()) return;
-		if(path.length() > getResources().getInteger(R.integer.max_text_editor_size)) return;
+		if(path == null) return false;
+		if(!path.exists()) return false;
+		if(path.length() > getResources().getInteger(R.integer.max_text_editor_size)) return false;
 		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null)
 		{
@@ -2166,6 +2124,7 @@ public class OpenExplorer
 				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 				.commit();
 		//addTab(editor, path.getName(), true);
+		return true;
 	}
 	
 	@Override
@@ -2394,6 +2353,7 @@ public class OpenExplorer
 			getSelectedFragment().onCreateOptionsMenu(menu, getMenuInflater());
 			
 		}
+		MenuUtils.setMenuVisible(menu, IS_DEBUG_BUILD && !isBlackBerry(), R.id.menu_debug);
 		MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
 		//Logger.LogVerbose("OpenExplorer.onCreateOptionsMenu");
 		return super.onCreateOptionsMenu(menu);
@@ -3023,8 +2983,7 @@ public class OpenExplorer
 				if(entry != null && entry.getBreadCrumbTitle() != null)
 				{
 					try {
-						mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(),
-								false, OpenPath.Sorting);
+						mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString());
 					} catch (Exception e) {
 						Logger.LogError("Couldn't get back cache.", e);
 					}
@@ -3180,8 +3139,7 @@ public class OpenExplorer
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
 				int index = mViewPagerAdapter.getItemPosition(cf);
 				setCurrentItem(index, addToStack);
-				if(cf instanceof ContentFragment)
-					((ContentFragment)cf).refreshData(null, false);
+				//if(cf instanceof ContentFragment) ((ContentFragment)cf).refreshData(null, false);
 				//updatePagerTitle(index);
 			} else {
 				OpenPath commonBase = null;
@@ -3208,7 +3166,7 @@ public class OpenExplorer
 				setViewPageAdapter(mViewPagerAdapter, true);
 				//mViewPager.setAdapter(mViewPagerAdapter);
 				setCurrentItem(path.getDepth() - 1, false);
-				getDirContentFragment(false).refreshData(null, false);
+				//getDirContentFragment(false).refreshData(null, false);
 			}
 		//}
 		//refreshContent();
@@ -3226,15 +3184,6 @@ public class OpenExplorer
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
 		mLastPath = path;
-	}
-	private void refreshContent()
-	{
-		ContentFragment frag = getDirContentFragment(false);
-		if(frag != null && frag.getPath() instanceof OpenNetworkPath)
-		{
-			frag.refreshData(null, false);
-			frag.runUpdateTask(false);
-		}
 	}
 	private String getFragmentPaths(List<OpenFragment> frags)
 	{
@@ -3662,15 +3611,6 @@ public class OpenExplorer
 					"date modified DESC"
 					);
 				break;
-			case 4: // downloads
-				if(bRetrieveCursorFiles)
-				loader = new CursorLoader(
-					getApplicationContext(),
-					MediaStore.Files.getContentUri("/"),
-					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
-					"_data LIKE '%download%", null,
-					"date modified DESC"
-					);
 		}
 
 		return loader;

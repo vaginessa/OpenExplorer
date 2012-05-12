@@ -41,6 +41,12 @@ public class OpenFragmentActivity
 		return this.getClass().getSimpleName();
 	}
 	
+	@Override
+	public void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		Logger.LogDebug(getClassName() + ".onAttachToWindow()");
+	}
+	
 	public void onClick(View v) {
 		Logger.LogDebug("View onClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
 	}
@@ -120,7 +126,9 @@ public class OpenFragmentActivity
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 	
-
+	public static final boolean isBlackBerry() {
+		return Build.MANUFACTURER.trim().equalsIgnoreCase("rim") || Build.MODEL.toLowerCase().contains("blackberry");
+	}
 	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
 	public void showToast(final CharSequence message)  {
 		showToast(message, Toast.LENGTH_SHORT);
