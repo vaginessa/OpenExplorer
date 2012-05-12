@@ -33,6 +33,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.FTPManager;
+import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -49,24 +50,11 @@ import org.brandroid.utils.Preferences;
 
 import com.jcraft.jsch.UserInfo;
 
+import android.content.Context;
 import android.net.Uri;
+import android.os.StatFs;
 import android.util.Log;
 
-/**
- * This class is completely modular, which is to say that it has
- * no reference to the any GUI activity. This class could be taken
- * and placed into in other java (not just Android) project and work.
- * <br>
- * <br>
- * This class handles all file and folder operations on the system.
- * This class dictates how files and folders are copied/pasted, (un)zipped
- * renamed and searched. The EventHandler class will generally call these
- * methods and have them performed in a background thread. Threading is not
- * done in this class.  
- * 
- * @author Joe Berria
- *
- */
 public class FileManager {
 	public static final int BUFFER = 8 * 1024;
 	
@@ -403,12 +391,56 @@ public class FileManager {
 	
 	public static OpenPath getOpenCache(String path)
 	{
+		return getOpenCache(path, null);
+	}
+	public static OpenPath getOpenCache(String path, Context c)
+	{
 		OpenPath ret = null;
-		try {
-			ret = getOpenCache(path, false, null);
-		} catch(IOException e) { }
+		if(path.startsWith("/"))
+			ret = new OpenFile(path);
+		else if(path.startsWith("ftp:/"))
+			ret = new OpenFTP(path, null, new FTPManager());
+		else if(path.startsWith("sftp:/"))
+			ret = new OpenSFTP(path);
+		else if(path.equals("Videos"))
+			ret = OpenExplorer.getVideoParent();
+		else if(path.equals("Photos"))
+			ret = OpenExplorer.getPhotoParent();
+		else if(path.equals("Music"))
+			ret = OpenExplorer.getMusicParent();
+		else if(path.equals("Downloads"))
+			ret = OpenExplorer.getDownloadParent();
+		else if(path.equals("External") && !checkForNoMedia(OpenFile.getExternalMemoryDrive(false)))
+			ret = OpenFile.getExternalMemoryDrive(false);
+		else if(path.equals("Internal") || path.equals("External"))
+			ret = OpenFile.getInternalMemoryDrive();
+		else if(path.startsWith("content://") && c != null)
+			ret = new OpenContent(Uri.parse(path), c);
+		else
+			ret = null;
 		return ret;
 	}
+	
+	public static boolean checkForNoMedia(OpenPath defPath)
+	{
+		if(defPath == null) return true;
+		if(defPath instanceof OpenFile)
+		{
+			StatFs sf = new StatFs(defPath.getPath());
+			if(sf.getBlockCount() == 0)
+				return true;
+			else return false;
+		} else {
+			try {
+				return defPath.list() == null || defPath.list().length == 0;
+			} catch(IOException e)
+			{
+				Logger.LogError("Error Checking for Media.", e);
+				return true;
+			}
+		}
+	}
+	
 	public static OpenPath getOpenCache(String path, Boolean bGetNetworkedFiles, SortType sort)
 			throws IOException //, SmbAuthException, SmbException
 	{

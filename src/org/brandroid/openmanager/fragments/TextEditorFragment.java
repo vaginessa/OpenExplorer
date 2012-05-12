@@ -176,15 +176,7 @@ public class TextEditorFragment extends OpenFragment
 		{
 			String path = bundle.getString("edit_path");
 			mData = null;
-			if(path.startsWith("content://"))
-				mPath = new OpenContent(Uri.parse(path), getActivity());
-			else
-				try {
-					mPath = FileManager.getOpenCache(path, false, null);
-				} catch (IOException e) {
-					Logger.LogWarning("Couldn't get cache to edit.", e);
-					mPath = new OpenFile(path);
-				}
+			mPath = FileManager.getOpenCache(path);
 			Logger.LogDebug("load text editor (" + path + ")");
 			if(mData == null && bundle.containsKey("edit_data"))
 				mData = bundle.getString("edit_data");

@@ -4,41 +4,31 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeSet;
-
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.OpenFragment;
-import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.SortedArrayList;
 
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -106,7 +96,6 @@ public class ContentAdapter extends BaseAdapter {
 		
 		mData2.clear();
 		
-		int folder_index = 0;
 		if(items != null)
 		for(OpenPath f : items)
 		{
@@ -121,17 +110,15 @@ public class ContentAdapter extends BaseAdapter {
 		}
 
 		if(doSort)
-		{
-			OpenPath.Sorting = mSorting;
-			Collections.sort(mData2);
-		}
+			sort();
 		
 		notifyDataSetChanged();
 	}
 	
-	public void sort()
+	public void sort() { sort(mSorting); }
+	public void sort(SortType sort)
 	{
-		OpenPath.Sorting = mSorting;
+		OpenPath.Sorting = sort;
 		Collections.sort(mData2);
 	}
 	
@@ -144,7 +131,10 @@ public class ContentAdapter extends BaseAdapter {
 	
 	private OpenPath[] getList() {
 		try {
-			return mParent.list();
+			if(mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
+				return null;
+			else
+				return mParent.list();
 		} catch (IOException e) {
 			Logger.LogError("Couldn't getList in ContentAdapter");
 			return null;
@@ -154,22 +144,8 @@ public class ContentAdapter extends BaseAdapter {
 	////@Override
 	public View getView(int position, View view, ViewGroup parent)
 	{
-		final OpenPath file = getItem(position); //super.getItem(position);
-		if(file == null) return null;
-		
-		final String mName = file.getName();
-		
-		int mWidth = getResources().getInteger(R.integer.content_list_image_size);
-		int mHeight = mWidth;
-		if(getViewMode() == OpenExplorer.VIEW_GRID)
-			mWidth = mHeight = getResources().getInteger(R.integer.content_grid_image_size);
-		
 		int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
 				R.layout.grid_content_layout : R.layout.list_content_layout;
-		
-		boolean showLongDate = false;
-		if(getResources().getBoolean(R.bool.show_long_date))
-			showLongDate = true;
 		
 		if(view == null
 					//|| view.getTag() == null
@@ -185,7 +161,22 @@ public class ContentAdapter extends BaseAdapter {
 			//view.setTag(mHolder);
 			//file.setTag(mHolder);
 		} //else mHolder = (BookmarkHolder)view.getTag();
-
+		
+		final OpenPath file = getItem(position); //super.getItem(position);
+		
+		if(file == null) return view;
+		
+		final String mName = file.getName();
+		
+		int mWidth = getResources().getInteger(R.integer.content_list_image_size);
+		int mHeight = mWidth;
+		if(getViewMode() == OpenExplorer.VIEW_GRID)
+			mWidth = mHeight = getResources().getInteger(R.integer.content_grid_image_size);
+		
+		boolean showLongDate = false;
+		if(getResources().getBoolean(R.bool.show_long_date))
+			showLongDate = true;
+		
 		//mHolder.getIconView().measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 		//Logger.LogVerbose("Content Icon Size: " + mHolder.getIconView().getMeasuredWidth() + "x" + mHolder.getIconView().getMeasuredHeight());
 

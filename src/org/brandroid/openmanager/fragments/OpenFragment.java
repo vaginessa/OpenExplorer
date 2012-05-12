@@ -107,13 +107,9 @@ public abstract class OpenFragment
     		sPath = args.getString("last");
     	if(args.containsKey("edit_path"))
     		sPath = args.getString("edit_path");
-    	OpenPath path = null;
+    	OpenPath path = FileManager.getOpenCache(sPath, context);
     	if(sPath != null)
     	{
-    		if(sPath.startsWith("content://"))
-    			path = new OpenContent(Uri.parse(sPath), context);
-    		else
-    			path = FileManager.getOpenCache(sPath);
         	if(fname.endsWith("ContentFragment"))
         		return ContentFragment.getInstance(path, args);
         	else if(fname.endsWith("TextEditorFragment"))
@@ -240,7 +236,8 @@ public abstract class OpenFragment
 	
 	public boolean showMenu(int menuId, View from)
 	{
-		Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
+		if(DEBUG)
+			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
 		if(getActivity() == null) return false;
 		IconContextMenu mOpenMenu = IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
 		if(mOpenMenu == null) return false;
@@ -505,13 +502,15 @@ public abstract class OpenFragment
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		//Logger.LogDebug("}-- onAttach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		if(DEBUG)
+			Logger.LogDebug("}-- onAttach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 	}
 	
 	@Override
 	public void onDetach() {
 		super.onDetach();
-		//Logger.LogDebug("{-- onDetach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		if(DEBUG)
+			Logger.LogDebug("{-- onDetach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 	}
 	
 	@Override
@@ -950,6 +949,13 @@ public abstract class OpenFragment
 	public ShellSession getShellSession() {
 		return getExplorer().getShellSession();
 	}
+
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		if(DEBUG)
+			Logger.LogDebug("<-- onViewCreated - " + getClassName());
+		super.onViewCreated(view, savedInstanceState);
+	}
 	
 	/*
 	 * 
@@ -970,12 +976,6 @@ public abstract class OpenFragment
 			Bundle savedInstanceState) {
 		Logger.LogDebug("<-- onCreateView - " + getClassName());
 		return super.onCreateView(inflater, container, savedInstanceState);
-	}
-	
-	@Override
-	public void onViewCreated(View view, Bundle savedInstanceState) {
-		Logger.LogDebug("<-- onViewCreated - " + getClassName());
-		super.onViewCreated(view, savedInstanceState);
 	}
 	
 	@Override

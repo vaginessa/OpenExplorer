@@ -383,6 +383,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(path == null) return false;
 		boolean bypassHide = false; //getExplorer().getPreferences().getSetting("global", "pref_hide", false);
 		try {
+			if(path instanceof OpenSmartFolder)
+				bypassHide = true;
 			if(!bypassHide && !checkPrefs(type, path))
 				return false;
 		} catch(NullPointerException e) { }

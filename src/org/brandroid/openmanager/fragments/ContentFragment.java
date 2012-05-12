@@ -139,14 +139,7 @@ public class ContentFragment extends OpenFragment
 	}
 	private void setPath(String path)
 	{
-		if(path.startsWith("content://"))
-			mPath = new OpenContent(Uri.parse(path), getActivity());
-		else
-			try {
-				mPath = FileManager.getOpenCache(path, false, null);
-			} catch (IOException e) {
-				mPath = new OpenFile(path);
-			}
+		mPath = FileManager.getOpenCache(path, getAndroidContext());
 	}
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
@@ -233,7 +226,7 @@ public class ContentFragment extends OpenFragment
 			mGrid.setAdapter(mContentAdapter);
 		} else {
 			mContentAdapter.setViewMode(mode);
-			notifyDataSetChanged();
+			refreshData(null, false);
 		}
 	}
 	
@@ -251,24 +244,7 @@ public class ContentFragment extends OpenFragment
 		if(getArguments() != null && getArguments().containsKey("last"))
 			mBundle = getArguments();
 		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || !mPath.getPath().equals(mBundle.getString("last"))))
-		{
-			String last = mBundle.getString("last");
-			Logger.LogDebug("Unbundling " + last);
-			if(last.startsWith("content://"))
-				mPath = new OpenContent(Uri.parse(last), getAndroidContext());
-			else if(last.startsWith("/"))
-				mPath = new OpenFile(last).setRoot();
-			else if(last.equalsIgnoreCase("Photos"))
-				mPath = OpenExplorer.getPhotoParent();
-			else if(last.equalsIgnoreCase("Videos"))
-				mPath = OpenExplorer.getVideoParent();
-			else if(last.equalsIgnoreCase("Music"))
-				mPath = OpenExplorer.getMusicParent();
-			else if(last.equalsIgnoreCase("Downloads"))
-				mPath = OpenExplorer.getDownloadParent();
-			else
-				mPath = FileManager.getOpenCache(last);
-		}
+			mPath = FileManager.getOpenCache(mBundle.getString("last"), getAndroidContext());
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
 		
@@ -287,6 +263,10 @@ public class ContentFragment extends OpenFragment
 		//else
 			mContentAdapter.updateData();
 	}
+	public synchronized void refreshData()
+	{
+		refreshData(getArguments(), false);
+	}
 	public synchronized void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
 		if(!mRefreshReady) return;
@@ -296,6 +276,7 @@ public class ContentFragment extends OpenFragment
 		}
 		
 		if(getAndroidContext() == null) {
+			Logger.LogError("RefreshData out of context");
 			return;
 		}
 		
@@ -368,7 +349,10 @@ public class ContentFragment extends OpenFragment
 			mShowLongDate = getResources().getBoolean(R.bool.show_long_date) //getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation() % 180 != 0
 					&& mPath != null;
 
-		if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
+		if(path instanceof OpenFileRoot)
+		{
+			runUpdateTask();
+		} else if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
 				path.listFiles();
 			} catch (IOException e) {
@@ -640,9 +624,6 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuChecked(menu, getShowThumbnails(), R.id.menu_view_thumbs);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.CAN_DO_CAROUSEL, R.id.menu_view_carousel);
 		
-		if(RootManager.Default.isRoot())
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_root);
-		
 	}
 	
 	/*
@@ -706,7 +687,7 @@ public class ContentFragment extends OpenFragment
 		else
 			updateGridView();
 		
-		refreshData(mBundle, true);
+		//refreshData(mBundle, true);
 		
 		if(mGrid != null)
 		{
@@ -727,6 +708,7 @@ public class ContentFragment extends OpenFragment
 	@TargetApi(11)
 	public void updateGridView()
 	{
+		Logger.LogDebug("updateGridView() @ " + mPath);
 		int mLayoutID;
 		if(mGrid == null)
 			mGrid = (GridView)getView().findViewById(R.id.content_grid);
@@ -757,7 +739,7 @@ public class ContentFragment extends OpenFragment
 		mContentAdapter.setCheckClipboardListener(this);
 
 		mGrid.setAdapter(mContentAdapter);
-		notifyDataSetChanged();
+		refreshData(getArguments(), false);
 		setupGridView();
 	}
 	public void setupGridView()
@@ -900,15 +882,6 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onWorkerProgressUpdate(int pos, int total) {
 		
-	}
-	
-	/**
-	 * Only to be used to change the path after creation
-	 * @param path
-	 */
-	public void changePath(OpenPath path) {
-		mPath = path;
-		refreshData(null, false);
 	}
 	
 	private void pushPath(OpenPath path)

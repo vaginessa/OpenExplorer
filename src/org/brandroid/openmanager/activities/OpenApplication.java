@@ -38,7 +38,8 @@ public class OpenApplication extends Application implements OpenApp
     @Override
     public void onCreate() {
     	super.onCreate();
-        GalleryUtils.initialize(this);
+    	Logger.LogDebug("OpenApplication.onCreate");
+        //GalleryUtils.initialize(this);
     }
     
     @Override
