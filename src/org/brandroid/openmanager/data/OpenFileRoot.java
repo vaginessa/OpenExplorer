@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.RootManager;
@@ -14,6 +16,7 @@ import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.os.PatternMatcher;
 
 public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateListener {
 
@@ -40,24 +43,44 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 		//           10        20        30        40        50
 		// 01234567890123456789012345678901234567890123456789012345678901234567890
 		// drwxrwx--x    1 system   system        2048 Fri May 11 09:40:44 2012 dalvik-cach
+		// -rw-r--r-- system   system   48238558 2012-04-27 21:56 com.twodboy.worldofgoofull-1.apk
 		mPath = parent;
 		if(!mPath.endsWith("/"))
 			mPath += "/";
-		String[] parts = listing.split(" +", 11);
-		mPerms = parts[0];
-		try {
-			mSize = Long.parseLong(parts[4]);
-		} catch(NumberFormatException e) { }
-		try {
-			mDate = Date.parse(parts[5] + " " + parts[6] + " " + parts[7] + " " + parts[8] + " " + parts[9]);
-		} catch(Exception e) { }
-		mName = parts[10];
-		if(mName.indexOf(" -> ") > -1)
+		PatternMatcher pmLong = new PatternMatcher(" [1-2][0-9][0-9][0-9]\\-[0-9]+\\-[0-9]+ ", PatternMatcher.PATTERN_SIMPLE_GLOB);
+		boolean bLong = pmLong.match(listing);
+		Pattern p = Pattern.compile("[0-9][0-9]\\:[0-9][0-9] " + (bLong ? "[1-2][0-9][0-9][0-9] " : ""));
+		Matcher m = p.matcher(listing);
+		if(m.matches())
 		{
-			mSym = mName.substring(mName.indexOf(" -> ") + 4);
-			mName = mName.substring(0, mName.indexOf(" -> ") - 1).trim();
+			mName = listing.substring(m.end());
+			try {
+				mDate = Date.parse(listing.substring(m.start(), m.end() - 1).trim());
+				mSize = Long.parseLong(listing.substring(listing.lastIndexOf(" ", m.start()), m.start() - 1).trim());
+			} catch(Exception e) { }
+			mPerms = listing.split(" ")[0];
+		} else {
+			String[] parts = listing.split(" +");
+			if(parts.length > 5)
+			{
+				mPerms = parts[0];
+				int i = 3;
+				try {
+					if(parts.length >= 7)
+						mSize = Long.parseLong(parts[i++]);
+				} catch(NumberFormatException e) { }
+				try {
+					mDate = Date.parse(parts[i + 1] + " " + parts[i + 2]);
+				} catch(Exception e) { }
+			}
+			mName = parts[parts.length - 1];
+			if(mName.indexOf(" -> ") > -1)
+			{
+				mSym = mName.substring(mName.indexOf(" -> ") + 4);
+				mName = mName.substring(0, mName.indexOf(" -> ") - 1).trim();
+			}
 		}
-		if(parts[0].startsWith("d") && !mName.endsWith("/"))
+		if(mPerms != null && mPerms.startsWith("d") && !mName.endsWith("/"))
 			mName += "/";
 	}
 	
@@ -155,23 +178,28 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 			public void onReceiveMessage(String msg) {
 				if(msg.indexOf("\n") > -1)
 				{
-					for(String s : msg.split("\n"))
+					while(msg.indexOf("\n") > -1)
+					{
+						String s = msg.substring(0, msg.indexOf("\n"));
+						msg = msg.substring(msg.indexOf("\n") + 1);
 						onReceiveMessage(s);
+					}
+					buff[0] = msg;
 					return;
 				}
 				Logger.LogDebug("CF Message: " + msg);
 				if(msg != null && !msg.trim().equals(""))
 				{
-					String[] parts = msg.split(" +", 11);
-					if(parts.length < 11)
+					String[] parts = msg.split(" +", 7);
+					if(parts.length < 7)
 					{
 						if(buff[0] != null)
 						{
 							msg = buff[0] + msg;
-							parts = msg.split(" +", 11);
+							parts = msg.split(" +", 7);
 						} else buff[0] = msg;
 					}
-					if(parts.length >= 11)
+					if(parts.length >= 7)
 						callback.add(new OpenFileRoot(getPath(), msg));
 				}
 			}
@@ -246,7 +274,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 	
 	private String getLSOpts()
 	{
-		String lsOpts = "le";
+		String lsOpts = "l";
 		if(Sorting.showHidden())
 			lsOpts += "A";
 		switch(Sorting.getType())

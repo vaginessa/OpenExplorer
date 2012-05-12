@@ -47,7 +47,11 @@ public class RootManager implements UpdateCallback
 
     private static final int NEW_INPUT = 1;
     
-	public static final RootManager Default = new RootManager();
+	public static final RootManager Default;
+	
+	static {
+		Default = new RootManager();
+	}
 
     private boolean mIsRunning = false;
     private Handler mMsgHandler = new Handler() {
@@ -197,7 +201,8 @@ public class RootManager implements UpdateCallback
 	{
 		if(mIsRunning) return;
 		mIsRunning = true;
-		mPollingThread.start();
+		if(mPollingThread.getState() == State.NEW)
+			mPollingThread.start();
 	}
 	public void write(String cmd)
 	{
@@ -273,16 +278,16 @@ public class RootManager implements UpdateCallback
 		if(rootRequested) return rootEnabled;
 		try
 		{
-			if(myProcess == null)
-				myProcess = Runtime.getRuntime().exec("su");
+			Process suProcess = myProcess != null ? myProcess :
+				Runtime.getRuntime().exec("su");
 
 
 			if(os == null)
-				os = new DataOutputStream(myProcess.getOutputStream());
+				os = new DataOutputStream(suProcess.getOutputStream());
 			if(is == null)
-				is = new DataInputStream(myProcess.getInputStream());
+				is = new DataInputStream(suProcess.getInputStream());
 			
-			start();
+			//start();
 			
 			if (null != os && null != is)
 			{
@@ -312,7 +317,7 @@ public class RootManager implements UpdateCallback
 
 				if(!rootEnabled)
 				{
-					mPollingThread.stop();
+					//mPollingThread.stop();
 				}
 				if (exitSu)
 				{
