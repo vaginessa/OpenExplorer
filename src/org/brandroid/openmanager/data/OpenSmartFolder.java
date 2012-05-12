@@ -160,7 +160,9 @@ public class OpenSmartFolder extends OpenPath
 		for(SmartSearch s : mSearches)
 			if(s.mParent instanceof OpenFile)
 				return s.mParent;
-		return mSearches.get(0).mParent;
+		if(mSearches.size() > 0)
+			return mSearches.get(0).mParent;
+		else return null;
 	}
 
 	@Override
