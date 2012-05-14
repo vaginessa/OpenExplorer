@@ -1,5 +1,7 @@
 package org.brandroid.openmanager.adapters;
 
+import java.util.Date;
+
 import org.brandroid.openmanager.R;
 
 import android.content.Context;
@@ -15,6 +17,7 @@ public class LinesAdapter extends BaseAdapter
 	private final Context mContext;
 	private final LayoutInflater inflater;
 	private float mTextSize;
+	private Integer mSizeChangedCount = 0;
 	
 	public LinesAdapter(Context c, String[] lines)
 	{
@@ -34,6 +37,11 @@ public class LinesAdapter extends BaseAdapter
 		if(size == mTextSize) return;
 		mTextSize = size;
 		notifyDataSetChanged();
+	}
+	
+	public void notifySizeChanged() {
+		mSizeChangedCount++;
+		super.notifyDataSetChanged();
 	}
 
 	@Override
@@ -66,8 +74,11 @@ public class LinesAdapter extends BaseAdapter
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View ret = convertView;
-		if(ret == null)
+		if(ret == null || !(ret.getTag() instanceof Integer) || ((Integer)ret.getTag()) < mSizeChangedCount)
+		{
 			ret = inflater.inflate(R.layout.edit_text_view_row, null);
+			ret.setTag(mSizeChangedCount);
+		}
 		TextView txtLine = (TextView)ret.findViewById(R.id.text_line);
 		TextView txtData = (TextView)ret.findViewById(R.id.text_data);
 		txtLine.setText(repeat(" ", ((Integer)getCount()).toString().length() - ((Integer)position).toString().length())

@@ -53,10 +53,13 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TabHost;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -673,6 +676,8 @@ public class DialogHandler extends DialogFragment {
 				}
 			}, null);
 	}
+
+
 	public static AlertDialog showConfirmationDialog(final Context context, String msg, String title, DialogInterface.OnClickListener onYes, DialogInterface.OnClickListener onNo, DialogInterface.OnClickListener onCancel)
 	{
 		return new AlertDialog.Builder(context)
@@ -681,6 +686,34 @@ public class DialogHandler extends DialogFragment {
 			.setNegativeButton(R.string.s_no, onNo)
 			.setPositiveButton(R.string.s_yes, onYes)
 			.setNeutralButton(R.string.s_cancel, onCancel)
+			.show();
+	}
+
+	public static AlertDialog showPickerDialog(final Context context, String title,
+				PickerFragment.OnOpenPathPickedListener onPickListener) {
+		PickerFragment picker = new PickerFragment(context);
+		picker.setOnOpenPathPickedListener(onPickListener);
+		return new AlertDialog.Builder(context)
+			.setTitle(title)
+			.setView(picker.getView())
+			.show();
+	}
+	
+	public static AlertDialog showSeekBarDialog(final Context context, String title,
+			int progress, int max,
+			OnSeekBarChangeListener onSeekListener)
+	{
+		FrameLayout view = new FrameLayout(context);
+		SeekBar sb = new SeekBar(context);
+		view.addView(sb);
+		view.setPadding(20, 20, 20, 20);
+		
+		sb.setOnSeekBarChangeListener(onSeekListener);
+		sb.setProgress(progress);
+		sb.setMax(max);
+		return new AlertDialog.Builder(context)
+			.setTitle(title)
+			.setView(view)
 			.show();
 	}
 	

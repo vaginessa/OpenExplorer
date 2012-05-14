@@ -772,7 +772,7 @@ public class OpenExplorer
 				if(showContextMenu(R.menu.text_view, findViewById(R.id.title_menu)) != null)
 					return true;
 			}
-			if(showContextMenu(R.menu.text_view_flat, from) != null)
+			if(showContextMenu(R.menu.text_view, from) != null)
 				return true;
 		}
 		else if(from != null && !(from instanceof CheckedTextView) && 
@@ -809,8 +809,6 @@ public class OpenExplorer
 				menuId = R.menu.menu_view_flat;
 			else if(menuId == R.menu.text_view)
 				menuId = R.menu.text_view;
-			else if(menuId == R.menu.text_view_flat)
-				menuId = R.menu.text_view_flat;
 			else {
 				Logger.LogWarning("Unknown menuId (" + menuId + ")!");
 				return null;
@@ -821,7 +819,6 @@ public class OpenExplorer
 				menuId == R.menu.menu_sort ||
 				menuId == R.menu.menu_view ||
 				menuId == R.menu.text_view ||
-				menuId == R.menu.text_view_flat ||
 				menuId == R.menu.menu_sort_flat ||
 				menuId == R.menu.menu_view_flat)
 			{
@@ -2552,7 +2549,7 @@ public class OpenExplorer
 				if(f instanceof ContentFragment)
 					return showMenu(from instanceof MenuItem ? R.menu.menu_view : R.menu.menu_view_flat, from);
 				else if(f instanceof TextEditorFragment)
-					return showMenu(from instanceof MenuItem ? R.menu.text_view : R.menu.text_view_flat, from);
+					return showMenu(R.menu.text_view, from);
 				else return false;
 				
 			case R.id.menu_view_grid:

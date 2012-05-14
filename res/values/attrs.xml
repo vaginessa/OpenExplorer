@@ -21,8 +21,10 @@
         <attr name="actionbarCompatItemStyle" format="reference" />
         <attr name="actionbarCompatItemHomeStyle" format="reference" />
         <attr name="actionbarCompatProgressIndicatorStyle" format="reference" />
-    </declare-styleable>
+        <attr name="actionbarCompatItemHomeAsUpStyle" format="reference" />
+	</declare-styleable>
 
+    
     <declare-styleable name="BezelImageView">
         <attr name="maskDrawable" format="reference" />
         <attr name="borderDrawable" format="reference" />

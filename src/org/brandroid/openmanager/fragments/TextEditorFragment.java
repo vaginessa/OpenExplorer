@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.Date;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.LinesAdapter;
@@ -25,8 +26,10 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.fragments.PickerFragment.OnOpenPathPickedListener;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.SeekBarActionView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 
@@ -58,10 +61,12 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class TextEditorFragment extends OpenFragment
 	implements OnClickListener, OpenPathFragmentInterface, TextWatcher,
-		OpenFragment.OnFragmentTitleLongClickListener
+		OpenFragment.OnFragmentTitleLongClickListener, OnSeekBarChangeListener
 {
 	private EditText mEditText;
 	private ListView mViewList;
@@ -70,6 +75,7 @@ public class TextEditorFragment extends OpenFragment
 	//private TableLayout mViewTable;
 	//private ScrollView mViewScroller;
 	private ProgressBar mProgress = null;
+	private SeekBarActionView mFontSizeBar = null;
 	
 	private OpenPath mPath = null;
 	private String mData = null;
@@ -77,6 +83,8 @@ public class TextEditorFragment extends OpenFragment
 	private long lastClick = 0l;
 	private float mTextSize = 10f;
 	private boolean mSalvage = true;
+	
+	private final static boolean USE_SEEK_ACTIONVIEW = !OpenExplorer.BEFORE_HONEYCOMB && Build.VERSION.SDK_INT < 14;
 	
 	private AsyncTask<?, ?, ?> mTask = null;
 	
@@ -128,6 +136,16 @@ public class TextEditorFragment extends OpenFragment
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		mViewListAdapter = new LinesAdapter(activity, new String[]{});
+		mFontSizeBar = new SeekBarActionView(activity);
+		mFontSizeBar.setProgress((int)mTextSize);
+		mFontSizeBar.setOnCloseClickListener(new SeekBarActionView.OnCloseListener() {
+			@Override
+			public boolean onClose() {
+				mViewListAdapter.notifySizeChanged();
+				return false;
+			}
+		});
+		mFontSizeBar.setOnSeekBarChangeListener(this);
 	}
 
 	private void setPath(String path)
@@ -211,6 +229,13 @@ public class TextEditorFragment extends OpenFragment
 		super.onCreateOptionsMenu(menu, inflater);
 		if(!menu.hasVisibleItems())
 			inflater.inflate(R.menu.text_editor, menu);
+		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
+		if(mFontSize != null && USE_SEEK_ACTIONVIEW)
+		{
+			mFontSize
+				.setActionView((SeekBarActionView)mFontSizeBar)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		}
 		if(Build.VERSION.SDK_INT > 10 && menu.findItem(R.id.menu_view) != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
 			inflater.inflate(R.menu.text_view, menu.findItem(R.id.menu_view).getSubMenu());
 	}
@@ -221,17 +246,22 @@ public class TextEditorFragment extends OpenFragment
 		super.onPrepareOptionsMenu(menu);
 		MenuUtils.setMenuVisible(menu, mPath.canWrite(), R.id.menu_save);
 		MenuUtils.setMenuChecked(menu, mEditMode, R.id.menu_view_keyboard_toggle);
-		if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_large))
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_large, R.id.menu_view_font_medium, R.id.menu_view_font_small);
-		else if(mTextSize >= getResources().getDimensionPixelSize(R.dimen.text_size_medium))
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_medium, R.id.menu_view_font_large, R.id.menu_view_font_small);
-		else
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_font_small, R.id.menu_view_font_medium, R.id.menu_view_font_large);
 		//MenuUtils.setMenuVisible(menu, false);
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId())
+		{
+			case R.id.menu_view_font_size:
+				if(USE_SEEK_ACTIONVIEW)
+					((SeekBarActionView)mFontSizeBar).onActionViewExpanded();
+				else DialogHandler.showSeekBarDialog(getActivity(),
+						getString(R.string.s_view_font_size),
+						(int)mTextSize, 60,
+						this);
+				return true;
+		}
 		return onClickItem(item.getItemId());
 	}
 	
@@ -426,17 +456,18 @@ public class TextEditorFragment extends OpenFragment
 			doSave();
 			return true;
 			
-		case R.id.menu_view_font_large:
-			if(c != null)
-				setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_large));
-			return true;
-		case R.id.menu_view_font_medium:
-			if(c != null)
-				setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_medium));
-			return true;
-		case R.id.menu_view_font_small:
-			if(c != null)
-				setTextSize(getResources().getDimensionPixelSize(R.dimen.text_size_small));
+		case R.id.menu_save_as:
+			
+			DialogHandler.showPickerDialog(getActivity(),
+					getString(R.string.s_saveas),
+					new OnOpenPathPickedListener() {
+						@Override
+						public void onOpenPathPicked(OpenPath path) {
+							cancelTask();
+							mTask = new FileSaveTask(path);
+							((FileSaveTask)mTask).execute(mEditText.getText().toString());
+						}
+					});
 			return true;
 			
 		case R.id.menu_close:
@@ -699,6 +730,25 @@ public class TextEditorFragment extends OpenFragment
 
 	public boolean isSalvagable() {
 		return mSalvage;
+	}
+
+	@Override
+	public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+		if(!fromUser) return;
+		float fsize = (float)(progress + 1) / 2;
+		setTextSize(fsize);
+	}
+
+	@Override
+	public void onStartTrackingTouch(SeekBar seekBar) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onStopTrackingTouch(SeekBar seekBar) {
+		Logger.LogDebug("refresh!");
+		mViewListAdapter.notifySizeChanged();
 	}
 	
 }

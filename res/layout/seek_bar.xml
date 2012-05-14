@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/seek_bar"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/transparent"
+    android:focusable="true"
+    android:descendantFocusability="afterDescendants">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Grouped to allow tapping on either item to exit search mode -->
+        <LinearLayout
+            android:id="@+id/closeButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:focusable="true"
+            android:background="@drawable/list_selector_background">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/action_up"
+                android:src="@drawable/ic_ab_back_holo_dark"/>
+
+            <ImageView
+                android:id="@+id/action_icon"
+                android:layout_height="32dip"
+                android:layout_width="32dip"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_menu_font_size"
+                android:scaleType="centerInside"
+            />
+
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@android:id/progress"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"
+            />
+
+    </LinearLayout>
+
+</LinearLayout>

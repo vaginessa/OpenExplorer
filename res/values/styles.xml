@@ -54,6 +54,7 @@
         <item name="actionbarCompatItemStyle">@style/ActionBarCompatItem</item>
         <item name="actionbarCompatItemHomeStyle">@style/ActionBarCompatHomeItem</item>
         <item name="actionbarCompatProgressIndicatorStyle">@style/ActionBarCompatProgressIndicator</item>
+        <item name="actionbarCompatItemHomeAsUpStyle">@style/ActionBarCompatHomeAsUp</item>
     </style>
     
    	<style name="MyTabPageIndicator" parent="Widget">
@@ -111,6 +112,11 @@
 
     <style name="ActionBarCompatHomeItem" parent="style/ActionBarCompatItemBase">
         <item name="android:longClickable">true</item>
+        <item name="android:background">@drawable/list_selector_background</item>
+    </style>
+    
+    <style name="ActionBarCompatHomeAsUp" parent="style/ActionBarCompatItemBase">
+        <item name="android:src">@drawable/ic_ab_back_holo_dark</item>
     </style>
 
     <style name="SlideDialog" parent="@android:style/Theme.Dialog">
