@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name" auto="1">פתח את Internet</string>
-    <string name="s_search" auto="1">לחפש</string>
     <string name="s_photos" auto="1">תמונות</string>
     <string name="s_videos" auto="1">וידאו</string>
     <string name="s_music" auto="1">מוסיקה</string>
@@ -74,11 +73,11 @@
     <string name="s_pref_server_type" auto="1">שרת סוג</string>
     <string name="s_files" auto="1">קבצים</string>
     <string name="s_create" auto="1">ליצור</string>
-    <string name="s_title_holding_x_files" auto="1">החזקת קבצים %s</string>
+    <string name="s_title_holding_x_files" auto="1">החזקת קבצים  %s </string>
     <string name="s_title_newfolder" auto="1">יצירת תיקיה חדשה</string>
-    <string name="s_title_send" auto="1">שלח %s</string>
-    <string name="s_title_unzip" auto="1">Unzip %s</string>
-    <string name="s_title_zip" auto="1">מיקוד %s</string>
+    <string name="s_title_send" auto="1">שלח  %s </string>
+    <string name="s_title_unzip" auto="1">Unzip  %s </string>
+    <string name="s_title_zip" auto="1">מיקוד  %s </string>
     <string name="s_title_executing" auto="1">מבצע</string>
     <string name="s_title_deleting" auto="1">מחיקת</string>
     <string name="s_title_searching" auto="1">חיפוש</string>
@@ -143,7 +142,7 @@
     <string name="s_menu_delete_all" auto="1">מחק הכל</string>
     <string name="s_menu_move_all" auto="1">העבר לכאן</string>
     <string name="s_menu_copy_all" auto="1">העתק לכאן</string>
-    <string name="s_confirm_delete" auto="1">האם אתה בטוח שברצונך למחוק %s?</string>
+    <string name="s_confirm_delete" auto="1">האם אתה בטוח שברצונך למחוק  %s ?</string>
     <string name="s_error_same_destination" auto="1">מדריך יעד זהה.</string>
     <string name="s_sample_notification" auto="1">העתקה -&gt; sdcard:  n 3 קבצים</string>
     <string name="s_pref_fullscreen" auto="1">מסך מלא</string>
@@ -239,7 +238,46 @@
     <string name="menu_view_font_medium" auto="1">גודל גופן בינוני</string>
     <string name="menu_view_font_large" auto="1">גודל גופן גדול</string>
     <string name="app_description" auto="1">פתח את Internet Explorer - קוד פתוח מנהל קבצים עבור כל המכשירים! (לוחות הברית, טלפונים, טלוויזיות גוגל, כריכים!) \n-Complete קובץ מערכת ניהול \n-USB, SD ו מדיה חיצוניים אחרים \n-לחיבור רשת (FTP, SFTP, SMB / Samba / Windows / LAN / WIFI) \n - עורך טקסט \n חכם תיקיות, כי סריקה עבור סוגים שונים של מדיה (וידאו, תמונות, מוסיקה, הורדות) \n-צפה זימונית המדריך ניווט (מימין לסחוב לעלות המדריך) \n-משתמש על / root היכולת ברשימה / לקרוא תיקיות מערכת (המערכת לא לכתוב עדיין) \n \nFeatures הבאים: \n-כרטיסיות עורך טקסט \n-יכולת רשת יותר (Dropbox, Box.net, כונן שמים) \n-Offline מבנה קובץ המטמון, יזכרו אילו קבצים יש לך במקומות שונים, ללא צורך להתחבר \n-Disk חום המפה מראה מקום שבו הקבצים הגדולים ביותר הם \n \n * שים לב: App היא בגרסת ביתא. יש עדיין הרבה באגים. אם אתה לא רוצה לחוות את הבאגים, בבקשה אל תוריד את היישום הזה. אם תרצה לעזור לי למצוא את הבאגים, אנא שלח לי או לשתף פעולה עם אלי GitHub (https://github.com/BrandoCommando/OpenExplorer/). יש לזכור דירוגים רעים לעזור לאף אחד.</string>
-    <string name="alert_translate_google" auto="1">שלום, תרגום זה מסופק על ידי Google Translate. אם אתה יודע אנגלית, כמו גם %s, ואת רוצה לסייע במתן תרגום טוב יותר, אנא לחץ על הכפתור הזה:</string>
+    <string name="alert_translate_google" auto="1">שלום, תרגום זה מסופק על ידי Google Translate. אם אתה יודע אנגלית, כמו גם%s, ואת רוצה לסייע במתן תרגום טוב יותר, אנא לחץ על הכפתור הזה:</string>
     <string name="alert_translate_none" auto="1">שלום, נראה כי אתה משתמש בשפה לא נתמכת. האם אתה יודע אנגלית של %s? אם הייתם רוצים לסייע במתן התרגום הנכון, לחצו כאן:</string>
     <string name="button_translate" auto="1">לתרגם</string>
+    <string name="httpError">אירעה שגיאת רשת.</string>
+    <string name="httpErrorAuth">האימות נכשל.</string>
+    <string name="httpErrorProxyAuth">האימות דרך שרת ה-Proxy נכשל.</string>
+    <string name="httpErrorConnect">ההתחברות לשרת נכשלה.</string>
+    <string name="httpErrorIO">השרת לא הצליח ליצור קשר. נסה שוב מאוחר יותר.</string>
+    <string name="httpErrorTimeout">חלף הזמן הקצוב של החיבור לשרת.</string>
+    <string name="httpErrorFile">לא היתה גישה לקובץ.</string>
+    <string name="httpErrorFileNotFound">הקובץ המבוקש לא נמצא.</string>
+    <string name="contentServiceSync">סינכרון</string>
+    <string name="keyguard_password_enter_pin_code">הזן קוד PIN</string>
+    <string name="keyguard_password_enter_password_code">הזן סיסמה לביטול הנעילה</string>
+    <string name="keyguard_password_enter_pin_password_code">הזן PIN לביטול נעילה</string>
+    <string name="lockscreen_password_wrong">מצטערים, נסה שוב</string>
+    <string name="whichApplication">השלמת פעולה באמצעות</string>
+    <string name="noApplications">אין יישומים שיכולים לבצע פעולה זו.</string>
+    <string name="report">שלח דוח</string>
+    <string name="sim_restart_button">הפעל מחדש</string>
+    <string name="extmedia_format_button_format">פרמוט</string>
+    <string name="ext_media_nofs_notification_message">אחסון USB ריק או עם מערכת קבצים לא נתמכת.</string>
+    <string name="activity_list_empty">כרטיס SD ריק או שמערכת הקבצים שלו לא נתמכת.</string>
+    <string name="ime_action_go">לא נמצאו פעילויות תואמות</string>
+    <string name="ime_action_send">התחל</string>
+    <string name="ime_action_done">שלח</string>
+    <string name="ime_action_default">סיום</string>
+    <string name="upload_file">בצע</string>
+    <string name="no_file_chosen">בחר קובץ</string>
+    <string name="reset">לא נבחר קובץ</string>
+    <string name="back_button_label">איפוס</string>
+    <string name="next_button_label">הקודם</string>
+    <string name="no_matches">הבא</string>
+    <string name="find_on_page">אין התאמות</string>
+    <string name="find">חפש בדף</string>
+    <string name="activitychooserview_choose_application">מצא</string>
+    <string name="shareactionprovider_share_with">בחר יישום</string>
+    <string name="storage_internal">שתף עם</string>
+    <string name="storage_sd_card">אחסון פנימי</string>
+    <string name="storage_usb">כרטיס SD</string>
+    <string name="extract_edit_menu_button">אחסון USB</string>
+    <string name="activity_chooser_view_see_all">ערוך...</string>
 </resources>

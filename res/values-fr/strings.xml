@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">film</string>
+    <string name="app_name" auto="1">Ouvrez l\'Explorateur</string>
     <string name="s_photos" auto="1">Photos</string>
     <string name="s_videos" auto="1">Vidéos</string>
     <string name="s_music" auto="1">Musique</string>
@@ -9,17 +9,17 @@
     <string name="s_internal" auto="1">Interne</string>
     <string name="s_view" auto="1">Voir</string>
     <string name="s_bookmarks" auto="1">Favoris</string>
-    <string name="s_menu_favorites">Favoris</string>
-    <string name="s_menu_sort">Trier</string>
-    <string name="s_menu_sort_name_asc">Trier par Nom (de A à Z)</string>
+    <string name="s_menu_favorites" auto="1">Favoris bascule</string>
+    <string name="s_menu_sort" auto="1">Trier</string>
+    <string name="s_menu_sort_name_asc" auto="1">Trier par Nom (de A à Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">Trier par Nom (Z à A)</string>
-    <string name="s_menu_sort_date_asc">Trier par nouveautés</string>
-    <string name="s_menu_sort_date_desc">Trier par ancienneté</string>
-    <string name="s_menu_sort_size_asc">Trier par taille (du + grand au + petit)</string>
-    <string name="s_menu_sort_size_desc">Trier par taille (du + petit au + grand)</string>
+    <string name="s_menu_sort_date_asc" auto="1">Trier Trier par nouveautés</string>
+    <string name="s_menu_sort_date_desc" auto="1">Trier par ancien</string>
+    <string name="s_menu_sort_size_asc" auto="1">Trier par Le plus grand</string>
+    <string name="s_menu_sort_size_desc" auto="1">Trier par Le plus petit</string>
     <string name="s_menu_sort_type" auto="1">Trier par Type de fichier</string>
-    <string name="s_menu_multi">Sélections multiples</string>
-    <string name="s_menu_grid">Voir la grille</string>
+    <string name="s_menu_multi" auto="1">Multi-Select</string>
+    <string name="s_menu_grid" auto="1">Grille Voir</string>
     <string name="s_menu_list" auto="1">Voir la liste</string>
     <string name="s_menu_carousel" auto="1">Carrousel</string>
     <string name="s_menu_hidden" auto="1">Afficher les fichiers cachés</string>
@@ -27,17 +27,17 @@
     <string name="s_menu_new_folder" auto="1">Nouveau dossier</string>
     <string name="s_menu_other" auto="1">Autres paramètres</string>
     <string name="s_menu_flush" auto="1">Vidage du cache</string>
-    <string name="s_menu_root">Root</string>
-    <string name="s_menu_prefs_folder">Préférences de dossier</string>
+    <string name="s_menu_root" auto="1">Racine</string>
+    <string name="s_menu_prefs_folder" auto="1">Préférences pour les dossiers</string>
     <string name="s_menu_prefs_global" auto="1">Préférences globales</string>
     <string name="s_menu_info" auto="1">Infos</string>
-    <string name="s_menu_copy">Copier</string>
+    <string name="s_menu_copy" auto="1">Copie</string>
     <string name="s_menu_cut" auto="1">Couper</string>
     <string name="s_menu_paste" auto="1">Coller</string>
     <string name="s_menu_delete" auto="1">Supprimer</string>
     <string name="s_menu_share" auto="1">Envoyer / Partager ...</string>
     <string name="s_menu_zip" auto="1">Fichier Zip (s) ...</string>
-    <string name="s_menu_unzip">Decompresser</string>
+    <string name="s_menu_unzip" auto="1">Décompressez ...</string>
     <string name="s_menu_rename" auto="1">Renommer ...</string>
     <string name="s_menu_bookmark" auto="1">Ajouter un signet</string>
     <string name="s_save" auto="1">Enregistrer</string>
@@ -123,49 +123,47 @@
     <string name="s_pref_start_summary" auto="1">Indique le dossier dans lequel OpenExplorer commence en</string>
     <string name="s_custom" auto="1">Personnalisé ...</string>
     <string name="s_text_intro_top" auto="1">Bienvenue OpenExplorer!</string>
-    <string name="s_text_intro_body">Le but de OpenExplorer est de vous rendre plus productif au sein du système de fichiers Android et dans le cloud. Que vous ayez besoin de gérer des vidéos ou des photos à partir d\'emplacements multiples ou de gérer votre serveur à distance via FTP, OpenExplorer peut convenir à vos besoins.
-\n
-\nVeuillez choisir votre chemin de départ :</string>
-    <string name="s_info_num_folders" auto="1">Nombre de dossiers:</string>
-    <string name="s_info_num_files" auto="1">Nombre de fichiers:</string>
+    <string name="s_text_intro_body" auto="1">Le but de OpenExplorer est de vous rendre plus productif au sein du système de fichiers Android et dans le nuage. Que vous ayez besoin de gérer des vidéos ou des photos à partir d\'emplacements multiples ou de gérer votre serveur à distance via FTP, OpenExplorer peuvent convenir à vos besoins  n  nVeuillez choisir votre chemin de départ.:</string>
+    <string name="s_info_num_folders" auto="1">Nombre de dossiers:</string>
+    <string name="s_info_num_files" auto="1">Nombre de fichiers:</string>
     <string name="s_info_last_modified" auto="1">Dernière mise à jour:</string>
     <string name="s_info_permissions" auto="1">Autorisations sur les fichiers:</string>
     <string name="s_info_permission_read" auto="1">Lire:</string>
     <string name="s_info_permission_write" auto="1">Ecrire:</string>
     <string name="s_info_permission_execute" auto="1">Exécuter:</string>
     <string name="s_toggle_keyboard" auto="1">clavier</string>
-    <string name="s_show_password" auto="1">Montrer Mot de passe</string>
-    <string name="s_error_ftp" auto="1">Erreur de connexion au FTP</string>
-    <string name="s_prompt_zip" auto="1">Entrez le nom de fichier nouveau fichier Zip:</string>
-    <string name="app_edit" auto="1">Modifier avec OpenExplorer</string>
-    <string name="s_menu_more" auto="1">Plus options ...</string>
+    <string name="s_show_password" auto="1">Montrer Mot de passe</string>
+    <string name="s_error_ftp" auto="1">Erreur de connexion au FTP</string>
+    <string name="s_prompt_zip" auto="1">Entrez le nom de fichier nouveau fichier Zip:</string>
+    <string name="app_edit" auto="1">Modifier avec OpenExplorer</string>
+    <string name="s_menu_more" auto="1">Plus options ...</string>
     <string name="s_msg_low_memory" auto="1">Peu de mémoire!</string>
     <string name="s_clear" auto="1">effacer</string>
     <string name="s_menu_delete_all" auto="1">supprimer tout</string>
     <string name="s_menu_move_all" auto="1">Déplacer ici</string>
     <string name="s_menu_copy_all" auto="1">copier ici</string>
-    <string name="s_confirm_delete" auto="1">Etes-vous sûr que vous voulez supprimer  %s ?</string>
-    <string name="s_error_same_destination" auto="1">Le répertoire de destination est le même.</string>
-    <string name="s_sample_notification" auto="1">Copie -&gt; sdcard:  n 3 Fichiers</string>
+    <string name="s_confirm_delete" auto="1">Etes-vous sûr que vous voulez supprimer  %s ?</string>
+    <string name="s_error_same_destination" auto="1">Le répertoire de destination est le même.</string>
+    <string name="s_sample_notification" auto="1">Copie -&gt; sdcard:  n 3 Fichiers</string>
     <string name="s_pref_fullscreen" auto="1">plein écran</string>
-    <string name="s_pref_fullscreen_summary_on" auto="1">Masquer la barre de notification</string>
-    <string name="s_pref_fullscreen_summary_off" auto="1">Afficher la barre de notification</string>
-    <string name="s_pref_pagers" auto="1">Voir Pagers</string>
-    <string name="s_pref_pagers_summary_on" auto="1">Glisser horizontal = Annuaire de navigation</string>
-    <string name="s_pref_pagers_summary_off" auto="1">Horizontaux handicapés glisser</string>
-    <string name="s_alert_new_media" auto="1">Nouveaux Médias Insérée!</string>
-    <string name="s_warn_pager_title" auto="1">Nouvelle fonctionnalité: Pagers Voir</string>
-    <string name="s_warn_pager" auto="1">Balayez vers la gauche vers la droite pour monter un répertoire et de droite à gauchepour revenir en arrière. Cela devrait rendre plus facile à naviguer. Essayez-le (sur un support externe)!</string>
-    <string name="s_warn_confirm" auto="1">Ne comprenez-vous?</string>
+    <string name="s_pref_fullscreen_summary_on" auto="1">Masquer la barre de notification</string>
+    <string name="s_pref_fullscreen_summary_off" auto="1">Afficher la barre de notification</string>
+    <string name="s_pref_pagers" auto="1">Voir Pagers</string>
+    <string name="s_pref_pagers_summary_on" auto="1">Glisser horizontal = Annuaire de navigation</string>
+    <string name="s_pref_pagers_summary_off" auto="1">Horizontaux handicapés glisser</string>
+    <string name="s_alert_new_media" auto="1">Nouveaux Médias Insérée!</string>
+    <string name="s_warn_pager_title" auto="1">Nouvelle fonctionnalité: Pagers Voir</string>
+    <string name="s_warn_pager" auto="1">Balayez vers la gauche vers la droite pour monter un répertoire et de droite à gauchepour revenir en arrière. Cela devrait rendre plus facile à naviguer. Essayez-le (sur un support externe)!</string>
+    <string name="s_warn_confirm" auto="1">Ne comprenez-vous?</string>
     <string name="s_warn_disable" auto="1">désactiver</string>
-    <string name="s_pref_intent_internal" auto="1">intentions internes</string>
-    <string name="s_pref_intent_internal_on" auto="1">Utilisez le Gestionnaire intention OpenExplorer</string>
-    <string name="s_pref_intent_internal_off" auto="1">Utilisez le Gestionnaire système intention</string>
-    <string name="s_pref_text_internal" auto="1">Utilisez l\'éditeur de texte interne</string>
+    <string name="s_pref_intent_internal" auto="1">intentions internes</string>
+    <string name="s_pref_intent_internal_on" auto="1">Utilisez le Gestionnaire intention OpenExplorer</string>
+    <string name="s_pref_intent_internal_off" auto="1">Utilisez le Gestionnaire système intention</string>
+    <string name="s_pref_text_internal" auto="1">Utilisez l\'éditeur de texte interne</string>
     <string name="s_text_editor_title" auto="1">Éditeur de texte</string>
-    <string name="s_pref_show_root" auto="1">Système de fichiers Afficher racine (/)</string>
-    <string name="s_pref_show_internal" auto="1">Afficher les médias internes</string>
-    <string name="s_pref_show_external" auto="1">Afficher les médias externes</string>
+    <string name="s_pref_show_root" auto="1">Système de fichiers Afficher racine (/)</string>
+    <string name="s_pref_show_internal" auto="1">Afficher les médias internes</string>
+    <string name="s_pref_show_external" auto="1">Afficher les médias externes</string>
     <string name="s_error_no_media" auto="1">On dirait qu\'il n\'y a pas de média inséré. S\'il vous plaît désactiver le partage USB ou re-insérer un support.</string>
     <string name="s_prompt_password" auto="1">Entrez Mot de passe</string>
     <string name="s_add" auto="1">ajouter</string>
@@ -176,7 +174,7 @@
     <string name="s_default" auto="1">par défaut</string>
     <string name="s_pref_timeout" auto="1">Timeout</string>
     <string name="s_pref_timeout_summary" auto="1">Délai en secondes</string>
-    <string name="s_menu_up">Dossier parent</string>
+    <string name="s_menu_up" auto="1">monter</string>
     <string name="s_prompt_unzip" auto="1">Entrez le chemin à décompresser dans:</string>
     <string name="s_pref_hardware_accel" auto="1">Activer l\'accélération matérielle</string>
     <string name="s_pref_honeyplus" auto="1">Android 3.0 + Réglages</string>
@@ -213,7 +211,7 @@
     <string name="s_pref_fancy_menus" auto="1">Menus de fantaisie</string>
     <string name="s_pref_fancy_context" auto="1">Menus contextuels Fantaisie</string>
     <string name="s_search_files" auto="1">Recherche système de fichiers</string>
-    <string name="s_menu_exit">Quitter</string>
+    <string name="s_menu_exit" auto="1">Sortie</string>
     <string name="s_warn_wtf_message" auto="1">Oups! Il semble qu\'une erreur non gérée s\'est produite! Comme il s\'agit d\'un problème commun dans les applications bêta nombreux, la seule façon de résoudre ces problèmes consiste à recevoir des rapports de divers dispositifs, tels que le vôtre, afin de déterminer comment résoudre le problème. Puissions-nous envoyer un tel rapport, contenant uniquement des données anonymes, à l\'développeur?</string>
     <string name="s_warn_wtf_ps" auto="1">*** S\'il vous plaît noter, cette application est en version beta. S\'il vous plaît ne donnez pas cette application une mauvaise note simplement parce qu\'il se bloque. Juste désinstaller si ça vous gêne vraiment. Merci!</string>
     <string name="s_yes" auto="1">Oui</string>
@@ -243,4 +241,43 @@
     <string name="alert_translate_google" auto="1">Bonjour, cette traduction est fournie par Google Translate. Si vous connaissez l\'anglais ainsi que%s, et que vous souhaitez aider à fournir une meilleure traduction, s\'il vous plaît cliquer sur ce bouton:</string>
     <string name="alert_translate_none" auto="1">Bonjour, il semble que vous utilisez une langue non prise en charge. Savez-vous s anglais et %s? Si vous souhaitez-vous pour aider à fournir une traduction correcte, cliquez ici:</string>
     <string name="button_translate" auto="1">Traduire</string>
+    <string name="httpError">Une erreur réseau s\'est produite.</string>
+    <string name="httpErrorAuth">Échec de l\'authentification.</string>
+    <string name="httpErrorProxyAuth">Échec de l\'authentification par un serveur proxy.</string>
+    <string name="httpErrorConnect">Échec de la connexion au serveur.</string>
+    <string name="httpErrorIO">Impossible de communiquer avec le serveur. Veuillez réessayer ultérieurement.</string>
+    <string name="httpErrorTimeout">Délai de connexion au serveur dépassé.</string>
+    <string name="httpErrorFile">Impossible d\'accéder au fichier.</string>
+    <string name="httpErrorFileNotFound">Le fichier demandé est introuvable.</string>
+    <string name="contentServiceSync">Synchroniser</string>
+    <string name="keyguard_password_enter_pin_code">Saisissez le code PIN</string>
+    <string name="keyguard_password_enter_password_code">Saisissez le mot de passe pour procéder au déverrouillage.</string>
+    <string name="keyguard_password_enter_pin_password_code">Saisissez le code PIN pour procéder au déverrouillage.</string>
+    <string name="lockscreen_password_wrong">Incorrect. Merci de réessayer.</string>
+    <string name="whichApplication">Continuer avec</string>
+    <string name="noApplications">Aucune application ne peut effectuer cette action.</string>
+    <string name="report">Rapport</string>
+    <string name="sim_restart_button">Redémarrer</string>
+    <string name="extmedia_format_button_format">Format</string>
+    <string name="ext_media_nofs_notification_message">La mémoire de stockage USB est vide ou son système de fichiers n\'est pas pris en charge.</string>
+    <string name="activity_list_empty">La carte SD est vide ou son système de fichiers n\'est pas pris en charge.</string>
+    <string name="ime_action_go">Aucune activité correspondante trouvée</string>
+    <string name="ime_action_send">OK</string>
+    <string name="ime_action_done">Envoyer</string>
+    <string name="ime_action_default">OK</string>
+    <string name="upload_file">Exécuter</string>
+    <string name="no_file_chosen">Sélectionner un fichier</string>
+    <string name="reset">Aucun fichier sélectionné</string>
+    <string name="back_button_label">Réinitialiser</string>
+    <string name="next_button_label">Retour</string>
+    <string name="no_matches">Suivant</string>
+    <string name="find_on_page">Aucune correspondance</string>
+    <string name="find">Rechercher sur la page</string>
+    <string name="activitychooserview_choose_application">Rechercher</string>
+    <string name="shareactionprovider_share_with">Sélectionnez une application</string>
+    <string name="storage_internal">Partager avec</string>
+    <string name="storage_sd_card">Mémoire de stockage interne</string>
+    <string name="storage_usb">Carte SD</string>
+    <string name="extract_edit_menu_button">Mémoire de stockage USB</string>
+    <string name="activity_chooser_view_see_all">Modifier...</string>
 </resources>

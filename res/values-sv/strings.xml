@@ -16,4 +16,6 @@
     <string name="s_menu_sort_size_asc">Sortera efter största</string>
     <string name="s_menu_sort_size_desc">Sortera efter minsta</string>
     <string name="s_menu_sort_type">Sortera efter filtyp</string>
+    <string name="s_menu_list">listvy</string>
+    <string name="s_menu_hidden">visa dolda filer</string>
 </resources>

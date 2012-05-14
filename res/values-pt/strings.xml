@@ -1,32 +1,283 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="s_photos">Fotos</string>
-    <string name="s_music">Música </string>
-    <string name="s_menu_sort">Ordenação</string>
-    <string name="s_menu_sort_name_asc">Ordenar por Nome (A-Z) </string>
-    <string name="s_menu_sort_name_desc">Ordenar por Nome (Z-A) </string>
-    <string name="s_menu_sort_date_asc">Ordenar pelo mais recente</string>
-    <string name="s_menu_sort_date_desc">Ordenar pelo mais antigo</string>
-    <string name="s_menu_sort_size_asc">Ordenar pelo maior</string>
-    <string name="s_menu_sort_size_desc">Ordenar pelo menor </string>
-    <string name="s_menu_sort_type">Ordenar pelo tipo de arquivo </string>
-    <string name="s_menu_multi">Multi-seleção </string>
-    <string name="s_menu_grid">Visão em grade</string>
-    <string name="s_menu_list">Visão em lista</string>
-    <string name="s_menu_carousel">Carrossel </string>
-    <string name="s_menu_hidden">Mostrar arquivos ocultos</string>
-    <string name="s_menu_new_folder">Nova pasta</string>
-    <string name="s_menu_copy">Copiar</string>
-    <string name="s_menu_cut">Cortar</string>
-    <string name="s_menu_paste">Colar</string>
-    <string name="s_menu_rename">Renomear</string>
-    <string name="s_menu_bookmark">Adicionar aos &quot;bookmarks&quot;</string>
-    <string name="s_save">Salvar</string>
-    <string name="s_saveas">Salvar como</string>
-    <string name="s_cancel">Cancelar</string>
-    <string name="s_size">Tamanho</string>
-    <string name="s_pref_servers">Servidores adicionais</string>
-    <string name="s_pref_server_add">Adicionar novo servidor </string>
-    <string name="s_pref_hidden">Mostrar arquivos ocultos</string>
-    <string name="s_pref_sort">Ordenando</string>
+    <string name="app_name" auto="1">Abrir o Explorer</string>
+    <string name="s_photos" auto="1">Fotos</string>
+    <string name="s_videos" auto="1">Vídeos</string>
+    <string name="s_music" auto="1">Música</string>
+    <string name="s_downloads" auto="1">Download</string>
+    <string name="s_external" auto="1">Externo</string>
+    <string name="s_internal" auto="1">Interno</string>
+    <string name="s_view" auto="1">Ver</string>
+    <string name="s_bookmarks" auto="1">Bookmarks</string>
+    <string name="s_menu_favorites" auto="1">Bookmarks Alternar</string>
+    <string name="s_menu_sort" auto="1">Espécie</string>
+    <string name="s_menu_sort_name_asc" auto="1">Ordenar por Nome (A-Z)</string>
+    <string name="s_menu_sort_name_desc" auto="1">Ordenar por Nome (Z-A)</string>
+    <string name="s_menu_sort_date_asc" auto="1">Ordenar por mais novo</string>
+    <string name="s_menu_sort_date_desc" auto="1">Classificar por mais antigo</string>
+    <string name="s_menu_sort_size_asc" auto="1">Ordenar por maior</string>
+    <string name="s_menu_sort_size_desc" auto="1">Ordenar por Menor</string>
+    <string name="s_menu_sort_type" auto="1">Ordenar por Filetype</string>
+    <string name="s_menu_multi" auto="1">Multi-Select</string>
+    <string name="s_menu_grid" auto="1">Grid View</string>
+    <string name="s_menu_list" auto="1">Ver Lista</string>
+    <string name="s_menu_carousel" auto="1">Carrossel</string>
+    <string name="s_menu_hidden" auto="1">Mostrar arquivos ocultos</string>
+    <string name="s_menu_thumbs" auto="1">Mostrar miniaturas Imagem</string>
+    <string name="s_menu_new_folder" auto="1">Nova Pasta</string>
+    <string name="s_menu_other" auto="1">Outras configurações</string>
+    <string name="s_menu_flush" auto="1">Flush cache</string>
+    <string name="s_menu_root" auto="1">Raiz</string>
+    <string name="s_menu_prefs_folder" auto="1">Preferências de pasta</string>
+    <string name="s_menu_prefs_global" auto="1">Preferências Globais</string>
+    <string name="s_menu_info" auto="1">Informações</string>
+    <string name="s_menu_copy" auto="1">Copiar</string>
+    <string name="s_menu_cut" auto="1">Cortar</string>
+    <string name="s_menu_paste" auto="1">Colar</string>
+    <string name="s_menu_delete" auto="1">Excluir</string>
+    <string name="s_menu_share" auto="1">Enviar / Compartilhar ...</string>
+    <string name="s_menu_zip" auto="1">Arquivo Zip (s) ...</string>
+    <string name="s_menu_unzip" auto="1">Descompacte ...</string>
+    <string name="s_menu_rename" auto="1">Renomeie ...</string>
+    <string name="s_menu_bookmark" auto="1">Adicionar marcadores</string>
+    <string name="s_save" auto="1">Salvar</string>
+    <string name="s_saveas" auto="1">Salvar como ...</string>
+    <string name="s_cancel" auto="1">Cancelar</string>
+    <string name="s_size" auto="1">Tamanho</string>
+    <string name="s_none" auto="1">Nenhum</string>
+    <string name="s_pref_servers" auto="1">Servidores adicionais</string>
+    <string name="s_pref_server_add" auto="1">+ Adicionar Novo servidor</string>
+    <string name="s_pref_display" auto="1">Mostrar Preferências</string>
+    <string name="s_pref_hidden" auto="1">Mostrar arquivos ocultos</string>
+    <string name="s_pref_hidden_summary" auto="1">Mostrar pastas e arquivos ocultos</string>
+    <string name="s_pref_thumbs" auto="1">Mostrar miniaturas Imagem</string>
+    <string name="s_pref_thumbs_summary" auto="1">Exibir uma miniatura para a imagem do vídeo / / App arquivos</string>
+    <string name="s_pref_view" auto="1">Modo de exibição</string>
+    <string name="s_pref_view_summary" auto="1">Exibir arquivos em uma grade, lista ou carrossel (Honeycomb só)</string>
+    <string name="s_pref_sort" auto="1">Classificando</string>
+    <string name="s_pref_sort_summary" auto="1">Escolha como classificar arquivos e pastas</string>
+    <string name="s_pref_advanced" auto="1">Avançado</string>
+    <string name="s_pref_server_name" auto="1">Nome do servidor</string>
+    <string name="s_pref_server_name_summary" auto="1">Digite o nome do servidor</string>
+    <string name="s_pref_server_url" auto="1">URL do servidor</string>
+    <string name="s_pref_server_url_summary" auto="1">Digite a URL completa do servidor</string>
+    <string name="s_pref_server_host" auto="1">Server Host</string>
+    <string name="s_pref_server_user" auto="1">Usuário</string>
+    <string name="s_pref_server_user_summary" auto="1">Nome de Usuário</string>
+    <string name="s_pref_server_password" auto="1">Senha</string>
+    <string name="s_pref_server_password_summary" auto="1">Login Senha</string>
+    <string name="s_pref_server_path" auto="1">Subdiretório</string>
+    <string name="s_pref_server_path_summary" auto="1">Digite o caminho de login padrão</string>
+    <string name="s_pref_server_extras" auto="1">Configurações extras</string>
+    <string name="s_pref_server_update" auto="1">Adicionar / Atualizar Servidor</string>
+    <string name="s_pref_server_type" auto="1">Tipo de Servidor</string>
+    <string name="s_files" auto="1">arquivos</string>
+    <string name="s_create" auto="1">Criar</string>
+    <string name="s_title_holding_x_files" auto="1">Segurando arquivos %s</string>
+    <string name="s_title_newfolder" auto="1">Crie uma nova pasta</string>
+    <string name="s_title_send" auto="1">Enviar %s</string>
+    <string name="s_title_unzip" auto="1">Descompacte %s</string>
+    <string name="s_title_zip" auto="1">Zip %s</string>
+    <string name="s_title_executing" auto="1">Execução</string>
+    <string name="s_title_deleting" auto="1">Excluindo</string>
+    <string name="s_title_searching" auto="1">Busca</string>
+    <string name="s_title_moving" auto="1">Em movimento</string>
+    <string name="s_title_copying" auto="1">Copiar</string>
+    <string name="s_title_zipping" auto="1">Comprimir</string>
+    <string name="s_title_unzipping" auto="1">Unzipping</string>
+    <string name="s_title_wait" auto="1">Por favor, aguarde ...</string>
+    <string name="s_alert_confirm_delete" auto="1">Apagar %s não pode ser desfeita. Tem certeza de que deseja continuar?</string>
+    <string name="s_alert_rename" auto="1">Por favor, escreva o novo nome deste arquivo</string>
+    <string name="s_alert_newfolder" auto="1">Digite o nome da pasta que você gostaria de criar.</string>
+    <string name="s_alert_unzip" auto="1">Gostaria de descompactar %s aqui ou em alguma outra pasta?</string>
+    <string name="s_button_unzip_here" auto="1">Descompacte aqui</string>
+    <string name="s_button_unzip_else" auto="1">Descompacte em outro lugar ...</string>
+    <string name="s_msg_none" auto="1">Arquivo (s) não poderia ser</string>
+    <string name="s_msg_some" auto="1">Alguns arquivo (s) não poderia ser</string>
+    <string name="s_msg_all" auto="1">Arquivo (s) com sucesso</string>
+    <string name="s_msg_deleted" auto="1">excluído</string>
+    <string name="s_msg_moved" auto="1">movido</string>
+    <string name="s_msg_copied" auto="1">copiado</string>
+    <string name="s_remove" auto="1">Remover</string>
+    <string name="s_eject" auto="1">Ejetar</string>
+    <string name="s_update" auto="1">Atualizar</string>
+    <string name="s_alert_bookmark_rename" auto="1">Alterar o título do seu marcador.</string>
+    <string name="s_title_bookmark_prefix" auto="1">Gerenciar Favoritos:</string>
+    <string name="s_alert_remove_safe" auto="1">Agora você pode remover com segurança a unidade.</string>
+    <string name="s_alert_remove_error" auto="1">Não é possível ejetar.</string>
+    <string name="s_menu_about" auto="1">Sobre</string>
+    <string name="s_about_version" auto="1">Versão</string>
+    <string name="s_about_author" auto="1">Autor</string>
+    <string name="s_about_site" auto="1">Site</string>
+    <string name="s_about_email" auto="1">E-mail</string>
+    <string name="s_about_recent" auto="1">Atualizações recentes</string>
+    <string name="s_chooser_email" auto="1">Enviar comentário ...</string>
+    <string name="s_status_loading" auto="1">Loading ...</string>
+    <string name="s_menu_open" auto="1">Abrir com ...</string>
+    <string name="s_menu_edit" auto="1">Editar com ...</string>
+    <string name="s_pref_stats_title" auto="1">Ajude a melhorar OpenExplorer</string>
+    <string name="s_pref_stats_summary" auto="1">Enviar estatísticas de uso anônimas. Isto não inclui qualquer informação que possa ser usado para identificar o utilizador.</string>
+    <string name="s_error_no_intents" auto="1">Sem aplicações instaladas pode ler esse tipo de arquivo.</string>
+    <string name="s_menu_root_disabled" auto="1">O root desabilitado</string>
+    <string name="s_pref_start" auto="1">A partir de pasta</string>
+    <string name="s_pref_start_summary" auto="1">Indica qual pasta OpenExplorer começa em</string>
+    <string name="s_custom" auto="1">Personalizado ...</string>
+    <string name="s_text_intro_top" auto="1">Bem-vindo ao OpenExplorer!</string>
+    <string name="s_text_intro_body" auto="1">O objetivo do OpenExplorer é torná-lo mais produtivo dentro do sistema de arquivos do Android e na nuvem. Se você precisa para gerenciar vídeos ou fotografias de vários locais ou gerenciar seu servidor remotamente via FTP, OpenExplorer pode atender às suas necessidades  n  nPor favor, selecione o seu caminho de partida.:</string>
+    <string name="s_info_num_folders" auto="1">Número de pastas:</string>
+    <string name="s_info_num_files" auto="1">Número de arquivos:</string>
+    <string name="s_info_last_modified" auto="1">Última modificação:</string>
+    <string name="s_info_permissions" auto="1">Permissões de arquivos:</string>
+    <string name="s_info_permission_read" auto="1">Leia-se:</string>
+    <string name="s_info_permission_write" auto="1">Escreve:</string>
+    <string name="s_info_permission_execute" auto="1">Execute:</string>
+    <string name="s_toggle_keyboard" auto="1">Teclado</string>
+    <string name="s_show_password" auto="1">Mostrar Senha</string>
+    <string name="s_error_ftp" auto="1">Erro ao conectar ao FTP</string>
+    <string name="s_prompt_zip" auto="1">Digite nome do novo arquivo Zip:</string>
+    <string name="app_edit" auto="1">Editar com OpenExplorer</string>
+    <string name="s_menu_more" auto="1">Mais opções ...</string>
+    <string name="s_msg_low_memory" auto="1">Pouca memória!</string>
+    <string name="s_clear" auto="1">Limpar</string>
+    <string name="s_menu_delete_all" auto="1">Delete All</string>
+    <string name="s_menu_move_all" auto="1">Mover para aqui</string>
+    <string name="s_menu_copy_all" auto="1">Copiar aqui</string>
+    <string name="s_confirm_delete" auto="1">Tem certeza que deseja deletar %s?</string>
+    <string name="s_error_same_destination" auto="1">O directório de destino é o mesmo.</string>
+    <string name="s_sample_notification" auto="1">Cópia - sdcard&gt;:  n 3 Arquivos</string>
+    <string name="s_pref_fullscreen" auto="1">Full Screen</string>
+    <string name="s_pref_fullscreen_summary_on" auto="1">Ocultar Barra de Notificação</string>
+    <string name="s_pref_fullscreen_summary_off" auto="1">Mostrar Barra de Notificação</string>
+    <string name="s_pref_pagers" auto="1">Ver Pagers</string>
+    <string name="s_pref_pagers_summary_on" auto="1">Horizontal Swiping = Diretório Navegação</string>
+    <string name="s_pref_pagers_summary_off" auto="1">Horizontais Deficientes swiping</string>
+    <string name="s_alert_new_media" auto="1">New Media Inserida!</string>
+    <string name="s_warn_pager_title" auto="1">Novo recurso: Pagers Visualização</string>
+    <string name="s_warn_pager" auto="1">Swipe esquerda para a direita para subir um diretório e direita para a esquerda para voltar. Isto deve tornar mais fácil de navegar. Experimente-o (em mídia externa)!</string>
+    <string name="s_warn_confirm" auto="1">Você entende?</string>
+    <string name="s_warn_disable" auto="1">Desativar</string>
+    <string name="s_pref_intent_internal" auto="1">Intenções internos</string>
+    <string name="s_pref_intent_internal_on" auto="1">Use OpenExplorer Gerente Intent</string>
+    <string name="s_pref_intent_internal_off" auto="1">Use o Gerenciador de Intenções do Sistema</string>
+    <string name="s_pref_text_internal" auto="1">Utilize o Editor de Texto Interna</string>
+    <string name="s_text_editor_title" auto="1">Editor de Texto</string>
+    <string name="s_pref_show_root" auto="1">Mostrar Sistema de arquivos raiz (/)</string>
+    <string name="s_pref_show_internal" auto="1">Mostrar mídia interna</string>
+    <string name="s_pref_show_external" auto="1">Mostrar mídia externa</string>
+    <string name="s_error_no_media" auto="1">Parece que não há nenhuma mídia inserida. Desative o compartilhamento USB ou re inserção de mídia.</string>
+    <string name="s_prompt_password" auto="1">Digite a senha</string>
+    <string name="s_add" auto="1">Adicionar</string>
+    <string name="s_server_ftp" auto="1">FTP</string>
+    <string name="s_server_sftp" auto="1">SFTP</string>
+    <string name="s_pref_server_port" auto="1">Porto</string>
+    <string name="s_about_buildtime" auto="1">Criar Data</string>
+    <string name="s_default" auto="1">Omissão</string>
+    <string name="s_pref_timeout" auto="1">Timeout</string>
+    <string name="s_pref_timeout_summary" auto="1">Timeout em segundos</string>
+    <string name="s_menu_up" auto="1">Subir</string>
+    <string name="s_prompt_unzip" auto="1">Digite o caminho para descompactar em:</string>
+    <string name="s_pref_hardware_accel" auto="1">Ativar aceleração de hardware</string>
+    <string name="s_pref_honeyplus" auto="1">Android 3.0 + Definições</string>
+    <string name="s_pref_actionmode" auto="1">Modo de Ação</string>
+    <string name="s_pref_actionmode_enabled" auto="1">Use o modo Ação</string>
+    <string name="s_pref_actionmode_disabled" auto="1">Use os menus de contexto padrão</string>
+    <string name="s_server_smb" auto="1">SMB / Windows</string>
+    <string name="s_bookmark_drives" auto="1">Drives</string>
+    <string name="s_bookmark_smart" auto="1">Pastas Inteligentes</string>
+    <string name="s_bookmark_favorites" auto="1">Favoritos</string>
+    <string name="s_bookmark_servers" auto="1">Servidores</string>
+    <string name="s_bookmark_cache" auto="1">Esconderijo</string>
+    <string name="s_info_totalspace" auto="1">Espaço em disco total:</string>
+    <string name="s_info_freespace" auto="1">Espaço livre em disco:</string>
+    <string name="s_status_rate" auto="1">Taxa:</string>
+    <string name="s_about_hardware" auto="1">Equipamento</string>
+    <string name="s_menu_refresh" auto="1">Pasta de atualização</string>
+    <string name="s_pref_reset" auto="1">Redefinir Views</string>
+    <string name="s_toast_complete" auto="1">Operação concluída!</string>
+    <string name="s_pref_reset_summary" auto="1">Clique aqui para remover todas as configurações específicas pasta view, retornando a um estado padrão.</string>
+    <string name="s_prompt_path" auto="1">Digite o caminho:</string>
+    <string name="s_prompt_search" auto="1">Pesquisar por:</string>
+    <string name="s_prompt_search_within" auto="1">Procure dentro:</string>
+    <string name="s_pref_view_category" auto="1">Favoritos Preferências de Visualização</string>
+    <string name="s_pref_show_videos" auto="1">Mostrar Vídeos</string>
+    <string name="s_pref_show_photos" auto="1">Mostrar fotos</string>
+    <string name="s_pref_show_music" auto="1">Mostrar Música</string>
+    <string name="s_pref_show_downloads" auto="1">Mostrar downloads</string>
+    <string name="s_hide" auto="1">Esconder</string>
+    <string name="s_show" auto="1">Mostrar</string>
+    <string name="s_msg_event_cancelled" auto="1">Evento cancelado.</string>
+    <string name="s_alert_newfolder_folder" auto="1">Criar nova pasta:</string>
+    <string name="s_pref_fancy_category" auto="1">Fantasia configurações de vídeo</string>
+    <string name="s_pref_fancy_menus" auto="1">Menus de fantasia</string>
+    <string name="s_pref_fancy_context" auto="1">Extravagantes menus de contexto</string>
+    <string name="s_search_files" auto="1">Pesquisa do Sistema de Arquivos</string>
+    <string name="s_menu_exit" auto="1">Sair</string>
+    <string name="s_warn_wtf_message" auto="1">Oops! Afigura-se que um erro não tratado ocorreu! Como este é um problema comum em muitos aplicativos Beta, a única maneira de resolver esses problemas é receber relatórios de vários dispositivos, tais como a sua, a fim de determinar como corrigir o problema. Que possamos enviar tal relatório, contendo apenas dados anônimos, para o desenvolvedor?</string>
+    <string name="s_warn_wtf_ps" auto="1">*** Por favor, note que este aplicativo está em Beta. Por favor, não dar a este app uma classificação ruim, simplesmente porque ele trava. Basta desinstalar se isso realmente incomoda. Obrigado!</string>
+    <string name="s_yes" auto="1">Sim</string>
+    <string name="s_no" auto="1">Não</string>
+    <string name="s_wtf_preview" auto="1">Relatório Visualizar dados</string>
+    <string name="s_wtf_remember" auto="1">Não perguntar novamente</string>
+    <string name="s_pref_basebar" auto="1">Dividir Barra de ação</string>
+    <string name="s_pref_basebar_on" auto="1">Botões de ação na parte inferior da tela no modo retrato</string>
+    <string name="s_pref_basebar_off" auto="1">Botões de ação na parte superior da tela (quando disponível)</string>
+    <string name="s_pref_autowtf" auto="1">Auto-enviar relatórios de falhas</string>
+    <string name="s_pref_autowtf_summary" auto="1">Quando uma exceção não tratada ocorrer, automaticamente emitir o relatório.</string>
+    <string name="s_split_auto" auto="1">Automático</string>
+    <string name="s_split_top" auto="1">Botões da Força ao Topo</string>
+    <string name="s_split_top_single" auto="1">Força único botão ao Topo</string>
+    <string name="s_split_bottom" auto="1">Botões de força para baixo</string>
+    <string name="s_split_none" auto="1">Coloque todos os botões no menu do sistema</string>
+    <string name="s_about_screensize" auto="1">Tamanho da tela</string>
+    <string name="s_about_density" auto="1">Densidade</string>
+    <string name="s_menu_location_int" auto="1">Caminho Memória Interna</string>
+    <string name="s_menu_location_ext" auto="1">Caminho Memória Externa</string>
+    <string name="s_wtf_context" auto="1">Por favor, descreva contexto do acidente:</string>
+    <string name="thanks" auto="1">Obrigado!</string>
+    <string name="menu_view_font_small" auto="1">Tamanho da fonte Pequena</string>
+    <string name="menu_view_font_medium" auto="1">Médio Tamanho da fonte</string>
+    <string name="menu_view_font_large" auto="1">Tamanho da Fonte Grande</string>
+    <string name="app_description" auto="1">Abrir Explorer - gerenciador de arquivos de código aberto para todos os dispositivos! (Comprimidos, telefones, TVs Google, sanduíches!)  N-Completo sistema de gerenciamento de arquivo  n-USB, SD e outras mídias externas  n conectáveis-rede (FTP, SFTP, SMB / Samba / Windows / Lan / Wi-Fi)  n - Editor de Texto  n-Smart Folders que fazem a varredura para diferentes tipos de mídia (vídeos, fotos, música, downloads)  n-View Pager diretório de navegação (furto direita para subir um diretório) capacidade  n-Superuser / Root à lista / ler pastas do sistema (nenhum sistema ainda escrever)  n  nFeatures para vir:  n-Editor de Texto com separadores  n-Recurso de rede More (Dropbox, Box.net, unidade Sky)  n-Offline cache de estrutura de arquivo, vai se lembrar que os arquivos você tem em diferentes lugares sem precisar se conectar  n-Disk mapa de calor mostra espaço onde os seus maiores arquivos são  n  n * ATENÇÃO: Este aplicativo está em versão beta. Há ainda muitos erros. Se você não deseja experimentar esses erros, por favor, não baixar este aplicativo. Se você gostaria de me ajudar a encontrar esses erros, por favor me escreva ou colaborar comigo no GitHub (https://github.com/BrandoCommando/OpenExplorer/). Lembre-se de avaliações ruins ajudar ninguém.</string>
+    <string name="alert_translate_google" auto="1">Olá, essa tradução é fornecida pelo Google Translate. Se você sabe Inglês, bem como %s, e gostaria de ajudar a proporcionar uma melhor tradução, por favor, clique neste botão:</string>
+    <string name="alert_translate_none" auto="1">Olá, parece que você está usando uma linguagem não-suportado. Sabe s Inglês e%? Se você gostaria de nos ajudar a fornecer uma tradução correta, clique aqui:</string>
+    <string name="button_translate" auto="1">Traduzir</string>
+    <string name="httpError">Ocorreu um erro na rede.</string>
+    <string name="httpErrorAuth">Falha na autenticação.</string>
+    <string name="httpErrorProxyAuth">Falha na autenticação por meio do servidor proxy.</string>
+    <string name="httpErrorConnect">Falha na conexão com o servidor.</string>
+    <string name="httpErrorIO">O servidor não conseguiu estabelecer comunicação. Tente novamente mais tarde.</string>
+    <string name="httpErrorTimeout">O tempo limite de conexão com o servidor esgotou.</string>
+    <string name="httpErrorFile">Não foi possível acessar o arquivo.</string>
+    <string name="httpErrorFileNotFound">O arquivo solicitado não foi encontrado.</string>
+    <string name="contentServiceSync">Sincronizar</string>
+    <string name="keyguard_password_enter_pin_code">Digite o código PIN</string>
+    <string name="keyguard_password_enter_password_code">Digite a senha para desbloquear</string>
+    <string name="keyguard_password_enter_pin_password_code">Digite o PIN para desbloquear</string>
+    <string name="lockscreen_password_wrong">Tente novamente</string>
+    <string name="whichApplication">Complete a ação usando</string>
+    <string name="noApplications">Nenhum aplicativo pode realizar esta ação.</string>
+    <string name="report">Informar</string>
+    <string name="sim_restart_button">Reiniciar</string>
+    <string name="extmedia_format_button_format">Formatar</string>
+    <string name="ext_media_nofs_notification_message">O armazenamento USB está vazio ou possui sistema de arquivos incompatível.</string>
+    <string name="activity_list_empty">Cartão SD vazio ou com sistema de arquivos incompatível.</string>
+    <string name="ime_action_go">Nenhum atividade correspondente foi encontrada</string>
+    <string name="ime_action_send">Ir</string>
+    <string name="ime_action_done">Enviar</string>
+    <string name="ime_action_default">Concluído</string>
+    <string name="upload_file">Executar</string>
+    <string name="no_file_chosen">Escolher arquivo</string>
+    <string name="reset">Nenhum arquivo escolhido</string>
+    <string name="back_button_label">Redefinir</string>
+    <string name="next_button_label">Voltar</string>
+    <string name="no_matches">Avançar</string>
+    <string name="find_on_page">Não encontrado</string>
+    <string name="find">Localizar na página</string>
+    <string name="activitychooserview_choose_application">Localizar</string>
+    <string name="shareactionprovider_share_with">Escolha um aplicativo</string>
+    <string name="storage_internal">Compartilhar com</string>
+    <string name="storage_sd_card">Armazenamento interno</string>
+    <string name="storage_usb">Cartão SD</string>
+    <string name="extract_edit_menu_button">Armazenamento USB</string>
+    <string name="activity_chooser_view_see_all">Editar...</string>
 </resources>
