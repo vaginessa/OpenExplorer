@@ -7,18 +7,20 @@
 		android:title="@string/s_search"
         />
     <item android:id="@+id/menu_file"
-        android:title="@string/s_save"
-        android:icon="@drawable/ic_menu_save"
+        android:title="@string/s_title_operations"
+        android:icon="@drawable/ic_menu_folder"
         android:showAsAction="always" />
-    <item android:id="@+id/menu_save"
-        android:title="@string/s_save"
-        android:icon="@drawable/ic_menu_save"
-        android:showAsAction="always" />
-    <item android:id="@+id/menu_save_as"
-        android:title="@string/s_saveas"
-        android:icon="@drawable/ic_menu_save"
-        android:showAsAction="always"
-        />
+    	<menu>
+	    <item android:id="@+id/menu_save"
+	        android:title="@string/s_save"
+	        android:icon="@drawable/ic_menu_save"
+	        android:showAsAction="always" />
+	    <item android:id="@+id/menu_save_as"
+	        android:title="@string/s_saveas"
+	        android:icon="@drawable/ic_menu_save"
+	        android:showAsAction="always"
+        	/>
+	   	</menu>
     <item
         android:id="@+id/menu_view_font_size"
         android:title="@string/s_view_font_size"

@@ -150,7 +150,7 @@ public class OperationsFragment
 
 	@Override
 	public Drawable getIcon() {
-		return getDrawable(R.drawable.sm_gear_anim);
+		return getDrawable(R.drawable.sm_gear);
 	}
 
 	@Override
