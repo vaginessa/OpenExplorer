@@ -318,27 +318,20 @@ public class ContentFragment extends OpenFragment
 		Logger.LogDebug("Refreshing Data for " + mPath);
 		
 		mActionModeSelected = false;
+		SortType sort = SortType.ALPHA;
+		if(getExplorer() != null)
+			sort = new SortType(getViewSetting(path, "sort", 
+					getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString())));
 		try {
-			mContentAdapter.mCountHidden = getViewSetting(path, "show",
-						getExplorer() != null ? 
-								getExplorer().getSetting(null, "pref_show", false)
-								: false);
 			mContentAdapter.mShowThumbnails = getViewSetting(path, "thumbs", 
 						getExplorer() != null ?
 								getExplorer().getSetting(null, "pref_thumbs", true)
-								: true);
-			mContentAdapter.mFoldersFirst = getViewSetting(path, "folders", getExplorer() != null ?
-								getExplorer().getSetting(null, "pref_folders", true)
 								: true);
 		} catch(NullPointerException npe) {
 			Logger.LogWarning("Null while getting prefs", npe);
 		}
 		
-		if(getExplorer() != null)
-			mContentAdapter.setSorting(FileManager.parseSortType(
-				getViewSetting(path, "sort",
-					getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString())
-			)));
+		mContentAdapter.setSorting(sort);
 		
 		//Logger.LogVerbose("View options for " + path.getPath() + " : " + (mShowHiddenFiles ? "show" : "hide") + " + " + (mShowThumbnails ? "thumbs" : "icons") + " + " + mSorting.toString());
 
@@ -552,7 +545,7 @@ public class ContentFragment extends OpenFragment
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 		
-		MenuUtils.setMenuChecked(menu, mContentAdapter != null ? mContentAdapter.mFoldersFirst : true, R.id.menu_sort_folders_first);
+		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(), R.id.menu_sort_folders_first);
 		
 		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
 		
@@ -925,7 +918,7 @@ public class ContentFragment extends OpenFragment
 	
 	public void onFoldersFirstChanged(boolean first)
 	{
-		setFoldersFirst(first);
+		setSorting(getSorting().setFoldersFirst(first));
 		refreshData(null, false);
 	}
 	public void onHiddenFilesChanged()
@@ -937,7 +930,7 @@ public class ContentFragment extends OpenFragment
 	{
 		Logger.LogInfo("onHiddenFilesChanged(" + toShow + ")");
 		saveTopPath();
-		setShowHiddenFiles(toShow);
+		setSorting(getSorting().setShowHiddenFiles(toShow));
 		//getManager().setShowHiddenFiles(state);
 		refreshData(null, false);
 	}
@@ -958,15 +951,6 @@ public class ContentFragment extends OpenFragment
 		//getManager().setSorting(type);
 		refreshData(null, false);
 	}
-	public void setFoldersFirst(boolean first) {
-		mContentAdapter.mFoldersFirst = first;
-		setViewSetting(mPath, "folders", first);
-	}
-	public void setShowHiddenFiles(boolean show)
-	{
-		mContentAdapter.mCountHidden = show;
-		setViewSetting(mPath, "show", show);
-	}
 	
 	public void setSorting(SortType type)
 	{
@@ -984,7 +968,8 @@ public class ContentFragment extends OpenFragment
 	{
 		setSorting(sort);
 		setShowThumbnails(thumbs);
-		setShowHiddenFiles(hidden);
+		setSorting(getSorting().setShowHiddenFiles(hidden));
+		
 		refreshData(null, false);
 	}
 
@@ -1024,10 +1009,8 @@ public class ContentFragment extends OpenFragment
 	public SortType getSorting() {
 		return mContentAdapter != null ? mContentAdapter.getSorting() : SortType.ALPHA;
 	}
-	public boolean getFoldersFirst() { return mContentAdapter != null ? mContentAdapter.mFoldersFirst : true; }
-	public boolean getShowHiddenFiles() {
-		return mContentAdapter != null ? mContentAdapter.mCountHidden : false;
-	}
+	public boolean getFoldersFirst() { return getSorting().foldersFirst(); }
+	public boolean getShowHiddenFiles() { return getSorting().showHidden(); }
 	public boolean getShowThumbnails() {
 		return mContentAdapter != null ? mContentAdapter.mShowThumbnails : true;
 	}

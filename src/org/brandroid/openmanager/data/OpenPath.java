@@ -8,10 +8,14 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.SortType;
@@ -472,6 +476,25 @@ public abstract class OpenPath
     }
 	public String getSuffix() {
 		return getName();
+	}
+	
+	public String getDetails(boolean countHiddenChildren, boolean showLongDate)
+	{
+		String deets = "";
+		
+		if(isDirectory())
+			try {
+				deets += getChildCount(countHiddenChildren) + " %s | ";
+			} catch (IOException e) { }
+		else if(isFile())
+			deets += DialogHandler.formatSize(length()) + " | ";
+		
+		Long last = lastModified();
+		if(last != null)
+			deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
+						.format(last);
+		
+		return deets;
 	}
     
 }

@@ -413,19 +413,8 @@ public class TextEditorFragment extends OpenFragment
 		mSalvage = false;
 		cancelTask();
 		if(getExplorer() != null && getExplorer().isViewPagerEnabled())
-		{
-			final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
-			final ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
-			final int pos = pager.getCurrentItem() - 1;
-			if(pos < 0)
-				getActivity().finish();
-			else
-				pager.post(new Runnable() {public void run() {
-					adapter.remove(TextEditorFragment.this);
-					pager.setAdapter(adapter);
-					pager.setCurrentItem(pos, false);
-				}});
-		} else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
+			getExplorer().closeEditor(this);				
+		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
 			getFragmentManager().popBackStack();
 		else if(getActivity() != null)
 			getActivity().finish();

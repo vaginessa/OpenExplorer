@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.SoftReference;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 
 import android.content.Context;
@@ -209,4 +213,25 @@ public class OpenMediaStore extends OpenPath
 		
 	}
 
+	@Override
+	public String getDetails(boolean countHidden, boolean showLongDate) {
+		
+		String deets = "";
+		
+		if(getWidth() > 0 || getHeight() > 0)
+			deets += getWidth() + "x" + getHeight() + " | ";
+		if(getDuration() > 0)
+			deets += DialogHandler.formatDuration(getDuration()) + " | ";
+		
+		deets += DialogHandler.formatSize(length()) + " | ";
+		
+		Long last = lastModified();
+		if(last != null)
+		{
+			DateFormat df = new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy");
+			deets += df.format(last);
+		}
+		
+		return deets;
+	}
 }

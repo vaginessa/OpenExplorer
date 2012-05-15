@@ -3,8 +3,12 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
+import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 
 import android.os.Environment;
@@ -123,4 +127,19 @@ public abstract class OpenNetworkPath extends OpenPath
 		mPort = port;
 	}
 	public int getPort() { return mPort; }
+	
+	@Override
+	public String getDetails(boolean countHiddenChildren, boolean showLongDate)
+	{
+		String deets = "";
+		
+		Long last = lastModified();
+		if(last != null)
+		{
+			deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
+						.format(last);
+		}
+		
+		return deets;
+	}
 }

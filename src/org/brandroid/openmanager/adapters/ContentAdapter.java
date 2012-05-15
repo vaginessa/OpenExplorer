@@ -47,8 +47,6 @@ public class ContentAdapter extends BaseAdapter {
 	private final ArrayList<OpenPath> mData2 = new ArrayList();
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
-	public boolean mCountHidden = false;
-	public boolean mFoldersFirst = true;
 	private SortType mSorting = SortType.ALPHA;
 	private CheckClipboardListener mClipper;
 	private Context mContext;
@@ -76,23 +74,15 @@ public class ContentAdapter extends BaseAdapter {
 	
 	public void updateData() { updateData(getList()); } 
 	public void updateData(final OpenPath[] items) { updateData(items, true); }
-	private void updateData(final OpenPath[] items, boolean allowSkips)
-	{
-		if(items == null) return;
-		updateData(items,
-				!allowSkips || (items.length < 500),
-				mFoldersFirst,
-				mCountHidden //getManager().getShowHiddenFiles())
-				);
-	}
 	private void updateData(final OpenPath[] items,
-			final boolean doSort,
-			final boolean foldersFirst,
-			final boolean showHidden) {
+			final boolean doSort) {
 		if(items == null) return;
 		
 		//new Thread(new Runnable(){public void run() {
-		Logger.LogVerbose("updateData on " + items.length + " items (for " + mParent + ") : " + (showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files") + " + " + (doSort ? mSorting.toString() : "no sort"));
+		boolean showHidden = getSorting().showHidden();
+		boolean foldersFirst = getSorting().foldersFirst();
+		Logger.LogVerbose("updateData on " + items.length + " items (for " + mParent + ") : " +
+				(showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files") + " + " + (doSort ? mSorting.toString() : "no sort"));
 		
 		mData2.clear();
 		
@@ -166,6 +156,10 @@ public class ContentAdapter extends BaseAdapter {
 		
 		if(file == null) return view;
 		
+		Object o = file.getTag();
+		if(o != null && o instanceof OpenPath && ((OpenPath)o).equals(file))
+			return view;
+		
 		final String mName = file.getName();
 		
 		int mWidth = getResources().getInteger(R.integer.content_list_image_size);
@@ -184,7 +178,7 @@ public class ContentAdapter extends BaseAdapter {
 		//mHolder.setInfo(getFileDetails(file, false));
 		TextView mInfo = (TextView)view.findViewById(R.id.content_info);
 		if(mInfo != null)
-			mInfo.setText(getFileDetails(file, showLongDate));
+			mInfo.setText(String.format(file.getDetails(getSorting().showHidden(), showLongDate), getResources().getString(R.string.s_files)));
 		
 		TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
 		if(mPathView != null)
@@ -268,53 +262,9 @@ public class ContentAdapter extends BaseAdapter {
 			}
 		}
 		
+		view.setTag(file);
+		
 		return view;
-	}
-
-	private String getFileDetails(OpenPath file, Boolean longDate) {
-		//OpenPath file = getManager().peekStack().getChild(name); 
-		String deets = ""; //file.getPath() + "\t\t";
-		
-		if(file instanceof OpenMediaStore)
-		{
-			OpenMediaStore ms = (OpenMediaStore)file;
-			if(ms.getWidth() > 0 || ms.getHeight() > 0)
-				deets += ms.getWidth() + "x" + ms.getHeight() + " | ";
-			if(ms.getDuration() > 0)
-				deets += DialogHandler.formatDuration(ms.getDuration()) + " | ";
-		}
-		
-		if(file.isDirectory() && !file.requiresThread()) {
-			try {
-				deets += file.getChildCount(mCountHidden) + " " + getContext().getString(R.string.s_files) + " | ";
-				//deets = file.list().length + " items";
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else if(file.isFile()) {
-			deets += DialogHandler.formatSize(file.length()) + " | ";
-		} 
-		
-		Long last = file.lastModified();
-		if(last != null)
-		{
-			DateFormat df = new SimpleDateFormat(longDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy");
-			deets += df.format(file.lastModified());
-		}
-		
-		/*
-		
-		deets += " | ";
-		
-		deets += (file.isDirectory()?"d":"-");
-		deets += (file.canRead()?"r":"-");
-		deets += (file.canWrite()?"w":"-");
-		deets += (file.canExecute()?"x":"-");
-		
-		*/
-		
-		return deets;
 	}
 
 	@Override

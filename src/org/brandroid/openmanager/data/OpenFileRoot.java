@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -365,4 +366,16 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 		return null;
 	}
 
+	@Override
+	public String getDetails(boolean countHiddenChildren, boolean showLongDate)
+	{
+		String deets = "";
+		if(mChildren != null)
+			deets = mChildren.size() + " %s | ";
+		Long last = lastModified();
+		if(last != null && last > 0)
+			deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
+						.format(last);
+		return deets;
+	}
 }

@@ -50,7 +50,7 @@ public class BetterPopupWindow {
 	private static final boolean ALLOW_HORIZONTAL_MODE = true;
 	private int layout;
 	private Point exact = null;
-	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
 	/**
 	 * Create a BetterPopupWindow

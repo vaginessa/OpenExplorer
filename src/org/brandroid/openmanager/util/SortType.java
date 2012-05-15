@@ -10,6 +10,19 @@ public class SortType {
 	{
 		mWhich = which;
 	}
+	public SortType(String s)
+	{
+		String t = s;
+		if(s.indexOf(" ") > -1)
+			t = s.substring(0, s.indexOf(" ")).trim();
+		for(Type type : SortType.Type.values())
+			if(type.toString().equals(t))
+				mWhich = type;
+		if(s.indexOf("FM") > -1)
+			mFoldersFirst = false;
+		if(s.indexOf("SHOW") > -1)
+			mShowHiddenFiles = true;
+	}
 	
 	public boolean showHidden() { return mShowHiddenFiles; }
 	public boolean foldersFirst() { return mFoldersFirst; }
@@ -17,7 +30,7 @@ public class SortType {
 	
 	@Override
 	public String toString() {
-		return getType().toString() + " (" + (mFoldersFirst ? "FF" : "FM") + ")";
+		return getType().toString() + " (" + (mShowHiddenFiles ? "SHOW+" : "HIDE+") + (mFoldersFirst ? "FF" : "FM") + ")";
 	}
 	
 	public enum Type
@@ -40,4 +53,13 @@ public class SortType {
 			DATE = new SortType(Type.DATE),
 			DATE_DESC = new SortType(Type.DATE_DESC),
 			ALPHA_DESC = new SortType(Type.ALPHA_DESC);
+
+	public SortType setShowHiddenFiles(boolean hidden) {
+		mShowHiddenFiles = hidden;
+		return this;
+	}
+	public SortType setFoldersFirst(boolean first) {
+		mFoldersFirst = first;
+		return this;
+	}
 }

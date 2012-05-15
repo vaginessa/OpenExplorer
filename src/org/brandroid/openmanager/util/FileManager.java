@@ -551,11 +551,5 @@ public class FileManager {
 		return directory.list();
 	}
 
-	public static SortType parseSortType(String setting) {
-		for(SortType.Type type : SortType.Type.values())
-			if(type.toString().equalsIgnoreCase(setting))
-				return new SortType(type);
-		return SortType.ALPHA;	
-	}
 }
 

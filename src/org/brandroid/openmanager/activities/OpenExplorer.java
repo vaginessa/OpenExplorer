@@ -68,6 +68,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LruCache;
 import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.InputType;
 import android.text.SpannableString;
@@ -1125,7 +1126,7 @@ public class OpenExplorer
 				{
 					Animation anim;
 					if(visible)
-						anim = AnimationUtils.makeInAnimation(getApplicationContext(), false);
+						anim = AnimationUtils.makeInAnimation(getApplicationContext(), true);
 					else
 						anim = AnimationUtils.makeOutAnimation(getApplicationContext(), false);
 					anim.setAnimationListener(new Animation.AnimationListener() {
@@ -1916,11 +1917,12 @@ public class OpenExplorer
 	
 	public void toggleBookmarks()
 	{
-		View mBookmarks = findViewById(R.id.list_frag);
+		final View mBookmarks = findViewById(R.id.list_frag);
+		final boolean in = mBookmarks == null || mBookmarks.getVisibility() == View.GONE;
 		if(isSinglePane())
-			toggleBookmarks(mBookmarks == null || mBookmarks.getVisibility() == View.GONE);
+			toggleBookmarks(in);
 		else
-			mBookmarks.setVisibility(mBookmarks.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+			setViewVisibility(in, true, R.id.list_frag);
 	}
 
 	public void refreshOperations() {
@@ -2092,6 +2094,23 @@ public class OpenExplorer
 		setViewPageAdapter(mViewPagerAdapter, true);
 	}
 	
+	public void closeEditor(final TextEditorFragment tf)
+	{
+		final int pos = mViewPagerAdapter.getItemPosition(tf);
+		if(pos >= 0)
+		{
+			tf.setSalvagable(false);
+			mViewPager.post(new Runnable() {public void run() {
+				if(pos > 0)
+					mViewPager.setCurrentItem(pos - 1, false);
+				else if (mViewPagerAdapter.getCount() > 1)
+					mViewPager.setCurrentItem(pos + 1, false);
+				mViewPagerAdapter.remove(tf);
+				setViewPageAdapter(mViewPagerAdapter, false);
+				saveOpenedEditors();
+			}});
+		}
+	}
 	public boolean editFile(OpenPath path) { return editFile(path, false); }
 	public boolean editFile(OpenPath path, boolean batch)
 	{
@@ -2477,12 +2496,7 @@ public class OpenExplorer
 				break;
 			case R.id.title_icon:
 			case android.R.id.home:
-			
-				if(mSinglePane)
-					toggleBookmarks();
-				else
-					goHome();
-
+				toggleBookmarks();
 				return true;
 				
 			case R.id.menu_new_folder:
