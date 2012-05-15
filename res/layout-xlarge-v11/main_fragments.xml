@@ -16,56 +16,49 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/view_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
     
-	<LinearLayout
-		android:id="@+id/frag_holder"
-	    android:orientation="horizontal"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:baselineAligned="false">
 	    
-	    
-	    <FrameLayout android:id="@+id/list_frag"
-	        android:layout_weight="1"
-	        android:layout_width="0dp"
+    <FrameLayout android:id="@+id/list_frag"
+        android:layout_width="@dimen/bookmarks_width"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignWithParentIfMissing="true"
+       	/>
+    
+    <RelativeLayout
+        android:layout_toRightOf="@id/list_frag"
+        android:layout_toLeftOf="@id/frag_log"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >	
+	    <FrameLayout
+	        android:id="@+id/content_frag"
+	    	android:layout_height="match_parent"
+	    	android:layout_width="match_parent"
+	    	/>
+
+	    <ViewStub
+	        android:id="@+id/content_pager_frame_stub"
+	        android:layout="@layout/viewpager"
+	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
-	       	/>
-	    
-	    <RelativeLayout
-	        android:layout_weight="4"
-	        android:layout_width="0dp"
+	        />
+	
+	</RelativeLayout>
+	
+    <FrameLayout
+			android:id="@+id/frag_log"
+			android:layout_weight="1"
+	        android:layout_width="@dimen/bookmarks_width"
 	        android:layout_height="match_parent"
-	        >	
-		    <FrameLayout
-		        android:id="@+id/content_frag"
-		    	android:layout_height="match_parent"
-		    	android:layout_width="match_parent"
-		    	android:layout_toLeftOf="@+id/frag_log"
-		    	/>
-	
-		    <ViewStub
-		        android:id="@+id/content_pager_frame_stub"
-		        android:layout="@layout/viewpager"
-		        android:layout_width="match_parent"
-		        android:layout_height="match_parent"
-		    	android:layout_toLeftOf="@+id/frag_log"
-		        />
-		    
-		
-		    <FrameLayout
-				android:id="@+id/frag_log"
-				android:layout_alignParentRight="true"
-		        android:layout_width="@dimen/bookmarks_width"
-		        android:layout_height="match_parent"
-		        >
-		    </FrameLayout>
-		</RelativeLayout>
-	
-	    
-	</LinearLayout>
-</LinearLayout>
+	        android:layout_alignParentRight="true"
+	        android:layout_alignWithParentIfMissing="true"
+	        />
+
+</RelativeLayout>
