@@ -26,6 +26,7 @@ public class Preferences {
 	public static boolean Pref_Intents_Internal = true;
 	public static boolean Pref_Text_Internal = true;
 	public static boolean Pref_Zip_Internal = true;
+	public static boolean Pref_ShowUp = false;
 	
 	public Preferences(Context context)
 	{

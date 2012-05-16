@@ -23,9 +23,8 @@
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@drawable/ic_menu_search"
-		android:showAsAction="always|collapseActionView"
-		android:actionViewClass="android.widget.SearchView"
-		android:title="@string/s_search" />
+		android:showAsAction="always"
+		android:title="@android:string/search_go" />
 	<item
 		android:id="@+id/menu_sort"
 		android:icon="@drawable/ic_menu_sort_by_size"
@@ -75,7 +74,7 @@
   	    />
 	<item
 		android:id="@+id/menu_up"
-		android:icon="@drawable/ic_up"
+		android:icon="@drawable/sm_folder_up"
 		android:showAsAction="always"
 		android:visible="false"
 		android:title="@string/s_menu_up" />

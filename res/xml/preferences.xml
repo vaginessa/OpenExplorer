@@ -53,6 +53,10 @@
 		    android:enabled="@bool/prehoneycomb"
 		    />
 		<CheckBoxPreference
+		    android:key="pref_showup"
+		    android:title="@string/s_pref_showup"
+		    android:defaultValue="false" />
+		<CheckBoxPreference
 		    android:key="pref_logview"
 		    android:title="@string/s_pref_logview"
 		    android:defaultValue="true" 

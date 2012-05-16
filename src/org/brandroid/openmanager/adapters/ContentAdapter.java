@@ -18,6 +18,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -136,6 +137,7 @@ public class ContentAdapter extends BaseAdapter {
 	{
 		int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
 				R.layout.grid_content_layout : R.layout.list_content_layout;
+		final boolean useLarge = mode == R.layout.grid_content_layout;
 		
 		if(view == null
 					//|| view.getTag() == null
@@ -160,12 +162,25 @@ public class ContentAdapter extends BaseAdapter {
 		if(o != null && o instanceof OpenPath && ((OpenPath)o).equals(file))
 			return view;
 		
+		TextView mInfo = (TextView)view.findViewById(R.id.content_info);
+		TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
+		TextView mNameView = (TextView)view.findViewById(R.id.content_text);
+		final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+		
+		if(Preferences.Pref_ShowUp && position == 0)
+		{
+			mNameView.setText(mContext.getString(R.string.s_menu_up));
+			mIcon.setImageResource(useLarge ? R.drawable.lg_folder_up : R.drawable.sm_folder_up);
+			if(mInfo != null) mInfo.setText("");
+			if(mPathView != null) mPathView.setText("");
+			return view;
+		}
 		final String mName = file.getName();
 		
-		int mWidth = getResources().getInteger(R.integer.content_list_image_size);
+		int mWidth = getResources().getInteger(getViewMode() == OpenExplorer.VIEW_GRID ?
+				R.integer.content_grid_image_size :
+				R.integer.content_list_image_size);
 		int mHeight = mWidth;
-		if(getViewMode() == OpenExplorer.VIEW_GRID)
-			mWidth = mHeight = getResources().getInteger(R.integer.content_grid_image_size);
 		
 		boolean showLongDate = false;
 		if(getResources().getBoolean(R.bool.show_long_date))
@@ -176,11 +191,9 @@ public class ContentAdapter extends BaseAdapter {
 
 		//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		//mHolder.setInfo(getFileDetails(file, false));
-		TextView mInfo = (TextView)view.findViewById(R.id.content_info);
 		if(mInfo != null)
 			mInfo.setText(String.format(file.getDetails(getSorting().showHidden(), showLongDate), getResources().getString(R.string.s_files)));
 		
-		TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
 		if(mPathView != null)
 		{
 			if(mParent instanceof OpenSmartFolder || mParent instanceof OpenCursor)
@@ -194,7 +207,6 @@ public class ContentAdapter extends BaseAdapter {
 				//mHolder.showPath(false);
 		}
 		
-		TextView mNameView = (TextView)view.findViewById(R.id.content_text);
 		if(mNameView != null)
 			mNameView.setText(mName);
 
@@ -210,16 +222,7 @@ public class ContentAdapter extends BaseAdapter {
 						
 		//if(!mHolder.getTitle().equals(mName))
 		//	mHolder.setTitle(mName);
-		final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
 		//RemoteImageView mIcon = (RemoteImageView)view.findViewById(R.id.content_icon);
-		if(mIcon.getWidth() > 0)
-			mWidth = mIcon.getWidth();
-		else if(mIcon.getMeasuredWidth() > 0)
-			mWidth = mIcon.getMeasuredWidth();
-		if(mIcon.getHeight() > 0)
-			mHeight = mIcon.getHeight();
-		else if(mIcon.getMeasuredHeight() > 0)
-			mHeight = mIcon.getMeasuredHeight();
 		
 		if(mIcon != null)
 		{
@@ -274,6 +277,15 @@ public class ContentAdapter extends BaseAdapter {
 
 	@Override
 	public OpenPath getItem(int position) {
+		if(Preferences.Pref_ShowUp)
+		{
+			if(position == 0)
+			{
+				OpenPath pp = mParent.getParent();
+				if(pp == null)
+					return mParent;
+			} else position--;
+		}
 		return mData2.get(position);
 	}
 
@@ -284,7 +296,8 @@ public class ContentAdapter extends BaseAdapter {
 
 	public void add(OpenPath f)
 	{
-		mData2.add(f);
+		if(getSorting().showHidden() || !f.isHidden())
+			mData2.add(f);
 	}
 
 	public boolean contains(OpenPath f) {
