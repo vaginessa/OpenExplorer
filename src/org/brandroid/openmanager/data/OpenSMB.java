@@ -71,9 +71,9 @@ public class OpenSMB extends OpenNetworkPath
 		try {
 			if(kid.isConnected())
 			{
-				mAttributes = mFile.getAttributes();
-				mSize = mFile.length();
-				mModified = mFile.lastModified();
+				mAttributes = kid.getAttributes();
+				mSize = kid.length();
+				mModified = kid.lastModified();
 			}
 		} catch (SmbException e) {
 			Logger.LogError("Error creating SMB", e);
@@ -158,11 +158,13 @@ public class OpenSMB extends OpenNetworkPath
 	
 	@Override
 	public int getAttributes() {
-		int ret = 0;
+		if(mAttributes != null) return mAttributes;
 		try {
-			ret = mFile.getAttributes();
+			if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+				mAttributes = mFile.getAttributes();
+			else return 0;
 		} catch (SmbException e) { }
-		return ret;
+		return mAttributes;
 	}
 	
 	@Override
@@ -233,7 +235,11 @@ public class OpenSMB extends OpenNetworkPath
 		Logger.LogInfo("Listing children under " + getPath());
 		SmbFile[] kids = null;
 		try {
-			kids = mFile.listFiles();
+			getAttributes();
+			int opts = SmbFile.ATTR_DIRECTORY | SmbFile.ATTR_SYSTEM;
+			if(!Sorting.showHidden())
+				opts |= SmbFile.ATTR_HIDDEN;
+			kids = mFile.listFiles("*", opts, null, null);
 		} catch(SmbAuthException e) {
 			Logger.LogWarning("Unable to authenticate. Trying to get password from Servers.");
 			mFile.disconnect();
@@ -249,6 +255,7 @@ public class OpenSMB extends OpenNetworkPath
 			for(int i = 0; i < kids.length; i++)
 			{
 				kids[i].setAuth(mFile.getAuth());
+				Logger.LogDebug(kids[i].getPath() + " = " + kids[i].length());
 				OpenSMB smb = new OpenSMB(this, kids[i]);
 				mChildren[i] = smb;
 				FileManager.setOpenCache(smb.getPath(), smb);
@@ -262,13 +269,15 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public Boolean isDirectory() {
+		if(mFile.getURL().getPath().endsWith("/"))
+			return true;
 		if(mAttributes != null)
 			return (mAttributes & SmbFile.ATTR_DIRECTORY) == SmbFile.ATTR_DIRECTORY;
 		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
 			try {
 				return mFile.isDirectory();
 			} catch (SmbException e) { }
-		return mFile.getName().endsWith("/");
+		return getPath().endsWith("/");
 	}
 
 	@Override
@@ -304,6 +313,8 @@ public class OpenSMB extends OpenNetworkPath
 
 	@Override
 	public Boolean canRead() {
+		return true;
+		/*
 		try {
 			if(Thread.currentThread().equals(OpenExplorer.UiThread))
 				return true;
@@ -311,7 +322,7 @@ public class OpenSMB extends OpenNetworkPath
 				return mFile.canRead();
 		} catch (SmbException e) {
 			return false;
-		}
+		}*/
 	}
 
 	@Override
@@ -322,7 +333,10 @@ public class OpenSMB extends OpenNetworkPath
 			if(Thread.currentThread().equals(OpenExplorer.UiThread))
 				return true;
 			else
-				return mFile.canWrite();
+			{
+				mAttributes = mFile.getAttributes();
+				return (mAttributes & SmbFile.ATTR_READONLY) == 0;
+			}
 		} catch (SmbException e) {
 			return false;
 		}

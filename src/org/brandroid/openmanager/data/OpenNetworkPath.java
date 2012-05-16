@@ -135,6 +135,9 @@ public abstract class OpenNetworkPath extends OpenPath
 	{
 		String deets = "";
 		
+		if(!isDirectory())
+			deets += DialogHandler.formatSize(length()) + " | ";
+		
 		Long last = lastModified();
 		if(last != null)
 		{
