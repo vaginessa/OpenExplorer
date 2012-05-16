@@ -1410,8 +1410,10 @@ public class OpenExplorer
 		if(txt != null)
 			Logger.LogDebug("Log: " + txt);
 		if(mLogFragment.getAdded()) return;
-		MenuUtils.setViewsVisible(this, true, R.id.menu_log);
-		MenuUtils.setMenuVisible(mMainMenu, true, R.id.menu_log);
+		if(BEFORE_HONEYCOMB)
+			MenuUtils.setViewsVisible(this, true, R.id.menu_log);
+		else
+			MenuUtils.setMenuVisible(mMainMenu, true, R.id.menu_log);
 		invalidateOptionsMenu();
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
@@ -2211,7 +2213,9 @@ public class OpenExplorer
 			setupBaseBarButtons();
 		else try {
 			super.invalidateOptionsMenu();
-		} catch(Exception e) { }
+		} catch(Exception e) {
+			Logger.LogError("Unable to invalidateOptionsMenu", e);
+		}
 	}
 	
 	public void setupBaseBarButtons() {
@@ -2368,7 +2372,7 @@ public class OpenExplorer
 			menu.clear();
 		else
 			menu = new MenuBuilder(this);
-		//if(BEFORE_HONEYCOMB)
+		if(BEFORE_HONEYCOMB)
 		{
 			getSelectedFragment().onCreateOptionsMenu(menu, getMenuInflater());
 			
@@ -2480,6 +2484,8 @@ public class OpenExplorer
 				id = R.id.menu_view;
 			else if(d.equals(getResources().getDrawable(R.drawable.ic_menu_sort_by_size)))
 				id = R.id.menu_sort;
+			else if(d.equals(getResources().getDrawable(R.drawable.ic_menu_folder)))
+				id = R.id.menu_file;
 		}
 		if(id == R.id.menu_view || id == R.id.menu_sort)
 			if(v.showContextMenu()) return;
@@ -2495,6 +2501,8 @@ public class OpenExplorer
 		if(id != R.id.title_icon && id != android.R.id.home);
 			toggleBookmarks(false);
 		if(item != null && getSelectedFragment().onOptionsItemSelected(item))
+			return true;
+		if(getSelectedFragment().onClick(id))
 			return true;
 		switch(id)
 		{
@@ -3110,12 +3118,16 @@ public class OpenExplorer
 			{
 				int common = 0;
 
+				boolean removed = false;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 				{
 					OpenFragment f = mViewPagerAdapter.getItem(i);
 					if(f == null || !(f instanceof ContentFragment)) continue;
 					if(!familyTree.contains(((ContentFragment)f).getPath()))
+					{
 						mViewPagerAdapter.remove(i);
+						removed = true;
+					}
 					else common++;
 				}
 				
@@ -3123,6 +3135,7 @@ public class OpenExplorer
 				{
 					mViewPagerAdapter.remove(cf);
 					mViewPagerAdapter.add(cf);
+					removed = true;
 					//notifyPager();
 				}
 				
@@ -3151,7 +3164,7 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, true); // TODO: I really want to set this to false, as it will speed up the app considerably
+				setViewPageAdapter(mViewPagerAdapter, removed); // TODO: I really want to set this to false, as it will speed up the app considerably
 				//mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
