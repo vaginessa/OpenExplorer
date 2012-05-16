@@ -23,7 +23,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.HashSet;
-import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+
 import org.brandroid.utils.ByteQueue;
 import org.brandroid.utils.Logger;
 
@@ -31,11 +31,19 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-public class RootManager implements UpdateCallback
+public class RootManager
 {
+	public interface UpdateCallback
+	{
+		void onUpdate();
+		void onReceiveMessage(String msg);
+		void onExit();
+	}
+
 	private static boolean rootRequested = false;
 	private static boolean rootEnabled = false;
 	private static final boolean singleProcess = true; 
+	private static String busybox = null;
 	private Process myProcess = null;
 	private UpdateCallback mNotify = null;
 	private DataInputStream is;
@@ -43,7 +51,9 @@ public class RootManager implements UpdateCallback
 	private Thread mPollingThread;
 	private ByteQueue mByteQueue;
     private byte[] mReceiveBuffer;
+    private String mLastWrite = null;
     private final static int BufferLength = 32 * 1024;
+    private int mPending = 0;
 
     private static final int NEW_INPUT = 1;
     
@@ -81,19 +91,18 @@ public class RootManager implements UpdateCallback
 		super.finalize();
 	}
 
-	@Override
 	public void onUpdate() {
+		mLastWrite = null;
 		if(mNotify != null)
 			mNotify.onUpdate();
 	}
 
-	@Override
 	public void onReceiveMessage(String msg) {
 		if(mNotify != null)
 			mNotify.onReceiveMessage(msg);
 	}
 	
-	public RootManager setUpdateCallback(UpdateCallback notify)
+	public RootManager setUpdateCallback(RootManager.UpdateCallback notify)
 	{
 		mNotify = notify;
 		return this;
@@ -139,10 +148,11 @@ public class RootManager implements UpdateCallback
         int bytesToRead = bytesAvailable; // Math.min(bytesAvailable, mReceiveBuffer.length);
         try {
             int bytesRead = mByteQueue.read(mReceiveBuffer, 0, bytesToRead);
-            if(bytesRead == 0) return;
-            if(mReceiveBuffer[0] == 0)
+            if(bytesRead == 0 || mReceiveBuffer[0] == 0)
+            {
             	onUpdate();
-            else
+            	return;
+            } else
             	onReceiveMessage(new String(mReceiveBuffer));
             if(mReceiveBuffer[mReceiveBuffer.length - 1] == 0)
             	onUpdate();
@@ -166,6 +176,21 @@ public class RootManager implements UpdateCallback
 			//myProcess = Runtime.getRuntime().exec("su -c sh");
 		}
 		return myProcess;
+	}
+	public String getBusyBox() {
+		if(busybox == null)
+		{
+			write("which busybox", new UpdateCallback() {
+				public void onUpdate() { }
+				public void onReceiveMessage(String msg) {
+					if(msg.startsWith("/"))
+						busybox = msg + " ";
+					else busybox = "";
+				}
+				public void onExit() { }
+			});
+		} else return "";
+		return busybox;
 	}
 	public boolean isRoot()
 	{
@@ -204,23 +229,36 @@ public class RootManager implements UpdateCallback
 		if(mPollingThread.getState() == State.NEW)
 			mPollingThread.start();
 	}
-	public void write(String cmd)
+	public void write(final String cmd, final UpdateCallback callback)
 	{
+		if(mLastWrite != null && cmd.equals(mLastWrite))
+		{
+			setUpdateCallback(callback);
+			return;
+		}
+		new Thread(new Runnable(){public void run(){
 		try {
+			if(mLastWrite != null)
+				Logger.LogDebug("Waiting for last write (" + mLastWrite + ")...");
+			try {
+				while(mLastWrite != null) { Thread.sleep(10); }
+			} catch(InterruptedException e) { }
+			mLastWrite = cmd;
 			getSuProcess();
 		
 			start();
 		
-			is.skip(is.available());
 			if(os == null)
 				os = new DataOutputStream(myProcess.getOutputStream());
 
+			setUpdateCallback(callback);
 			Logger.LogDebug("Writing to process: " + cmd);
 			os.writeBytes(cmd + "\n");
 			os.flush();
 		} catch (IOException e) {
 			Logger.LogError("Error writing to Root output stream.", e);
 		}
+		}}).start();
 	}
 	public HashSet<String> execute(String cmd)
 	{
@@ -399,7 +437,6 @@ public class RootManager implements UpdateCallback
 		return retval;
 	}
 
-	@Override
 	public void onExit() {
 		mIsRunning = false;
 		if(mNotify != null)

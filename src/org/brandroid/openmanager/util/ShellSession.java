@@ -16,13 +16,14 @@ import org.apache.http.util.ByteArrayBuffer;
 import org.brandroid.utils.ByteQueue;
 import org.brandroid.utils.Logger;
 
+import android.R.layout;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
 public class ShellSession {
-    private UpdateCallback mNotify;
+    private RootManager.UpdateCallback mNotify;
 
 	private int mProcId;
 	private FileDescriptor mFd;
@@ -65,14 +66,7 @@ public class ShellSession {
         }
     };
     
-	public interface UpdateCallback
-	{
-		void onUpdate();
-		void onReceiveMessage(String msg);
-		void onExit();
-	}
-	
-	public void setUpdateCallback(UpdateCallback listener)
+	public void setUpdateCallback(RootManager.UpdateCallback listener)
 	{
 		mNotify = listener;
 	}

@@ -20,7 +20,7 @@ import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 
@@ -489,6 +489,9 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 		return false;
 	}
 
+	public static void setTempFileRoot(OpenFile root) {
+		mTempDir = root;
+	}
 	public static OpenFile getTempFileRoot() {
 		if(mTempDir != null)
 			return mTempDir;
@@ -499,29 +502,5 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 		if(mInternalDrive != null)
 			return mInternalDrive.getChild("OpenExplorer").getChild("temp");
 		return null;
-	}
-	
-	@Override
-	public String getDetails(boolean mCountHidden, boolean showLongDate)
-	{
-		if(deets != null) return deets;
-		deets = "";
-		
-		if(isDirectory()) {
-			try {
-				deets += getChildCount(mCountHidden) + " %s | ";
-			} catch (IOException e) { }
-		} else if(isFile()) {
-			deets += DialogHandler.formatSize(length()) + " | ";
-		} 
-		
-		Long last = lastModified();
-		if(last != null)
-		{
-			deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
-						.format(last);
-		}
-		
-		return deets;
 	}
 }

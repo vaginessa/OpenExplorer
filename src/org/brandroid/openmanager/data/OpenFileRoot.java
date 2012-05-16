@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,15 +12,22 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.os.Environment;
 import android.os.PatternMatcher;
 
-public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateListener {
+public class OpenFileRoot
+	extends OpenPath
+	implements //OpenPath.OpenPathUpdateListener,
+		OpenPath.NeedsTempFile, OpenPath.OpenPathCopyable
+{
 
 	private String mPath;
 	private String mName;
@@ -27,7 +35,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 	private String mSym;
 	private Long mDate = null;
 	private Long mSize = null;
-	private List<OpenPath> mChildren = null;
+	private WeakReference<List<OpenPath>> mChildren = null;
 	
 	public OpenFileRoot(OpenPath src)
 	{
@@ -151,58 +159,89 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 		return null;
 	}
 	
-	public List<OpenPath> getChildren() { return mChildren; }
+	public List<OpenPath> getChildren() { return mChildren != null ? mChildren.get() : null; }
 
 	@Override
 	public OpenPath[] list() throws IOException {
 		if(mChildren == null)
 			return listFiles();
-		return mChildren.toArray(new OpenPath[mChildren.size()]);
+		return getChildren().toArray(new OpenPath[getChildren().size()]);
 	}
 	
-	@Override
+	private void addChild(OpenPath kid)
+	{
+		if(getChildren() == null)
+		{
+			ArrayList<OpenPath> tmp = new ArrayList<OpenPath>();
+			mChildren = new WeakReference<List<OpenPath>>(tmp);
+		} else {
+			if(!mChildren.get().contains(kid))
+				mChildren.get().add(kid);
+		}
+		
+	}
+	
 	public void list(final OpenContentUpdater callback) throws IOException {
+		if(getChildren() != null)
+		{
+			for(OpenPath kid : getChildren())
+				callback.addContentPath(kid);
+			return;
+		}
 		String path = getPath();
 		if(!path.endsWith("/"))
 			path += "/";
-		Logger.LogDebug("Trying to list " + path + " via Su");
+		Logger.LogDebug("Trying to list " + path + " via Su with Callback");
 		final String[] buff = new String[]{null};
-		RootManager.Default.setUpdateCallback(new UpdateCallback() {
+		final String w = "ls -" + getLSOpts() + " " + path;
+		RootManager proc = new RootManager();
+		UpdateCallback callback2 = new UpdateCallback() {
 			
 			@Override
 			public void onUpdate() {
 				Logger.LogDebug("CF onUpdate");
+				callback.doneUpdating();
 				RootManager.Default.setUpdateCallback(null);
+			}
+			
+			private void processMessage(String msg)
+			{
+				String[] parts = msg.split(" +", 7);
+				if(parts.length < 7)
+				{
+					if(buff[0] != null)
+					{
+						msg = buff[0] + msg;
+						parts = msg.split(" +", 7);
+					} else buff[0] = msg;
+				}
+				if(parts.length >= 7)
+				{
+					OpenFileRoot kid = new OpenFileRoot(getPath(), msg);
+					addChild(kid);
+					callback.addContentPath(kid);
+				}
+				else if(msg.trim().length() > 0)
+					Logger.LogDebug("CF Saving for later: " + msg);
 			}
 			
 			@Override
 			public void onReceiveMessage(String msg) {
+				Logger.LogDebug("CF Message: (" + w + "): " + msg.length()); //.replace("\n", "\\n"));
 				if(msg.indexOf("\n") > -1)
 				{
+					RootManager.Default.onUpdate();
 					while(msg.indexOf("\n") > -1)
 					{
 						String s = msg.substring(0, msg.indexOf("\n"));
 						msg = msg.substring(msg.indexOf("\n") + 1);
-						onReceiveMessage(s);
+						processMessage(s);
 					}
 					buff[0] = msg;
 					return;
 				}
-				Logger.LogDebug("CF Message: " + msg);
 				if(msg != null && !msg.trim().equals(""))
-				{
-					String[] parts = msg.split(" +", 7);
-					if(parts.length < 7)
-					{
-						if(buff[0] != null)
-						{
-							msg = buff[0] + msg;
-							parts = msg.split(" +", 7);
-						} else buff[0] = msg;
-					}
-					if(parts.length >= 7)
-						callback.add(new OpenFileRoot(getPath(), msg));
-				}
+					processMessage(msg);
 			}
 			
 			@Override
@@ -210,8 +249,8 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 				Logger.LogDebug("CF onExit");
 				RootManager.Default.setUpdateCallback(null);
 			}
-		});
-		RootManager.Default.write("ls -" + getLSOpts() + " " + path);
+		};
+		RootManager.Default.write(w, callback2);
 	}
 
 	@Override
@@ -220,55 +259,15 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 		if(!path.endsWith("/"))
 			path += "/";
 		Logger.LogDebug("Trying to list " + path + " via Su");
-		final long[] last = new long[]{new Date().getTime()};
-		final String[] buff = new String[]{null};
-		mChildren = new ArrayList<OpenPath>();
-		RootManager.Default.setUpdateCallback(new UpdateCallback() {
-			@Override
-			public void onUpdate() {
-				Logger.LogDebug("CF onUpdate");
-				last[0] = 0;
-				RootManager.Default.setUpdateCallback(null);
-			}
-			@Override
-			public void onReceiveMessage(String msg) {
-				if(msg.indexOf("\n") > -1)
-				{
-					for(String s : msg.split("\n"))
-						onReceiveMessage(s);
-					return;
-				}
-				last[0] = new Date().getTime();
-				Logger.LogDebug("CF Message: " + msg);
-				if(msg != null && !msg.trim().equals(""))
-				{
-					String[] parts = msg.split(" +", 11);
-					if(parts.length < 11)
-					{
-						if(buff[0] != null)
-							msg = buff[0] + msg;
-						parts = msg.split(" +", 11);
-					}
-					if(parts.length == 11)
-					{
-						buff[0] = null;
-						OpenFileRoot kid = new OpenFileRoot(getPath(), msg);
-						if(!mChildren.contains(kid))
-							mChildren.add(kid);
-					} else buff[0] = msg;
-				}
-			}
-			@Override
-			public void onExit() {
-				Logger.LogDebug("CF onExit");
-			}
-		});
-		
-		RootManager.Default.write("ls -" + getLSOpts() + " " + path);
-		while(new Date().getTime() - last[0] < 1000) {
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) { }
+		mChildren.clear();
+		String cmd = "ls -l " + path;
+		if(RootManager.Default.getBusyBox() != "")
+			cmd = "ls -l" + getLSOpts() + " " + path;
+		String data = execute(cmd, true);
+		while(data.indexOf("\n") > -1)
+		{
+			addChild(new OpenFileRoot(getPath(), data.substring(0, data.indexOf("\n"))));
+			data = data.substring(data.indexOf("\n") + 1);
 		}
 		return list();
 	}
@@ -346,7 +345,8 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 
 	@Override
 	public Boolean delete() {
-		return getFile().delete();
+		execute("rm " + getPath(), false);
+		return true;
 	}
 
 	@Override
@@ -356,26 +356,112 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return tempDownload().getInputStream();
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return tempDownload().getOutputStream();
 	}
 
 	@Override
 	public String getDetails(boolean countHiddenChildren, boolean showLongDate)
 	{
 		String deets = "";
-		if(mChildren != null)
-			deets = mChildren.size() + " %s | ";
+		if(getChildren() != null)
+			deets = getChildren().size() + " %s | ";
+		else if(isFile())
+			deets = DialogHandler.formatSize(length()) + " | ";
 		Long last = lastModified();
 		if(last != null && last > 0)
 			deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
 						.format(last);
 		return deets;
+	}
+
+	public String getTempFileName()
+	{
+		return getPath().replaceAll("[^A-Za-z0-9\\.]", "-");
+	}
+	public OpenFile getTempFile()
+	{
+		OpenFile root = OpenFile.getTempFileRoot();
+		if(root != null)
+			return root.getChild(getTempFileName());
+		return null;
+	}
+	
+	@Override
+	public OpenFile tempDownload() throws IOException {
+		OpenFile tmp = getTempFile();
+		if(tmp == null) throw new IOException("Unable to download Temp file");
+		if(!tmp.exists())
+			tmp.create();
+		else if(lastModified() <= tmp.lastModified())
+			return tmp;
+		copyTo(tmp);
+		return tmp;
+	}
+	@Override
+	public void tempUpload() throws IOException {
+		OpenFile tmp = getTempFile();
+		if(tmp == null) throw new IOException("Unable to download Temp file");
+		if(!tmp.exists())
+			tmp.create();
+		else if(lastModified() <= tmp.lastModified())
+			return;
+		copyFrom(tmp);
+	}
+	
+	private String execute(final String cmd, boolean useBusyBox)
+	{
+		final boolean[] waiting = new boolean[]{true};
+		final String[] ret = new String[1];
+		final String bb = useBusyBox ? RootManager.Default.getBusyBox() : "";
+		try {
+			RootManager.Default.write(bb + cmd,
+				new UpdateCallback() {
+					public void onUpdate() {
+						Logger.LogDebug("Done with command: " + cmd);
+						waiting[0] = false;
+					}
+					public void onReceiveMessage(String msg) {
+						ret[0] = (ret[0] == null ? "" : ret[0]) + msg;
+					}
+					public void onExit() { }
+			});
+		} catch(Exception e) {
+			return null;
+		}
+		try {
+			while(waiting[0]) { Thread.sleep(50); }
+		} catch(InterruptedException e) { }
+		return ret[0];
+	}
+	
+	public static boolean copy(final OpenPath src, final OpenPath dest) {
+		final boolean[] waiting = new boolean[]{true};
+		try {
+			RootManager.Default.write("cp -f " + src.getPath() + " " + dest.getPath(),
+				new UpdateCallback() {
+					public void onUpdate() {
+						Logger.LogDebug("Done copying " + src.getPath() + " to " + dest.getPath());
+						waiting[0] = false;
+					}
+					public void onReceiveMessage(String msg) { }
+					public void onExit() { }
+			});
+		} catch(Exception e) {
+			return false;
+		}
+		try {
+			while(waiting[0]) { Thread.sleep(50); }
+		} catch(InterruptedException e) { }
+		return true;
+	}
+	public boolean copyTo(OpenFile dest) { return copy(this, dest); }
+	@Override
+	public boolean copyFrom(OpenPath file) {
+		return copy(file, this);
 	}
 }

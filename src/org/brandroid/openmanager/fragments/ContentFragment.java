@@ -38,7 +38,7 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
-import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -193,6 +193,8 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	protected ContentAdapter getContentAdapter() {
+		if(mContentAdapter == null)
+			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
 		return mContentAdapter;
 	}
 	
@@ -383,13 +385,17 @@ public class ContentFragment extends OpenFragment
 		{
 			try {
 				((OpenPathUpdateListener)mPath).list(new OpenContentUpdater() {
-					public void add(OpenPath file) {
+					public void addContentPath(OpenPath file) {
 						if(!mContentAdapter.contains(file))
 						{
 							mContentAdapter.add(file);
-							mContentAdapter.sort();
-							mContentAdapter.notifyDataSetChanged();
 						}
+					}
+
+					@Override
+					public void doneUpdating() {
+						mContentAdapter.sort();
+						mContentAdapter.notifyDataSetChanged();
 					}
 				});
 				return;
@@ -471,6 +477,9 @@ public class ContentFragment extends OpenFragment
 			return true;
 		case R.id.menu_sort_folders_first:
 			onFoldersFirstChanged(!getFoldersFirst());
+			return true;
+		case R.id.menu_refresh:
+			refreshData();
 			return true;
 		}
 		return false;
@@ -577,6 +586,7 @@ public class ContentFragment extends OpenFragment
 				MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
 				break;
 		}
+		else MenuUtils.setMenuChecked(menu, true, R.id.menu_sort_name_asc);
 		
 		//if(OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_multi) != null)
 		//	menu.findItem(R.id.menu_multi).setIcon(null);
@@ -954,7 +964,11 @@ public class ContentFragment extends OpenFragment
 	
 	public void setSorting(SortType type)
 	{
-		mContentAdapter.setSorting(type);
+		SortType old = type;
+		if(getContentAdapter() != null)
+			old = getContentAdapter().getSorting();
+		old.setType(type.getType());
+		getContentAdapter().setSorting(old);
 		setViewSetting(mPath, "sort", type.toString());
 	}
 	
