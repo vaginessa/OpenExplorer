@@ -8,11 +8,6 @@
         android:showAsAction="ifRoom|withText"
         />
 	<item
-	    android:id="@+id/menu_view_font_size"
-	    android:showAsAction="always"
-	    android:icon="@drawable/ic_menu_font_size"
-	    android:title="@string/s_view_font_size" />
-	<item
 	    android:id="@+id/menu_view_fullscreen"
 	    android:checkable="true"
 	    android:title="@string/s_pref_fullscreen" />

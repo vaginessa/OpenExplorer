@@ -24,6 +24,7 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.PickerFragment.OnOpenPathPickedListener;
@@ -227,8 +228,9 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		if(!menu.hasVisibleItems())
-			inflater.inflate(R.menu.text_editor, menu);
+		if(menu.size() > 0)
+			menu.clear();
+		inflater.inflate(R.menu.text_editor, menu);
 		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
 		if(mFontSize != null && USE_SEEK_ACTIONVIEW)
 		{
@@ -236,7 +238,9 @@ public class TextEditorFragment extends OpenFragment
 				.setActionView((SeekBarActionView)mFontSizeBar)
 				.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		}
-		if(Build.VERSION.SDK_INT > 10 && menu.findItem(R.id.menu_view) != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
+		if(!OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_file) != null)
+			inflater.inflate(R.menu.text_file, menu.findItem(R.id.menu_file).getSubMenu());
+		if(!OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_view) != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
 			inflater.inflate(R.menu.text_view, menu.findItem(R.id.menu_view).getSubMenu());
 	}
 	
@@ -435,6 +439,9 @@ public class TextEditorFragment extends OpenFragment
 	}
 	public boolean onClickItem(int id) {
 		Context c = getActivity();
+		View from = null; 
+		if(c != null)
+			from = getView().findViewById(id);
 		switch(id)
 		{
 		case R.id.menu_context_info:
@@ -462,11 +469,13 @@ public class TextEditorFragment extends OpenFragment
 		case R.id.menu_close:
 			doClose();
 			return true;
+			
 		case R.id.menu_view:
-			View from = null; 
-			if(c != null)
-				from = getView().findViewById(id);
 			showMenu(R.menu.text_view, from);
+			return true;
+			
+		case R.id.menu_file:
+			showMenu(R.menu.text_file, from);
 			return true;
 			
 		case R.id.menu_view_keyboard_toggle:
@@ -552,6 +561,8 @@ public class TextEditorFragment extends OpenFragment
 				fos.close();
 				if(mPath instanceof OpenNetworkPath)
 					((OpenNetworkPath)mPath).disconnect();
+				if(mPath instanceof NeedsTempFile)
+					((NeedsTempFile)mPath).tempUpload();
 			} catch(Exception e) {
 				Logger.LogError("Couldn't save file.", e);
 			}
