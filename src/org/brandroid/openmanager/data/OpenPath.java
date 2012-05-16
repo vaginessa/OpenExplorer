@@ -39,7 +39,6 @@ public abstract class OpenPath
 	public static SortType Sorting = SortType.DATE_DESC;
 	
     private WeakReference<MediaObject> mObject;
-    private IdentityCache<String, Path> mChildren;
 	
 	private static final long serialVersionUID = 332701810738149106L;
 	private Object mTag = null;
@@ -322,7 +321,8 @@ public abstract class OpenPath
 	
 	public interface OpenContentUpdater
 	{
-		public void add(OpenPath file);
+		public void addContentPath(OpenPath file);
+		public void doneUpdating();
 	}
 	public interface OpenPathUpdateListener
 	{
@@ -332,6 +332,12 @@ public abstract class OpenPath
 	public interface OpenPathCopyable
 	{
 		public boolean copyFrom(OpenPath file);
+	}
+	
+	public interface NeedsTempFile
+	{
+		public OpenFile tempDownload() throws IOException;
+		public void tempUpload() throws IOException;
 	}
 
 	public String getMimeType() {
@@ -482,17 +488,21 @@ public abstract class OpenPath
 	{
 		String deets = "";
 		
-		if(isDirectory())
-			try {
+		try {
+			if(isDirectory())
 				deets += getChildCount(countHiddenChildren) + " %s | ";
-			} catch (IOException e) { }
-		else if(isFile())
-			deets += DialogHandler.formatSize(length()) + " | ";
+			else if(isFile())
+				deets += DialogHandler.formatSize(length()) + " | ";
+		} catch (Exception e) { }
 		
 		Long last = lastModified();
 		if(last != null)
-			deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
-						.format(last);
+		{
+			try {
+				deets += new SimpleDateFormat(showLongDate ? "MM-dd-yyyy HH:mm" : "MM-dd-yy")
+							.format(last);
+			} catch(Exception e) { }
+		}
 		
 		return deets;
 	}

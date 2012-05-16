@@ -18,6 +18,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
 public abstract class OpenNetworkPath extends OpenPath
+	implements OpenPath.NeedsTempFile
 {
 	/**
 	 * 
@@ -78,16 +79,17 @@ public abstract class OpenNetworkPath extends OpenPath
 			return root.getChild(getTempFileName());
 		return null;
 	}
-	public void syncTempFileDown() throws IOException
+	public OpenFile tempDownload() throws IOException
 	{
 		OpenFile tmp = getTempFile();
 		if(!tmp.exists())
 			tmp.create();
 		else if(lastModified() <= tmp.lastModified())
-			return;
+			return tmp;
 		copyTo(tmp, NetworkListener.DefaultListener);
+		return tmp;
 	}
-	public void syncTempFileUp() throws IOException
+	public void tempUpload() throws IOException
 	{
 		OpenFile tmp = getTempFile();
 		if(!tmp.exists()) return;

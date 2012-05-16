@@ -21,7 +21,7 @@ import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.ContentFragment;
-import org.brandroid.openmanager.util.ShellSession.UpdateCallback;
+import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.utils.Logger;
 
 import android.content.Context;
@@ -29,7 +29,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> implements UpdateCallback
+public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> implements RootManager.UpdateCallback
 {
 	private OpenPath[] params = null;
 	private boolean isCancellable = false;
