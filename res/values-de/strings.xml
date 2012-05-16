@@ -123,7 +123,7 @@
     <string name="s_pref_start_summary" auto="1">Zeigt an, welche Ordner OpenExplorer in beginnt</string>
     <string name="s_custom" auto="1">Eigene ...</string>
     <string name="s_text_intro_top" auto="1">Willkommen bei OpenExplorer!</string>
-    <string name="s_text_intro_body" auto="1">Das Ziel der OpenExplorer ist, dass Sie noch produktiver im Android-Dateisystem und in der Wolke. Egal, ob Sie Videos oder Fotos von mehreren Standorten aus verwalten oder verwalten Sie Ihre Webserver remote über FTP benötigen, können OpenExplorer Ihre Bedürfnisse  n  nBitte wählen Sie Ihre Start-Pfad.:</string>
+    <string name="s_text_intro_body">Das Ziel von OpenExplorer ist es, noch produktiver mit dem Android-Dateisystem und der Cloud zu arbeiten. Egal, ob Sie Videos oder Fotos von mehreren Orten aus verwalten möchten oder Sie einen Remotezugriff über FTP auf Ihren Webserver benötigen, kann Ihnen OpenExplorer dabei helfen. Bitte wählen Sie Ihre Start-Pfad:</string>
     <string name="s_info_num_folders" auto="1">Anzahl der Ordner:</string>
     <string name="s_info_num_files" auto="1">Anzahl der Dateien:</string>
     <string name="s_info_last_modified" auto="1">Zuletzt geändert am:</string>
