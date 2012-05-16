@@ -51,11 +51,17 @@ public class ContentAdapter extends BaseAdapter {
 	private SortType mSorting = SortType.ALPHA;
 	private CheckClipboardListener mClipper;
 	private Context mContext;
+	private boolean mPlusParent = false;
+	private boolean mShowDetails = true;
+	private boolean mShowFiles = true;
 	
 	public ContentAdapter(Context context, int mode, OpenPath parent) {
 		//super(context, layout, data);
 		mContext = context;
 		mParent = parent;
+		
+		if(Preferences.Pref_ShowUp && mParent.getParent() != null)
+			mPlusParent = true;
 		mViewMode = mode;
 	}
 	
@@ -64,6 +70,9 @@ public class ContentAdapter extends BaseAdapter {
 		public boolean checkClipboard(OpenPath file);
 	}
 	public void setCheckClipboardListener(CheckClipboardListener l) { mClipper = l; }
+	public void setShowPlusParent(boolean showUp) { mPlusParent = showUp; }
+	public void setShowDetails(boolean showDeets) { mShowDetails = showDeets; }
+	public void setShowFiles(boolean showFiles) { mShowFiles = showFiles; }
 	
 	public Context getContext() { return mContext; }
 	public Resources getResources() { if(mContext != null) return mContext.getResources(); else return null; }
@@ -97,6 +106,8 @@ public class ContentAdapter extends BaseAdapter {
 				if(!f.exists()) continue;
 				if(f.isFile() && !(f.length() >= 0)) continue;
 			}
+			if(!mShowFiles && !f.isDirectory())
+				continue;
 			mData2.add(f);
 		}
 
@@ -167,7 +178,7 @@ public class ContentAdapter extends BaseAdapter {
 		TextView mNameView = (TextView)view.findViewById(R.id.content_text);
 		final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
 		
-		if(Preferences.Pref_ShowUp && position == 0)
+		if(mPlusParent && position == 0)
 		{
 			mNameView.setText(mContext.getString(R.string.s_menu_up));
 			mIcon.setImageResource(useLarge ? R.drawable.lg_folder_up : R.drawable.sm_folder_up);
@@ -192,18 +203,21 @@ public class ContentAdapter extends BaseAdapter {
 		//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		//mHolder.setInfo(getFileDetails(file, false));
 		if(mInfo != null)
-			mInfo.setText(String.format(file.getDetails(getSorting().showHidden(), showLongDate), getResources().getString(R.string.s_files)));
+		{
+			if(mShowDetails)
+				mInfo.setText(String.format(file.getDetails(getSorting().showHidden(), showLongDate), getResources().getString(R.string.s_files)));
+			else mInfo.setText("");
+		}
 		
 		if(mPathView != null)
 		{
-			if(mParent instanceof OpenSmartFolder || mParent instanceof OpenCursor)
+			if(mShowDetails && (mParent instanceof OpenSmartFolder || mParent instanceof OpenCursor))
 			{
 				String s = file.getPath().replace(file.getName(), "");
 				mPathView.setVisibility(View.VISIBLE);
 				mPathView.setText(s);
 			}
-			else
-				mPathView.setVisibility(View.GONE);
+			else mPathView.setVisibility(View.GONE);
 				//mHolder.showPath(false);
 		}
 		
@@ -272,32 +286,23 @@ public class ContentAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		return mData2.size();
+		return mData2.size() + (mPlusParent ? 1 : 0);
 	}
 
 	@Override
 	public OpenPath getItem(int position) {
-		if(Preferences.Pref_ShowUp)
-		{
-			if(position == 0)
-			{
-				OpenPath pp = mParent.getParent();
-				if(pp == null)
-					return mParent;
-			} else position--;
-		}
-		return mData2.get(position);
+		if(mPlusParent && position == 0)
+			return mParent.getParent();
+		return mData2.get(position - (mPlusParent ? 1 : 0));
 	}
 
 	@Override
 	public long getItemId(int position) {
 		return position;
 	}
-
-	public void add(OpenPath f)
-	{
-		if(getSorting().showHidden() || !f.isHidden())
-			mData2.add(f);
+	
+	public void add(OpenPath p) {
+		mData2.add(p);
 	}
 
 	public boolean contains(OpenPath f) {
