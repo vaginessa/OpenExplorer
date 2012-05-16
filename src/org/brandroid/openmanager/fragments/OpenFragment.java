@@ -81,7 +81,7 @@ public abstract class OpenFragment
 	protected Object mActionMode = null;
 	protected int mMenuContextItemIndex = -1;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	
 	public interface OnFragmentTitleLongClickListener
 	{

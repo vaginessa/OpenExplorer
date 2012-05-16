@@ -1,5 +1,7 @@
 package org.brandroid.openmanager.util;
 
+import org.brandroid.openmanager.util.SortType.Type;
+
 public class SortType {
 	
 	Type mWhich = Type.NONE;
@@ -61,5 +63,8 @@ public class SortType {
 	public SortType setFoldersFirst(boolean first) {
 		mFoldersFirst = first;
 		return this;
+	}
+	public void setType(Type which) {
+		mWhich = which;
 	}
 }

@@ -297,6 +297,7 @@ public class OpenExplorer
 		Preferences.Pref_Intents_Internal = prefs.getBoolean("global", "pref_intent_internal", true);
 		Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
 		Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
+		Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
 		
 		USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus", USE_PRETTY_MENUS);
 		USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", USE_PRETTY_CONTEXT_MENUS);
@@ -361,6 +362,7 @@ public class OpenExplorer
 			} else USE_ACTION_BAR = false;
 		}
 		
+		OpenFile.setTempFileRoot(new OpenFile(getFilesDir()).getChild("temp"));
 		setupLoggingDb();
 		handleExceptionHandler();
 		getMimeTypes();
@@ -1166,6 +1168,7 @@ public class OpenExplorer
 					mViewPager.setAdapter(adapter);
 				else {
 					mViewPager.notifyDataSetChanged();
+					getDirContentFragment(false).notifyDataSetChanged();
 				}
 				return true;
 			} catch(IndexOutOfBoundsException e) {
@@ -2219,7 +2222,7 @@ public class OpenExplorer
 		//getMenuInflater().inflate(R.menu.main_menu, mMainMenu);
 		try {
 			getSelectedFragment().onCreateOptionsMenu(mMainMenu, getMenuInflater());
-			Logger.LogVerbose("Setting up base bar (" + mMainMenu.size() + ")...");
+			//Logger.LogVerbose("Setting up base bar (" + mMainMenu.size() + ")...");
 			onPrepareOptionsMenu(mMainMenu);
 		} catch(Exception e) {
 			Logger.LogError("Couldn't set up base bar.", e);
@@ -2363,8 +2366,9 @@ public class OpenExplorer
 	public boolean onCreateOptionsMenu(Menu menu) {
 		if(menu != null)
 			menu.clear();
-		else return false;
-		if(BEFORE_HONEYCOMB)
+		else
+			menu = new MenuBuilder(this);
+		//if(BEFORE_HONEYCOMB)
 		{
 			getSelectedFragment().onCreateOptionsMenu(menu, getMenuInflater());
 			
@@ -2450,6 +2454,9 @@ public class OpenExplorer
 
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
+		if(super.onOptionsItemSelected(item))
+			return true;
+		
 		if(item.isCheckable())
 			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
 		
@@ -3373,8 +3380,10 @@ public class OpenExplorer
 		return false;
 	}
 	public void addBookmark(OpenPath file) {
+		Logger.LogDebug("Adding Bookmark: " + file.getPath());
 		String sBookmarks = getPreferences().getSetting("bookmarks", "bookmarks", "");
-		sBookmarks += sBookmarks != "" ? ";" : file.getPath();
+		sBookmarks += (sBookmarks != "" ? ";" : "") + file.getPath();
+		Logger.LogInfo("Bookmarks: " + sBookmarks);
 		getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
 		if(mBookmarkListener != null)
 			mBookmarkListener.onBookMarkAdd(file);

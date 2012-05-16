@@ -90,6 +90,7 @@ public class OpenViewPager extends ViewPager
 	}
 
 	public void notifyDataSetChanged() {
+		requestLayout();
 		getAdapter().notifyDataSetChanged();
 		mIndicator.notifyDataSetChanged();
 	}

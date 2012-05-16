@@ -540,7 +540,7 @@ public class ThumbnailCreator extends Thread {
 						Logger.LogError("Error closing input stream while handling invalid APK exception.", nix);
 					}
 				}
-			} else if (!valid && file.isImageFile() && !useGeneric) {
+			} else if (!valid && file.isImageFile() && !file.requiresThread() && !useGeneric) {
 				//mHeight *= 2; mWidth *= 2;
 				//long len_kb = file.length() / 1024;
 				
