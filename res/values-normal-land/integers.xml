@@ -15,6 +15,7 @@
   -->
 
 <resources>
+    <item type="integer" name="max_grid_columns">2</item>
     <item type="bool" name="ignore_max_base_buttons">false</item>
     <item type="integer" name="max_base_buttons">4</item>
 </resources>

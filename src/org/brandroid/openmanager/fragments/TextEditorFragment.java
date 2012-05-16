@@ -238,9 +238,9 @@ public class TextEditorFragment extends OpenFragment
 				.setActionView((SeekBarActionView)mFontSizeBar)
 				.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		}
-		if(!OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_file) != null)
+		if(menu.findItem(R.id.menu_file) != null && menu.findItem(R.id.menu_file).getSubMenu() != null && !menu.findItem(R.id.menu_file).getSubMenu().hasVisibleItems())
 			inflater.inflate(R.menu.text_file, menu.findItem(R.id.menu_file).getSubMenu());
-		if(!OpenExplorer.BEFORE_HONEYCOMB && menu.findItem(R.id.menu_view) != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
+		if(menu.findItem(R.id.menu_view) != null && menu.findItem(R.id.menu_view).getSubMenu() != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
 			inflater.inflate(R.menu.text_view, menu.findItem(R.id.menu_view).getSubMenu());
 	}
 	
@@ -248,8 +248,9 @@ public class TextEditorFragment extends OpenFragment
 		if(getActivity() == null) return;
 		if(menu == null) return;
 		super.onPrepareOptionsMenu(menu);
-		MenuUtils.setMenuVisible(menu, mPath.canWrite(), R.id.menu_save);
+		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_save, R.id.menu_save_as);
 		MenuUtils.setMenuChecked(menu, mEditMode, R.id.menu_view_keyboard_toggle);
+		MenuUtils.setMenuVisible(menu, true, R.id.menu_view_font_size);
 		//MenuUtils.setMenuVisible(menu, false);
 	}
 	
@@ -434,14 +435,15 @@ public class TextEditorFragment extends OpenFragment
 		onClickItem(v.getId());
 	}
 	@Override
-	public void onClick(int id) {
-		onClickItem(id);
+	public boolean onClick(int id) {
+		return onClickItem(id);
 	}
 	public boolean onClickItem(int id) {
 		Context c = getActivity();
 		View from = null; 
-		if(c != null)
-			from = getView().findViewById(id);
+		if(getExplorer() != null)
+			from = getExplorer().findViewById(id);
+		Logger.LogDebug("TextEditorFragment.onClickItem(0x" + Integer.toHexString(id) + ")");
 		switch(id)
 		{
 		case R.id.menu_context_info:
@@ -456,12 +458,15 @@ public class TextEditorFragment extends OpenFragment
 			
 			DialogHandler.showPickerDialog(getActivity(),
 					getString(R.string.s_saveas),
+					mPath,
 					new OnOpenPathPickedListener() {
 						@Override
 						public void onOpenPathPicked(OpenPath path) {
 							cancelTask();
 							mTask = new FileSaveTask(path);
-							((FileSaveTask)mTask).execute(mEditText.getText().toString());
+							if(mDirty)
+								mData = mEditText.getText().toString();
+							((FileSaveTask)mTask).execute(mData);
 						}
 					});
 			return true;
@@ -470,12 +475,23 @@ public class TextEditorFragment extends OpenFragment
 			doClose();
 			return true;
 			
+		case R.id.menu_view_font_size:
+			if(USE_SEEK_ACTIONVIEW)
+				((SeekBarActionView)mFontSizeBar).onActionViewExpanded();
+			else DialogHandler.showSeekBarDialog(getActivity(),
+					getString(R.string.s_view_font_size),
+					(int)mTextSize, 60,
+					this);
+			return true;
+			
 		case R.id.menu_view:
-			showMenu(R.menu.text_view, from);
+			if(OpenExplorer.BEFORE_HONEYCOMB)
+				showMenu(R.menu.text_view, from);
 			return true;
 			
 		case R.id.menu_file:
-			showMenu(R.menu.text_file, from);
+			if(OpenExplorer.BEFORE_HONEYCOMB)
+				showMenu(R.menu.text_file, from);
 			return true;
 			
 		case R.id.menu_view_keyboard_toggle:

@@ -2,15 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:id="@id/menu_search"
         android:icon="@drawable/ic_menu_search"
-		android:showAsAction="always|collapseActionView"
-		android:actionViewClass="android.widget.SearchView"
 		android:title="@string/s_search"
+        android:showAsAction="always"
         />
     <item android:id="@+id/menu_file"
         android:title="@string/s_title_operations"
         android:icon="@drawable/ic_menu_folder"
-        android:showAsAction="always" />
+        android:showAsAction="always">
     	<menu />
+    </item>
     <item
         android:id="@+id/menu_view_font_size"
         android:title="@string/s_view_font_size"

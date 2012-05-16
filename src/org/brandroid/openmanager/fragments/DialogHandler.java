@@ -689,13 +689,27 @@ public class DialogHandler extends DialogFragment {
 			.show();
 	}
 
-	public static AlertDialog showPickerDialog(final Context context, String title,
-				PickerFragment.OnOpenPathPickedListener onPickListener) {
-		PickerFragment picker = new PickerFragment(context);
+	public static AlertDialog showPickerDialog(final Context context, String title, OpenPath path,
+				final PickerFragment.OnOpenPathPickedListener onPickListener) {
+		final PickerFragment picker = new PickerFragment(context, OpenFile.getExternalMemoryDrive(true));
 		picker.setOnOpenPathPickedListener(onPickListener);
+		Bundle args = new Bundle();
+		args.putParcelable("start", OpenFile.getExternalMemoryDrive(true));
+		View view = picker.onCreateView((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE),
+				null, args);
+		picker.setDefaultName(path.getName());
+		picker.onViewCreated(view, args);
 		return new AlertDialog.Builder(context)
 			.setTitle(title)
-			.setView(picker.getView())
+			.setView(view)
+			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					onPickListener.onOpenPathPicked(picker.getPath());
+				}
+			})
+			.setNegativeButton(android.R.string.cancel, null)
+			.setCancelable(true)
 			.show();
 	}
 	
