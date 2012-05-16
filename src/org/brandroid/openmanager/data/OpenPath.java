@@ -67,7 +67,10 @@ public abstract class OpenPath
 		} catch(IOException e) { return null; }
 		}
 	public abstract OpenPath[] list() throws IOException;
+	
+	/* Provides a method to always get latest Files listing */
 	public abstract OpenPath[] listFiles() throws IOException;
+	
 	public List<OpenPath> listFilesCollection() throws IOException
 	{
 		OpenPath[] files = listFiles();

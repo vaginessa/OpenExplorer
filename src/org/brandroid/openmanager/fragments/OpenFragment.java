@@ -81,7 +81,7 @@ public abstract class OpenFragment
 	protected Object mActionMode = null;
 	protected int mMenuContextItemIndex = -1;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	
 	public interface OnFragmentTitleLongClickListener
 	{
@@ -236,11 +236,11 @@ public abstract class OpenFragment
 	
 	public boolean showMenu(int menuId, View from)
 	{
+		if(getActivity() == null) return false;
+		final IconContextMenu mOpenMenu = IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
+		if(mOpenMenu == null) return false;
 		if(DEBUG)
 			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
-		if(getActivity() == null) return false;
-		IconContextMenu mOpenMenu = IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
-		if(mOpenMenu == null) return false;
 		MenuBuilder menu = mOpenMenu.getMenu();
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
@@ -252,13 +252,16 @@ public abstract class OpenFragment
 					showMenu(R.menu.menu_sort, view);
 				else if(item.getItemId() == R.id.menu_view)
 					showMenu(R.menu.menu_view, view);
+				else if(item.getItemId() == R.id.menu_file)
+					showMenu(R.menu.text_file, view);
 				else
 					onClick(item.getItemId());
 				//mOpenMenu.dismiss();
 				//mMenuPopup.dismiss();
+				mOpenMenu.dismiss();
 			}
 		});
-		return true;
+		return mOpenMenu.show();
 	}
 	
 	@Override
@@ -544,6 +547,9 @@ public abstract class OpenFragment
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
+		if(item == null) return false;
+		if(item.getMenuInfo() == null) return false;
+		if(!(item.getMenuInfo() instanceof OpenContextMenuInfo)) return false;
 		OpenContextMenuInfo info = (OpenContextMenuInfo) item.getMenuInfo();
 		OpenPath path = info.getPath();
 		if(path == null && mMenuContextItemIndex > -1 && getContentAdapter() != null)
@@ -857,11 +863,12 @@ public abstract class OpenFragment
 	}
 	
 	public void onClick(View v) {
-		Logger.LogDebug("View onClick(" + v.getId() + ") - " + v.toString());
+		//Logger.LogDebug("View onClick(" + v.getId() + ") - " + v.toString());
 	}
 	
-	public void onClick(int id) {
-		Logger.LogDebug("View onClick(" + id + ") / " + getClassName());
+	public boolean onClick(int id) {
+		//Logger.LogDebug("View onClick(" + id + ") / " + getClassName());
+		return false;
 	}
 	
 	public boolean onLongClick(View v) {

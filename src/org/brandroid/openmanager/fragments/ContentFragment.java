@@ -259,10 +259,14 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	public synchronized void notifyDataSetChanged() {
-		//if(mContentAdapter == null) return;
+		if(mContentAdapter == null) {
+			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
+			mGrid.setAdapter(mContentAdapter);
+		}
 		//if(!Thread.currentThread().equals(OpenExplorer.UiThread))
 		//	getActivity().runOnUiThread(new Runnable(){public void run(){mContentAdapter.updateData();}});
 		//else
+		
 			mContentAdapter.updateData();
 	}
 	public synchronized void refreshData()
@@ -556,7 +560,7 @@ public class ContentFragment extends OpenFragment
 		
 		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(), R.id.menu_sort_folders_first);
 		
-		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
+		MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
 		
 		if(mContentAdapter != null)
 		switch(getSorting().getType())

@@ -1753,7 +1753,7 @@ if (this instanceof SmbNamedPipe) {
         doEnum(list, false, wildcard, searchAttributes, fnf, ff);
         return (String[])list.toArray(new String[list.size()]);
     }
-    SmbFile[] listFiles( String wildcard, int searchAttributes,
+    public SmbFile[] listFiles( String wildcard, int searchAttributes,
                 SmbFilenameFilter fnf, SmbFileFilter ff ) throws SmbException {
         ArrayList list = new ArrayList();
         doEnum(list, true, wildcard, searchAttributes, fnf, ff);
@@ -1987,7 +1987,8 @@ if (this instanceof SmbNamedPipe) {
                 if (name.length() > 0) {
                     // if !files we don't need to create SmbFiles here
                     SmbFile f = new SmbFile(this, name, e.getType(),
-                                ATTR_READONLY | ATTR_DIRECTORY, 0L, 0L, 0L );
+                                ATTR_READONLY | ATTR_DIRECTORY,
+                                e.createTime(), e.getAttributes(), e.length() );
                     if (ff != null && ff.accept(f) == false)
                         continue;
                     if (files) {
