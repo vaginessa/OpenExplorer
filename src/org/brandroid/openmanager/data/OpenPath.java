@@ -71,6 +71,15 @@ public abstract class OpenPath
 	/* Provides a method to always get latest Files listing */
 	public abstract OpenPath[] listFiles() throws IOException;
 	
+	public OpenPath[] listDirectories() throws IOException
+	{
+		ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
+		for(OpenPath path : list())
+			if(path.isDirectory())
+				ret.add(path);
+		return ret.toArray(new OpenPath[ret.size()]);
+	}
+	
 	public List<OpenPath> listFilesCollection() throws IOException
 	{
 		OpenPath[] files = listFiles();

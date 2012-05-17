@@ -5,6 +5,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.utils.MenuUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -60,6 +61,7 @@ public class PickerFragment extends OpenFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		view = inflater.inflate(R.layout.picker, container, false);
+		MenuUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.button2, android.R.id.title);
 		mGrid = (GridView)view.findViewById(android.R.id.list);
 		mGrid.setNumColumns(mContext.getResources().getInteger(R.integer.max_grid_columns));
 		mSelection = (TextView)view.findViewById(R.id.pick_path);

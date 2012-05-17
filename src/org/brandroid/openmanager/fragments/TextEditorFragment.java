@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.Date;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
@@ -37,6 +38,7 @@ import org.brandroid.utils.MenuUtils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -44,6 +46,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.view.ViewPager;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -77,6 +80,8 @@ public class TextEditorFragment extends OpenFragment
 	//private ScrollView mViewScroller;
 	private ProgressBar mProgress = null;
 	private SeekBarActionView mFontSizeBar = null;
+	
+	private final static int REQUEST_SAVE_AS = 1; 
 	
 	private OpenPath mPath = null;
 	private String mData = null;
@@ -438,6 +443,23 @@ public class TextEditorFragment extends OpenFragment
 	public boolean onClick(int id) {
 		return onClickItem(id);
 	}
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if(requestCode == REQUEST_SAVE_AS)
+		{
+			if(data.hasExtra("path"))
+				mPath = (OpenPath)data.getParcelableExtra("path");
+			else if(data.getData() != null)
+				mPath = FileManager.getOpenCache(data.getDataString());
+			cancelTask();
+			mTask = new FileSaveTask(mPath);
+			if(mDirty)
+				mData = mEditText.getText().toString();
+			((FileSaveTask)mTask).execute(mData);
+			notifyPager();
+		}
+	}
 	public boolean onClickItem(int id) {
 		Context c = getActivity();
 		View from = null; 
@@ -456,19 +478,11 @@ public class TextEditorFragment extends OpenFragment
 			
 		case R.id.menu_save_as:
 			
-			DialogHandler.showPickerDialog(getActivity(),
-					getString(R.string.s_saveas),
-					mPath,
-					new OnOpenPathPickedListener() {
-						@Override
-						public void onOpenPathPicked(OpenPath path) {
-							cancelTask();
-							mTask = new FileSaveTask(path);
-							if(mDirty)
-								mData = mEditText.getText().toString();
-							((FileSaveTask)mTask).execute(mData);
-						}
-					});
+			Intent intent = new Intent(getActivity(), FolderPickerActivity.class);
+			intent.putExtra("start", (Parcelable)mPath);
+			intent.putExtra("name", mPath.getName());
+			intent.setData(mPath.getUri());
+			startActivityForResult(intent, REQUEST_SAVE_AS);
 			return true;
 			
 		case R.id.menu_close:

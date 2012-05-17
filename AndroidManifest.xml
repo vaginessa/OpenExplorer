@@ -82,6 +82,17 @@
 		    </intent-filter>
 		</activity>
 		
+		<activity android:name=".activities.FolderPickerActivity"
+		    android:label="@string/s_title_picker"
+		    android:theme="@style/Dialog"
+		    android:configChanges="screenSize|keyboard|keyboardHidden"
+		    >
+		    <intent-filter>
+		        <action android:name="android.intent.action.PICK" />
+				<data android:scheme="file" />
+		    </intent-filter>
+		</activity>
+		
 	    <meta-data
 	        android:name="android.app.default_searchable"
 	        android:value=".activities.OpenExplorer"

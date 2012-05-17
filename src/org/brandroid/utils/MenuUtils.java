@@ -59,6 +59,13 @@ public class MenuUtils {
 				//}});
 		}
 	}
+	public static void setViewsOnClick(Activity a, OnClickListener onclick, int... ids)
+	{
+		if(a == null) return;
+		for(int id : ids)
+			if(a.findViewById(id) != null)
+				a.findViewById(id).setOnClickListener(onclick);
+	}
 
 	public static void setMenuChecked(Menu menu, boolean checked, int toCheck, int... toOppose)
 	{

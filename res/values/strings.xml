@@ -301,4 +301,7 @@
     <string name="activity_chooser_view_see_all">See all...</string>
     <string name="s_pref_showup">Always show "up" directory</string>
     <string name="close">Close</string>
+    <string name="s_title_picker">Please choose directory</string>
+    <string name="selected_path">Selected Path:</string>
+    <string name="filename">Filename</string>
 </resources>
