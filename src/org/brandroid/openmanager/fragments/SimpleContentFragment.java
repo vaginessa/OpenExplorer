@@ -67,6 +67,7 @@ public class SimpleContentFragment extends Fragment
 		if(mData.containsKey("path"))
 			mPath = (OpenPath)mData.getParcelable("path");
 		mGrid = (GridView)inflater.inflate(R.layout.content_grid, container, false);
+		mGrid.setNumColumns(container.getContext().getResources().getInteger(R.integer.max_grid_columns));
 		mAdapter = new ContentAdapter(container.getContext(), OpenExplorer.VIEW_LIST, mPath);
 		mAdapter.setShowDetails(false);
 		mAdapter.setSorting(SortType.ALPHA);

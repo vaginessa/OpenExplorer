@@ -53,11 +53,11 @@ public class FolderPickerActivity extends FragmentActivity
 		mPickName = (EditText)findViewById(R.id.pick_filename);
 		mTitle = (TextView)findViewById(android.R.id.title);
 		mFragmentManager = getSupportFragmentManager();
-		setPath(mPath);
+		setPath(mPath, true);
 		MenuUtils.setViewsOnClick(this, this, android.R.id.button1, android.R.id.button2);
 	}
 	
-	private void setPath(OpenPath path)
+	private void setPath(OpenPath path, boolean addToStack)
 	{
 		if(path == null)
 			path = OpenFile.getExternalMemoryDrive(true);
@@ -71,12 +71,17 @@ public class FolderPickerActivity extends FragmentActivity
 			mPickName.setText(mDefaultName);
 			mPath = mPath.getParent();
 		}
+		if(!addToStack) return;
 		PickerFragment frag = new PickerFragment(this, mPath);
 		frag.setShowSelection(false);
 		frag.setOnOpenPathPickedListener(new OnOpenPathPickedListener() {
 			@Override
 			public void onOpenPathPicked(OpenPath path) {
-				setPath(path);
+				setPath(path, true);
+			}
+			public void onOpenPathShown(OpenPath path)
+			{
+				setPath(path, false);
 			}
 		});
 		mFragmentManager
@@ -95,7 +100,7 @@ public class FolderPickerActivity extends FragmentActivity
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 		OpenPath path = getSelectedFragment().getPath();
-		setPath(path);
+		setPath(path, true);
 	}
 	
 	private void returnPath()

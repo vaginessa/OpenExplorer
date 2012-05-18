@@ -21,6 +21,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,8 +37,8 @@ public class PickerFragment extends OpenFragment
 	private Context mContext;
 	private OnOpenPathPickedListener mPickListener;
 	private View view;
-	private ViewPager mPager;
-	private FragmentPagerAdapter mPagerAdapter;
+	private OpenViewPager mPager;
+	private PickerPagerAdapter mPagerAdapter;
 	private TextView mSelection;
 	private EditText mPickName;
 	private OpenPath mPath;
@@ -80,7 +81,29 @@ public class PickerFragment extends OpenFragment
 			Bundle savedInstanceState) {
 		view = inflater.inflate(R.layout.picker_pager, container, false);
 		MenuUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.button2, android.R.id.title, R.id.pick_filename);
-		mPager = (ViewPager)view.findViewById(R.id.picker_pager);
+		mPager = (OpenViewPager)view.findViewById(R.id.picker_pager);
+		mPager.setOnPageChangeListener(new OnPageChangeListener() {
+			
+			@Override
+			public void onPageSelected(int position) {
+				OpenPath path = ((PickerPagerAdapter)mPagerAdapter).getItemPath(position);
+				if(mPickListener != null)
+					mPickListener.onOpenPathShown(path);
+			}
+			
+			@Override
+			public void onPageScrolled(int position, float positionOffset,
+					int positionOffsetPixels) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onPageScrollStateChanged(int state) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 		mSelection = (TextView)view.findViewById(R.id.pick_path);
 		
 		//mGrid = (GridView)view.findViewById(android.R.id.list);
@@ -110,13 +133,15 @@ public class PickerFragment extends OpenFragment
 		}
 	}
 	
-	public void setPath(OpenPath path)
+	public void setPath(final OpenPath path)
 	{
 		mPath = path;
 		((PickerPagerAdapter)mPagerAdapter)
 			.setOnItemClickListener(this)
 			.setPath(path);
-		mPager.setCurrentItem(path.getDepth() - 1);
+		mPager.postDelayed(new Runnable(){public void run(){
+			mPager.setCurrentItem(path.getDepth() - 1);
+		}}, 200);
 		/*
 		mAdapter = new ContentAdapter(mContext, OpenExplorer.VIEW_LIST, mPath);
 		mAdapter.setShowPlusParent(path.getParent() != null);
@@ -136,6 +161,7 @@ public class PickerFragment extends OpenFragment
 	public interface OnOpenPathPickedListener
 	{
 		public void onOpenPathPicked(OpenPath path);
+		public void onOpenPathShown(OpenPath path);
 	}
 	
 	public void setOnOpenPathPickedListener(OnOpenPathPickedListener listener)
@@ -175,7 +201,7 @@ public class PickerFragment extends OpenFragment
 		return ret;
 	}
 	
-	static class PickerPagerAdapter extends FragmentPagerAdapter
+	static class PickerPagerAdapter extends FragmentStatePagerAdapter
 	{
 		private OpenPath mPath;
 		private OnItemClickListener mListener;
@@ -198,11 +224,15 @@ public class PickerFragment extends OpenFragment
 			mListener = l;
 			return this;
 		}
+		
+		public OpenPath getItemPath(int position)
+		{
+			return mPath.getAncestors(true).get(getCount() - position - 1);
+		}
 
 		@Override
 		public Fragment getItem(int position) {
-			OpenPath path = mPath.getAncestors(true).get(getCount() - position - 1);
-			SimpleContentFragment ret = new SimpleContentFragment(mContext, path);
+			SimpleContentFragment ret = new SimpleContentFragment(mContext, getItemPath(position));
 			ret.setOnItemClickListener(mListener);
 			return ret;
 		}
