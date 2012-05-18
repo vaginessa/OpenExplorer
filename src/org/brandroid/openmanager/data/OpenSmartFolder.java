@@ -102,7 +102,9 @@ public class OpenSmartFolder extends OpenPath
 
 	@Override
 	public String getAbsolutePath() {
-		return getFirstDir().getAbsolutePath();
+		if(getFirstDir() != null)
+			return getFirstDir().getAbsolutePath();
+		else return mName;
 	}
 
 	@Override

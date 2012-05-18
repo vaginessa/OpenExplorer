@@ -127,6 +127,7 @@ public abstract class OpenPath
 	public abstract OutputStream getOutputStream() throws IOException;
 	@Override
 	public boolean equals(Object o) {
+		if(o == null) return false;
 		if(o instanceof OpenPath)
 			return getAbsolutePath().equals(((OpenPath)o).getAbsolutePath());
 		else

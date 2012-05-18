@@ -302,15 +302,15 @@ public class ThumbnailCreator extends Thread {
 				return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
 			if(file instanceof OpenFTP)
 				return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
-			if(file.getAbsolutePath().equals("/") && mName.equals(""))
+			if(file.getAbsolutePath() != null && file.getAbsolutePath().equals("/") && mName.equals(""))
 				return (R.drawable.drive);
-			else if(sPath2.indexOf("download") > -1)
+			else if(hasKids && sPath2.indexOf("download") > -1)
 				return (useLarge ? R.drawable.lg_download : R.drawable.sm_download);
-			else if(mName.equals("Photos") || mName.equalsIgnoreCase("dcim") || mName.equalsIgnoreCase("pictures") || mName.equalsIgnoreCase("camera"))
+			else if(hasKids && (mName.equals("Photos") || mName.equalsIgnoreCase("dcim") || mName.equalsIgnoreCase("pictures") || mName.equalsIgnoreCase("camera")))
 				return (useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
-			else if(mName.equals("Videos"))
+			else if(hasKids && mName.equals("Videos"))
 				return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
-			else if(mName.equals("Music"))
+			else if(hasKids && mName.equals("Music"))
 				return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
 			else if(hasKids && (sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1))
 				return (useLarge ? R.drawable.lg_sdcard : R.drawable.sm_sdcard);
