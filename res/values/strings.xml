@@ -304,4 +304,5 @@
     <string name="s_title_picker">Please choose directory</string>
     <string name="selected_path">Selected Path:</string>
     <string name="filename">Filename</string>
+    <string name="s_msg_saved">saved</string>
 </resources>

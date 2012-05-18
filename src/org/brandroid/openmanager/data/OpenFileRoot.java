@@ -259,7 +259,9 @@ public class OpenFileRoot
 		if(!path.endsWith("/"))
 			path += "/";
 		Logger.LogDebug("Trying to list " + path + " via Su");
-		mChildren.clear();
+		if(mChildren != null)
+			mChildren.clear();
+		else mChildren = new WeakReference<List<OpenPath>>(new ArrayList<OpenPath>());
 		String cmd = "ls -l " + path;
 		if(RootManager.Default.getBusyBox() != "")
 			cmd = "ls -l" + getLSOpts() + " " + path;

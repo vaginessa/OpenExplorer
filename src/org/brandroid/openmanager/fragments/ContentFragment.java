@@ -261,7 +261,8 @@ public class ContentFragment extends OpenFragment
 	public synchronized void notifyDataSetChanged() {
 		if(mContentAdapter == null) {
 			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
-			mGrid.setAdapter(mContentAdapter);
+			if(mGrid != null)
+				mGrid.setAdapter(mContentAdapter);
 		}
 		//if(!Thread.currentThread().equals(OpenExplorer.UiThread))
 		//	getActivity().runOnUiThread(new Runnable(){public void run(){mContentAdapter.updateData();}});

@@ -10,12 +10,19 @@ import org.brandroid.utils.Logger;
 
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 {
 	private OpenPath mPath = new OpenFile("/mnt/sdcard");
 	private OpenFragment mFirst = null;
 	//private List<OpenPath> mChildren = new ArrayList<OpenPath>();
+	private OnItemClickListener mClickListener;
+	
+	public void setOnItemClickListener(OnItemClickListener l)
+	{
+		mClickListener = l;
+	}
 
 	public OpenPathPagerAdapter(FragmentManager fm) {
 		super(fm);
@@ -80,7 +87,8 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 			}
 			Logger.LogVerbose("Getting Fragment for #" + pos + " - " + tmp.getPath());
 			//return 
-			return ContentFragment.getInstance(tmp);
+			ContentFragment ret = ContentFragment.getInstance(tmp);
+			return ret;
 		}
 	}
 	

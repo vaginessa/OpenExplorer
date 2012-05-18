@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/blue" 
+        />
+    <FrameLayout
+        android:id="@+id/picker_widget"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1" 
+        />
+    
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/blue" 
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="4dp"
+         >
+
+        <TextView
+            style="@style/Mid"
+            android:gravity="left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/selected_path"
+            android:paddingRight="4dp"
+            />
+
+        <TextView
+            android:id="@+id/pick_path"
+            style="@style/Mid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="left" />
+
+    </LinearLayout>
+    
+    <EditText 
+        android:id="@+id/pick_filename"
+        android:hint="@string/filename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+    
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+        <Button android:id="@android:id/button1"
+            android:text="@android:string/ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            />
+        <Button android:id="@android:id/button2"
+            android:text="@android:string/cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            />
+    </LinearLayout>
+</LinearLayout>

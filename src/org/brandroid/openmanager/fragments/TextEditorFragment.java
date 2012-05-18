@@ -66,6 +66,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class TextEditorFragment extends OpenFragment
@@ -610,6 +611,9 @@ public class TextEditorFragment extends OpenFragment
 		protected void onPostExecute(String result) {
 			super.onPostExecute(result);
 			setProgressVisibility(false);
+			Context c = TextEditorFragment.this.getActivity();
+			String msg = mPath + " " + c.getResources().getString(R.string.s_msg_saved);
+			Toast.makeText(c, msg, Toast.LENGTH_LONG);
 			setEnabled(true, mEditText);
 		}
 		

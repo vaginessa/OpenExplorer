@@ -1,25 +1,22 @@
 package org.brandroid.openmanager.activities;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.adapters.ContentAdapter;
-import org.brandroid.openmanager.adapters.ContentTreeAdapter;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.fragments.PickerFragment;
+import org.brandroid.openmanager.fragments.PickerFragment.OnOpenPathPickedListener;
 import org.brandroid.utils.MenuUtils;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.TextView;
 
 public class FolderPickerActivity extends FragmentActivity
@@ -28,10 +25,9 @@ public class FolderPickerActivity extends FragmentActivity
 	private OpenPath mPath;
 	private boolean pickDirOnly = true;
 	private String mDefaultName;
-	private GridView mGrid;
-	private BaseAdapter mAdapter;
 	private TextView mSelection, mTitle;
 	private EditText mPickName;
+	private FragmentManager mFragmentManager;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,14 +48,12 @@ public class FolderPickerActivity extends FragmentActivity
 				intent.putExtra("name", mDefaultName);
 			}
 		}
-		setContentView(R.layout.picker);
-		mGrid = (GridView)findViewById(android.R.id.list);
-		mGrid.setNumColumns(getResources().getInteger(R.integer.max_grid_columns));
+		setContentView(R.layout.picker_widget);
 		mSelection = (TextView)findViewById(R.id.pick_path);
 		mPickName = (EditText)findViewById(R.id.pick_filename);
 		mTitle = (TextView)findViewById(android.R.id.title);
+		mFragmentManager = getSupportFragmentManager();
 		setPath(mPath);
-		mGrid.setOnItemClickListener(this);
 		MenuUtils.setViewsOnClick(this, this, android.R.id.button1, android.R.id.button2);
 	}
 	
@@ -77,14 +71,30 @@ public class FolderPickerActivity extends FragmentActivity
 			mPickName.setText(mDefaultName);
 			mPath = mPath.getParent();
 		}
-		mAdapter = new ContentTreeAdapter(this, mPath);
-		mGrid.setAdapter(mAdapter);
+		PickerFragment frag = new PickerFragment(this, mPath);
+		frag.setShowSelection(false);
+		frag.setOnOpenPathPickedListener(new OnOpenPathPickedListener() {
+			@Override
+			public void onOpenPathPicked(OpenPath path) {
+				setPath(path);
+			}
+		});
+		mFragmentManager
+			.beginTransaction()
+			.replace(R.id.picker_widget, frag)
+			.setBreadCrumbTitle(mPath.getPath())
+			.commit();
+	}
+	
+	public PickerFragment getSelectedFragment()
+	{
+		return (PickerFragment)mFragmentManager.findFragmentById(R.id.picker_widget);
 	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
-		OpenPath path = (OpenPath)mAdapter.getItem(position);
+		OpenPath path = getSelectedFragment().getPath();
 		setPath(path);
 	}
 	

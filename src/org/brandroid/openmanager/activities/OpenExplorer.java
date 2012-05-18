@@ -97,6 +97,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -148,12 +150,14 @@ import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListene
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.FTPManager;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenNetworkPath.OpenAuthCallback;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
@@ -178,6 +182,7 @@ import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.EventHandler.TaskChangeListener;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
@@ -200,6 +205,7 @@ import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuItemImpl;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Preferences.OnPreferenceInteraction;
 import org.brandroid.utils.SubmitStatsTask;
 
 import com.android.gallery3d.data.DataManager;
@@ -1195,7 +1201,7 @@ public class OpenExplorer
 		//intent.setData();
 		//a.startActivity(intent);
 		WebViewFragment web = new WebViewFragment().setUri(uri);
-		if(!(a instanceof FragmentActivity))
+		if(Build.VERSION.SDK_INT < 100)
 		{
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 			a.startActivity(intent);
@@ -2749,15 +2755,8 @@ public class OpenExplorer
 	}
 	
 	private void debugTest() {
-		/*
-		int bad = 2 / 0;
-		Logger.LogInfo("HEY! We know how to divide by 0! It is " + bad);
-		*/
-		startActivity(new Intent(this, Authenticator.class));
-		/*
-		mEvHandler.copyFile(new OpenFile("/mnt/sdcard/cm9-droid3-20120316-0330.zip"), new OpenFile("/mnt/sdcard/Download"), this);
-		refreshOperations();
-		//*/
+		//startActivity(new Intent(this, Authenticator.class));
+		
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }

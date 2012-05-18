@@ -379,7 +379,12 @@ public class ThumbnailCreator extends Thread {
 		{
 			File f = mContext.getFileStreamPath(cacheName);
 			if(f.exists())
-				mCacheMap.put(cacheName, BitmapFactory.decodeFile(f.getPath()));
+			{
+				if(f.length() > 0)
+					mCacheMap.put(cacheName, BitmapFactory.decodeFile(f.getPath()));
+				else
+					fails.put(name, 1);
+			}
 		}
 		if(mCacheMap.containsKey(cacheName))
 			return mCacheMap.get(cacheName);
@@ -410,7 +415,7 @@ public class ThumbnailCreator extends Thread {
 		String mParent = file.getParent() != null ? file.getParent().getName() : null;
 		if(fails == null)
 			fails = new Hashtable<String, Integer>();
-		if(mParent != null && (fails.containsKey(mParent) && fails.get(mParent) > 10))
+		if(mParent != null && (fails.containsKey(file.getPath()) || (fails.containsKey(mParent) && fails.get(mParent) > 10)))
 			useGeneric = true;
 		
 		if(mContext != null)
