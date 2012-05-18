@@ -5,6 +5,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.PickerFragment;
 import org.brandroid.openmanager.fragments.PickerFragment.OnOpenPathPickedListener;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.MenuUtils;
 
 import android.content.Intent;
@@ -12,6 +13,8 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -20,10 +23,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class FolderPickerActivity extends FragmentActivity
-	implements OnItemClickListener, OnClickListener
+	implements OnItemClickListener, OnClickListener, TextWatcher
 {
 	private OpenPath mPath;
-	private boolean pickDirOnly = true;
+	private boolean pickDirOnly = false;
 	private String mDefaultName;
 	private TextView mSelection, mTitle;
 	private EditText mPickName;
@@ -32,29 +35,45 @@ public class FolderPickerActivity extends FragmentActivity
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Intent intent = getIntent();
-		if(intent == null)
-			intent = new Intent();
-		if(savedInstanceState != null)
-		{
-			if(savedInstanceState.containsKey("start"))
-			{
-				mPath = (OpenPath)savedInstanceState.getParcelable("start");
-				intent.putExtra("picker", savedInstanceState.getParcelable("start"));
-			} else mPath = OpenFile.getExternalMemoryDrive(true);
-			if(savedInstanceState.containsKey("name"))
-			{
-				mDefaultName = savedInstanceState.getString("name");
-				intent.putExtra("name", mDefaultName);
-			}
-		}
+
 		setContentView(R.layout.picker_widget);
 		mSelection = (TextView)findViewById(R.id.pick_path);
 		mPickName = (EditText)findViewById(R.id.pick_filename);
 		mTitle = (TextView)findViewById(android.R.id.title);
+
+		Intent intent = getIntent();
+		if(intent == null)
+			intent = new Intent();
+		if(savedInstanceState != null)
+			checkBundle(savedInstanceState, intent);
+		else if(intent.getData() != null)
+			onNewIntent(intent);
+		
 		mFragmentManager = getSupportFragmentManager();
 		setPath(mPath, true);
 		MenuUtils.setViewsOnClick(this, this, android.R.id.button1, android.R.id.button2);
+		if(mPickName != null)
+			mPickName.addTextChangedListener(this);
+	}
+	
+	private void checkBundle(Bundle data, Intent intent)
+	{
+		if(data.containsKey("start"))
+		{
+			mPath = (OpenPath)data.getParcelable("start");
+			intent.putExtra("picker", data.getParcelable("start"));
+		} else mPath = OpenFile.getExternalMemoryDrive(true);
+		if(data.containsKey("name"))
+		{
+			mDefaultName = data.getString("name");
+			intent.putExtra("name", mDefaultName);
+		}
+		if(data.containsKey("files"))
+			pickDirOnly = data.getBoolean("files", pickDirOnly);
+		
+		MenuUtils.setViewsVisible(this, !pickDirOnly, R.id.pick_path_row, R.id.pick_path);
+		if(!pickDirOnly && (mDefaultName == null || mDefaultName == ""))
+			MenuUtils.setViewsEnabled(this, false, android.R.id.button1);
 	}
 	
 	private void setPath(OpenPath path, boolean addToStack)
@@ -89,6 +108,19 @@ public class FolderPickerActivity extends FragmentActivity
 			.replace(R.id.picker_widget, frag)
 			.setBreadCrumbTitle(mPath.getPath())
 			.commit();
+	}
+	
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		if(intent.getData() != null)
+		{
+			OpenPath path = FileManager.getOpenCache(intent.getDataString());
+			if(path != null && path.exists())
+				mPath = path;
+		}
+		if(intent.getExtras() != null)
+			checkBundle(intent.getExtras(), intent);
 	}
 	
 	public PickerFragment getSelectedFragment()
@@ -128,5 +160,23 @@ public class FolderPickerActivity extends FragmentActivity
 			finish();
 			break;
 		}
+	}
+
+	@Override
+	public void beforeTextChanged(CharSequence s, int start, int count,
+			int after) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void afterTextChanged(Editable s) {
+		MenuUtils.setViewsEnabled(this, s != null && !s.toString().equals(""), android.R.id.button1);
 	}
 }
