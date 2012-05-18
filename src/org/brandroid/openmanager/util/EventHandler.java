@@ -53,7 +53,6 @@ import java.io.IOException;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.OperationsActivity;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -611,15 +610,15 @@ public class EventHandler {
 		public void prepareNotification(int notifIcon, boolean isCancellable) {
 			boolean showProgress = true;
 			try {
-				Intent intent = new Intent(mContext, OperationsActivity.class);
+				Intent intent = new Intent(mContext, OpenExplorer.class);
 				intent.putExtra("TaskId", taskId);
 				PendingIntent pendingIntent = PendingIntent.getActivity(
-						mContext, OperationsActivity.REQUEST_VIEW, intent, 0);
+						mContext, OpenExplorer.REQUEST_VIEW, intent, 0);
 				mNote = new Notification(notifIcon, getTitle(),
 						System.currentTimeMillis());
 				if (showProgress) {
 					PendingIntent pendingCancel = PendingIntent.getActivity(
-							mContext, OperationsActivity.REQUEST_VIEW, intent,
+							mContext, OpenExplorer.REQUEST_VIEW, intent,
 							0);
 					RemoteViews noteView = new RemoteViews(
 							mContext.getPackageName(), R.layout.notification);

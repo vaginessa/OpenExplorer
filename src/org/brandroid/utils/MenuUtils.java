@@ -5,8 +5,11 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import android.app.Activity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.TouchDelegate;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -56,6 +59,18 @@ public class MenuUtils {
 			if(v != null)
 				//v.post(new Runnable(){public void run(){
 					v.setVisibility(visible ? View.VISIBLE : View.GONE);
+				//}});
+		}
+	}
+	public static void setViewsEnabled(Activity a, final boolean enabled, int... ids)
+	{
+		for(int id : ids)
+		{
+			if(a == null) return;
+			final View v = a.findViewById(id);
+			if(v != null)
+				//v.post(new Runnable(){public void run(){
+					v.setEnabled(enabled);
 				//}});
 		}
 	}
@@ -125,6 +140,15 @@ public class MenuUtils {
 			View v = activity.findViewById(id);
 			if(v != null && v instanceof TextView)
 				((TextView)v).setTag(string);
+		}
+	}
+	public static void setOnTouchListener(View view, OnTouchListener l, boolean setChildrenToo) {
+		view.setOnTouchListener(l);
+		if(setChildrenToo)
+		{
+			ViewGroup vg = (ViewGroup)view;
+			for(View v : vg.getTouchables())
+				v.setOnTouchListener(l);
 		}
 	}
 	

@@ -6,6 +6,8 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
+import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.utils.Logger;
@@ -27,9 +29,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-public class OpenFragmentActivity
+public abstract class OpenFragmentActivity
 			extends FragmentActivity
 			implements View.OnClickListener, View.OnLongClickListener
+				, OpenContextProvider
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
@@ -112,16 +115,23 @@ public class OpenFragmentActivity
 	{
 		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
 	}
+	public Float getSetting(OpenPath file, String key, Float defValue)
+	{
+		return getPreferences().getSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), defValue);
+	}
 	public void setSetting(OpenPath file, String key, String value)
 	{
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
-	public boolean setSetting(OpenPath file, String key, Boolean value)
+	public void setSetting(OpenPath file, String key, Boolean value)
 	{
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
-		return value;
 	}
 	public void setSetting(OpenPath file, String key, Integer value)
+	{
+		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
+	}
+	public void setSetting(OpenPath file, String key, Float value)
 	{
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
@@ -145,6 +155,13 @@ public class OpenFragmentActivity
 	public void showToast(final int resId, final int length)  {
 		showToast(getString(resId), length);
 	}
+
+	@Override
+	public Context getContext() {
+		return this;
+	}
+	@Override
+	public abstract void onChangeLocation(OpenPath path);
 
 	/*
 	@Override

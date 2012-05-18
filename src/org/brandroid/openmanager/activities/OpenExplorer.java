@@ -77,8 +77,10 @@ import android.text.Spanned;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.DisplayMetrics;
 import android.view.ActionMode;
 import android.view.ContextMenu;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.InflateException;
 import android.view.KeyEvent;
@@ -196,6 +198,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
+import org.brandroid.openmanager.views.OpenViewPager.OnDPADListener;
 import org.brandroid.utils.CustomExceptionHandler;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.ImageUtils;
@@ -228,8 +231,11 @@ public class OpenExplorer
 	{
 
 	private static final int PREF_CODE =		0x6;
-	private static final int REQ_SPLASH = 7;
-	private static final int REQ_INTENT = 8;
+	public static final int REQ_SPLASH = 7;
+	public static final int REQ_INTENT = 8;
+	public static final int REQ_SAVE_FILE = 9;
+	public static final int REQ_PICK_FOLDER = 10;
+	public static final int REQUEST_VIEW = 11;
 	public static final int VIEW_LIST = 0;
 	public static final int VIEW_GRID = 1;
 	public static final int VIEW_CAROUSEL = 2;
@@ -245,6 +251,12 @@ public class OpenExplorer
 	public static boolean USE_PRETTY_MENUS = true;
 	public static boolean USE_PRETTY_CONTEXT_MENUS = true;
 	public static boolean IS_FULL_SCREEN = false;
+	
+	private static boolean DEBUG = false;
+	
+	public static int SCREEN_WIDTH = -1;
+	public static int SCREEN_HEIGHT = -1;
+	public static int SCREEN_DPI = -1;
 	
 	private static MimeTypes mMimeTypes;
 	private Object mActionMode;
@@ -561,6 +573,7 @@ public class OpenExplorer
 	{
 		FileManager.DefaultUserInfo = new SimpleUserInfo();
 		final Context c = this;
+		Preferences.Warn_Networking = getSetting(null, "warn_networking", false);
 		SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
 			
 			public boolean promptPassword(String message) {
@@ -732,7 +745,7 @@ public class OpenExplorer
 	}
 	public boolean showMenu(int menuId, final View from)
 	{
-		Logger.LogVerbose("showMenu(0x" + Integer.toHexString(menuId) + "," + (from != null ? from.toString() : "NULL") + ")");
+		Logger.LogInfo("showMenu(0x" + Integer.toHexString(menuId) + "," + (from != null ? from.toString() : "NULL") + ")");
 		//if(mMenuPopup == null)
 		if(menuId == R.id.title_menu || menuId == R.menu.main_menu)
 			showContextMenu(mMainMenu, from instanceof CheckedTextView ? null : from);
@@ -1115,7 +1128,8 @@ public class OpenExplorer
 
 		if(mViewPager != null && mViewPagerEnabled)
 		{
-			Logger.LogVerbose("Setting up ViewPager");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogDebug("Setting up ViewPager");
 			mViewPagerAdapter = //new PagerTabsAdapter(this, mViewPager, indicator);
 					new ArrayPagerAdapter(this, mViewPager);
 			mViewPagerAdapter.setOnPageTitleClickListener(this);
@@ -1343,12 +1357,31 @@ public class OpenExplorer
 	public void onAttachedToWindow() {
 		super.onAttachedToWindow();
 		handleNetworking();
+		if(getWindowManager() != null)
+		{
+			Display d = getWindowManager().getDefaultDisplay();
+			if(d != null)
+			{
+				DisplayMetrics dm = new DisplayMetrics();
+				d.getMetrics(dm);
+				if(dm != null)
+				{
+					SCREEN_DPI = dm.densityDpi;
+					SCREEN_WIDTH = dm.widthPixels;
+					SCREEN_HEIGHT = dm.heightPixels;
+				} else {
+					SCREEN_WIDTH = d.getWidth();
+					SCREEN_HEIGHT = d.getHeight();
+				}
+			}
+		}
 	}
 	
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Logger.LogVerbose("OpenExplorer.onStart");
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("OpenExplorer.onStart");
 		if(findViewById(R.id.frag_log) != null)
 		{
 			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
@@ -1758,7 +1791,8 @@ public class OpenExplorer
 			if(bRetrieveExtraVideoDetails)
 				bRetrieveExtraVideoDetails = !getSetting(null, "tag_novidinfo", false);
 			mVideoParent.setName(getString(R.string.s_videos));
-			Logger.LogVerbose("Finding videos");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogVerbose("Finding videos");
 			//if(!IS_DEBUG_BUILD)
 			try {
 				getSupportLoaderManager().initLoader(0, null, this);
@@ -1770,7 +1804,8 @@ public class OpenExplorer
 			if(bRetrieveDimensionsForPhotos)
 				bRetrieveDimensionsForPhotos = !getSetting(null, "tag_nodims", false);
 			mPhotoParent.setName(getString(R.string.s_photos));
-			Logger.LogVerbose("Finding Photos");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogVerbose("Finding Photos");
 			try {
 				getSupportLoaderManager().initLoader(1, null, this);
 				Logger.LogDebug("Done looking for photos");
@@ -1780,7 +1815,8 @@ public class OpenExplorer
 		if(!mMusicParent.isLoaded())
 		{
 			mMusicParent.setName(getString(R.string.s_music));
-			Logger.LogVerbose("Finding Music");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogVerbose("Finding Music");
 			try {
 				getSupportLoaderManager().initLoader(2, null, this);
 				Logger.LogDebug("Done looking for music");
@@ -1788,7 +1824,8 @@ public class OpenExplorer
 		}
 		if(!mApkParent.isLoaded())
 		{
-			Logger.LogVerbose("Finding APKs");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogVerbose("Finding APKs");
 			try {
 				getSupportLoaderManager().initLoader(3, null, this);
 			} catch(IllegalStateException e) { Logger.LogError("Couldn't get Apks.", e); }
@@ -1807,26 +1844,18 @@ public class OpenExplorer
 					mHasInternal = true;
 					//OpenSmartFolder dlSmart = new OpenSmartFolder("Downloads");
 				
-				for(String dl : new String[]{"Download","Downloads"})
-				{
-					if(mHasExternal)
-					{
-						if(extDrive.getChild(dl).exists())
-							mDownloadParent.addSearch(new SmartSearch(extDrive.getChild(dl)));
-						else if(extDrive.getChild(dl.toLowerCase()).exists())
-							mDownloadParent.addSearch(new SmartSearch(extDrive.getChild(dl.toLowerCase())));
-					}
-					if(mHasInternal)
-					{
-						if(intDrive.getChild(dl).exists())
-							mDownloadParent.addSearch(new SmartSearch(intDrive.getChild(dl)));
-						else if(intDrive.getChild(dl.toLowerCase()).exists())
-							mDownloadParent.addSearch(new SmartSearch(intDrive.getChild(dl.toLowerCase())));
-					}
-				}
+				if(mHasExternal)
+					for(OpenPath kid : extDrive.list())
+						if(kid.getName().toLowerCase().indexOf("download")>-1)
+							mDownloadParent.addSearch(new SmartSearch(kid));
+				if(mHasInternal)
+					for(OpenPath kid : intDrive.list())
+						if(kid.getName().toLowerCase().indexOf("download")>-1)
+							mDownloadParent.addSearch(new SmartSearch(kid));
 			}}).start();
 		}
-		Logger.LogVerbose("Done finding cursors");
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("Done finding cursors");
 		return true;
 	}
 	private void refreshCursors()
@@ -1845,9 +1874,11 @@ public class OpenExplorer
 				//|| new Date().getTime() - mLastCursorEnsure < 10000 // at least 10 seconds
 				)
 		{
-			Logger.LogVerbose("Skipping ensureCursorCache");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogVerbose("Skipping ensureCursorCache");
 			return;
-		} else Logger.LogVerbose("Running ensureCursorCache");
+		} else if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("Running ensureCursorCache");
 		mRunningCursorEnsure = true;
 		
 		// group into blocks
@@ -1907,7 +1938,8 @@ public class OpenExplorer
 			}
 		}
 
-		Logger.LogVerbose("Done with ensureCursorCache");
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("Done with ensureCursorCache");
 		
 		//mLastCursorEnsure = new Date().getTime();
 		mRunningCursorEnsure = false;
@@ -1968,7 +2000,8 @@ public class OpenExplorer
 	
 	public void refreshBookmarks()
 	{
-		Logger.LogVerbose("refreshBookmarks()");
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("refreshBookmarks()");
 		refreshCursors();
 		if(mBookmarks != null)
 		{
@@ -2405,8 +2438,9 @@ public class OpenExplorer
 		MenuUtils.setMenuChecked(menu, USE_SPLIT_ACTION_BAR, R.id.menu_view_split);
 		//MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
 		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
-		if(Build.VERSION.SDK_INT < 14 && !BEFORE_HONEYCOMB) // pre-ics
+		if(!getResources().getBoolean(R.bool.allow_fullscreen))
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
+		else MenuUtils.setMenuChecked(menu, IS_FULL_SCREEN, R.id.menu_view_fullscreen);
 		if(getWindowWidth() < 500 && Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
 		{
 			MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
@@ -2665,7 +2699,8 @@ public class OpenExplorer
 				ContentFragment content = getDirContentFragment(true);
 				if(content != null)
 				{
-					Logger.LogDebug("Refreshing " + content.getPath().getPath());
+					if(DEBUG && IS_DEBUG_BUILD)
+						Logger.LogDebug("Refreshing " + content.getPath().getPath());
 					FileManager.removeOpenCache(content.getPath().getPath());
 					content.getPath().deleteFolderFromDb();
 					content.runUpdateTask(true);
@@ -2859,7 +2894,8 @@ public class OpenExplorer
 				invalidateOptionsMenu();
 		} else if(newView == VIEW_CAROUSEL && oldView != VIEW_CAROUSEL && CAN_DO_CAROUSEL)
 		{
- 			Logger.LogDebug("Switching to carousel!");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogDebug("Switching to carousel!");
 			if(mViewPagerEnabled)
 			{
 				setViewVisibility(false, false, R.id.content_pager_indicator,
@@ -2873,7 +2909,8 @@ public class OpenExplorer
 				.commit();
 			updateTitle(path.getPath());
 		} else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && CAN_DO_CAROUSEL) { // if we need to transition from carousel
-			Logger.LogDebug("Switching from carousel!");
+			if(DEBUG && IS_DEBUG_BUILD)
+				Logger.LogDebug("Switching from carousel!");
 			if(mViewPagerEnabled)
 			{
 				setViewVisibility(true, false, R.id.content_frag);
@@ -2969,6 +3006,9 @@ public class OpenExplorer
 			}
 		} else if (requestCode == REQ_INTENT) {
 			
+		} else {
+			if(getSelectedFragment() != null)
+				getSelectedFragment().onActivityResult(requestCode, resultCode, data);
 		}
 	}
 

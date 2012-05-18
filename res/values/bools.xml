@@ -6,4 +6,5 @@
     <item type="bool" name="honeycomb">false</item>
     <item type="bool" name="prehoneycomb">true</item>
     <item type="bool" name="ignore_max_base_buttons">true</item>
+    <item type="bool" name="allow_fullscreen">true</item>
 </resources>
