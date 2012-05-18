@@ -7,6 +7,12 @@
         android:checkable="true"
         android:showAsAction="ifRoom|withText"
         />
+    <item
+        android:id="@+id/menu_view_lines"
+        android:title="@string/s_menu_view_line_numbers"
+        android:checkable="true"
+        android:checked="true"
+        />
 	<item
 	    android:id="@+id/menu_view_fullscreen"
 	    android:checkable="true"

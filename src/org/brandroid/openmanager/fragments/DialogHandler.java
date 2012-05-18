@@ -70,6 +70,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.zip.ZipFile;
 import java.io.File;
 import java.io.IOException;
@@ -95,6 +97,8 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Preferences.OnPreferenceInteraction;
 
 public class DialogHandler extends DialogFragment {
 	
@@ -667,6 +671,48 @@ public class DialogHandler extends DialogFragment {
 		//dialogInfo.setFilePath(path.getPath());
 		//dialogInfo.show(fragmentManager, "info");
 	}
+	
+	/*
+	 * Show a warning that has a specific count down to auto-cancel
+	 */
+	public static AlertDialog showWarning(final Context context, int msg, int countSecs, DialogInterface.OnClickListener onOK)
+	{
+		final Timer timer = new Timer("Count Down");
+		final AlertDialog dlg = new AlertDialog.Builder(context)
+			.setMessage(msg)
+			.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+					timer.cancel();
+				}
+			})
+			.setCancelable(true)
+			.setPositiveButton(android.R.string.ok, onOK)
+			.show();
+		final int[] cnt = new int[]{countSecs};
+		final Button btCancel = dlg.getButton(DialogInterface.BUTTON_NEGATIVE);
+		TimerTask tt = new TimerTask() {
+			@Override
+			public void run() {
+				if(dlg.isShowing())
+				{
+					btCancel.post(new Runnable(){public void run(){
+						btCancel.setText(context.getResources().getString(android.R.string.cancel) + " (" + cnt[0]-- + ")");
+					}});
+				} else cnt[0] = 0;
+				if(cnt[0] <= 0)
+					cancel();
+			}
+			@Override
+			public boolean cancel() {
+				dlg.cancel();
+				return super.cancel();
+			}
+		};
+		timer.scheduleAtFixedRate(tt, 0, 1000);
+		return dlg;
+	}
 
 	public static AlertDialog showConfirmationDialog(final Context context, String msg, String title, DialogInterface.OnClickListener onYes)
 	{
@@ -944,6 +990,10 @@ public class DialogHandler extends DialogFragment {
 		String sep = "\n";
 		ret += sep + "Build Info:" + sep;
 		ret += "SDK: " + Build.VERSION.SDK_INT + sep;
+		if(OpenExplorer.SCREEN_WIDTH > -1)
+			ret += "Screen: " + OpenExplorer.SCREEN_WIDTH + "x" + OpenExplorer.SCREEN_HEIGHT + sep;
+		if(OpenExplorer.SCREEN_DPI > -1)
+			ret += "DPI: " + OpenExplorer.SCREEN_DPI + sep;
 		ret += "Lang: " + getLangCode() + sep;
 		ret += "Fingerprint: " + Build.FINGERPRINT + sep;
 		ret += "Manufacturer: " + Build.MANUFACTURER + sep;

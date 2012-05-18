@@ -153,13 +153,7 @@
 		<activity android:name=".activities.BluetoothActivity" android:label="Bluetooth"
 			android:theme="@style/Dialog" />
 		
-		<activity android:name=".activities.ServerActivity" android:label="@string/s_pref_servers"
-		    android:theme="@style/Dialog" />
-		
 		<activity android:name=".activities.SplashActivity"
-		    android:theme="@style/Dialog" />
-		
-		<activity android:name=".activities.OperationsActivity"
 		    android:theme="@style/Dialog" />
 		
 		<!-- 

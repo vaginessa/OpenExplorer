@@ -4,28 +4,7 @@
 	android:orientation="vertical"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
-
-	<RelativeLayout
-	    android:id="@+id/layout_info"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_alignParentLeft="true"
-	    android:layout_alignParentTop="true"
-	    android:gravity="center"
-	    android:orientation="horizontal" >
-
-	    <ProgressBar
-	        android:id="@android:id/progress"
-	        style="@style/Widget.ProgressBar.Horizontal"
-	        android:indeterminate="true"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-	        android:layout_alignParentLeft="true"
-	        android:visibility="gone"
-	        android:layout_margin="4dp" />
-	    
-	</RelativeLayout>
-
+	
 	<ListView
 	    android:id="@+id/text_view_list"
 	    android:layout_width="match_parent"
@@ -63,7 +42,40 @@
 		android:bufferType="normal"
 		android:inputType="textNoSuggestions|textMultiLine"
 		android:layout_alignParentLeft="true">
-        <requestFocus></requestFocus>
     </EditText>
     
+
+	<LinearLayout
+	    android:id="@+id/layout_info"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentLeft="true"
+	    android:layout_alignParentTop="true"
+	    android:gravity="center"
+	    android:orientation="vertical" >
+
+	    <ProgressBar
+	        android:id="@android:id/progress"
+	        style="@style/Widget.ProgressBar.Horizontal"
+	        android:indeterminate="true"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:visibility="gone"
+	        android:layout_margin="4dp" />
+	    
+	    <TextView
+	        style="@style/Large"
+	        android:ellipsize="none"
+	        android:singleLine="false"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_margin="8dp"
+	        android:padding="8dp"
+	        android:background="@drawable/contextmenu_square"
+	        android:id="@+id/text_filename"
+	        android:text="@string/filename"
+	        />
+	    
+	</LinearLayout>
+	
 </RelativeLayout>

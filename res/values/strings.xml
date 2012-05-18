@@ -305,4 +305,7 @@
     <string name="selected_path">Selected Path:</string>
     <string name="filename">Filename</string>
     <string name="s_msg_saved">saved</string>
+    <string name="s_menu_view_line_numbers">Line Numbers</string>
+    <string name="warn_text_editor">Welcome to Text Editor. Please long press the text to enter Edit mode.</string>
+    <string name="warn_networking">Welcome to Networking. Please note that this feature is still under development and may contain bugs. Please do not give a bad market rating if you find any of these bugs.</string>
 </resources>

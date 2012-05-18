@@ -41,6 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -66,8 +67,12 @@ import android.text.method.ReplacementTransformationMethod;
 import android.text.method.TransformationMethod;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
 
 public class SettingsActivity extends PreferenceActivity
@@ -147,6 +152,51 @@ public class SettingsActivity extends PreferenceActivity
 						public boolean onPreferenceClick(Preference preference) {
 							OpenExplorer.launchTranslator(SettingsActivity.this);
 							return true;
+						}
+					});
+				}
+				
+				final Preference pSize = pm.findPreference("text_size") != null ? pm.findPreference("text_size") : findPreference("text_size");
+				if(pSize != null)
+				{
+					float sz = new Preferences(getApplication())
+						.getSetting("global", "text_size", 10f);
+					pSize.setSummary(sz + "");
+					pSize.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+						@Override
+						public boolean onPreferenceClick(final Preference preference) {
+							float mSize = 10f;
+							try {
+								mSize = Float.parseFloat(pSize.getSummary().toString());
+							} catch(Exception e) { }
+							
+							DialogHandler.showSeekBarDialog(SettingsActivity.this,
+									getString(R.string.s_view_font_size),
+									(int)mSize * 2, 60,
+									new OnSeekBarChangeListener() {
+
+										@Override
+										public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+											float fsz = (float)(progress + 1) / 2;
+											pSize.setSummary(fsz + "");
+										}
+
+										@Override
+										public void onStartTrackingTouch(
+												SeekBar seekBar) {
+											// TODO Auto-generated method stub
+											
+										}
+
+										@Override
+										public void onStopTrackingTouch(
+												SeekBar seekBar) {
+											new Preferences(getApplication())
+												.setSetting("global", "text_size", (float)(seekBar.getProgress() + 1) / 2);
+										}
+
+									});
+							return false;
 						}
 					});
 				}

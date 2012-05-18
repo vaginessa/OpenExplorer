@@ -27,6 +27,8 @@ public class Preferences {
 	public static boolean Pref_Text_Internal = true;
 	public static boolean Pref_Zip_Internal = true;
 	public static boolean Pref_ShowUp = false;
+	public static boolean Warn_TextEditor = false;
+	public static boolean Warn_Networking = false;
 	
 	public interface OnPreferenceInteraction
 	{
@@ -128,7 +130,13 @@ public class Preferences {
 	public float getSetting(String file, String key, Float defValue)
 	{
 		try {
-			return Float.parseFloat(getSetting(file, key, defValue.toString()));
+			float ret = defValue;
+			try {
+				ret = getPreferences(file).getFloat(key, defValue);
+			} catch(ClassCastException e) {
+				ret = Float.parseFloat(getSetting(file, key, defValue.toString()));
+			}
+			return ret;
 		} catch(Exception e) { return defValue; }
 	}
 	public Double getSetting(String file, String key, Double defValue)
@@ -217,6 +225,15 @@ public class Preferences {
 			getPreferences(file)
 				.edit()
 				.putInt(key, value)
+				.commit();
+		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
+	}
+	public void setSetting(String file, String key, Float value)
+	{
+		try {
+			getPreferences(file)
+				.edit()
+				.putFloat(key, value)
 				.commit();
 		} catch(Exception e) { Logger.LogError("Couldn't set " + key + " in " + file + " preferences.", e); }
 	}
