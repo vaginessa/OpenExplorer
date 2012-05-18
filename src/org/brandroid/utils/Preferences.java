@@ -28,6 +28,12 @@ public class Preferences {
 	public static boolean Pref_Zip_Internal = true;
 	public static boolean Pref_ShowUp = false;
 	
+	public interface OnPreferenceInteraction
+	{
+		public void setSetting(String key, String value);
+		public String getSetting(String key, String sDefault);
+	}
+	
 	public Preferences(Context context)
 	{
 		mContext = context;

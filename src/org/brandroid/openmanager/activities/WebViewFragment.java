@@ -31,8 +31,15 @@ public class WebViewFragment
 	private Uri uri;
 	private WebView web;
 	private TextView mTitle;
+	private WebViewClient mClient = new MyWebViewClient();
 	
 	public WebViewFragment() {
+	}
+	
+	public void setWebViewClient(WebViewClient client) {
+		mClient = client;
+		if(isVisible())
+			web.setWebViewClient(client);
 	}
 	
 	public WebViewFragment setUri(Uri uri) {
@@ -60,7 +67,7 @@ public class WebViewFragment
 		else if(view.findViewById(R.id.webview) != null)
 			web = (WebView)view.findViewById(R.id.webview);
 		OpenChromeClient client = new OpenChromeClient();
-		web.setWebViewClient(new MyWebViewClient());
+		web.setWebViewClient(mClient);
 		web.setWebChromeClient(client);
 		WebSettings settings = web.getSettings();
 		settings.setJavaScriptEnabled(true);
@@ -77,17 +84,21 @@ public class WebViewFragment
 		super.onCreate(savedInstanceState);
 		if(savedInstanceState != null && savedInstanceState.containsKey("url"))
 			setUri(Uri.parse(savedInstanceState.getString("url")));
+		else if(web != null)
+			web.restoreState(savedInstanceState);
+	}
+	
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		web.restoreState(savedInstanceState);
 	}
 	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		if(web != null)
-		{
-			uri = Uri.parse(web.getUrl());
-			if(outState != null)
-				outState.putString("url", web.getUrl());
-		}
+			web.saveState(outState);
 	}
 	
 	public class MyWebViewClient extends WebViewClient

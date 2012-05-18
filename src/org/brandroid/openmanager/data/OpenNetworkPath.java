@@ -55,6 +55,12 @@ public abstract class OpenNetworkPath extends OpenPath
 		public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e);
 	}
 	
+	public interface OpenAuthCallback
+	{
+		public void OnAuthenticate(String url);
+		public void OnAuthenticated(OpenPath path);
+	}
+	
 	@Override
 	public Boolean requiresThread() {
 		return true;
