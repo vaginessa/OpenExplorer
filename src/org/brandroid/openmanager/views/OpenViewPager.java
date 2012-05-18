@@ -9,19 +9,46 @@ import org.brandroid.utils.Logger;
 
 import com.viewpagerindicator.PageIndicator;
 import android.content.Context;
+import android.inputmethodservice.Keyboard.Key;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 
 public class OpenViewPager extends ViewPager
 {
 	private PageIndicator mIndicator = null;
 	private List<OnPageChangeListener> mListeners = new ArrayList<OnPageChangeListener>();
 	private OnPageIndicatorChangeListener mIndicatorListener = null;
+	private OnDPADListener mDPAD = null;
 	
 	public interface OnPageIndicatorChangeListener
 	{
 		public void onPageIndicatorChange();
+	}
+	public interface OnDPADListener
+	{
+		public boolean onKeyPressLeft();
+		public boolean onKeyPressRight();
+	}
+	
+	public void setOnDPADListener(OnDPADListener dpad)
+	{
+		mDPAD = dpad;
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if(event.getAction() == KeyEvent.ACTION_DOWN && mDPAD != null)
+		{
+			if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+					&& mDPAD.onKeyPressLeft())
+				return true;
+			if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+					&& mDPAD.onKeyPressRight())
+				return true;
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	public OpenViewPager(Context context, AttributeSet attrs) {
@@ -91,6 +118,7 @@ public class OpenViewPager extends ViewPager
 
 	public void notifyDataSetChanged() {
 		getAdapter().notifyDataSetChanged();
-		mIndicator.notifyDataSetChanged();
+		if(mIndicator != null)
+			mIndicator.notifyDataSetChanged();
 	}
 }

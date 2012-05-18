@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
@@ -24,6 +25,7 @@ public class OpenCursor extends OpenPath
 	private Long mModified = Long.MIN_VALUE;
 	public static int LoadedCursors = 0;
 	private UpdateBookmarkTextListener mListener = null;
+	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	
 	public OpenCursor(String name)
 	{
@@ -65,7 +67,8 @@ public class OpenCursor extends OpenPath
 		mChildren = kids.toArray(mChildren);
 		if(mListener != null)
 			mListener.updateBookmarkText("(" + mChildren.length + ")");
-		Logger.LogInfo(getName() + " found " + mChildren.length);
+		if(DEBUG)
+			Logger.LogDebug(getName() + " found " + mChildren.length);
 		loaded = true;
 		c.close();
 	}

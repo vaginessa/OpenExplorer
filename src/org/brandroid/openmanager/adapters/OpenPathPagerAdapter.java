@@ -8,6 +8,7 @@ import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 
+import android.os.Parcelable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.widget.AdapterView.OnItemClickListener;

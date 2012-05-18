@@ -81,7 +81,7 @@ public abstract class OpenFragment
 	protected Object mActionMode = null;
 	protected int mMenuContextItemIndex = -1;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	
 	public interface OnFragmentTitleLongClickListener
 	{
@@ -165,12 +165,26 @@ public abstract class OpenFragment
 	 * Return priority for ordering in ViewPager (Low to High)
 	 */
 	public int getPagerPriority() { return 5; }
+	
+	@Override
+	public void startActivityForResult(Intent intent, int requestCode) {
+		super.startActivityForResult(intent, requestCode);
+		if(DEBUG)
+			Logger.LogDebug(getClassName() + ".startActivityForResult(" + requestCode + "," + (intent != null ? intent.toString() : "null") + ")");
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if(DEBUG)
+			Logger.LogDebug(getClassName() + ".onActivityResult(" + requestCode + "," + resultCode + "," + (data != null ? data.toString() : "null") + ")");
+	}
 
 	//@Override
 	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 		OpenPath file = (OpenPath)list.getItemAtPosition(pos);
 		
-		Logger.LogDebug("File clicked: " + file.getPath());
+		Logger.LogInfo("File clicked: " + file.getPath());
 		
 		if(file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
 			file = new OpenZip((OpenFile)file);
@@ -302,7 +316,7 @@ public abstract class OpenFragment
 		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 		final String name = file.getName();
 		
-		Logger.LogDebug("Long click: " + file);
+		Logger.LogInfo(getClassName() + ".onItemLongClick: " + file);
 		
 		final OpenContextMenuInfo info = new OpenContextMenuInfo(file);
 		
@@ -460,36 +474,59 @@ public abstract class OpenFragment
 
 	protected String getViewSetting(OpenPath path, String key, String def)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
-			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
-		return def;
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			return def;
+		else
+			return getFragmentActivity().getSetting(path, key, def);
 	}
 	protected Boolean getViewSetting(OpenPath path, String key, Boolean def)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
-			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
-		return def;
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			return def;
+		else
+			return getFragmentActivity().getSetting(path, key, def);
 	}
 	protected Integer getViewSetting(OpenPath path, String key, Integer def)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
-			return getExplorer().getPreferences().getSetting("views", key + "_" + path.getPath(), def);
-		return def;
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			return def;
+		else
+			return getFragmentActivity().getSetting(path, key, def);
+	}
+	protected Float getViewSetting(OpenPath path, String key, Float def)
+	{
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			return def;
+		else
+			return getFragmentActivity().getSetting(path, key, def);
 	}
 	protected void setViewSetting(OpenPath path, String key, String value)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
-			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			Logger.LogWarning("Unable to setViewSetting");
+		else
+			getFragmentActivity().setSetting(path, key, value);
 	}
 	protected void setViewSetting(OpenPath path, String key, Boolean value)
 	{
-		if(getExplorer() != null && getExplorer().getPreferences() != null && path != null && path.getPath() != null)
-			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			Logger.LogWarning("Unable to setViewSetting");
+		else
+			getFragmentActivity().setSetting(path, key, value);
 	}
 	protected void setViewSetting(OpenPath path, String key, Integer value)
 	{
-		if(path != null && path.getPath() != null && getExplorer() != null && getExplorer().getPreferences() != null)
-			getExplorer().getPreferences().setSetting("views", key + "_" + path.getPath(), value);
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			Logger.LogWarning("Unable to setViewSetting");
+		else
+			getFragmentActivity().setSetting(path, key, value);
+	}
+	protected void setViewSetting(OpenPath path, String key, Float value)
+	{
+		if(getExplorer() == null || getExplorer().getPreferences() == null)
+			Logger.LogWarning("Unable to setViewSetting");
+		else
+			getFragmentActivity().setSetting(path, key, value);
 	}
 	protected Integer getSetting(OpenPath file, String key, Integer defValue)
 	{
@@ -500,6 +537,12 @@ public abstract class OpenFragment
 	{
 		if(getActivity() == null) return defValue;
 		return getFragmentActivity().getSetting(file, key, defValue);
+	}
+	protected Boolean getSetting(String file, String key, Boolean defValue)
+	{
+		if(getActivity() == null) return defValue;
+		if(getFragmentActivity().getPreferences() == null) return defValue;
+		return getFragmentActivity().getPreferences().getSetting(file, key, defValue);
 	}
 	
 	@Override
@@ -863,16 +906,16 @@ public abstract class OpenFragment
 	}
 	
 	public void onClick(View v) {
-		//Logger.LogDebug("View onClick(" + v.getId() + ") - " + v.toString());
+		Logger.LogInfo(getClassName() + ".onClick(" + v.getId() + ")");
 	}
 	
 	public boolean onClick(int id) {
-		//Logger.LogDebug("View onClick(" + id + ") / " + getClassName());
+		Logger.LogInfo(getClassName() + ".onClick(" + id + ")");
 		return false;
 	}
 	
 	public boolean onLongClick(View v) {
-		Logger.LogDebug("View onLongClick(" + v.getId() + ") - " + v.toString());
+		Logger.LogInfo(getClassName() + ".onLongClick(" + v.getId() + ") - " + v.toString());
 		return false;
 	}
 	
