@@ -12,6 +12,7 @@ import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 
 import org.brandroid.openmanager.R;
@@ -502,5 +503,14 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 		if(mInternalDrive != null)
 			return mInternalDrive.getChild("OpenExplorer").getChild("temp");
 		return null;
+	}
+	@Override
+	public boolean touch() {
+		try {
+			if(exists())
+				return getFile().setLastModified(new Date().getTime());
+			else
+				return getFile().createNewFile();
+		} catch(Exception e) { return false; }
 	}
 }

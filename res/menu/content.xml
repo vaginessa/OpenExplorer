@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+  	
+    <item
+		android:id="@+id/menu_paste"
+		android:title="@string/s_menu_multi"
+    	android:showAsAction="always|withText"
+    	android:icon="@drawable/ic_menu_paste">
+    </item>
+	<item
+		android:id="@+id/menu_sort"
+		android:icon="@drawable/ic_menu_sort_by_size"
+		android:showAsAction="ifRoom"
+		android:title="@string/s_menu_sort">
+		<!-- include menu_sort.xml -->
+		<menu />
+	</item>
+	<item
+		android:id="@+id/menu_view"
+		android:icon="@drawable/ic_menu_view"
+		android:showAsAction="ifRoom"
+		android:title="@string/s_view">
+		<!--  include menu_view.xml -->
+		<menu />
+	</item>
+    <item android:id="@+id/menu_content_ops"
+        android:title="@string/s_title_operations"
+        android:icon="@drawable/ic_menu_folder"
+        android:showAsAction="always">
+		<!--  include content_ops.xml -->
+    	<menu />
+    </item>
+	<item
+	    android:id="@+id/menu_refresh"
+	    android:icon="@drawable/ic_menu_refresh"
+	    android:showAsAction="ifRoom"
+	    android:title="@string/s_menu_refresh"
+	    />
+</menu>

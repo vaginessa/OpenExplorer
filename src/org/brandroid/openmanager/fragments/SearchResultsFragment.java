@@ -124,7 +124,8 @@ public class SearchResultsFragment
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		mTextSummary.setText(getString(R.string.search_summary, mSearch.getQuery(), mSearch.getBasePath().getPath(), 0));
+		if(mTextSummary != null)
+			mTextSummary.setText(getString(R.string.search_summary, mSearch.getQuery(), mSearch.getBasePath().getPath(), 0));
 		mCancel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {

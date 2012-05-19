@@ -425,4 +425,35 @@ public class Utils {
         int length = Math.min(s.length(), MASK_STRING.length());
         return IS_DEBUG_BUILD ? s : MASK_STRING.substring(0, length);
     }
+
+    public static String joinArray(int[] array)
+    {
+    	String ret = "[";
+    	for(int item : array)
+    		ret += Integer.toHexString(item) + ",";
+    	ret += "]";
+    	return ret;
+    }
+    public static String joinArray(String[] array)
+    {
+    	String ret = "[";
+    	for(String item : array)
+    		ret += item + ",";
+    	ret += "]";
+    	return ret;
+    }
+	public static int getArrayIndex(int[] search, int value)
+	{
+		for(int i = 0; i < search.length; i++)
+			if(search[i] == value)
+				return i;
+		return -1;
+	}
+	public static int getArrayIndex(String[] search, int value)
+	{
+		for(int i = 0; i < search.length; i++)
+			if(search[i].equals("" + value))
+				return i;
+		return -1;
+	}
 }

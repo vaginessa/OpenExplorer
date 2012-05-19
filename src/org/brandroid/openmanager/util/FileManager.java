@@ -300,27 +300,6 @@ public class FileManager {
 	}
 	
 	/**
-	 * 
-	 * @param path
-	 * @param name
-	 * @return
-	 */
-	public int createDir(String path, String name) {
-		int len = path.length();
-		
-		if(len < 1 || len < 1)
-			return -1;
-		
-		if(path.charAt(len - 1) != '/')
-			path += "/";
-		
-		if (new File(path+name).mkdir())
-			return 0;
-		
-		return -1;
-	}
-	
-	/**
 	 * The full path name of the file to delete.
 	 * 
 	 * @param path name

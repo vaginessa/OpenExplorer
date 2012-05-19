@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    
+  	<item android:id="@+id/menu_ops"
+  	    android:showAsAction="always"
+  	    android:icon="@drawable/ic_gear"
+  	    android:title="@string/s_title_operations"
+  	    android:visible="false"
+  	    />
+  	<item android:id="@+id/menu_log"
+  	    android:showAsAction="always"
+  	    android:icon="@drawable/ic_paper"
+  	    android:title="@string/s_pref_logview"
+  	    android:visible="false"
+  	    />
+	<item
+		android:id="@+id/menu_search"
+		android:icon="@drawable/ic_menu_search"
+		android:showAsAction="always"
+		android:title="@android:string/search_go"
+		/>
+
+</menu>

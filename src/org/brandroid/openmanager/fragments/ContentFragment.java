@@ -467,6 +467,12 @@ public class ContentFragment extends OpenFragment
 		if(item == null) return false;
 		switch(item.getItemId())
 		{
+		case R.id.menu_new_file:
+			EventHandler.createNewFile(getPath(), getActivity());
+			return true;
+		case R.id.menu_new_folder:
+			EventHandler.createNewFolder(getPath(), getActivity());
+			return true;
 		case R.id.menu_sort_name_asc:	onSortingChanged(SortType.ALPHA); return true; 
 		case R.id.menu_sort_name_desc:	onSortingChanged(SortType.ALPHA_DESC); return true; 
 		case R.id.menu_sort_date_asc: 	onSortingChanged(SortType.DATE); return true;
@@ -483,63 +489,16 @@ public class ContentFragment extends OpenFragment
 		case R.id.menu_sort_folders_first:
 			onFoldersFirstChanged(!getFoldersFirst());
 			return true;
-		case R.id.menu_refresh:
-			refreshData();
-			return true;
 		}
 		return false;
 	}
 	
-	@TargetApi(11)
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		menu.clear();
-		inflater.inflate(R.menu.main_menu, menu);
-		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
-		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
-		{
-			MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
-			try {
-			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
-			if(mSearchView != null)
-				mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-					@TargetApi(11)
-					public boolean onQueryTextSubmit(String query) {
-						mSearchView.clearFocus();
-						Intent intent = getExplorer().getIntent();
-						if(intent == null)
-							intent = new Intent();
-						intent.setAction(Intent.ACTION_SEARCH);
-						Bundle appData = new Bundle();
-						appData.putString("path", getExplorer().getDirContentFragment(false).getPath().getPath());
-						intent.putExtra(SearchManager.APP_DATA, appData);
-						intent.putExtra(SearchManager.QUERY, query);
-						getExplorer().handleIntent(intent);
-						return true;
-					}
-					public boolean onQueryTextChange(String newText) {
-						return false;
-					}
-				});
-			} catch(NullPointerException e) {
-				Logger.LogError("Couldn't set up Search ActionView", e);
-			}
-		}
+		inflater.inflate(R.menu.content, menu);
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
-		if(!(menu instanceof MenuBuilder))
-		{
-			MenuItem sort = menu.findItem(R.id.menu_sort);
-			if(sort != null && sort.getSubMenu() != null && !sort.getSubMenu().hasVisibleItems())
-				inflater.inflate(R.menu.menu_sort, sort.getSubMenu());
-			MenuItem view = menu.findItem(R.id.menu_view);
-			if(view != null && view.getSubMenu() != null && !view.getSubMenu().hasVisibleItems())
-				inflater.inflate(R.menu.menu_view, view.getSubMenu());
-			MenuItem paste = menu.findItem(R.id.menu_paste);
-			if(paste != null && paste.getSubMenu() != null && !paste.getSubMenu().hasVisibleItems())
-				inflater.inflate(R.menu.multiselect, paste.getSubMenu());
-		}
 	}
 	
 	@Override

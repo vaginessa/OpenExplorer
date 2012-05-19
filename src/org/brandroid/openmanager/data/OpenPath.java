@@ -519,5 +519,8 @@ public abstract class OpenPath
 		
 		return deets;
 	}
+	public boolean touch() {
+		return false;
+	}
     
 }

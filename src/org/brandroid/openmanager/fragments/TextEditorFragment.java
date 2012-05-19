@@ -278,20 +278,15 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		if(menu.size() > 0)
-			menu.clear();
 		inflater.inflate(R.menu.text_editor, menu);
 		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
+		//Class clz = Class.forName("org.brandroid.openmanagerviews.SeekBarActionView");
 		if(mFontSize != null && USE_SEEK_ACTIONVIEW)
 		{
 			mFontSize
 				.setActionView((SeekBarActionView)mFontSizeBar)
 				.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		}
-		if(menu.findItem(R.id.menu_file) != null && menu.findItem(R.id.menu_file).getSubMenu() != null && !menu.findItem(R.id.menu_file).getSubMenu().hasVisibleItems())
-			inflater.inflate(R.menu.text_file, menu.findItem(R.id.menu_file).getSubMenu());
-		if(menu.findItem(R.id.menu_view) != null && menu.findItem(R.id.menu_view).getSubMenu() != null && !menu.findItem(R.id.menu_view).getSubMenu().hasVisibleItems())
-			inflater.inflate(R.menu.text_view, menu.findItem(R.id.menu_view).getSubMenu());
 	}
 	
 	public void onPrepareOptionsMenu(Menu menu) {
@@ -552,18 +547,10 @@ public class TextEditorFragment extends OpenFragment
 			if(c != null)
 				DialogHandler.showFileInfo(c, getPath());
 			return true;
-		case R.id.menu_save:
-			doSave();
-			return true;
 			
-		case R.id.menu_save_as:
-			
-			doSaveAs();
-			return true;
-			
-		case R.id.menu_close:
-			doClose();
-			return true;
+		case R.id.menu_save: doSave(); return true;
+		case R.id.menu_save_as: doSaveAs(); return true;
+		case R.id.menu_close: doClose(); return true;
 			
 		case R.id.menu_view_font_size:
 			if(USE_SEEK_ACTIONVIEW)
@@ -579,7 +566,7 @@ public class TextEditorFragment extends OpenFragment
 				showMenu(R.menu.text_view, from);
 			return true;
 			
-		case R.id.menu_file:
+		case R.id.menu_text_ops:
 			if(OpenExplorer.BEFORE_HONEYCOMB)
 				showMenu(R.menu.text_file, from);
 			return true;

@@ -260,13 +260,13 @@ public class EventHandler {
 	 * @param directory
 	 *            directory path to create the new folder in.
 	 */
-	public void createNewFolder(final String directory, Context mContext) {
-		final InputDialog dlg = new InputDialog(mContext)
+	public static void createNewFolder(final OpenPath folder, final Context context) {
+		final InputDialog dlg = new InputDialog(context)
 				.setTitle(R.string.s_title_newfolder)
 				.setIcon(R.drawable.ic_menu_folder_add_dark)
 				.setMessage(R.string.s_alert_newfolder)
 				.setMessageTop(R.string.s_alert_newfolder_folder)
-				.setDefaultTop(directory, false).setCancelable(true)
+				.setDefaultTop(folder.getPath(), false).setCancelable(true)
 				.setNegativeButton(R.string.s_cancel, new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						dialog.dismiss();
@@ -276,9 +276,53 @@ public class EventHandler {
 			public void onClick(DialogInterface dialog, int which) {
 				String name = dlg.getInputText();
 				if (name.length() > 0) {
-					if (mFileMang != null)
-						mFileMang.createDir(directory, name);
-					OnWorkerThreadComplete(MKDIR_TYPE, null);
+					OpenPath file = folder.getChild(name + "/");
+					if(file.mkdir())
+						Toast.makeText(context,
+							file.getPath() +
+							context.getString(R.string.s_msg_created)
+							, Toast.LENGTH_LONG);
+					else Toast.makeText(context,
+							context.getString(R.string.s_msg_none) +
+							context.getString(R.string.s_msg_created)
+							, Toast.LENGTH_LONG);
+				} else {
+					dialog.dismiss();
+				}
+			}
+		});
+		dlg.create().show();
+	}
+	
+
+
+	public static void createNewFile(final OpenPath folder, final Context context) {
+		final InputDialog dlg = new InputDialog(context)
+		.setTitle(R.string.s_title_newfolder)
+		.setIcon(R.drawable.ic_menu_folder_add_dark)
+		.setMessage(R.string.s_alert_newfolder)
+		.setMessageTop(R.string.s_alert_newfolder_folder)
+		.setDefaultTop(folder.getPath())
+		.setCancelable(true)
+		.setNegativeButton(R.string.s_cancel, new OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		dlg.setPositiveButton(R.string.s_create, new OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				String name = dlg.getInputText();
+				if (name.length() > 0) {
+					OpenPath file = folder.getChild(name);
+					if(file.touch())
+						Toast.makeText(context,
+							file.getPath() +
+							context.getString(R.string.s_msg_created)
+							, Toast.LENGTH_LONG);
+					else Toast.makeText(context,
+							context.getString(R.string.s_msg_none) +
+							context.getString(R.string.s_msg_created)
+							, Toast.LENGTH_LONG);
 				} else {
 					dialog.dismiss();
 				}

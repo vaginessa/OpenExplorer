@@ -1,9 +1,13 @@
 package org.brandroid.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.brandroid.openmanager.activities.OpenExplorer;
 
 import android.app.Activity;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.TouchDelegate;
 import android.view.View;
@@ -149,6 +153,33 @@ public class MenuUtils {
 			ViewGroup vg = (ViewGroup)view;
 			for(View v : vg.getTouchables())
 				v.setOnTouchListener(l);
+		}
+	}
+	public static void mergeDuplicateMenus(Menu menu)
+	{
+		ArrayList<Integer> holder = new ArrayList<Integer>();
+		//ArrayList<Integer> buffer = new ArrayList<int>();
+		for(int i = menu.size() - 1; i >= 0; i--)
+		{
+			MenuItem item = menu.getItem(i);
+			if(holder.contains(item.getItemId())) {
+				
+			}
+		}
+	}
+	public static void fillSubMenus(int[] search, int[] replace, Menu menu, MenuInflater inflater)
+	{
+		for(int i = 0; i < menu.size(); i++)
+		{
+			MenuItem item = menu.getItem(i);
+			try {
+				int index = Utils.getArrayIndex(search, item.getItemId());
+				if(index > -1 && item.getSubMenu() != null)
+				{
+					inflater.inflate(replace[index], item.getSubMenu());
+					Logger.LogDebug("Inflating 0x" + Integer.toHexString(replace[index]) + " to " + item.getTitle());
+				}
+			} catch(Exception e) { Logger.LogWarning("Couldn't fill submenu (0x" + Integer.toHexString(item.getItemId()) + ")"); }
 		}
 	}
 	

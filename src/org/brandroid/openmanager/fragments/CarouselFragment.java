@@ -269,7 +269,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		if(!menu.hasVisibleItems())
-			inflater.inflate(R.menu.main_menu, menu);
+			inflater.inflate(R.menu.content, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{
@@ -299,19 +299,6 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			} catch(NullPointerException e) {
 				Logger.LogError("Couldn't set up Search ActionView", e);
 			}
-		}
-		//MenuInflater inflater = new MenuInflater(mContext);
-		if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
-		{
-			MenuItem sort = menu.findItem(R.id.menu_sort);
-			if(sort != null && sort.getSubMenu() != null && !sort.getSubMenu().hasVisibleItems())
-				inflater.inflate(R.menu.menu_sort, sort.getSubMenu());
-			MenuItem view = menu.findItem(R.id.menu_view);
-			if(view != null && view.getSubMenu() != null && !view.getSubMenu().hasVisibleItems())
-				inflater.inflate(R.menu.menu_view, view.getSubMenu());
-			MenuItem paste = menu.findItem(R.id.menu_paste);
-			if(paste != null && paste.getSubMenu() != null && !paste.getSubMenu().hasVisibleItems())
-				inflater.inflate(R.menu.multiselect, paste.getSubMenu());
 		}
 	}
 	
@@ -384,8 +371,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		MenuUtils.setMenuVisible(menu, false, R.id.menu_view_thumbs);
 		MenuUtils.setMenuVisible(menu, !OpenExplorer.BEFORE_HONEYCOMB, R.id.menu_view_carousel);
 		
-		if(RootManager.Default.isRoot())
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_root);	
+		//if(RootManager.Default.isRoot()) MenuUtils.setMenuChecked(menu, true, R.id.menu_root);	
 	}
 	
 	@Override

@@ -68,6 +68,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
+/*
+ * Base class for all OpenExplorer fragments. Provides convenient methods to access
+ * other sections of the application.
+ */
 public abstract class OpenFragment
 			extends Fragment
 			implements View.OnClickListener, View.OnLongClickListener
@@ -259,29 +263,13 @@ public abstract class OpenFragment
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
-		mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
-			public void onIconContextItemSelected(MenuItem item, Object info, View view) {
-				//showToast(item.getTitle().toString());
-				if(item.getItemId() == R.id.menu_sort)
-					showMenu(R.menu.menu_sort, view);
-				else if(item.getItemId() == R.id.menu_view)
-					showMenu(R.menu.menu_view, view);
-				else if(item.getItemId() == R.id.menu_file)
-					showMenu(R.menu.text_file, view);
-				else
-					onClick(item.getItemId());
-				//mOpenMenu.dismiss();
-				//mMenuPopup.dismiss();
-				mOpenMenu.dismiss();
-			}
-		});
+		mOpenMenu.setOnIconContextItemSelectedListener(getExplorer());
 		return mOpenMenu.show();
 	}
 	
 	@Override
 	public void setHasOptionsMenu(boolean hasMenu) {
-		if(!OpenExplorer.BEFORE_HONEYCOMB)
-			super.setHasOptionsMenu(hasMenu);
+		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
 		mHasOptions = hasMenu;
 	}
 	public boolean hasOptionsMenu()
@@ -354,14 +342,7 @@ public abstract class OpenFragment
 						//view.refreshDrawableState();
 					}
 				});
-				cm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {	
-					public void onIconContextItemSelected(MenuItem item, Object info, View view) {
-						if(item != null)
-							executeMenu(item.getItemId(), null, file);
-						else Logger.LogWarning("MenuItem null for onContextItemSelected");
-						cm.dismiss();
-					}
-				});
+				cm.setOnIconContextItemSelectedListener(getExplorer());
 				cm.setInfo(pos);
 				cm.setTextLayout(R.layout.context_item);
 				if(!cm.show()) //r.left, r.top);
@@ -373,7 +354,7 @@ public abstract class OpenFragment
 			}
 		}
 		
-		if(!OpenExplorer.BEFORE_HONEYCOMB&&OpenExplorer.USE_ACTIONMODE)
+		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE)
 		{
 			if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
 				try {
@@ -416,17 +397,9 @@ public abstract class OpenFragment
 					});
 					((android.view.ActionMode)mActionMode).setTitle(file.getName());
 				} catch (NoSuchMethodException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				} catch (InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
 			return true;
@@ -583,10 +556,15 @@ public abstract class OpenFragment
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		//Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
+		if(DEBUG)
+			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		return super.onOptionsItemSelected(item);
+	}
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
