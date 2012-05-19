@@ -260,6 +260,8 @@ public abstract class OpenFragment
 		if(DEBUG)
 			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
 		MenuBuilder menu = mOpenMenu.getMenu();
+		if(getActivity() != null)
+			getActivity().onPrepareOptionsMenu(menu);
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
@@ -664,7 +666,7 @@ public abstract class OpenFragment
 				return false;
 
 			case R.id.menu_context_paste:
-			case R.id.menu_paste:
+			case R.id.content_paste:
 				OpenPath into = file;
 				if(!file.isDirectory())
 				{

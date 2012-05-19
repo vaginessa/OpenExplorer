@@ -520,7 +520,8 @@ public class ContentFragment extends OpenFragment
 		
 		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(), R.id.menu_sort_folders_first);
 		
-		MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
+		if(mPath != null)
+			MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(), R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
 		
 		if(mContentAdapter != null)
 		switch(getSorting().getType())
@@ -560,17 +561,17 @@ public class ContentFragment extends OpenFragment
 		
 		if(getClipboard() == null || getClipboard().size() == 0)
 		{
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_paste);
+			MenuUtils.setMenuVisible(menu, false, R.id.content_paste);
 		} else {
-			MenuItem mPaste = menu.findItem(R.id.menu_paste);
+			MenuItem mPaste = menu.findItem(R.id.content_paste);
 			if(mPaste != null && getClipboard() != null && !isDetached())
 				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
 			if(getClipboard().isMultiselect())
 			{
 				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
 				d.getDrawable(1).setAlpha(127);
-				if(menu.findItem(R.id.menu_paste) != null)
-					menu.findItem(R.id.menu_paste).setIcon(d);
+				if(menu.findItem(R.id.content_paste) != null)
+					menu.findItem(R.id.content_paste).setIcon(d);
 			}
 			if(mPaste != null)
 				mPaste.setVisible(true);

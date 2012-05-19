@@ -3,7 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
   	
     <item
-		android:id="@+id/menu_paste"
+		android:id="@+id/content_paste"
 		android:title="@string/s_menu_multi"
     	android:showAsAction="always|withText"
     	android:icon="@drawable/ic_menu_paste">
