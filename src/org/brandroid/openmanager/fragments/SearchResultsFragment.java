@@ -33,7 +33,6 @@ public class SearchResultsFragment
 		extends ContentFragment
 		implements OnItemClickListener, OnItemLongClickListener, SearchProgressUpdateListener
 {
-	private OpenSearch mSearch;
 	private TextView mTextSummary;
 	private ProgressBar mProgressBar;
 	private Button mCancel;
@@ -50,52 +49,66 @@ public class SearchResultsFragment
 		return ret;
 	}
 	
+	public OpenSearch getSearch()
+	{
+		return (OpenSearch)mPath;
+	}
+	
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putString("query", mSearch.getQuery());
-		outState.putString("path", mSearch.getBasePath().getPath());
-		if(mSearch.isRunning())
-			mSearch.cancelSearch();
+		outState.putString("query", getSearch().getQuery());
+		outState.putString("path", getSearch().getBasePath().getPath());
+		if(getSearch().isRunning())
+			getSearch().cancelSearch();
 		else
 			outState.putParcelableArrayList("results", getResults());
 	}
 	public SearchResultsFragment(OpenPath searchIn, String query)
 	{
-		mSearch = new OpenSearch(query, searchIn, this);
-		mSearch.start();
+		mPath = new OpenSearch(query, searchIn, this);
+		getSearch().start();
 	}
 	
 	@Override
 	public OpenPath getPath() {
-		return mSearch;
+		return getSearch();
 	}
 	
-	public ArrayList<OpenPath> getResults() { return (ArrayList<OpenPath>) mSearch.getResults(); }
+	public ArrayList<OpenPath> getResults() {
+		if(getSearch() != null)
+			return (ArrayList<OpenPath>) getSearch().getResults();
+		else return null;
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle b = getArguments();
+		if(b == null)
+			b = savedInstanceState;
 		if(b != null)
 		{
-			String q = getArguments().getString("query");
-			OpenPath path = null;
-			try {
-				path = FileManager.getOpenCache(getArguments().getString("path"), false, null);
-			} catch(IOException e) { path = new OpenFile(getArguments().getString("path")); }
-			ArrayList<Parcelable> results = null;
+			String q = "";
+			if(b.containsKey("query"))
+				q = b.getString("query");
+			OpenPath path = new OpenFile("/");
+			if(b.containsKey("path"))
+				path = FileManager.getOpenCache(b.getString("path"));
 			if(b.containsKey("results"))
 			{
-				results = b.getParcelableArrayList("results");
-				mSearch = new OpenSearch(q, path, results);
+				ArrayList<Parcelable> results = b.getParcelableArrayList("results");
+				mPath = new OpenSearch(q, path, results);
 			} else {
-				mSearch = new OpenSearch(q, path, this);
-				mSearch.start();
+				mPath = new OpenSearch(q, path, this);
+				getSearch().start();
 			}
 		}
-		else mSearch = null;
-		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, mSearch);
+		else {
+			mPath = new OpenSearch("", OpenFile.getExternalMemoryDrive(true), this);
+			getSearch().start();
+		}
+		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, getSearch());
 	}
 	
 	@Override
@@ -124,12 +137,12 @@ public class SearchResultsFragment
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		if(mTextSummary != null)
-			mTextSummary.setText(getString(R.string.search_summary, mSearch.getQuery(), mSearch.getBasePath().getPath(), 0));
+		if(mTextSummary != null && getSearch() != null && getSearch().getBasePath() != null)
+			mTextSummary.setText(getString(R.string.search_summary, getSearch().getQuery(), getSearch().getBasePath().getPath(), 0));
 		mCancel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mSearch.cancelSearch();
+				getSearch().cancelSearch();
 				if(getExplorer() != null && getExplorer().isViewPagerEnabled())
 				{
 					final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
@@ -152,7 +165,7 @@ public class SearchResultsFragment
 
 	@Override
 	public CharSequence getTitle() {
-		return "\"" + mSearch.getQuery() + "\"" + " (" + getResults().size() + ")";
+		return "\"" + getSearch().getQuery() + "\"" + " (" + getResults().size() + ")";
 	}
 	@Override
 	public void onUpdate() {
@@ -176,7 +189,7 @@ public class SearchResultsFragment
 		}
 		if(mTextSummary != null)
 			mTextSummary.post(new Runnable(){public void run(){
-				mTextSummary.setText(getString(R.string.search_results, getResults().size(), mSearch.getQuery(), mSearch.getBasePath().getPath()));
+				mTextSummary.setText(getString(R.string.search_results, getResults().size(), getSearch().getQuery(), getSearch().getBasePath().getPath()));
 			}});
 		if(mCancel != null)
 			mCancel.post(new Runnable(){public void run(){
