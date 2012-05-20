@@ -105,7 +105,7 @@ public class ContentFragment extends OpenFragment
 	public Boolean mShowLongDate = false;
 	private int mTopIndex = 0;
 	private OpenPath mTopPath = null;
-	private OpenPath mPath = null;
+	protected OpenPath mPath = null;
 	private OnPathChangeListener mPathListener = null;
 	private boolean mRefreshReady = true;
 	
@@ -386,6 +386,7 @@ public class ContentFragment extends OpenFragment
 	public void runUpdateTask() { runUpdateTask(false); }
 	public void runUpdateTask(boolean reconnect)
 	{
+		if(mPath == null) return;
 		if(mPath instanceof OpenPathUpdateListener)
 		{
 			try {

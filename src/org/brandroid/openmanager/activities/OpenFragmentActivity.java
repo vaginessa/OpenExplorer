@@ -137,8 +137,9 @@ public abstract class OpenFragmentActivity
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
 	
-	public static final boolean isBlackBerry() {
-		return Build.MANUFACTURER.trim().equalsIgnoreCase("rim") || Build.MODEL.toLowerCase().contains("blackberry");
+	public static boolean isBlackBerry() {
+		return Build.MANUFACTURER.trim().equalsIgnoreCase("rim") ||
+				Build.MODEL.toLowerCase().indexOf("blackberry") > -1;
 	}
 	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
 	public void showToast(final CharSequence message)  {

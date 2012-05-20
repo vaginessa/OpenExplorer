@@ -1,11 +1,15 @@
 package org.brandroid.utils;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 
 import android.app.Activity;
+import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -15,6 +19,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 public class MenuUtils {
@@ -114,7 +119,17 @@ public class MenuUtils {
 		if(OpenExplorer.BEFORE_HONEYCOMB) return;
 		for(int id : ids)
 			if(menu.findItem(id) != null)
-				menu.findItem(id).setShowAsAction(show);
+			{
+				MenuItem item = (MenuItem)menu.findItem(id);
+				MenuItemCompat.setShowAsAction(item, show);
+			}
+		/*
+		for(int id : ids)
+			if(menu.findItem(id) != null)
+			{
+				MenuItem item = menu.findItem(id);
+				item.setShowAsAction(show);
+			}*/
 	}
 	
 	public static int[] getMenuIDs(Menu menu)
@@ -181,6 +196,14 @@ public class MenuUtils {
 				}
 			} catch(Exception e) { Logger.LogWarning("Couldn't fill submenu (0x" + Integer.toHexString(item.getItemId()) + ")"); }
 		}
+	}
+	@SuppressWarnings("unchecked")
+	public static <T> ArrayList<T> findChildByClass(ViewGroup parent, Class<T> class1) {
+		ArrayList<T> ret = new ArrayList<T>();
+		for(int i = 0; i < parent.getChildCount(); i++)
+			if(parent.getChildAt(i).getClass().equals(class1))
+				ret.add((T)parent.getChildAt(i));
+		return ret;
 	}
 	
 }
