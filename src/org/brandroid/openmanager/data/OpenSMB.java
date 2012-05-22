@@ -379,6 +379,7 @@ public class OpenSMB extends OpenNetworkPath
 		}
 	}
 
+	/*
 	@Override
 	public InputStream getInputStream() throws IOException {
 		return mFile.getInputStream();
@@ -388,7 +389,7 @@ public class OpenSMB extends OpenNetworkPath
 	public OutputStream getOutputStream() throws IOException {
 		return mFile.getOutputStream();
 	}
-	
+	*/
 
 	public void copyTo(OpenFile dest, BackgroundWork task) throws SmbException {
 		mFile.copyTo(dest, task);
@@ -489,5 +490,20 @@ public class OpenSMB extends OpenNetworkPath
 				mDiskFreeSpace = mFile.getDiskFreeSpace();
 			} catch (SmbException e) { }
 		return mDiskFreeSpace;
+	}
+	@Override
+	public void clearChildren() {
+		mChildren = null;
+	}
+	@Override
+	public boolean copyFrom(OpenFile f, NetworkListener l) {
+		//InputStream is = mFile.getInputStream();
+		
+		return false;
+	}
+	@Override
+	public boolean copyTo(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

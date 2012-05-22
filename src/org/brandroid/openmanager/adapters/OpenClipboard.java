@@ -13,11 +13,13 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.RemoteImageView;
+import org.brandroid.utils.ViewUtils;
 
 import android.text.ClipboardManager;
 import android.content.ClipData;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,6 +39,24 @@ public class OpenClipboard
 	private final Context mContext;
 	private OnClipboardUpdateListener listener = null;
 	private boolean mMultiselect = false;
+	private OpenPath mCurrentPath = null;
+	
+	public static class OpenClipItem
+	{
+		public OpenPath Path;
+		public OpenClipboardOperation Operation;
+		public OpenClipItem(OpenPath path, OpenClipboardOperation op)
+		{
+			Path = path;
+			Operation = op;
+		}
+	}
+	
+	public enum OpenClipboardOperation
+	{
+		COPY,
+		CUT
+	}
 	
 	public interface OnClipboardUpdateListener
 	{
@@ -115,6 +135,13 @@ public class OpenClipboard
 	}
 	public boolean isMultiselect() { return mMultiselect; }
 	
+	/*
+	 * Path hint for drop down menu
+	 */
+	public void setCurrentPath(OpenPath p)
+	{
+		mCurrentPath = p;
+	}
 	public void setClipboardUpdateListener(OnClipboardUpdateListener listener)
 	{
 		this.listener = listener;
@@ -122,6 +149,21 @@ public class OpenClipboard
 
 	public int getCount() {
 		return list.size();
+	}
+	
+	public boolean hasPastable() {
+		for(OpenPath p : list)
+			if(isPastable(p))
+				return true;
+		return false;
+	}
+	
+	private boolean isPastable(OpenPath item)
+	{
+		if(mCurrentPath == null) return true;
+		if(item.getParent() == null) return true;
+		if(mCurrentPath.equals(item.getParent())) return false;
+		return true;
 	}
 
 	public OpenPath getItem(int pos) {
@@ -154,6 +196,14 @@ public class OpenClipboard
 		if(file == null) return ret;
 		
 		TextView text = (TextView)ret.findViewById(R.id.content_text);
+		Context c = parent.getContext();
+		Drawable d = ThumbnailCreator.getDefaultDrawable(file, w, w, c);
+		boolean isCut = file.getTag() != null && file.getTag() instanceof Integer && ((Integer)file.getTag()).equals(R.id.menu_context_cut);
+		if(isCut)
+			d = new LayerDrawable(new Drawable[]{d,
+					c.getResources().getDrawable(R.drawable.ic_menu_cut)});
+		float alpha = isPastable(file) ? 1f : 0.5f;
+		
 		if(text != null)
 		{
 			RemoteImageView image = (RemoteImageView)ret.findViewById(R.id.content_icon);
@@ -168,14 +218,17 @@ public class OpenClipboard
 				if(file.getName() != null)
 					text.setText(file.getName());
 				if(file.getPath() != null)
-					pathView.setText(file.getPath());
-				ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w * (3f/4f)), (int)(w * (3f/4f)));
+					pathView.setText(file.getParent().getPath());
+				image.setImageDrawable(d);
+				ViewUtils.setAlpha(alpha, image, pathView, text);
+				//ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w * (3f/4f)), (int)(w * (3f/4f)));
 			}
 		} else if(ret instanceof TextView) {
 			text = (TextView)ret;
 			text.setText(file.getName());
+			ViewUtils.setAlpha(text, alpha);
 			text.setCompoundDrawables(
-				ThumbnailCreator.getDefaultDrawable(file, 32, 32, parent.getContext()),
+				d,
 				(Drawable)null,
 				parent.getContext().getResources().getDrawable(android.R.drawable.checkbox_on_background),
 				(Drawable)null);
@@ -196,15 +249,21 @@ public class OpenClipboard
 	}
 	public boolean add(OpenPath path) {
 		boolean ret = true;
+		if(path.getTag() == null || !(path.getTag() instanceof Integer))
+			path.setTag((Integer)(DeleteSource ? R.id.menu_context_cut : R.id.menu_context_copy));
 		if(list.contains(path))
 			ret = false;
-		ret = list.add(path);
+		else
+			ret = list.add(path);
 		onClipboardUpdate();
 		return ret;
 	}
 
 	public void add(int index, OpenPath path) {
 		if(path == null) return;
+		if(list.contains(path)) return;
+		if(path.getTag() == null || !(path.getTag() instanceof Integer))
+			path.setTag((Integer)(DeleteSource ? R.id.menu_context_cut : R.id.menu_context_copy));
 		list.add(index, path);
 		onClipboardUpdate();
 	}

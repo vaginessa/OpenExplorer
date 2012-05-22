@@ -15,6 +15,7 @@ import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
@@ -377,14 +378,6 @@ public class OpenFTP extends OpenNetworkPath
 	{
 		mManager.get(mFile.getName(), stream);
 	}
-	@Override
-	public InputStream getInputStream() throws IOException {
-		return mManager.getInputStream();
-	}
-	@Override
-	public OutputStream getOutputStream() throws IOException {
-		return mManager.getOutputStream();
-	}
 
 	@Override
 	public Boolean isHidden() {
@@ -431,9 +424,13 @@ public class OpenFTP extends OpenNetworkPath
 	public boolean copyFrom(OpenFile f, NetworkListener l) {
 		try {
 			connect();
-			boolean ret = mManager.getClient().remoteStore(f.getPath());
+			InputStream is = f.getInputStream();
+			FTPClient client = mManager.getClient();
+			client.cwd(getParent().getUri().getPath());
+			boolean ret = client.storeFile(getName(), is);
+			is.close();
 			if(!ret)
-				throw new IOException("Unable to download from FTP.");
+				throw new IOException("Unable to upload to FTP.");
 			if(l != null)
 				l.OnNetworkCopyFinished(this, f);
 			return ret;
@@ -446,11 +443,16 @@ public class OpenFTP extends OpenNetworkPath
 	@Override
 	public boolean copyTo(OpenFile f, NetworkListener l) {
 
+		Logger.LogDebug("OpenFTP.copyTo(" + f + ")");
 		try {
 			connect();
-			boolean ret = mManager.getClient().remoteRetrieve(f.getPath());
+			OutputStream os = f.getOutputStream();
+			FTPClient client = mManager.getClient();
+			client.cwd(getParent().getUri().getPath());
+			boolean ret = client.retrieveFile(getName(), os);
+			os.close();
 			if(!ret)
-				throw new IOException("Unable to upload to FTP.");
+				throw new IOException("Unable to download from FTP.");
 			if(l != null)
 				l.OnNetworkCopyFinished(this, f);
 			return ret;
@@ -459,5 +461,9 @@ public class OpenFTP extends OpenNetworkPath
 				l.OnNetworkFailure(this, f, e);
 			return false;
 		}
+	}
+	@Override
+	public void clearChildren() {
+		mChildren.clear();
 	}
 }

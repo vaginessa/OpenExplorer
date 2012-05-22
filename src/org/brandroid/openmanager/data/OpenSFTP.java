@@ -375,6 +375,7 @@ public class OpenSFTP extends OpenNetworkPath
 		return mSession.isConnected();
 	}
 
+	/*
 	@Override
 	public InputStream getInputStream() throws IOException {
 		if(in != null)
@@ -434,6 +435,8 @@ public class OpenSFTP extends OpenNetworkPath
 		}
 		return out;
 	}
+	*/
+	
 	static int checkAck(InputStream in) throws IOException
 	{
 		int b=in.read();
@@ -448,5 +451,19 @@ public class OpenSFTP extends OpenNetworkPath
 			if(b==2){System.out.print(sb.toString());}
 		}
 		return b;
+	}
+	@Override
+	public void clearChildren() {
+		mChildren = null;
+	}
+	@Override
+	public boolean copyFrom(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public boolean copyTo(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

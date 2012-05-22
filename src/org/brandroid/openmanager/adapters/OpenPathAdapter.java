@@ -11,10 +11,10 @@ import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
-import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -121,9 +121,9 @@ public class OpenPathAdapter extends BaseAdapter
 			mNameView.setTextAppearance(mContext,  R.style.Large);
 		
 		if(file.isHidden())
-			OpenFragment.setAlpha(0.5f, mNameView, mPathView, mInfo);
+			ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);
 		else
-			OpenFragment.setAlpha(1.0f, mNameView, mPathView, mInfo);
+			ViewUtils.setAlpha(1.0f, mNameView, mPathView, mInfo);
 						
 		//if(!mHolder.getTitle().equals(mName))
 		//	mHolder.setTitle(mName);

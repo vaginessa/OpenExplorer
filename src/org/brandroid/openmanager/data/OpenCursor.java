@@ -33,6 +33,10 @@ public class OpenCursor extends OpenPath
 		loaded = false;
 	}
 	
+	@Override
+	public boolean showChildPath() {
+		return true;
+	}
 	public void setUpdateBookmarkTextListener(UpdateBookmarkTextListener listener)
 	{
 		mListener = listener;

@@ -98,8 +98,10 @@ public class OpenPathDbAdapter
     @Override
     protected void finalize() throws Throwable {
     	super.finalize();
-    	if(mDb != null && mDb.isOpen())
-    		close();
+    	try {
+	    	if(mDb != null)
+	    		close();
+    	} catch(Exception e) { }
     }
     
     public static int getKeyIndex(String keyName)

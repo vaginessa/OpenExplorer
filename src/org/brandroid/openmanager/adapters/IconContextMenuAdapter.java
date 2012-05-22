@@ -13,6 +13,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.ScaleDrawable;
 import android.view.*;
 import android.widget.*;
 
@@ -31,6 +32,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
     
     public void setMenu(Menu menu)
     {
+    	if(menu == null) return;
     	myMenu.clear();
     	for(int i=0; i<menu.size(); i++)
     	{
@@ -113,10 +115,12 @@ public class IconContextMenuAdapter extends BaseAdapter {
         //res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
         //res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
         
+        int sz = (int)(res.getResources().getDimension(R.dimen.one_dp) * 32f);
         Drawable src = item.getIcon();
         if(src != null && src instanceof BitmapDrawable)
         	((BitmapDrawable)src).setGravity(Gravity.CENTER);
         Drawable icon = new LayerDrawable(new Drawable[]{src != null ? src : new ColorDrawable(android.R.color.white)});
+        		//Gravity.CENTER, sz, sz);
         
         if(!item.isEnabled())
         {

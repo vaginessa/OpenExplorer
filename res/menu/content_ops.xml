@@ -28,5 +28,9 @@
         android:title="@android:string/selectAll"
         android:showAsAction="ifRoom"
         android:icon="@drawable/ic_menu_selectall_holo_dark" />
-	
+	<item
+	    android:id="@+id/content_paste"
+	    android:title="@android:string/paste"
+	    android:showAsAction="always"
+	    android:icon="@drawable/ic_menu_paste" />
 </menu>

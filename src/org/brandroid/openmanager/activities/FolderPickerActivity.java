@@ -6,7 +6,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.PickerFragment;
 import org.brandroid.openmanager.fragments.PickerFragment.OnOpenPathPickedListener;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -51,7 +51,7 @@ public class FolderPickerActivity extends FragmentActivity
 		
 		mFragmentManager = getSupportFragmentManager();
 		setPath(mPath, true);
-		MenuUtils.setViewsOnClick(this, this, android.R.id.button1, android.R.id.button2);
+		ViewUtils.setViewsOnClick(this, this, android.R.id.button1, android.R.id.button2);
 		if(mPickName != null)
 			mPickName.addTextChangedListener(this);
 	}
@@ -71,9 +71,9 @@ public class FolderPickerActivity extends FragmentActivity
 		if(data.containsKey("files"))
 			pickDirOnly = data.getBoolean("files", pickDirOnly);
 		
-		MenuUtils.setViewsVisible(this, !pickDirOnly, R.id.pick_path_row, R.id.pick_path);
+		ViewUtils.setViewsVisible(this, !pickDirOnly, R.id.pick_path_row, R.id.pick_path);
 		if(!pickDirOnly && (mDefaultName == null || mDefaultName == ""))
-			MenuUtils.setViewsEnabled(this, false, android.R.id.button1);
+			ViewUtils.setViewsEnabled(this, false, android.R.id.button1);
 	}
 	
 	private void setPath(OpenPath path, boolean addToStack)
@@ -177,6 +177,6 @@ public class FolderPickerActivity extends FragmentActivity
 
 	@Override
 	public void afterTextChanged(Editable s) {
-		MenuUtils.setViewsEnabled(this, s != null && !s.toString().equals(""), android.R.id.button1);
+		ViewUtils.setViewsEnabled(this, s != null && !s.toString().equals(""), android.R.id.button1);
 	}
 }

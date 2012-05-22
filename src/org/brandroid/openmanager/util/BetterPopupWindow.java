@@ -5,6 +5,7 @@ import java.util.Hashtable;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -19,7 +20,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnLayoutChangeListener;
 import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
@@ -137,7 +137,8 @@ public class BetterPopupWindow {
 		{
 			if(exact != null && exact.y + h > getAvailableHeight())
 				h -= Math.abs(getAvailableHeight() - exact.y) + 10;
-			popup.update(w, h);
+			if(popup != null && popup.isShowing())
+				popup.update(w, h);
 		}
 	}
 	
@@ -176,66 +177,32 @@ public class BetterPopupWindow {
 					.findViewById(android.R.id.widget_frame))
 					.addView(this.root);
 
-			if(OpenExplorer.BEFORE_HONEYCOMB)
-			{
-				root.postDelayed(new Runnable(){public void run() {
-					int h = root.getHeight();
-					int w = popup.getWidth();
-					int left = root.getLeft();
-					int top = root.getTop();
-					if(getArrow() != null)
-						h += getArrow().getHeight();
-					if(backgroundView.getPaddingTop() > 0)
-						h += backgroundView.getPaddingTop();
-					if(backgroundView.getPaddingBottom() > 0)
-						h += backgroundView.getPaddingBottom();
-					h += 4;
-					//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-					h = Math.max(h, backgroundView.getHeight());
-					h = Math.max(getPreferredMinHeight(), h);
-					int l = 0, t = 0;
-					if(exact != null)
-					{
-						l = exact.x;
-						t = exact.y;
-					}
-					if(mHeight > 0 && h <= mHeight) return;
-					if(DEBUG)
-						Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ")"); // from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
-					OnPopupShown(w, h);
-				}}, mContext.getResources().getInteger(android.R.integer.config_mediumAnimTime));
-			} else
-				root.addOnLayoutChangeListener(new OnLayoutChangeListener() {
-				@Override
-				public void onLayoutChange(View v, int left, int top, int right,
-						int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-					int h = bottom - top;
-					int w = Math.max(popup.getWidth(), right - left);
-					if(getArrow() != null)
-						h += getArrow().getHeight();
-					if(backgroundView.getPaddingTop() > 0)
-						h += backgroundView.getPaddingTop();
-					if(backgroundView.getPaddingBottom() > 0)
-						h += backgroundView.getPaddingBottom();
-					h += 14 * mContext.getResources().getDimension(R.dimen.one_dp);
-					//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-					//h = Math.max(h, backgroundView.getHeight());
-					//h = Math.max(getPreferredMinHeight(), h);
-					int l = 0, t = 0;
-					if(exact != null)
-					{
-						l = exact.x;
-						t = exact.y;
-					}
-					//if(h < getPreferredMinHeight()) return;
-					if(mHeight > 0 && h <= mHeight) return;
-					if(h > popup.getMaxAvailableHeight(anchor, t)) return;
-					if(DEBUG)
-						Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ") from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
-					if(h > getPreferredMinHeight())
-						OnPopupShown(w, h);
+			root.postDelayed(new Runnable(){public void run() {
+				int h = root.getHeight();
+				int w = popup.getWidth();
+				int left = root.getLeft();
+				int top = root.getTop();
+				if(getArrow() != null)
+					h += getArrow().getHeight();
+				if(backgroundView.getPaddingTop() > 0)
+					h += backgroundView.getPaddingTop();
+				if(backgroundView.getPaddingBottom() > 0)
+					h += backgroundView.getPaddingBottom();
+				h += 4;
+				//backgroundView.measure(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+				h = Math.max(h, backgroundView.getHeight());
+				h = Math.max(getPreferredMinHeight(), h);
+				int l = 0, t = 0;
+				if(exact != null)
+				{
+					l = exact.x;
+					t = exact.y;
 				}
-			});
+				if(mHeight > 0 && h <= mHeight) return;
+				if(DEBUG)
+					Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ")"); // from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
+				OnPopupShown(w, h);
+			}}, mContext.getResources().getInteger(android.R.integer.config_mediumAnimTime));
 		}
 		this.popup.setContentView(backgroundView);
 		
@@ -321,8 +288,8 @@ public class BetterPopupWindow {
 	}
 
 	public boolean showLikePopDownMenu(int xOffset, int yOffset) {
-		this.preShow((anchor != null ? getAbsoluteLeft(anchor) : 0) + xOffset,
-				(anchor != null ? getAbsoluteTop(anchor) : 0) + yOffset);
+		this.preShow((anchor != null ? ViewUtils.getAbsoluteLeft(anchor) : 0) + xOffset,
+				(anchor != null ? ViewUtils.getAbsoluteTop(anchor) : 0) + yOffset);
 
 		if(anchor == null)
 		{
@@ -389,8 +356,8 @@ public class BetterPopupWindow {
 				Logger.LogError("Error measuring background", e);
 			}
 			
-			int ancLeft = getAbsoluteLeft(anchor),
-				ancTop = getAbsoluteTop(anchor);
+			int ancLeft = ViewUtils.getAbsoluteLeft(anchor),
+				ancTop = ViewUtils.getAbsoluteTop(anchor);
 			
 			int padLeft = 0;
 			if(backgroundView.findViewById(R.id.indicator_line) != null)
@@ -462,8 +429,8 @@ public class BetterPopupWindow {
 				if(backgroundView.findViewById(R.id.indicator) != null)
 					backgroundView.findViewById(R.id.indicator).setVisibility(View.GONE);
 				anchor = getAnchorRoot();
-				ancLeft = getAbsoluteLeft(anchor);
-				ancTop = getAbsoluteTop(anchor);
+				ancLeft = ViewUtils.getAbsoluteLeft(anchor);
+				ancTop = ViewUtils.getAbsoluteTop(anchor);
 				//yOffset = getWindowHeight() - getAvailableHeight();
 				if(DEBUG)
 					Logger.LogInfo("Switching to absolute popup! " +
@@ -561,38 +528,6 @@ public class BetterPopupWindow {
 		return true;
 	}
 	
-	private int getAbsoluteTop(View v) {
-		try {
-			int[] ret = new int[2];
-			v.getLocationInWindow(ret);
-			return ret[1];
-		} catch(Exception e) {
-			int ret = v.getTop();
-			if(v.getParent() != null && v.getParent() instanceof View)
-				ret += getAbsoluteTop((View)v.getParent());
-			return ret;
-		}
-	}
-
-	private int getOffsetLeft(View v) {
-		int ret = getAbsoluteLeft(v);
-		if(v.getParent() != null)
-			ret -= getAbsoluteLeft((View)v.getParent());
-		return ret;
-	}
-	private int getAbsoluteLeft(View v) {
-		try {
-			int[] ret = new int[2];
-			v.getLocationOnScreen(ret);
-			return ret[0];
-		} catch(Exception e) {
-			int ret = v.getLeft();
-			if(v.getParent() != null && v.getParent() instanceof View)
-				ret += getAbsoluteLeft((View)v.getParent());
-			return ret;
-		}
-	}
-
 	public View getContentView()
 	{
 		return root;
@@ -670,7 +605,7 @@ public class BetterPopupWindow {
 	 * Displays like a QuickAction from the anchor view.
 	 */
 	public void showLikeQuickAction() {
-		this.showLikeQuickAction(0, 0, anchor != null ? getAbsoluteLeft(anchor) : 10);
+		this.showLikeQuickAction(0, 0, anchor != null ? ViewUtils.getAbsoluteLeft(anchor) : 10);
 	}
 	private View setViewWidth(View v, int w)
 	{

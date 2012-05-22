@@ -7,9 +7,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Parcelable;
 
 public class OpenSearch extends OpenPath
@@ -23,6 +26,7 @@ public class OpenSearch extends OpenPath
 	private Thread mSearchThread = null;
 	private int mSearchedDirs = 0;
 	private long mLastUpdate = 0;
+	private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
 	public OpenSearch(String query, OpenPath base, SearchProgressUpdateListener listener)
 	{
@@ -31,12 +35,12 @@ public class OpenSearch extends OpenPath
 		mBasePath = base;
 		mListener = listener;
 	}
-	public OpenSearch(String query, OpenPath base, ArrayList<Parcelable> results)
+	public OpenSearch(String query, OpenPath base, SearchProgressUpdateListener listener, ArrayList<Parcelable> results)
 	{
 		mResultsArray = new ArrayList<OpenPath>();
 		mQuery = query;
 		mBasePath = base;
-		mListener = null;
+		mListener = listener;
 		for(Parcelable p : results)
 		{
 			try {
@@ -64,18 +68,23 @@ public class OpenSearch extends OpenPath
 	
 	public void start()
 	{
+		if(DEBUG)
+			Logger.LogDebug("OpenSearch.start()");
 		new Thread(new Runnable() {
-			
 			@Override
 			public void run() {
 				SearchWithin(mBasePath);
 				mFinished = true;
+				mListener.onUpdate();
 				mListener.onFinish();
+				if(DEBUG)
+					Logger.LogDebug("OpenSearch finished!");
 			}
 		}).start();
 	}
 	private void SearchWithin(OpenPath dir)
 	{
+		if(dir == null) return;
 		if(isCancelled()) return;
 		mSearchedDirs++;
 		OpenPath[] kids = null;
@@ -99,6 +108,11 @@ public class OpenSearch extends OpenPath
 	private boolean isMatch(String a, String b)
 	{
 		return a.toLowerCase().indexOf(b.toLowerCase()) > -1 ? true : false;
+	}
+	
+	@Override
+	public boolean showChildPath() {
+		return true;
 	}
 
 	@Override
@@ -224,4 +238,11 @@ public class OpenSearch extends OpenPath
 		return null;
 	}
 
+	@Override
+	public void clearChildren() {
+		if(isRunning())
+			cancelSearch();
+		mResultsArray.clear();
+		start();
+	}
 }

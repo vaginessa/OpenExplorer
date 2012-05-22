@@ -10,15 +10,16 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
-import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -203,25 +204,27 @@ public class ContentAdapter extends BaseAdapter {
 
 		//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		//mHolder.setInfo(getFileDetails(file, false));
+		
+		if(mPathView != null)
+		{
+			if(mShowDetails && mParent.showChildPath())
+			{
+				String s = file.getPath().replace(file.getName(), "");
+				mPathView.setVisibility(View.VISIBLE);
+				mPathView.setText(s);
+				showLongDate = false;
+			}
+			else mPathView.setVisibility(View.GONE);
+				//mHolder.showPath(false);
+		}
+
 		if(mInfo != null)
 		{
 			if(mShowDetails)
 				mInfo.setText(String.format(file.getDetails(getSorting().showHidden(), showLongDate), getResources().getString(R.string.s_files)));
 			else mInfo.setText("");
 		}
-		
-		if(mPathView != null)
-		{
-			if(mShowDetails && (mParent instanceof OpenSmartFolder || mParent instanceof OpenCursor))
-			{
-				String s = file.getPath().replace(file.getName(), "");
-				mPathView.setVisibility(View.VISIBLE);
-				mPathView.setText(s);
-			}
-			else mPathView.setVisibility(View.GONE);
-				//mHolder.showPath(false);
-		}
-		
+
 		if(mNameView != null)
 			mNameView.setText(mName);
 
@@ -231,9 +234,9 @@ public class ContentAdapter extends BaseAdapter {
 			mNameView.setTextAppearance(getContext(),  R.style.Large);
 		
 		if(file.isHidden())
-			OpenFragment.setAlpha(0.5f, mNameView, mPathView, mInfo);
+			ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);
 		else
-			OpenFragment.setAlpha(1.0f, mNameView, mPathView, mInfo);
+			ViewUtils.setAlpha(1.0f, mNameView, mPathView, mInfo);
 						
 		//if(!mHolder.getTitle().equals(mName))
 		//	mHolder.setTitle(mName);

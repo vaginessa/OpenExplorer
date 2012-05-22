@@ -18,6 +18,7 @@
 
 package org.brandroid.openmanager.util;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.io.File;
 import java.io.BufferedInputStream;
@@ -42,9 +43,11 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenZip;
+import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
@@ -393,7 +396,13 @@ public class FileManager {
 			ret = OpenFile.getExternalMemoryDrive(false);
 		else if(path.equals("Internal") || path.equals("External"))
 			ret = OpenFile.getInternalMemoryDrive();
-		else if(path.startsWith("content://") && c != null)
+		else if(path.startsWith("content://org.brandroid.openmanager/search/"))
+		{
+			String query = path.replace("content://org.brandroid.openmanager/search/", "");
+			path = path.substring(query.indexOf("/") + 1);
+			query = Uri.decode(query.substring(0, query.indexOf("/")));
+			ret = new OpenSearch(query, getOpenCache(path), (SearchProgressUpdateListener)null);
+		} else if(path.startsWith("content://") && c != null)
 			ret = new OpenContent(Uri.parse(path), c);
 		else
 			ret = null;

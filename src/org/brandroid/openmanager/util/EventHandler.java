@@ -62,8 +62,8 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Utils;
+import org.brandroid.utils.ViewUtils;
 
 public class EventHandler {
 	public static final int SEARCH_TYPE = 0x00;
@@ -298,10 +298,10 @@ public class EventHandler {
 
 	public static void createNewFile(final OpenPath folder, final Context context) {
 		final InputDialog dlg = new InputDialog(context)
-		.setTitle(R.string.s_title_newfolder)
-		.setIcon(R.drawable.ic_menu_folder_add_dark)
-		.setMessage(R.string.s_alert_newfolder)
-		.setMessageTop(R.string.s_alert_newfolder_folder)
+		.setTitle(R.string.s_title_newfile)
+		.setIcon(R.drawable.ic_menu_new_file)
+		.setMessage(R.string.s_alert_newfile)
+		.setMessageTop(R.string.s_alert_newfile_folder)
 		.setDefaultTop(folder.getPath())
 		.setCancelable(true)
 		.setNegativeButton(R.string.s_cancel, new OnClickListener() {
@@ -790,6 +790,7 @@ public class EventHandler {
 			Logger.LogVerbose("Using Channel copy");
 			if (into.isDirectory() || !into.exists())
 				into = into.getChild(source.getName());
+			if(source.getPath().equals(into.getPath())) return false;
 			final OpenFile dest = (OpenFile) into;
 			final boolean[] running = new boolean[] { true };
 			final long size = source.length();
@@ -1098,7 +1099,7 @@ public class EventHandler {
 						int progA = (int) (((float) mLastProgress[0] / (float) mLastProgress[1]) * 1000f);
 						int progB = (int) (((float) mLastProgress[0] / (float) mLastProgress[2]) * 1000f);
 						if(getStatus() == Status.FINISHED)
-							MenuUtils.setViewsVisible(view, false, android.R.id.closeButton, android.R.id.progress);
+							ViewUtils.setViewsVisible(view, false, android.R.id.closeButton, android.R.id.progress);
 						else {
 							ProgressBar pb = (ProgressBar) view
 									.findViewById(android.R.id.progress);
@@ -1152,7 +1153,7 @@ public class EventHandler {
 							getResourceString(mContext, R.string.s_msg_all,
 									R.string.s_msg_deleted), Toast.LENGTH_SHORT)
 							.show();
-
+				OnWorkerThreadComplete(mType, new ArrayList<String>());
 				break;
 
 			case SEARCH_TYPE:

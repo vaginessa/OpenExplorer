@@ -23,13 +23,10 @@
     android:orientation="vertical"
     >
     
-    
-    
-	
-    
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
+        android:id="@+id/title_holder"
         android:layout_height="wrap_content">
 
 	<ViewStub android:layout="@layout/title_bar" android:id="@+id/title_stub" android:inflatedId="@+id/title_bar"
@@ -38,19 +35,12 @@
 	      android:layout_weight="1"
 	      />
 	
-	<ViewStub
-	    android:id="@id/base_stub"
-	    android:layout="@layout/base_bar"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    />
-	
 	</LinearLayout>
 	
     <View android:background="@color/blue"
         android:layout_height="1dp"
         android:layout_width="match_parent"
-        android:layout_alignBottom="@+id/title_bar"
+        android:layout_alignBottom="@+id/title_holder"
         android:layout_alignWithParentIfMissing="true"
         android:id="@+id/title_underline"
         />
@@ -98,7 +88,7 @@
 		    <FrameLayout
 				android:id="@+id/frag_log"
 				android:layout_above="@id/base_bar"
-				android:layout_below="@id/title_bar"
+				android:layout_below="@+id/title_underline"
 		        android:layout_width="@dimen/bookmarks_width"
 		        android:layout_height="match_parent"
 		        android:layout_alignParentRight="true"
@@ -106,5 +96,13 @@
 		        >
 		    	<include layout="@layout/log_viewer" />
 		    </FrameLayout>
+	
+	<ViewStub
+	    android:id="@id/base_stub"
+	    android:layout="@layout/base_bar"
+	    android:layout_alignParentBottom="true"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    />
 	
 </RelativeLayout>

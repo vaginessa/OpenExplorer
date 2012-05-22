@@ -2,7 +2,7 @@ package org.brandroid.openmanager.activities;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.util.OpenChromeClient;
-import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -58,10 +58,10 @@ public class WebViewFragment
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		MenuUtils.setOnClicks(view, this, android.R.id.button1);
+		ViewUtils.setOnClicks(view, this, android.R.id.button1);
 		mTitle = (TextView)view.findViewById(android.R.id.title);
 		if(getShowsDialog())
-			MenuUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.title);
+			ViewUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.title);
 		if(view != null && view instanceof WebView)
 			web = (WebView)view;
 		else if(view.findViewById(R.id.webview) != null)

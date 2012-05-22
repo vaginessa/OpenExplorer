@@ -6,19 +6,21 @@
 		android:showAsAction="ifRoom"
 		android:checkable="true"
 		android:title="@string/s_menu_multi" />
-	<group android:checkableBehavior="single">
+	<!-- group android:checkableBehavior="single" -->
 		<item
 			android:id="@+id/menu_view_grid"
+			android:checkable="true"
 			android:title="@string/s_menu_grid" />
 		<item
 			android:id="@+id/menu_view_list"
-			android:checked="true"
+			android:checkable="true"
 			android:title="@string/s_menu_list" />
 		<item
 			android:id="@+id/menu_view_carousel"
 			android:visible="false"
+			android:checkable="true"
 			android:title="@string/s_menu_carousel" />
-	</group>
+	<!-- /group -->
 	<item
 		android:id="@+id/menu_view_hidden"
 		android:checkable="true"
@@ -26,9 +28,8 @@
 	<item
 		android:id="@+id/menu_view_thumbs"
 		android:checkable="true"
-		android:checked="true"
 		android:title="@string/s_menu_thumbs" />
-	<group android:checkableBehavior="all">
+	<!-- group android:checkableBehavior="all" -->
 		<item
 		    android:id="@+id/menu_view_fullscreen"
 		    android:checkable="true"
@@ -38,5 +39,5 @@
 		    android:checkable="true"
 		    android:title="@string/s_pref_basebar"
 		    android:visible="@bool/prehoneycomb" />
-	</group>
+	<!-- /group -->
 </menu>

@@ -53,11 +53,11 @@
 	        />
 	
 	<ViewStub
-	    android:layout_alignParentBottom="true"
+	    android:id="@+id/base_stub"
 	    android:layout="@layout/base_bar"
-		android:id="@+id/base_stub"
-	    android:inflatedId="@+id/base_bar"
-	    android:layout_width="fill_parent"
+	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
+	    android:layout_alignParentBottom="true"
 	    />
+	    
 </RelativeLayout>

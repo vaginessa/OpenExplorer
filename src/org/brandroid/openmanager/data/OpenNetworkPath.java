@@ -88,6 +88,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	public OpenFile tempDownload() throws IOException
 	{
 		OpenFile tmp = getTempFile();
+		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
 			tmp.create();
 		else if(lastModified() <= tmp.lastModified())
@@ -98,13 +99,16 @@ public abstract class OpenNetworkPath extends OpenPath
 	public void tempUpload() throws IOException
 	{
 		OpenFile tmp = getTempFile();
-		if(!tmp.exists()) return;
-		if(lastModified() > tmp.lastModified()) return;
+		if(tmp == null) throw new IOException("Unable to download Temp file");
+		if(!tmp.exists())
+			tmp.create();
+		else if(lastModified() <= tmp.lastModified())
+			return;
 		copyFrom(tmp, NetworkListener.DefaultListener);
 	}
 	
-	public boolean copyFrom(OpenFile f, NetworkListener l) { return false; }
-	public boolean copyTo(OpenFile f, NetworkListener l) { return false; }
+	public abstract boolean copyFrom(OpenFile f, NetworkListener l);
+	public abstract boolean copyTo(OpenFile f, NetworkListener l);
 	
 	public abstract boolean isConnected() throws IOException;
 
@@ -152,5 +156,15 @@ public abstract class OpenNetworkPath extends OpenPath
 		}
 		
 		return deets;
+	}
+	
+	@Override
+	public final InputStream getInputStream() throws IOException {
+		return tempDownload().getInputStream();
+	}
+	
+	@Override
+	public final OutputStream getOutputStream() throws IOException {
+		return tempDownload().getOutputStream();
 	}
 }

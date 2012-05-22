@@ -386,6 +386,15 @@ public abstract class OpenPath
 		return getPath();
 	}
 	
+	/**
+	 * Indicates to Adapter whether or not to show Path (i.e. can contain multiple parent paths)
+	 * @return Boolean
+	 */
+	public boolean showChildPath()
+	{
+		return false;
+	}
+	
 	public static OpenPathDbAdapter getDb() { if(AllowDBCache) return mDb; return null; }
 	public final static void setDb(OpenPathDbAdapter openPathDbAdapter) {
 		mDb = openPathDbAdapter;
@@ -521,6 +530,9 @@ public abstract class OpenPath
 	}
 	public boolean touch() {
 		return false;
+	}
+	public void clearChildren() {
+		
 	}
     
 }

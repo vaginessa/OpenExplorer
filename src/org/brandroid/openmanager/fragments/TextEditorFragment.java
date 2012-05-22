@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -27,6 +28,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.SeekBarActionView;
@@ -37,6 +39,7 @@ import org.brandroid.utils.Preferences;
 import android.R.anim;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.app.actionbarcompat.ActionBarHelper;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -48,6 +51,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v4.view.MenuItemCompat;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
@@ -317,7 +321,19 @@ public class TextEditorFragment extends OpenFragment
 						this);
 				return true;
 		}
-		return onClickItem(item.getItemId());
+		return onClick(item.getItemId(), (View)getActionView(item));
+	}
+	
+	public Object getActionView(MenuItem item)
+	{
+		try {
+			if(Build.VERSION.SDK_INT < 11)
+				return getActivity().findViewById(item.getItemId());
+			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
+			return m.invoke(item, new Object[0]);
+		} catch(Exception e) {
+			return getActivity().findViewById(item.getItemId());
+		}
 	}
 	
 	@Override
@@ -506,37 +522,10 @@ public class TextEditorFragment extends OpenFragment
 
 	@Override
 	public void onClick(View v) {
-		onClickItem(v.getId());
+		onClick(v.getId(), v);
 	}
 	@Override
-	public boolean onClick(int id) {
-		return onClickItem(id);
-	}
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if(data != null)
-		{
-			if(data.hasExtra("req"))
-				requestCode = data.getIntExtra("req", requestCode);
-		}
-		if(requestCode == REQUEST_SAVE_AS && resultCode == Activity.RESULT_OK)
-		{
-			if(data.hasExtra("path"))
-				mPath = (OpenPath)data.getParcelableExtra("path");
-			else if(data.getData() != null)
-				mPath = FileManager.getOpenCache(data.getDataString());
-			Logger.LogDebug("Saving " + mPath);
-			cancelTask();
-			mTask = new FileSaveTask(mPath);
-			if(mDirty)
-				mData = mEditText.getText().toString();
-			((FileSaveTask)mTask).execute(mData);
-			notifyPager();
-		}
-	}
-	public boolean onClickItem(int id) {
-		super.onClick(id);
+	public boolean onClick(int id, View view) {
 		Context c = getActivity();
 		View from = null; 
 		if(getExplorer() != null)
@@ -563,12 +552,12 @@ public class TextEditorFragment extends OpenFragment
 			
 		case R.id.menu_view:
 			if(OpenExplorer.BEFORE_HONEYCOMB)
-				showMenu(R.menu.text_view, from);
+				showIContextMenu(R.menu.text_view, from);
 			return true;
 			
 		case R.id.menu_text_ops:
 			if(OpenExplorer.BEFORE_HONEYCOMB)
-				showMenu(R.menu.text_file, from);
+				showIContextMenu(R.menu.text_file, from);
 			return true;
 			
 		case R.id.menu_view_keyboard_toggle:
@@ -580,6 +569,29 @@ public class TextEditorFragment extends OpenFragment
 			return true;
 		}
 		return false;
+	}
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if(data != null)
+		{
+			if(data.hasExtra("req"))
+				requestCode = data.getIntExtra("req", requestCode);
+		}
+		if(requestCode == REQUEST_SAVE_AS && resultCode == Activity.RESULT_OK)
+		{
+			if(data.hasExtra("path"))
+				mPath = (OpenPath)data.getParcelableExtra("path");
+			else if(data.getData() != null)
+				mPath = FileManager.getOpenCache(data.getDataString());
+			Logger.LogDebug("Saving " + mPath);
+			cancelTask();
+			mTask = new FileSaveTask(mPath);
+			if(mDirty)
+				mData = mEditText.getText().toString();
+			((FileSaveTask)mTask).execute(mData);
+			notifyPager();
+		}
 	}
 	
 	private void setEditable(boolean editable)
@@ -657,10 +669,10 @@ public class TextEditorFragment extends OpenFragment
 				fos = new BufferedOutputStream(mPath.getOutputStream());
 				fos.write(bytes);
 				fos.close();
-				if(mPath instanceof OpenNetworkPath)
-					((OpenNetworkPath)mPath).disconnect();
 				if(mPath instanceof NeedsTempFile)
 					((NeedsTempFile)mPath).tempUpload();
+				if(mPath instanceof OpenNetworkPath)
+					((OpenNetworkPath)mPath).disconnect();
 				mData = data;
 				return bytes.length;
 			} catch(Exception e) {
@@ -715,6 +727,9 @@ public class TextEditorFragment extends OpenFragment
 					Logger.LogError("File too large?", r);
 					if(getExplorer() != null)
 						getExplorer().showToast("Unable to open file. File too large?");
+					doClose();
+				} catch (FileNotFoundException f) {
+					Logger.LogError("File not found - " + path, f);
 					doClose();
 				} catch (Exception e) {
 					Logger.LogError("Couldn't find file - " + path, e);
@@ -831,7 +846,7 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public boolean onTitleLongClick(View titleView) {
-		return showMenu(R.menu.text_file, titleView);
+		return showIContextMenu(R.menu.text_file, titleView);
 	}
 
 	public boolean isSalvagable() {

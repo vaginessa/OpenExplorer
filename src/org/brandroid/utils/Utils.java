@@ -456,4 +456,11 @@ public class Utils {
 				return i;
 		return -1;
 	}
+	public static <T> int getArrayIndex(T[] search, T value)
+	{
+		for(int i = 0; i < search.length; i++)
+			if(value.equals(search[i]))
+				return i;
+		return -1;
+	}
 }

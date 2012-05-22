@@ -240,6 +240,7 @@ public class OpenSCP extends OpenNetworkPath
 		//}
 	}
 
+	/*
 	@Override
 	public InputStream getInputStream() throws IOException {
 		if(in != null)
@@ -299,6 +300,8 @@ public class OpenSCP extends OpenNetworkPath
 		}
 		return out;
 	}
+	*/
+	
 	static int checkAck(InputStream in) throws IOException
 	{
 		int b=in.read();
@@ -318,5 +321,17 @@ public class OpenSCP extends OpenNetworkPath
 	@Override
 	public OpenNetworkPath[] getChildren() {
 		return mChildren;
+	}
+
+	@Override
+	public boolean copyFrom(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean copyTo(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

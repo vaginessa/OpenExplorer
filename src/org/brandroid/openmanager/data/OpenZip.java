@@ -68,6 +68,11 @@ public class OpenZip extends OpenPath
 	}
 	
 	@Override
+	public int getChildCount(boolean countHidden) throws IOException {
+		return 1;
+	}
+	
+	@Override
 	public int getListLength() {
 		try {
 			return mChildren != null ? mChildren.length : list().length;
@@ -85,7 +90,8 @@ public class OpenZip extends OpenPath
 	@Override
 	public OpenPath[] listFiles() throws IOException {
 		Logger.LogVerbose("Listing OpenZip " + mFile);
-		mChildren = new OpenPath[mZip.size()];
+		if(mZip != null)
+			mChildren = new OpenPath[mZip.size()];
 		Enumeration<? extends ZipEntry> entries = mZip.entries();
 		int i = 0;
 		while(entries.hasMoreElements())

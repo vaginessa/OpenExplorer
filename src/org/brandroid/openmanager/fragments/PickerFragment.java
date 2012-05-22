@@ -8,7 +8,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.views.OpenViewPager;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.ViewUtils;
 
 import com.viewpagerindicator.PageIndicator;
 import com.viewpagerindicator.TabPageIndicator;
@@ -80,7 +80,7 @@ public class PickerFragment extends OpenFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		view = inflater.inflate(R.layout.picker_pager, container, false);
-		MenuUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.button2, android.R.id.title, R.id.pick_filename);
+		ViewUtils.setViewsVisible(view, false, android.R.id.button1, android.R.id.button2, android.R.id.title, R.id.pick_filename);
 		mPager = (OpenViewPager)view.findViewById(R.id.picker_pager);
 		mPager.setOnPageChangeListener(new OnPageChangeListener() {
 			
@@ -122,7 +122,7 @@ public class PickerFragment extends OpenFragment
 			mPath = (OpenPath)savedInstanceState.getParcelable("start");
 		setPath(mPath);
 		if(!mShowSelection)
-			MenuUtils.setViewsVisible(view, false, R.id.pick_path_row, R.id.pick_path);
+			ViewUtils.setViewsVisible(view, false, R.id.pick_path_row, R.id.pick_path);
 		if(mPickName != null)
 		{
 			if(pickDirOnly)

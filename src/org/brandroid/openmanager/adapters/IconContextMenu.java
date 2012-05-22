@@ -27,7 +27,7 @@ public class IconContextMenu
 {
 	
 	public interface IconContextItemSelectedListener {
-		void onIconContextItemSelected(MenuItem item, Object info, View view);
+		void onIconContextItemSelected(IconContextMenu menu, MenuItem item, Object info, View view);
 	}
 	
 	private GridView mGrid;
@@ -36,7 +36,7 @@ public class IconContextMenu
 	protected final ViewGroup root;
 	private MenuBuilder menu;
 	protected View anchor;
-	private int maxColumns = 2;
+	private int maxColumns = 1;
 	private int mWidth = 0;
 	private int rotation = 0;
 	private static final Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>();
@@ -54,6 +54,7 @@ public class IconContextMenu
     	try {
     		new MenuInflater(context).inflate(menuId, menu);
     	} catch(ClassCastException e) {
+    		Logger.LogWarning("Couldn't inflate menu (0x" + Integer.toHexString(menuId) + ")", e);
     		return null;
     	}
     	return menu;
@@ -103,7 +104,7 @@ public class IconContextMenu
 				if(iconContextItemSelectedListener != null)
 				{
 					iconContextItemSelectedListener.onIconContextItemSelected(
-							adapter.getItem(pos), info, v);
+							IconContextMenu.this, adapter.getItem(pos), info, v);
 				}
 			}
 			
@@ -215,7 +216,14 @@ public class IconContextMenu
 	public static IconContextMenu getInstance(Context c, int menuId,
 			View from, View top, View bottom) {
 		if(!mInstances.containsKey(menuId))
-			mInstances.put(menuId, new IconContextMenu(c, menuId, from, top, bottom));
+		{
+			MenuBuilder menu = newMenu(c, menuId);
+			if(menu == null) {
+				Logger.LogWarning("IconContextMenu getInstance(0x" + Integer.toHexString(menuId) + ") is null");
+				return null;
+			}
+			mInstances.put(menuId, new IconContextMenu(c, menu, from, top, bottom));
+		}
 		else Logger.LogDebug("IContextMenu Instance Height: " + mInstances.get(menuId).popup.getPopupHeight());
 		IconContextMenu ret = mInstances.get(menuId);
 		ret.setAnchor(from);

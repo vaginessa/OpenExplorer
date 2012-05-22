@@ -433,10 +433,16 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 	public void setPath(String path) {
 		mFile = new File(path); 
 	}
+	
+	@Override
+	public void clearChildren() {
+		mChildren = null;
+	}
 
 	public boolean create() throws IOException
 	{
-		mFile.mkdirs();
+		if(getParent() != null)
+			getParent().mkdir();
 		return mFile.createNewFile();
 	}
 

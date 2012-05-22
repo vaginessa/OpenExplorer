@@ -119,6 +119,11 @@ public class OpenSmartFolder extends OpenPath
 	public OpenPath getParent() {
 		return null;
 	}
+	
+	@Override
+	public boolean showChildPath() {
+		return true;
+	}
 
 	@Override
 	public OpenPath getChild(String name) {
@@ -237,4 +242,8 @@ public class OpenSmartFolder extends OpenPath
 		return getFirstDir().getOutputStream();
 	}
 
+	@Override
+	public void clearChildren() {
+		mChildren.clear();
+	}
 }

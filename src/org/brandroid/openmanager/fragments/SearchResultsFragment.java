@@ -48,6 +48,13 @@ public class SearchResultsFragment
 		ret.setArguments(args);
 		return ret;
 	}
+	public static SearchResultsFragment getInstance(OpenPath basePath, String query)
+	{
+		Bundle data = new Bundle();
+		data.putString("query", query);
+		data.putString("path", basePath.getPath());
+		return getInstance(data);
+	}
 	
 	public OpenSearch getSearch()
 	{
@@ -55,19 +62,19 @@ public class SearchResultsFragment
 	}
 	
 	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if(getSearch().isRunning())
+			getSearch().cancelSearch();
+	}
+	
+	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putString("query", getSearch().getQuery());
 		outState.putString("path", getSearch().getBasePath().getPath());
-		if(getSearch().isRunning())
-			getSearch().cancelSearch();
-		else
-			outState.putParcelableArrayList("results", getResults());
-	}
-	public SearchResultsFragment(OpenPath searchIn, String query)
-	{
-		mPath = new OpenSearch(query, searchIn, this);
-		getSearch().start();
+		outState.putParcelableArrayList("results", getResults());
+		outState.putBoolean("running", getSearch().isRunning());
 	}
 	
 	@Override
@@ -85,7 +92,7 @@ public class SearchResultsFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle b = getArguments();
-		if(b == null)
+		if(b == null || (savedInstanceState != null && savedInstanceState.containsKey("path")))
 			b = savedInstanceState;
 		if(b != null)
 		{
@@ -98,15 +105,16 @@ public class SearchResultsFragment
 			if(b.containsKey("results"))
 			{
 				ArrayList<Parcelable> results = b.getParcelableArrayList("results");
-				mPath = new OpenSearch(q, path, results);
+				mPath = new OpenSearch(q, path, this, results);
+				if(b.containsKey("running") && b.getBoolean("running"))
+					getSearch().start();
 			} else {
 				mPath = new OpenSearch(q, path, this);
 				getSearch().start();
 			}
 		}
 		else {
-			mPath = new OpenSearch("", OpenFile.getExternalMemoryDrive(true), this);
-			getSearch().start();
+			//throw new Exception("Couldn't search for emptiness");
 		}
 		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, getSearch());
 	}
@@ -167,33 +175,26 @@ public class SearchResultsFragment
 	public CharSequence getTitle() {
 		return "\"" + getSearch().getQuery() + "\"" + " (" + getResults().size() + ")";
 	}
+	
 	@Override
 	public void onUpdate() {
-		if(isVisible())
-		{
-			mGrid.post(new Runnable(){
-				public void run() {
-					mContentAdapter.notifyDataSetChanged();
-			}});
-		}
+		if(mGrid == null) return;
+		mGrid.post(new Runnable(){
+			public void run() {
+				mContentAdapter.notifyDataSetChanged();
+				notifyPager();
+		}});
 	}
 	@Override
 	public void onFinish() {
-		setProgressVisibility(false);
-		if(isVisible())
-		{
-			mGrid.post(new Runnable(){
-				public void run() {
-					mContentAdapter.notifyDataSetChanged();
-			}});
-		}
-		if(mTextSummary != null)
-			mTextSummary.post(new Runnable(){public void run(){
+		if(getView() == null) return;
+		getView().post(new Runnable(){
+			public void run() {
+				setProgressVisibility(false);
+				mContentAdapter.notifyDataSetChanged();
+				notifyPager();
 				mTextSummary.setText(getString(R.string.search_results, getResults().size(), getSearch().getQuery(), getSearch().getBasePath().getPath()));
-			}});
-		if(mCancel != null)
-			mCancel.post(new Runnable(){public void run(){
 				mCancel.setText(android.R.string.ok);
-			}});
+		}});
 	}
 }

@@ -310,4 +310,7 @@
     <string name="warn_networking">Welcome to Networking. Please note that this feature is still under development and may contain bugs. Please do not give a bad market rating if you find any of these bugs.</string>
     <string name="s_menu_new_file">New Text File</string>
     <string name="s_msg_created">created</string>
+    <string name="s_title_newfile">New File</string>
+    <string name="s_alert_newfile_folder">Create new file in:</string>
+    <string name="s_alert_newfile">Type the name of the new file:</string>
 </resources>

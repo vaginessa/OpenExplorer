@@ -3,7 +3,7 @@ package org.brandroid.openmanager.adapters;
 import java.util.List;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -62,7 +62,7 @@ public class LinedArrayAdapter extends ArrayAdapter<CharSequence>
 					repeat(" ", ((Integer)mCount).toString().length() - pos.toString().length())
 					+ pos);
 		}
-		MenuUtils.setViewsVisible(view, mShowLineNumbers, R.id.text_line);
+		ViewUtils.setViewsVisible(view, mShowLineNumbers, R.id.text_line);
 		((TextView)view.findViewById(R.id.text_data)).setText(getItem(position));
 		if(mTextSize != 10)
 		{

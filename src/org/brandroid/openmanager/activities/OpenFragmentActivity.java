@@ -39,6 +39,7 @@ public abstract class OpenFragmentActivity
 	//public boolean isFragmentValid = true;
 	public static Thread UiThread = Thread.currentThread();
 	private Preferences mPreferences = null;
+	private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	
 	public String getClassName()
 	{
@@ -52,11 +53,13 @@ public abstract class OpenFragmentActivity
 	}
 	
 	public void onClick(View v) {
-		Logger.LogDebug("View onClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
+		if(DEBUG)
+			Logger.LogDebug(getClassName() + ".onClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
 	}
 	
 	public void onClick(int id) {
-		Logger.LogDebug("View onClick(0x" + Integer.toHexString(id) + ") / " + getClassName());
+		if(DEBUG)
+			Logger.LogDebug("View onClick(0x" + Integer.toHexString(id) + ") / " + getClassName());
 	}
 	
 	public boolean onClick(int id, MenuItem item, View from)
@@ -65,13 +68,15 @@ public abstract class OpenFragmentActivity
 	}
 	
 	public boolean onLongClick(View v) {
-		Logger.LogDebug("View onLongClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
+		if(DEBUG)
+			Logger.LogDebug("View onLongClick(0x" + Integer.toHexString(v.getId()) + ") - " + v.toString());
 		return false;
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Logger.LogDebug("Menu selected(0x" + Integer.toHexString(item.getItemId()) + ") - " + item.toString());
+		if(DEBUG)
+			Logger.LogDebug("Menu selected(0x" + Integer.toHexString(item.getItemId()) + ") - " + item.toString());
 		return super.onOptionsItemSelected(item);
 	}
 	

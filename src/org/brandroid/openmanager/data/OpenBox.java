@@ -345,13 +345,14 @@ public class OpenBox extends OpenNetworkPath
 	}
 
 	@Override
-	public InputStream getInputStream() throws IOException {
-		return null;
+	public boolean copyFrom(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
 	}
-
 	@Override
-	public OutputStream getOutputStream() throws IOException {
-		return null;
+	public boolean copyTo(OpenFile f, NetworkListener l) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
