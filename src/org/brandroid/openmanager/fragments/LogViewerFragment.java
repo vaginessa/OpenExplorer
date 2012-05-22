@@ -65,10 +65,11 @@ public class LogViewerFragment extends OpenFragment
 	
 	public void print(final String txt, final int color)
 	{
+		Logger.LogDebug("print(" + txt + ", " + color + ")");
+		mData.add(0, colorify(txt, color));
+		if(mAdapter == null) return;
 		//getActivity().runOnUiThread(
 		Runnable doPrint = new Runnable(){public void run(){
-			mData.add(0, colorify(txt, color));
-			if(mAdapter != null)
 				mAdapter.notifyDataSetChanged();
 			}};
 		if(!Thread.currentThread().equals(OpenExplorer.UiThread) && mListView != null)

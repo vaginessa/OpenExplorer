@@ -279,6 +279,7 @@ public class OpenExplorer
 	protected MenuBuilder mMainMenu = null;
 	private ViewGroup mToolbarButtons = null;
 	private View mSearchView = null;
+	private int mTitleButtons = 0;
 	
 	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
 	private static boolean bRetrieveExtraVideoDetails = Build.VERSION.SDK_INT > 8;
@@ -439,13 +440,14 @@ public class OpenExplorer
 			if(mBaseStub != null)
 				mBaseStub.inflate();
 		}
-		setViewVisibility(false, false, R.id.title_paste, R.id.menu_global_ops, R.id.menu_log);
+		setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
 		setOnClicks(
-				R.id.menu_global_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
-				R.id.menu_log, R.id.title_icon, R.id.title_menu,
+				R.id.title_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
+				R.id.title_log, R.id.title_icon, R.id.title_menu,
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
+		checkTitleSeparator();
 		IconContextMenu.clearInstances();
 		
 		if(findViewById(R.id.list_frag) == null)
@@ -1001,7 +1003,7 @@ public class OpenExplorer
 			mLogFragment = new LogViewerFragment();
 		View anchor = null;
 		if(anchor == null)
-			anchor = findViewById(R.id.menu_log);
+			anchor = findViewById(R.id.title_log);
 		if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
 			anchor = getActionBar().getCustomView();
 		if(anchor == null)
@@ -1021,7 +1023,7 @@ public class OpenExplorer
 			mOpsFragment = new OperationsFragment();
 		View anchor = null;
 		if(anchor == null)
-			anchor = findViewById(R.id.menu_global_ops);
+			anchor = findViewById(R.id.title_ops);
 		if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
 			anchor = getActionBar().getCustomView();
 		if(anchor == null)
@@ -1384,18 +1386,36 @@ public class OpenExplorer
 	}
 	*/
 	
+	private boolean usingSplitActionBar()
+	{
+		if(!USE_SPLIT_ACTION_BAR) return false;
+		if(mToolbarButtons != null)
+			return ViewUtils.getAbsoluteTop(mToolbarButtons) > 10;
+		if(findViewById(R.id.menu_search) != null)
+			return ViewUtils.getAbsoluteTop(findViewById(R.id.menu_search)) > 10;
+		return false;
+	}
+	private void checkTitleSeparator()
+	{
+		boolean visible = false;
+		if(!usingSplitActionBar())
+			for(int id : new int[]{R.id.title_paste, R.id.title_log, R.id.title_ops})
+				if(findViewById(id) != null && findViewById(id).getVisibility() == View.VISIBLE)
+					visible = true;
+		ViewUtils.setViewsVisible(this, visible, R.id.title_divider);
+	}
 	public void sendToLogView(final String txt, final int color)
 	{
 		try {
 		
-		if(txt != null)
-			Logger.LogDebug("Log: " + txt);
+		if(txt == null) return;
+		Logger.LogDebug("Log: " + txt);
+		if(mLogFragment == null)
+			mLogFragment = new LogViewerFragment();
+		mLogFragment.print(txt, color);
 		if(mLogFragment.getAdded()) return;
-		if(BEFORE_HONEYCOMB)
-			ViewUtils.setViewsVisible(this, true, R.id.menu_log);
-		else
-			MenuUtils.setMenuVisible(mMainMenu, true, R.id.menu_log);
-		invalidateOptionsMenu();
+		ViewUtils.setViewsVisible(this, true, R.id.title_log);
+		checkTitleSeparator();
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
 		if(!mLogFragment.getAdded() && !mLogFragment.isVisible())
@@ -1413,9 +1433,9 @@ public class OpenExplorer
 				mLogFragment.setAdded(true);
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
-		if(mLogFragment != null && txt != null)
-			mLogFragment.print(txt, color);
-		} catch(Exception e) { Logger.LogWarning("Couldn't send to Log Viewer"); }
+		} catch(Exception e) {
+			//Logger.LogWarning("Couldn't send to Log Viewer");
+		}
 	}
 	private void setupLoggingDb()
 	{
@@ -1918,9 +1938,9 @@ public class OpenExplorer
 		int tasks = EventHandler.getRunningTasks().length;
 		if(tasks <= 0)
 		{
-			ViewUtils.setViewsVisible(this, false, R.id.frag_log, R.id.menu_global_ops);
-			MenuUtils.setMenuVisible(mMainMenu, true, R.id.menu_global_ops);
-			invalidateOptionsMenu();
+			ViewUtils.setViewsVisible(this, false, R.id.frag_log, R.id.title_ops);
+			ViewUtils.setViewsVisible(this, true, R.id.title_ops);
+			checkTitleSeparator();
 			return;
 		}
 		if(findViewById(R.id.frag_log) != null)
@@ -1936,8 +1956,8 @@ public class OpenExplorer
 		} else {
 			initOpsPopup();
 		}
-		ViewUtils.setViewsVisible(this, tasks > 0, R.id.menu_global_ops);
-		ViewUtils.setText(this, ""+tasks, R.id.menu_global_ops);
+		ViewUtils.setViewsVisible(this, tasks > 0, R.id.title_ops);
+		checkTitleSeparator();
 	}
 	
 	public void refreshBookmarks()
@@ -2175,13 +2195,7 @@ public class OpenExplorer
 	
 	@Override
 	public void invalidateOptionsMenu() {
-		if(!mLastMenuClass.equals(getSelectedFragment().getClassName()))
-			lastInvalidate = 0;
-		long now = new Date().getTime();
-		if(now - lastInvalidate < 1000) return;
-		lastInvalidate = now;
-		
-		mLastMenuClass = getSelectedFragment().getClassName();
+		mLastMenuClass = "";
 		if(BEFORE_HONEYCOMB)
 			setupBaseBarButtons();
 		else try {
@@ -2429,7 +2443,6 @@ public class OpenExplorer
 					, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
 			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
 		}
-		MenuUtils.setMenuVisible(menu, EventHandler.getRunningTasks().length > 0, R.id.menu_global_ops);
 		
 		//if(BEFORE_HONEYCOMB)
 		{
@@ -2504,11 +2517,12 @@ public class OpenExplorer
 
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		if(DEBUG)
-			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
-		
-		if(!BEFORE_HONEYCOMB && item.getSubMenu() != null)
+
+		if(item.getSubMenu() != null)
+		{
+			onPrepareOptionsMenu(item.getSubMenu());
 			return false;
+		}
 		
 		if(item.isCheckable())
 			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
@@ -2516,6 +2530,9 @@ public class OpenExplorer
 		OpenFragment f = getSelectedFragment();
 		if(f != null && f.onOptionsItemSelected(item))
 			return true;
+		
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
 		
 		return onClick(item.getItemId(), item, null);
 	}
@@ -2551,6 +2568,8 @@ public class OpenExplorer
 			return true;
 		if(item != null && f.onOptionsItemSelected(item))
 			return true;
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + "," + from + ")");
 		switch(id)
 		{
 			case R.id.menu_debug:
@@ -2635,7 +2654,7 @@ public class OpenExplorer
 				
 			//case R.id.menu_global_ops_text:
 			//case R.id.menu_global_ops_icon:
-			case R.id.menu_global_ops:
+			case R.id.title_ops:
 				refreshOperations();
 				if(mSinglePane)
 					mOpsFragment.getPopup().showLikePopDownMenu();
@@ -2643,9 +2662,10 @@ public class OpenExplorer
 					ViewUtils.setViewsVisible(this,
 							findViewById(R.id.frag_log).getVisibility() == View.GONE,
 							R.id.frag_log);
+				checkTitleSeparator();
 				return true;
 				
-			case R.id.menu_log:
+			case R.id.title_log:
 				if(mLogFragment == null)
 					mLogFragment = new LogViewerFragment();
 				if (findViewById(R.id.frag_log) != null)
@@ -3393,27 +3413,15 @@ public class OpenExplorer
 			case R.id.title_icon:
 				goHome();
 				return true;
-			case R.id.menu_global_ops:
-				if(!BEFORE_HONEYCOMB)
-					MenuUtils.setMenuShowAsAction(mMainMenu, 0 //MenuItem.SHOW_AS_ACTION_NEVER
-							, R.id.menu_global_ops);
-				else {
-					mMainMenu.add(0, R.id.menu_global_ops, 0, R.string.s_title_operations)
-						.setIcon(R.drawable.ic_gear);
-					if(mToolbarButtons.findViewById(R.id.menu_global_ops) != null)
-						mToolbarButtons.removeView(mToolbarButtons.findViewById(R.id.menu_global_ops));
-				}
+			case R.id.title_ops:
+				showToast(R.string.s_title_operations);
+				ViewUtils.setViewsVisible(this, false, R.id.title_ops);
+				checkTitleSeparator();
 				return true;
-			case R.id.menu_log:
-				mLogFragment.setAdded(true);
-				if(!BEFORE_HONEYCOMB)
-					MenuUtils.setMenuShowAsAction(mMainMenu, 0 // MenuItem.SHOW_AS_ACTION_NEVER
-							, R.id.menu_log);
-				else {
-					mToolbarButtons.removeView(mToolbarButtons.findViewById(R.id.menu_log));
-					mMainMenu.add(0, R.id.menu_log, 0, R.string.s_pref_logview)
-						.setIcon(R.drawable.ic_paper);
-				}
+			case R.id.title_log:
+				showToast(R.string.s_pref_logview);
+				ViewUtils.setViewsVisible(this, false, R.id.title_log);
+				checkTitleSeparator();
 				return true;
 				
 			/*case R.id.menu_favorites:
@@ -3467,7 +3475,7 @@ public class OpenExplorer
 		{
 			pb = getLayoutInflater().inflate(R.layout.toolbar_button, null);
 			pb.setId(R.id.title_paste);
-			((ImageButton)pb).setImageResource(R.drawable.ic_menu_paste);
+			((ImageButton)pb).setImageResource(R.drawable.ic_menu_clipboard);
 			mToolbarButtons.addView(pb, 0);
 			pb.setOnClickListener(this);
 		}
@@ -3487,13 +3495,14 @@ public class OpenExplorer
 			{
 				picon
 					.setImageResource(getClipboard().isMultiselect() ?
-							R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_paste
+							R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_clipboard
 							);
 				if(picon.getDrawable() instanceof LayerDrawable)
 					((LayerDrawable)(picon.getDrawable()))
 						.getDrawable(1).setAlpha(getClipboard().isMultiselect()?127:0);
 			}
 		}
+		checkTitleSeparator();
 		invalidateOptionsMenu();
 		if(!BEFORE_HONEYCOMB && USE_ACTIONMODE && mActionMode != null)
 			((ActionMode)mActionMode).setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));

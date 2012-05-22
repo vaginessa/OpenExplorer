@@ -421,7 +421,8 @@ public class OpenFTP extends OpenNetworkPath
 	}
 	
 	@Override
-	public boolean copyFrom(OpenFile f, NetworkListener l) {
+	public boolean copyFrom(OpenFile f, NetworkListener l)
+	{
 		try {
 			connect();
 			InputStream is = f.getInputStream();
@@ -441,7 +442,8 @@ public class OpenFTP extends OpenNetworkPath
 		}
 	}
 	@Override
-	public boolean copyTo(OpenFile f, NetworkListener l) {
+	public boolean copyTo(OpenFile f, NetworkListener l)
+	{
 
 		Logger.LogDebug("OpenFTP.copyTo(" + f + ")");
 		try {

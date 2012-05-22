@@ -92,6 +92,7 @@ public class OpenZip extends OpenPath
 		Logger.LogVerbose("Listing OpenZip " + mFile);
 		if(mZip != null)
 			mChildren = new OpenPath[mZip.size()];
+		else return mChildren;
 		Enumeration<? extends ZipEntry> entries = mZip.entries();
 		int i = 0;
 		while(entries.hasMoreElements())

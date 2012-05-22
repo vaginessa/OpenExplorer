@@ -84,7 +84,7 @@ public abstract class OpenFragment
 	//public boolean isFragmentValid = true;
 	protected boolean mActionModeSelected = false;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
 	
 	public interface OnFragmentTitleLongClickListener
@@ -183,10 +183,14 @@ public abstract class OpenFragment
 		if(DEBUG)
 			Logger.LogDebug(getClassName() + ".onActivityResult(" + requestCode + "," + resultCode + "," + (data != null ? data.toString() : "null") + ")");
 	}
-	
+
 	public boolean showMenu(final int menuId, View from)
 	{
-		if(showIContextMenu(menuId, from)) return true;
+		return showMenu(menuId, from, 0, 0);
+	}
+	public boolean showMenu(final int menuId, View from, int xOffset, int yOffset)
+	{
+		if(showIContextMenu(menuId, from, xOffset, yOffset)) return true;
 		if(from == null) return false;
 		from.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
 			public void onCreateContextMenu(ContextMenu menu, View v,
@@ -200,7 +204,7 @@ public abstract class OpenFragment
 		return ret;
 	}
 	
-	public boolean showIContextMenu(int menuId, View from)
+	public boolean showIContextMenu(int menuId, View from, int xOffset, int yOffset)
 	{
 		if(getActivity() == null) return false;
 		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
@@ -217,7 +221,7 @@ public abstract class OpenFragment
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
 		mOpenMenu.setOnIconContextItemSelectedListener(getExplorer());
-		return mOpenMenu.show();
+		return mOpenMenu.show(xOffset, yOffset);
 	}
 	
 	@Override

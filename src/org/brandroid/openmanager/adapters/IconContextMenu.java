@@ -170,6 +170,10 @@ public class IconContextMenu
 
     public boolean show()
     {
+    	return show(0, 0);
+    }
+    public boolean show(int left, int top)
+    {
     	//popup.showLikeQuickAction();
     	final int menuSig = getMenuSignature();
     	if(mHeights.containsKey(menuSig))
@@ -184,12 +188,6 @@ public class IconContextMenu
 				mHeights.put(menuSig, height);
 			}
 		});
-    	boolean ret = popup.showLikePopDownMenu();
-    	return ret;
-    }
-    public boolean show(int left, int top)
-    {
-    	//popup.showLikeQuickAction();
     	return popup.showLikePopDownMenu(left, top);
     }
     public void dismiss()

@@ -86,8 +86,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AbsListView;
@@ -104,7 +106,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 public class ContentFragment extends OpenFragment
 		implements OnItemClickListener, OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
-					OnTaskUpdateListener
+					OnTaskUpdateListener, OnTouchListener
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -457,6 +459,16 @@ public class ContentFragment extends OpenFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
+		mGrid.setOnLongClickListener(this);
+		mGrid.setOnTouchListener(this);
+		mGrid.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+			@Override
+			public void onCreateContextMenu(ContextMenu menu, View v,
+					ContextMenuInfo menuInfo) {
+				getMenuInflater().inflate(R.menu.context_file, menu);
+				onPrepareOptionsMenu(menu);
+			}
+		});
 		//if(mProgressBarLoading == null)
 		//	mProgressBarLoading = v.findViewById(R.id.content_progress);
 		setProgressVisibility(false);
@@ -584,6 +596,28 @@ public class ContentFragment extends OpenFragment
 		onPrepareOptionsMenu(menu);
 	}
 	
+
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		v.setTag(event);
+		return false;
+	}
+	
+	@Override
+	public boolean onLongClick(View v) {
+		if(v.equals(mGrid))
+		{
+			if(v.getTag() != null && v.getTag() instanceof MotionEvent)
+			{
+				MotionEvent lastEvent = (MotionEvent)v.getTag();
+				int x = (int)Math.floor(lastEvent.getX());
+				int y = (int)Math.floor(lastEvent.getY());
+				return createContextMenu(mPath, mGrid, mGrid, x, y);
+			} else return v.showContextMenu();
+		}
+		return false;
+	}
+	
 	public boolean onItemLongClick(AdapterView<?> list, final View view, int pos, long id) {
 		mMenuContextItemIndex = pos;
 		//view.setBackgroundResource(R.drawable.selector_blue);
@@ -591,8 +625,15 @@ public class ContentFragment extends OpenFragment
 		//if(list.showContextMenu()) return true;
 		
 		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
-		final String name = file.getName();
 		
+		return createContextMenu(file, list, view);
+	}
+	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list, final View view)
+	{
+		return createContextMenu(file, list, view, 0, 0);
+	}
+	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list, final View view, final int xOffset, final int yOffset)
+	{
 		Logger.LogInfo(getClassName() + ".onItemLongClick: " + file);
 		
 		final OpenContextMenuInfo info = new OpenContextMenuInfo(file);
@@ -771,6 +812,8 @@ public class ContentFragment extends OpenFragment
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		if(item == null) return false;
+		if(DEBUG)
+			Logger.LogDebug("ContentFragment.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
 		OpenPath path = null;
 		if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
 			path = getContentAdapter().getItem(mMenuContextItemIndex);
@@ -778,6 +821,11 @@ public class ContentFragment extends OpenFragment
 			return true;
 		switch(item.getItemId())
 		{
+		case R.id.menu_sort:
+		case R.id.menu_view:
+		case R.id.menu_content_ops:
+			onPrepareOptionsMenu(item.getSubMenu());
+			return false;
 		case R.id.menu_new_file:
 			EventHandler.createNewFile(getPath(), getActivity());
 			return true;
@@ -883,7 +931,8 @@ public class ContentFragment extends OpenFragment
 
 			case R.id.menu_multi:
 				changeMultiSelectState(!getClipboard().isMultiselect());
-				getClipboard().add(file);
+				if(!fromPasteMenu)
+					getClipboard().add(file);
 				return true;
 			case R.id.menu_context_bookmark:
 				getExplorer().addBookmark(file);
@@ -1026,7 +1075,7 @@ public class ContentFragment extends OpenFragment
 	//			mode.finish();
 	//			return true;
 			}
-		return true;
+		return false;
 	}
 
 	@Override
@@ -1067,7 +1116,8 @@ public class ContentFragment extends OpenFragment
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
 		
-		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(), R.id.menu_sort_folders_first);
+		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(),
+				R.id.menu_sort_folders_first);
 		
 		if(mPath != null)
 			MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(),

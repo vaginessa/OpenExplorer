@@ -92,7 +92,10 @@ public abstract class OpenNetworkPath extends OpenPath
 		if(!tmp.exists())
 			tmp.create();
 		else if(lastModified() <= tmp.lastModified())
+		{
+			Logger.LogWarning("Remote file is older than local temp file.");
 			return tmp;
+		}
 		copyTo(tmp, NetworkListener.DefaultListener);
 		return tmp;
 	}
@@ -102,12 +105,27 @@ public abstract class OpenNetworkPath extends OpenPath
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
 			tmp.create();
-		else if(lastModified() <= tmp.lastModified())
+		else if(lastModified() >= tmp.lastModified())
+		{
+			Logger.LogWarning("Remote file is newer than local temp file.");
 			return;
+		}
 		copyFrom(tmp, NetworkListener.DefaultListener);
 	}
 	
+	/**
+	 * Upload file (used during tempUpload).
+	 * @param f Local file to upload.
+	 * @param l Network listener for logging (since exceptions are caught).
+	 * @return True if transfer was successful, false otherwise.
+	 */
 	public abstract boolean copyFrom(OpenFile f, NetworkListener l);
+	/**
+	 * Download file (used during tempDownload).
+	 * @param f Local file to download to.
+	 * @param l Network listener for logging (since exceptions are caught).
+	 * @return True if transfer was successful, false otherwise.
+	 */
 	public abstract boolean copyTo(OpenFile f, NetworkListener l);
 	
 	public abstract boolean isConnected() throws IOException;

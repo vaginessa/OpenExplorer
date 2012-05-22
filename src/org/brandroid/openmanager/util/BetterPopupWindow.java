@@ -152,7 +152,7 @@ public class BetterPopupWindow {
 			popup.setBackgroundDrawable(new ColorDrawable(mContext.getResources().getColor(R.color.translucent_gray)));
 		else
 			popup.setBackgroundDrawable(new BitmapDrawable());
-		
+				
 		// if using PopupWindow#setBackgroundDrawable this is the only values of the width and hight that make it work
 		// otherwise you need to set the background of the root viewgroup
 		// and set the popupwindow background to an empty BitmapDrawable

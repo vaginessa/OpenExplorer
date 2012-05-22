@@ -552,12 +552,12 @@ public class TextEditorFragment extends OpenFragment
 			
 		case R.id.menu_view:
 			if(OpenExplorer.BEFORE_HONEYCOMB)
-				showIContextMenu(R.menu.text_view, from);
+				showMenu(R.menu.text_view, from);
 			return true;
 			
 		case R.id.menu_text_ops:
 			if(OpenExplorer.BEFORE_HONEYCOMB)
-				showIContextMenu(R.menu.text_file, from);
+				showMenu(R.menu.text_file, from);
 			return true;
 			
 		case R.id.menu_view_keyboard_toggle:
@@ -846,7 +846,7 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public boolean onTitleLongClick(View titleView) {
-		return showIContextMenu(R.menu.text_file, titleView);
+		return showMenu(R.menu.text_file, titleView);
 	}
 
 	public boolean isSalvagable() {

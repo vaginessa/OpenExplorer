@@ -2,6 +2,7 @@ package org.brandroid.openmanager.adapters;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -121,15 +122,10 @@ public class IconContextMenuAdapter extends BaseAdapter {
         	((BitmapDrawable)src).setGravity(Gravity.CENTER);
         Drawable icon = new LayerDrawable(new Drawable[]{src != null ? src : new ColorDrawable(android.R.color.white)});
         		//Gravity.CENTER, sz, sz);
+
+    	ViewUtils.setAlpha(res, item.isEnabled() ? 1f : 0.4f);
         
-        if(!item.isEnabled())
-        {
-        	res.setClickable(false);
-        	res.setLongClickable(false);
-        	res.setTextColor(context.getResources().getColor(R.color.lightgray));
-        	icon.setAlpha(128);
-        } else icon.setAlpha(255);
-        
+    	res.setEnabled(item.isEnabled());
         res.setTag(item);
         res.setText(item.getTitle());
         res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);
