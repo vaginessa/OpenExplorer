@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 	<item
 		android:id="@+id/menu_multi"
-		android:icon="@drawable/multiselect"
+		android:icon="@drawable/ic_multiselect"
 		android:showAsAction="ifRoom"
 		android:checkable="true"
 		android:title="@string/s_menu_multi" />
