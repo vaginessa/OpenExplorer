@@ -220,7 +220,19 @@ public abstract class OpenFragment
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
-		mOpenMenu.setOnIconContextItemSelectedListener(getExplorer());
+		mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+			
+			@Override
+			public void onIconContextItemSelected(IconContextMenu menu, MenuItem item,
+					Object info, View view) {
+				if(onOptionsItemSelected(item)) {
+					menu.dismiss();
+					return;
+				}
+				if(getExplorer() != null)
+					getExplorer().onIconContextItemSelected(menu, item, info, view);
+			}
+		});
 		return mOpenMenu.show(xOffset, yOffset);
 	}
 	
