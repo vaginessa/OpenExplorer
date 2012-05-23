@@ -44,7 +44,7 @@ public abstract class OpenNetworkPath extends OpenPath
 			}
 			
 			@Override
-			public void OnNetworkCopyUpdate(int[] progress) {
+			public void OnNetworkCopyUpdate(Integer... progress) {
 				
 			}
 			
@@ -54,7 +54,7 @@ public abstract class OpenNetworkPath extends OpenPath
 			}
 		};
 		public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest);
-		public void OnNetworkCopyUpdate(int... progress);
+		public void OnNetworkCopyUpdate(Integer... progress);
 		public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e);
 	}
 	
@@ -65,7 +65,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	}
 	
 	@Override
-	public Boolean requiresThread() {
+	public final Boolean requiresThread() {
 		return true;
 	}
 	
@@ -95,7 +95,7 @@ public abstract class OpenNetworkPath extends OpenPath
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
 			tmp.create();
-		else if(lastModified() <= tmp.lastModified())
+		else if(lastModified() != null && tmp.lastModified() != null && lastModified() <= tmp.lastModified())
 		{
 			Logger.LogWarning("Remote file is older than local temp file.");
 			return tmp;
@@ -110,7 +110,7 @@ public abstract class OpenNetworkPath extends OpenPath
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
 			tmp.create();
-		else if(lastModified() >= tmp.lastModified())
+		else if(lastModified() != null && tmp.lastModified() != null && lastModified() >= tmp.lastModified())
 		{
 			Logger.LogWarning("Remote file is newer than local temp file.");
 			return;
@@ -138,17 +138,17 @@ public abstract class OpenNetworkPath extends OpenPath
 		if(task == null) return copyFrom(f, OpenNetworkPath.NetworkListener.DefaultListener);
 		return copyFrom(f, new NetworkListener() {
 			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) { }
-			public void OnNetworkCopyUpdate(int... progress) {
+			public void OnNetworkCopyUpdate(Integer... progress) {
 				if(task instanceof TextEditorFragment.FileLoadTask)
-					((TextEditorFragment.FileLoadTask)task).publishProgress(progress);
+					((TextEditorFragment.FileLoadTask)task).showProgress(progress);
 				else if(task instanceof TextEditorFragment.FileSaveTask)
-					((TextEditorFragment.FileSaveTask)task).publishProgress(progress);
+					((TextEditorFragment.FileSaveTask)task).showProgress(progress);
 			}
 			public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest) {
 				if(task instanceof TextEditorFragment.FileLoadTask)
-					((TextEditorFragment.FileLoadTask)task).publishProgress();
+					((TextEditorFragment.FileLoadTask)task).showProgress();
 				else if(task instanceof TextEditorFragment.FileSaveTask)
-					((TextEditorFragment.FileSaveTask)task).publishProgress();
+					((TextEditorFragment.FileSaveTask)task).showProgress();
 			}
 		});
 	}
@@ -156,17 +156,17 @@ public abstract class OpenNetworkPath extends OpenPath
 	{
 		return copyTo(f, new NetworkListener() {
 			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {}
-			public void OnNetworkCopyUpdate(int... progress) {
+			public void OnNetworkCopyUpdate(Integer... progress) {
 				if(task instanceof TextEditorFragment.FileLoadTask)
-					((TextEditorFragment.FileLoadTask)task).publishProgress(progress);
+					((TextEditorFragment.FileLoadTask)task).showProgress(progress);
 				else if(task instanceof TextEditorFragment.FileSaveTask)
-					((TextEditorFragment.FileSaveTask)task).publishProgress(progress);
+					((TextEditorFragment.FileSaveTask)task).showProgress(progress);
 			}
 			public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest) {
 				if(task instanceof TextEditorFragment.FileLoadTask)
-					((TextEditorFragment.FileLoadTask)task).publishProgress();
+					((TextEditorFragment.FileLoadTask)task).showProgress();
 				else if(task instanceof TextEditorFragment.FileSaveTask)
-					((TextEditorFragment.FileSaveTask)task).publishProgress();
+					((TextEditorFragment.FileSaveTask)task).showProgress();
 			}
 		});
 	}
@@ -180,6 +180,14 @@ public abstract class OpenNetworkPath extends OpenPath
 	public void setName(String name) { mName = name; } 
 	public String getName() { return mName; }
 	public String getName(String defaultName) { return mName != null ? mName : defaultName; }
+	
+	public final String getRemotePath()
+	{
+		String name = getName();
+		if(!name.endsWith("/") && !name.startsWith("/"))
+			name = "/" + name;
+		return getUri().getPath().replace(name, "");
+	}
 	
 	public UserInfo getUserInfo() { return mUserInfo; }
 	public UserInfo setUserInfo(UserInfo info) { mUserInfo = info; return mUserInfo; }

@@ -330,10 +330,6 @@ public class OpenFTP extends OpenNetworkPath
 	}
 	
 	@Override
-	public Boolean requiresThread() {
-		return true;
-	}
-	@Override
 	public int getAttributes() {
 		return mAttributes != null ? mAttributes : 0;
 	}
@@ -370,9 +366,41 @@ public class OpenFTP extends OpenNetworkPath
 			return false;
 		}
 	}
+	
+	@Override
+	public boolean touch() {
+		FTPClient client;
+		OutputStream os = null;
+		try {
+			client = getManager().getClient();
+			client.cwd(getRemotePath());
+			os = getManager().getOutputStream(getUri().getPath());
+			os.flush();
+			return true;
+		} catch (IOException e) {
+			Logger.LogError("Couldn't touch file - " + getPath(), e);
+		} finally {
+			if(os != null)
+				try {
+					os.close();
+				} catch (IOException e) { }
+		}
+		return false;
+	}
+	
 	@Override
 	public Boolean mkdir() {
-		return false; //mFile.mkdir();
+		FTPClient client;
+		try {
+			connect();
+			client = getManager().getClient();
+			client.cwd("/");
+			client.mkd(getRemotePath());
+			return true;
+		} catch(IOException e) {
+			Logger.LogError("Unable to make FTP directory - " + getPath(), e);
+		}
+		return false;
 	}
 	public void get(OutputStream stream) throws IOException
 	{
@@ -423,13 +451,14 @@ public class OpenFTP extends OpenNetworkPath
 	@Override
 	public boolean copyFrom(OpenFile f, NetworkListener l)
 	{
+		Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
+		InputStream is = null;
 		try {
 			connect();
-			InputStream is = f.getInputStream();
+			is = f.getInputStream();
 			FTPClient client = mManager.getClient();
 			client.cwd(getParent().getUri().getPath());
 			boolean ret = client.storeFile(getName(), is);
-			is.close();
 			if(!ret)
 				throw new IOException("Unable to upload to FTP.");
 			if(l != null)
@@ -439,20 +468,21 @@ public class OpenFTP extends OpenNetworkPath
 			if(l != null)
 				l.OnNetworkFailure(this, f, e);
 			return false;
+		} finally {
+			if(is != null) try { is.close(); } catch(IOException e) { }
 		}
 	}
 	@Override
 	public boolean copyTo(OpenFile f, NetworkListener l)
 	{
-
+		OutputStream os = null;
 		Logger.LogDebug("OpenFTP.copyTo(" + f + ")");
 		try {
 			connect();
-			OutputStream os = f.getOutputStream();
+			os = f.getOutputStream();
 			FTPClient client = mManager.getClient();
 			client.cwd(getParent().getUri().getPath());
 			boolean ret = client.retrieveFile(getName(), os);
-			os.close();
 			if(!ret)
 				throw new IOException("Unable to download from FTP.");
 			if(l != null)
@@ -462,6 +492,8 @@ public class OpenFTP extends OpenNetworkPath
 			if(l != null)
 				l.OnNetworkFailure(this, f, e);
 			return false;
+		} finally {
+			if(os != null) try { os.close(); } catch(IOException e) { }
 		}
 	}
 	@Override

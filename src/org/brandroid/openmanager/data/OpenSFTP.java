@@ -106,7 +106,6 @@ public class OpenSFTP extends OpenNetworkPath
 	}
 	public String getHost() { return mHost; }
 	public String getUser() { return mUser; }
-	public String getRemotePath() { return mRemotePath; }
 
 	@Override
 	public String getName() {
@@ -272,11 +271,6 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public Boolean exists() {
-		return true;
-	}
-
-	@Override
-	public Boolean requiresThread() {
 		return true;
 	}
 

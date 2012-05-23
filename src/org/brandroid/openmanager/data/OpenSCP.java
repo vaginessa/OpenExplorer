@@ -176,11 +176,6 @@ public class OpenSCP extends OpenNetworkPath
 	}
 
 	@Override
-	public Boolean requiresThread() {
-		return true;
-	}
-
-	@Override
 	public Boolean delete() {
 		return false;
 	}

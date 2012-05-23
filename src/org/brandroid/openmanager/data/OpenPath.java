@@ -407,6 +407,12 @@ public abstract class OpenPath
 		if(!AllowDBCache) return false;
 		return mDb.createItem(this, delete) > 0;
 	}
+	
+	/**
+	 * List files found in cached in database.
+	 * @param sort Sorting parameter.
+	 * @return True if entries were found, false if no cache available.
+	 */
 	public boolean listFromDb(SortType sort) { return false; }
 	public int deleteFolderFromDb()
 	{
