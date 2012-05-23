@@ -65,17 +65,17 @@ public class LogViewerFragment extends OpenFragment
 	
 	public void print(final String txt, final int color)
 	{
-		Logger.LogDebug("print(" + txt + ", " + color + ")");
-		mData.add(0, colorify(txt, color));
-		if(mAdapter == null) return;
+		if(mAdapter == null) {
+			mData.add(0, colorify(txt, color));
+			return;
+		}
 		//getActivity().runOnUiThread(
-		Runnable doPrint = new Runnable(){public void run(){
+		Runnable doPrint =
+			new Runnable(){public void run(){
+				mData.add(0, colorify(txt, color));
 				mAdapter.notifyDataSetChanged();
 			}};
-		if(!Thread.currentThread().equals(OpenExplorer.UiThread) && mListView != null)
-			mListView.post(doPrint);
-		else
-			doPrint.run();
+		mListView.post(doPrint);			
 	}
 	
 	private CharSequence colorify(String txt, int color)

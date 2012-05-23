@@ -163,7 +163,17 @@ public class OpenSFTP extends OpenNetworkPath
 
 	@Override
 	public OpenPath getParent() {
-		return mParent;
+		if(mParent != null)
+			return mParent;
+		try {
+			if(getUri().getPath().length() > 2)
+			{
+				String path = getAbsolutePath().replace("/" + getName(), "");
+				if(path.length() > 8)
+					return new OpenSFTP(path);
+			}
+		} catch(Exception e) { Logger.LogError("Unable to get OpenSFTP.getParent(" + getPath() + ")", e); }
+		return null;
 	}
 	
 	@Override
@@ -375,9 +385,7 @@ public class OpenSFTP extends OpenNetworkPath
 		return mSession.isConnected();
 	}
 
-	/*
-	@Override
-	public InputStream getInputStream() throws IOException {
+	private InputStream getMyInputStream() throws IOException {
 		if(in != null)
 			return in;
 
@@ -417,8 +425,7 @@ public class OpenSFTP extends OpenNetworkPath
 		return in;
 	}
 
-	@Override
-	public OutputStream getOutputStream() throws IOException {
+	private OutputStream getMyOutputStream() throws IOException {
 		if(out != null)
 			return out;
 
@@ -435,7 +442,6 @@ public class OpenSFTP extends OpenNetworkPath
 		}
 		return out;
 	}
-	*/
 	
 	static int checkAck(InputStream in) throws IOException
 	{
@@ -458,12 +464,24 @@ public class OpenSFTP extends OpenNetworkPath
 	}
 	@Override
 	public boolean copyFrom(OpenFile f, NetworkListener l) {
-		// TODO Auto-generated method stub
+		try {
+			mChannel.put(f.getPath(), getUri().getPath());
+			l.OnNetworkCopyFinished(this, f);
+			return true;
+		} catch(Exception e){
+			l.OnNetworkFailure(this, f, e);
+		}
 		return false;
 	}
 	@Override
 	public boolean copyTo(OpenFile f, NetworkListener l) {
-		// TODO Auto-generated method stub
+		try {
+			mChannel.get(getUri().getPath(), f.getPath());
+			l.OnNetworkCopyFinished(this, f);
+			return true;
+		} catch (SftpException e) {
+			l.OnNetworkFailure(this, f, e);
+		}
 		return false;
 	}
 }

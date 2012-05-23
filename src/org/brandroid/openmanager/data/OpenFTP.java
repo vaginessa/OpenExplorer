@@ -183,22 +183,22 @@ public class OpenFTP extends OpenNetworkPath
 		return 0;
 	}
 
+
 	@Override
 	public OpenFTP getParent() {
-		if(mParent != null || mParent == null)
+		if(mParent != null)
 			return mParent;
-		String parent = OpenPath.getParent(getPath());
-		if(parent == null) return null;
-		if(parent.length() < 5) return null;
-		//return new OpenSMB(new SmbFile(parent, mFile.getAuth()));
-		//return new OpenFTP(parent, new FTPFile[]{this.getFile()}, new FTPManager(mManager, parent));
 		try {
-			return (OpenFTP) FileManager.getOpenCache(parent, false, null);
-		} catch (IOException e) {
-			return null;
-		}
+			if(getUri().getPath().length() > 2)
+			{
+				String path = getAbsolutePath().replace("/" + getName(), "");
+				if(path.length() > 8)
+					return (OpenFTP)FileManager.getOpenCache(path);
+			}
+		} catch(Exception e) { Logger.LogError("Unable to get OpenSFTP.getParent(" + getPath() + ")", e); }
+		return null;
 	}
-
+	
 	@Override
 	public OpenFTP[] listFiles() throws IOException {
 		if(isListing) return getChildren();

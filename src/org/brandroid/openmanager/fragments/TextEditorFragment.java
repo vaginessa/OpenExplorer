@@ -659,6 +659,11 @@ public class TextEditorFragment extends OpenFragment
 		{
 			mPath = path;
 		}
+		
+		public void publishProgress(int... progress)
+		{
+			publishProgress(progress);
+		}
 
 		@Override
 		protected Integer doInBackground(String... datas) {
@@ -670,7 +675,7 @@ public class TextEditorFragment extends OpenFragment
 				fos.write(bytes);
 				fos.close();
 				if(mPath instanceof NeedsTempFile)
-					((NeedsTempFile)mPath).tempUpload();
+					((NeedsTempFile)mPath).tempUpload(this);
 				if(mPath instanceof OpenNetworkPath)
 					((OpenNetworkPath)mPath).disconnect();
 				mData = data;
@@ -708,6 +713,10 @@ public class TextEditorFragment extends OpenFragment
 		@Override
 		protected String doInBackground(OpenPath... params) {
 			OpenPath mPath = params[0];
+			if(mPath instanceof NeedsTempFile)
+				try {
+					((NeedsTempFile)mPath).tempDownload(this);
+				} catch (IOException e) { Logger.LogError("Unable to download temp file while loading text file." , e); }
 			String path = mPath.getPath();
 			Logger.LogDebug("Getting " + path);
 			if(mPath.canRead()) {
@@ -803,6 +812,11 @@ public class TextEditorFragment extends OpenFragment
 			super.onPreExecute();
 			setEnabled(false, mEditText);
 			setProgressVisibility(true);
+		}
+		
+		public void publishProgress(int... progress)
+		{
+			publishProgress(progress);
 		}
 		
 		@Override

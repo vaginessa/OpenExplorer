@@ -8,6 +8,9 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbShareInfo;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -391,6 +394,49 @@ public class OpenSMB extends OpenNetworkPath
 	}
 	*/
 
+	@Override
+	public boolean copyFrom(OpenFile f, NetworkListener l) {
+		InputStream is = null;
+		OutputStream os = null;
+		try {
+			is = mFile.getInputStream();
+			os = new BufferedOutputStream(getFile().getOutputStream());
+			while(is.available() > 0)
+			{
+				byte[] buffer = new byte[Math.max(4096, is.available())];
+				if(is.read(buffer) > 0)
+					os.write(buffer);
+			}
+			l.OnNetworkCopyFinished(this, f);
+			return true;
+		} catch (IOException e) {
+			l.OnNetworkFailure(this, f, e);
+		} finally {
+			if(is != null)
+				try {
+					is.close();
+				} catch (IOException e) {
+				}
+			if(os != null)
+				try {
+					os.close();
+				} catch (IOException e) {
+				}
+		}
+		return false;
+	}
+	@Override
+	public boolean copyTo(OpenFile f, NetworkListener l) {
+		try {
+			mFile.copyTo(f, null);
+			l.OnNetworkCopyFinished(this, f);
+			return true;
+		} catch(Exception e) {
+			l.OnNetworkFailure(this, f, e);
+		}
+		return false;
+	}
+	
 	public void copyTo(OpenFile dest, BackgroundWork task) throws SmbException {
 		mFile.copyTo(dest, task);
 	}
@@ -494,16 +540,5 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public void clearChildren() {
 		mChildren = null;
-	}
-	@Override
-	public boolean copyFrom(OpenFile f, NetworkListener l) {
-		//InputStream is = mFile.getInputStream();
-		
-		return false;
-	}
-	@Override
-	public boolean copyTo(OpenFile f, NetworkListener l) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

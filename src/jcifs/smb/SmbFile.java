@@ -2401,7 +2401,7 @@ if (this instanceof SmbNamedPipe) {
                             break;
                         }
                         w.write( b[i], resp.dataLength, dest, off );
-                        if(new Date().getTime() - lastPub > 500)
+                        if(task != null && new Date().getTime() - lastPub > 500)
                         {
                         	task.publish(i, i, total);
                         	lastPub = new Date().getTime();

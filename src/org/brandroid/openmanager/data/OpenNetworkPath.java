@@ -9,8 +9,11 @@ import java.text.SimpleDateFormat;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.openmanager.fragments.TextEditorFragment.FileLoadTask;
 import org.brandroid.utils.Logger;
 
+import android.os.AsyncTask;
 import android.os.Environment;
 
 import com.jcraft.jsch.JSch;
@@ -85,8 +88,9 @@ public abstract class OpenNetworkPath extends OpenPath
 			return root.getChild(getTempFileName());
 		return null;
 	}
-	public OpenFile tempDownload() throws IOException
+	public OpenFile tempDownload(AsyncTask task) throws IOException
 	{
+		Logger.LogDebug("tempDownload() on " + getPath());
 		OpenFile tmp = getTempFile();
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
@@ -96,11 +100,12 @@ public abstract class OpenNetworkPath extends OpenPath
 			Logger.LogWarning("Remote file is older than local temp file.");
 			return tmp;
 		}
-		copyTo(tmp, NetworkListener.DefaultListener);
+		copyTo(tmp, task);
 		return tmp;
 	}
-	public void tempUpload() throws IOException
+	public void tempUpload(AsyncTask task) throws IOException
 	{
+		Logger.LogDebug("tempUpload() on " + getPath());
 		OpenFile tmp = getTempFile();
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
@@ -110,7 +115,7 @@ public abstract class OpenNetworkPath extends OpenPath
 			Logger.LogWarning("Remote file is newer than local temp file.");
 			return;
 		}
-		copyFrom(tmp, NetworkListener.DefaultListener);
+		copyFrom(tmp, task);
 	}
 	
 	/**
@@ -127,6 +132,44 @@ public abstract class OpenNetworkPath extends OpenPath
 	 * @return True if transfer was successful, false otherwise.
 	 */
 	public abstract boolean copyTo(OpenFile f, NetworkListener l);
+	
+	public boolean copyFrom(OpenFile f, final AsyncTask task)
+	{
+		if(task == null) return copyFrom(f, OpenNetworkPath.NetworkListener.DefaultListener);
+		return copyFrom(f, new NetworkListener() {
+			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) { }
+			public void OnNetworkCopyUpdate(int... progress) {
+				if(task instanceof TextEditorFragment.FileLoadTask)
+					((TextEditorFragment.FileLoadTask)task).publishProgress(progress);
+				else if(task instanceof TextEditorFragment.FileSaveTask)
+					((TextEditorFragment.FileSaveTask)task).publishProgress(progress);
+			}
+			public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest) {
+				if(task instanceof TextEditorFragment.FileLoadTask)
+					((TextEditorFragment.FileLoadTask)task).publishProgress();
+				else if(task instanceof TextEditorFragment.FileSaveTask)
+					((TextEditorFragment.FileSaveTask)task).publishProgress();
+			}
+		});
+	}
+	public boolean copyTo(OpenFile f, final AsyncTask task)
+	{
+		return copyTo(f, new NetworkListener() {
+			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {}
+			public void OnNetworkCopyUpdate(int... progress) {
+				if(task instanceof TextEditorFragment.FileLoadTask)
+					((TextEditorFragment.FileLoadTask)task).publishProgress(progress);
+				else if(task instanceof TextEditorFragment.FileSaveTask)
+					((TextEditorFragment.FileSaveTask)task).publishProgress(progress);
+			}
+			public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest) {
+				if(task instanceof TextEditorFragment.FileLoadTask)
+					((TextEditorFragment.FileLoadTask)task).publishProgress();
+				else if(task instanceof TextEditorFragment.FileSaveTask)
+					((TextEditorFragment.FileSaveTask)task).publishProgress();
+			}
+		});
+	}
 	
 	public abstract boolean isConnected() throws IOException;
 
@@ -178,11 +221,11 @@ public abstract class OpenNetworkPath extends OpenPath
 	
 	@Override
 	public final InputStream getInputStream() throws IOException {
-		return tempDownload().getInputStream();
+		return tempDownload(null).getInputStream();
 	}
 	
 	@Override
 	public final OutputStream getOutputStream() throws IOException {
-		return tempDownload().getOutputStream();
+		return tempDownload(null).getOutputStream();
 	}
 }

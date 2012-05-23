@@ -20,6 +20,7 @@ import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.PatternMatcher;
 
@@ -358,12 +359,12 @@ public class OpenFileRoot
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return tempDownload().getInputStream();
+		return tempDownload(null).getInputStream();
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return tempDownload().getOutputStream();
+		return tempDownload(null).getOutputStream();
 	}
 
 	@Override
@@ -394,7 +395,7 @@ public class OpenFileRoot
 	}
 	
 	@Override
-	public OpenFile tempDownload() throws IOException {
+	public OpenFile tempDownload(AsyncTask task) throws IOException {
 		OpenFile tmp = getTempFile();
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
@@ -405,7 +406,7 @@ public class OpenFileRoot
 		return tmp;
 	}
 	@Override
-	public void tempUpload() throws IOException {
+	public void tempUpload(AsyncTask<?, ?, ?> task) throws IOException {
 		OpenFile tmp = getTempFile();
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())

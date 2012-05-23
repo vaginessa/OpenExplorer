@@ -30,6 +30,7 @@ import com.android.gallery3d.util.IdentityCache;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -349,8 +350,8 @@ public abstract class OpenPath
 	
 	public interface NeedsTempFile
 	{
-		public OpenFile tempDownload() throws IOException;
-		public void tempUpload() throws IOException;
+		public OpenFile tempDownload(AsyncTask<?, ?, ?> task) throws IOException;
+		public void tempUpload(AsyncTask<?, ?, ?> task) throws IOException;
 	}
 
 	public String getMimeType() {

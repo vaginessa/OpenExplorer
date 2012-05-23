@@ -1409,7 +1409,7 @@ public class OpenExplorer
 		try {
 		
 		if(txt == null) return;
-		Logger.LogDebug("Log: " + txt);
+		//Logger.LogDebug("Log: " + txt);
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
 		mLogFragment.print(txt, color);
