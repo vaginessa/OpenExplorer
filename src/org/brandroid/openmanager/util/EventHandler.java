@@ -66,17 +66,26 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 public class EventHandler {
-	public static final int SEARCH_TYPE = 0x00;
-	public static final int COPY_TYPE = 0x01;
-	public static final int UNZIP_TYPE = 0x02;
-	public static final int UNZIPTO_TYPE = 0x03;
-	public static final int ZIP_TYPE = 0x04;
-	public static final int DELETE_TYPE = 0x05;
-	public static final int RENAME_TYPE = 0X06;
-	public static final int MKDIR_TYPE = 0x07;
-	public static final int CUT_TYPE = 0x08;
-	public static final int ERROR_TYPE = 0x09;
+	public static final EventType SEARCH_TYPE = EventType.SEARCH;
+	public static final EventType COPY_TYPE = EventType.COPY;
+	public static final EventType UNZIP_TYPE = EventType.UNZIP;
+	public static final EventType UNZIPTO_TYPE = EventType.UNZIPTO;
+	public static final EventType ZIP_TYPE = EventType.ZIP;
+	public static final EventType DELETE_TYPE = EventType.DELETE;
+	public static final EventType RENAME_TYPE = EventType.RENAME;
+	public static final EventType MKDIR_TYPE = EventType.MKDIR;
+	public static final EventType CUT_TYPE = EventType.CUT;
+	public static final EventType TOUCH_TYPE = EventType.TOUCH;
+	public static final EventType ERROR_TYPE = EventType.ERROR;
 	public static final int BACKGROUND_NOTIFICATION_ID = 123;
+	
+	public enum EventType {
+		SEARCH,
+		COPY, CUT,
+		DELETE, RENAME, MKDIR, TOUCH,
+		UNZIP, UNZIPTO, ZIP,
+		ERROR
+	}
 	
 	public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.isBlackBerry() && Build.VERSION.SDK_INT > 9;
 
@@ -122,8 +131,15 @@ public class EventHandler {
 		public void OnTasksChanged(int taskCount);
 	}
 	public interface OnWorkerUpdateListener {
-		public void onWorkerThreadComplete(int type, ArrayList<String> results);
+		public void onWorkerThreadComplete(EventType type, String... results);
 		public void onWorkerProgressUpdate(int pos, int total);
+		
+		/**
+		 * Occurs when an error occurs during Event
+		 * @param type Type of requested event.
+		 * @param files List of OpenPath items.
+		 */
+		public void onWorkerThreadFailure(EventType type, OpenPath... files);
 	}
 
 	private synchronized void OnWorkerProgressUpdate(int pos, int total) {
@@ -132,11 +148,20 @@ public class EventHandler {
 		mThreadListener.onWorkerProgressUpdate(pos, total);
 	}
 
-	private synchronized void OnWorkerThreadComplete(int type,
-			ArrayList<String> results) {
+	private synchronized void OnWorkerThreadComplete(EventType type,
+			String... results) {
 		if (mThreadListener == null)
 			return;
 		mThreadListener.onWorkerThreadComplete(type, results);
+		mThreadListener = null;
+		if(mTaskListener != null)
+			mTaskListener.OnTasksChanged(getTaskList().size());
+	}
+	
+	private synchronized void OnWorkerThreadFailure(EventType type, OpenPath... files)
+	{
+		if(mThreadListener == null) return;
+		mThreadListener.onWorkerThreadFailure(type, files);
 		mThreadListener = null;
 		if(mTaskListener != null)
 			mTaskListener.OnTasksChanged(getTaskList().size());
@@ -230,7 +255,7 @@ public class EventHandler {
 	}
 
 	public void renameFile(final OpenPath path, boolean isFolder,
-			Context mContext) {
+			final Context mContext) {
 		final InputDialog dRename = new InputDialog(mContext)
 				.setIcon(R.drawable.ic_rename).setTitle(R.string.s_menu_rename)
 				.setCancelable(true).setMessage(R.string.s_alert_rename)
@@ -238,10 +263,10 @@ public class EventHandler {
 		dRename.setPositiveButton(android.R.string.ok,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						if (dRename.getInputText().toString().length() > 0) {
-							if (mFileMang.renameTarget(path.getPath(), dRename
-									.getInputText().toString()))
-								OnWorkerThreadComplete(RENAME_TYPE, null);
+						String newName = dRename.getInputText().toString(); 
+						BackgroundWork work = new BackgroundWork(RENAME_TYPE, mContext, path, newName);
+						if (newName.length() > 0) {
+							work.execute();
 						} else
 							dialog.dismiss();
 					}
@@ -276,16 +301,7 @@ public class EventHandler {
 			public void onClick(DialogInterface dialog, int which) {
 				String name = dlg.getInputText();
 				if (name.length() > 0) {
-					OpenPath file = folder.getChild(name + "/");
-					if(file.mkdir())
-						Toast.makeText(context,
-							file.getPath() +
-							context.getString(R.string.s_msg_created)
-							, Toast.LENGTH_LONG);
-					else Toast.makeText(context,
-							context.getString(R.string.s_msg_none) +
-							context.getString(R.string.s_msg_created)
-							, Toast.LENGTH_LONG);
+					createNewFolder(folder.getChild(name), context);
 				} else {
 					dialog.dismiss();
 				}
@@ -293,8 +309,6 @@ public class EventHandler {
 		});
 		dlg.create().show();
 	}
-	
-
 
 	public static void createNewFile(final OpenPath folder, final Context context) {
 		final InputDialog dlg = new InputDialog(context)
@@ -313,22 +327,21 @@ public class EventHandler {
 			public void onClick(DialogInterface dialog, int which) {
 				String name = dlg.getInputText();
 				if (name.length() > 0) {
-					OpenPath file = folder.getChild(name);
-					if(file.touch())
-						Toast.makeText(context,
-							file.getPath() +
-							context.getString(R.string.s_msg_created)
-							, Toast.LENGTH_LONG);
-					else Toast.makeText(context,
-							context.getString(R.string.s_msg_none) +
-							context.getString(R.string.s_msg_created)
-							, Toast.LENGTH_LONG);
+					createNewFile(folder, name, context);
 				} else {
 					dialog.dismiss();
 				}
 			}
 		});
 		dlg.create().show();
+	}
+	public static void createNewFile(final OpenPath folder, final String filename, Context context)
+	{
+		new Thread(new Runnable(){public void run(){
+			folder.getChild(filename).touch();
+		}}).start();
+		//BackgroundWork bw = new BackgroundWork(TOUCH_TYPE, context, folder, filename);
+		//bw.execute();
 	}
 
 	public void sendFile(final List<OpenPath> path, final Context mContext) {
@@ -446,7 +459,7 @@ public class EventHandler {
 						if (!path.exists() && !path.mkdir()) {
 							Logger.LogError("Couldn't locate output path for unzip! "
 									+ path.getPath());
-							OnWorkerThreadComplete(ERROR_TYPE, null);
+							OnWorkerThreadFailure(UNZIPTO_TYPE);
 							return;
 						}
 						Logger.LogVerbose("Unzipping " + file.getPath()
@@ -458,9 +471,11 @@ public class EventHandler {
 				.setDefaultText(into.getPath()).create().show();
 	}
 
+	/*
 	public void unZipFileTo(OpenPath zipFile, OpenPath toDir, Context mContext) {
 		new BackgroundWork(UNZIPTO_TYPE, mContext, toDir).execute(zipFile);
 	}
+	*/
 
 	/**
 	 * Do work on second thread class
@@ -469,7 +484,7 @@ public class EventHandler {
 	 */
 	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer>
 			implements OnProgressUpdateCallback {
-		private final int mType;
+		private final EventType mType;
 		private final Context mContext;
 		private final String[] mInitParams;
 		private final OpenPath mIntoPath;
@@ -492,7 +507,7 @@ public class EventHandler {
 			mListener = listener;
 		}
 
-		public void OnWorkerThreadComplete(int type, ArrayList<String> results) {
+		public void OnWorkerThreadComplete(EventType type, String... results) {
 			if (mListener != null)
 				mListener.onWorkerThreadComplete(type, results);
 			EventHandler.this.OnWorkerThreadComplete(type, results);
@@ -504,7 +519,7 @@ public class EventHandler {
 			EventHandler.this.OnWorkerProgressUpdate(pos, total);
 		}
 
-		public BackgroundWork(int type, Context context, OpenPath intoPath,
+		public BackgroundWork(EventType type, Context context, OpenPath intoPath,
 				String... params) {
 			mType = type;
 			mContext = context;
@@ -525,30 +540,36 @@ public class EventHandler {
 			String title = getResourceString(mContext,
 					R.string.s_title_executing).toString();
 			switch (mType) {
-			case DELETE_TYPE:
+			case DELETE:
 				title = getResourceString(mContext, R.string.s_title_deleting)
 						.toString();
 				break;
-			case SEARCH_TYPE:
+			case SEARCH:
 				title = getResourceString(mContext, R.string.s_title_searching)
 						.toString();
 				break;
-			case COPY_TYPE:
+			case COPY:
 				title = getResourceString(mContext, R.string.s_title_copying)
 						.toString();
 				break;
-			case CUT_TYPE:
+			case CUT:
 				title = getResourceString(mContext, R.string.s_title_moving)
 						.toString();
 				break;
-			case UNZIP_TYPE:
-			case UNZIPTO_TYPE:
+			case UNZIP:
+			case UNZIPTO:
 				title = getResourceString(mContext, R.string.s_title_unzipping)
 						.toString();
 				break;
-			case ZIP_TYPE:
+			case ZIP:
 				title = getResourceString(mContext, R.string.s_title_zipping)
 						.toString();
+				break;
+			case MKDIR:
+				title = getResourceString(mContext, R.string.s_menu_rename).toString();
+				break;
+			case TOUCH:
+				title = getResourceString(mContext, R.string.s_create).toString();
 				break;
 			}
 			title += " " + '\u2192' + " " + mIntoPath.getPath();
@@ -595,32 +616,35 @@ public class EventHandler {
 			boolean showDialog = true, showNotification = false, isCancellable = true;
 			notifIcon = R.drawable.icon;
 			switch (mType) {
-			case DELETE_TYPE:
+			case DELETE:
 				showDialog = false;
 				break;
-			case SEARCH_TYPE:
+			case SEARCH:
 				notifIcon = android.R.drawable.ic_menu_search;
 				break;
-			case COPY_TYPE:
+			case COPY:
 				if (mIntoPath.requiresThread())
 					notifIcon = android.R.drawable.stat_sys_upload;
 				notifIcon = R.drawable.ic_menu_copy;
 				showDialog = false;
 				showNotification = true;
 				break;
-			case CUT_TYPE:
+			case CUT:
 				notifIcon = R.drawable.ic_menu_cut;
 				showDialog = false;
 				showNotification = true;
 				break;
-			case UNZIP_TYPE:
-			case UNZIPTO_TYPE:
+			case UNZIP:
+			case UNZIPTO:
 				showDialog = false;
 				showNotification = true;
 				break;
-			case ZIP_TYPE:
+			case ZIP:
 				showDialog = false;
 				showNotification = true;
+				break;
+			default:
+				showDialog = showNotification = false;
 				break;
 			}
 			if (showDialog)
@@ -726,15 +750,27 @@ public class EventHandler {
 
 			switch (mType) {
 
-			case DELETE_TYPE:
+			case DELETE:
 				for (int i = 0; i < len; i++)
 					ret += mFileMang.deleteTarget(params[i]);
 				break;
-			case SEARCH_TYPE:
+			case SEARCH:
 				mSearchResults = new ArrayList<String>();
 				searchDirectory(mIntoPath, mInitParams[0], mSearchResults);
 				break;
-			case COPY_TYPE:
+			case RENAME:
+				ret += FileManager.renameTarget(mIntoPath.getPath(), mInitParams[0]) ?
+						1 : 0;
+				break;
+			case MKDIR:
+				for(OpenPath p : params)
+					ret += p.mkdir() ? 1 : 0;
+				break;
+			case TOUCH:
+				for(OpenPath p : params)
+					ret += p.touch() ? 1 : 0;
+				break;
+			case COPY:
 				// / TODO: Add existing file check
 				for (OpenPath file : params) {
 					if (file.requiresThread()) {
@@ -750,7 +786,7 @@ public class EventHandler {
 					}
 				}
 				break;
-			case CUT_TYPE:
+			case CUT:
 				for (OpenPath file : params) {
 					try {
 						if (file.requiresThread()) {
@@ -767,12 +803,12 @@ public class EventHandler {
 					}
 				}
 				break;
-			case UNZIPTO_TYPE:
-			case UNZIP_TYPE:
+			case UNZIPTO:
+			case UNZIP:
 				extractZipFiles(params[0], mIntoPath);
 				break;
 
-			case ZIP_TYPE:
+			case ZIP:
 				mFileMang.setProgressListener(this);
 				publishProgress();
 				mFileMang.createZipFile(mIntoPath, params);
@@ -1134,7 +1170,7 @@ public class EventHandler {
 
 			switch (mType) {
 
-			case DELETE_TYPE:
+			case DELETE:
 				if (result == 0)
 					Toast.makeText(
 							mContext,
@@ -1153,14 +1189,14 @@ public class EventHandler {
 							getResourceString(mContext, R.string.s_msg_all,
 									R.string.s_msg_deleted), Toast.LENGTH_SHORT)
 							.show();
-				OnWorkerThreadComplete(mType, new ArrayList<String>());
+				OnWorkerThreadComplete(mType);
 				break;
 
-			case SEARCH_TYPE:
-				OnWorkerThreadComplete(mType, mSearchResults);
+			case SEARCH:
+				OnWorkerThreadComplete(mType, mSearchResults.toArray(new String[mSearchResults.size()]));
 				return;
 
-			case COPY_TYPE:
+			case COPY:
 				if (result == null || result == 0)
 					Toast.makeText(
 							mContext,
@@ -1180,7 +1216,7 @@ public class EventHandler {
 									R.string.s_msg_copied), Toast.LENGTH_SHORT)
 							.show();
 				break;
-			case CUT_TYPE:
+			case CUT:
 				if (result == null || result == 0)
 					Toast.makeText(
 							mContext,
@@ -1202,16 +1238,16 @@ public class EventHandler {
 
 				break;
 
-			case UNZIPTO_TYPE:
+			case UNZIPTO:
 				break;
 
-			case UNZIP_TYPE:
+			case UNZIP:
 				break;
 
-			case ZIP_TYPE:
+			case ZIP:
 				break;
 			}
-			OnWorkerThreadComplete(mType, null);
+			OnWorkerThreadComplete(mType);
 		}
 	}
 

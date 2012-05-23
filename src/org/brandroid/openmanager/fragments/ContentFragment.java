@@ -44,6 +44,7 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.openmanager.util.SortType;
@@ -443,7 +444,10 @@ public class ContentFragment extends OpenFragment
 			((OpenNetworkPath)mPath).disconnect();
 		Logger.LogDebug("Running Task for " + sPath);
 		NetworkIOTask.addTask(sPath, task);
-		task.execute(mPath);
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+			task.execute(mPath);
+		else
+			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mPath);
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -1339,18 +1343,21 @@ public class ContentFragment extends OpenFragment
 	public int getPagerPriority() {
 		return 1;
 	}
+
+	@Override
+	public void onWorkerThreadFailure(EventType type, OpenPath... files)
+	{
+		for(OpenPath path : files)
+			sendToLogView(type.name() + " error on " + path, Color.RED);
+		setProgressVisibility(false);
+	}
 	
-	/*
-	 * (non-Javadoc)
-	 * this will update the data shown to the user after a change to
-	 * the file system has been made from our background thread or EventHandler.
-	 */
-	//@Override
-	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
-		
+	@Override
+	public void onWorkerThreadComplete(EventType type, String... results)
+	{	
 		Logger.LogVerbose("Need to refresh!");
-		if(type == EventHandler.SEARCH_TYPE) {
-			if(results == null || results.size() < 1) {
+		if(type == EventType.SEARCH) {
+			if(results == null || results.length < 1) {
 				Toast.makeText(getApplicationContext(), "Sorry, zero items found", Toast.LENGTH_LONG).show();
 				return;
 			}
@@ -1386,9 +1393,9 @@ public class ContentFragment extends OpenFragment
 			dialog.show(getFragmentManager(), "dialog");
 			
 		} else if(type == EventHandler.UNZIPTO_TYPE && results != null) {
-			String name = new OpenFile(results.get(0)).getName();
+			String name = new OpenFile(results[0]).getName();
 			
-			getClipboard().add(new OpenFile(results.get(0)));
+			getClipboard().add(new OpenFile(results[0]));
 			getExplorer().updateTitle("Holding " + name);
 			
 		} else {
@@ -1418,7 +1425,7 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	public void onWorkerProgressUpdate(int pos, int total) {
-		
+		setProgressVisibility(pos < total);
 	}
 	
 	private void pushPath(OpenPath path)
@@ -1431,9 +1438,11 @@ public class ContentFragment extends OpenFragment
 	{
 		if(mGrid == null) return;
 		mTopIndex = mGrid.getFirstVisiblePosition();
-		if(mContentAdapter != null)
+		if(mContentAdapter != null && mTopIndex > -1 && mTopIndex < mContentAdapter.getCount())
+		{
 			mTopPath = (OpenPath)mContentAdapter.getItem(mTopIndex);
-		Logger.LogInfo("Top Path saved to " + mTopIndex + (mTopPath != null ? " :: " + mTopPath.getName() : ""));
+			Logger.LogInfo("Top Path saved to " + mTopIndex + (mTopPath != null ? " :: " + mTopPath.getName() : ""));
+		}
 	}
 	
 	private Boolean restoreTopPath()
@@ -1582,9 +1591,11 @@ public class ContentFragment extends OpenFragment
 		return null;
 	}
 	@Override
-	public void updateData(OpenPath[] result) {
-		if(mContentAdapter != null)
+	public void updateData(final OpenPath[] result) {
+		if(mContentAdapter == null) return;
+		if(Thread.currentThread().equals(OpenExplorer.UiThread))
 			mContentAdapter.updateData(result);
+		else mGrid.post(new Runnable(){public void run(){mContentAdapter.updateData(result);}});
 		//notifyDataSetChanged();
 	}
 	@Override

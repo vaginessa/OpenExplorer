@@ -286,7 +286,7 @@ public class FileManager {
 	 * @param newName
 	 * @return
 	 */
-	public boolean renameTarget(String filePath, String newName) {
+	public static boolean renameTarget(String filePath, String newName) {
 		File src = new File(filePath);
 		File dest;
 		

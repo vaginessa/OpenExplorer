@@ -3,10 +3,12 @@ package org.brandroid.openmanager.fragments;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
+import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
@@ -81,10 +83,15 @@ public class OperationsFragment
 			}
 			bw.updateView(view);
 			bw.setWorkerUpdateListener(new OnWorkerUpdateListener() {
-				public void onWorkerThreadComplete(int type, ArrayList<String> results) {
+				public void onWorkerThreadComplete(EventType type, String... results) {
 					notifyDataSetChanged();
 				}
 				public void onWorkerProgressUpdate(final int pos, final int total) {
+					notifyDataSetChanged();
+				}
+				@Override
+				public void onWorkerThreadFailure(EventType type,
+						OpenPath... files) {
 					notifyDataSetChanged();
 				}
 			});

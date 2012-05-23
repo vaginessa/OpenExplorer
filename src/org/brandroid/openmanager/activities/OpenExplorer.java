@@ -173,6 +173,7 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
@@ -3590,7 +3591,7 @@ public class OpenExplorer
 	}
 
 	@Override
-	public void onWorkerThreadComplete(int type, ArrayList<String> results) {
+	public void onWorkerThreadComplete(EventType type, String... results) {
 		try {
 			Thread.sleep(50);
 			Logger.LogVerbose("Time to wake up!");
@@ -3613,6 +3614,12 @@ public class OpenExplorer
 		ContentFragment frag = getDirContentFragment(false);
 		if(frag != null)
 			frag.onWorkerProgressUpdate(pos, total);
+	}
+
+	@Override
+	public void onWorkerThreadFailure(EventType type, OpenPath... files) {
+		for(OpenPath path : files)
+			sendToLogView(type.name() + " error on " + path, Color.RED);
 	}
 	
 	@Override

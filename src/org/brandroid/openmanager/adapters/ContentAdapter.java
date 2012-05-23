@@ -39,7 +39,7 @@ import android.widget.TextView;
 
 
 /**
- * 
+ * Main Adapter used in OpenExplorer. Adapts Grid & List View.
  */
 public class ContentAdapter extends BaseAdapter {
 	private final int KB = 1024;
@@ -125,13 +125,6 @@ public class ContentAdapter extends BaseAdapter {
 		OpenPath.Sorting = sort;
 		Collections.sort(mData2);
 	}
-	
-	private final Handler handler = new Handler(new Handler.Callback() {
-		public boolean handleMessage(Message msg) {
-			notifyDataSetChanged();
-			return true;
-		}
-	});
 	
 	private OpenPath[] getList() {
 		try {
@@ -297,7 +290,9 @@ public class ContentAdapter extends BaseAdapter {
 	public OpenPath getItem(int position) {
 		if(mPlusParent && position == 0)
 			return mParent.getParent();
-		return mData2.get(position - (mPlusParent ? 1 : 0));
+		int pos = position - (mPlusParent ? 1 : 0);
+		if(pos < 0 || pos >= mData2.size()) return null;
+		return mData2.get(pos);
 	}
 
 	@Override

@@ -659,9 +659,13 @@ public class TextEditorFragment extends OpenFragment
 		{
 			mPath = path;
 		}
-		
-		public void publishProgress(int... progress)
+
+		private long lastPub = 0l;
+		public void showProgress(Integer... progress)
 		{
+			long now = new Date().getTime();
+			if(now - lastPub < 500) return;
+			lastPub = now;
 			publishProgress(progress);
 		}
 
@@ -814,8 +818,12 @@ public class TextEditorFragment extends OpenFragment
 			setProgressVisibility(true);
 		}
 		
-		public void publishProgress(int... progress)
+		private long lastPub = 0l;
+		public void showProgress(Integer... progress)
 		{
+			long now = new Date().getTime();
+			if(now - lastPub < 500) return;
+			lastPub = now;
 			publishProgress(progress);
 		}
 		
