@@ -315,4 +315,5 @@
     <string name="s_alert_newfile">Type the name of the new file:</string>
     <string name="s_alert_exit">Are you sure you would like to exit?</string>
     <string name="s_alert_clipboard">Copied to Clipboard</string>
+    <string name="s_alert_restart">Restarting. Please wait.</string>
 </resources>
