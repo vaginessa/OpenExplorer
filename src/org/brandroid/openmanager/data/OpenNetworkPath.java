@@ -124,19 +124,19 @@ public abstract class OpenNetworkPath extends OpenPath
 	 * @param l Network listener for logging (since exceptions are caught).
 	 * @return True if transfer was successful, false otherwise.
 	 */
-	public abstract boolean copyFrom(OpenFile f, NetworkListener l);
+	public abstract boolean syncUpload(OpenFile f, NetworkListener l);
 	/**
 	 * Download file (used during tempDownload).
 	 * @param f Local file to download to.
 	 * @param l Network listener for logging (since exceptions are caught).
 	 * @return True if transfer was successful, false otherwise.
 	 */
-	public abstract boolean copyTo(OpenFile f, NetworkListener l);
+	public abstract boolean syncDownload(OpenFile f, NetworkListener l);
 	
 	public boolean copyFrom(OpenFile f, final AsyncTask task)
 	{
-		if(task == null) return copyFrom(f, OpenNetworkPath.NetworkListener.DefaultListener);
-		return copyFrom(f, new NetworkListener() {
+		if(task == null) return syncUpload(f, OpenNetworkPath.NetworkListener.DefaultListener);
+		return syncUpload(f, new NetworkListener() {
 			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) { }
 			public void OnNetworkCopyUpdate(Integer... progress) {
 				if(task instanceof TextEditorFragment.FileLoadTask)
@@ -154,7 +154,7 @@ public abstract class OpenNetworkPath extends OpenPath
 	}
 	public boolean copyTo(OpenFile f, final AsyncTask task)
 	{
-		return copyTo(f, new NetworkListener() {
+		return syncDownload(f, new NetworkListener() {
 			public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {}
 			public void OnNetworkCopyUpdate(Integer... progress) {
 				if(task instanceof TextEditorFragment.FileLoadTask)

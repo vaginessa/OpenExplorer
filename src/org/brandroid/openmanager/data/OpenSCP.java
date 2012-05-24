@@ -319,13 +319,13 @@ public class OpenSCP extends OpenNetworkPath
 	}
 
 	@Override
-	public boolean copyFrom(OpenFile f, NetworkListener l) {
+	public boolean syncUpload(OpenFile f, NetworkListener l) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean copyTo(OpenFile f, NetworkListener l) {
+	public boolean syncDownload(OpenFile f, NetworkListener l) {
 		// TODO Auto-generated method stub
 		return false;
 	}

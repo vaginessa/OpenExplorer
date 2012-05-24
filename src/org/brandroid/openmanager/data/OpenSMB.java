@@ -395,7 +395,7 @@ public class OpenSMB extends OpenNetworkPath
 	*/
 
 	@Override
-	public boolean copyFrom(OpenFile f, NetworkListener l) {
+	public boolean syncUpload(OpenFile f, NetworkListener l) {
 		InputStream is = null;
 		OutputStream os = null;
 		try {
@@ -426,7 +426,7 @@ public class OpenSMB extends OpenNetworkPath
 		return false;
 	}
 	@Override
-	public boolean copyTo(OpenFile f, NetworkListener l) {
+	public boolean syncDownload(OpenFile f, NetworkListener l) {
 		try {
 			mFile.copyTo(f, null);
 			l.OnNetworkCopyFinished(this, f);

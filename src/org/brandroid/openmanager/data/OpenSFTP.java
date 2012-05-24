@@ -24,11 +24,15 @@ import com.jcraft.jsch.UserInfo;
 import android.database.Cursor;
 import android.net.Uri;
 
+/**
+ * Main class for SFTP connections. Please note that as a descendent of OpenNetworkPath,
+ * this class does not create its own threads for networking, so make sure not to call
+ * listFiles via the UI thread.
+ * @author Brandon Bowles
+ * @see OpenNetworkPath
+ */
 public class OpenSFTP extends OpenNetworkPath
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 3263112609308933024L;
 	private long filesize = 0l;
 	private Session mSession = null;
@@ -457,7 +461,7 @@ public class OpenSFTP extends OpenNetworkPath
 		mChildren = null;
 	}
 	@Override
-	public boolean copyFrom(OpenFile f, NetworkListener l) {
+	public boolean syncUpload(OpenFile f, NetworkListener l) {
 		try {
 			mChannel.put(f.getPath(), getUri().getPath());
 			l.OnNetworkCopyFinished(this, f);
@@ -468,7 +472,7 @@ public class OpenSFTP extends OpenNetworkPath
 		return false;
 	}
 	@Override
-	public boolean copyTo(OpenFile f, NetworkListener l) {
+	public boolean syncDownload(OpenFile f, NetworkListener l) {
 		try {
 			mChannel.get(getUri().getPath(), f.getPath());
 			l.OnNetworkCopyFinished(this, f);

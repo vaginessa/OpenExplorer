@@ -449,7 +449,7 @@ public class OpenFTP extends OpenNetworkPath
 	}
 	
 	@Override
-	public boolean copyFrom(OpenFile f, NetworkListener l)
+	public boolean syncUpload(OpenFile f, NetworkListener l)
 	{
 		Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
 		InputStream is = null;
@@ -473,7 +473,7 @@ public class OpenFTP extends OpenNetworkPath
 		}
 	}
 	@Override
-	public boolean copyTo(OpenFile f, NetworkListener l)
+	public boolean syncDownload(OpenFile f, NetworkListener l)
 	{
 		OutputStream os = null;
 		Logger.LogDebug("OpenFTP.copyTo(" + f + ")");
