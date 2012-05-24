@@ -60,10 +60,23 @@ public class ViewUtils {
 
 	public static void setViewsEnabled(Activity a, final boolean enabled, int... ids)
 	{
+		if(a == null) return;
 		for(int id : ids)
 		{
-			if(a == null) return;
 			final View v = a.findViewById(id);
+			if(v != null)
+				//v.post(new Runnable(){public void run(){
+					v.setEnabled(enabled);
+				//}});
+		}
+	}
+	
+	public static void setViewsEnabled(View view, final boolean enabled, int... ids)
+	{
+		if(view == null) return;
+		for(int id : ids)
+		{
+			final View v = view.findViewById(id);
 			if(v != null)
 				//v.post(new Runnable(){public void run(){
 					v.setEnabled(enabled);
@@ -102,7 +115,16 @@ public class ViewUtils {
 		{
 			View v = activity.findViewById(id);
 			if(v != null && v instanceof TextView)
-				((TextView)v).setTag(string);
+				((TextView)v).setText(string);
+		}
+	}
+
+	public static void setText(View view, String text, int... textViewID) {
+		for(int id : textViewID)
+		{
+			View v = view.findViewById(id);
+			if(v != null && v instanceof TextView)
+				((TextView)v).setText(text);
 		}
 	}
 

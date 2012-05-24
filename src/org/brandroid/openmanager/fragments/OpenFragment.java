@@ -130,10 +130,12 @@ public abstract class OpenFragment
 	
 	@Override
 	public int compare(OpenFragment a, OpenFragment b) {
+		if(a == null && b != null) return 1;
+		else if(b == null) return -1;
+		
 		int priA = a.getPagerPriority();
 		int priB = b.getPagerPriority();
-		if(DEBUG)
-			Logger.LogDebug("Comparing " + a.getTitle() + "(" + priA + ") to " + b.getTitle() + "(" + priB + ")");
+		//if(DEBUG) Logger.LogDebug("Comparing " + a.getTitle() + "(" + priA + ") to " + b.getTitle() + "(" + priB + ")");
 		if(priA != priB)
 		{
 			if(priA > priB)
@@ -204,7 +206,7 @@ public abstract class OpenFragment
 		return ret;
 	}
 	
-	public boolean showIContextMenu(int menuId, View from, int xOffset, int yOffset)
+	public boolean showIContextMenu(int menuId, final View from, int xOffset, int yOffset)
 	{
 		if(getActivity() == null) return false;
 		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
@@ -221,18 +223,13 @@ public abstract class OpenFragment
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
 		mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
-			
-			@Override
-			public void onIconContextItemSelected(IconContextMenu menu, MenuItem item,
+			public void onIconContextItemSelected(final IconContextMenu menu, MenuItem item,
 					Object info, View view) {
-				if(onOptionsItemSelected(item)) {
+				if(onOptionsItemSelected(item))
 					menu.dismiss();
-					return;
-				}
-				if(getExplorer() != null)
+				else if(getExplorer() != null)
 					getExplorer().onIconContextItemSelected(menu, item, info, view);
-			}
-		});
+			}});
 		return mOpenMenu.show(xOffset, yOffset);
 	}
 	

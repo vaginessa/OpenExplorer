@@ -508,7 +508,7 @@ public class TextEditorFragment extends OpenFragment
 		mSalvage = false;
 		cancelTask();
 		if(getExplorer() != null && getExplorer().isViewPagerEnabled())
-			getExplorer().closeEditor(this);				
+			getExplorer().closeFragment(this);				
 		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
 			getFragmentManager().popBackStack();
 		else if(getActivity() != null)

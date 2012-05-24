@@ -870,8 +870,9 @@ public class OpenExplorer
 	}
 	
 	
-	/*
+	/**
 	 * Returns true if the Intent was "Handled"
+	 * @param intent Input Intent
 	 */
 	public boolean handleIntent(Intent intent)
 	{
@@ -885,7 +886,9 @@ public class OpenExplorer
 				} catch (IOException e) {
 					searchIn = new OpenFile(bundle.getString("path"));
 				}
-			SearchResultsFragment srf = SearchResultsFragment.getInstance(searchIn, intent.getStringExtra(SearchManager.QUERY));
+			String query = intent.getStringExtra(SearchManager.QUERY);
+			Logger.LogDebug("ACTION_SEARCH for \"" + query + "\" in " + searchIn);
+			SearchResultsFragment srf = SearchResultsFragment.getInstance(searchIn, query);
 			if(mViewPagerEnabled && mViewPagerAdapter != null)
 			{
 				mViewPagerAdapter.add(srf);
@@ -2101,21 +2104,25 @@ public class OpenExplorer
 		setViewPageAdapter(mViewPagerAdapter, true);
 	}
 	
-	public void closeEditor(final TextEditorFragment tf)
+	public void closeFragment(final OpenFragment frag)
 	{
-		final int pos = mViewPagerAdapter.getItemPosition(tf);
+		final int pos = mViewPagerAdapter.getItemPosition(frag);
 		if(pos >= 0)
 		{
-			tf.setSalvagable(false);
+			if(frag instanceof TextEditorFragment)
+				((TextEditorFragment)frag).setSalvagable(false);
 			mViewPager.post(new Runnable() {public void run() {
 				if(pos > 0)
 					mViewPager.setCurrentItem(pos - 1, false);
 				else if (mViewPagerAdapter.getCount() > 1)
 					mViewPager.setCurrentItem(pos + 1, false);
-				mViewPagerAdapter.remove(tf);
-				setViewPageAdapter(mViewPagerAdapter, false);
-				saveOpenedEditors();
+				mViewPagerAdapter.remove(frag);
+				setViewPageAdapter(mViewPagerAdapter, true);
+				if(frag instanceof TextEditorFragment)
+					saveOpenedEditors();
 			}});
+			if(mViewPagerAdapter.getCount() == 0)
+				finish();
 		}
 	}
 	public boolean editFile(OpenPath path) { return editFile(path, false); }
@@ -2305,29 +2312,32 @@ public class OpenExplorer
 			}
 			mToolbarButtons.setVisibility(View.VISIBLE);
 			mLastMenuClass = f.getClassName();
-			if(maxedOut)
+			if(MenuUtils.countVisibleMenus(mMainMenu) > 0)
 			{
-				ImageButton old = buttons.remove(buttons.size() - 1);
-				MenuUtils.setMenuVisible(mMainMenu, true, old.getId());
-				mToolbarButtons.removeView(old);
+				if(maxedOut)
+				{
+					ImageButton old = buttons.remove(buttons.size() - 1);
+					MenuUtils.setMenuVisible(mMainMenu, true, old.getId());
+					mToolbarButtons.removeView(old);
+				}
+				final ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
+				btn.setImageResource(R.drawable.ic_menu_moreoverflow);
+				btn.setId(R.id.title_menu);
+				btn.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						showMenu(mMainMenu, btn);
+					}
+				});
+				btn.setOnLongClickListener(new OnLongClickListener() {
+					@Override
+					public boolean onLongClick(View v) {
+						showToast(R.string.s_menu_more);
+						return true;
+					}
+				});
+				mToolbarButtons.addView(btn);
 			}
-			final ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
-			btn.setImageResource(R.drawable.ic_menu_moreoverflow);
-			btn.setId(R.id.title_menu);
-			btn.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					showMenu(mMainMenu, btn);
-				}
-			});
-			btn.setOnLongClickListener(new OnLongClickListener() {
-				@Override
-				public boolean onLongClick(View v) {
-					showToast(R.string.s_menu_more);
-					return true;
-				}
-			});
-			mToolbarButtons.addView(btn);
 			Logger.LogDebug("Added " + buttons.size() + " children to Base Bar.");
 			if(tbl != null)
 			{
@@ -2780,7 +2790,16 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_exit:
-				finish();
+				DialogHandler.showConfirmationDialog(this,
+						getString(R.string.s_alert_exit),
+						getString(R.string.s_menu_exit),
+						getPreferences(), "exit",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								finish();
+							}
+						});
 				return true;
 				
 			default:
@@ -3498,13 +3517,10 @@ public class OpenExplorer
 					.setImageResource(getClipboard().isMultiselect() ?
 							R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_clipboard
 							);
-				if(picon.getDrawable() instanceof LayerDrawable)
-					((LayerDrawable)(picon.getDrawable()))
-						.getDrawable(1).setAlpha(getClipboard().isMultiselect()?127:0);
 			}
 		}
 		checkTitleSeparator();
-		invalidateOptionsMenu();
+		//invalidateOptionsMenu();
 		if(!BEFORE_HONEYCOMB && USE_ACTIONMODE && mActionMode != null)
 			((ActionMode)mActionMode).setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
 		getDirContentFragment(false).notifyDataSetChanged();

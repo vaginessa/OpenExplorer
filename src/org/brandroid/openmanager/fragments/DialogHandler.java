@@ -53,6 +53,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
@@ -98,291 +99,11 @@ import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.ViewUtils;
 import org.brandroid.utils.Preferences.OnPreferenceInteraction;
 
-public class DialogHandler extends DialogFragment {
-	
-	public static enum DialogType {
-		HOLDINGFILE_DIALOG,
-		SEARCHRESULT_DIALOG,
-		FILEINFO_DIALOG
-	}
-	
-	private static DialogHandler instance = null;
-	private static DialogType mDialogType;
-	private static Context mContext;
-	
-	private OnSearchFileSelected mSearchListener;
-	private ArrayList<OpenPath> mFiles;
-	private OpenPath mPath;
-	
-	
-	public interface OnSearchFileSelected {
-		public void onFileSelected(String fileName);
-	}
-	
-	public static DialogHandler newDialog(DialogType type, Context context) {
-		instance = new DialogHandler();
-		mDialogType = type;
-		mContext = context;
-		
-		return instance;
-	}
-		
-	
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-			
-		switch(mDialogType) {
-		case HOLDINGFILE_DIALOG:
-			setStyle(DialogFragment.STYLE_NORMAL,
-					!OpenExplorer.BEFORE_HONEYCOMB ?
-							android.R.style.Theme_Holo_Dialog : android.R.style.Theme_Dialog);
-			break;
-		case SEARCHRESULT_DIALOG:
-			setStyle(OpenExplorer.BEFORE_HONEYCOMB ? DialogFragment.STYLE_NORMAL : DialogFragment.STYLE_NO_TITLE, 
-					!OpenExplorer.BEFORE_HONEYCOMB ?
-							android.R.style.Theme_Holo_Panel : android.R.style.Theme_Panel);
-			break;
-			
-		case FILEINFO_DIALOG:
-			setStyle(OpenExplorer.BEFORE_HONEYCOMB ? DialogFragment.STYLE_NORMAL : DialogFragment.STYLE_NO_FRAME,
-					!OpenExplorer.BEFORE_HONEYCOMB ?
-							android.R.style.Theme_Holo_Panel : android.R.style.Theme_Panel);
-			break;
-		}
-	}
-	
-	
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		if(savedInstanceState != null && savedInstanceState.containsKey("path"))
-			mPath = new OpenFile(savedInstanceState.getString("path"));
-		switch(mDialogType) {
-		case HOLDINGFILE_DIALOG:  	return createHoldingFileDialog();
-		case SEARCHRESULT_DIALOG: 	return createSearchResultDialog(inflater);
-		case FILEINFO_DIALOG:		return createFileInfoDialog(inflater, mPath);
-		}
-
-		return super.onCreateView(inflater, container, savedInstanceState);
-	}
-	
-	@Override
-	public void onSaveInstanceState(Bundle bundle) {
-		bundle.putString("path", mPath.getPath());
-		super.onSaveInstanceState(bundle);
-	}
-	
-	public void setHoldingFileList(ArrayList<OpenPath> list) {
-		mFiles = list;
-	}
-	
-	public void setFilePath(String path) {
-		mPath = new OpenFile(path);
-	}
-	
-	public void setOnSearchFileSelected(OnSearchFileSelected s) {
-		mSearchListener = s;
-	}
-	
-	private View createHoldingFileDialog() {
-		if(getDialog() == null || getDialog().getWindow() == null) return null;
-		getDialog().getWindow().setGravity(Gravity.LEFT | Gravity.TOP);
-		getDialog().setTitle(getResources().getString(R.string.s_title_holding_x_files).replace("xxx", "" + mFiles.size()));
-		
-		ListView list = new ListView(mContext);
-		list.setAdapter(new DialogListAdapter(mContext, R.layout.bookmark_layout, mFiles));
-
-		return list;
-	}
-	
-	private View createSearchResultDialog(LayoutInflater inflater) {
-		getDialog().getWindow().setGravity(Gravity.RIGHT);
-		
-		final View v = inflater.inflate(R.layout.search_grid, null);
-		final Button launch_button = (Button)v.findViewById(R.id.search_button_open);
-		final Button goto_button = (Button)v.findViewById(R.id.search_button_go);
-		final LinearLayout layout = (LinearLayout)v.findViewById(R.id.search_button_view);
-		layout.setBackgroundColor(0xee444444);
-
-		ListView list = (ListView)v.findViewById(R.id.search_listview);
-		list.setBackgroundColor(0xcc000000);
-		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			
-			
-			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-				final OpenPath selected = mFiles.get(position);
-				
-				if (layout.getVisibility() == View.GONE)
-					layout.setVisibility(View.VISIBLE);
-				
-				goto_button.setOnClickListener(new View.OnClickListener() {
-					
-					
-					public void onClick(View v) {
-						mSearchListener.onFileSelected(selected.getPath());
-						dismiss();
-					}
-				});
-				
-				if(IntentManager.isIntentAvailable(selected, (OpenExplorer)getActivity()))
-				{
-					IntentManager.startIntent(selected, (OpenExplorer)getActivity());
-					return;
-				}
-					
-				
-				if (!selected.isDirectory()) {
-					launch_button.setVisibility(View.VISIBLE);
-					launch_button.setOnClickListener(new View.OnClickListener() {
-						
-						
-						public void onClick(View v) {
-							String item_ext = "";
-															
-							try {
-								item_ext = selected.getName().substring(selected.getName().lastIndexOf("."));
-								
-							} catch (StringIndexOutOfBoundsException e) {
-								item_ext = "";
-							}
-							
-							/*audio files*/
-							if (item_ext.equalsIgnoreCase(".mp3") || 
-								item_ext.equalsIgnoreCase(".m4a") ) {
-					    		
-					    		Intent i = new Intent();
-				   				i.setAction(android.content.Intent.ACTION_VIEW);
-				   				i.setDataAndType(selected.getUri(), "audio/*");
-				   				startActivity(i);
-							}
-							
-							/* image files*/
-							else if(item_ext.equalsIgnoreCase(".jpeg") || 
-					    			item_ext.equalsIgnoreCase(".jpg")  ||
-					    			item_ext.equalsIgnoreCase(".png")  ||
-					    			item_ext.equalsIgnoreCase(".gif")  || 
-					    			item_ext.equalsIgnoreCase(".tiff")) {
-
-								Intent picIntent = new Intent();
-						    		picIntent.setAction(android.content.Intent.ACTION_VIEW);
-						    		picIntent.setDataAndType(selected.getUri(), "image/*");
-						    		startActivity(picIntent);
-					    	}
-							
-							/*video file selected--add more video formats*/
-					    	else if(item_ext.equalsIgnoreCase(".m4v") ||
-					    			item_ext.equalsIgnoreCase(".mp4") ||
-					    			item_ext.equalsIgnoreCase(".3gp") ||
-					    			item_ext.equalsIgnoreCase(".wmv") || 
-					    			item_ext.equalsIgnoreCase(".mp4") || 
-					    			item_ext.equalsIgnoreCase(".ogg") ||
-					    			item_ext.equalsIgnoreCase(".wav")) {
-					    		
-				    				Intent movieIntent = new Intent();
-						    		movieIntent.setAction(android.content.Intent.ACTION_VIEW);
-						    		movieIntent.setDataAndType(selected.getUri(), "video/*");
-						    		startActivity(movieIntent);	
-					    	}
-							
-							/*pdf file selected*/
-					    	else if(item_ext.equalsIgnoreCase(".pdf")) {
-					    		
-					    		if(selected.exists()) {
-						    		Intent pdfIntent = new Intent();
-						    		pdfIntent.setAction(android.content.Intent.ACTION_VIEW);
-						    		pdfIntent.setDataAndType(selected.getUri(), "application/pdf");
-							    		
-						    		try {
-						    			startActivity(pdfIntent);
-						    		} catch (ActivityNotFoundException e) {
-						    			Toast.makeText(mContext, "Sorry, couldn't find a pdf viewer", 
-												Toast.LENGTH_SHORT).show();
-						    		}
-						    	}
-					    	}
-							
-							/*Android application file*/
-					    	else if(item_ext.equalsIgnoreCase(".apk")){
-					    		
-					    		if(selected.exists()) {
-					    			Intent apkIntent = new Intent();
-					    			apkIntent.setAction(android.content.Intent.ACTION_VIEW);
-					    			apkIntent.setDataAndType(selected.getUri(), 
-					    									 "application/vnd.android.package-archive");
-					    			startActivity(apkIntent);
-					    		}
-					    	}
-							
-							/* HTML XML file */
-					    	else if(item_ext.equalsIgnoreCase(".html") || 
-					    			item_ext.equalsIgnoreCase(".xml")) {
-					    		
-					    		if(selected.exists()) {
-					    			Intent htmlIntent = new Intent();
-					    			htmlIntent.setAction(android.content.Intent.ACTION_VIEW);
-					    			htmlIntent.setDataAndType(selected.getUri(), "text/html");
-					    			
-					    			try {
-					    				startActivity(htmlIntent);
-					    			} catch(ActivityNotFoundException e) {
-					    				Toast.makeText(mContext, "Sorry, couldn't find a HTML viewer", 
-					    									Toast.LENGTH_SHORT).show();
-						    			
-					    			}
-					    		}
-					    	}
-														
-							/* text file*/
-					    	else if(item_ext.equalsIgnoreCase(".txt")) {
-				    			Intent txtIntent = new Intent();
-				    			txtIntent.setAction(android.content.Intent.ACTION_VIEW);
-				    			txtIntent.setDataAndType(selected.getUri(), "text/plain");
-				    			
-				    			try {
-				    				startActivity(txtIntent);
-				    			} catch(ActivityNotFoundException e) {
-				    				txtIntent.setType("text/*");
-				    				startActivity(txtIntent);
-				    			}
-					    	}
-							
-							/* generic intent */
-					    	else {
-					    		if(selected.exists()) {
-						    		Intent generic = new Intent();
-						    		generic.setAction(android.content.Intent.ACTION_VIEW);
-						    		generic.setDataAndType(selected.getUri(), "application/*");
-						    		
-						    		try {
-						    			startActivity(generic);
-						    		} catch(ActivityNotFoundException e) {
-						    			Toast.makeText(mContext, "Sorry, couldn't find anything " +
-						    						   "to open " + selected.getName(), 
-						    						   Toast.LENGTH_SHORT).show();
-							    	}
-					    		}
-					    	}
-							
-							dismiss();
-						}
-					});
-					
-				} else {
-					launch_button.setVisibility(View.INVISIBLE);
-				}
-				
-				try {
-					populateFileInfoViews(v, selected);
-				} catch (IOException e) {
-					Logger.LogError("Couldn't populate.", e);
-				}
-			}
-		});
-		list.setAdapter(new DialogListAdapter(mContext, R.layout.bookmark_layout, mFiles));
-		
-		return v;
-	}
-	
+public class DialogHandler
+{
 	public static View createFileInfoDialog(LayoutInflater inflater, OpenPath mPath) {
 		View v = inflater.inflate(R.layout.info_layout, null);
 		v.setBackgroundColor(0xcc000000);
@@ -610,50 +331,6 @@ public class DialogHandler extends DialogFragment {
 		
 	}
 	
-	/*
-	 * 
-	 */
-	private class DialogListAdapter extends ArrayAdapter<OpenPath> {
-		private BookmarkHolder mHolder;
-		
-		public DialogListAdapter(Context context, int layout, ArrayList<OpenPath> data) {
-			super(context, layout, data);
-			
-		}
-		
-		
-		public View getView(int position, View view, ViewGroup parent) {
-			String ext;
-			OpenPath file = mFiles.get(position);
-			//String file.getName();
-			String name = file.getName(); // file.substring(file.lastIndexOf("/") + 1, file.length());
-			
-			if (view == null) {
-				LayoutInflater inflater = (LayoutInflater)mContext
-											.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				view = inflater.inflate(R.layout.bookmark_layout, parent, false);
-				mHolder = new BookmarkHolder(file, name, view, 0);				
-				view.setTag(mHolder);
-				
-			} else {
-				mHolder = (BookmarkHolder)view.getTag();
-			}
-			
-			if (file.isDirectory())
-				ext = "dir";
-			else
-				ext = name.substring(name.lastIndexOf(".") + 1);
-			
-			mHolder.setTitle(name);
-			
-			ThumbnailCreator.setThumbnail(mHolder.getIconView(), file, 96, 96);
-			
-			return view;
-		}
-	}
-	
-
-
 	public static void showFileInfo(final Context mContext, final OpenPath path) {
 		try {
 		new AlertDialog.Builder(mContext)
@@ -671,9 +348,14 @@ public class DialogHandler extends DialogFragment {
 		//dialogInfo.setFilePath(path.getPath());
 		//dialogInfo.show(fragmentManager, "info");
 	}
-	
-	/*
-	 * Show a warning that has a specific count down to auto-cancel
+
+	/**
+	 * Show a warning that has a specific count down to auto-cancel.
+	 * @param context Context.
+	 * @param msg Message String ID.
+	 * @param countSecs Length in seconds to show message before auto-cancelling.
+	 * @param onOK Callback for when "OK" is selected.
+	 * @return
 	 */
 	public static AlertDialog showWarning(final Context context, int msg, int countSecs, DialogInterface.OnClickListener onOK)
 	{
@@ -712,6 +394,53 @@ public class DialogHandler extends DialogFragment {
 		};
 		timer.scheduleAtFixedRate(tt, 0, 1000);
 		return dlg;
+	}
+
+	/**
+	 * Show a warning message with option to "Always Remember" choice
+	 * @param context Context.
+	 * @param text Message to show.
+	 * @param title Title of Dialog.
+	 * @param preferences Preferences object from which to pull pref_key. This will be placed in the "warn" SharedPreference.
+	 * @param pref_key Preference Key holding whether or not to show warning.
+	 * @param onYes Callback for when Yes is chosen. This will be called automatically if "Do not ask again" is selected.
+	 */
+	public static void showConfirmationDialog(final Context context,
+			String text, String title,
+			final Preferences preferences, final String pref_key,
+			final DialogInterface.OnClickListener onYes)
+	{
+		final View layout = ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+				.inflate(R.layout.confirm_view, null);
+		
+		final AlertDialog dialog = new AlertDialog.Builder(context)
+			.setTitle(title)
+			.setView(layout)
+			.create();
+		
+		if(!preferences.getBoolean("warn", pref_key, false))
+		{
+			ViewUtils.setText(layout, text, R.id.confirm_message);
+			
+			ViewUtils.setOnClicks(layout, new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if(v.getId() == R.id.confirm_remember)
+					{
+						CheckBox me = (CheckBox)v;
+						preferences.setSetting("warn", pref_key, me.isChecked());
+						ViewUtils.setViewsEnabled(layout, !me.isChecked(), R.id.confirm_no);
+					} else if(v.getId() == R.id.confirm_no) {
+						preferences.setSetting("warn", pref_key, false);
+						dialog.dismiss();
+					} else if(v.getId() == R.id.confirm_yes) {
+						onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
+					}
+				}
+			}, R.id.confirm_remember, R.id.confirm_yes, R.id.confirm_no);
+			
+			dialog.show();
+		} else onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
 	}
 
 	public static AlertDialog showConfirmationDialog(final Context context, String msg, String title, DialogInterface.OnClickListener onYes)
@@ -1027,4 +756,5 @@ public class DialogHandler extends DialogFragment {
 				(ms > 6000 ? (s >= 10 ? "" : "0") + s : 
 					(ms < 1000 ? ms + "ms" : s + "s"));
 	}
+
 }

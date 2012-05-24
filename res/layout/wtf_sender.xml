@@ -10,6 +10,7 @@
     android:orientation="vertical" >
 
     <TextView
+        android:id="@+id/wtf_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/s_warn_wtf_message"
@@ -64,6 +65,7 @@
         android:inputType="textMultiLine" />
 
     <TextView
+        android:id="@+id/wtf_ps"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/s_warn_wtf_ps"

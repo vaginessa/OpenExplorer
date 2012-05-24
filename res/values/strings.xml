@@ -313,4 +313,5 @@
     <string name="s_title_newfile">New File</string>
     <string name="s_alert_newfile_folder">Create new file in:</string>
     <string name="s_alert_newfile">Type the name of the new file:</string>
+    <string name="s_alert_exit">Are you sure you would like to exit?</string>
 </resources>

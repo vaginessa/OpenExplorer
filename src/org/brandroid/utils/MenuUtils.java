@@ -130,5 +130,12 @@ public class MenuUtils {
 			} catch(Exception e) { Logger.LogWarning("Couldn't fill submenu (0x" + Integer.toHexString(item.getItemId()) + ")"); }
 		}
 	}
+	public static int countVisibleMenus(Menu menu) {
+		int ret = 0;
+		for(int i = 0; i < menu.size(); i++)
+			if(menu.getItem(i).isVisible())
+				ret++;
+		return ret;
+	}
 	
 }
