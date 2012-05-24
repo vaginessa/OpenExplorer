@@ -10,11 +10,15 @@ import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
 import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.utils.Logger;
 
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.view.ViewPager;
@@ -36,9 +40,41 @@ public class SearchResultsFragment
 	private TextView mTextSummary;
 	private ProgressBar mProgressBar;
 	private Button mCancel;
+	private SearchTask myTask = new SearchTask();
+	private int lastNotedCount = 0;
 	
-	public SearchResultsFragment()
+	private SearchResultsFragment() {
+		setArguments(new Bundle());
+	}
+	
+	private class SearchTask extends AsyncTask<Void, Void, Void>
 	{
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			getSearch().setThreadUpdateCallback(new OpenPathThreadUpdater() {
+				@Override
+				public void update(String status) {
+					publishProgress();
+				}
+				@Override
+				public void update(int progress, int total) {
+					publishProgress();
+				}
+			});
+			getSearch().start();
+			return null;
+		}
+		
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			notifyDataSetChanged();
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			notifyDataSetChanged();
+		}
 		
 	}
 	
@@ -64,8 +100,8 @@ public class SearchResultsFragment
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		if(getSearch().isRunning())
-			getSearch().cancelSearch();
+		if(myTask.getStatus() == Status.RUNNING)
+			myTask.cancel(true);
 	}
 	
 	@Override
@@ -73,12 +109,14 @@ public class SearchResultsFragment
 		super.onSaveInstanceState(outState);
 		outState.putString("query", getSearch().getQuery());
 		outState.putString("path", getSearch().getBasePath().getPath());
-		outState.putParcelableArrayList("results", getResults());
-		outState.putBoolean("running", getSearch().isRunning());
+		if(myTask.getStatus() == Status.RUNNING)
+			outState.putBoolean("running", true);
+		else
+			outState.putParcelableArrayList("results", getResults());
 	}
 	
 	@Override
-	public OpenPath getPath() {
+	public OpenSearch getPath() {
 		return getSearch();
 	}
 	
@@ -89,32 +127,44 @@ public class SearchResultsFragment
 	}
 	
 	@Override
+	public boolean onBackPressed() {
+		if(myTask.getStatus() == Status.RUNNING)
+			myTask.cancel(true);
+		else if(getExplorer() != null && getExplorer().isViewPagerEnabled())
+			getExplorer().closeFragment(this);
+		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
+			getFragmentManager().popBackStack();
+		else if(getActivity() != null)
+			getActivity().finish();
+		return true;
+	}
+	
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle b = getArguments();
-		if(b == null || (savedInstanceState != null && savedInstanceState.containsKey("path")))
-			b = savedInstanceState;
-		if(b != null)
+		if(b == null)
+			b = new Bundle();
+		if(savedInstanceState != null && savedInstanceState.containsKey("path"))
 		{
-			String q = "";
-			if(b.containsKey("query"))
-				q = b.getString("query");
-			OpenPath path = new OpenFile("/");
-			if(b.containsKey("path"))
-				path = FileManager.getOpenCache(b.getString("path"));
-			if(b.containsKey("results"))
-			{
-				ArrayList<Parcelable> results = b.getParcelableArrayList("results");
-				mPath = new OpenSearch(q, path, this, results);
-				if(b.containsKey("running") && b.getBoolean("running"))
-					getSearch().start();
-			} else {
-				mPath = new OpenSearch(q, path, this);
-				getSearch().start();
-			}
+			Logger.LogDebug(b.toString() + " switching to " + savedInstanceState.toString());
+			b = savedInstanceState;
 		}
-		else {
-			//throw new Exception("Couldn't search for emptiness");
+		String q = "";
+		if(b.containsKey("query"))
+			q = b.getString("query");
+		OpenPath path = new OpenFile("/");
+		if(b.containsKey("path"))
+			path = FileManager.getOpenCache(b.getString("path"));
+		if(b.containsKey("results"))
+		{
+			ArrayList<Parcelable> results = b.getParcelableArrayList("results");
+			mPath = new OpenSearch(q, path, this, results);
+			if(b.containsKey("running") && b.getBoolean("running"))
+				myTask.execute();
+		} else {
+			mPath = new OpenSearch(q, path, this);
+			myTask.execute();
 		}
 		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, getSearch());
 	}
@@ -150,7 +200,7 @@ public class SearchResultsFragment
 		mCancel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				getSearch().cancelSearch();
+				myTask.cancel(true);
 				if(getExplorer() != null && getExplorer().isViewPagerEnabled())
 				{
 					final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
@@ -173,12 +223,15 @@ public class SearchResultsFragment
 
 	@Override
 	public CharSequence getTitle() {
-		return "\"" + getSearch().getQuery() + "\"" + " (" + getResults().size() + ")";
+		if(getSearch() != null)
+			return "\"" + getSearch().getQuery() + "\"" + " (" + getResults().size() + ")";
+		else return getString(android.R.string.search_go);
 	}
 	
 	@Override
 	public void onUpdate() {
 		if(mGrid == null) return;
+		if(lastNotedCount >= getSearch().getListLength())
 		mGrid.post(new Runnable(){
 			public void run() {
 				mContentAdapter.notifyDataSetChanged();

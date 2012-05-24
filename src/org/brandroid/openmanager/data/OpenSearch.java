@@ -23,9 +23,9 @@ public class OpenSearch extends OpenPath
 	private final SearchProgressUpdateListener mListener;
 	private boolean mCancelled = false;
 	private boolean mFinished = false;
-	private Thread mSearchThread = null;
 	private int mSearchedDirs = 0;
 	private long mLastUpdate = 0;
+	private long mStart = 0;
 	private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
 	public OpenSearch(String query, OpenPath base, SearchProgressUpdateListener listener)
@@ -42,14 +42,7 @@ public class OpenSearch extends OpenPath
 		mBasePath = base;
 		mListener = listener;
 		for(Parcelable p : results)
-		{
-			try {
-				mResultsArray.add(FileManager.getOpenCache(p.toString(), false, null));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+			mResultsArray.add(FileManager.getOpenCache(p.toString()));
 	}
 	
 	public interface SearchProgressUpdateListener
@@ -58,48 +51,42 @@ public class OpenSearch extends OpenPath
 		void onFinish();
 	}
 	
-	public void cancelSearch() {
-		mCancelled = true;
-		if(mSearchThread != null)
-			mSearchThread.stop();
-	}
-	public boolean isCancelled() { return mCancelled; }
-	public boolean isRunning() { return !mCancelled && !mFinished; }
+	public boolean isRunning() { return mCancelled || mFinished ? false : true; }
 	
 	public void start()
 	{
+		mStart = new Date().getTime();
 		if(DEBUG)
 			Logger.LogDebug("OpenSearch.start()");
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				SearchWithin(mBasePath);
-				mFinished = true;
-				mListener.onUpdate();
-				mListener.onFinish();
-				if(DEBUG)
-					Logger.LogDebug("OpenSearch finished!");
-			}
-		}).start();
+		//new Thread(new Runnable() {public void run() {
+			SearchWithin(mBasePath);
+			mFinished = true;
+			mListener.onUpdate();
+			mListener.onFinish();
+			if(DEBUG)
+				Logger.LogDebug("OpenSearch finished!");
+		//}}).start();
 	}
 	private void SearchWithin(OpenPath dir)
 	{
 		if(dir == null) return;
-		if(isCancelled()) return;
 		mSearchedDirs++;
 		OpenPath[] kids = null;
 		try {
 			kids = dir.listFiles();
 		} catch(IOException e) { return; }
 		for(OpenPath kid : kids)
+		{
 			if(isMatch(kid.getName().toLowerCase(), getQuery().toLowerCase()))
-				mResultsArray.add(kid);
-		if(new Date().getTime() - mLastUpdate > 500)
-			publishProgress();
-		for(OpenPath kid : kids)
+				if(!mResultsArray.contains(kid))
+					mResultsArray.add(kid);
+			if(new Date().getTime() - mLastUpdate > 500)
+				publishProgress();
 			if(kid.isDirectory())
 				SearchWithin(kid);
+		}
 	}
+	
 	public void publishProgress()
 	{
 		mListener.onUpdate();
@@ -163,6 +150,7 @@ public class OpenSearch extends OpenPath
 
 	@Override
 	public OpenPath[] listFiles() throws IOException {
+		start();
 		return mResultsArray.toArray(new OpenPath[(int)length()]);
 	}
 
@@ -190,7 +178,7 @@ public class OpenSearch extends OpenPath
 
 	@Override
 	public Long lastModified() {
-		return null;
+		return mStart;
 	}
 
 	@Override
@@ -240,8 +228,6 @@ public class OpenSearch extends OpenPath
 
 	@Override
 	public void clearChildren() {
-		if(isRunning())
-			cancelSearch();
 		mResultsArray.clear();
 		start();
 	}
