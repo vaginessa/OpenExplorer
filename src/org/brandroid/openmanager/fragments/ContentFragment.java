@@ -386,7 +386,14 @@ public class ContentFragment extends OpenFragment
 		else {
 			if(path.listFromDb(mContentAdapter.getSorting()))
 			{
-				sendToLogView("Loaded " + mContentAdapter.getCount() + " entries from cache", Color.DKGRAY);
+				int loaded = mContentAdapter.getCount();
+				if(path instanceof OpenNetworkPath)
+				{
+					OpenNetworkPath[] kids = ((OpenNetworkPath)path).getChildren();
+					mContentAdapter.updateData(kids);
+					loaded = kids.length;
+				}
+				Logger.LogDebug("Loaded " + loaded + " entries from cache");
 				runUpdateTask();
 			} else if(path instanceof OpenFile)
 				((OpenFile)path).listFiles();

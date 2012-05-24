@@ -9,6 +9,8 @@ import org.brandroid.openmanager.adapters.LinedArrayAdapter;
 import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+import org.brandroid.utils.ViewUtils;
 
 import android.R.anim;
 import android.app.Activity;
@@ -16,6 +18,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.ClipboardManager;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
@@ -23,8 +26,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
@@ -32,6 +37,7 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class LogViewerFragment extends OpenFragment
 	implements OnClickListener, Poppable
@@ -82,6 +88,7 @@ public class LogViewerFragment extends OpenFragment
 	{
 		if(color != 0)
 		{
+			color  = Color.rgb(255 - Color.red(color), 255 - Color.green(color), 255 - Color.blue(color));
 			SpannableString line = new SpannableString(txt);
 			line.setSpan(new ForegroundColorSpan(color), 0, line.length(), Spanned.SPAN_COMPOSING);
 			return line;
@@ -125,9 +132,8 @@ public class LogViewerFragment extends OpenFragment
 			Bundle savedInstanceState) {
 		mInflater = inflater; 
 		View ret = inflater.inflate(R.layout.log_viewer, null);
-		if(ret.findViewById(android.R.id.button1) != null)
-			ret.findViewById(android.R.id.button1)
-				.setOnClickListener(this);
+		ret.setOnLongClickListener(this);
+		ViewUtils.setOnClicks(ret, this, android.R.id.button1, android.R.id.button2, android.R.id.button3);
 		mListView = (ListView)ret.findViewById(android.R.id.list);
 		return ret;
 	}
@@ -157,15 +163,24 @@ public class LogViewerFragment extends OpenFragment
 		onClick(v.getId(), null, v);
 	}
 	
+	@SuppressWarnings("deprecation")
 	public void onClick(int id, MenuItem item, View from)
 	{
 		switch(id)
 		{
-		case android.R.id.button1:
+		case android.R.id.button1: // Clear
 			mData.clear();
 			notifyDataSetChanged();
 			break;
+		case android.R.id.button2: // Copy
+			ClipboardManager cm = (ClipboardManager)getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+			cm.setText(Utils.joinArray(mData.toArray(new CharSequence[mData.size()]), "\n"));
+			Toast.makeText(mContext, R.string.s_alert_clipboard, Toast.LENGTH_LONG);
+			break;
 			//default: if(getExplorer() != null) getExplorer().onClick(id, item, from);
+		case android.R.id.button3: // Close
+			doClose();
+			break;
 		}
 	}
 
@@ -212,24 +227,6 @@ public class LogViewerFragment extends OpenFragment
 	
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

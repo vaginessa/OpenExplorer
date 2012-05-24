@@ -434,13 +434,12 @@ public class Utils {
     	ret += "]";
     	return ret;
     }
-    public static String joinArray(String[] array)
+    public static <T> String joinArray(T[] array, String separator)
     {
-    	String ret = "[";
-    	for(String item : array)
-    		ret += item + ",";
-    	ret += "]";
-    	return ret;
+    	StringBuilder ret = new StringBuilder();
+    	for(T item : array)
+    		ret.append(item + separator);
+    	return ret.toString();
     }
 	public static int getArrayIndex(int[] search, int value)
 	{

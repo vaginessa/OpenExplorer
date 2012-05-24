@@ -1438,7 +1438,7 @@ public class OpenExplorer
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
 		} catch(Exception e) {
-			//Logger.LogWarning("Couldn't send to Log Viewer");
+			Logger.LogWarning("Couldn't send to Log Viewer", e);
 		}
 	}
 	private void setupLoggingDb()

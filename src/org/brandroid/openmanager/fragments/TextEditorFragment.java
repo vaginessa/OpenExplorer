@@ -503,16 +503,12 @@ public class TextEditorFragment extends OpenFragment
 		startActivityForResult(intent, REQUEST_SAVE_AS);
 	}
 	
+	@Override
 	public void doClose()
 	{
 		mSalvage = false;
 		cancelTask();
-		if(getExplorer() != null && getExplorer().isViewPagerEnabled())
-			getExplorer().closeFragment(this);				
-		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
-			getFragmentManager().popBackStack();
-		else if(getActivity() != null)
-			getActivity().finish();
+		super.doClose();
 	}
 	
 	public void cancelTask() {

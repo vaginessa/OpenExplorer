@@ -467,6 +467,16 @@ public abstract class OpenFragment
 			getExplorer().sendToLogView(txt, color);
 	}
 	
+	public void doClose()
+	{
+		if(getExplorer() != null && getExplorer().isViewPagerEnabled())
+			getExplorer().closeFragment(this);				
+		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
+			getFragmentManager().popBackStack();
+		else if(getActivity() != null)
+			getActivity().finish();
+	}
+	
 	@Override
 	public Context getAndroidContext() {
 		if(getExplorer() != null)

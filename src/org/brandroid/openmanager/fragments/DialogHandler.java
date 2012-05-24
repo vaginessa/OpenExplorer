@@ -152,7 +152,9 @@ public class DialogHandler
 		String apath = file.getAbsolutePath();
 		if(file instanceof OpenMediaStore)
 			file = ((OpenMediaStore)file).getFile();
-		Date date = new Date(file.lastModified());
+		Date date = new Date();
+		if(file.lastModified() != null)
+			date = new Date(file.lastModified());
 		
 		TextView numDir = (TextView)v.findViewById(R.id.info_dirs_label);
 		TextView numFile = (TextView)v.findViewById(R.id.info_files_label);
@@ -405,7 +407,7 @@ public class DialogHandler
 	 * @param pref_key Preference Key holding whether or not to show warning.
 	 * @param onYes Callback for when Yes is chosen. This will be called automatically if "Do not ask again" is selected.
 	 */
-	public static void showConfirmationDialog(final Context context,
+	public static void showConfirmationDialog(Context context,
 			String text, String title,
 			final Preferences preferences, final String pref_key,
 			final DialogInterface.OnClickListener onYes)
