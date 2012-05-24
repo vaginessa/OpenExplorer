@@ -54,7 +54,6 @@ public class BetterPopupWindow {
 
 	/**
 	 * Create a BetterPopupWindow
-	 * 
 	 * @param anchor
 	 *		the view that the BetterPopupWindow will be displaying 'from'
 	 */
@@ -78,6 +77,9 @@ public class BetterPopupWindow {
 				if(event.getAction() == MotionEvent.ACTION_OUTSIDE) {
 						BetterPopupWindow.this.popup.dismiss();
 						return true;
+				} else if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					if(event.getY() < ViewUtils.getAbsoluteTop(getContentView()))
+						BetterPopupWindow.this.popup.dismiss();
 				}
 				return false;
 			}
