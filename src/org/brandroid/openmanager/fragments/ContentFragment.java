@@ -34,7 +34,6 @@ import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.fragments.DialogHandler.OnSearchFileSelected;
 import org.brandroid.openmanager.fragments.OpenFragment.OpenContextMenuInfo;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.NetworkIOTask;
@@ -1291,7 +1290,8 @@ public class ContentFragment extends OpenFragment
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
-				mListScrollY = view.getScrollY();
+				if(view != null)
+					mListScrollY = view.getScrollY();
 				//if(scrollState == 0)
 				//	onScrollStopped(view);
 			}
@@ -1362,35 +1362,11 @@ public class ContentFragment extends OpenFragment
 				return;
 			}
 			
-			DialogHandler dialog = DialogHandler.newDialog(DialogHandler.DialogType.SEARCHRESULT_DIALOG, getApplicationContext());
 			ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 			for(String s : results)
 				files.add(new OpenFile(s));
-			dialog.setHoldingFileList(files);
-			dialog.setOnSearchFileSelected(new OnSearchFileSelected() {
-				
-				//@Override
-				public void onFileSelected(String fileName) {
-					OpenPath file = null;
-					try {
-						file = FileManager.getOpenCache(fileName, false, OpenPath.Sorting);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					if(file == null)
-						file = new OpenFile(fileName);
-					
-					if (file.isDirectory()) {
-						pushPath(file);
-					} else {
-						pushPath(file.getParent());
-					}
-				}
-			});
 			
-			dialog.show(getFragmentManager(), "dialog");
+			Toast.makeText(getActivity(), "Unimplemented", Toast.LENGTH_LONG).show();
 			
 		} else if(type == EventHandler.UNZIPTO_TYPE && results != null) {
 			String name = new OpenFile(results[0]).getName();
@@ -1426,12 +1402,6 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onWorkerProgressUpdate(int pos, int total) {
 		setProgressVisibility(pos < total);
-	}
-	
-	private void pushPath(OpenPath path)
-	{
-		if(mPathListener != null)
-			mPathListener.changePath(path);
 	}
 	
 	private void saveTopPath()

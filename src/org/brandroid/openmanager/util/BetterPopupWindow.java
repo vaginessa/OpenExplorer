@@ -674,7 +674,7 @@ public class BetterPopupWindow {
 
 
 	public void dismiss() {
-		this.popup.dismiss();
+		popup.dismiss();
 	}
 
 
