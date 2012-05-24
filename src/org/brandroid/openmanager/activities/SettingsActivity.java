@@ -37,6 +37,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
+import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -142,6 +143,15 @@ public class SettingsActivity extends PreferenceActivity
 			} else { // global preferences
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				addPreferencesFromResource(R.xml.preferences);
+				
+				final PreferenceActivity pa = this;
+				
+				ViewUtils.setOnPrefChange(pm, new OnPreferenceChangeListener() {
+					public boolean onPreferenceChange(Preference preference, Object newValue) {
+						pa.setResult(OpenExplorer.RESULT_RESTART_NEEDED);
+						return true;
+					}
+				}, "pref_fullscreen", "pref_basebar", "pref_stats", "pref_root");
 
 				Preference pTranslate = pm.findPreference("pref_translate");
 				if(pTranslate == null) pTranslate = findPreference("pref_translate");

@@ -7,6 +7,9 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 
 import android.app.Activity;
 import android.os.Build;
+import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.PreferenceManager;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
@@ -84,6 +87,18 @@ public class ViewUtils {
 		}
 	}
 
+	public static void setOnPrefChange(PreferenceManager pm, OnPreferenceChangeListener listener, String... keys)
+	{
+		for(String key : keys)
+			if(pm.findPreference(key) != null)
+				pm.findPreference(key).setOnPreferenceChangeListener(listener);
+	}
+	public static void setOnClicks(PreferenceManager pm, OnPreferenceClickListener listener, String... keys)
+	{
+		for(String key : keys)
+			if(pm.findPreference(key) != null)
+				pm.findPreference(key).setOnPreferenceClickListener(listener);
+	}
 	public static void setOnClicks(View parent, OnClickListener listener, int... ids)
 	{
 		for(int id : ids)

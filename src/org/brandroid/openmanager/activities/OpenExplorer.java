@@ -221,12 +221,13 @@ public class OpenExplorer
 			OpenApp, IconContextItemSelectedListener
 	{
 
-	private static final int PREF_CODE =		0x6;
+	public static final int REQ_PREFERENCES = 6;
 	public static final int REQ_SPLASH = 7;
 	public static final int REQ_INTENT = 8;
 	public static final int REQ_SAVE_FILE = 9;
 	public static final int REQ_PICK_FOLDER = 10;
 	public static final int REQUEST_VIEW = 11;
+	public static final int RESULT_RESTART_NEEDED = 12;
 	public static final int VIEW_LIST = 0;
 	public static final int VIEW_GRID = 1;
 	public static final int VIEW_CAROUSEL = 2;
@@ -844,6 +845,11 @@ public class OpenExplorer
 	}
 	public IconContextMenu showIContextMenu(MenuBuilder menu, final View from, int cols)
 	{
+		if(menu.findItem(R.id.menu_context_paste) != null)
+		{
+			if(!OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return null;
+		} else if(!OpenExplorer.USE_PRETTY_MENUS) return null;
+		
 		Logger.LogDebug("Trying to show context menu " + menu.toString() + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".");
 		try {
 			if(mToolbarButtons != null)
@@ -1438,7 +1444,7 @@ public class OpenExplorer
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
 		} catch(Exception e) {
-			Logger.LogWarning("Couldn't send to Log Viewer", e);
+			Logger.LogError("Couldn't send to Log Viewer", e);
 		}
 	}
 	private void setupLoggingDb()
@@ -2998,7 +3004,7 @@ public class OpenExplorer
 			Intent intent = new Intent(this, SettingsActivity.class);
 			if(path != null)
 				intent.putExtra("path", path.getPath());
-			startActivityForResult(intent, PREF_CODE);
+			startActivityForResult(intent, REQ_PREFERENCES);
 		}
 	}
 	
@@ -3017,8 +3023,18 @@ public class OpenExplorer
 	}
 		
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(requestCode == PREF_CODE) {
-			goHome(); // just restart
+		if(requestCode == REQ_PREFERENCES)
+		{
+			if(resultCode == RESULT_RESTART_NEEDED) {
+				showToast(R.string.s_alert_restart);
+				goHome(); // just restart
+			} else {
+				loadPreferences();
+				refreshBookmarks();
+				notifyPager();
+				getDirContentFragment(false).refreshData();
+				invalidateOptionsMenu();
+			}
 		} else if (requestCode == REQ_SPLASH) {
 			if(resultCode == RESULT_OK && data != null && data.hasExtra("start"))
 			{
