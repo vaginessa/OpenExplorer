@@ -230,7 +230,7 @@ public class BetterPopupWindow {
 	
 	private int getPreferredMinHeight()
 	{
-		return Math.round(mContext.getResources().getDimension(R.dimen.one_dp) * (200));
+		return Math.round(mContext.getResources().getDimension(R.dimen.one_dp) * (100));
 	}
 	
 	private View getArrow()
@@ -523,9 +523,9 @@ public class BetterPopupWindow {
 			float pos = placeArrow(arrowOffset, popWidth);
 			if(pos == -1)
 				popup.setAnimationStyle(R.style.Animations_Fade);
-			else if(pos > 0.7f)
+			else if(pos > 0.8f && pos <= 1.0f)
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
-			else if(pos < 0.3f)
+			else if(pos < 0.2f && pos >= 0.0f)
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
 			else
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottom : R.style.Animations_GrowFromTop);

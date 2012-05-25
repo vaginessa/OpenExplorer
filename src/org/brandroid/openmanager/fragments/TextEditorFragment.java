@@ -28,7 +28,9 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.interfaces.OpenActionView;
 import org.brandroid.openmanager.util.ActionModeHelper;
+import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.SeekBarActionView;
@@ -56,6 +58,7 @@ import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.style.StyleSpan;
+import android.view.CollapsibleActionView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -74,6 +77,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -311,30 +315,42 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		View action = getActionView(item);
+		if(action instanceof OpenActionView)
+		{
+			((OpenActionView)action).onActionViewExpanded();
+			return true;
+		}
 		switch(item.getItemId())
 		{
 			case R.id.menu_view_font_size:
 				if(USE_SEEK_ACTIONVIEW)
-					((SeekBarActionView)mFontSizeBar).onActionViewExpanded();
-				else DialogHandler.showSeekBarDialog(getActivity(),
-						getString(R.string.s_view_font_size),
-						(int)mTextSize * 2, 60,
-						this);
+					mFontSizeBar.onActionViewExpanded();
+				else {
+					/*
+					DialogHandler.showSeekBarDialog(getActivity(),
+							getString(R.string.s_view_font_size),
+							(int)mTextSize * 2, 60,
+							this);
+					*/
+					showSeekBarPopup(action);
+				}
 				return true;
 		}
 		return onClick(item.getItemId(), (View)getActionView(item));
 	}
 	
-	public Object getActionView(MenuItem item)
+	private void showSeekBarPopup(View from)
 	{
-		try {
-			if(Build.VERSION.SDK_INT < 11)
-				return getActivity().findViewById(item.getItemId());
-			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
-			return m.invoke(item, new Object[0]);
-		} catch(Exception e) {
-			return getActivity().findViewById(item.getItemId());
-		}
+		SeekBar sb = new SeekBar(from.getContext());
+		sb.setMax(60);
+		sb.setProgress((int)mTextSize * 2);
+		sb.setOnSeekBarChangeListener(this);
+		sb.setPadding(20, 4, 20, 4);
+		BetterPopupWindow sizePop = new BetterPopupWindow(from.getContext(), from);
+		sizePop.setTitle(getString(R.string.s_view_font_size));
+		sizePop.setContentView(sb);
+		sizePop.showLikePopDownMenu();
 	}
 	
 	@Override
@@ -522,10 +538,9 @@ public class TextEditorFragment extends OpenFragment
 		onClick(v.getId(), v);
 	}
 	@Override
-	public boolean onClick(int id, View view) {
+	public boolean onClick(int id, View from) {
 		Context c = getActivity();
-		View from = null; 
-		if(getExplorer() != null)
+		if(from == null)
 			from = getExplorer().findViewById(id);
 		switch(id)
 		{
@@ -541,10 +556,13 @@ public class TextEditorFragment extends OpenFragment
 		case R.id.menu_view_font_size:
 			if(USE_SEEK_ACTIONVIEW)
 				((SeekBarActionView)mFontSizeBar).onActionViewExpanded();
-			else DialogHandler.showSeekBarDialog(getActivity(),
+			else {
+				/*DialogHandler.showSeekBarDialog(getActivity(),
 					getString(R.string.s_view_font_size),
 					(int)mTextSize, 60,
-					this);
+					this);*/
+				showSeekBarPopup(from);
+			}
 			return true;
 			
 		case R.id.menu_view:

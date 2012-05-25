@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
@@ -486,6 +487,18 @@ public abstract class OpenFragment
 			getFragmentManager().popBackStack();
 		else if(getActivity() != null)
 			getActivity().finish();
+	}
+	
+	public View getActionView(MenuItem item)
+	{
+		try {
+			if(Build.VERSION.SDK_INT < 11)
+				return getActivity().findViewById(item.getItemId());
+			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
+			return (View)m.invoke(item, new Object[0]);
+		} catch(Exception e) {
+			return getActivity().findViewById(item.getItemId());
+		}
 	}
 	
 	@Override

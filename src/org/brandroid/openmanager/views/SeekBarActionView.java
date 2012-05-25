@@ -1,10 +1,10 @@
 package org.brandroid.openmanager.views;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.interfaces.OpenActionView;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.CollapsibleActionView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -12,7 +12,9 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
-public class SeekBarActionView extends LinearLayout
+public class SeekBarActionView
+	extends LinearLayout
+	implements OpenActionView
 {
     private OnCloseListener mOnCloseListener;
     private OnClickListener mOnClickListener;
