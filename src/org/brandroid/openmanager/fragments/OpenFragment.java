@@ -1,73 +1,46 @@
 package org.brandroid.openmanager.fragments;
 
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
-
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.OpenFragmentActivity;
-import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
-import org.brandroid.openmanager.data.OpenContent;
-import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.InputDialog;
-import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.ShellSession;
-import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
-import org.brandroid.utils.MenuUtils;
-import org.brandroid.utils.Preferences;
-
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
-import android.content.DialogInterface.OnClickListener;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.Fragment.InstantiationException;
 import android.support.v4.util.LruCache;
 import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnCreateContextMenuListener;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.CheckedTextView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 
 /*
  * Base class for all OpenExplorer fragments. Provides convenient methods to access
@@ -206,6 +179,11 @@ public abstract class OpenFragment
 		return ret;
 	}
 	
+	public boolean inflateMenu(Menu menu, int menuItemId, MenuInflater inflater)
+	{
+		return false;
+	}
+	
 	public boolean showIContextMenu(int menuId, final View from, int xOffset, int yOffset)
 	{
 		if(getActivity() == null) return false;
@@ -213,6 +191,21 @@ public abstract class OpenFragment
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return false;
 		final IconContextMenu mOpenMenu =
 				IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
+		mOpenMenu.setOnKeyListener(new View.OnKeyListener() {
+			
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
+				if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
+				{
+					mOpenMenu.dismiss();
+					if(getExplorer() != null)
+						if(getExplorer().onKey(from, keyCode, event))
+							return true;
+				}
+				return false;
+			}
+		});
 		if(mOpenMenu == null) return false;
 		if(DEBUG)
 			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));

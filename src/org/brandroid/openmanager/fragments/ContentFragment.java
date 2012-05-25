@@ -1173,6 +1173,23 @@ public class ContentFragment extends OpenFragment
 		
 	}
 	
+	@Override
+	public boolean inflateMenu(Menu menu, int itemId, MenuInflater inflater) {
+		switch(itemId)
+		{
+		case R.id.menu_view:
+			inflater.inflate(R.menu.content_view, menu);
+			return true;
+		case R.id.menu_sort:
+			inflater.inflate(R.menu.content_sort, menu);
+			return true;
+		case R.id.menu_content_ops:
+			inflater.inflate(R.menu.content_ops, menu);
+			return true;
+		}
+		return false;
+	}
+	
 	/*
 	@Override
 	public void setInitialSavedState(SavedState state) {

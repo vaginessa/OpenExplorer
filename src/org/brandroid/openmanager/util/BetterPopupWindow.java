@@ -17,9 +17,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
@@ -51,6 +53,7 @@ public class BetterPopupWindow {
 	private int layout;
 	private Point exact = null;
 	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+	private OnKeyListener mKeyListener = null;
 
 	/**
 	 * Create a BetterPopupWindow
@@ -84,7 +87,6 @@ public class BetterPopupWindow {
 				return false;
 			}
 		});
-
 
 		this.windowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
 		onCreate();
@@ -144,10 +146,13 @@ public class BetterPopupWindow {
 		}
 	}
 	
+	public void setOnKeyListener(OnKeyListener l) { mKeyListener = l; }
+	
 	private void preShow(int xPos, final int yPos) {
 		if(this.root == null) {
 				throw new IllegalStateException("setContentView was not called with a view to display.");
 		}
+		root.setOnKeyListener(mKeyListener);
 		onShow();
 
 		if(DEBUG)
@@ -161,7 +166,7 @@ public class BetterPopupWindow {
 		layout = yPos + (anchor != null ? anchor.getHeight() : 0) > getWindowRect().centerY() ?
 				R.layout.context_bottom : R.layout.contextmenu_layout;
 		
-		if(getAvailableHeight() > yPos + anchor.getHeight() + Math.max(mHeight, getPreferredMinHeight()))
+		if(anchor == null || (getAvailableHeight() > yPos + anchor.getHeight() + Math.max(mHeight, getPreferredMinHeight())))
 			layout = R.layout.contextmenu_layout;
 		else layout = R.layout.context_bottom;
 		
@@ -377,13 +382,14 @@ public class BetterPopupWindow {
 	
 			int popWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
 			int popLeft = ancLeft;
-			
-			if(fromRight)
-			{
+
+			if(OpenExplorer.isGTV(mContext))
+				popup.setAnimationStyle(R.style.Animations_Fade);
+			else if(fromRight)
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
-			} else {
+			else
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
-			}
+
 			//if(fromBottom)
 			//	popup.setHeight(popup.getMaxAvailableHeight(anchor));
 			
@@ -396,7 +402,8 @@ public class BetterPopupWindow {
 			}
 			else if(mHeight > 0) popup.setHeight(mHeight);
 			
-			if(ALLOW_HORIZONTAL_MODE && (
+			if(ALLOW_HORIZONTAL_MODE &&
+				getWindowHeight() < 700 && (
 				(ancLeft == 0 && ancTop > 0
 					&& ancTop < getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height)
 					)

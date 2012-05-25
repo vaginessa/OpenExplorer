@@ -153,8 +153,13 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			{
 				OpenPath path = (OpenPath)items[i];
 				if(path.isDirectory())
-					mFrags.add(ContentFragment.getInstance(path));
-				else if(path.isTextFile() || path.length() < 500000)
+				{
+					do {
+						add(0, ContentFragment.getInstance(path));
+						path = path.getParent();
+					} while(path != null);
+					notifyDataSetChanged();
+				} else if(path.isTextFile() || path.length() < 500000)
 					mFrags.add(new TextEditorFragment(path));
 			}
 	}

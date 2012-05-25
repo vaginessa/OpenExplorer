@@ -125,7 +125,7 @@ public class MenuUtils {
 				if(index > -1 && item.getSubMenu() != null)
 				{
 					inflater.inflate(replace[index], item.getSubMenu());
-					Logger.LogDebug("Inflating 0x" + Integer.toHexString(replace[index]) + " to " + item.getTitle());
+					//Logger.LogDebug("Inflating 0x" + Integer.toHexString(replace[index]) + " to " + item.getTitle());
 				}
 			} catch(Exception e) { Logger.LogWarning("Couldn't fill submenu (0x" + Integer.toHexString(item.getItemId()) + ")"); }
 		}

@@ -1,7 +1,5 @@
 package org.brandroid.openmanager.adapters;
 
-import java.sql.Date;
-
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;

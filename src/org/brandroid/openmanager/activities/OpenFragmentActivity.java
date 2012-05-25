@@ -146,7 +146,8 @@ public abstract class OpenFragmentActivity
 		return Build.MANUFACTURER.trim().equalsIgnoreCase("rim") ||
 				Build.MODEL.toLowerCase().indexOf("blackberry") > -1;
 	}
-	public boolean isGTV() { return getPackageManager().hasSystemFeature("com.google.android.tv"); }
+	public boolean isGTV() { return isGTV(this); }
+	public static boolean isGTV(Context context) { return context.getPackageManager().hasSystemFeature("com.google.android.tv"); }
 	public void showToast(final CharSequence message)  {
 		showToast(message, Toast.LENGTH_SHORT);
 	}

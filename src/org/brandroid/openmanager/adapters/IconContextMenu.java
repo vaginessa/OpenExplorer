@@ -14,6 +14,7 @@ import android.content.*;
 import android.content.DialogInterface.OnDismissListener;
 import android.graphics.Rect;
 import android.view.*;
+import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.GridView;
@@ -127,6 +128,13 @@ public class IconContextMenu
 	        .create();
 	        */
     }
+	
+	public void setOnKeyListener(OnKeyListener listener)
+	{
+		popup.setOnKeyListener(listener);
+		if(mGrid != null)
+			mGrid.setOnKeyListener(listener);
+	}
 	
 	public void setNumColumns(int cols) {
 		maxColumns = cols;
