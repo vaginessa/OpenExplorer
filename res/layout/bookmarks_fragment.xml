@@ -9,7 +9,7 @@
     android:layout_alignParentTop="true"
     >
 	<ExpandableListView
-	    android:id="@android:id/list"
+	    android:id="@+id/bookmarks_list"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
 	/>

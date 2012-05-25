@@ -165,6 +165,7 @@ import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.LogViewerFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.OperationsFragment;
+import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentDPADListener;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentTitleLongClickListener;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
@@ -212,6 +213,7 @@ import com.android.gallery3d.util.ThreadPool;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.TabPageIndicator;
+import com.viewpagerindicator.TitlePageIndicator;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -220,7 +222,7 @@ public class OpenExplorer
 		implements OnBackStackChangedListener, OnClipboardUpdateListener,
 			OnWorkerUpdateListener,
 			OnPageTitleClickListener, LoaderCallbacks<Cursor>, OnPageChangeListener,
-			OpenApp, IconContextItemSelectedListener, OnKeyListener
+			OpenApp, IconContextItemSelectedListener, OnKeyListener, OnFragmentDPADListener
 	{
 
 	public static final int REQ_PREFERENCES = 6;
@@ -2427,11 +2429,11 @@ public class OpenExplorer
 		if(!USE_PRETTY_MENUS)
 			fillSubMenus(menu, getMenuInflater());
 		handleMoreMenu(menu, false);
-		/*if(USE_PRETTY_MENUS && isGTV())
+		if(USE_PRETTY_MENUS && isGTV())
 		{
 			fillSubMenus(mMainMenu, getMenuInflater());
 			handleMoreMenu(menu, true);
-		}*/
+		}
 		return true;
 	}
 	
@@ -3255,7 +3257,7 @@ public class OpenExplorer
 					.commit();
 			}
 		}
-		OpenFragment cf = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
+		final OpenFragment cf = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
 			new CarouselFragment(path) :
 			ContentFragment.getInstance(path, newView, getSupportFragmentManager());
 				
@@ -3844,7 +3846,10 @@ public class OpenExplorer
 		if(!f.isDetached())
 		{
 			invalidateOptionsMenu();
-			ImageUtils.fadeToDrawable((ImageView)findViewById(R.id.title_icon), f.getIcon());
+			if(isGTV())
+				((ImageView)findViewById(R.id.title_icon)).setImageDrawable(f.getIcon());
+			else
+				ImageUtils.fadeToDrawable((ImageView)findViewById(R.id.title_icon), f.getIcon());
 		}
 		//if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath)) ((ContentFragment)f).refreshData(null, false);
 	}
@@ -3933,6 +3938,43 @@ public class OpenExplorer
 		if(onOptionsItemSelected(item))
 			return true;
 		return false;
+	}
+	
+	public boolean onFragmentDPAD(OpenFragment frag, boolean toRight) {
+		int pos = mViewPagerAdapter.getItemPosition(frag);
+		Logger.LogDebug("onFragmentDPAD(" + pos + "," + (toRight?"RIGHT":"LEFT") + ")");
+		if(toRight)
+		{
+			if(frag.getTitleView() != null)
+				if(frag.getTitleView().requestFocus())
+					return true;
+			if(ViewUtils.requestFocus(this,
+					findViewById(R.id.content_frag).getNextFocusRightId(),
+					R.id.log_clear, R.id.title_menu, android.R.id.home, R.id.menu_search))
+				return true;
+		} else if (!toRight)
+		{
+			if(frag.getTitleView() != null)
+				if(frag.getTitleView().requestFocus())
+					return true;
+			if(findViewById(R.id.menu_search) != null)
+				if(findViewById(findViewById(R.id.menu_search).getNextFocusLeftId()).requestFocus())
+					return true;
+			if(ViewUtils.requestFocus(this,
+					findViewById(R.id.content_frag).getNextFocusLeftId(),
+					R.id.bookmarks_list, R.id.list_frag, R.id.title_menu, android.R.id.home, R.id.frag_log, R.id.menu_search))
+				return true;
+		}
+		pos += toRight ? 1 : -1;
+		pos = pos % mViewPagerAdapter.getCount();
+		mViewPager.setCurrentItem(pos);
+		return true;
+	}
+
+	public View getPagerTitleView(OpenFragment frag) {
+		int pos = mViewPagerAdapter.getItemPosition(frag);
+		if(pos < 0) return null;
+		return ((TabPageIndicator)mViewPager.getIndicator()).getView(pos);
 	}
 
 }

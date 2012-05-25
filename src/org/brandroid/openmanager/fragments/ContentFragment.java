@@ -53,6 +53,7 @@ import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
+import org.brandroid.utils.ViewUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,6 +71,7 @@ import android.os.Environment;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -82,6 +84,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.support.v4.app.FragmentManager;
 import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -89,6 +92,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
+import android.view.View.OnKeyListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -469,8 +473,23 @@ public class ContentFragment extends OpenFragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.content_layout, container, false);
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
-		mGrid.setOnLongClickListener(this);
-		mGrid.setOnTouchListener(this);
+		final OpenFragment me = this;
+		mGrid.setOnKeyListener(new OnKeyListener() {
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
+				int col = mGrid.getSelectedItemPosition() % mGrid.getNumColumns();
+				Logger.LogDebug("ContentFragment.mGrid.onKey(" + keyCode + "," + event + ")@" + col);
+				if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT && col == 0)
+					return onFragmentDPAD(me, false);
+				else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && col == mGrid.getNumColumns() - 1)
+					return onFragmentDPAD(me, true);
+				else
+					return false;
+			}
+		});
+		v.setOnLongClickListener(this);
+		v.setOnTouchListener(this);
 		mGrid.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
 			@Override
 			public void onCreateContextMenu(ContextMenu menu, View v,
@@ -622,7 +641,7 @@ public class ContentFragment extends OpenFragment
 				MotionEvent lastEvent = (MotionEvent)v.getTag();
 				int x = (int)Math.floor(lastEvent.getX());
 				int y = (int)Math.floor(lastEvent.getY());
-				return createContextMenu(mPath, mGrid, mGrid, x, y);
+				return createContextMenu(mPath, mGrid, mGrid, 0, x, y);
 			} else return v.showContextMenu();
 		}
 		return false;
@@ -636,13 +655,15 @@ public class ContentFragment extends OpenFragment
 		
 		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
 		
-		return createContextMenu(file, list, view);
+		return createContextMenu(file, list, view, pos);
 	}
-	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list, final View view)
+	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list,
+			final View view, final int pos)
 	{
-		return createContextMenu(file, list, view, 0, 0);
+		return createContextMenu(file, list, view, pos, 0, 0);
 	}
-	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list, final View view, final int xOffset, final int yOffset)
+	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list,
+			final View view, final int pos, final int xOffset, final int yOffset)
 	{
 		Logger.LogInfo(getClassName() + ".onItemLongClick: " + file);
 		
@@ -680,6 +701,7 @@ public class ContentFragment extends OpenFragment
 				cm.setOnIconContextItemSelectedListener(getExplorer());
 				cm.setInfo(info);
 				cm.setTextLayout(R.layout.context_item);
+				cm.setTitle(file.getName());
 				if(!cm.show()) //r.left, r.top);
 					return list.showContextMenu();
 				else return true;
@@ -803,20 +825,22 @@ public class ContentFragment extends OpenFragment
 		switch(id)
 		{
 		case R.id.menu_content_ops:
-			if(showMenu(R.menu.content_ops, view))
+			if(showMenu(R.menu.content_ops, view, getString(R.string.s_title_operations)))
 				return true;
 			break;
 		case R.id.menu_sort:
-			if(showMenu(R.menu.content_sort, view))
+			if(showMenu(R.menu.content_sort, view, getString(R.string.s_menu_sort)))
 				return true;
 			break;
 		case R.id.menu_view:
-			if(showMenu(R.menu.content_view, view))
+			if(showMenu(R.menu.content_view, view, getString(R.string.s_view)))
 				return true;
 			break;
 		}
 		return false;
 	}
+	
+	
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)

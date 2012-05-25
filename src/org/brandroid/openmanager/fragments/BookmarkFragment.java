@@ -59,7 +59,7 @@ public class BookmarkFragment
 		return 0;
 	}
 	
-	public ExpandableListView getListView() { return (ExpandableListView) getView().findViewById(android.R.id.list); }
+	public ExpandableListView getListView() { return (ExpandableListView) getView().findViewById(R.id.bookmarks_list); }
 	public void setListAdapter(ExpandableListAdapter adapter) { getListView().setAdapter(adapter); }
 	
 	public void onActivityCreated(Bundle savedInstanceState) {

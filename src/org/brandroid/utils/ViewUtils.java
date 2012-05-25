@@ -134,17 +134,29 @@ public class ViewUtils {
 		}
 	}
 
-	public static void setText(View view, String text, int... textViewID) {
+	public static void setText(View parent, CharSequence text, int... textViewID) {
+		if(parent == null) return;
 		for(int id : textViewID)
 		{
-			View v = view.findViewById(id);
+			View v = parent.findViewById(id);
 			if(v != null && v instanceof TextView)
 				((TextView)v).setText(text);
 		}
 	}
 
+	public static void setText(View parent, int textId, int... textViewID) {
+		if(parent == null) return;
+		for(int id : textViewID)
+		{
+			View v = parent.findViewById(id);
+			if(v != null && v instanceof TextView)
+				((TextView)v).setText(textId);
+		}
+	}
+
 	public static void setViewsVisible(Activity a, final boolean visible, int... ids)
 	{
+		if(a == null) return;
 		for(int id : ids)
 		{
 			if(a == null) return;
@@ -156,11 +168,12 @@ public class ViewUtils {
 		}
 	}
 
-	public static void setViewsVisible(View a, boolean visible, int... ids)
+	public static void setViewsVisible(View parent, boolean visible, int... ids)
 	{
+		if(parent == null) return;
 		for(int id : ids)
-			if(a.findViewById(id) != null)
-				a.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
+			if(parent.findViewById(id) != null)
+				parent.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 
 	public static void toggleChecked(View view) {
@@ -216,5 +229,16 @@ public class ViewUtils {
 	{
 		for(int id : ids)
 			setAlpha(root.findViewById(id), alpha);
+	}
+
+	public static boolean requestFocus(Activity a, int... ids)
+	{
+		for(int id : ids)
+		{
+			View v = a.findViewById(id);
+			if(v != null && v.isShown() && v.isFocusable() && v.requestFocus())
+				return true;
+		}
+		return false;
 	}
 }

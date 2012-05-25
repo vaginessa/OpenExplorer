@@ -49,11 +49,12 @@ public class BetterPopupWindow {
 	public boolean USE_INDICATOR = true;
 	private int mHeight = 0;
 	private boolean forcedHeight = false;
-	private static final boolean ALLOW_HORIZONTAL_MODE = true;
+	private static final boolean ALLOW_HORIZONTAL_MODE = false;
 	private int layout;
 	private Point exact = null;
 	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	private OnKeyListener mKeyListener = null;
+	private CharSequence mTitle = null;
 
 	/**
 	 * Create a BetterPopupWindow
@@ -130,7 +131,8 @@ public class BetterPopupWindow {
 	/**
 	 * In case there is stuff to do right before displaying.
 	 */
-	protected void onShow() {}
+	protected void onShow() {
+	}
 
 	private void OnPopupShown(int w, int h)
 	{
@@ -153,7 +155,6 @@ public class BetterPopupWindow {
 				throw new IllegalStateException("setContentView was not called with a view to display.");
 		}
 		root.setOnKeyListener(mKeyListener);
-		onShow();
 
 		if(DEBUG)
 			popup.setBackgroundDrawable(new ColorDrawable(mContext.getResources().getColor(R.color.translucent_gray)));
@@ -183,6 +184,8 @@ public class BetterPopupWindow {
 				((ViewGroup)backgroundView
 					.findViewById(android.R.id.widget_frame))
 					.addView(this.root);
+			if(mTitle != null && mTitle.length() > 0)
+				setTitle(mTitle);
 
 			root.postDelayed(new Runnable(){public void run() {
 				int h = root.getHeight();
@@ -221,6 +224,8 @@ public class BetterPopupWindow {
 		this.popup.setTouchable(true);
 		this.popup.setFocusable(true);
 		this.popup.setOutsideTouchable(true);
+		
+		onShow();
 	}
 	
 	private int getPreferredMinHeight()
@@ -235,14 +240,21 @@ public class BetterPopupWindow {
 			ret = backgroundView.findViewById(R.id.indicator);
 		return ret;
 	}
-	private void placeArrow(int arrowOffset, int rootWidth)
+	
+	/**
+	 * Place arrow in Popup.
+	 * @param arrowOffset Requested X offset.
+	 * @param rootWidth Container width.
+	 * @return Percentage (0 to 1) of arrow position. Returns -1 if indicator is not used.
+	 */
+	private float placeArrow(int arrowOffset, int rootWidth)
 	{
 		View indicator = backgroundView.findViewById(R.id.indicator);
-		if(indicator == null) return;
+		if(indicator == null) return -1;
 		if(!USE_INDICATOR && indicator != null)
 		{
 			indicator.setVisibility(View.GONE);
-			return;
+			return -1;
 		}
 		int arrowWidth = 30;
 		if(indicator != null)
@@ -259,19 +271,15 @@ public class BetterPopupWindow {
 			pos1 = Math.min(rootWidth - arrowWidth, Math.max(0, arrowOffset));
 		int pos2 = Math.min(rootWidth - arrowWidth, (rootWidth + arrowOffset) - arrowWidth);
 		//Logger.LogVerbose("Arrow (offset, width, arrow -> pos1 / pos2): " + arrowOffset + ", " + rootWidth + ", " + arrowWidth + " -> " + pos1 + " / " + pos2);
+		indicator.setVisibility(View.VISIBLE);
 		if(arrowOffset >= 0)
 		{
-			//indicator.setLeft(arrowOffset);
 			setViewWidth(backgroundView.findViewById(R.id.space_left), pos1);
-			//setViewWidth(backgroundView.findViewById(R.id.space_right), LayoutParams.FILL_PARENT);
+			return (float)arrowOffset / (float)Math.min(1, rootWidth);
 		} else {
-			//arrowOffset *= -1;
-			
-			//setViewWidth(backgroundView.findViewById(R.id.space_left), rootWidth);
 			setViewWidth(backgroundView.findViewById(R.id.space_left), pos2);
+			return (float)Math.abs(rootWidth + arrowOffset) / (float)Math.min(1, rootWidth);
 		}
-		indicator.setVisibility(View.VISIBLE);
-		
 	}
 	
 	public BetterPopupWindow setContentView(View root) {
@@ -383,12 +391,7 @@ public class BetterPopupWindow {
 			int popWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
 			int popLeft = ancLeft;
 
-			if(OpenExplorer.isGTV(mContext))
-				popup.setAnimationStyle(R.style.Animations_Fade);
-			else if(fromRight)
-				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
-			else
-				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
+			popup.setAnimationStyle(R.style.Animations_Fade);
 
 			//if(fromBottom)
 			//	popup.setHeight(popup.getMaxAvailableHeight(anchor));
@@ -517,8 +520,15 @@ public class BetterPopupWindow {
 			
 			//Logger.LogDebug("Some More: pop(w/l)=(" + popWidth + "/" + popLeft + "),arr=" + arrowOffset);
 			
-			placeArrow(arrowOffset, popWidth);
-			
+			float pos = placeArrow(arrowOffset, popWidth);
+			if(pos == -1)
+				popup.setAnimationStyle(R.style.Animations_Fade);
+			else if(pos > 0.7f)
+				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomLeft : R.style.Animations_GrowFromTopLeft);
+			else if(pos < 0.3f)
+				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottomRight : R.style.Animations_GrowFromTopRight);
+			else
+				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottom : R.style.Animations_GrowFromTop);
 			
 			
 			/*
@@ -688,25 +698,14 @@ public class BetterPopupWindow {
 
 
 	public void setTitle(CharSequence title) {
-		if(backgroundView != null && backgroundView.findViewById(R.id.contextmenu_title) != null)
+		mTitle = title;
+		if(backgroundView != null)
 		{
-			if(title != null && title.length() > 0)
-			{
-				backgroundView.findViewById(R.id.contextmenu_title).setVisibility(View.VISIBLE);
-				((TextView)backgroundView.findViewById(android.R.id.title)).setText(title);
-			} else backgroundView.findViewById(R.id.contextmenu_title).setVisibility(View.GONE);
+			ViewUtils.setViewsVisible(backgroundView, true, R.id.contextmenu_title);
+			ViewUtils.setText(backgroundView, title, android.R.id.title);
 		}
 	}
 
-
-	public void setTitle(int stringId) {
-		if(backgroundView != null && backgroundView.findViewById(R.id.contextmenu_title) != null)
-		{
-			backgroundView.findViewById(R.id.contextmenu_title).setVisibility(View.VISIBLE);
-			((TextView)backgroundView.findViewById(android.R.id.title)).setText(stringId);
-			backgroundView.invalidate();
-		}
-	}
 
 	public synchronized void setAnchor(View view) {
 		anchor = view;

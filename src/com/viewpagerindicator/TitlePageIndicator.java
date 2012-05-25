@@ -39,6 +39,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 
 /**
  * A TitlePageIndicator is a PageIndicator which displays the title of left view

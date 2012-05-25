@@ -132,8 +132,13 @@
     <style name="Animations" />
 
     <style name="Animations.Fade">
-        <item name="@android:windowEnterAnimation">@android:anim/fade_in</item>
-        <item name="@android:windowExitAnimation">@android:anim/fade_out</item>
+        <item name="@android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="@android:windowExitAnimation">@anim/fade_out</item>
+    </style>
+    
+    <style name="Animations.SlideDown">
+        <item name="@android:windowEnterAnimation">@anim/slide_down_in</item>
+        <item name="@android:windowExitAnimation">@anim/slide_up_out</item>
     </style>
 
     <style name="Animations.GrowFromTopLeft">

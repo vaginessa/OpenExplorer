@@ -15,6 +15,7 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.CarouselFragment;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentDPADListener;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
@@ -44,12 +45,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
 	private ArrayList<OpenFragment> mFrags = new ArrayList<OpenFragment>();
 	private OnPageTitleClickListener mListener = null;
-	private final ViewPager mViewPager;
 	private final Context mContext;
 
 	public ArrayPagerAdapter(FragmentActivity activity, ViewPager pager) {
 		super(activity.getSupportFragmentManager());
-		mViewPager = pager;
 		mContext = activity;
 	}
 	
@@ -65,9 +64,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	@Override
 	public OpenFragment getItem(int pos) {
-		if(pos < mFrags.size() && pos >= 0)
-			return mFrags.get(pos);
-		else return null;
+		if(mFrags.size() == 0) return null;
+		while(pos < 0)
+			pos += mFrags.size();
+		return mFrags.get(pos % mFrags.size());		
 	}
 
 	public OpenFragment getLastItem() {

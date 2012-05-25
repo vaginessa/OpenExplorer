@@ -297,4 +297,8 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
             return mIndex;
         }
     }
+
+	public View getView(int pos) {
+		return mTabLayout.getChildAt(pos);
+	}
 }

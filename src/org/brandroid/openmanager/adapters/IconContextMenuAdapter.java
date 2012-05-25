@@ -74,7 +74,8 @@ public class IconContextMenuAdapter extends BaseAdapter {
 	
 	//@Override
 	public long getItemId(int position) {
-		return getItem(position).getItemId();
+		return position;
+		//return getItem(position).getItemId();
 	}
     
     //@Override
@@ -129,6 +130,11 @@ public class IconContextMenuAdapter extends BaseAdapter {
         res.setTag(item);
         res.setText(item.getTitle());
         res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);
+        
+        if(position == 0)
+        	res.setNextFocusUpId(getCount() - 1);
+        else if(position == getCount() - 1)
+        	res.setNextFocusDownId(0);
               
         return res;
     }

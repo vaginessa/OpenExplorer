@@ -3,5 +3,5 @@
 	<translate android:fromYDelta="-50%p" android:toYDelta="0"
             android:duration="@integer/config_mediumAnimTime"/>
 	<alpha android:fromAlpha="0.0" android:toAlpha="1.0"
-            android:duration="@integer/config_mediumAnimTime" />
+            android:duration="@integer/config_shortAnimTime" />
 </set>

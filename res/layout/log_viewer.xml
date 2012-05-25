@@ -21,19 +21,19 @@
             android:layout_height="wrap_content"
         	android:orientation="horizontal">
 	        <Button
-	            android:id="@android:id/button2"
+	            android:id="@+id/log_copy"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:text="@android:string/copy"
 	            />
 	        <Button
-	            android:id="@android:id/button1"
+	            android:id="@+id/log_clear"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:text="@string/s_clear"
 	            />
 	        <Button
-	            android:id="@android:id/button3"
+	            android:id="@+id/log_close"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:text="@string/close"
@@ -42,9 +42,10 @@
     </HorizontalScrollView>
 
 	<ListView 
-	    android:id="@android:id/list"
+	    android:id="@+id/log_list"
 	    android:layout_width="wrap_content"
 	    android:layout_height="match_parent"
+	    android:focusable="true"
 	    android:layout_weight="1"
 	    >
 	</ListView>

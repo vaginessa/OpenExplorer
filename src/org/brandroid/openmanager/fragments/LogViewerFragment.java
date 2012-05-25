@@ -133,8 +133,8 @@ public class LogViewerFragment extends OpenFragment
 		mInflater = inflater; 
 		View ret = inflater.inflate(R.layout.log_viewer, null);
 		ret.setOnLongClickListener(this);
-		ViewUtils.setOnClicks(ret, this, android.R.id.button1, android.R.id.button2, android.R.id.button3);
-		mListView = (ListView)ret.findViewById(android.R.id.list);
+		ViewUtils.setOnClicks(ret, this, R.id.log_clear, R.id.log_copy, R.id.log_close);
+		mListView = (ListView)ret.findViewById(R.id.log_list);
 		return ret;
 	}
 	
@@ -152,8 +152,8 @@ public class LogViewerFragment extends OpenFragment
 		{
 			if(getView() instanceof ListView)
 				mListView = (ListView)getView();
-			else if(getView().findViewById(android.R.id.list) != null)
-				mListView = (ListView)getView().findViewById(android.R.id.list);
+			else if(getView().findViewById(R.id.log_list) != null)
+				mListView = (ListView)getView().findViewById(R.id.log_list);
 		}
 		return mListView;
 	}
@@ -168,17 +168,17 @@ public class LogViewerFragment extends OpenFragment
 	{
 		switch(id)
 		{
-		case android.R.id.button1: // Clear
+		case R.id.log_clear: // Clear
 			mData.clear();
 			notifyDataSetChanged();
 			break;
-		case android.R.id.button2: // Copy
+		case R.id.log_copy: // Copy
 			ClipboardManager cm = (ClipboardManager)getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
 			cm.setText(Utils.joinArray(mData.toArray(new CharSequence[mData.size()]), "\n"));
 			Toast.makeText(mContext, R.string.s_alert_clipboard, Toast.LENGTH_LONG);
 			break;
 			//default: if(getExplorer() != null) getExplorer().onClick(id, item, from);
-		case android.R.id.button3: // Close
+		case R.id.log_close: // Close
 			doClose();
 			break;
 		}

@@ -41,6 +41,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnCreateContextMenuListener;
+import android.view.View.OnKeyListener;
 
 /*
  * Base class for all OpenExplorer fragments. Provides convenient methods to access
@@ -58,7 +59,20 @@ public abstract class OpenFragment
 	protected boolean mActionModeSelected = false;
 	private boolean mHasOptions = false;
 	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
-
+	private OnFragmentDPADListener mDPAD = null;
+	public final void setOnFragmentDPADListener(OnFragmentDPADListener listener) { mDPAD = listener; }
+		
+	public interface OnFragmentDPADListener
+	{
+		public boolean onFragmentDPAD(OpenFragment fragment, boolean toRight);
+	}
+	
+	public final boolean onFragmentDPAD(OpenFragment fragment, boolean toRight)
+	{
+		if(mDPAD != null)
+			return mDPAD.onFragmentDPAD(fragment, toRight);
+		return false;
+	}
 	
 	public interface OnFragmentTitleLongClickListener
 	{
@@ -159,13 +173,13 @@ public abstract class OpenFragment
 			Logger.LogDebug(getClassName() + ".onActivityResult(" + requestCode + "," + resultCode + "," + (data != null ? data.toString() : "null") + ")");
 	}
 
-	public boolean showMenu(final int menuId, View from)
+	public boolean showMenu(final int menuId, View from, CharSequence title)
 	{
-		return showMenu(menuId, from, 0, 0);
+		return showMenu(menuId, from, title, 0, 0);
 	}
-	public boolean showMenu(final int menuId, View from, int xOffset, int yOffset)
+	public boolean showMenu(final int menuId, View from, CharSequence title, int xOffset, int yOffset)
 	{
-		if(showIContextMenu(menuId, from, xOffset, yOffset)) return true;
+		if(showIContextMenu(menuId, from, title, xOffset, yOffset)) return true;
 		if(from == null) return false;
 		from.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
 			public void onCreateContextMenu(ContextMenu menu, View v,
@@ -184,13 +198,16 @@ public abstract class OpenFragment
 		return false;
 	}
 	
-	public boolean showIContextMenu(int menuId, final View from, int xOffset, int yOffset)
+	public boolean showIContextMenu(int menuId, final View from, CharSequence title, int xOffset, int yOffset)
 	{
 		if(getActivity() == null) return false;
 		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return false;
 		final IconContextMenu mOpenMenu =
 				IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
+		if(mOpenMenu == null) return false;
+		if(title != null && title.length() > 0)
+			mOpenMenu.setTitle(title);
 		mOpenMenu.setOnKeyListener(new View.OnKeyListener() {
 			
 			@Override
@@ -206,7 +223,6 @@ public abstract class OpenFragment
 				return false;
 			}
 		});
-		if(mOpenMenu == null) return false;
 		if(DEBUG)
 			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
 		MenuBuilder menu = mOpenMenu.getMenu();
@@ -330,6 +346,8 @@ public abstract class OpenFragment
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
+		if(activity instanceof OpenExplorer)
+			setOnFragmentDPADListener((OpenExplorer)activity);
 		if(DEBUG)
 			Logger.LogDebug("}-- onAttach :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 	}
@@ -527,6 +545,12 @@ public abstract class OpenFragment
 		if(DEBUG)
 			Logger.LogDebug("<-- onViewCreated - " + getClassName());
 		super.onViewCreated(view, savedInstanceState);
+	}
+
+	public View getTitleView() {
+		if(getExplorer() != null)
+			return getExplorer().getPagerTitleView(this);
+		return null;
 	}
 	
 	/*

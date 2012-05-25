@@ -24,7 +24,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
 
-public class IconContextMenu
+public class IconContextMenu implements OnKeyListener
 {
 	
 	public interface IconContextItemSelectedListener {
@@ -73,6 +73,7 @@ public class IconContextMenu
         mGrid = new GridView(context);
         mGrid.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         mGrid.setNumColumns(maxColumns);
+        mGrid.setOnKeyListener(this);
         setAdapter(context, new IconContextMenuAdapter(context, menu));
         if(mWidth == 0)
         {
@@ -165,9 +166,6 @@ public class IconContextMenu
     public void setTitle(CharSequence title) {
     	popup.setTitle(title);
     }
-	public void setTitle(int stringId) {
-		popup.setTitle(stringId);
-	}
 	
 	private int getMenuSignature() {
 		return
@@ -252,6 +250,18 @@ public class IconContextMenu
 
 	public void setTextLayout(int layoutId) {
 		getAdapter().setTextLayout(layoutId);
+	}
+
+	@Override
+	public boolean onKey(View v, int keyCode, KeyEvent event) {
+		if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
+		int pos = mGrid.getSelectedItemPosition();
+		int col = pos % mGrid.getNumColumns();
+		if(col == 0 && keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
+			return true;
+		if(col == mGrid.getNumColumns() - 1 && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
+			return true;
+		return false;
 	}
 
     
