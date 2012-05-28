@@ -123,9 +123,7 @@
     <string name="s_pref_start_summary">Ez legyen az OpenExplorer alapértelmezetten megjelenített mappája</string>
     <string name="s_custom">Egyedi...</string>
     <string name="s_text_intro_top">Az OpenExplorer üdvözli Önt!</string>
-    <string name="s_text_intro_body">Az OpenExplorer célja, hogy hatékonyabbá tegye a fájl-szintű műveleteket az Android OS fájlrendszerében és a felhőben. Akár a több helyen fellelhető videóit, fotóit szeretné rendszerezni, akár a különböző tárhelyeit, távoli webszervereit szeretné menedzselni, az OpenExplorer segít Önnek ebben.
-\n
-\nKérjük, válassza ki az alapértelmezett mappát!</string>
+    <string name="s_text_intro_body">Az OpenExplorer célja, hogy hatékonyabbá tegye a fájl-szintű műveleteket az Android OS fájlrendszerében és a felhőben. Akár a több helyen fellelhető videóit, fotóit szeretné rendszerezni, akár a különböző tárhelyeit, távoli webszervereit szeretné menedzselni, az OpenExplorer segít Önnek ebben.\n\nKérjük, válassza ki az alapértelmezett mappát!</string>
     <string name="s_info_num_folders">Mappák száma:</string>
     <string name="s_info_num_files">Fájlok száma:</string>
     <string name="s_info_last_modified">Utoljára módosítva:</string>
@@ -239,22 +237,7 @@
     <string name="menu_view_font_small">Kis betűméret</string>
     <string name="menu_view_font_medium">Közepes betűméret</string>
     <string name="menu_view_font_large">Nagy betűméret</string>
-    <string name="app_description">Open Explorer - nyílt forrású fájl menedzser minden eszközre! (Tábla PC-k, okostelefonok, Google TV-k, Android szendvicsek (ICS)!)
-\n- teljes fájlrendszer menedzsment
-\n- USB, SD kártya és egyéb külső adathordozók támogatása
-\n- hálózat és szerver menedzsment (FTP, SecureFTP, SMB/Samba/Windows/LAN/WiFi)
-\n- beépített szövegszerkesztő
-\n- &quot;okos mappák&quot; a különböző médiatartalmak (videók, fotók, zenék, dokumentumok) jobb átláthatóságához
-\n- &quot;csúsztatás böngészés&quot; a mappák közötti navigáláshoz (pl.: swipe-polás/csúsztatás jobb irányba egy szinttel feljebb lép)
-\n- Superuser(Su)/Root hozzáférés a rendszermappák listázásához/olvasásához (az írási képesség még fejlesztés alatt)
-\n
-\nFunkciók fejlesztés alatt:
-\n- &quot;többfüles&quot; szövegszerkesztő
-\n- még nagyobb hálózatkezelési képesség (Dropbox, Box.net, SkyDrive)
-\n- offline fájlrendszer cache, mely megjegyzi, milyen fájlokkal rendelkezik a távoli szervereken/tárhelyeken, a felhőben
-\n- lemezkapacitás hőtérképes elemzése, mely megmutatja, hol találhatóak a nagyméretű fájlok az egyes adathordozókon
-\n
-\n*MEGJEGYZÉS: Ez az alkalmazás még béta állapotú! Egyelőre több hibát is tartalmaz. Ha nem szeretne az esetleges hibajelenségekkel találkozni, kérjük, ne töltse ezt az alkalmazást! Ha szeretne segíteni megtalálni a hibákat, és ezáltal tökéletesíteni az alkalmazást, úgy kérem írjon nekem emailt, vagy dolgozzon együtt velem a GitHub-on (https://github.com/BrandoCommando/OpenExplorer/). Kérem, vegye figyelembe, hogy a negatív értékelés önmagában nem segítség! Köszönöm!</string>
+    <string name="app_description">Open Explorer - nyílt forrású fájl menedzser minden eszközre! (Tábla PC-k, okostelefonok, Google TV-k, Android szendvicsek (ICS)!)\n- teljes fájlrendszer menedzsment\n- USB, SD kártya és egyéb külső adathordozók támogatása\n- hálózat és szerver menedzsment (FTP, SecureFTP, SMB/Samba/Windows/LAN/WiFi)\n- beépített szövegszerkesztő\n- &quot;okos mappák&quot; a különböző médiatartalmak (videók, fotók, zenék, dokumentumok) jobb átláthatóságához\n- &quot;csúsztatás böngészés&quot; a mappák közötti navigáláshoz (pl.: swipe-polás/csúsztatás jobb irányba egy szinttel feljebb lép)\n- Superuser(Su)/Root hozzáférés a rendszermappák listázásához/olvasásához (az írási képesség még fejlesztés alatt)\n\nFunkciók fejlesztés alatt:\n- &quot;többfüles&quot; szövegszerkesztő\n- még nagyobb hálózatkezelési képesség (Dropbox, Box.net, SkyDrive)\n- offline fájlrendszer cache, mely megjegyzi, milyen fájlokkal rendelkezik a távoli szervereken/tárhelyeken, a felhőben\n- lemezkapacitás hőtérképes elemzése, mely megmutatja, hol találhatóak a nagyméretű fájlok az egyes adathordozókon\n\n*MEGJEGYZÉS: Ez az alkalmazás még béta állapotú! Egyelőre több hibát is tartalmaz. Ha nem szeretne az esetleges hibajelenségekkel találkozni, kérjük, ne töltse ezt az alkalmazást! Ha szeretne segíteni megtalálni a hibákat, és ezáltal tökéletesíteni az alkalmazást, úgy kérem írjon nekem emailt, vagy dolgozzon együtt velem a GitHub-on (https://github.com/BrandoCommando/OpenExplorer/). Kérem, vegye figyelembe, hogy a negatív értékelés önmagában nem segítség! Köszönöm!</string>
     <string name="alert_translate_google">Üdvözöljük! Ez a fordítás a Google Translate-tel készült. Ha beszél angolul és %s -ul, és szeretne segíteni a fordítás javításában, kipontosításában, kérjük, kattintson ide:</string>
     <string name="alert_translate_none">Üdvözöljük! Úgy tűnik, nem támogatott nyelvet használ. Beszél Ön angolul és %s -ul? Ha szeretne segíteni a fordításban, vagy annak javításában, kipontosításában, kérjük, kattintson ide:</string>
     <string name="button_translate">Fordítás</string>

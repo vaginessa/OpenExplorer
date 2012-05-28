@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">פתח את Internet</string>
+    <string name="app_name">עכככם</string>
     <string name="s_photos" auto="1">תמונות</string>
     <string name="s_videos" auto="1">וידאו</string>
     <string name="s_music" auto="1">מוסיקה</string>
@@ -10,26 +10,26 @@
     <string name="s_view" auto="1">נוף</string>
     <string name="s_bookmarks" auto="1">סימניות</string>
     <string name="s_menu_favorites" auto="1">Toggle Bookmarks</string>
-    <string name="s_menu_sort" auto="1">מין</string>
+    <string name="s_menu_sort">מיין</string>
     <string name="s_menu_sort_name_asc" auto="1">מיין לפי שם (A-Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">מיין לפי שם (Z-A)</string>
-    <string name="s_menu_sort_date_asc" auto="1">מיון לפי חדשים</string>
-    <string name="s_menu_sort_date_desc" auto="1">מיין לפי הכי ישנות</string>
-    <string name="s_menu_sort_size_asc" auto="1">לפי הגדול</string>
-    <string name="s_menu_sort_size_desc" auto="1">לפי הקטן</string>
-    <string name="s_menu_sort_type" auto="1">לפי FileType</string>
+    <string name="s_menu_sort_date_asc">מיין לפי הכי חדש</string>
+    <string name="s_menu_sort_date_desc">מיין לפי הכי ישן</string>
+    <string name="s_menu_sort_size_asc">מיין לפי הגדול</string>
+    <string name="s_menu_sort_size_desc">מיין לפי הקטן</string>
+    <string name="s_menu_sort_type">מיין לפי סוג קובץ</string>
     <string name="s_menu_multi" auto="1">Multi-Select</string>
     <string name="s_menu_grid" auto="1">Grid View</string>
     <string name="s_menu_list" auto="1">תצוגת רשימה</string>
     <string name="s_menu_carousel" auto="1">קרוסלה</string>
-    <string name="s_menu_hidden" auto="1">הצגקבציםמוסתרים</string>
+    <string name="s_menu_hidden">הצג קבצים מוסתרים</string>
     <string name="s_menu_thumbs" auto="1">הצגת תמונות ממוזערות</string>
     <string name="s_menu_new_folder" auto="1">תיקיה חדשה</string>
     <string name="s_menu_other" auto="1">הגדרות אחרות</string>
     <string name="s_menu_flush" auto="1">ריקון מטמון</string>
     <string name="s_menu_root" auto="1">שורש</string>
     <string name="s_menu_prefs_folder" auto="1">העדפות תיקייה</string>
-    <string name="s_menu_prefs_global" auto="1">גלובל העדפות</string>
+    <string name="s_menu_prefs_global">העדפות כלליות</string>
     <string name="s_menu_info" auto="1">מידע</string>
     <string name="s_menu_copy" auto="1">עותק</string>
     <string name="s_menu_cut" auto="1">לחתוך</string>
@@ -40,7 +40,7 @@
     <string name="s_menu_unzip" auto="1">Unzip ...</string>
     <string name="s_menu_rename" auto="1">שינוי שם ...</string>
     <string name="s_menu_bookmark" auto="1">הוסף סימנייה</string>
-    <string name="s_save" auto="1">להציל</string>
+    <string name="s_save">שמור</string>
     <string name="s_saveas" auto="1">שמור כ ...</string>
     <string name="s_cancel" auto="1">לבטל</string>
     <string name="s_size" auto="1">גודל</string>
@@ -48,7 +48,7 @@
     <string name="s_pref_servers" auto="1">שרתים נוספים</string>
     <string name="s_pref_server_add" auto="1">+ הוסף שרת חדש</string>
     <string name="s_pref_display" auto="1">הצגת העדפות</string>
-    <string name="s_pref_hidden" auto="1">הצגקבציםמוסתרים</string>
+    <string name="s_pref_hidden">הצג קבצים מוסתרים</string>
     <string name="s_pref_hidden_summary" auto="1">הצגת קבצים ותיקיות מוסתרים</string>
     <string name="s_pref_thumbs" auto="1">הצגת תמונות ממוזערות</string>
     <string name="s_pref_thumbs_summary" auto="1">הצגת תמונה ממוזערת של תמונה / וידאו / App קבצים</string>
@@ -70,7 +70,7 @@
     <string name="s_pref_server_path_summary" auto="1">הזן את שם המשתמש נתיב ברירת המחדל</string>
     <string name="s_pref_server_extras" auto="1">הגדרות נוספות</string>
     <string name="s_pref_server_update" auto="1">הוספה / עדכון שרת</string>
-    <string name="s_pref_server_type" auto="1">שרת סוג</string>
+    <string name="s_pref_server_type">סוג שרת</string>
     <string name="s_files" auto="1">קבצים</string>
     <string name="s_create" auto="1">ליצור</string>
     <string name="s_title_holding_x_files" auto="1">החזקת קבצים  %s </string>
@@ -191,7 +191,7 @@
     <string name="s_info_freespace" auto="1">נפח דיסק פנוי:</string>
     <string name="s_status_rate" auto="1">דירוג:</string>
     <string name="s_about_hardware" auto="1">חומרה</string>
-    <string name="s_menu_refresh" auto="1">רענן Folder</string>
+    <string name="s_menu_refresh">רענן תיקייה</string>
     <string name="s_pref_reset" auto="1">אפס צפיות</string>
     <string name="s_toast_complete" auto="1">להשלמת הפעולה!</string>
     <string name="s_pref_reset_summary" auto="1">לחץ כאן כדי להסיר את כל תיקייה ספציפית הגדרות התצוגה, לחזור למצב ברירת המחדל.</string>
@@ -230,8 +230,8 @@
     <string name="s_split_none" auto="1">מניחים את כל הכפתורים בתפריט מערכת</string>
     <string name="s_about_screensize" auto="1">גודל מסך</string>
     <string name="s_about_density" auto="1">צפיפות</string>
-    <string name="s_menu_location_int" auto="1">זיכרון פנימי נתיב</string>
-    <string name="s_menu_location_ext" auto="1">זיכרון חיצוני נתיב</string>
+    <string name="s_menu_location_int">נתיב זיכרון פנימי</string>
+    <string name="s_menu_location_ext">נתיב זיכרון חיצוני</string>
     <string name="s_wtf_context" auto="1">אנא תאר בהקשר של קריסה:</string>
     <string name="thanks" auto="1">תודה!</string>
     <string name="menu_view_font_small" auto="1">גודל גופן קטן</string>
@@ -280,4 +280,20 @@
     <string name="storage_usb">כרטיס SD</string>
     <string name="extract_edit_menu_button">אחסון USB</string>
     <string name="activity_chooser_view_see_all">ערוך...</string>
+    <string name="s_title_picker" auto="1">בחר מדריך</string>
+    <string name="selected_path" auto="1">נבחר נתיב:</string>
+    <string name="filename" auto="1">שם הקובץ</string>
+    <string name="s_msg_saved" auto="1">הצילו</string>
+    <string name="s_menu_view_line_numbers" auto="1">קו מספרים</string>
+    <string name="warn_text_editor" auto="1">ברוכים הבאים עורך טקסט. אנא לחץ לחיצה ארוכה על הטקסט כדי להיכנס למצב עריכה.</string>
+    <string name="warn_networking" auto="1">ברוכים הבאים לרשת. יש לציין כי תכונה זו עדיין בפיתוח ויכול להכיל באגים. נא לא לתת דירוג שוק רע אם אתה מוצא את כל הבאגים האלה.</string>
+    <string name="s_menu_new_file" auto="1">קובץ טקסט חדש</string>
+    <string name="s_msg_created" auto="1">נוצר</string>
+    <string name="s_title_newfile" auto="1">קובץ חדש</string>
+    <string name="s_alert_newfile_folder" auto="1">יצירת קובץ חדש:</string>
+    <string name="s_alert_newfile" auto="1">הקלד את השם של הקובץ החדש:</string>
+    <string name="s_alert_exit" auto="1">האם אתה בטוח שאתה רוצה לצאת?</string>
+    <string name="s_alert_clipboard" auto="1">להעתיק את הלוח</string>
+    <string name="s_alert_restart" auto="1">הפעלה מחדש. אנא המתן.</string>
+    <string name="language" auto="1">שפה</string>
 </resources>

@@ -1,246 +1,246 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">Άνοιγμα Explorer</string>
-    <string name="s_photos" auto="1">Φωτογραφίες</string>
-    <string name="s_videos" auto="1">Βίντεο</string>
-    <string name="s_music" auto="1">Μουσική</string>
-    <string name="s_downloads" auto="1">Λήψεις</string>
-    <string name="s_external" auto="1">Εξωτερικός</string>
-    <string name="s_internal" auto="1">Εσωτερικός</string>
-    <string name="s_view" auto="1">Προβολή</string>
-    <string name="s_bookmarks" auto="1">Σελιδοδείκτες</string>
-    <string name="s_menu_favorites" auto="1">Εναλλαγή Σελιδοδείκτες</string>
-    <string name="s_menu_sort" auto="1">Είδος</string>
-    <string name="s_menu_sort_name_asc" auto="1">Ταξινόμηση κατά Όνομα (A-Ω)</string>
-    <string name="s_menu_sort_name_desc" auto="1">Ταξινόμηση κατά Όνομα (Ω-Α)</string>
-    <string name="s_menu_sort_date_asc" auto="1">Ανά Νέος</string>
-    <string name="s_menu_sort_date_desc" auto="1">Ταξινόμηση κατά παλαιότερο</string>
-    <string name="s_menu_sort_size_asc" auto="1">Ταξινόμηση από το μεγαλύτερο</string>
-    <string name="s_menu_sort_size_desc" auto="1">Ταξινόμηση με μικρότερο</string>
-    <string name="s_menu_sort_type" auto="1">Ανά Τύπο</string>
-    <string name="s_menu_multi" auto="1">Multi-Επιλέξτε</string>
-    <string name="s_menu_grid" auto="1">Grid View</string>
-    <string name="s_menu_list" auto="1">Προβολή λίστας</string>
-    <string name="s_menu_carousel" auto="1">Carousel</string>
-    <string name="s_menu_hidden" auto="1">Εμφάνιση κρυφών αρχείων</string>
-    <string name="s_menu_thumbs" auto="1">Εμφάνιση μικρογραφίες εικόνων</string>
-    <string name="s_menu_new_folder" auto="1">Νέος φάκελος</string>
-    <string name="s_menu_other" auto="1">Άλλες ρυθμίσεις</string>
-    <string name="s_menu_flush" auto="1">Φλος Cache</string>
-    <string name="s_menu_root" auto="1">Ρίζα</string>
-    <string name="s_menu_prefs_folder" auto="1">Επιλογές Φακέλων</string>
-    <string name="s_menu_prefs_global" auto="1">Παγκόσμια Προτιμήσεις</string>
-    <string name="s_menu_info" auto="1">Πληροφορίες</string>
-    <string name="s_menu_copy" auto="1">Αντιγράψτε</string>
-    <string name="s_menu_cut" auto="1">Κόψτε</string>
-    <string name="s_menu_paste" auto="1">Πάστα</string>
-    <string name="s_menu_delete" auto="1">Διαγραφή</string>
-    <string name="s_menu_share" auto="1">Αποστολή / Κοινή χρήση ...</string>
-    <string name="s_menu_zip" auto="1">Zip αρχείο (α) ...</string>
-    <string name="s_menu_unzip" auto="1">Αποσυμπιέστε ...</string>
-    <string name="s_menu_rename" auto="1">Μετονομασία ...</string>
-    <string name="s_menu_bookmark" auto="1">Προσθήκη σελιδοδείκτη</string>
-    <string name="s_save" auto="1">Εκτός</string>
-    <string name="s_saveas" auto="1">Αποθήκευση ως ...</string>
-    <string name="s_cancel" auto="1">Ακύρωση</string>
-    <string name="s_size" auto="1">Μέγεθος</string>
-    <string name="s_none" auto="1">Κανένας</string>
-    <string name="s_pref_servers" auto="1">Πρόσθετες Διακομιστές</string>
-    <string name="s_pref_server_add" auto="1">+ Προσθήκη νέου διακομιστή</string>
-    <string name="s_pref_display" auto="1">Εμφάνιση Προτιμήσεις</string>
-    <string name="s_pref_hidden" auto="1">Εμφάνιση κρυφών αρχείων</string>
-    <string name="s_pref_hidden_summary" auto="1">Εμφάνιση κρυφών αρχείων και φακέλων</string>
-    <string name="s_pref_thumbs" auto="1">Εμφάνιση μικρογραφίες εικόνων</string>
-    <string name="s_pref_thumbs_summary" auto="1">Εμφάνιση για μια μικρογραφία εικόνας / βίντεο / App αρχεία</string>
-    <string name="s_pref_view" auto="1">Δείτε Λειτουργία</string>
-    <string name="s_pref_view_summary" auto="1">Εμφάνιση αρχείων σε ένα δίκτυο, λίστα, ή καρουσέλ (Honeycomb μόνο)</string>
-    <string name="s_pref_sort" auto="1">Ταξινόμηση</string>
-    <string name="s_pref_sort_summary" auto="1">Επιλέξτε τον τρόπο για να ταξινομήσετε αρχεία και φακέλους</string>
-    <string name="s_pref_advanced" auto="1">Προηγμένη</string>
-    <string name="s_pref_server_name" auto="1">Όνομα διακομιστή</string>
-    <string name="s_pref_server_name_summary" auto="1">Πληκτρολογήστε το Όνομα διακομιστή</string>
-    <string name="s_pref_server_url" auto="1">URL του διακομιστή</string>
-    <string name="s_pref_server_url_summary" auto="1">Εισάγετε την πλήρη διεύθυνση URL του διακομιστή</string>
-    <string name="s_pref_server_host" auto="1">Κεντρικού διακομιστή</string>
-    <string name="s_pref_server_user" auto="1">Χρήστης</string>
-    <string name="s_pref_server_user_summary" auto="1">Όνομα Χρήστη</string>
-    <string name="s_pref_server_password" auto="1">Κωδικός</string>
-    <string name="s_pref_server_password_summary" auto="1">Υποσελίδες</string>
-    <string name="s_pref_server_path" auto="1">Υποκατάλογο</string>
-    <string name="s_pref_server_path_summary" auto="1">Εισάγετε προεπιλεγμένη διαδρομή σύνδεσης</string>
-    <string name="s_pref_server_extras" auto="1">Επιπλέον Ρυθμίσεις</string>
-    <string name="s_pref_server_update" auto="1">Προσθήκη / Ενημέρωση διακομιστή</string>
-    <string name="s_pref_server_type" auto="1">Τύπος διακομιστή</string>
-    <string name="s_files" auto="1">αρχεία</string>
-    <string name="s_create" auto="1">Δημιουργία</string>
-    <string name="s_title_holding_x_files" auto="1">Κρατώντας τα αρχεία %s</string>
-    <string name="s_title_newfolder" auto="1">Δημιουργήστε ένα νέο φάκελο</string>
-    <string name="s_title_send" auto="1">Στείλτε %s</string>
-    <string name="s_title_unzip" auto="1">Αποσυμπιέστε %s</string>
-    <string name="s_title_zip" auto="1">Zip %s</string>
-    <string name="s_title_executing" auto="1">Εκτέλεση</string>
-    <string name="s_title_deleting" auto="1">Διαγραφή</string>
-    <string name="s_title_searching" auto="1">Αναζήτηση</string>
-    <string name="s_title_moving" auto="1">Κίνηση</string>
-    <string name="s_title_copying" auto="1">Αντιγραφή</string>
-    <string name="s_title_zipping" auto="1">Συμπίεση</string>
-    <string name="s_title_unzipping" auto="1">Αποσυμπίεση</string>
-    <string name="s_title_wait" auto="1">Παρακαλώ περιμένετε ...</string>
-    <string name="s_alert_confirm_delete" auto="1">Διαγραφή %s δεν μπορεί να αναιρεθεί. Είστε βέβαιοι ότι θέλετε να συνεχίσετε;</string>
-    <string name="s_alert_rename" auto="1">Παρακαλώ πληκτρολογήστε το νέο όνομα αυτό το αρχείο</string>
-    <string name="s_alert_newfolder" auto="1">Πληκτρολογήστε το όνομα του φακέλου που θέλετε να δημιουργήσετε.</string>
-    <string name="s_alert_unzip" auto="1">Θα θέλατε να αποσυμπιέσετε %s εδώ ή κάποιο άλλο φάκελο;</string>
-    <string name="s_button_unzip_here" auto="1">Αποσυμπιέστε εδώ</string>
-    <string name="s_button_unzip_else" auto="1">Αποσυμπιέστε αλλού ...</string>
-    <string name="s_msg_none" auto="1">Αρχείο (α) δεν θα μπορούσε να είναι</string>
-    <string name="s_msg_some" auto="1">Μερικά αρχείο (α) δεν θα μπορούσε να είναι</string>
-    <string name="s_msg_all" auto="1">Αρχείο (ες) με επιτυχία</string>
-    <string name="s_msg_deleted" auto="1">διαγράφεται</string>
-    <string name="s_msg_moved" auto="1">μετακινηθεί</string>
-    <string name="s_msg_copied" auto="1">αντιγραφεί</string>
-    <string name="s_remove" auto="1">Κατάργηση</string>
-    <string name="s_eject" auto="1">Εξαγωγή</string>
-    <string name="s_update" auto="1">Ενημέρωση</string>
-    <string name="s_alert_bookmark_rename" auto="1">Αλλάξτε τον τίτλο του σελιδοδείκτη σας.</string>
-    <string name="s_title_bookmark_prefix" auto="1">Διαχείριση Σελιδοδείκτης:</string>
-    <string name="s_alert_remove_safe" auto="1">Μπορείτε τώρα να αφαιρέσετε με ασφάλεια τη μονάδα δίσκου.</string>
-    <string name="s_alert_remove_error" auto="1">Δεν είναι δυνατή η εξαγωγή.</string>
-    <string name="s_menu_about" auto="1">Περίπου</string>
-    <string name="s_about_version" auto="1">Εκδοχή</string>
-    <string name="s_about_author" auto="1">Συγγραφέας</string>
-    <string name="s_about_site" auto="1">Δικτυακός τόπος</string>
-    <string name="s_about_email" auto="1">E-mail</string>
-    <string name="s_about_recent" auto="1">Πρόσφατες ενημερώσεις</string>
-    <string name="s_chooser_email" auto="1">Αποστολή σχολίων ...</string>
-    <string name="s_status_loading" auto="1">Φόρτωση ...</string>
-    <string name="s_menu_open" auto="1">Άνοιγμα με ...</string>
-    <string name="s_menu_edit" auto="1">Επεξεργασία με ...</string>
-    <string name="s_pref_stats_title" auto="1">Βοήθεια βελτίωση OpenExplorer</string>
-    <string name="s_pref_stats_summary" auto="1">Αποστολή ανώνυμων στατιστικών στοιχείων χρήσης. Αυτό δεν περιλαμβάνει πληροφορίες που θα μπορούσαν να χρησιμοποιηθούν για την αναγνώριση του χρήστη.</string>
-    <string name="s_error_no_intents" auto="1">Δεν υπάρχουν εγκατεστημένες εφαρμογές μπορούν να διαβάζουν αυτόν τον τύπο αρχείου.</string>
-    <string name="s_menu_root_disabled" auto="1">Απενεργοποιηθεί Root</string>
-    <string name="s_pref_start" auto="1">Ξεκινώντας φακέλου</string>
-    <string name="s_pref_start_summary" auto="1">Δείχνει σε ποιο φάκελο OpenExplorer ξεκινά</string>
-    <string name="s_custom" auto="1">Προσαρμοσμένο ...</string>
-    <string name="s_text_intro_top" auto="1">Καλώς ήλθατε στο OpenExplorer!</string>
-    <string name="s_text_intro_body" auto="1">Ο στόχος του είναι να OpenExplorer να σας κάνει πιο παραγωγικοί στο σύστημα αρχείων Android και στο cloud. Είτε θα πρέπει να διαχειρίζονται τα βίντεο ή τις φωτογραφίες από πολλαπλές τοποθεσίες ή να διαχειριστεί ο διακομιστής σας από απόσταση μέσω FTP, OpenExplorer να ταιριάζει στις ανάγκες σας  n  nΕπιλέξτε ξεκινώντας την πορεία σας.:</string>
-    <string name="s_info_num_folders" auto="1">Αριθμός φακέλων:</string>
-    <string name="s_info_num_files" auto="1">Αριθμός αρχείων:</string>
-    <string name="s_info_last_modified" auto="1">Τελευταία τροποποίηση:</string>
-    <string name="s_info_permissions" auto="1">Δικαιώματα αρχείων:</string>
-    <string name="s_info_permission_read" auto="1">Διαβάστε:</string>
-    <string name="s_info_permission_write" auto="1">Γράψτε:</string>
-    <string name="s_info_permission_execute" auto="1">Εκτέλεση:</string>
-    <string name="s_toggle_keyboard" auto="1">Πληκτρολόγιο</string>
-    <string name="s_show_password" auto="1">Εμφάνιση κωδικού πρόσβασης</string>
-    <string name="s_error_ftp" auto="1">Σφάλμα κατά τη σύνδεση σε FTP</string>
-    <string name="s_prompt_zip" auto="1">Πληκτρολογήστε το όνομα αρχείου του νέου αρχείου Zip:</string>
-    <string name="app_edit" auto="1">Επεξεργασία με OpenExplorer</string>
-    <string name="s_menu_more" auto="1">Περισσότερες επιλογές ...</string>
-    <string name="s_msg_low_memory" auto="1">Χαμηλή μνήμη!</string>
-    <string name="s_clear" auto="1">Διαγραφή</string>
-    <string name="s_menu_delete_all" auto="1">Διαγραφή όλων</string>
-    <string name="s_menu_move_all" auto="1">Μετακίνηση εδώ</string>
-    <string name="s_menu_copy_all" auto="1">Αντιγράψτε εδώ</string>
-    <string name="s_confirm_delete" auto="1">Είστε βέβαιοι ότι θέλετε να διαγράψετε το %s;</string>
-    <string name="s_error_same_destination" auto="1">Ο κατάλογος προορισμού είναι το ίδιο.</string>
-    <string name="s_sample_notification" auto="1">Αντιγραφή -&gt; sdcard:  n 3 Αρχεία</string>
-    <string name="s_pref_fullscreen" auto="1">Πλήρης οθόνη</string>
-    <string name="s_pref_fullscreen_summary_on" auto="1">Απόκρυψη Μπαρ Κοινοποίηση</string>
-    <string name="s_pref_fullscreen_summary_off" auto="1">Εμφάνιση Μπαρ Κοινοποίηση</string>
-    <string name="s_pref_pagers" auto="1">Δείτε συσκευές τηλεειδοποίησης</string>
-    <string name="s_pref_pagers_summary_on" auto="1">Οριζόντια περνώντας = Κατάλογος Πλοήγηση</string>
-    <string name="s_pref_pagers_summary_off" auto="1">Οριζόντια περνώντας άτομα με ειδικές ανάγκες</string>
-    <string name="s_alert_new_media" auto="1">Νέα Μέσα εισαχθεί!</string>
-    <string name="s_warn_pager_title" auto="1">Νέο χαρακτηριστικό: Προβολή συσκευές τηλεειδοποίησης</string>
-    <string name="s_warn_pager" auto="1">Περάστε αριστερά προς τα δεξιά για να ανεβεί ένα κατάλογο και δεξιά προς τα αριστερά για να πάει πίσω. Αυτό θα καταστήσει ευκολότερη την πλοήγηση. Δοκιμάστε το (σε εξωτερικά μέσα)!</string>
-    <string name="s_warn_confirm" auto="1">Καταλαβαίνετε;</string>
-    <string name="s_warn_disable" auto="1">Απενεργοποίηση</string>
-    <string name="s_pref_intent_internal" auto="1">Εσωτερική Προθέσεων</string>
-    <string name="s_pref_intent_internal_on" auto="1">Χρησιμοποιήστε OpenExplorer Διευθυντής Πρόθεσης</string>
-    <string name="s_pref_intent_internal_off" auto="1">Χρησιμοποιήστε το Διαχειριστή του Συστήματος Πρόθεσης</string>
-    <string name="s_pref_text_internal" auto="1">Χρησιμοποιήστε εσωτερική Επεξεργαστής κειμένου</string>
-    <string name="s_text_editor_title" auto="1">Επεξεργαστής κειμένου</string>
-    <string name="s_pref_show_root" auto="1">Εμφάνιση root σύστημα αρχείων (/)</string>
-    <string name="s_pref_show_internal" auto="1">Εμφάνιση Εσωτερική Media</string>
-    <string name="s_pref_show_external" auto="1">Εμφάνιση εξωτερικών μέσων</string>
-    <string name="s_error_no_media" auto="1">Φαίνεται σαν να μην υπάρχει μέσα τοποθετηθεί. Παρακαλούμε να απενεργοποιήσετε την κοινή χρήση USB ή επαν-ένθετο μέσα μαζικής ενημέρωσης.</string>
-    <string name="s_prompt_password" auto="1">Καταχωρήστε τον κωδικό πρόσβασης</string>
-    <string name="s_add" auto="1">Προσθήκη</string>
-    <string name="s_server_ftp" auto="1">FTP</string>
-    <string name="s_server_sftp" auto="1">SFTP</string>
-    <string name="s_pref_server_port" auto="1">Λιμάνι</string>
-    <string name="s_about_buildtime" auto="1">Ημερομηνία κατασκευής</string>
-    <string name="s_default" auto="1">Προεπιλογή</string>
-    <string name="s_pref_timeout" auto="1">Χρονικό όριο</string>
-    <string name="s_pref_timeout_summary" auto="1">Χρονικό όριο σε δευτερόλεπτα</string>
-    <string name="s_menu_up" auto="1">Ανεβείτε</string>
-    <string name="s_prompt_unzip" auto="1">Εισάγετε τη διαδρομή για να αποσυμπιέσετε σε:</string>
-    <string name="s_pref_hardware_accel" auto="1">Enable hardware acceleration για</string>
-    <string name="s_pref_honeyplus" auto="1">Το Android 3.0 + Ρυθμίσεις</string>
-    <string name="s_pref_actionmode" auto="1">Τρόπος δράσης</string>
-    <string name="s_pref_actionmode_enabled" auto="1">Χρησιμοποιήστε τη λειτουργία δράσης</string>
-    <string name="s_pref_actionmode_disabled" auto="1">Χρησιμοποιήστε το πρότυπο μενού περιβάλλοντος</string>
-    <string name="s_server_smb" auto="1">SMB / Windows</string>
-    <string name="s_bookmark_drives" auto="1">Δίσκοι</string>
-    <string name="s_bookmark_smart" auto="1">Έξυπνη Φάκελοι</string>
-    <string name="s_bookmark_favorites" auto="1">Αγαπημένα</string>
-    <string name="s_bookmark_servers" auto="1">Διακομιστές</string>
-    <string name="s_bookmark_cache" auto="1">Κρύπτη</string>
-    <string name="s_info_totalspace" auto="1">Συνολικός χώρος στο δίσκο:</string>
-    <string name="s_info_freespace" auto="1">Διαθέσιμος χώρος στο δίσκο:</string>
-    <string name="s_status_rate" auto="1">Τιμή:</string>
-    <string name="s_about_hardware" auto="1">Υλικό</string>
-    <string name="s_menu_refresh" auto="1">Ανανέωση φακέλου</string>
-    <string name="s_pref_reset" auto="1">Επαναφορά Προβολές</string>
-    <string name="s_toast_complete" auto="1">Πλήρης Λειτουργία!</string>
-    <string name="s_pref_reset_summary" auto="1">Κάντε κλικ εδώ για να αφαιρέσετε όλες φάκελο ειδικές ρυθμίσεις προβολής, η επιστροφή σε μια προεπιλεγμένη κατάσταση.</string>
-    <string name="s_prompt_path" auto="1">Εισάγετε τη διαδρομή:</string>
-    <string name="s_prompt_search" auto="1">Αναζήτηση για:</string>
-    <string name="s_prompt_search_within" auto="1">Αναζήτηση σε:</string>
-    <string name="s_pref_view_category" auto="1">Σελιδοδείκτης Προτιμήσεις View</string>
-    <string name="s_pref_show_videos" auto="1">Εμφάνιση Βίντεο</string>
-    <string name="s_pref_show_photos" auto="1">Εμφάνιση Φωτογραφίες</string>
-    <string name="s_pref_show_music" auto="1">Εμφάνιση Μουσική</string>
-    <string name="s_pref_show_downloads" auto="1">Εμφάνιση Λήψεις</string>
-    <string name="s_hide" auto="1">Απόκρυψη</string>
-    <string name="s_show" auto="1">Εμφάνιση</string>
-    <string name="s_msg_event_cancelled" auto="1">Εκδήλωση ακυρωθεί.</string>
-    <string name="s_alert_newfolder_folder" auto="1">Δημιουργία νέου φακέλου στο:</string>
-    <string name="s_pref_fancy_category" auto="1">Fancy Ρυθμίσεις οθόνης</string>
-    <string name="s_pref_fancy_menus" auto="1">Fancy μενού</string>
-    <string name="s_pref_fancy_context" auto="1">Fancy μενού περιβάλλοντος</string>
-    <string name="s_search_files" auto="1">Αναζήτηση συστήματος αρχείων</string>
-    <string name="s_menu_exit" auto="1">Έξοδος</string>
-    <string name="s_warn_wtf_message" auto="1">Ωχ! Φαίνεται ότι ένα ανεπίλυτο σφάλμα! Δεδομένου ότι αυτό είναι ένα κοινό θέμα σε πολλές εφαρμογές Βήτα, ο μόνος τρόπος για την επίλυση αυτών των ζητημάτων είναι να λαμβάνει αναφορές από διάφορες συσκευές, όπως η δική σας, προκειμένου να καθορίσουν τον τρόπο να διορθώσετε το πρόβλημα. Μπορεί να στέλνουμε τέτοια έκθεση, που περιέχει μόνο ανώνυμα δεδομένα, με τον κύριο του έργου;</string>
-    <string name="s_warn_wtf_ps" auto="1">*** Παρακαλώ σημειώστε, αυτή η εφαρμογή είναι σε Beta. Παρακαλώ μην δώσει σε αυτό το app μια κακή βαθμολογία απλά γιατί κολλάει. Απλά απεγκαταστήσετε αν σας ενοχλεί πραγματικά. Ευχαριστώ!</string>
-    <string name="s_yes" auto="1">Ναί</string>
-    <string name="s_no" auto="1">Όχι</string>
-    <string name="s_wtf_preview" auto="1">Δεδομένα Έκθεση Προεπισκόπηση</string>
-    <string name="s_wtf_remember" auto="1">Να μην ερωτηθώ ξανά</string>
-    <string name="s_pref_basebar" auto="1">Διαχωρισμός Μπαρ δράσης</string>
-    <string name="s_pref_basebar_on" auto="1">Κουμπιά δράσης στο κάτω μέρος της οθόνης στη λειτουργία πορτραίτου</string>
-    <string name="s_pref_basebar_off" auto="1">Δράση κουμπιά στο πάνω μέρος της οθόνης (όταν είναι διαθέσιμο)</string>
-    <string name="s_pref_autowtf" auto="1">Αυτόματη αποστολή Crash Εκθέσεις</string>
-    <string name="s_pref_autowtf_summary" auto="1">Όταν μια εξαίρεση που δεν αντιμετωπίστηκε συμβαίνει, να στείλετε αυτόματα την έκθεση.</string>
-    <string name="s_split_auto" auto="1">Αυτόματο</string>
-    <string name="s_split_top" auto="1">Κουμπιά Δύναμη στην κορυφή</string>
-    <string name="s_split_top_single" auto="1">Δύναμη Ενιαία κουμπί στην κορυφή</string>
-    <string name="s_split_bottom" auto="1">Κουμπιά δύναμη προς τα κάτω</string>
-    <string name="s_split_none" auto="1">Τοποθετήστε όλα τα κουμπιά στο μενού Σύστημα</string>
-    <string name="s_about_screensize" auto="1">Μέγεθος οθόνης</string>
-    <string name="s_about_density" auto="1">Πυκνότητα</string>
-    <string name="s_menu_location_int" auto="1">Εσωτερική διαδρομή μνήμης</string>
-    <string name="s_menu_location_ext" auto="1">Εξωτερικές διαδρομής μνήμης</string>
-    <string name="s_wtf_context" auto="1">Περιγράψτε πλαίσιο της συντριβής:</string>
-    <string name="thanks" auto="1">Σας ευχαριστούμε!</string>
-    <string name="menu_view_font_small" auto="1">Μικρό μέγεθος γραμματοσειράς</string>
-    <string name="menu_view_font_medium" auto="1">Μεσαίο μέγεθος γραμματοσειράς</string>
-    <string name="menu_view_font_large" auto="1">Μέγεθος γραμματοσειράς Μεγάλο</string>
+    <string name="app_name">Open Explorer</string>
+    <string name="s_photos">Φωτογραφίες </string>
+    <string name="s_videos">Βίντεο </string>
+    <string name="s_music">Μουσική </string>
+    <string name="s_downloads">Κατεβάσματα </string>
+    <string name="s_external">Εξωτερική </string>
+    <string name="s_internal">Εσωτερική </string>
+    <string name="s_view">Προβολή </string>
+    <string name="s_bookmarks">Αγαπημένα </string>
+    <string name="s_menu_favorites">Άνοιγμα / κλείσιμο φακέλων </string>
+    <string name="s_menu_sort">Προβολή </string>
+    <string name="s_menu_sort_name_asc">Προβολή κατά όνομα (Α-Ω)</string>
+    <string name="s_menu_sort_name_desc">Προβολή κατά όνομα (Ω-Α)</string>
+    <string name="s_menu_sort_date_asc">Προβολή νεωτερου </string>
+    <string name="s_menu_sort_date_desc">Προβολή παλαιωτερου</string>
+    <string name="s_menu_sort_size_asc">Προβολή μεγαλυτερου</string>
+    <string name="s_menu_sort_size_desc">Προβολή μικρότερου </string>
+    <string name="s_menu_sort_type">Προβολή κατά τύπο αρχείου </string>
+    <string name="s_menu_multi">Πολλαπλή επιλογή </string>
+    <string name="s_menu_grid">Προβολή σε πίνακα </string>
+    <string name="s_menu_list">Προβολή σε λίστα </string>
+    <string name="s_menu_carousel">Καρουζελ </string>
+    <string name="s_menu_hidden">Προβολή κρυφων αρχείων </string>
+    <string name="s_menu_thumbs">Προβολή εικονιδίων </string>
+    <string name="s_menu_new_folder">Νέος φάκελος </string>
+    <string name="s_menu_other">Άλλες ρυθμίσεις </string>
+    <string name="s_menu_flush">Καθαρισμός προσωρινής μνήμης </string>
+    <string name="s_menu_root">Αρχικός κατάλογος </string>
+    <string name="s_menu_prefs_folder">Προτιμήσεις φακέλου </string>
+    <string name="s_menu_prefs_global">Γενικές. Προτιμήσεις </string>
+    <string name="s_menu_info">Πληροφορίες </string>
+    <string name="s_menu_copy">Αντιγραφή </string>
+    <string name="s_menu_cut">Αποκοπή </string>
+    <string name="s_menu_paste">Επικόλληση </string>
+    <string name="s_menu_delete">Διαγραφή </string>
+    <string name="s_menu_share">Αποστολή / διαμοιρασμός </string>
+    <string name="s_menu_zip">Συμπιεση</string>
+    <string name="s_menu_unzip">Αποσυμπιεση...</string>
+    <string name="s_menu_rename">Μετανομασια...</string>
+    <string name="s_menu_bookmark">Προσθήκη στους σελιδοδεικτες</string>
+    <string name="s_save">Αποθήκευση </string>
+    <string name="s_saveas">Αποθήκευση ως...</string>
+    <string name="s_cancel">Ακύρωση </string>
+    <string name="s_size">Μέγεθος </string>
+    <string name="s_none">Κανένα </string>
+    <string name="s_pref_servers">Επιπρόσθετοι διακομιστές </string>
+    <string name="s_pref_server_add">+ Προσθήκη νέου διακομιστή </string>
+    <string name="s_pref_display">Προβολή επιλογών </string>
+    <string name="s_pref_hidden">Προβολή κρυφων αρχείων </string>
+    <string name="s_pref_hidden_summary">Προβολή κρυφων αρχείων και φακελων</string>
+    <string name="s_pref_thumbs">Προβολή φωτογραφιών σ πλακίδια </string>
+    <string name="s_pref_thumbs_summary">Προβολή εικονιδίου για αρχείο φωτογραφίας / βίντεο / προγραμμάτος</string>
+    <string name="s_pref_view">Επιλογή προβολής </string>
+    <string name="s_pref_view_summary">Προβολή αρχείων σε πινακα,λίστα ή καρουζελ (μόνο για Honeycomb)</string>
+    <string name="s_pref_sort">Προβολή </string>
+    <string name="s_pref_sort_summary">Επιλέξετε προβολή αρχείων και φακελων </string>
+    <string name="s_pref_advanced">Προηγμένα </string>
+    <string name="s_pref_server_name">Όνομα διακομιστή </string>
+    <string name="s_pref_server_name_summary">Πληκτρογηστε το ονομα του διακομιστή </string>
+    <string name="s_pref_server_url">URL διακομιστή </string>
+    <string name="s_pref_server_url_summary">Πληκτρολογηστε το πλήρες URL του διακομιστή </string>
+    <string name="s_pref_server_host">Διεύθυνση διακομιστή </string>
+    <string name="s_pref_server_user">Χρήστης </string>
+    <string name="s_pref_server_user_summary">Όνομα χρήστη </string>
+    <string name="s_pref_server_password">Συνθηματικό </string>
+    <string name="s_pref_server_password_summary">Συνθηματικό εισόδου </string>
+    <string name="s_pref_server_path">Υποφακελος </string>
+    <string name="s_pref_server_path_summary">Εισάγετε την διεύθυνση εισόδου </string>
+    <string name="s_pref_server_extras">Επιπλέον ρυθμίσεις </string>
+    <string name="s_pref_server_update">Προσθήκη / επεξεργασία διακομιστή </string>
+    <string name="s_pref_server_type">Τύπος διακομιστή </string>
+    <string name="s_files">Αρχεία </string>
+    <string name="s_create">Δημιουργία </string>
+    <string name="s_title_holding_x_files">Κράτηση %s αρχείων </string>
+    <string name="s_title_newfolder">Δημιουργία νέου φακέλου </string>
+    <string name="s_title_send">Αποστόλη xxx</string>
+    <string name="s_title_unzip">Αποσυμπίεση xxx</string>
+    <string name="s_title_zip">Συμπιεση xxx</string>
+    <string name="s_title_executing">Εκτέλεση σε εξέλιξη </string>
+    <string name="s_title_deleting">Διαγραφή σε εξέλιξη </string>
+    <string name="s_title_searching">Αναζήτηση σε εξέλιξη </string>
+    <string name="s_title_moving">Μετακίνηση. Σε εξέλιξη;</string>
+    <string name="s_title_copying">Αντιγραφή σε εξέλιξη </string>
+    <string name="s_title_zipping">Συμπίεση σε εξελιξης</string>
+    <string name="s_title_unzipping">Αποσυμπίεση σε εξέλιξη </string>
+    <string name="s_title_wait">Παρακαλώ περιμένετε...</string>
+    <string name="s_alert_confirm_delete">Η διαγραφή %s δεν είναι αναστρέψιμη.Είστε σίγουροι ότι θέλετε να συνεχίσετε;</string>
+    <string name="s_alert_rename">Παρακαλώ πληκτρολογηστε το νέο όνομα για το αρχείο </string>
+    <string name="s_alert_newfolder">Πληκτρολογηστε το όνομα του νέου φακέλου που θα δημιουργησετε.</string>
+    <string name="s_alert_unzip">Θέλετε να αποσυμπιεστει το %s εδώ ή σε κάποιον άλλο φάκελο;</string>
+    <string name="s_button_unzip_here">Αποσυμπιεση εδώ </string>
+    <string name="s_button_unzip_else">Επιλογή φακέλου αποσυμπίεσης </string>
+    <string name="s_msg_none">Αδύνατη δημιουργία αρχείου(-ων)</string>
+    <string name="s_msg_some">Ορισμένα αρχεία δεν μπορούν </string>
+    <string name="s_msg_all">Το αρχείο(-α) επιτυχώς </string>
+    <string name="s_msg_deleted">Διαγράφηκαν </string>
+    <string name="s_msg_moved">Μετακινηθηκαν</string>
+    <string name="s_msg_copied">Αντιγραφηκαν </string>
+    <string name="s_remove">Αφαιρέθηκαν </string>
+    <string name="s_eject">Εξειχθησαν </string>
+    <string name="s_update">Αναβαθμηση</string>
+    <string name="s_alert_bookmark_rename">Αλλάξτε το όνομα του σελιδοδεικτη</string>
+    <string name="s_title_bookmark_prefix">Επεξεργασία σελιδοδεικτη:</string>
+    <string name="s_alert_remove_safe">Τώρα μπορειτε να αφαιρέσετε τον δίσκο με ασφάλεια </string>
+    <string name="s_alert_remove_error">Αδυναμία αποβολης </string>
+    <string name="s_menu_about">Περι</string>
+    <string name="s_about_version">Εκδοση</string>
+    <string name="s_about_author">Συγγραφέας </string>
+    <string name="s_about_site">Ιστοσελίδα </string>
+    <string name="s_about_email">Ηλεκτρονικό ταχυδρομείο </string>
+    <string name="s_about_recent">Πρόσφατες αναβαθμησεις</string>
+    <string name="s_chooser_email">Αποστολή σχολείων...</string>
+    <string name="s_status_loading">Φόρτωση...</string>
+    <string name="s_menu_open">Άνοιγμα με...</string>
+    <string name="s_menu_edit">Τροποποίηση με...</string>
+    <string name="s_pref_stats_title">Βοηθήστε στην βελτίωση του open explorer </string>
+    <string name="s_pref_stats_summary">Αποστολή ανώνυμων στατιστικών χρήσης. Δεν θα συμπεριληφθουν πληροφορίες που ίσως αναγνωριστεί ο χρήστης.</string>
+    <string name="s_error_no_intents">Δεν υπάρχει πρόγραμμα που μπορεί να ανοίξει αυτόν τον τύπο αρχείου.</string>
+    <string name="s_menu_root_disabled">Ανενεργός διαχειριστής συστήματος (root)</string>
+    <string name="s_pref_start">Φάκελος έναρξης </string>
+    <string name="s_pref_start_summary">Δηλώνει σε ποιον φάκελο θα εκκινεί ο Open Explorer</string>
+    <string name="s_custom">Άλλο...</string>
+    <string name="s_text_intro_top">Καλώς ορίσατε στον Open Explorer!</string>
+    <string name="s_text_intro_body">Επιλογή αρχικού καταλόγου:</string>
+    <string name="s_info_num_folders">Αριθμός φακέλων:</string>
+    <string name="s_info_num_files">Αριθμός αρχείων:</string>
+    <string name="s_info_last_modified">Τελευταία τροποποίηση:</string>
+    <string name="s_info_permissions">Δικαιώματα αρχείου:</string>
+    <string name="s_info_permission_read">Ανάγνωση:</string>
+    <string name="s_info_permission_write">Εγγραφή:</string>
+    <string name="s_info_permission_execute">Εκτέλεση:</string>
+    <string name="s_toggle_keyboard">Πληκτρολόγιο </string>
+    <string name="s_show_password">Προβολή συνθηματικου </string>
+    <string name="s_error_ftp">Σφάλμα στην προσπάθεια σύνδεσης με το δίκτυο </string>
+    <string name="s_prompt_zip">Εισάγετε το όνομα για το νέο αρχείο Zip:</string>
+    <string name="app_edit">Άνοιγμα με τον Open Exporer</string>
+    <string name="s_menu_more">Περισσότερες επιιλογές...</string>
+    <string name="s_msg_low_memory">Ανεπαρκής μνήμη!</string>
+    <string name="s_clear">Καθαρισμός </string>
+    <string name="s_menu_delete_all">Διαγραφή όλων </string>
+    <string name="s_menu_move_all">Μετακίνηση εδώ </string>
+    <string name="s_menu_copy_all">Αντιγραφή εδώ </string>
+    <string name="s_confirm_delete">Είστε σίγουροι ότι θέλετε να διαγράψετε %s ;</string>
+    <string name="s_error_same_destination">Ο φάκελος προορισμού είναι ο ίδιος.</string>
+    <string name="s_sample_notification">Αντιγραφή -&gt; κάρτα μνήμης: 3 αρχεία </string>
+    <string name="s_pref_fullscreen">Πλήρης οθόνη </string>
+    <string name="s_pref_fullscreen_summary_on">Απόκρυψη μπάρας πληροφόρησης </string>
+    <string name="s_pref_fullscreen_summary_off">Προβολή μπάρας πληροφόρησης </string>
+    <string name="s_pref_pagers">Προβολή δεικτών </string>
+    <string name="s_pref_pagers_summary_on">Οριζόντιο </string>
+    <string name="s_pref_pagers_summary_off">Το οριζόντιο συρσιμο είναι απενεργοποιημενο</string>
+    <string name="s_alert_new_media">Προστέθηκε νέο μέσο! </string>
+    <string name="s_warn_pager_title">Νέα λειτουργία: προβολή δεικτών </string>
+    <string name="s_warn_pager">Σύρετε από αριστερά προς τα δεξιά για να πάτε ψηλότερα στους φακέλους και δεξιά προς τα αριστερά για επιστροφή στον προηγούμενο φάκελο.Δοκιμάστε το (σε εξωτερικό μέσο αποθήκευσης)!</string>
+    <string name="s_warn_confirm">Το καταλάβατε;</string>
+    <string name="s_warn_disable">Απενεργοποιηση</string>
+    <string name="s_pref_intent_internal">Εσωτερικός περιηγητής</string>
+    <string name="s_pref_intent_internal_on">Χρησιμοποιηστε τον Open Explorer για περιηγητή αρχείων </string>
+    <string name="s_pref_intent_internal_off">Χρησιμοποιείστε τον περιηγητή του συστήματος </string>
+    <string name="s_pref_text_internal">Χρησιμοποιειστε τον επεξεργαστή εγγράφων </string>
+    <string name="s_text_editor_title">Επεξεργαστής εγγράφων </string>
+    <string name="s_pref_show_root">Εμφάνισε τον κατάλογο το συστήματος (/)</string>
+    <string name="s_pref_show_internal">Εμφάνισε το εσωτερικό μέσο αποθήκευσης </string>
+    <string name="s_pref_show_external">Εμφάνισε το εξωτερικό μέσο αποθηκευσης</string>
+    <string name="s_error_no_media">Φαίνεται πως δεν εχει εισαχθεί κάποιο μέσο αποθήκευσης.Παρακαλώ απενεργοποιηστε την λειτουργία διαμοιρασμού USB η επανατοποθετηστε το μέσο.</string>
+    <string name="s_prompt_password">Εισάγετε το συνθηματικό </string>
+    <string name="s_add">Προσθηκη</string>
+    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_sftp">SFTP</string>
+    <string name="s_pref_server_port">Port</string>
+    <string name="s_about_buildtime">Ημερομηνία χτησιματος</string>
+    <string name="s_default">Προκαθορισμενο</string>
+    <string name="s_pref_timeout">Παρέλαση χρονου</string>
+    <string name="s_pref_timeout_summary">Παρέλαση χρόνου σε δευτερόλεπτα </string>
+    <string name="s_menu_up">Πάνω </string>
+    <string name="s_prompt_unzip">Εισάγετε το φάκελο που θα γίνει η αποσυμπίεση </string>
+    <string name="s_pref_hardware_accel">Ενεργοποιηστε την επιταχυνση υλικού </string>
+    <string name="s_pref_honeyplus">Ρυθμίσεις για Android 3.0+ </string>
+    <string name="s_pref_actionmode">Προβολή ενέργειας </string>
+    <string name="s_pref_actionmode_enabled">Χρησιμοποιηστε την προβολή ενέργειας </string>
+    <string name="s_pref_actionmode_disabled">Χρησιμοποιησε κλασσικό μενού </string>
+    <string name="s_server_smb">SMB/Windows</string>
+    <string name="s_bookmark_drives">Δίσκοι </string>
+    <string name="s_bookmark_smart">Έξυπνοι φάκελοι </string>
+    <string name="s_bookmark_favorites">Αγαπημένα </string>
+    <string name="s_bookmark_servers">Διακομιστές </string>
+    <string name="s_bookmark_cache">Προσωρινή μνήμη </string>
+    <string name="s_info_totalspace">Σύνολο χώρου δίσκου:</string>
+    <string name="s_info_freespace">Ελεύθερος χώρος δίσκου:</string>
+    <string name="s_status_rate">Τιμη:</string>
+    <string name="s_about_hardware">Υλικό </string>
+    <string name="s_menu_refresh">Ανανέωση φακέλου </string>
+    <string name="s_pref_reset">Επαναφορά προβολων</string>
+    <string name="s_toast_complete">Η διαδικασία ολοκληρώθηκε!</string>
+    <string name="s_pref_reset_summary">Πατήστε εδώ για την απόκρυψη όλων των ρυθμίσεων προβολής φακέλων,επαναφορά σε αρχικές ρυθμίσεις.</string>
+    <string name="s_prompt_path">Εισάγετε τη διαδρομή του φακέλου:</string>
+    <string name="s_prompt_search">Αναζήτηση για:</string>
+    <string name="s_prompt_search_within">Αναζήτηση μέσα σε:</string>
+    <string name="s_pref_view_category">Προβολή ρυθμίσεων σελιδοδεικτων</string>
+    <string name="s_pref_show_videos">Εμφάνιση βίντεο </string>
+    <string name="s_pref_show_photos">Εμφάνιση φωτογραφιών </string>
+    <string name="s_pref_show_music">Εμφάνιση μουσικής </string>
+    <string name="s_pref_show_downloads">Εμφάνιση λήψεων </string>
+    <string name="s_hide">Αποκρυψη</string>
+    <string name="s_show">Εμφανιση</string>
+    <string name="s_msg_event_cancelled">Η διαδικασία ακυρώθηκε.</string>
+    <string name="s_alert_newfolder_folder">Δημιουργία φακέλου σε:</string>
+    <string name="s_pref_fancy_category">Εφέ στις ρυθμίσεις </string>
+    <string name="s_pref_fancy_menus">Εντυπωσιακό μενού </string>
+    <string name="s_pref_fancy_context">Εφέ στα μενού πλαισίου </string>
+    <string name="s_search_files">Αναζήτηση στο σύστημα αρχείων </string>
+    <string name="s_menu_exit">Έξοδος </string>
+    <string name="s_warn_wtf_message">Ωπ! Εμφανίστηκε ένα απρόσμενο σφάλμα! Αυτό είναι σύνηθες σε πολλές εφαρμογές που βρίσκονται σε στάδιο εξέλιξης, ο μόνος τρόπος απασφαλματωσης είναι η λήψη αναφορών από διαφορετικές συσκευές, όπως και η δική σας, για να μπορέσουμε να διορθώσουμε το πρόβλημα.Θα θέλατε να αποστείλετε μια αναφορά του προβληματος,χωρίς να συμπεριλαμβανονται προσωπικές πληροφορίες,στον προγραμματιστη της εφαρμογής;</string>
+    <string name="s_warn_wtf_ps">***Παρακαλώ σημειώστε ότι αυτή η εφαρμογή είναι ακόμη σε στάδιο εξέλιξης.Μην αφήνετε αρνητικές βαθμολογίες λόγω του οτι δεν είναι σταθερή.Αν σας ενοχλεί απλά διαγράψτε τη.</string>
+    <string name="s_yes">Ναι </string>
+    <string name="s_no">Όχι </string>
+    <string name="s_wtf_preview">Πρόβαλε την αναφορά </string>
+    <string name="s_wtf_remember">Να μην ερωτηθείτε ξανά </string>
+    <string name="s_pref_basebar">Διαχωρισμός μπάρας ενεργειών </string>
+    <string name="s_pref_basebar_on">Πλήκτρα ενεργειών στο πάνω μέρος της οθόνης σε προβολή πορτραίτου</string>
+    <string name="s_pref_basebar_off">Πλήκτρα ενεργειών στο πάνω μέρος της οθόνης. (όπου αυτό είναι δυνατό)</string>
+    <string name="s_pref_autowtf">Αυτόματη αποστολή αναφοράς σφαλματων</string>
+    <string name="s_pref_autowtf_summary">Όταν συμβαίνει αναπάντεχο σφαλμα στείλε την αναφορά αυτόματα.</string>
+    <string name="s_split_auto">Αυτόματο </string>
+    <string name="s_split_top">Επιβολή εικονιδίων στο πάνω μέρος </string>
+    <string name="s_split_top_single">Επιβολή ενός εικονιδίου στο πάνω μέρος </string>
+    <string name="s_split_bottom">Επιβολή εικονιδίων στο κάτω μέρος </string>
+    <string name="s_split_none">Τοποθετήστε όλα τα εικονίδια στο μενού σύστημα </string>
+    <string name="s_about_screensize">Μέγεθος οθόνης </string>
+    <string name="s_about_density">Πυκνότητα </string>
+    <string name="s_menu_location_int">Διαδρομή εσωτερικής μνήμης </string>
+    <string name="s_menu_location_ext">Διαδρομή εξωτερικής μνήμης </string>
+    <string name="s_wtf_context">Παρακαλώ περιγράψτε το περιεχόμενο του σφάλματος </string>
+    <string name="thanks">Ευχαριστώ! </string>
+    <string name="menu_view_font_small">Μικρή γραμματοσειρα</string>
+    <string name="menu_view_font_medium">Μεσαία γραμματοσειρα </string>
+    <string name="menu_view_font_large">Μεγάλη γραματοσειρα </string>
     <string name="app_description" auto="1">Άνοιγμα Explorer - Ανοικτή πηγή διαχειριστής αρχείων για όλες τις συσκευές! (Δισκία, τηλέφωνα, τηλεοράσεις Google, σάντουιτς!)  N-Πλήρης φάκελος του συστήματος διαχείρισης  n-USB, SD και άλλα εξωτερικά μέσα  n-Δίκτυο Συνδεόμενο (FTP, SFTP, SMB / Samba / Windows / LAN / WiFi)  n - Επεξεργαστής κειμένου  n-Smart Φάκελοι ότι σάρωση για διαφορετικούς τύπους μέσων (βίντεο, φωτογραφίες, μουσική, downloads)  n-Προβολή Pager κατάλογο πλοήγησης (περάστε το δικαίωμα να ανεβεί ένα κατάλογο)  n-Υπερχρήστη / Root ικανότητα στη λίστα / διαβάσετε φακέλους συστήματος (σύστημα δεν γράφουν ακόμη)  n  nFeatures να έρθει:  n-καρτέλες Επεξεργαστής κειμένου  n-Περισσότερες δυνατότητες δικτύωσης (Dropbox, Box.net, Sky Drive)  n-Χωρίς μνήμη cache δομή του αρχείου, το οποίο θα θυμόμαστε τα αρχείαέχετε σε διαφορετικά μέρη χωρίς να χρειάζεται να συνδεθεί  n-χώρου στο δίσκο χάρτη θερμότητας δείχνει πού είναι μεγαλύτερα αρχεία σας  n  n * ΣΗΜΕΙΩΣΗ: Η εφαρμογή αυτή είναι σε Beta. Υπάρχουν ακόμα πολλά σφάλματα. Εάν δεν θέλετε να αντιμετωπίσετε αυτά τα σφάλματα, παρακαλούμε να μην κατεβάσετε αυτό το app. Αν θέλετε να με βοηθήσει να βρω αυτά τα σφάλματα, παρακαλώ στείλτε μου ή να συνεργαστούν μαζί μου για GitHub (https://github.com/BrandoCommando/OpenExplorer/). Παρακαλώ θυμηθείτε κακή βαθμολογία βοηθούν κανέναν.</string>
-    <string name="alert_translate_google" auto="1">Γεια σας, αυτή η μετάφραση παρέχεται από την Google Translate. Αν γνωρίζετε αγγλικά, καθώς και το %s, και θα ήθελα να βοηθήσει στην παροχή μιας καλύτερης μετάφρασης, κάντε κλικ στο κουμπί αυτό:</string>
-    <string name="alert_translate_none" auto="1">Γεια σου, φαίνεται ότι χρησιμοποιείτε μια μη υποστηριζόμενη γλώσσα. Ξέρετε αγγλικά και %s; Αν θα θέλατε να βοηθήσει στην παροχή μιας σωστής μετάφρασης, κάντε κλικ εδώ:</string>
-    <string name="button_translate" auto="1">Μετάφραση</string>
+    <string name="alert_translate_google">Γειά σας, αυτή η μετάφραση έγινε από το Google Translate.Αν γνωρίζετε Αγγλικά και %s , και θέλετε να βοηθήσετε στη μετάφραση, παρακαλώ πατήστε εδώ:</string>
+    <string name="alert_translate_none">Γειά σας,φαίνεται πως χρησιμοποιεί μια γλώσσα που δεν υποστηρίζετε.Μιλάτε Αγγλικά και %s; θα θέλατε να βοηθήσετε στο να δώσετε μια σωστή μετάφραση; Αν ναι κανέτε κλικ εδώ:</string>
+    <string name="button_translate">Μετάφραση </string>
     <string name="httpError">Παρουσιάστηκε σφάλμα δικτύου.</string>
     <string name="httpErrorAuth">Ο έλεγχος ταυτότητας δεν ήταν επιτυχής.</string>
     <string name="httpErrorProxyAuth">Ο έλεγχος ταυτότητας μέσω του διακομιστή μεσολάβησης δεν ήταν επιτυχής.</string>
@@ -280,4 +280,20 @@
     <string name="storage_usb">Κάρτα SD</string>
     <string name="extract_edit_menu_button">Χώρος αποθήκευσης USB</string>
     <string name="activity_chooser_view_see_all">Επεξεργασία...</string>
+    <string name="s_title_picker" auto="1">Παρακαλώ επιλέξτε τον κατάλογο</string>
+    <string name="selected_path" auto="1">Επιλεγμένα διαδρομής:</string>
+    <string name="filename" auto="1">Όνομα</string>
+    <string name="s_msg_saved" auto="1">αποθηκευτεί</string>
+    <string name="s_menu_view_line_numbers" auto="1">Αριθμοί γραμμής</string>
+    <string name="warn_text_editor" auto="1">Καλώς ήρθατε στο Επεξεργαστής κειμένου. Παρακαλώ πολύ πιέστε το κείμενο να τεθεί σε κατάσταση επεξεργασίας.</string>
+    <string name="warn_networking" auto="1">Καλώς ήρθατε στο Δίκτυο. Παρακαλώ σημειώστε ότι το χαρακτηριστικό αυτό είναι ακόμα υπό ανάπτυξη και μπορεί να περιέχει σφάλματα. Παρακαλώ μην δώσει μια κακή αξιολόγηση της αγοράς, αν βρείτε κάποιο από αυτά τα σφάλματα.</string>
+    <string name="s_menu_new_file" auto="1">Νέο αρχείο κειμένου</string>
+    <string name="s_msg_created" auto="1">δημιουργήθηκε</string>
+    <string name="s_title_newfile" auto="1">Νέα Αρχείο</string>
+    <string name="s_alert_newfile_folder" auto="1">Δημιουργία νέου αρχείου σε:</string>
+    <string name="s_alert_newfile" auto="1">Πληκτρολογήστε το όνομα του νέου αρχείου:</string>
+    <string name="s_alert_exit" auto="1">Είστε σίγουροι ότι θέλετε να βγείτε;</string>
+    <string name="s_alert_clipboard" auto="1">Αντιγραφεί στο πρόχειρο</string>
+    <string name="s_alert_restart" auto="1">Επανεκκίνηση. Παρακαλώ περιμένετε.</string>
+    <string name="language" auto="1">γλώσσα</string>
 </resources>

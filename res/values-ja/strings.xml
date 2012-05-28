@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">エクスプローラを開き</string>
+    <string name="app_name">オープン エクスプローラー</string>
     <string name="s_photos" auto="1">写真</string>
     <string name="s_videos" auto="1">ビデオ</string>
     <string name="s_music" auto="1">音楽</string>
@@ -9,23 +9,23 @@
     <string name="s_internal" auto="1">内部</string>
     <string name="s_view" auto="1">ビュー</string>
     <string name="s_bookmarks" auto="1">ブックマーク</string>
-    <string name="s_menu_favorites" auto="1">トグルブックマーク</string>
-    <string name="s_menu_sort" auto="1">ソート</string>
-    <string name="s_menu_sort_name_asc" auto="1">名で並べ替え（A-Z）</string>
-    <string name="s_menu_sort_name_desc" auto="1">名で並べ替え（Z-A）</string>
-    <string name="s_menu_sort_date_asc" auto="1">ランキングで並べ替え</string>
-    <string name="s_menu_sort_date_desc" auto="1">古いで並べ替え</string>
-    <string name="s_menu_sort_size_asc" auto="1">最大で並べ替え</string>
-    <string name="s_menu_sort_size_desc" auto="1">最小で並べ替え</string>
-    <string name="s_menu_sort_type" auto="1">ファイル形式で並べ替え</string>
+    <string name="s_menu_favorites">ブックマークに追加</string>
+    <string name="s_menu_sort">並び替え</string>
+    <string name="s_menu_sort_name_asc">名前で並び替え(昇順)</string>
+    <string name="s_menu_sort_name_desc">名前で並び替え(降順)</string>
+    <string name="s_menu_sort_date_asc">新しい順に並び替え</string>
+    <string name="s_menu_sort_date_desc">古い順に並び替え</string>
+    <string name="s_menu_sort_size_asc">大きい順に並び替え</string>
+    <string name="s_menu_sort_size_desc">小さい順に並び替え</string>
+    <string name="s_menu_sort_type">ファイル形式で並び替え</string>
     <string name="s_menu_multi" auto="1">複数選択</string>
-    <string name="s_menu_grid" auto="1">グリッドビュー</string>
-    <string name="s_menu_list" auto="1">リストビュー</string>
+    <string name="s_menu_grid">グリッド表示</string>
+    <string name="s_menu_list">リスト表示</string>
     <string name="s_menu_carousel" auto="1">カルーセル</string>
-    <string name="s_menu_hidden" auto="1">隠しファイルを表示</string>
-    <string name="s_menu_thumbs" auto="1">画像のサムネイルを表示する</string>
-    <string name="s_menu_new_folder" auto="1">新規フォルダ</string>
-    <string name="s_menu_other" auto="1">その他の設定</string>
+    <string name="s_menu_hidden">隠しファイルを表示</string>
+    <string name="s_menu_thumbs">サムネイル画像を表示</string>
+    <string name="s_menu_new_folder">新しいフォルダー</string>
+    <string name="s_menu_other">その他の設定</string>
     <string name="s_menu_flush" auto="1">キャッシュのフラッシュ</string>
     <string name="s_menu_root" auto="1">ルート</string>
     <string name="s_menu_prefs_folder" auto="1">フォルダの設定</string>
@@ -34,7 +34,7 @@
     <string name="s_menu_copy" auto="1">コピー</string>
     <string name="s_menu_cut" auto="1">カット</string>
     <string name="s_menu_paste" auto="1">貼り付ける</string>
-    <string name="s_menu_delete" auto="1">削除する</string>
+    <string name="s_menu_delete">削除</string>
     <string name="s_menu_share" auto="1">/共有を送信...</string>
     <string name="s_menu_zip" auto="1">zipファイル（複数可）...</string>
     <string name="s_menu_unzip" auto="1">解凍します...</string>
@@ -57,7 +57,7 @@
     <string name="s_pref_sort" auto="1">並べ替え</string>
     <string name="s_pref_sort_summary" auto="1">ファイルとフォルダを並べ替える方法を選択します。</string>
     <string name="s_pref_advanced" auto="1">高度な</string>
-    <string name="s_pref_server_name" auto="1">サーバー名</string>
+    <string name="s_pref_server_name">サーバー名</string>
     <string name="s_pref_server_name_summary" auto="1">サーバー名を入力します。</string>
     <string name="s_pref_server_url" auto="1">サーバのURL</string>
     <string name="s_pref_server_url_summary" auto="1">完全なサーバーのURLを入力します。</string>
@@ -83,7 +83,7 @@
     <string name="s_title_searching" auto="1">検索</string>
     <string name="s_title_moving" auto="1">移動する</string>
     <string name="s_title_copying" auto="1">複写</string>
-    <string name="s_title_zipping" auto="1">ビュン</string>
+    <string name="s_title_zipping">Zip圧縮する</string>
     <string name="s_title_unzipping" auto="1">解凍する</string>
     <string name="s_title_wait" auto="1">しばらくお待ちください...</string>
     <string name="s_alert_confirm_delete" auto="1">％sを削除すると元に戻すことはできません。続行してもよろしいですか？</string>
@@ -105,7 +105,7 @@
     <string name="s_title_bookmark_prefix" auto="1">ブックマークの管理：</string>
     <string name="s_alert_remove_safe" auto="1">これで、ドライブを安全に削除することができます。</string>
     <string name="s_alert_remove_error" auto="1">取り出すことができません。</string>
-    <string name="s_menu_about" auto="1">約</string>
+    <string name="s_menu_about">このアプリについて</string>
     <string name="s_about_version" auto="1">バージョン</string>
     <string name="s_about_author" auto="1">作成者</string>
     <string name="s_about_site" auto="1">ウェブサイト</string>
@@ -145,7 +145,7 @@
     <string name="s_confirm_delete" auto="1">あなたは％sを削除しますか？</string>
     <string name="s_error_same_destination" auto="1">コピー先のディレクトリは同じです。</string>
     <string name="s_sample_notification" auto="1">コピー - &gt; SDカード： nの3ファイル</string>
-    <string name="s_pref_fullscreen" auto="1">フルスクリーン</string>
+    <string name="s_pref_fullscreen">全画面</string>
     <string name="s_pref_fullscreen_summary_on" auto="1">通知バーを隠す</string>
     <string name="s_pref_fullscreen_summary_off" auto="1">通知バーを表示する</string>
     <string name="s_pref_pagers" auto="1">ページャを表示する</string>
@@ -167,7 +167,7 @@
     <string name="s_error_no_media" auto="1">挿入したメディアが存在しないように見えます。 USB共有または再挿入するメディアを無効にしてください。</string>
     <string name="s_prompt_password" auto="1">パスワードを入力します</string>
     <string name="s_add" auto="1">加える</string>
-    <string name="s_server_ftp" auto="1">FTP</string>
+    <string name="s_server_ftp">FTP</string>
     <string name="s_server_sftp" auto="1">SFTP</string>
     <string name="s_pref_server_port" auto="1">ポート</string>
     <string name="s_about_buildtime" auto="1">ビルド日</string>
@@ -185,7 +185,7 @@
     <string name="s_bookmark_drives" auto="1">ドライブ</string>
     <string name="s_bookmark_smart" auto="1">スマートフォルダ</string>
     <string name="s_bookmark_favorites" auto="1">お気に入り</string>
-    <string name="s_bookmark_servers" auto="1">サーバ</string>
+    <string name="s_bookmark_servers">サーバー</string>
     <string name="s_bookmark_cache" auto="1">キャッシュ</string>
     <string name="s_info_totalspace" auto="1">ディスク総容量：</string>
     <string name="s_info_freespace" auto="1">ディスク空き領域：</string>
@@ -214,8 +214,8 @@
     <string name="s_menu_exit" auto="1">終了する</string>
     <string name="s_warn_wtf_message" auto="1">おっと！これは、未処理のエラーが発生したことが表示されます！これは多くのベータ版のアプリで共通の問題であるとして、これらの問題を解決する唯一の方法は、問題を解決する方法を決定するためには、このようなあなたのようなさまざまなデバイスからレポートを受信することである。私たちは開発者にのみ、匿名のデータを含む、そのようなレポートを送信できますか？</string>
     <string name="s_warn_wtf_ps" auto="1">注意してください***このアプリはベータ版です。それがクラッシュしたというだけの理由で、このアプリに悪い評価を与えないでください。それは本当にあなたを悩ませている場合だけアンインストールしてください。ありがとう！</string>
-    <string name="s_yes" auto="1">はい</string>
-    <string name="s_no" auto="1">なし</string>
+    <string name="s_yes">はい</string>
+    <string name="s_no">いいえ</string>
     <string name="s_wtf_preview" auto="1">プレビューレポートデータ</string>
     <string name="s_wtf_remember" auto="1">今後この質問を表示しない</string>
     <string name="s_pref_basebar" auto="1">アクションバーを分割</string>
@@ -240,7 +240,7 @@
     <string name="app_description" auto="1">エクスプローラを開き - すべてのデバイスのオープンソースのファイルマネージャ！ （錠剤、携帯電話、Googleのテレビ、サンドイッチ！）に nコンプリートファイルシステムの管理 n-USB、SDおよびその他の外部メディアの n - ネットワーク接続可能（FTP、SFTP、SMB /のSamba / Windows / LAN / WIFI）を n - テキスト·エディタは、 n、スマートフォルダ、メディアの種類（ビデオ、写真、音楽、ダウンロードする） n - ビューベルディレクトリナビゲーション（ディレクトリを移動する強打の右）に nスーパユーザ/ルート機能/リストへのスキャンシステムフォルダを読んでない（システムがまだ書かない）に来るの n  nFeaturesます： n-タブテキストエディタに n-多くのネットワーク機能（Dropboxが、Box.net、スカイドライブ）に n - オフラインファイル構造のキャッシュは、どのファイルを覚えていますあなたが接続する必要が n型ディスク·スペースのヒートマップは、あなたの最大のファイルがどこにあるかを示していなくても、別の場所に持っているの nを n *ご注意：このアプリはベータ版です。多くのバグが残っています。あなたはこれらのバグを体験したくない場合は、どうぞ、このアプリをダウンロードしないでください。あなたは私がこれらのバグを見つけるために希望される場合は、私に電子メールを送るか、またはGitHubの（https://github.com/BrandoCommando/OpenExplorer/）で私に協力してください。悪い評価は誰も助けない覚えておいてください。</string>
     <string name="alert_translate_google" auto="1">こんにちは、この翻訳はGoogle翻訳で提供されています。あなたが同様に％sは、英語を知って、よりよい翻訳を提供することを支援するためにご希望の場合は、このボタンをクリックしてください。</string>
     <string name="alert_translate_none" auto="1">こんにちは、それはあなたがサポートされていない言語を使用していることが表示されます。あなたは、英語と％sを知っていますか？あなたは、正しい翻訳を提供する際に支援したい場合は、ここをクリックしてください：</string>
-    <string name="button_translate" auto="1">翻訳する</string>
+    <string name="button_translate">翻訳</string>
     <string name="httpError">ネットワークエラーが発生しました。</string>
     <string name="httpErrorAuth">認証できませんでした。</string>
     <string name="httpErrorProxyAuth">プロキシサーバーを使用した認証に失敗しました。</string>

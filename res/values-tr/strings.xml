@@ -4,7 +4,7 @@
     <string name="s_photos" auto="1">Fotoğraflar</string>
     <string name="s_videos" auto="1">Videolar</string>
     <string name="s_music" auto="1">Müzik</string>
-    <string name="s_downloads" auto="1">Dosyalar</string>
+    <string name="s_downloads">Indir</string>
     <string name="s_external" auto="1">Dış</string>
     <string name="s_internal" auto="1">Iç</string>
     <string name="s_view" auto="1">Görmek</string>
@@ -13,13 +13,13 @@
     <string name="s_menu_sort" auto="1">Tür</string>
     <string name="s_menu_sort_name_asc" auto="1">Adı göre sırala (A-Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">Adı göre sırala (Z-A)</string>
-    <string name="s_menu_sort_date_asc" auto="1">Yeni göre sıralamak</string>
-    <string name="s_menu_sort_date_desc" auto="1">Eski göre sıralamak</string>
-    <string name="s_menu_sort_size_asc" auto="1">Sıralama En Büyük tarafından</string>
+    <string name="s_menu_sort_date_asc">Yeni göre sırala</string>
+    <string name="s_menu_sort_date_desc">Eski göre sırala</string>
+    <string name="s_menu_sort_size_asc">Büyük boyuta göre sìrala</string>
     <string name="s_menu_sort_size_desc" auto="1">Küçük göre sıralamak</string>
     <string name="s_menu_sort_type" auto="1">Filetype göre sırala</string>
     <string name="s_menu_multi" auto="1">Multi-Select</string>
-    <string name="s_menu_grid" auto="1">Grid View</string>
+    <string name="s_menu_grid">Grid görünümü</string>
     <string name="s_menu_list" auto="1">Liste Görünümü</string>
     <string name="s_menu_carousel" auto="1">Atlıkarınca</string>
     <string name="s_menu_hidden" auto="1">Gizli Dosyaları Göster</string>
@@ -27,20 +27,20 @@
     <string name="s_menu_new_folder" auto="1">Yeni Klasör</string>
     <string name="s_menu_other" auto="1">Diğer Ayarlar</string>
     <string name="s_menu_flush" auto="1">Flush Önbellek</string>
-    <string name="s_menu_root" auto="1">Kök</string>
+    <string name="s_menu_root">Root</string>
     <string name="s_menu_prefs_folder" auto="1">Klasör Tercihleri</string>
     <string name="s_menu_prefs_global" auto="1">Küresel Tercihler</string>
     <string name="s_menu_info" auto="1">Bilgi</string>
     <string name="s_menu_copy" auto="1">Kopyala</string>
-    <string name="s_menu_cut" auto="1">Kesmek</string>
-    <string name="s_menu_paste" auto="1">Yapıştırmak</string>
-    <string name="s_menu_delete" auto="1">Silmek</string>
+    <string name="s_menu_cut">Kes</string>
+    <string name="s_menu_paste">Yapìstìr</string>
+    <string name="s_menu_delete">Sil</string>
     <string name="s_menu_share" auto="1">Paylaş / Gönder ...</string>
     <string name="s_menu_zip" auto="1">Zip dosyası (ler) ...</string>
     <string name="s_menu_unzip" auto="1">Unzip ...</string>
     <string name="s_menu_rename" auto="1">Yeniden adlandır ...</string>
     <string name="s_menu_bookmark" auto="1">Bookmark ekle</string>
-    <string name="s_save" auto="1">Kurtarmak</string>
+    <string name="s_save">Kaydet</string>
     <string name="s_saveas" auto="1">Farklı kaydet ...</string>
     <string name="s_cancel" auto="1">Iptal</string>
     <string name="s_size" auto="1">Boyut</string>
@@ -113,12 +113,12 @@
     <string name="s_about_recent" auto="1">Son Güncellemeler</string>
     <string name="s_chooser_email" auto="1">Geribildirim gönder ...</string>
     <string name="s_status_loading" auto="1">Yükleniyor ...</string>
-    <string name="s_menu_open" auto="1">Ile aç ...</string>
+    <string name="s_menu_open">Birlikte aç</string>
     <string name="s_menu_edit" auto="1">Ile düzenle ...</string>
     <string name="s_pref_stats_title" auto="1">OpenExplorer geliştirilmesine yardımcı olun</string>
     <string name="s_pref_stats_summary" auto="1">Anonim kullanım istatistikleri gönder. Bu, kullanıcı tanımlamak için kullanılabilir herhangi bir bilgi içermez.</string>
     <string name="s_error_no_intents" auto="1">Hayır yüklü uygulamalar bu türde bir dosya okuyabilirsiniz.</string>
-    <string name="s_menu_root_disabled" auto="1">Kök devre dışı</string>
+    <string name="s_menu_root_disabled">Root devre dışı</string>
     <string name="s_pref_start" auto="1">Klasör Başlangıç</string>
     <string name="s_pref_start_summary" auto="1">Klasöründe OpenExplorer başlar hangi gösterir</string>
     <string name="s_custom" auto="1">Özel ...</string>
@@ -140,8 +140,8 @@
     <string name="s_msg_low_memory" auto="1">Düşük bellek!</string>
     <string name="s_clear" auto="1">Temizle</string>
     <string name="s_menu_delete_all" auto="1">Tümünü Sil</string>
-    <string name="s_menu_move_all" auto="1">İşte Taşı</string>
-    <string name="s_menu_copy_all" auto="1">İşte kopyalayın</string>
+    <string name="s_menu_move_all">Buraya Taşı</string>
+    <string name="s_menu_copy_all">Buraya kopyala</string>
     <string name="s_confirm_delete" auto="1">Eğer %s silmek istediğinizden emin misiniz?</string>
     <string name="s_error_same_destination" auto="1">Hedef dizin aynıdır.</string>
     <string name="s_sample_notification" auto="1">Kopyalama -&gt; sdcard:  n 3 Dosyalar</string>
@@ -190,7 +190,7 @@
     <string name="s_info_freespace" auto="1">Disk Boş Alan:</string>
     <string name="s_status_rate" auto="1">Oranı:</string>
     <string name="s_about_hardware" auto="1">Donanım</string>
-    <string name="s_menu_refresh" auto="1">Yenile Klasör</string>
+    <string name="s_menu_refresh">Yenile Klasör</string>
     <string name="s_pref_reset" auto="1">Görüntüleme sıfırlayın</string>
     <string name="s_toast_complete" auto="1">Komple Operasyonu!</string>
     <string name="s_pref_reset_summary" auto="1">Varsayılan bir devlet dönmeden, tüm klasör özel görünüm ayarlarını kaldırmak için buraya tıklayın.</string>
@@ -229,8 +229,8 @@
     <string name="s_split_none" auto="1">Sistem Menüsü tüm Düğmeler yerleştirin</string>
     <string name="s_about_screensize" auto="1">Ekran Boyutu</string>
     <string name="s_about_density" auto="1">Yoğunluk</string>
-    <string name="s_menu_location_int" auto="1">Dahili Bellek Yolu</string>
-    <string name="s_menu_location_ext" auto="1">Dış Bellek Yolu</string>
+    <string name="s_menu_location_int">Dahili Bellek</string>
+    <string name="s_menu_location_ext">Harici Bellek</string>
     <string name="s_wtf_context" auto="1">Çökme bağlamında açıklayınız:</string>
     <string name="thanks" auto="1">Teşekkür ederiz!</string>
     <string name="menu_view_font_small" auto="1">Küçük Yazı Tipi Boyutu</string>

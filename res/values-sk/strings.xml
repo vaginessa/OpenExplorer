@@ -1,92 +1,93 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">Otvoriť Explorer</string>
-    <string name="s_photos" auto="1">Fotky</string>
-    <string name="s_videos" auto="1">Videá</string>
-    <string name="s_music" auto="1">Hudba</string>
-    <string name="s_downloads" auto="1">Súbory na stiahnutie</string>
-    <string name="s_external" auto="1">Externý</string>
-    <string name="s_internal" auto="1">Interná</string>
-    <string name="s_view" auto="1">Prehliadať</string>
-    <string name="s_bookmarks" auto="1">Záložky</string>
-    <string name="s_menu_favorites" auto="1">Prepnúť Záložky</string>
-    <string name="s_menu_sort" auto="1">Typ</string>
-    <string name="s_menu_sort_name_asc" auto="1">Zoradiť podľa názvu (-Z)</string>
-    <string name="s_menu_sort_name_desc" auto="1">Zoradiť podľa názvu (Z-)</string>
-    <string name="s_menu_sort_date_asc" auto="1">Zoradiť podľa Najnovší</string>
-    <string name="s_menu_sort_date_desc" auto="1">Zoradiť podľa Najstaršie</string>
-    <string name="s_menu_sort_size_asc" auto="1">Zoradiť podľa Najväčší</string>
-    <string name="s_menu_sort_size_desc" auto="1">Zoradiť podľa Najmenší</string>
-    <string name="s_menu_sort_type" auto="1">Zoradiť podľa filetype</string>
-    <string name="s_menu_multi" auto="1">Multi-Select</string>
-    <string name="s_menu_grid" auto="1">Mriežku</string>
-    <string name="s_menu_list" auto="1">Zobraziť zoznam</string>
-    <string name="s_menu_carousel" auto="1">Kolotoč</string>
-    <string name="s_menu_hidden" auto="1">Zobrazovať skryté súbory</string>
-    <string name="s_menu_thumbs" auto="1">Zobraziť náhľady obrázkov</string>
-    <string name="s_menu_new_folder" auto="1">Nová zložka</string>
-    <string name="s_menu_other" auto="1">Ďalšie nastavenia</string>
-    <string name="s_menu_flush" auto="1">Flush cache</string>
-    <string name="s_menu_root" auto="1">Koreň</string>
-    <string name="s_menu_prefs_folder" auto="1">Folder Preferences</string>
-    <string name="s_menu_prefs_global" auto="1">Globálne nastavenia</string>
-    <string name="s_menu_info" auto="1">Info</string>
-    <string name="s_menu_copy" auto="1">Skopírujte</string>
-    <string name="s_menu_cut" auto="1">Znížiť</string>
-    <string name="s_menu_paste" auto="1">Pasta</string>
-    <string name="s_menu_delete" auto="1">Vymazať</string>
-    <string name="s_menu_share" auto="1">Odoslať / Share ...</string>
-    <string name="s_menu_zip" auto="1">Zip súbor (y) ...</string>
-    <string name="s_menu_unzip" auto="1">Rozbaľte ...</string>
-    <string name="s_menu_rename" auto="1">Premenovať ...</string>
-    <string name="s_menu_bookmark" auto="1">Pridať záložku</string>
-    <string name="s_save" auto="1">Uložiť</string>
-    <string name="s_saveas" auto="1">Uložiť ako ...</string>
-    <string name="s_cancel" auto="1">Zrušiť</string>
-    <string name="s_size" auto="1">Veľkosť</string>
-    <string name="s_none" auto="1">Žiadny</string>
-    <string name="s_pref_servers" auto="1">Ďalšie servery</string>
-    <string name="s_pref_display" auto="1">Nastavenie zobrazenia</string>
-    <string name="s_pref_hidden" auto="1">Zobrazovať skryté súbory</string>
-    <string name="s_pref_hidden_summary" auto="1">Zobraziť skryté súbory a priečinky</string>
-    <string name="s_pref_thumbs" auto="1">Zobraziť náhľady obrázkov</string>
-    <string name="s_pref_thumbs_summary" auto="1">Zobraziť miniatúru obrázok / video / App súborov</string>
-    <string name="s_pref_view" auto="1">Režim zobrazenia</string>
-    <string name="s_pref_view_summary" auto="1">Zobrazenie súborov v sieti, zoznam alebo kolotoč ods Honeycomb iba)</string>
-    <string name="s_pref_sort" auto="1">Triedenie</string>
-    <string name="s_pref_sort_summary" auto="1">Vyberte si, ako triediť súbory a priečinky</string>
-    <string name="s_pref_advanced" auto="1">Pokročilý</string>
-    <string name="s_pref_server_name" auto="1">Názov servera</string>
-    <string name="s_pref_server_name_summary" auto="1">Zadajte názov servera</string>
-    <string name="s_pref_server_url" auto="1">Adresa URL servera</string>
-    <string name="s_pref_server_url_summary" auto="1">Zadajte úplnú adresu URL servera</string>
-    <string name="s_pref_server_host" auto="1">Server Host</string>
-    <string name="s_pref_server_user" auto="1">Užívateľ</string>
-    <string name="s_pref_server_user_summary" auto="1">Užívateľské meno</string>
-    <string name="s_pref_server_password" auto="1">Heslo</string>
-    <string name="s_pref_server_password_summary" auto="1">Prihlásiť heslo</string>
-    <string name="s_pref_server_path" auto="1">Podadresár</string>
-    <string name="s_pref_server_path_summary" auto="1">Zadajte predvolené prihlasovacie cestu</string>
-    <string name="s_pref_server_extras" auto="1">Ďalšie nastavenia</string>
-    <string name="s_pref_server_update" auto="1">Pridať / aktualizovať server</string>
-    <string name="s_pref_server_type" auto="1">Typ servera</string>
-    <string name="s_files" auto="1">Súbory</string>
-    <string name="s_create" auto="1">Vytvoriť</string>
-    <string name="s_title_holding_x_files" auto="1">Držanie %s súbory</string>
-    <string name="s_title_newfolder" auto="1">Vytvorenie novej zložky</string>
-    <string name="s_title_send" auto="1">Poslať %s</string>
-    <string name="s_title_unzip" auto="1">Rozbaľte %s</string>
-    <string name="s_title_zip" auto="1">Zips %s</string>
-    <string name="s_title_executing" auto="1">Vykonávanie</string>
-    <string name="s_title_deleting" auto="1">Odstránenie</string>
-    <string name="s_title_searching" auto="1">Vyhľadávanie</string>
-    <string name="s_title_moving" auto="1">Sťahovanie</string>
-    <string name="s_title_copying" auto="1">Kopírovanie</string>
-    <string name="s_title_zipping" auto="1">Zips</string>
-    <string name="s_title_unzipping" auto="1">Rozbalením</string>
-    <string name="s_title_wait" auto="1">Čakajte prosím ...</string>
-    <string name="s_alert_confirm_delete" auto="1">Odstránenie %s sa nedá vrátiť späť. Ste si istí, že chcete pokračovať?</string>
-    <string name="s_alert_rename" auto="1">Prosím, zadajte nový názov tento súbor</string>
+    <string name="app_name">Open Explorer</string>
+    <string name="s_photos">Fotky</string>
+    <string name="s_videos">Videá</string>
+    <string name="s_music">Hudba</string>
+    <string name="s_downloads">Stiahnutia</string>
+    <string name="s_external">Externý</string>
+    <string name="s_internal">Interný</string>
+    <string name="s_view">Prezerať</string>
+    <string name="s_bookmarks">Záložky</string>
+    <string name="s_menu_favorites">Prepnúť záložky</string>
+    <string name="s_menu_sort">Typ</string>
+    <string name="s_menu_sort_name_asc">Zoradiť podľa mena (A-Z)</string>
+    <string name="s_menu_sort_name_desc">Zoradiť podľa mena (Z-A)</string>
+    <string name="s_menu_sort_date_asc">Zoradiť od najnovších</string>
+    <string name="s_menu_sort_date_desc">Zoradiť od najstarších</string>
+    <string name="s_menu_sort_size_asc">Zoradiť od najdlhších</string>
+    <string name="s_menu_sort_size_desc">Zoradiť od najkratších</string>
+    <string name="s_menu_sort_type">Zoradiť podľa typu súboru</string>
+    <string name="s_menu_multi">Multivýber</string>
+    <string name="s_menu_grid">Zobraziť mriežku</string>
+    <string name="s_menu_list">Zobtaziť zoznam</string>
+    <string name="s_menu_carousel">Karusel</string>
+    <string name="s_menu_hidden">Zobraziť skryté súbory</string>
+    <string name="s_menu_thumbs">Zobraziť náhľady obrázkov</string>
+    <string name="s_menu_new_folder">Nový priečinok</string>
+    <string name="s_menu_other">Ďalšie nastavenia</string>
+    <string name="s_menu_flush">Flush cache</string>
+    <string name="s_menu_root">Root</string>
+    <string name="s_menu_prefs_folder">Nastavenie priečinkov</string>
+    <string name="s_menu_prefs_global">Globálne nastavenia</string>
+    <string name="s_menu_info">Info</string>
+    <string name="s_menu_copy">Kopírovať</string>
+    <string name="s_menu_cut">Vystrihnúť</string>
+    <string name="s_menu_paste">Prilepiť</string>
+    <string name="s_menu_delete">Vymazať</string>
+    <string name="s_menu_share">Odoslať/Zdieľať</string>
+    <string name="s_menu_zip">Zip súbor(y)</string>
+    <string name="s_menu_unzip">Rozbaliť</string>
+    <string name="s_menu_rename">Premenovať</string>
+    <string name="s_menu_bookmark">Pridať záložku</string>
+    <string name="s_save">Uložiť</string>
+    <string name="s_saveas">Uložiť ako...</string>
+    <string name="s_cancel">Zrušiť</string>
+    <string name="s_size">Veľkosť</string>
+    <string name="s_none">Žiadny</string>
+    <string name="s_pref_servers">Ďalšie servery</string>
+    <string name="s_pref_server_add">+ Pridať nový server</string>
+    <string name="s_pref_display">Nastavenie zobrazenia</string>
+    <string name="s_pref_hidden">Zobrazovať skryté súbory</string>
+    <string name="s_pref_hidden_summary">Zobraziť skryté súbory a priečinky</string>
+    <string name="s_pref_thumbs">Zobraziť náhľady obrázkov</string>
+    <string name="s_pref_thumbs_summary">Zobraziť miniatúru súboru obrázka/videa/aplikácie</string>
+    <string name="s_pref_view">Režim zobrazenia</string>
+    <string name="s_pref_view_summary">Zobraziť súbory ako mriežku, zonam alebo karusel</string>
+    <string name="s_pref_sort">Triedenie</string>
+    <string name="s_pref_sort_summary">Vyberte si, ako triediť súbory a priečinky</string>
+    <string name="s_pref_advanced">Pokročilé</string>
+    <string name="s_pref_server_name">Meno servera</string>
+    <string name="s_pref_server_name_summary">Zadajte názov servera</string>
+    <string name="s_pref_server_url">URL servera</string>
+    <string name="s_pref_server_url_summary">Zadajte úplnú URL servera</string>
+    <string name="s_pref_server_host">Server Host</string>
+    <string name="s_pref_server_user">Užívateľ</string>
+    <string name="s_pref_server_user_summary">Užívateľské meno</string>
+    <string name="s_pref_server_password">Heslo</string>
+    <string name="s_pref_server_password_summary">Prihlasovacie heslo</string>
+    <string name="s_pref_server_path">Podadresár</string>
+    <string name="s_pref_server_path_summary">Zadajte predvolenú cestu pre prihlasovanie</string>
+    <string name="s_pref_server_extras">Ďalšie nastavenia</string>
+    <string name="s_pref_server_update">Pridať/Aktualizovať server</string>
+    <string name="s_pref_server_type">Typ servera</string>
+    <string name="s_files">Súbory</string>
+    <string name="s_create">Vytvoriť</string>
+    <string name="s_title_holding_x_files">Hospodárske súbory</string>
+    <string name="s_title_newfolder">Vytvorenie novej zložky</string>
+    <string name="s_title_send">Odoslať xxx</string>
+    <string name="s_title_unzip">Rozbaliť xxx</string>
+    <string name="s_title_zip">Zbaliť xxx</string>
+    <string name="s_title_executing">Vykonávanie</string>
+    <string name="s_title_deleting">Odstránenie</string>
+    <string name="s_title_searching">Vyhľadávanie</string>
+    <string name="s_title_moving">Presúvanie</string>
+    <string name="s_title_copying">Kopírovanie</string>
+    <string name="s_title_zipping">Zbalenie (Zip)</string>
+    <string name="s_title_unzipping">Rozbalenie</string>
+    <string name="s_title_wait">Prosím, vyčkajte</string>
+    <string name="s_alert_confirm_delete">Mazanie nemožno vrátiť. Ste si istí, že chcete pokračovať?</string>
+    <string name="s_alert_rename">Prosím zadajte nový názov tohoto súboru</string>
     <string name="s_alert_newfolder" auto="1">Zadajte názov priečinka, ktorú chcete vytvoriť.</string>
     <string name="s_alert_unzip" auto="1">Chceli by ste rozbalit %s tu alebo inú zložku?</string>
     <string name="s_button_unzip_here" auto="1">Rozbaľte tu</string>
@@ -104,7 +105,6 @@
     <string name="s_title_bookmark_prefix" auto="1">Správa Záložka:</string>
     <string name="s_alert_remove_safe" auto="1">Teraz môžete bezpečne odstrániť disk.</string>
     <string name="s_alert_remove_error" auto="1">Nemožno vysunúť.</string>
-    <string name="s_menu_about" auto="1">O</string>
     <string name="s_about_version" auto="1">Verzia</string>
     <string name="s_about_author" auto="1">Autor</string>
     <string name="s_about_site" auto="1">Webové stránky</string>

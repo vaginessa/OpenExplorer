@@ -1,9 +1,283 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
+    <string name="app_name" auto="1">פתח את Internet</string>
+    <string name="s_photos" auto="1">תמונות</string>
+    <string name="s_videos" auto="1">וידאו</string>
+    <string name="s_music" auto="1">מוסיקה</string>
+    <string name="s_downloads" auto="1">הורדות</string>
+    <string name="s_external" auto="1">חיצוני</string>
+    <string name="s_internal" auto="1">פנימי</string>
+    <string name="s_view" auto="1">נוף</string>
+    <string name="s_bookmarks" auto="1">סימניות</string>
+    <string name="s_menu_favorites" auto="1">Toggle Bookmarks</string>
+    <string name="s_menu_sort" auto="1">מין</string>
+    <string name="s_menu_sort_name_asc" auto="1">מיין לפי שם (A-Z)</string>
+    <string name="s_menu_sort_name_desc" auto="1">מיין לפי שם (Z-A)</string>
+    <string name="s_menu_sort_date_asc" auto="1">מיון לפי חדשים</string>
+    <string name="s_menu_sort_date_desc" auto="1">מיין לפי הכי ישנות</string>
+    <string name="s_menu_sort_size_asc" auto="1">לפי הגדול</string>
+    <string name="s_menu_sort_size_desc" auto="1">לפי הקטן</string>
+    <string name="s_menu_sort_type" auto="1">לפי FileType</string>
+    <string name="s_menu_multi" auto="1">Multi-Select</string>
+    <string name="s_menu_grid" auto="1">Grid View</string>
+    <string name="s_menu_list" auto="1">תצוגת רשימה</string>
+    <string name="s_menu_carousel" auto="1">קרוסלה</string>
+    <string name="s_menu_hidden" auto="1">הצגקבציםמוסתרים</string>
+    <string name="s_menu_thumbs" auto="1">הצגת תמונות ממוזערות</string>
+    <string name="s_menu_new_folder" auto="1">תיקיה חדשה</string>
+    <string name="s_menu_other" auto="1">הגדרות אחרות</string>
+    <string name="s_menu_flush" auto="1">ריקון מטמון</string>
+    <string name="s_menu_root" auto="1">שורש</string>
+    <string name="s_menu_prefs_folder" auto="1">העדפות תיקייה</string>
+    <string name="s_menu_prefs_global" auto="1">גלובל העדפות</string>
+    <string name="s_menu_info" auto="1">מידע</string>
+    <string name="s_menu_copy" auto="1">עותק</string>
+    <string name="s_menu_cut" auto="1">לחתוך</string>
+    <string name="s_menu_paste" auto="1">להדביק</string>
+    <string name="s_menu_delete" auto="1">למחוק</string>
+    <string name="s_menu_share" auto="1">שלח / שתף ...</string>
+    <string name="s_menu_zip" auto="1">Zip קובץ (ים) ...</string>
+    <string name="s_menu_unzip" auto="1">Unzip ...</string>
+    <string name="s_menu_rename" auto="1">שינוי שם ...</string>
+    <string name="s_menu_bookmark" auto="1">הוסף סימנייה</string>
+    <string name="s_save" auto="1">להציל</string>
+    <string name="s_saveas" auto="1">שמור כ ...</string>
+    <string name="s_cancel" auto="1">לבטל</string>
+    <string name="s_size" auto="1">גודל</string>
+    <string name="s_none" auto="1">אף אחד</string>
+    <string name="s_pref_servers" auto="1">שרתים נוספים</string>
+    <string name="s_pref_server_add" auto="1">+ הוסף שרת חדש</string>
+    <string name="s_pref_display" auto="1">הצגת העדפות</string>
+    <string name="s_pref_hidden" auto="1">הצגקבציםמוסתרים</string>
+    <string name="s_pref_hidden_summary" auto="1">הצגת קבצים ותיקיות מוסתרים</string>
+    <string name="s_pref_thumbs" auto="1">הצגת תמונות ממוזערות</string>
+    <string name="s_pref_thumbs_summary" auto="1">הצגת תמונה ממוזערת של תמונה / וידאו / App קבצים</string>
+    <string name="s_pref_view" auto="1">מצב תצוגה</string>
+    <string name="s_pref_view_summary" auto="1">הצגת קבצים ברשת, רשימה או קרוסלה (Honeycomb בלבד)</string>
+    <string name="s_pref_sort" auto="1">מיון</string>
+    <string name="s_pref_sort_summary" auto="1">בחר כיצד למיין קבצים ותיקיות</string>
+    <string name="s_pref_advanced" auto="1">מתקדם</string>
+    <string name="s_pref_server_name" auto="1">שרת שם</string>
+    <string name="s_pref_server_name_summary" auto="1">הזן שם שרת</string>
+    <string name="s_pref_server_url" auto="1">שרת URL</string>
+    <string name="s_pref_server_url_summary" auto="1">הזן כתובת השרת מלא</string>
+    <string name="s_pref_server_host" auto="1">שרת מארח</string>
+    <string name="s_pref_server_user" auto="1">משתמש</string>
+    <string name="s_pref_server_user_summary" auto="1">שם משתמש</string>
+    <string name="s_pref_server_password" auto="1">סיסמה</string>
+    <string name="s_pref_server_password_summary" auto="1">התחברות סיסמה</string>
+    <string name="s_pref_server_path" auto="1">בתיקיית</string>
+    <string name="s_pref_server_path_summary" auto="1">הזן את שם המשתמש נתיב ברירת המחדל</string>
+    <string name="s_pref_server_extras" auto="1">הגדרות נוספות</string>
+    <string name="s_pref_server_update" auto="1">הוספה / עדכון שרת</string>
+    <string name="s_pref_server_type" auto="1">שרת סוג</string>
+    <string name="s_files" auto="1">קבצים</string>
+    <string name="s_create" auto="1">ליצור</string>
+    <string name="s_title_holding_x_files" auto="1">החזקת קבצים %s</string>
+    <string name="s_title_newfolder" auto="1">יצירת תיקיה חדשה</string>
+    <string name="s_title_send" auto="1">שלח %s</string>
+    <string name="s_title_unzip" auto="1">Unzip %s</string>
+    <string name="s_title_zip" auto="1">מיקוד %s</string>
+    <string name="s_title_executing" auto="1">מבצע</string>
+    <string name="s_title_deleting" auto="1">מחיקת</string>
+    <string name="s_title_searching" auto="1">חיפוש</string>
+    <string name="s_title_moving" auto="1">נע</string>
+    <string name="s_title_copying" auto="1">העתקה</string>
+    <string name="s_title_zipping" auto="1">רכס</string>
+    <string name="s_title_unzipping" auto="1">פתחתי את רוכסן</string>
+    <string name="s_title_wait" auto="1">אנא המתן ...</string>
+    <string name="s_alert_confirm_delete" auto="1">מחיקת %s לא ניתן לבטל. האם אתה בטוח שאתה רוצה להמשיך?</string>
+    <string name="s_alert_rename" auto="1">אנא הקלד את השם החדש קובץ זה</string>
+    <string name="s_alert_newfolder" auto="1">הקלד את השם של התיקייה שאתה רוצה ליצור.</string>
+    <string name="s_alert_unzip" auto="1">היית רוצה לפתוח %s כאן או תיקיה אחרת?</string>
+    <string name="s_button_unzip_here" auto="1">Unzip כאן</string>
+    <string name="s_button_unzip_else" auto="1">Unzip במקום אחר ...</string>
+    <string name="s_msg_none" auto="1">קובץ (ים) לא יכול להיות</string>
+    <string name="s_msg_some" auto="1">יש קובץ (ים) לא יכול להיות</string>
+    <string name="s_msg_all" auto="1">קובץ (ים) בהצלחה</string>
+    <string name="s_msg_deleted" auto="1">נמחק</string>
+    <string name="s_msg_moved" auto="1">עבר</string>
+    <string name="s_msg_copied" auto="1">מועתק</string>
+    <string name="s_remove" auto="1">להסיר</string>
+    <string name="s_eject" auto="1">לפלוט</string>
+    <string name="s_update" auto="1">לעדכן</string>
+    <string name="s_alert_bookmark_rename" auto="1">שינוי הכותרת של הסימנייה.</string>
+    <string name="s_title_bookmark_prefix" auto="1">נהל הפוך:</string>
+    <string name="s_alert_remove_safe" auto="1">כעת אתה יכול להסיר בבטחה את הכונן.</string>
+    <string name="s_alert_remove_error" auto="1">לא ניתן להוציא.</string>
+    <string name="s_menu_about" auto="1">על</string>
+    <string name="s_about_version" auto="1">גרסה</string>
+    <string name="s_about_author" auto="1">מחבר</string>
+    <string name="s_about_site" auto="1">אתר אינטרנט</string>
+    <string name="s_about_email" auto="1">דוא&quot;ל</string>
+    <string name="s_about_recent" auto="1">עדכונים אחרונים</string>
+    <string name="s_chooser_email" auto="1">שלח משוב ...</string>
+    <string name="s_status_loading" auto="1">טוען ...</string>
+    <string name="s_menu_open" auto="1">פתח עם ...</string>
+    <string name="s_menu_edit" auto="1">ערוך עם ...</string>
+    <string name="s_pref_stats_title" auto="1">עזרה לשפר OpenExplorer</string>
+    <string name="s_pref_stats_summary" auto="1">שלח סטטיסטיקת שימוש אנונימית. זה אינו כולל כל מידע שיכול לשמש כדי לזהות את המשתמש.</string>
+    <string name="s_error_no_intents" auto="1">אין היישומים המותקנים יכול לקרוא קובץ מסוג זה.</string>
+    <string name="s_menu_root_disabled" auto="1">שורש נכים</string>
+    <string name="s_pref_start" auto="1">החל תיקייה</string>
+    <string name="s_pref_start_summary" auto="1">מציין באיזו תיקייה OpenExplorer מתחיל</string>
+    <string name="s_custom" auto="1">אישית ...</string>
+    <string name="s_text_intro_top" auto="1">ברוכים הבאים OpenExplorer!</string>
+    <string name="s_text_intro_body" auto="1">מטרת OpenExplorer היא לגרום לך יותר פרודוקטיביים בתוך מערכת הקבצים אנדרואיד בענן. אם אתה צריך לנהל את קטעי וידאו או תמונות מאתרים מרובים או לנהל האינטרנט שלך מרחוק באמצעות FTP, OpenExplorer יכול להתאים לצרכים שלך  n  n לבחור נתיב המוצא שלך.:</string>
+    <string name="s_info_num_folders" auto="1">מספר תיקיות:</string>
+    <string name="s_info_num_files" auto="1">מספר קבצים:</string>
+    <string name="s_info_last_modified" auto="1">השתנה לאחרונה:</string>
+    <string name="s_info_permissions" auto="1">הרשאות הקובץ:</string>
+    <string name="s_info_permission_read" auto="1">לקרוא:</string>
+    <string name="s_info_permission_write" auto="1">כתוב:</string>
+    <string name="s_info_permission_execute" auto="1">לבצע:</string>
+    <string name="s_toggle_keyboard" auto="1">מקלדת</string>
+    <string name="s_show_password" auto="1">הצג סיסמה</string>
+    <string name="s_error_ftp" auto="1">שגיאה בהתחברות ל-FTP</string>
+    <string name="s_prompt_zip" auto="1">הזן את שם הקובץ של קובץ Zip חדש:</string>
+    <string name="app_edit" auto="1">ערוך עם OpenExplorer</string>
     <string name="s_menu_more">אפשרויות נוספות</string>
+    <string name="s_msg_low_memory" auto="1">זיכרון נמוך!</string>
+    <string name="s_clear" auto="1">נקה</string>
     <string name="s_menu_delete_all">מחק הכל</string>
     <string name="s_menu_move_all">העבר לכאן</string>
     <string name="s_menu_copy_all">העתק לכאן</string>
+    <string name="s_confirm_delete" auto="1">האם אתה בטוח שברצונך למחוק %s?</string>
+    <string name="s_error_same_destination" auto="1">מדריך יעד זהה.</string>
+    <string name="s_sample_notification" auto="1">העתקה -&gt; sdcard:  n 3 קבצים</string>
+    <string name="s_pref_fullscreen" auto="1">מסך מלא</string>
+    <string name="s_pref_fullscreen_summary_on" auto="1">הסתר בר דיווח</string>
+    <string name="s_pref_fullscreen_summary_off" auto="1">הצג את סרגל ההודעות</string>
+    <string name="s_pref_pagers" auto="1">צפה איתורית</string>
+    <string name="s_pref_pagers_summary_on" auto="1">אופקי והעבירה = מדריך ניווט</string>
+    <string name="s_pref_pagers_summary_off" auto="1">נכים והעבירה אופקיים</string>
+    <string name="s_alert_new_media" auto="1">מדיה חדשה מוכנס!</string>
+    <string name="s_warn_pager_title" auto="1">תכונה חדשה: איתורית צפייה</string>
+    <string name="s_warn_pager" auto="1">לסחוב משמאל לימין לעלות ספריית מימין לשמאל לחזור. זה אמור להקל על הניווט. נסה את זה (על מדיה חיצונית)!</string>
+    <string name="s_warn_confirm" auto="1">אתה מבין?</string>
+    <string name="s_warn_disable" auto="1">השבת</string>
+    <string name="s_pref_intent_internal" auto="1">פנים דבר</string>
+    <string name="s_pref_intent_internal_on" auto="1">להשתמש במנהל OpenExplorer כוונות</string>
+    <string name="s_pref_intent_internal_off" auto="1">השתמש כוונות מנהל מערכת</string>
+    <string name="s_pref_text_internal" auto="1">השימוש ב \'עורך טקסט פנימי</string>
+    <string name="s_text_editor_title" auto="1">עורך טקסט</string>
+    <string name="s_pref_show_root" auto="1">הצג שורש מערכת קבצים (/)</string>
+    <string name="s_pref_show_internal" auto="1">הצג מדיה פנימיים</string>
+    <string name="s_pref_show_external" auto="1">הצג מדיה חיצונית</string>
+    <string name="s_error_no_media" auto="1">זה נראה כאילו אין התקשורת הנוספים. בבקשה לבטל את שיתוף USB או הכנס מחדש מדיה.</string>
+    <string name="s_prompt_password" auto="1">הזן סיסמה</string>
+    <string name="s_add" auto="1">להוסיף</string>
+    <string name="s_server_ftp" auto="1">FTP</string>
+    <string name="s_server_sftp" auto="1">SFTP</string>
+    <string name="s_pref_server_port" auto="1">נמל</string>
+    <string name="s_about_buildtime" auto="1">תאריך בנייה</string>
+    <string name="s_default" auto="1">ברירת מחדל</string>
+    <string name="s_pref_timeout" auto="1">פסק זמן</string>
+    <string name="s_pref_timeout_summary" auto="1">פסק זמן בשניות</string>
+    <string name="s_menu_up" auto="1">לעלות</string>
+    <string name="s_prompt_unzip" auto="1">הזן את הנתיב לפתוח את:</string>
+    <string name="s_pref_hardware_accel" auto="1">לאפשר האצת חומרה</string>
+    <string name="s_pref_honeyplus" auto="1">אנדרואיד 3.0 + הגדרות</string>
+    <string name="s_pref_actionmode" auto="1">מצב פעולה</string>
+    <string name="s_pref_actionmode_enabled" auto="1">השתמש במצב פעולה</string>
+    <string name="s_pref_actionmode_disabled" auto="1">להשתמש בתפריטים הקשר רגילים</string>
+    <string name="s_server_smb" auto="1">SMB / Windows</string>
+    <string name="s_bookmark_drives" auto="1">כוננים</string>
+    <string name="s_bookmark_smart" auto="1">תיקיות חכמות</string>
+    <string name="s_bookmark_favorites" auto="1">המועדפים</string>
+    <string name="s_bookmark_servers" auto="1">שרתי</string>
+    <string name="s_bookmark_cache" auto="1">מטמון</string>
+    <string name="s_info_totalspace" auto="1">הדיסק סה&quot;כ שטח:</string>
+    <string name="s_info_freespace" auto="1">נפח דיסק פנוי:</string>
+    <string name="s_status_rate" auto="1">דירוג:</string>
+    <string name="s_about_hardware" auto="1">חומרה</string>
     <string name="s_menu_refresh">רענן תיקיה</string>
+    <string name="s_pref_reset" auto="1">אפס צפיות</string>
+    <string name="s_toast_complete" auto="1">להשלמת הפעולה!</string>
+    <string name="s_pref_reset_summary" auto="1">לחץ כאן כדי להסיר את כל תיקייה ספציפית הגדרות התצוגה, לחזור למצב ברירת המחדל.</string>
+    <string name="s_prompt_path" auto="1">הזן את הנתיב:</string>
+    <string name="s_prompt_search" auto="1">חיפוש:</string>
+    <string name="s_prompt_search_within" auto="1">חפש בתוך:</string>
+    <string name="s_pref_view_category" auto="1">הפוך העדפות צפייה</string>
+    <string name="s_pref_show_videos" auto="1">הצג קטעי וידאו</string>
+    <string name="s_pref_show_photos" auto="1">הצג תמונות</string>
+    <string name="s_pref_show_music" auto="1">הצג מוזיקה</string>
+    <string name="s_pref_show_downloads" auto="1">הצג הורדות</string>
+    <string name="s_hide" auto="1">להסתיר</string>
+    <string name="s_show" auto="1">להראות</string>
+    <string name="s_msg_event_cancelled" auto="1">האירוע בוטל.</string>
+    <string name="s_alert_newfolder_folder" auto="1">יצירת תיקייה חדשה ב:</string>
+    <string name="s_pref_fancy_category" auto="1">הגדרות תצוגה מפואר</string>
+    <string name="s_pref_fancy_menus" auto="1">פנסי תפריטים</string>
+    <string name="s_pref_fancy_context" auto="1">הקשר תפריטים מהודרים</string>
+    <string name="s_search_files" auto="1">חיפוש מערכת קבצים</string>
     <string name="s_menu_exit">יציאה</string>
+    <string name="s_warn_wtf_message" auto="1">אופס! נראה כי לא מטופל שגיאה אירעה! ככל שמדובר בעניין נפוץ Apps בטא רבות, הדרך היחידה לפתור בעיות אלה היא לקבל דיווחים מכשירים שונים, כמו שלך, כדי לקבוע כיצד לפתור את הבעיה. אנו עשויים לשלוח דו&quot;ח כזה, המכיל רק נתונים אנונימיים, למפתח?</string>
+    <string name="s_warn_wtf_ps" auto="1">*** שימו לב, יישום זה הוא בטא. נא לא לתת את היישום הזה דירוג רע, פשוט משום שהוא מתרסק. פשוט להסיר את ההתקנה אם זה באמת מפריע לך. תודה!</string>
+    <string name="s_yes" auto="1">כן</string>
+    <string name="s_no" auto="1">לא</string>
+    <string name="s_wtf_preview" auto="1">דוח תצוגה מקדימה של נתונים</string>
+    <string name="s_wtf_remember" auto="1">אל תשאל שוב</string>
+    <string name="s_pref_basebar" auto="1">פיצול בר פעולה</string>
+    <string name="s_pref_basebar_on" auto="1">פעולה כפתורים בחלק התחתון של המסך במצב פורטרט</string>
+    <string name="s_pref_basebar_off" auto="1">פעולה כפתורים על גבי המסך (כניסה)</string>
+    <string name="s_pref_autowtf" auto="1">אוטומטית לשלוח ודוחות קריסה</string>
+    <string name="s_pref_autowtf_summary" auto="1">כאשר חריג לא מטופל מתרחשת, באופן אוטומטי לשלוח דוח.</string>
+    <string name="s_split_auto" auto="1">אוטומטי</string>
+    <string name="s_split_top" auto="1">חיל לחצנים עד למעלה</string>
+    <string name="s_split_top_single" auto="1">לכפות על לחצן יחיד למעלה</string>
+    <string name="s_split_bottom" auto="1">חיל לחצנים בתחתית הדף</string>
+    <string name="s_split_none" auto="1">מניחים את כל הכפתורים בתפריט מערכת</string>
+    <string name="s_about_screensize" auto="1">גודל מסך</string>
+    <string name="s_about_density" auto="1">צפיפות</string>
+    <string name="s_menu_location_int" auto="1">זיכרון פנימי נתיב</string>
+    <string name="s_menu_location_ext" auto="1">זיכרון חיצוני נתיב</string>
+    <string name="s_wtf_context" auto="1">אנא תאר בהקשר של קריסה:</string>
+    <string name="thanks" auto="1">תודה!</string>
+    <string name="menu_view_font_small" auto="1">גודל גופן קטן</string>
+    <string name="menu_view_font_medium" auto="1">גודל גופן בינוני</string>
+    <string name="menu_view_font_large" auto="1">גודל גופן גדול</string>
+    <string name="app_description" auto="1">פתח את Internet Explorer - קוד פתוח מנהל קבצים עבור כל המכשירים! (לוחות הברית, טלפונים, טלוויזיות גוגל, כריכים!) \n-Complete קובץ מערכת ניהול \n-USB, SD ו מדיה חיצוניים אחרים \n-לחיבור רשת (FTP, SFTP, SMB / Samba / Windows / LAN / WIFI) \n - עורך טקסט \n חכם תיקיות, כי סריקה עבור סוגים שונים של מדיה (וידאו, תמונות, מוסיקה, הורדות) \n-צפה זימונית המדריך ניווט (מימין לסחוב לעלות המדריך) \n-משתמש על / root היכולת ברשימה / לקרוא תיקיות מערכת (המערכת לא לכתוב עדיין) \n \nFeatures הבאים: \n-כרטיסיות עורך טקסט \n-יכולת רשת יותר (Dropbox, Box.net, כונן שמים) \n-Offline מבנה קובץ המטמון, יזכרו אילו קבצים יש לך במקומות שונים, ללא צורך להתחבר \n-Disk חום המפה מראה מקום שבו הקבצים הגדולים ביותר הם \n \n * שים לב: App היא בגרסת ביתא. יש עדיין הרבה באגים. אם אתה לא רוצה לחוות את הבאגים, בבקשה אל תוריד את היישום הזה. אם תרצה לעזור לי למצוא את הבאגים, אנא שלח לי או לשתף פעולה עם אלי GitHub (https://github.com/BrandoCommando/OpenExplorer/). יש לזכור דירוגים רעים לעזור לאף אחד.</string>
+    <string name="alert_translate_google" auto="1">שלום, תרגום זה מסופק על ידי Google Translate. אם אתה יודע אנגלית, כמו גם %s, ואת רוצה לסייע במתן תרגום טוב יותר, אנא לחץ על הכפתור הזה:</string>
+    <string name="alert_translate_none" auto="1">שלום, נראה כי אתה משתמש בשפה לא נתמכת. האם אתה יודע אנגלית של%? אם הייתם רוצים לסייע במתן התרגום הנכון, לחצו כאן:</string>
+    <string name="button_translate" auto="1">לתרגם</string>
+    <string name="httpError">אירעה שגיאת רשת.</string>
+    <string name="httpErrorAuth">האימות נכשל.</string>
+    <string name="httpErrorProxyAuth">האימות דרך שרת ה-Proxy נכשל.</string>
+    <string name="httpErrorConnect">ההתחברות לשרת נכשלה.</string>
+    <string name="httpErrorIO">השרת לא הצליח ליצור קשר. נסה שוב מאוחר יותר.</string>
+    <string name="httpErrorTimeout">חלף הזמן הקצוב של החיבור לשרת.</string>
+    <string name="httpErrorFile">לא היתה גישה לקובץ.</string>
+    <string name="httpErrorFileNotFound">הקובץ המבוקש לא נמצא.</string>
+    <string name="contentServiceSync">סינכרון</string>
+    <string name="keyguard_password_enter_pin_code">הזן קוד PIN</string>
+    <string name="keyguard_password_enter_password_code">הזן סיסמה לביטול הנעילה</string>
+    <string name="keyguard_password_enter_pin_password_code">הזן PIN לביטול נעילה</string>
+    <string name="lockscreen_password_wrong">מצטערים, נסה שוב</string>
+    <string name="whichApplication">השלמת פעולה באמצעות</string>
+    <string name="noApplications">אין יישומים שיכולים לבצע פעולה זו.</string>
+    <string name="report">שלח דוח</string>
+    <string name="sim_restart_button">הפעל מחדש</string>
+    <string name="extmedia_format_button_format">פרמוט</string>
+    <string name="ext_media_nofs_notification_message">אחסון USB ריק או עם מערכת קבצים לא נתמכת.</string>
+    <string name="activity_list_empty">כרטיס SD ריק או שמערכת הקבצים שלו לא נתמכת.</string>
+    <string name="ime_action_go">לא נמצאו פעילויות תואמות</string>
+    <string name="ime_action_send">התחל</string>
+    <string name="ime_action_done">שלח</string>
+    <string name="ime_action_default">סיום</string>
+    <string name="upload_file">בצע</string>
+    <string name="no_file_chosen">בחר קובץ</string>
+    <string name="reset">לא נבחר קובץ</string>
+    <string name="back_button_label">איפוס</string>
+    <string name="next_button_label">הקודם</string>
+    <string name="no_matches">הבא</string>
+    <string name="find_on_page">אין התאמות</string>
+    <string name="find">חפש בדף</string>
+    <string name="activitychooserview_choose_application">מצא</string>
+    <string name="shareactionprovider_share_with">בחר יישום</string>
+    <string name="storage_internal">שתף עם</string>
+    <string name="storage_sd_card">אחסון פנימי</string>
+    <string name="storage_usb">כרטיס SD</string>
+    <string name="extract_edit_menu_button">אחסון USB</string>
+    <string name="activity_chooser_view_see_all">ערוך...</string>
 </resources>

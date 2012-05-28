@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">Ouvrez l\'Explorateur</string>
+    <string name="app_name">film</string>
     <string name="s_photos" auto="1">Photos</string>
     <string name="s_videos" auto="1">Vidéos</string>
     <string name="s_music" auto="1">Musique</string>
@@ -9,35 +9,35 @@
     <string name="s_internal" auto="1">Interne</string>
     <string name="s_view" auto="1">Voir</string>
     <string name="s_bookmarks" auto="1">Favoris</string>
-    <string name="s_menu_favorites" auto="1">Favoris bascule</string>
-    <string name="s_menu_sort" auto="1">Trier</string>
-    <string name="s_menu_sort_name_asc" auto="1">Trier par Nom (de A à Z)</string>
+    <string name="s_menu_favorites">Favoris</string>
+    <string name="s_menu_sort">Trier</string>
+    <string name="s_menu_sort_name_asc">Trier par Nom (de A à Z)</string>
     <string name="s_menu_sort_name_desc" auto="1">Trier par Nom (Z à A)</string>
-    <string name="s_menu_sort_date_asc" auto="1">Trier Trier par nouveautés</string>
-    <string name="s_menu_sort_date_desc" auto="1">Trier par ancien</string>
-    <string name="s_menu_sort_size_asc" auto="1">Trier par Le plus grand</string>
-    <string name="s_menu_sort_size_desc" auto="1">Trier par Le plus petit</string>
+    <string name="s_menu_sort_date_asc">Trier par nouveautés</string>
+    <string name="s_menu_sort_date_desc">Trier par ancienneté</string>
+    <string name="s_menu_sort_size_asc">Trier par taille (du + grand au + petit)</string>
+    <string name="s_menu_sort_size_desc">Trier par taille (du + petit au + grand)</string>
     <string name="s_menu_sort_type" auto="1">Trier par Type de fichier</string>
-    <string name="s_menu_multi" auto="1">Multi-Select</string>
-    <string name="s_menu_grid" auto="1">Grille Voir</string>
-    <string name="s_menu_list" auto="1">Voir la liste</string>
+    <string name="s_menu_multi">Sélections multiples</string>
+    <string name="s_menu_grid">Voir la grille</string>
+    <string name="s_menu_list">Affichage en liste</string>
     <string name="s_menu_carousel" auto="1">Carrousel</string>
     <string name="s_menu_hidden" auto="1">Afficher les fichiers cachés</string>
     <string name="s_menu_thumbs" auto="1">Afficher les vignettes d\'images</string>
     <string name="s_menu_new_folder" auto="1">Nouveau dossier</string>
     <string name="s_menu_other" auto="1">Autres paramètres</string>
     <string name="s_menu_flush" auto="1">Vidage du cache</string>
-    <string name="s_menu_root" auto="1">Racine</string>
-    <string name="s_menu_prefs_folder" auto="1">Préférences pour les dossiers</string>
+    <string name="s_menu_root">Root</string>
+    <string name="s_menu_prefs_folder">Préférences de dossier</string>
     <string name="s_menu_prefs_global" auto="1">Préférences globales</string>
     <string name="s_menu_info" auto="1">Infos</string>
-    <string name="s_menu_copy" auto="1">Copie</string>
+    <string name="s_menu_copy">Copier</string>
     <string name="s_menu_cut" auto="1">Couper</string>
     <string name="s_menu_paste" auto="1">Coller</string>
     <string name="s_menu_delete" auto="1">Supprimer</string>
     <string name="s_menu_share" auto="1">Envoyer / Partager ...</string>
     <string name="s_menu_zip" auto="1">Fichier Zip (s) ...</string>
-    <string name="s_menu_unzip" auto="1">Décompressez ...</string>
+    <string name="s_menu_unzip">Decompresser</string>
     <string name="s_menu_rename" auto="1">Renommer ...</string>
     <string name="s_menu_bookmark" auto="1">Ajouter un signet</string>
     <string name="s_save" auto="1">Enregistrer</string>
@@ -123,7 +123,7 @@
     <string name="s_pref_start_summary" auto="1">Indique le dossier dans lequel OpenExplorer commence en</string>
     <string name="s_custom" auto="1">Personnalisé ...</string>
     <string name="s_text_intro_top" auto="1">Bienvenue OpenExplorer!</string>
-    <string name="s_text_intro_body" auto="1">Le but de OpenExplorer est de vous rendre plus productif au sein du système de fichiers Android et dans le nuage. Que vous ayez besoin de gérer des vidéos ou des photos à partir d\'emplacements multiples ou de gérer votre serveur à distance via FTP, OpenExplorer peuvent convenir à vos besoins  n  nVeuillez choisir votre chemin de départ.:</string>
+    <string name="s_text_intro_body">Le but de OpenExplorer est de vous rendre plus productif au sein du système de fichiers Android et dans le cloud. Que vous ayez besoin de gérer des vidéos ou des photos à partir d\'emplacements multiples ou de gérer votre serveur à distance via FTP, OpenExplorer peut convenir à vos besoins.\n\nVeuillez choisir votre chemin de départ :</string>
     <string name="s_info_num_folders" auto="1">Nombre de dossiers:</string>
     <string name="s_info_num_files" auto="1">Nombre de fichiers:</string>
     <string name="s_info_last_modified" auto="1">Dernière mise à jour:</string>
@@ -174,7 +174,7 @@
     <string name="s_default" auto="1">par défaut</string>
     <string name="s_pref_timeout" auto="1">Timeout</string>
     <string name="s_pref_timeout_summary" auto="1">Délai en secondes</string>
-    <string name="s_menu_up" auto="1">monter</string>
+    <string name="s_menu_up">Dossier parent</string>
     <string name="s_prompt_unzip" auto="1">Entrez le chemin à décompresser dans:</string>
     <string name="s_pref_hardware_accel" auto="1">Activer l\'accélération matérielle</string>
     <string name="s_pref_honeyplus" auto="1">Android 3.0 + Réglages</string>
@@ -211,7 +211,7 @@
     <string name="s_pref_fancy_menus" auto="1">Menus de fantaisie</string>
     <string name="s_pref_fancy_context" auto="1">Menus contextuels Fantaisie</string>
     <string name="s_search_files" auto="1">Recherche système de fichiers</string>
-    <string name="s_menu_exit" auto="1">Sortie</string>
+    <string name="s_menu_exit">Quitter</string>
     <string name="s_warn_wtf_message" auto="1">Oups! Il semble qu\'une erreur non gérée s\'est produite! Comme il s\'agit d\'un problème commun dans les applications bêta nombreux, la seule façon de résoudre ces problèmes consiste à recevoir des rapports de divers dispositifs, tels que le vôtre, afin de déterminer comment résoudre le problème. Puissions-nous envoyer un tel rapport, contenant uniquement des données anonymes, à l\'développeur?</string>
     <string name="s_warn_wtf_ps" auto="1">*** S\'il vous plaît noter, cette application est en version beta. S\'il vous plaît ne donnez pas cette application une mauvaise note simplement parce qu\'il se bloque. Juste désinstaller si ça vous gêne vraiment. Merci!</string>
     <string name="s_yes" auto="1">Oui</string>
@@ -280,4 +280,20 @@
     <string name="storage_usb">Carte SD</string>
     <string name="extract_edit_menu_button">Mémoire de stockage USB</string>
     <string name="activity_chooser_view_see_all">Modifier...</string>
+    <string name="s_title_picker" auto="1">S\'il vous plaît choisir le répertoire</string>
+    <string name="selected_path" auto="1">Chemin sélectionné:</string>
+    <string name="filename" auto="1">Nom du fichier</string>
+    <string name="s_msg_saved" auto="1">sauvé</string>
+    <string name="s_menu_view_line_numbers" auto="1">les numéros de ligne</string>
+    <string name="warn_text_editor" auto="1">Bienvenue à l\'éditeur de texte. S\'il vous plaît appuyez longuement sur le texte pour passer en mode Edit.</string>
+    <string name="warn_networking" auto="1">Bienvenue aux réseaux. S\'il vous plaît noter que cette fonctionnalité est encore en développement et peut contenir des bugs. S\'il vous plaît ne pas donner une note défavorable sur le marché si vous trouvez un de ces bugs.</string>
+    <string name="s_menu_new_file" auto="1">Un nouveau fichier texte</string>
+    <string name="s_msg_created" auto="1">créé</string>
+    <string name="s_title_newfile" auto="1">Nouveau fichier</string>
+    <string name="s_alert_newfile_folder" auto="1">Créer un nouveau fichier dans:</string>
+    <string name="s_alert_newfile" auto="1">Tapez le nom du nouveau fichier:</string>
+    <string name="s_alert_exit" auto="1">Etes-vous sûr que vous souhaitez quitter?</string>
+    <string name="s_alert_clipboard" auto="1">Copié le Presse-papiers</string>
+    <string name="s_alert_restart" auto="1">Redémarrage. S\'il vous plaît patienter.</string>
+    <string name="language" auto="1">Langue</string>
 </resources>

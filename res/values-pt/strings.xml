@@ -1,60 +1,60 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">Abrir o Explorer</string>
-    <string name="s_photos" auto="1">Fotos</string>
+    <string name="app_name">meus documentos</string>
+    <string name="s_photos">Fotos</string>
     <string name="s_videos" auto="1">Vídeos</string>
-    <string name="s_music" auto="1">Música</string>
+    <string name="s_music">Música </string>
     <string name="s_downloads" auto="1">Download</string>
     <string name="s_external" auto="1">Externo</string>
     <string name="s_internal" auto="1">Interno</string>
     <string name="s_view" auto="1">Ver</string>
     <string name="s_bookmarks" auto="1">Bookmarks</string>
-    <string name="s_menu_favorites" auto="1">Bookmarks Alternar</string>
-    <string name="s_menu_sort" auto="1">Espécie</string>
-    <string name="s_menu_sort_name_asc" auto="1">Ordenar por Nome (A-Z)</string>
-    <string name="s_menu_sort_name_desc" auto="1">Ordenar por Nome (Z-A)</string>
-    <string name="s_menu_sort_date_asc" auto="1">Ordenar por mais novo</string>
-    <string name="s_menu_sort_date_desc" auto="1">Classificar por mais antigo</string>
-    <string name="s_menu_sort_size_asc" auto="1">Ordenar por maior</string>
-    <string name="s_menu_sort_size_desc" auto="1">Ordenar por Menor</string>
-    <string name="s_menu_sort_type" auto="1">Ordenar por Filetype</string>
-    <string name="s_menu_multi" auto="1">Multi-Select</string>
-    <string name="s_menu_grid" auto="1">Grid View</string>
-    <string name="s_menu_list" auto="1">Ver Lista</string>
-    <string name="s_menu_carousel" auto="1">Carrossel</string>
-    <string name="s_menu_hidden" auto="1">Mostrar arquivos ocultos</string>
+    <string name="s_menu_favorites">ghhjjjhh</string>
+    <string name="s_menu_sort">Ordenação</string>
+    <string name="s_menu_sort_name_asc">Ordenar por Nome (A-Z) </string>
+    <string name="s_menu_sort_name_desc">Ordenar por Nome (Z-A) </string>
+    <string name="s_menu_sort_date_asc">Ordenar pelo mais recente</string>
+    <string name="s_menu_sort_date_desc">Ordenar pelo mais antigo</string>
+    <string name="s_menu_sort_size_asc">Ordenar pelo maior</string>
+    <string name="s_menu_sort_size_desc">Ordenar pelo menor </string>
+    <string name="s_menu_sort_type">Ordenar pelo tipo de arquivo </string>
+    <string name="s_menu_multi">Multi-seleção </string>
+    <string name="s_menu_grid">Visão em grade</string>
+    <string name="s_menu_list">Visão em lista</string>
+    <string name="s_menu_carousel">Carrossel </string>
+    <string name="s_menu_hidden">Mostrar arquivos ocultos</string>
     <string name="s_menu_thumbs" auto="1">Mostrar miniaturas Imagem</string>
-    <string name="s_menu_new_folder" auto="1">Nova Pasta</string>
+    <string name="s_menu_new_folder">Nova pasta</string>
     <string name="s_menu_other" auto="1">Outras configurações</string>
     <string name="s_menu_flush" auto="1">Flush cache</string>
     <string name="s_menu_root" auto="1">Raiz</string>
     <string name="s_menu_prefs_folder" auto="1">Preferências de pasta</string>
     <string name="s_menu_prefs_global" auto="1">Preferências Globais</string>
     <string name="s_menu_info" auto="1">Informações</string>
-    <string name="s_menu_copy" auto="1">Copiar</string>
-    <string name="s_menu_cut" auto="1">Cortar</string>
-    <string name="s_menu_paste" auto="1">Colar</string>
+    <string name="s_menu_copy">Copiar</string>
+    <string name="s_menu_cut">Cortar</string>
+    <string name="s_menu_paste">Colar</string>
     <string name="s_menu_delete" auto="1">Excluir</string>
     <string name="s_menu_share" auto="1">Enviar / Compartilhar ...</string>
     <string name="s_menu_zip" auto="1">Arquivo Zip (s) ...</string>
     <string name="s_menu_unzip" auto="1">Descompacte ...</string>
-    <string name="s_menu_rename" auto="1">Renomeie ...</string>
-    <string name="s_menu_bookmark" auto="1">Adicionar marcadores</string>
-    <string name="s_save" auto="1">Salvar</string>
-    <string name="s_saveas" auto="1">Salvar como ...</string>
-    <string name="s_cancel" auto="1">Cancelar</string>
-    <string name="s_size" auto="1">Tamanho</string>
+    <string name="s_menu_rename">Renomear</string>
+    <string name="s_menu_bookmark">Adicionar aos &quot;bookmarks&quot;</string>
+    <string name="s_save">Salvar</string>
+    <string name="s_saveas">Salvar como</string>
+    <string name="s_cancel">Cancelar</string>
+    <string name="s_size">Tamanho</string>
     <string name="s_none" auto="1">Nenhum</string>
-    <string name="s_pref_servers" auto="1">Servidores adicionais</string>
-    <string name="s_pref_server_add" auto="1">+ Adicionar Novo servidor</string>
+    <string name="s_pref_servers">Servidores adicionais</string>
+    <string name="s_pref_server_add">Adicionar novo servidor </string>
     <string name="s_pref_display" auto="1">Mostrar Preferências</string>
-    <string name="s_pref_hidden" auto="1">Mostrar arquivos ocultos</string>
+    <string name="s_pref_hidden">Mostrar arquivos ocultos</string>
     <string name="s_pref_hidden_summary" auto="1">Mostrar pastas e arquivos ocultos</string>
     <string name="s_pref_thumbs" auto="1">Mostrar miniaturas Imagem</string>
     <string name="s_pref_thumbs_summary" auto="1">Exibir uma miniatura para a imagem do vídeo / / App arquivos</string>
     <string name="s_pref_view" auto="1">Modo de exibição</string>
     <string name="s_pref_view_summary" auto="1">Exibir arquivos em uma grade, lista ou carrossel (Honeycomb só)</string>
-    <string name="s_pref_sort" auto="1">Classificando</string>
+    <string name="s_pref_sort">Ordenando</string>
     <string name="s_pref_sort_summary" auto="1">Escolha como classificar arquivos e pastas</string>
     <string name="s_pref_advanced" auto="1">Avançado</string>
     <string name="s_pref_server_name" auto="1">Nome do servidor</string>
@@ -123,7 +123,7 @@
     <string name="s_pref_start_summary" auto="1">Indica qual pasta OpenExplorer começa em</string>
     <string name="s_custom" auto="1">Personalizado ...</string>
     <string name="s_text_intro_top" auto="1">Bem-vindo ao OpenExplorer!</string>
-    <string name="s_text_intro_body" auto="1">O objetivo do OpenExplorer é torná-lo mais produtivo dentro do sistema de arquivos do Android e na nuvem. Se você precisa para gerenciar vídeos ou fotografias de vários locais ou gerenciar seu servidor remotamente via FTP, OpenExplorer pode atender às suas necessidades  n  nPor favor, selecione o seu caminho de partida.:</string>
+    <string name="s_text_intro_body">ghhjh</string>
     <string name="s_info_num_folders" auto="1">Número de pastas:</string>
     <string name="s_info_num_files" auto="1">Número de arquivos:</string>
     <string name="s_info_last_modified" auto="1">Última modificação:</string>

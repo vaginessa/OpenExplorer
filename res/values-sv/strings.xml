@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
+    <string name="app_name" auto="1">Öppen Explorer</string>
     <string name="s_photos">Foton</string>
     <string name="s_videos">Video</string>
     <string name="s_music">Musik</string>
@@ -8,6 +9,7 @@
     <string name="s_internal">Internt</string>
     <string name="s_view">Översikt</string>
     <string name="s_bookmarks">Bokmärke</string>
+    <string name="s_menu_favorites" auto="1">Toggle bokmärken</string>
     <string name="s_menu_sort">Sortera</string>
     <string name="s_menu_sort_name_asc">Sortera efter namn (A-Z)</string>
     <string name="s_menu_sort_name_desc">Sortera efter namn (Z-A)</string>
@@ -16,6 +18,266 @@
     <string name="s_menu_sort_size_asc">Sortera efter största</string>
     <string name="s_menu_sort_size_desc">Sortera efter minsta</string>
     <string name="s_menu_sort_type">Sortera efter filtyp</string>
+    <string name="s_menu_multi" auto="1">Multi-Select</string>
+    <string name="s_menu_grid" auto="1">Grid View</string>
     <string name="s_menu_list">listvy</string>
+    <string name="s_menu_carousel" auto="1">Karusellen</string>
     <string name="s_menu_hidden">visa dolda filer</string>
+    <string name="s_menu_thumbs" auto="1">Visa miniatyrbilder</string>
+    <string name="s_menu_new_folder" auto="1">Ny mapp</string>
+    <string name="s_menu_other" auto="1">Andra inställningar</string>
+    <string name="s_menu_flush" auto="1">Flush Cache</string>
+    <string name="s_menu_root" auto="1">Rot</string>
+    <string name="s_menu_prefs_folder" auto="1">Folder Preferences</string>
+    <string name="s_menu_prefs_global" auto="1">Globala Inställningar</string>
+    <string name="s_menu_info" auto="1">Info</string>
+    <string name="s_menu_copy" auto="1">Kopiera</string>
+    <string name="s_menu_cut" auto="1">Skära</string>
+    <string name="s_menu_paste" auto="1">Klistra in</string>
+    <string name="s_menu_delete" auto="1">Bort</string>
+    <string name="s_menu_share" auto="1">Skicka / Dela ...</string>
+    <string name="s_menu_zip" auto="1">Zip-fil (er) ...</string>
+    <string name="s_menu_unzip" auto="1">Packa ...</string>
+    <string name="s_menu_rename" auto="1">Byt namn ...</string>
+    <string name="s_menu_bookmark" auto="1">Lägg till bokmärke</string>
+    <string name="s_save" auto="1">Spara</string>
+    <string name="s_saveas" auto="1">Spara som ...</string>
+    <string name="s_cancel" auto="1">Avbryt</string>
+    <string name="s_size" auto="1">Storlek</string>
+    <string name="s_none" auto="1">Ingen</string>
+    <string name="s_pref_servers" auto="1">Ytterligare servrar</string>
+    <string name="s_pref_server_add" auto="1">+ Lägg till ny server</string>
+    <string name="s_pref_display" auto="1">Visa Inställningar</string>
+    <string name="s_pref_hidden" auto="1">Visa dolda filer</string>
+    <string name="s_pref_hidden_summary" auto="1">Visa dolda filer och mappar</string>
+    <string name="s_pref_thumbs" auto="1">Visa miniatyrbilder</string>
+    <string name="s_pref_thumbs_summary" auto="1">Visa en miniatyrbild för Image / Video / App-filer</string>
+    <string name="s_pref_view" auto="1">Visa läge</string>
+    <string name="s_pref_view_summary" auto="1">Visa filer i ett rutnät, lista, eller karusell (Honeycomb endast)</string>
+    <string name="s_pref_sort" auto="1">Sortering</string>
+    <string name="s_pref_sort_summary" auto="1">Välj hur du vill sortera filer och mappar</string>
+    <string name="s_pref_advanced" auto="1">Avancerad</string>
+    <string name="s_pref_server_name" auto="1">Servernamn</string>
+    <string name="s_pref_server_name_summary" auto="1">Ange Server Name</string>
+    <string name="s_pref_server_url" auto="1">Server URL</string>
+    <string name="s_pref_server_url_summary" auto="1">Fyll i fullständigt server URL</string>
+    <string name="s_pref_server_host" auto="1">Server Host</string>
+    <string name="s_pref_server_user" auto="1">Användaren</string>
+    <string name="s_pref_server_user_summary" auto="1">Användarnamn</string>
+    <string name="s_pref_server_password" auto="1">Lösenord</string>
+    <string name="s_pref_server_password_summary" auto="1">Användarnamn Lösenord</string>
+    <string name="s_pref_server_path" auto="1">Underkatalog</string>
+    <string name="s_pref_server_path_summary" auto="1">Ange sökväg standard inloggning</string>
+    <string name="s_pref_server_extras" auto="1">Extrainställningar</string>
+    <string name="s_pref_server_update" auto="1">Lägg till / uppdatera server</string>
+    <string name="s_pref_server_type" auto="1">Server av typ</string>
+    <string name="s_files" auto="1">filer</string>
+    <string name="s_create" auto="1">Skapa</string>
+    <string name="s_title_holding_x_files" auto="1">Håll %s-filer</string>
+    <string name="s_title_newfolder" auto="1">Skapa en ny mapp</string>
+    <string name="s_title_send" auto="1">Skicka %s</string>
+    <string name="s_title_unzip" auto="1">Packa %s</string>
+    <string name="s_title_zip" auto="1">Zip %s</string>
+    <string name="s_title_executing" auto="1">Exekvera</string>
+    <string name="s_title_deleting" auto="1">Ta bort</string>
+    <string name="s_title_searching" auto="1">Söka</string>
+    <string name="s_title_moving" auto="1">Rörliga</string>
+    <string name="s_title_copying" auto="1">Kopiera</string>
+    <string name="s_title_zipping" auto="1">Zippa</string>
+    <string name="s_title_unzipping" auto="1">Unzipping</string>
+    <string name="s_title_wait" auto="1">Var god vänta ...</string>
+    <string name="s_alert_confirm_delete" auto="1">Ta bort %s kan inte ångras. Är du säker på att du vill fortsätta?</string>
+    <string name="s_alert_rename" auto="1">Vänligen skriv in nya namn den här filen</string>
+    <string name="s_alert_newfolder" auto="1">Skriv namnet på den mapp du vill skapa.</string>
+    <string name="s_alert_unzip" auto="1">Vill du packa %s här eller någon annan mapp?</string>
+    <string name="s_button_unzip_here" auto="1">Packa här</string>
+    <string name="s_button_unzip_else" auto="1">Packa annanstans ...</string>
+    <string name="s_msg_none" auto="1">Fil (er) kunde inte</string>
+    <string name="s_msg_some" auto="1">Vissa fil (er) kunde inte</string>
+    <string name="s_msg_all" auto="1">Fil (er) med framgång</string>
+    <string name="s_msg_deleted" auto="1">bort</string>
+    <string name="s_msg_moved" auto="1">flyttas</string>
+    <string name="s_msg_copied" auto="1">kopieras</string>
+    <string name="s_remove" auto="1">Avlägsna</string>
+    <string name="s_eject" auto="1">Mata</string>
+    <string name="s_update" auto="1">Uppdatera</string>
+    <string name="s_alert_bookmark_rename" auto="1">Ändra titeln på ditt bokmärke.</string>
+    <string name="s_title_bookmark_prefix" auto="1">Hantera Bokmärke:</string>
+    <string name="s_alert_remove_safe" auto="1">Du kan nu på ett säkert sätt ta bort enheten.</string>
+    <string name="s_alert_remove_error" auto="1">Det går inte att mata ut.</string>
+    <string name="s_menu_about" auto="1">Ca</string>
+    <string name="s_about_version" auto="1">Version</string>
+    <string name="s_about_author" auto="1">Författare</string>
+    <string name="s_about_site" auto="1">Webbplats</string>
+    <string name="s_about_email" auto="1">E-post</string>
+    <string name="s_about_recent" auto="1">Nya uppdateringar</string>
+    <string name="s_chooser_email" auto="1">Skicka feedback ...</string>
+    <string name="s_status_loading" auto="1">Laddar ...</string>
+    <string name="s_menu_open" auto="1">Öppna med ...</string>
+    <string name="s_menu_edit" auto="1">Redigera med ...</string>
+    <string name="s_pref_stats_title" auto="1">Hjälpa till att förbättra OpenExplorer</string>
+    <string name="s_pref_stats_summary" auto="1">Skicka anonym användarstatistik. Detta inbegriper inte information som kan användas för att identifiera användaren.</string>
+    <string name="s_error_no_intents" auto="1">Inga installerade program kan läsa den här typen av fil.</string>
+    <string name="s_menu_root_disabled" auto="1">Rot inaktiverad</string>
+    <string name="s_pref_start" auto="1">Start mapp</string>
+    <string name="s_pref_start_summary" auto="1">Anger vilken mapp OpenExplorer startar i</string>
+    <string name="s_custom" auto="1">Anpassad ...</string>
+    <string name="s_text_intro_top" auto="1">Välkommen till OpenExplorer!</string>
+    <string name="s_text_intro_body" auto="1">Målet med OpenExplorer är att göra dig mer produktiv i Android filsystemet och i molnet. Oavsett om du behöver för att hantera video eller bilder från flera platser eller hantera din webbserver på distans via FTP, kan OpenExplorer passar dina behov  n  nVälj din utgångspunkt väg.:</string>
+    <string name="s_info_num_folders" auto="1">Antal mappar:</string>
+    <string name="s_info_num_files" auto="1">Antal filer:</string>
+    <string name="s_info_last_modified" auto="1">Senast ändrad:</string>
+    <string name="s_info_permissions" auto="1">Filrättigheter:</string>
+    <string name="s_info_permission_read" auto="1">Läs:</string>
+    <string name="s_info_permission_write" auto="1">Skriv:</string>
+    <string name="s_info_permission_execute" auto="1">Kör:</string>
+    <string name="s_toggle_keyboard" auto="1">Tangentbord</string>
+    <string name="s_show_password" auto="1">Visa lösenord</string>
+    <string name="s_error_ftp" auto="1">Fel vid anslutning till FTP</string>
+    <string name="s_prompt_zip" auto="1">Ange filnamnet på nya zip-fil:</string>
+    <string name="app_edit" auto="1">Redigera med OpenExplorer</string>
+    <string name="s_menu_more" auto="1">Fler alternativ ...</string>
+    <string name="s_msg_low_memory" auto="1">Låg minne!</string>
+    <string name="s_clear" auto="1">Rensa</string>
+    <string name="s_menu_delete_all" auto="1">Ta bort alla</string>
+    <string name="s_menu_move_all" auto="1">Flytta hit</string>
+    <string name="s_menu_copy_all" auto="1">Kopiera Här</string>
+    <string name="s_confirm_delete" auto="1">Är du säker på att du vill radera %s?</string>
+    <string name="s_error_same_destination" auto="1">Målkatalogen är densamma.</string>
+    <string name="s_sample_notification" auto="1">Kopiering -&gt; SDCard:  n 3 Filer</string>
+    <string name="s_pref_fullscreen" auto="1">Full Screen</string>
+    <string name="s_pref_fullscreen_summary_on" auto="1">Göm Anmälan Bar</string>
+    <string name="s_pref_fullscreen_summary_off" auto="1">Visa Anmälan Bar</string>
+    <string name="s_pref_pagers" auto="1">Visa Personsökare</string>
+    <string name="s_pref_pagers_summary_on" auto="1">Horisontell drar = Directory Navigation</string>
+    <string name="s_pref_pagers_summary_off" auto="1">Övergripande drar funktionshindrade</string>
+    <string name="s_alert_new_media" auto="1">New Media insatt!</string>
+    <string name="s_warn_pager_title" auto="1">Ny funktion: Visa Personsökare</string>
+    <string name="s_warn_pager" auto="1">Svep vänster till höger för att gå upp en katalog och höger till vänster för att gå tillbaka. Detta bör göra det lättare att navigera. Prova (på externa media)!</string>
+    <string name="s_warn_confirm" auto="1">Förstår du?</string>
+    <string name="s_warn_disable" auto="1">Inaktivera</string>
+    <string name="s_pref_intent_internal" auto="1">Interna väsentligt</string>
+    <string name="s_pref_intent_internal_on" auto="1">Använda OpenExplorer Avsikt-hanteraren</string>
+    <string name="s_pref_intent_internal_off" auto="1">Använd Manager System Intent</string>
+    <string name="s_pref_text_internal" auto="1">Använda interna Textredigeraren</string>
+    <string name="s_text_editor_title" auto="1">Textredigeraren</string>
+    <string name="s_pref_show_root" auto="1">Visa Rotfilsystemet (/)</string>
+    <string name="s_pref_show_internal" auto="1">Visa Interna Media</string>
+    <string name="s_pref_show_external" auto="1">Visa externa media</string>
+    <string name="s_error_no_media" auto="1">Det ser ut som det inte finns något insatt media. Inaktivera USB delning eller re-insert media.</string>
+    <string name="s_prompt_password" auto="1">Ange lösenord</string>
+    <string name="s_add" auto="1">Tillsätt</string>
+    <string name="s_server_ftp" auto="1">FTP</string>
+    <string name="s_server_sftp" auto="1">SFTP</string>
+    <string name="s_pref_server_port" auto="1">Port</string>
+    <string name="s_about_buildtime" auto="1">Bygg Datum</string>
+    <string name="s_default" auto="1">Standard</string>
+    <string name="s_pref_timeout" auto="1">Timeout</string>
+    <string name="s_pref_timeout_summary" auto="1">Timeout i sekunder</string>
+    <string name="s_menu_up" auto="1">Gå upp</string>
+    <string name="s_prompt_unzip" auto="1">Ange sökväg till unzip i:</string>
+    <string name="s_pref_hardware_accel" auto="1">Aktivera Maskinvaruacceleration</string>
+    <string name="s_pref_honeyplus" auto="1">Android 3.0 + inställningar</string>
+    <string name="s_pref_actionmode" auto="1">Action läge</string>
+    <string name="s_pref_actionmode_enabled" auto="1">Använd Action läge</string>
+    <string name="s_pref_actionmode_disabled" auto="1">Använd Standard Context menyer</string>
+    <string name="s_server_smb" auto="1">SMB / Windows</string>
+    <string name="s_bookmark_drives" auto="1">Drives</string>
+    <string name="s_bookmark_smart" auto="1">Smarta mappar</string>
+    <string name="s_bookmark_favorites" auto="1">Favoriter</string>
+    <string name="s_bookmark_servers" auto="1">Servrar</string>
+    <string name="s_bookmark_cache" auto="1">Cache</string>
+    <string name="s_info_totalspace" auto="1">Disk Total Space:</string>
+    <string name="s_info_freespace" auto="1">Disk Free Space:</string>
+    <string name="s_status_rate" auto="1">Rate:</string>
+    <string name="s_about_hardware" auto="1">Hårdvara</string>
+    <string name="s_menu_refresh" auto="1">Uppdatera mapp</string>
+    <string name="s_pref_reset" auto="1">Återställ Visningar</string>
+    <string name="s_toast_complete" auto="1">Operation klar!</string>
+    <string name="s_pref_reset_summary" auto="1">Klicka här för att ta bort alla mappspecifika vyinställningar, återgå till ett standardläge.</string>
+    <string name="s_prompt_path" auto="1">Ange sökväg:</string>
+    <string name="s_prompt_search" auto="1">Sök efter:</string>
+    <string name="s_prompt_search_within" auto="1">Sök inom:</string>
+    <string name="s_pref_view_category" auto="1">Bokmärken Visa Inställningar</string>
+    <string name="s_pref_show_videos" auto="1">Visa Videos</string>
+    <string name="s_pref_show_photos" auto="1">Visa foton</string>
+    <string name="s_pref_show_music" auto="1">Visa musik</string>
+    <string name="s_pref_show_downloads" auto="1">Visa Downloads</string>
+    <string name="s_hide" auto="1">Göm</string>
+    <string name="s_show" auto="1">Visar</string>
+    <string name="s_msg_event_cancelled" auto="1">Händelse annulleras.</string>
+    <string name="s_alert_newfolder_folder" auto="1">Skapa ny mapp i:</string>
+    <string name="s_pref_fancy_category" auto="1">Fancy Bildskärmsinställningar</string>
+    <string name="s_pref_fancy_menus" auto="1">Fancy Menyer</string>
+    <string name="s_pref_fancy_context" auto="1">Fancy Context Menyer</string>
+    <string name="s_search_files" auto="1">Sök filsystem</string>
+    <string name="s_menu_exit" auto="1">Utgång</string>
+    <string name="s_warn_wtf_message" auto="1">Oops! Det verkar som om en ohanterat fel har inträffat! Eftersom detta är ett vanligt problem i många Beta apps, är det enda sättet att lösa dessa frågor för att ta emot rapporter från olika enheter, t.ex. din, för att avgöra hur du åtgärdar problemet. Kan vi skicka en sådan rapport, som innehåller endast anonyma uppgifter, till utvecklaren?</string>
+    <string name="s_warn_wtf_ps" auto="1">*** Observera, detta är app i Beta. Vänligen ger inte denna applikation ett dåligt betyg bara för att det kraschar. Bara avinstallera om det verkligen stör dig. Tack!</string>
+    <string name="s_yes" auto="1">Ja</string>
+    <string name="s_no" auto="1">Ingen</string>
+    <string name="s_wtf_preview" auto="1">Förhandsgranska rapportdata</string>
+    <string name="s_wtf_remember" auto="1">Fråga inte igen</string>
+    <string name="s_pref_basebar" auto="1">Split Action Bar</string>
+    <string name="s_pref_basebar_on" auto="1">Action knapparna längst ned på skärmen i stående läge</string>
+    <string name="s_pref_basebar_off" auto="1">Action-knapparna ovanpå skärmen (om sådan finns)</string>
+    <string name="s_pref_autowtf" auto="1">Auto-skicka felrapporter</string>
+    <string name="s_pref_autowtf_summary" auto="1">När ett ohanterat undantag inträffar, automatiskt skicka rapport.</string>
+    <string name="s_split_auto" auto="1">Automatisk</string>
+    <string name="s_split_top" auto="1">Force Knappar till toppen</string>
+    <string name="s_split_top_single" auto="1">Tvinga enda knapp för att Top</string>
+    <string name="s_split_bottom" auto="1">Force Knappar till botten</string>
+    <string name="s_split_none" auto="1">Placera alla knappar i System menyn</string>
+    <string name="s_about_screensize" auto="1">Skärmstorlek</string>
+    <string name="s_about_density" auto="1">Densitet</string>
+    <string name="s_menu_location_int" auto="1">Internminne Path</string>
+    <string name="s_menu_location_ext" auto="1">Externt minne Path</string>
+    <string name="s_wtf_context" auto="1">Beskriv samband med kraschen:</string>
+    <string name="thanks" auto="1">Tack!</string>
+    <string name="menu_view_font_small" auto="1">Teckenstorlek Liten</string>
+    <string name="menu_view_font_medium" auto="1">Teckenstorlek Medium</string>
+    <string name="menu_view_font_large" auto="1">Teckenstorlek Large</string>
+    <string name="app_description" auto="1">Öppna Utforskaren - Open Source filhanterare för alla enheter! (Tabletter, telefoner, Google TV, smörgåsar!)  N-Komplett filsystem management  n-USB, SD och andra externa media  n-nätverk kan anslutas (FTP, SFTP, SMB / Samba / Windows / LAN / WIFI)  n - Text Editor  n-smarta mappar som skannar för olika typer av media (videor, foton, musik, nedladdningar)  n-View Personsökare katalogen navigering (svep rätt att gå upp en katalog)  n-superuser / Root förmåga att lista / Läs systemmappar (inget system skriva ännu)  n  nFeatures framöver:  n-flikar Text Editor  n-More nätverkskapacitet (Dropbox, Box.net, Sky drive)  n-Offline filstruktur cache, kommer ihåg vilka filer du har på olika platser utan att behöva ansluta  n-Diskutrymme värmen Kartan visar var dina största filer  n  n * OBS: Denna app är i Beta. Det finns fortfarande många buggar. Om du inte vill uppleva dessa fel, hämtar snälla inte denna app. Om du vill hjälpa mig att hitta dessa fel, vänligen maila mig eller samarbeta med mig på GitHub (https://github.com/BrandoCommando/OpenExplorer/). Kom ihåg dåliga betyg att hjälpa någon.</string>
+    <string name="alert_translate_google" auto="1">Hej, är denna översättning tillhandahålls av Google Translate. Om du vet engelska och som %s, och vill hjälpa till att ge en bättre översättning, klicka på knappen:</string>
+    <string name="alert_translate_none" auto="1">Hej, verkar det som du använder en icke-språk som stöds. Vet du engelska och %s? Om du vill du hjälpa till att tillhandahålla en korrekt översättning, klicka här:</string>
+    <string name="button_translate" auto="1">Översätt</string>
+    <string name="httpError">Ett nätverksfel har inträffat.</string>
+    <string name="httpErrorAuth">Det gick inte att autentisera.</string>
+    <string name="httpErrorProxyAuth">Det gick inte att autentisera via proxyservern.</string>
+    <string name="httpErrorConnect">Det gick inte att ansluta till servern.</string>
+    <string name="httpErrorIO">Servern kommunicerade inte. Försök igen senare.</string>
+    <string name="httpErrorTimeout">Anslutningen till servern har kopplats ifrån.</string>
+    <string name="httpErrorFile">Det gick inte att komma åt filen.</string>
+    <string name="httpErrorFileNotFound">Den begärda filen hittades inte.</string>
+    <string name="contentServiceSync">Synkronisera</string>
+    <string name="keyguard_password_enter_pin_code">Ange PIN-kod</string>
+    <string name="keyguard_password_enter_password_code">Ange lösenord för att låsa upp</string>
+    <string name="keyguard_password_enter_pin_password_code">Ange PIN-kod för att låsa upp</string>
+    <string name="lockscreen_password_wrong">Försök igen</string>
+    <string name="whichApplication">Slutför åtgärd genom att använda</string>
+    <string name="noApplications">Inga appar kan utföra den här åtgärden.</string>
+    <string name="report">Rapportera</string>
+    <string name="sim_restart_button">Starta om</string>
+    <string name="extmedia_format_button_format">Format</string>
+    <string name="ext_media_nofs_notification_message">USB-lagringsenheten är tom eller så har den ett filsystem som inte stöds.</string>
+    <string name="activity_list_empty">SD-kortet är tomt eller så har det ett filsystem som inte stöds.</string>
+    <string name="ime_action_go">Inga matchande aktiviteter hittades</string>
+    <string name="ime_action_send">Kör</string>
+    <string name="ime_action_done">Skicka</string>
+    <string name="ime_action_default">Färdig</string>
+    <string name="upload_file">Utför</string>
+    <string name="no_file_chosen">Välj fil</string>
+    <string name="reset">Ingen fil har valts</string>
+    <string name="back_button_label">Återställ</string>
+    <string name="next_button_label">Tillbaka</string>
+    <string name="no_matches">Nästa</string>
+    <string name="find_on_page">Inga träffar</string>
+    <string name="find">Sök på sidan</string>
+    <string name="activitychooserview_choose_application">Sök efter</string>
+    <string name="shareactionprovider_share_with">Välj en app</string>
+    <string name="storage_internal">Dela med</string>
+    <string name="storage_sd_card">Internt lagringsutrymme</string>
+    <string name="storage_usb">SD-kort</string>
+    <string name="extract_edit_menu_button">USB-lagring</string>
+    <string name="activity_chooser_view_see_all">Redigera...</string>
 </resources>
