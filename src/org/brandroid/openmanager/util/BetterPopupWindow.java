@@ -139,6 +139,7 @@ public class BetterPopupWindow {
 		//if(forcedHeight) return;
 		if(mShownListener != null)
 			mShownListener.OnPopupShown(w, h);
+		if(popup == null) return;
 		if(Math.abs(popup.getHeight() - h) > 10 || popup.getHeight() >= getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height))
 		{
 			if(exact != null && exact.y + h > getAvailableHeight())

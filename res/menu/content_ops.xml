@@ -33,4 +33,9 @@
 	    android:title="@android:string/paste"
 	    android:showAsAction="always"
 	    android:icon="@drawable/ic_menu_paste" />
+	<item
+	    android:id="@+id/menu_refresh"
+	    android:title="@string/s_menu_refresh"
+	    android:icon="@drawable/ic_menu_refresh"
+	    />
 </menu>

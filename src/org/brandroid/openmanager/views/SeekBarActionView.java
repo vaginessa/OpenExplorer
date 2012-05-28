@@ -2,6 +2,8 @@ package org.brandroid.openmanager.views;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.interfaces.OpenActionView;
+import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -25,6 +27,7 @@ public class SeekBarActionView
 	private boolean mIconified = true;
 	private boolean mIconifiedByDefault = true;
 	private boolean mClearingFocus = true;
+	private BetterPopupWindow pop = null;
 	
 	public interface OnCloseListener
 	{
@@ -49,6 +52,23 @@ public class SeekBarActionView
 				setIconified(!mIconified);
 			}
 		});
+	}
+	
+	public BetterPopupWindow getPopup(View anchor)
+	{
+		if(pop == null)
+		{
+			pop = new BetterPopupWindow(anchor.getContext(), anchor);
+			pop.setContentView(this);
+			setIconifiedByDefault(false);
+			setOnCloseClickListener(new OnCloseListener() {
+				public boolean onClose() {
+					pop.dismiss();
+					return true;
+				}
+			});
+		}
+		return pop;
 	}
 	
 	@Override
