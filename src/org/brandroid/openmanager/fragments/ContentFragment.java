@@ -479,16 +479,25 @@ public class ContentFragment extends OpenFragment
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
 				int col = 0;
+				int cols = 1;
 				try {
-					Method m = GridView.class.getMethod("getNumColumns", new Class[0]);
-					Object tmp = m.invoke(mGrid, new Object[0]);
-					if(tmp instanceof Integer)
-						col = mGrid.getSelectedItemPosition() % (Integer)tmp;
+					if(!OpenExplorer.BEFORE_HONEYCOMB)
+					{
+						Method m = GridView.class.getMethod("getNumColumns", new Class[0]);
+						Object tmp = m.invoke(mGrid, new Object[0]);
+						if(tmp instanceof Integer)
+						{
+							cols = (Integer)tmp;
+							col = mGrid.getSelectedItemPosition() % cols;
+						}
+					}
 				} catch(Exception e) { }
 				Logger.LogDebug("ContentFragment.mGrid.onKey(" + keyCode + "," + event + ")@" + col);
+				if(!OpenExplorer.BEFORE_HONEYCOMB)
+					cols = (Integer)mGrid.getNumColumns();
 				if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT && col == 0)
 					return onFragmentDPAD(me, false);
-				else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && col == mGrid.getNumColumns() - 1)
+				else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && col == cols - 1)
 					return onFragmentDPAD(me, true);
 				else
 					return false;

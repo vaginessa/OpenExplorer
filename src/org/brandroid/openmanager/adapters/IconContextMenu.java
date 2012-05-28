@@ -256,11 +256,16 @@ public class IconContextMenu implements OnKeyListener
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
 		if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
 		int pos = mGrid.getSelectedItemPosition();
-		int col = pos % mGrid.getNumColumns();
+		int col = pos % maxColumns;
 		if(col == 0 && keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
 			return true;
-		if(col == mGrid.getNumColumns() - 1 && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
+		if(col == maxColumns - 1 && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
 			return true;
+		if(keyCode == KeyEvent.KEYCODE_MENU)
+		{
+			dismiss();
+			return true;
+		}
 		return false;
 	}
 
