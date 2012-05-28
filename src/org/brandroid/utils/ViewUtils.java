@@ -125,46 +125,67 @@ public class ViewUtils {
 		}
 	}
 
-	public static void setText(Activity activity, String string, int... textViewID) {
+	public static void setText(Activity activity, final String text, int... textViewID) {
+		boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
 		for(int id : textViewID)
 		{
-			View v = activity.findViewById(id);
-			if(v != null && v instanceof TextView)
-				((TextView)v).setText(string);
-		}
-	}
-
-	public static void setText(View parent, CharSequence text, int... textViewID) {
-		if(parent == null) return;
-		for(int id : textViewID)
-		{
-			View v = parent.findViewById(id);
-			if(v != null && v instanceof TextView)
+			final View v = activity.findViewById(id);
+			if(v == null || !(v instanceof TextView)) continue;
+			if(ui)
 				((TextView)v).setText(text);
+			else v.post(new Runnable(){public void run(){
+				((TextView)v).setText(text);
+			}});
 		}
 	}
 
-	public static void setText(View parent, int textId, int... textViewID) {
+	public static void setText(View parent, final CharSequence text, int... textViewID) {
 		if(parent == null) return;
+		boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
 		for(int id : textViewID)
 		{
-			View v = parent.findViewById(id);
-			if(v != null && v instanceof TextView)
+			final View v = parent.findViewById(id);
+			if(v == null || !(v instanceof TextView)) continue;
+			if(ui)
+				((TextView)v).setText(text);
+			else v.post(new Runnable(){public void run(){
+				((TextView)v).setText(text);
+			}});
+		}
+	}
+
+	public static void setText(View parent, final int textId, int... textViewID) {
+		if(parent == null) return;
+		boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
+		for(int id : textViewID)
+		{
+			final View v = parent.findViewById(id);
+			if(v == null || !(v instanceof TextView)) continue;
+			if(ui)
 				((TextView)v).setText(textId);
+			else v.post(new Runnable(){public void run(){
+				((TextView)v).setText(textId);
+			}});
 		}
 	}
 
 	public static void setViewsVisible(Activity a, final boolean visible, int... ids)
 	{
+		boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
 		if(a == null) return;
 		for(int id : ids)
 		{
 			if(a == null) return;
 			final View v = a.findViewById(id);
 			if(v != null)
-				//v.post(new Runnable(){public void run(){
+			{
+				if(ui)
 					v.setVisibility(visible ? View.VISIBLE : View.GONE);
-				//}});
+				else
+					v.post(new Runnable(){public void run(){
+						v.setVisibility(visible ? View.VISIBLE : View.GONE);
+					}});
+			}
 		}
 	}
 

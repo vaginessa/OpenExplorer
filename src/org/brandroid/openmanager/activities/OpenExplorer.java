@@ -1767,6 +1767,11 @@ public class OpenExplorer
 	
 	private boolean findCursors()
 	{
+		mVideoParent.setName(getString(R.string.s_videos));
+		mPhotoParent.setName(getString(R.string.s_photos));
+		mMusicParent.setName(getString(R.string.s_music));
+		mDownloadParent.setName(getString(R.string.s_downloads));
+		
 		if(mVideoParent.isLoaded())
 		{
 			//Logger.LogDebug("Videos should be found");
@@ -1774,7 +1779,6 @@ public class OpenExplorer
 		{
 			if(bRetrieveExtraVideoDetails)
 				bRetrieveExtraVideoDetails = !getSetting(null, "tag_novidinfo", false);
-			mVideoParent.setName(getString(R.string.s_videos));
 			if(DEBUG && IS_DEBUG_BUILD)
 				Logger.LogVerbose("Finding videos");
 			//if(!IS_DEBUG_BUILD)
@@ -1787,7 +1791,6 @@ public class OpenExplorer
 		{
 			if(bRetrieveDimensionsForPhotos)
 				bRetrieveDimensionsForPhotos = !getSetting(null, "tag_nodims", false);
-			mPhotoParent.setName(getString(R.string.s_photos));
 			if(DEBUG && IS_DEBUG_BUILD)
 				Logger.LogVerbose("Finding Photos");
 			try {
@@ -1798,7 +1801,6 @@ public class OpenExplorer
 		}
 		if(!mMusicParent.isLoaded())
 		{
-			mMusicParent.setName(getString(R.string.s_music));
 			if(DEBUG && IS_DEBUG_BUILD)
 				Logger.LogVerbose("Finding Music");
 			try {
@@ -1816,7 +1818,6 @@ public class OpenExplorer
 		}
 		if(!mDownloadParent.isLoaded())
 		{
-			mDownloadParent.setName(getString(R.string.s_downloads));
 			new Thread(new Runnable(){public void run(){
 				OpenFile extDrive = OpenFile.getExternalMemoryDrive(false);
 				OpenFile intDrive = OpenFile.getInternalMemoryDrive();
@@ -2130,17 +2131,18 @@ public class OpenExplorer
 			if(frag instanceof TextEditorFragment)
 				((TextEditorFragment)frag).setSalvagable(false);
 			mViewPager.post(new Runnable() {public void run() {
-				if(pos > 0)
-					mViewPager.setCurrentItem(pos - 1, false);
-				else if (mViewPagerAdapter.getCount() > 1)
-					mViewPager.setCurrentItem(pos + 1, false);
+				int cp = mViewPager.getCurrentItem();
 				mViewPagerAdapter.remove(frag);
 				setViewPageAdapter(mViewPagerAdapter, true);
 				if(frag instanceof TextEditorFragment)
 					saveOpenedEditors();
+				if(mViewPagerAdapter.getCount() == 0)
+					finish();
+				if(cp == pos && pos > 0)
+					mViewPager.setCurrentItem(pos - 1, true);
+				else if (cp == pos && mViewPagerAdapter.getCount() > 1)
+					mViewPager.setCurrentItem(pos + 1, true);
 			}});
-			if(mViewPagerAdapter.getCount() == 0)
-				finish();
 		}
 	}
 	public boolean editFile(OpenPath path) { return editFile(path, false); }
@@ -2193,8 +2195,14 @@ public class OpenExplorer
 		else if(getDirContentFragment(false) != null)
 			intent.putExtra("last", getDirContentFragment(false).getPath().getPath());
 		intent.putExtra("state", b);
-		finish();
-		startActivity(intent);
+		if(OpenExplorer.BEFORE_HONEYCOMB)
+		{
+			finish();
+			startActivity(intent);
+		} else {
+			setIntent(intent);
+			recreate();
+		}
 	}
 	
 	@Override
@@ -2226,11 +2234,15 @@ public class OpenExplorer
 			setupBaseBarButtons();
 		if(!BEFORE_HONEYCOMB)
 		try {
-			runOnUiThread(new Runnable(){public void run(){
-				getWindow().invalidatePanelMenu(Window.FEATURE_OPTIONS_PANEL);
-			}});
+			Runnable refresh = new Runnable(){public void run(){
+				try {
+					getWindow().invalidatePanelMenu(Window.FEATURE_OPTIONS_PANEL);
+				} catch(Exception e2) { }
+			}};
+			getActionBar().getCustomView().post(refresh);
 		} catch(Exception e) {
 			Logger.LogError("Unable to invalidateOptionsMenu", e);
+			
 		}
 	}
 	
