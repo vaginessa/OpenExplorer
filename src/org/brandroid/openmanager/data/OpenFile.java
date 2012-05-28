@@ -31,7 +31,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
 
-public class OpenFile extends OpenPath implements OpenPathCopyable
+public class OpenFile
+	extends OpenPath
+	implements OpenPathCopyable, OpenPath.OpenPathByteIO
 {
 	private static final long serialVersionUID = 6436156952322586833L;
 	private File mFile;
@@ -458,6 +460,25 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 		}
 		return sb.toString();
 	}
+
+	public byte[] readBytes() {
+		byte[] ret = new byte[(int)length()];
+		InputStream is = null;
+		try {
+			is = getInputStream();
+			is.read(ret);
+		} catch(Exception e)
+		{
+			Logger.LogError("Unable to read byte[] data from OpenFile(" + getPath() + ")", e);
+		} finally {
+			if(is != null)
+				try {
+					is.close();
+				} catch (IOException e) { }
+		}
+		return ret;
+	}
+	
 	public String readHead(int lines) {
 		StringBuilder sb = new StringBuilder((int)length());
 		try {
@@ -478,6 +499,23 @@ public class OpenFile extends OpenPath implements OpenPathCopyable
 			s.close();
 		} catch(Exception e) {
 			Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
+		}
+	}
+
+	public void writeBytes(byte[] buffer) {
+		OutputStream os = null;
+		try {
+			os = getOutputStream();
+			os.write(buffer);
+			os.flush();
+			os.close();
+		} catch(IOException e) {
+			Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
+		} finally {
+			if(os != null)
+				try {
+					os.close();
+				} catch (IOException e) { }
 		}
 	}
 

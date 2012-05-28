@@ -348,6 +348,15 @@ public abstract class OpenPath
 		public boolean copyFrom(OpenPath file);
 	}
 	
+	/**
+	 * OpenPathByteIO preferable over getOutputStream()
+	 */ 
+	public interface OpenPathByteIO
+	{
+		public byte[] readBytes();
+		public void writeBytes(byte[] bytes);
+	}
+	
 	public interface NeedsTempFile
 	{
 		public OpenFile tempDownload(AsyncTask<?, ?, ?> task) throws IOException;

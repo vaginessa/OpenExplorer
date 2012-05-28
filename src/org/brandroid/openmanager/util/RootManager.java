@@ -36,7 +36,13 @@ public class RootManager
 	public interface UpdateCallback
 	{
 		void onUpdate();
-		void onReceiveMessage(String msg);
+		/**
+		 * Main Callback Function
+		 * @param msg
+		 * @return Return true to signal to RootManager to stop waiting for Process.
+		 * False if more is expected.
+		 */
+		boolean onReceiveMessage(String msg);
 		void onExit();
 	}
 
@@ -52,7 +58,7 @@ public class RootManager
 	private ByteQueue mByteQueue;
     private byte[] mReceiveBuffer;
     private String mLastWrite = null;
-    private final static int BufferLength = 32 * 1024;
+    private final static int BufferLength = 128 * 1024;
     private int mPending = 0;
 
     private static final int NEW_INPUT = 1;
@@ -99,7 +105,8 @@ public class RootManager
 
 	public void onReceiveMessage(String msg) {
 		if(mNotify != null)
-			mNotify.onReceiveMessage(msg);
+			if(mNotify.onReceiveMessage(msg))
+				onUpdate();
 	}
 	
 	public RootManager setUpdateCallback(RootManager.UpdateCallback notify)
@@ -152,8 +159,12 @@ public class RootManager
             {
             	onUpdate();
             	return;
-            } else
-            	onReceiveMessage(new String(mReceiveBuffer));
+            } else {
+            	String tmp = new String(mReceiveBuffer);
+            	if(tmp.startsWith("\n"))
+            		tmp = tmp.substring(1);
+            	onReceiveMessage(tmp);
+            }
             if(mReceiveBuffer[mReceiveBuffer.length - 1] == 0)
             	onUpdate();
             //mEmulator.append(mReceiveBuffer, 0, bytesRead);
@@ -178,18 +189,43 @@ public class RootManager
 		return myProcess;
 	}
 	public String getBusyBox() {
+		final boolean[] waiting = new boolean[]{true};
 		if(busybox == null)
 		{
 			write("which busybox", new UpdateCallback() {
-				public void onUpdate() { }
-				public void onReceiveMessage(String msg) {
+				public void onUpdate() {
+					Logger.LogDebug("WHICH update");
+					waiting[0] = false;
+				}
+				public boolean onReceiveMessage(String msg) {
+					Logger.LogDebug("WHICH receive " + msg);
 					if(msg.startsWith("/"))
 						busybox = msg + " ";
 					else busybox = "";
+					waiting[0] = false;
+					return true;
 				}
-				public void onExit() { }
+				public void onExit() {
+					Logger.LogDebug("WHICH exit");
+					waiting[0] = false;
+				}
 			});
-		} else return "";
+		}
+		while(waiting[0])
+		{
+			try {
+				Thread.sleep(10);
+			} catch(InterruptedException e) { 
+				break;
+			}
+		}
+		if(busybox == null)
+			busybox = "";
+		else if(!busybox.startsWith("/"))
+			busybox = "";
+		if(busybox.indexOf("\n") > -1)
+			busybox = busybox.substring(0, busybox.indexOf("\n"));
+		
 		return busybox;
 	}
 	public boolean isRoot()
@@ -239,7 +275,7 @@ public class RootManager
 		new Thread(new Runnable(){public void run(){
 		try {
 			if(mLastWrite != null)
-				Logger.LogDebug("Waiting for last write (" + mLastWrite + ")...");
+				Logger.LogDebug("Waiting for last write (" + mLastWrite + ") to write (" + cmd + ")");
 			try {
 				while(mLastWrite != null) { Thread.sleep(10); }
 			} catch(InterruptedException e) { }
@@ -291,6 +327,7 @@ public class RootManager
 				Logger.LogDebug("Root return value: " + retVal);
 				
 				String line = null;
+				if((line = is.readLine()) == null) // skip 1st newline
 				while((line = is.readLine()) != null)
 				{
 					ret.add(line);

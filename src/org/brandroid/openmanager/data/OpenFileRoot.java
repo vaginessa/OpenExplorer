@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
+import org.brandroid.openmanager.data.OpenPath.OpenPathByteIO;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.RootManager;
@@ -27,7 +28,8 @@ import android.os.PatternMatcher;
 public class OpenFileRoot
 	extends OpenPath
 	implements //OpenPath.OpenPathUpdateListener,
-		OpenPath.NeedsTempFile, OpenPath.OpenPathCopyable
+		OpenPath.NeedsTempFile, OpenPath.OpenPathCopyable,
+		OpenPathByteIO
 {
 
 	private String mPath;
@@ -166,7 +168,9 @@ public class OpenFileRoot
 	public OpenPath[] list() throws IOException {
 		if(mChildren == null)
 			return listFiles();
-		return getChildren().toArray(new OpenPath[getChildren().size()]);
+		if(getChildren() != null)
+			return getChildren().toArray(new OpenPath[getChildren().size()]);
+		else return null;
 	}
 	
 	private void addChild(OpenPath kid)
@@ -227,7 +231,7 @@ public class OpenFileRoot
 			}
 			
 			@Override
-			public void onReceiveMessage(String msg) {
+			public boolean onReceiveMessage(String msg) {
 				Logger.LogDebug("CF Message: (" + w + "): " + msg.length()); //.replace("\n", "\\n"));
 				if(msg.indexOf("\n") > -1)
 				{
@@ -239,10 +243,11 @@ public class OpenFileRoot
 						processMessage(s);
 					}
 					buff[0] = msg;
-					return;
+					return true;
 				}
 				if(msg != null && !msg.trim().equals(""))
 					processMessage(msg);
+				return false;
 			}
 			
 			@Override
@@ -263,21 +268,27 @@ public class OpenFileRoot
 		if(mChildren != null)
 			mChildren.clear();
 		else mChildren = new WeakReference<List<OpenPath>>(new ArrayList<OpenPath>());
-		String cmd = "ls -l " + path;
-		if(RootManager.Default.getBusyBox() != "")
-			cmd = "ls -l" + getLSOpts() + " " + path;
-		String data = execute(cmd, true);
-		while(data.indexOf("\n") > -1)
+		String opts = getLSOpts();
+		String cmd = "ls -l" + opts + " " + path;
+		String data = execute(cmd, !opts.equals(""));
+		while(!data.equals(""))
 		{
-			addChild(new OpenFileRoot(getPath(), data.substring(0, data.indexOf("\n"))));
-			data = data.substring(data.indexOf("\n") + 1);
+			String child = data; 
+			if(data.indexOf("\n") > -1)
+			{
+				child = data.substring(0, data.indexOf("\n"));
+				data = data.substring(data.indexOf("\n") + 1);
+			} else data = "";
+			if(child.split(" ").length > 4)
+				addChild(new OpenFileRoot(getPath(), child));
+			else Logger.LogWarning("Skipping Row while listing: " + child);
 		}
 		return list();
 	}
 	
 	private String getLSOpts()
 	{
-		String lsOpts = "l";
+		String lsOpts = "";
 		if(Sorting.showHidden())
 			lsOpts += "A";
 		switch(Sorting.getType())
@@ -348,7 +359,7 @@ public class OpenFileRoot
 
 	@Override
 	public Boolean delete() {
-		execute("rm " + getPath(), false);
+		execute("rm -f " + getPath(), false);
 		return true;
 	}
 
@@ -395,7 +406,7 @@ public class OpenFileRoot
 	}
 	
 	@Override
-	public OpenFile tempDownload(AsyncTask task) throws IOException {
+	public OpenFile tempDownload(AsyncTask<?,?,?> task) throws IOException {
 		OpenFile tmp = getTempFile();
 		if(tmp == null) throw new IOException("Unable to download Temp file");
 		if(!tmp.exists())
@@ -416,11 +427,18 @@ public class OpenFileRoot
 		copyFrom(tmp);
 	}
 	
-	private String execute(final String cmd, boolean useBusyBox)
+	private String execute(final String cmd) { return execute(cmd, false, -1); }
+	private String execute(final String cmd, boolean useBusyBox) { return execute(cmd, useBusyBox, -1); }
+	private String execute(final String cmd, boolean useBusyBox, int size)
 	{
 		final boolean[] waiting = new boolean[]{true};
+		final int[] sizes = new int[]{size};
 		final String[] ret = new String[1];
-		final String bb = useBusyBox ? RootManager.Default.getBusyBox() : "";
+		String bb = useBusyBox ? RootManager.Default.getBusyBox() : "";
+		if(bb == null || !bb.startsWith("/"))
+			bb = "";
+		else if(!bb.equals(""))
+			bb += " ";
 		try {
 			RootManager.Default.write(bb + cmd,
 				new UpdateCallback() {
@@ -428,12 +446,22 @@ public class OpenFileRoot
 						Logger.LogDebug("Done with command: " + cmd);
 						waiting[0] = false;
 					}
-					public void onReceiveMessage(String msg) {
+					public boolean onReceiveMessage(String msg) {
+						Logger.LogDebug("OpenFileRoot.execute.onReceiveMessage(" + msg + ")");
 						ret[0] = (ret[0] == null ? "" : ret[0]) + msg;
+						if(msg.length() > sizes[0])
+						{
+							waiting[0] = false;
+							return true;
+						} else sizes[0] -= msg.length();
+						return false;
 					}
-					public void onExit() { }
+					public void onExit() {
+						waiting[0] = false;
+					}
 			});
 		} catch(Exception e) {
+			Logger.LogError("Unable to execute command: " + cmd, e);
 			return null;
 		}
 		try {
@@ -451,7 +479,10 @@ public class OpenFileRoot
 						Logger.LogDebug("Done copying " + src.getPath() + " to " + dest.getPath());
 						waiting[0] = false;
 					}
-					public void onReceiveMessage(String msg) { }
+					public boolean onReceiveMessage(String msg) {
+						waiting[0] = false;
+						return true;
+					}
 					public void onExit() { }
 			});
 		} catch(Exception e) {
@@ -463,8 +494,34 @@ public class OpenFileRoot
 		return true;
 	}
 	public boolean copyTo(OpenFile dest) { return copy(this, dest); }
+	
 	@Override
 	public boolean copyFrom(OpenPath file) {
+		if(file instanceof OpenFile)
+		{
+			String cmd = "cp -f " + file.getPath() + " " + getPath();
+			String output = execute(cmd, false);
+			if(output.indexOf(cmd) > -1)
+				return true;
+		}
 		return copy(file, this);
+	}
+	@Override
+	public byte[] readBytes() {
+		OpenFile tmp = getTempFile();
+		if(tmp.exists() && tmp.length() > 0 && tmp.lastModified() >= lastModified())
+		{
+			String ret = execute("cat " + tmp.getPath(), false);
+			return ret.getBytes();
+		} else {
+			String ret = execute("cat " + getPath(), false);
+			return ret.getBytes();
+		}
+		
+	}
+	@Override
+	public void writeBytes(byte[] bytes) {
+		String ret = execute("cat > " + getPath() + "\n" + new String(bytes), false);
+		Logger.LogDebug("writeBytes response: " + ret);
 	}
 }

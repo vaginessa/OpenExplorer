@@ -256,8 +256,11 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
 		Logger.LogDebug("onUpdate");
 	}
 	@Override
-	public void onReceiveMessage(String msg) {
+	public boolean onReceiveMessage(String msg) {
 		Logger.LogDebug("Message Received: " + msg);
+		if(msg.indexOf("\n") > -1)
+			return true;
+		else return false;
 	}
 	@Override
 	public void onExit() {

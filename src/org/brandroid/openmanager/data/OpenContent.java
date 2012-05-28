@@ -3,13 +3,20 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
+import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
+import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 
 public class OpenContent extends OpenPath
+	implements NeedsTempFile
 {
 	private static final long serialVersionUID = 3185620135972000643L;
 	private final Uri uri;
@@ -165,12 +172,75 @@ public class OpenContent extends OpenPath
 	@Override
 	public InputStream getInputStream() throws IOException
 	{
-		return mContext.getContentResolver().openInputStream(uri);
+		try {
+			return mContext.getContentResolver().openInputStream(uri);
+		} catch(SecurityException sex) {
+			throw new IOException("Unable to get input Stream from ContentResolver", sex);
+		}
 	}
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		return mContext.getContentResolver().openOutputStream(uri);
+	}
+	
+
+	public String getTempFileName()
+	{
+		return getPath().replaceAll("[^A-Za-z0-9\\.]", "-");
+	}
+	public OpenFile getTempFile()
+	{
+		OpenFile root = OpenFile.getTempFileRoot();
+		if(root != null)
+			return root.getChild(getTempFileName());
+		return null;
+	}
+
+	@Override
+	public OpenFile tempDownload(AsyncTask<?, ?, ?> task) throws IOException {
+		
+		OpenFile tmp = getTempFile();
+		if(tmp == null) throw new IOException("Unable to download Temp file");
+		if(!tmp.exists())
+			tmp.create();
+		else if(lastModified() != null && tmp.lastModified() != null && lastModified() <= tmp.lastModified())
+		{
+			Logger.LogWarning("Remote file is older than local temp file.");
+			return tmp;
+		}
+		InputStream is = null;
+		int size = (int)length();
+		byte[] buffer = new byte[size];
+		try {
+			is = mContext.getContentResolver().openInputStream(uri);
+			is.read(buffer);
+			tmp.writeBytes(buffer);
+		} catch(IOException e) {
+			Logger.LogError("Error during OpenContent.tempDownload()", e);
+		} finally {
+			if(is != null)
+				is.close();
+		}
+		return tmp;
+	}
+
+	@Override
+	public void tempUpload(AsyncTask<?, ?, ?> task) throws IOException
+	{
+		OpenFile tmp = getTempFile();
+		if(tmp == null) throw new IOException("Unable to upload Temp file");
+		if(!tmp.exists())
+			tmp.create();
+		else if(lastModified() != null && tmp.lastModified() != null && lastModified() >= tmp.lastModified())
+		{
+			Logger.LogWarning("Remote file is newer than local temp file.");
+			return;
+		}
+		OutputStream os = mContext.getContentResolver().openOutputStream(uri);
+		os.write(tmp.readBytes());
+		os.flush();
+		os.close();
 	}
 
 }
