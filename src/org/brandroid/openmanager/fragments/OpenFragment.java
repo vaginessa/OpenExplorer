@@ -59,7 +59,7 @@ public abstract class OpenFragment
 	//public boolean isFragmentValid = true;
 	protected boolean mActionModeSelected = false;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	private OnFragmentDPADListener mDPAD = null;
 	public final void setOnFragmentDPADListener(OnFragmentDPADListener listener) { mDPAD = listener; }
 		
@@ -343,6 +343,11 @@ public abstract class OpenFragment
 		if(getFragmentActivity().getPreferences() == null) return defValue;
 		return getFragmentActivity().getPreferences().getSetting(file, key, defValue);
 	}
+	protected final void setSetting(String file, String key, Boolean value)
+	{
+		if(getActivity() == null) return;
+		getFragmentActivity().getPreferences().setSetting(file, key, value);
+	}
 	
 	@Override
 	public void onAttach(Activity activity) {
@@ -495,7 +500,10 @@ public abstract class OpenFragment
 			if(Build.VERSION.SDK_INT < 11)
 				return getActivity().findViewById(item.getItemId());
 			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
-			return (View)m.invoke(item, new Object[0]);
+			Object o = m.invoke(item, new Object[0]);
+			if(o != null && o instanceof View)
+				return (View)o;
+			else return getActivity().findViewById(item.getItemId());
 		} catch(Exception e) {
 			return getActivity().findViewById(item.getItemId());
 		}

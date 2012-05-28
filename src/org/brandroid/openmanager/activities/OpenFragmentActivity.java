@@ -1,6 +1,7 @@
 package org.brandroid.openmanager.activities;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.IconContextMenu;
@@ -17,6 +18,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.content.res.XmlResourceParser;
 import android.graphics.Point;
 import android.os.Build;
@@ -92,6 +94,29 @@ public abstract class OpenFragmentActivity
 		super.onDestroy();
 		//Logger.LogDebug("->onDestroy - " + getClassName());
 	}
+
+	/**
+	 * Set Application specific language. This has no effect on the system language.
+	 * @param context
+	 * @param language 2 Letter Language Code
+	 */
+    public static void setLanguage(Context context, String language) {
+        Locale locale;
+        if (language == null || language.equals("")) {
+            locale = Locale.getDefault();
+        } else if (language.length() == 5 && language.charAt(2) == '_') {
+            // language is in the form: en_US
+            locale = new Locale(language.substring(0, 2), language.substring(3));
+            language = language.substring(0, 2);
+        } else {
+            locale = new Locale(language);
+        }
+        Configuration config = new Configuration();
+        config.locale = locale;
+        context.getResources().updateConfiguration(config,
+                context.getResources().getDisplayMetrics());
+        new Preferences(context).setSetting("global", "pref_language", language);
+    }
 	
 	@SuppressWarnings("deprecation")
 	public int getWindowWidth() {

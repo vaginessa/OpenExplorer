@@ -16,7 +16,10 @@
 
 package org.brandroid.openmanager.interfaces;
 
+import org.brandroid.openmanager.util.BetterPopupWindow;
+
 import android.view.MenuItem;
+import android.view.View;
 
 
 /**
@@ -34,6 +37,13 @@ public interface OpenActionView {
      * Called when this view is collapsed as an action view.
      */
     public void onActionViewCollapsed();
+    
+    /**
+     * Called when ActionBar should not be used as container for ActionView.
+     * @param anchor Popup anchor.
+     * @return BetterPopupWindow instance containing ActionView.
+     */
+    public BetterPopupWindow getPopup(View anchor);
     
 
     public interface OnActionExpandListener {

@@ -196,7 +196,7 @@ public class Logger
 									" (" + trace[index].getMethodName() + ")\n");
 					} else fw.write("\n");
 					fw.write(Log.getStackTraceString(ex));
-					fw.write("\n");
+					fw.write("\nVersion " + OpenExplorer.VERSION + "\n");
 					fw.write(getDbLogs(true));
 					fw.write("\n");
 					fw.write(DialogHandler.getDeviceInfo());
