@@ -192,7 +192,7 @@ public class TextEditorFragment extends OpenFragment
 				return false;
 			}
 		});
-		if(!Preferences.Warn_TextEditor && !getViewSetting(null, "warn_text_editor", false))
+		if(!Preferences.Warn_TextEditor && !getSetting("warn", "text_editor", false))
 		{
 			Preferences.Warn_TextEditor = true;
 			DialogHandler.showWarning(getActivity(),
@@ -200,7 +200,7 @@ public class TextEditorFragment extends OpenFragment
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							setViewSetting(null, "warn_text_editor", true);
+							setSetting("warn", "text_editor", true);
 						}
 					});
 		}
@@ -326,15 +326,8 @@ public class TextEditorFragment extends OpenFragment
 			case R.id.menu_view_font_size:
 				if(USE_SEEK_ACTIONVIEW)
 					mFontSizeBar.onActionViewExpanded();
-				else {
-					/*
-					DialogHandler.showSeekBarDialog(getActivity(),
-							getString(R.string.s_view_font_size),
-							(int)mTextSize * 2, 60,
-							this);
-					*/
-					showSeekBarPopup(action);
-				}
+				else
+					mFontSizeBar.getPopup(action).showLikePopDownMenu();
 				return true;
 		}
 		return onClick(item.getItemId(), (View)getActionView(item));
@@ -555,14 +548,9 @@ public class TextEditorFragment extends OpenFragment
 			
 		case R.id.menu_view_font_size:
 			if(USE_SEEK_ACTIONVIEW)
-				((SeekBarActionView)mFontSizeBar).onActionViewExpanded();
-			else {
-				/*DialogHandler.showSeekBarDialog(getActivity(),
-					getString(R.string.s_view_font_size),
-					(int)mTextSize, 60,
-					this);*/
-				showSeekBarPopup(from);
-			}
+				mFontSizeBar.onActionViewExpanded();
+			else
+				mFontSizeBar.getPopup(from).showLikePopDownMenu();
 			return true;
 			
 		case R.id.menu_view:
@@ -693,6 +681,8 @@ public class TextEditorFragment extends OpenFragment
 				fos = new BufferedOutputStream(mPath.getOutputStream());
 				fos.write(bytes);
 				fos.close();
+				if(mPath instanceof OpenPath.OpenPathByteIO)
+					((OpenPath.OpenPathByteIO)mPath).writeBytes(data.getBytes());
 				if(mPath instanceof NeedsTempFile)
 					((NeedsTempFile)mPath).tempUpload(this);
 				if(mPath instanceof OpenNetworkPath)
@@ -740,38 +730,42 @@ public class TextEditorFragment extends OpenFragment
 			Logger.LogDebug("Getting " + path);
 			if(mPath.canRead()) {
 				Logger.LogDebug("File is " + mPath.length() + " bytes.");
-				InputStream is = null;
 				StringBuilder sb = new StringBuilder();
-				try {
-					is = mPath.getInputStream();
-					BufferedReader br = new BufferedReader(new InputStreamReader(is));
-					String line;
-					while((line = br.readLine()) != null)
-						sb.append(line + "\n");
-				} catch(SecurityException s) {
-					Logger.LogError("Couldn't open file due to security. " + path, s);
-					doClose();
-				} catch (RuntimeException r) {
-					Logger.LogError("File too large?", r);
-					if(getExplorer() != null)
-						getExplorer().showToast("Unable to open file. File too large?");
-					doClose();
-				} catch (FileNotFoundException f) {
-					Logger.LogError("File not found - " + path, f);
-					doClose();
-				} catch (Exception e) {
-					Logger.LogError("Couldn't find file - " + path, e);
-					doClose();
-				} finally {
+				if(mPath instanceof OpenPath.OpenPathByteIO)
+					sb.append(new String(((OpenPath.OpenPathByteIO)mPath).readBytes()));
+				else {
+					InputStream is = null;
 					try {
-						if(is != null)
-							is.close();
+						is = mPath.getInputStream();
+						BufferedReader br = new BufferedReader(new InputStreamReader(is));
+						String line;
+						while((line = br.readLine()) != null)
+							sb.append(line + "\n");
+					} catch(SecurityException s) {
+						Logger.LogError("Couldn't open file due to security. " + path, s);
+						doClose();
+					} catch (RuntimeException r) {
+						Logger.LogError("File too large?", r);
+						if(getExplorer() != null)
+							getExplorer().showToast("Unable to open file. File too large?");
+						doClose();
+					} catch (FileNotFoundException f) {
+						Logger.LogError("File not found - " + path, f);
+						doClose();
 					} catch (Exception e) {
-						e.printStackTrace();
+						Logger.LogError("Couldn't find file - " + path, e);
+						doClose();
+					} finally {
+						try {
+							if(is != null)
+								is.close();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
-					if(mPath instanceof OpenNetworkPath)
-						((OpenNetworkPath)mPath).disconnect();
 				}
+				if(mPath instanceof OpenNetworkPath)
+					((OpenNetworkPath)mPath).disconnect();
 				return sb.toString();
 			}
 			else if(path.indexOf("ftp:/") > -1)
