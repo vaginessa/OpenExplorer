@@ -256,6 +256,7 @@ public class OpenExplorer
 	public static int SCREEN_WIDTH = -1;
 	public static int SCREEN_HEIGHT = -1;
 	public static int SCREEN_DPI = -1;
+	public static int VERSION = 160;
 	
 	private static MimeTypes mMimeTypes;
 	private Object mActionMode;
@@ -318,6 +319,10 @@ public class OpenExplorer
 		Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
 		Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
 		Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
+		Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
+		
+		if(!Preferences.Pref_Language.equals(""))
+			setLanguage(getContext(), Preferences.Pref_Language);
 		
 		USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus", BEFORE_HONEYCOMB || isGTV());
 		USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", true);
@@ -574,7 +579,7 @@ public class OpenExplorer
 	{
 		FileManager.DefaultUserInfo = new SimpleUserInfo();
 		final Context c = this;
-		Preferences.Warn_Networking = getSetting(null, "warn_networking", false);
+		Preferences.Warn_Networking = getPreferences().getSetting("warn", "networking", false);
 		SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
 			
 			public boolean promptPassword(String message) {
@@ -1199,6 +1204,13 @@ public class OpenExplorer
 				new AlertDialog.Builder(OpenExplorer.this)
 					.setCancelable(true)
 					.setMessage(getString(msg, Locale.getDefault().getDisplayLanguage()))
+					.setNeutralButton("Use English",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								setLanguage(getContext(), "en");
+								goHome();
+							}
+						})
 					.setPositiveButton(R.string.button_translate,
 							new DialogInterface.OnClickListener() {
 								@Override
@@ -1307,6 +1319,9 @@ public class OpenExplorer
 	public void onAttachedToWindow() {
 		super.onAttachedToWindow();
 		handleNetworking();
+		try {
+			VERSION = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+		} catch (NameNotFoundException e) { }
 		if(getWindowManager() != null)
 		{
 			Display d = getWindowManager().getDefaultDisplay();
@@ -2388,7 +2403,7 @@ public class OpenExplorer
 			menu = new MenuBuilder(this);
 		if(DEBUG)
 			Logger.LogDebug("OpenExplorer.onCreateOptionsMenu");
-		getMenuInflater().inflate(R.menu.global_top, menu);
+		//getMenuInflater().inflate(R.menu.global_top, menu);
 		if(frag != null) // && frag.hasOptionsMenu())
 			frag.onCreateOptionsMenu(menu, getMenuInflater());
 		getMenuInflater().inflate(R.menu.global, menu);
@@ -2426,20 +2441,22 @@ public class OpenExplorer
 			}
 		}
 		MenuUtils.setMenuVisible(menu, IS_DEBUG_BUILD && !isBlackBerry(), R.id.menu_debug);
-		if(!USE_PRETTY_MENUS)
+		if(!USE_PRETTY_MENUS) {
 			fillSubMenus(menu, getMenuInflater());
-		handleMoreMenu(menu, false);
-		if(USE_PRETTY_MENUS && isGTV())
-		{
+			handleMoreMenu(menu, false);
+		} else if(isGTV()) {
 			fillSubMenus(mMainMenu, getMenuInflater());
 			handleMoreMenu(menu, true);
-		}
+		} else
+			MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 		return true;
 	}
 	
 	private void handleMoreMenu(Menu menu, boolean force)
 	{
-		int max = getResources().getInteger(R.integer.max_base_buttons); //(int)Math.floor(Math.min(6, getWindowWidth() / getResources().getDimension(R.dimen.actionbar_compat_button_width)));
+		int max = getResources().getInteger(R.integer.max_base_buttons);
+		if(getResources().getBoolean(R.bool.ignore_max_base_buttons))
+			max = (int)Math.floor(Math.min(6, getWindowWidth() / getResources().getDimension(R.dimen.actionbar_compat_button_width)));
 		if(force || (menu.size() > max && Build.VERSION.SDK_INT > 13 && getWindowWidth() < 700))
 		{
 			MenuItem more = menu.findItem(R.id.menu_more);
@@ -3062,9 +3079,10 @@ public class OpenExplorer
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		if(keyCode == KeyEvent.KEYCODE_MENU)
 		{
-			if(findViewById(R.id.menu_more) != null)
-				if(findViewById(R.id.menu_more).performClick())
-					return true;
+			View more = findViewById(R.id.menu_more);
+			if(more != null && more.isShown() &&
+					more.isClickable() && more.performClick())
+				return true;
 		}
 		/*
 		if (keyCode == KeyEvent.KEYCODE_BACK) {

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Random;
 
 import org.brandroid.openmanager.R;
@@ -37,6 +38,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
+import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -96,6 +98,22 @@ public class SettingsActivity extends PreferenceActivity
 	//private DonationObserver mDonationObserver;
 	private Handler mHandler;
 	
+	private String getDisplayLanguage(String langCode)
+	{
+		if(!langCode.equals(""))
+		{
+			int pos = Utils.getArrayIndex(getResources().getStringArray(R.array.languages_values), langCode);
+			if(pos > -1)
+			{
+				String[] langs = getResources().getStringArray(R.array.languages);
+				langCode = langs[pos];
+			}
+			return langCode;
+		}
+		else return langCode;
+		
+	}
+	
 	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -148,10 +166,25 @@ public class SettingsActivity extends PreferenceActivity
 				
 				ViewUtils.setOnPrefChange(pm, new OnPreferenceChangeListener() {
 					public boolean onPreferenceChange(Preference preference, Object newValue) {
+						if(preference.getKey().equals("pref_language"))
+							preference.setSummary(getDisplayLanguage((String)newValue));
+						if(newValue instanceof String)
+							preference.setSummary((String)newValue);
 						pa.setResult(OpenExplorer.RESULT_RESTART_NEEDED);
 						return true;
 					}
-				}, "pref_fullscreen", "pref_basebar", "pref_stats", "pref_root");
+				}, "pref_fullscreen", "pref_basebar", "pref_stats", "pref_root", "pref_language");
+				
+				Preference pLanguage = pm.findPreference("pref_language");
+				if(pLanguage == null) pLanguage = findPreference("pref_language");
+				if(pLanguage != null)
+				{
+					String lang = pm.getSharedPreferences().getString("pref_language", "");
+					if(!lang.equals(""))
+						pLanguage.setSummary(getDisplayLanguage(lang));
+					else pLanguage.setSummary(pLanguage.getSummary() +
+							" (" + Locale.getDefault().getDisplayLanguage() + ")");
+				}
 
 				Preference pTranslate = pm.findPreference("pref_translate");
 				if(pTranslate == null) pTranslate = findPreference("pref_translate");
@@ -350,17 +383,17 @@ public class SettingsActivity extends PreferenceActivity
 		//ResponseHandler.unregister(mDonationObserver);
 	}
 	
-	private void setOnChange(Preference p, Boolean bSetSummaries)
+	private void setOnChange(Preference p, Boolean forceSummaries)
 	{
 		if(p.getClass().equals(PreferenceScreen.class))
 		{
 			PreferenceScreen ps = (PreferenceScreen)p;
 			for(int i = 0; i < ps.getPreferenceCount(); i++)
-				setOnChange(ps.getPreference(i), bSetSummaries);
+				setOnChange(ps.getPreference(i), forceSummaries);
 		}
 		p.setOnPreferenceChangeListener(this);
 		
-		if(bSetSummaries)
+		if(forceSummaries || p.getSummary() == null || p.getSummary().equals(""))
 			if(p instanceof EditTextPreference)
 			{
 				if(((EditTextPreference)p).getText() != null && !"".equals(((EditTextPreference)p).getText()))
