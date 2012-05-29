@@ -59,7 +59,7 @@ public abstract class OpenFragment
 	//public boolean isFragmentValid = true;
 	protected boolean mActionModeSelected = false;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	private OnFragmentDPADListener mDPAD = null;
 	public final void setOnFragmentDPADListener(OnFragmentDPADListener listener) { mDPAD = listener; }
 		
@@ -216,6 +216,8 @@ public abstract class OpenFragment
 				if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
 				if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
 				{
+					if(DEBUG)
+						Logger.LogDebug("OpenFragment.onKey(" + from + "," + keyCode + "," + event + ")");
 					mOpenMenu.dismiss();
 					if(getExplorer() != null)
 						if(getExplorer().onKey(from, keyCode, event))

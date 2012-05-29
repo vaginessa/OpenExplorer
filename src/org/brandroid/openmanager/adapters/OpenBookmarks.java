@@ -275,7 +275,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 	
 
-	private boolean hasBookmark(OpenPath path)
+	public boolean hasBookmark(OpenPath path)
 	{
 		if(path == null) return true;
 		if(path.getPath() == null) return false;

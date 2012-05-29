@@ -2,6 +2,7 @@
 <resources>
     <item type="bool" name="show_long_date">false</item>
     <item type="bool" name="use_pager">true</item>
+    <item type="bool" name="allow_split_actionbar">true</item>
     <item type="bool" name="add_bookmarks_to_pager">false</item>
     <item type="bool" name="honeycomb">false</item>
     <item type="bool" name="prehoneycomb">true</item>
