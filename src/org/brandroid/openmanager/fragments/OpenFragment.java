@@ -43,6 +43,8 @@ import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnCreateContextMenuListener;
 import android.view.View.OnKeyListener;
+import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 
 /*
  * Base class for all OpenExplorer fragments. Provides convenient methods to access
@@ -178,9 +180,29 @@ public abstract class OpenFragment
 	{
 		return showMenu(menuId, from, title, 0, 0);
 	}
-	public boolean showMenu(final int menuId, View from, CharSequence title, int xOffset, int yOffset)
+	public boolean showMenu(final int menuId, final View from, CharSequence title, int xOffset, int yOffset)
 	{
 		if(showIContextMenu(menuId, from, title, xOffset, yOffset)) return true;
+		if(Build.VERSION.SDK_INT > 10)
+		{
+			final PopupMenu pop = new PopupMenu(from.getContext(), from);
+			pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					if(onOptionsItemSelected(item))
+					{
+						pop.dismiss();
+						return true;
+					}
+					else if(getExplorer() != null)
+						return getExplorer().onIconContextItemSelected(pop, item, item.getMenuInfo(), from);
+					return false;
+				}
+			});
+			pop.inflate(menuId);
+			Logger.LogDebug("PopupMenu.show()");
+			pop.show();
+			return true;
+		}
 		if(from == null) return false;
 		from.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
 			public void onCreateContextMenu(ContextMenu menu, View v,
@@ -205,7 +227,7 @@ public abstract class OpenFragment
 		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return false;
 		final IconContextMenu mOpenMenu =
-				IconContextMenu.getInstance(getActivity(), menuId, from, null, null);
+				IconContextMenu.getInstance(getActivity(), menuId, from);
 		if(mOpenMenu == null) return false;
 		if(title != null && title.length() > 0)
 			mOpenMenu.setTitle(title);

@@ -80,10 +80,13 @@ public class IconContextMenuAdapter extends BaseAdapter {
     
     //@Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        MenuItem item = getItem(position);
-        TextView res = (TextView)LayoutInflater.from(context).inflate(
-       				textLayoutId
-       				, parent, false);
+    	return createView(parent, getItem(position), textLayoutId);
+    }
+    public static View createView(ViewGroup parent, MenuItem item, int textLayoutId)
+    {
+    	Context context = parent.getContext(); 
+        TextView res = (TextView)LayoutInflater.from(context)
+        					.inflate(textLayoutId, parent, false);
         
         if(!item.isVisible())
         	res.setVisibility(View.GONE);
@@ -129,13 +132,12 @@ public class IconContextMenuAdapter extends BaseAdapter {
     	res.setEnabled(item.isEnabled());
         res.setTag(item);
         res.setText(item.getTitle());
-        res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);
-        
-        if(position == 0)
-        	res.setNextFocusUpId(getCount() - 1);
-        else if(position == getCount() - 1)
-        	res.setNextFocusDownId(0);
-              
+        if(src != null || check != null)
+        {
+	        res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);
+	        res.setCompoundDrawablePadding(8);
+        }
+        res.setPadding(8, 8, 8, 8);
         return res;
     }
 }

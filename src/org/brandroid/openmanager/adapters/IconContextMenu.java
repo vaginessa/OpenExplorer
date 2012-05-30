@@ -7,22 +7,24 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
-import org.brandroid.utils.MenuBuilderNew;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.*;
-import android.content.DialogInterface.OnDismissListener;
-import android.graphics.Rect;
-import android.view.*;
+import org.brandroid.utils.Utils;
+
+import android.content.Context;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.View.OnKeyListener;
-import android.widget.AdapterView;
-import android.widget.FrameLayout;
-import android.widget.GridView;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.ListView;
+import android.widget.ScrollView;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
 
 public class IconContextMenu implements OnKeyListener
 {
@@ -31,23 +33,28 @@ public class IconContextMenu implements OnKeyListener
 		void onIconContextItemSelected(IconContextMenu menu, MenuItem item, Object info, View view);
 	}
 	
-	private GridView mGrid;
+	private ScrollView mScroller;
+	private TableLayout mTable;
 	//private Dialog dialog;
 	protected final BetterPopupWindow popup;
-	protected final ViewGroup root;
 	private MenuBuilder menu;
 	protected View anchor;
+	private int mPosition;
 	private int maxColumns = 1;
 	private int mWidth = 0;
 	private int rotation = 0;
+	private CharSequence mTitle = null;
+	private int textLayoutId = R.layout.simple_list_item_multiple_choice;
 	private static final Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>();
 	private static final Hashtable<Integer, Integer> mHeights = new Hashtable<Integer, Integer>();
+	private static final int[] DOUBLE_WIDTH_IDS = new int[]{R.id.menu_context_download};
 	
+	private OnKeyListener mKeyListener;
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
 	private Object info;
 
-    public IconContextMenu(Context context, int menuId, View from, View head, View foot) {
-    	this(context, newMenu(context, menuId), from, head, foot);
+    public IconContextMenu(Context context, int menuId, View from) {
+    	this(context, newMenu(context, menuId), from);
     }
     
     public static MenuBuilder newMenu(Context context, int menuId) {
@@ -61,20 +68,24 @@ public class IconContextMenu implements OnKeyListener
     	return menu;
     }
 
-	public IconContextMenu(Context context, MenuBuilder newMenu, final View from, final View head, final View foot) {
-		root = (ViewGroup) ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-				.inflate(R.layout.paste_layout, null);
+	public IconContextMenu(Context context, MenuBuilder newMenu, final View from) {
 		//root.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         menu = newMenu;
 		anchor = from;
 		rotation = ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
         //this.dialog = new AlertDialog.Builder(context);
         popup = new BetterPopupWindow(context, anchor);
-        mGrid = new GridView(context);
-        mGrid.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        mGrid.setNumColumns(maxColumns);
-        mGrid.setOnKeyListener(this);
-        setAdapter(context, new IconContextMenuAdapter(context, menu));
+        mScroller = new ScrollView(context);
+        mScroller.setLayoutParams(new ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        mTable = new TableLayout(context); //new GridView(context);
+        mTable.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        refreshTable();
+        //mTable.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        //mGrid.setNumColumns(maxColumns);
+        mTable.setOnKeyListener(this);
+        popup.setOnKeyListener(this);
+        //mTable.setColumnStretchable(0, true);
+        //setAdapter(context, new IconContextMenuAdapter(context, menu));
         if(mWidth == 0)
         {
         	//mGrid.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
@@ -82,18 +93,15 @@ public class IconContextMenu implements OnKeyListener
         }
         if(mWidth == 0)
         	mWidth = context.getResources().getDimensionPixelSize(R.dimen.popup_width);
+        mScroller.addView(mTable);
         if(mWidth > 0)
         	popup.setPopupWidth(mWidth);
-        if(head != null)
-        	root.addView(head);
-		root.addView(mGrid);
-		if(foot != null)
-			root.addView(foot);
-        popup.setContentView(root);
+        popup.setContentView(mScroller);
         //if(mWidth > 0)
         //	popup.setPopupWidth(mWidth);
 	}
 	
+	/*
 	private IconContextMenuAdapter getAdapter() { return (IconContextMenuAdapter) mGrid.getAdapter(); }
 	public void setAdapter(Context context, final IconContextMenuAdapter adapter)
 	{
@@ -127,20 +135,84 @@ public class IconContextMenu implements OnKeyListener
 	        })
 	        .setInverseBackgroundForced(true)
 	        .create();
-	        */
+	        * /
     }
+	*/
+	
+	public void refreshTable()
+	{
+		final Context context = mTable.getContext();
+		mTable.post(new Runnable(){public void run(){
+			mTable.setStretchAllColumns(false);
+			mTable.setColumnStretchable(0, false);
+			mTable.removeAllViews();
+			//mTable.setShowDividers(TableLayout.SHOW_DIVIDER_MIDDLE);
+			//mTable.setDividerDrawable(context.getResources().getDrawable(android.R.drawable.divider_horizontal_dark));
+			if(mTitle != null)
+			{
+				View ttl = LayoutInflater.from(context)
+							.inflate(R.layout.popup_title, mTable, false);
+				((TextView)ttl.findViewById(android.R.id.title)).setText(mTitle);
+				mTable.addView(ttl);
+			}
+			TableRow row = new TableRow(context);
+			for(int i = 0; i < menu.size(); i++)
+			{
+				final MenuItem item = menu.getItem(i);
+				if(!item.isVisible()) continue;
+				int col = i % maxColumns;
+				boolean dbl = Utils.getArrayIndex(DOUBLE_WIDTH_IDS, item.getItemId()) > -1;
+				if(col == 0)
+				{
+					if(i > 0)
+						mTable.addView(row);
+					row = new TableRow(context);
+					row.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+				}
+				View kid = IconContextMenuAdapter.createView(row, item, textLayoutId);
+				if(i == menu.size() - 1)
+					kid.setNextFocusDownId(menu.getItem(0).getItemId());
+				else if(i == 0)
+					kid.setNextFocusUpId(menu.getItem(menu.size() - 1).getItemId());
+				kid.setId(item.getItemId());
+				kid.setBackgroundResource(R.drawable.list_selector_background);
+				kid.setFocusable(true);
+				if(i == 0)
+					kid.requestFocus();
+				kid.setOnKeyListener(IconContextMenu.this);
+				kid.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						if(iconContextItemSelectedListener != null)
+							iconContextItemSelectedListener
+								.onIconContextItemSelected(
+									IconContextMenu.this, item, menu, v);
+					}
+				});
+				if(textLayoutId == R.layout.simple_list_item_multiple_choice)
+					kid.setPadding(8, 8, 8, 8);
+				else kid.setPadding(2, 2, 2, 2);
+				((TextView)kid).setCompoundDrawablePadding(8);
+				row.addView(kid);
+			}
+			if(row.getChildCount() > 0)
+				mTable.addView(row);
+			mTable.setStretchAllColumns(true);
+		}});
+	}
 	
 	public void setOnKeyListener(OnKeyListener listener)
 	{
-		popup.setOnKeyListener(listener);
-		if(mGrid != null)
-			mGrid.setOnKeyListener(listener);
+		mKeyListener = listener;
+		//popup.setOnKeyListener(listener);
+		//if(mTable != null)
+		//	mTable.setOnKeyListener(listener);
 	}
 	
 	public void setNumColumns(int cols) {
 		maxColumns = cols;
-		if(mGrid != null)
-			mGrid.setNumColumns(cols);
+		//if(mGrid != null)
+		//	mGrid.setNumColumns(cols);
 	}
 	
 	public void setInfo(Object info) {
@@ -164,14 +236,15 @@ public class IconContextMenu implements OnKeyListener
     }
     
     public void setTitle(CharSequence title) {
-    	popup.setTitle(title);
+    	//popup.setTitle(title);
+    	mTitle = title;
     }
 	
 	private int getMenuSignature() {
 		return
 			rotation * 1000 +
 			maxColumns * 100 +
-			getAdapter().getCount();
+			mTable.getChildCount();
 	}
 
     public boolean show()
@@ -180,6 +253,7 @@ public class IconContextMenu implements OnKeyListener
     }
     public boolean show(int left, int top)
     {
+    	refreshTable();
     	//popup.showLikeQuickAction();
     	final int menuSig = getMenuSignature();
     	if(mHeights.containsKey(menuSig))
@@ -200,15 +274,6 @@ public class IconContextMenu implements OnKeyListener
     {
     	popup.dismiss();
     }
-
-    public void addView(View v)
-    {
-    	Logger.LogInfo("View added to IconContextMenu");
-    	root.addView(v);
-    }
-	public void addView(View v, int index) {
-		root.addView(v, index);
-	}
 	
 	public void setPopupWidth(int w)
 	{
@@ -217,8 +282,7 @@ public class IconContextMenu implements OnKeyListener
 			popup.setPopupWidth(w);
 	}
 
-	public static IconContextMenu getInstance(Context c, int menuId,
-			View from, View top, View bottom) {
+	public static IconContextMenu getInstance(Context c, int menuId, View from) {
 		if(!mInstances.containsKey(menuId))
 		{
 			MenuBuilder menu = newMenu(c, menuId);
@@ -226,7 +290,7 @@ public class IconContextMenu implements OnKeyListener
 				Logger.LogWarning("IconContextMenu getInstance(0x" + Integer.toHexString(menuId) + ") is null");
 				return null;
 			}
-			mInstances.put(menuId, new IconContextMenu(c, menu, from, top, bottom));
+			mInstances.put(menuId, new IconContextMenu(c, menu, from));
 		}
 		else Logger.LogDebug("IContextMenu Instance Height: " + mInstances.get(menuId).popup.getPopupHeight());
 		IconContextMenu ret = mInstances.get(menuId);
@@ -240,7 +304,8 @@ public class IconContextMenu implements OnKeyListener
 	}
 
 	public void setMenu(MenuBuilder newMenu) {
-		getAdapter().setMenu(newMenu);
+		/*getAdapter().setMenu(newMenu);*/
+		menu = newMenu;
 	}
 
 	public void setAnchor(View from) {
@@ -249,23 +314,30 @@ public class IconContextMenu implements OnKeyListener
 	}
 
 	public void setTextLayout(int layoutId) {
-		getAdapter().setTextLayout(layoutId);
+		//getAdapter().setTextLayout(layoutId);
+		textLayoutId = layoutId;
+		refreshTable();
 	}
+	
+	public int getSelectedItemPosition() { return mPosition; }
 
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
 		if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
-		int pos = mGrid.getSelectedItemPosition();
-		int col = pos % maxColumns;
-		if(col == 0 && keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
-			return true;
-		if(col == maxColumns - 1 && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
-			return true;
 		if(keyCode == KeyEvent.KEYCODE_MENU)
 		{
 			dismiss();
 			return true;
 		}
+		if(mKeyListener != null)
+			if(mKeyListener.onKey(v, keyCode, event))
+				return true;
+		int pos = getSelectedItemPosition();
+		int col = pos % maxColumns;
+		if(col == 0 && keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
+			return true;
+		if(col == maxColumns - 1 && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
+			return true;
 		return false;
 	}
 

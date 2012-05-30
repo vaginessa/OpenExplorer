@@ -66,6 +66,7 @@ import java.util.Hashtable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcel;
@@ -100,12 +101,14 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.GridView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 
 public class ContentFragment extends OpenFragment
 		implements OnItemClickListener, OnItemLongClickListener,
@@ -686,7 +689,29 @@ public class ContentFragment extends OpenFragment
 		
 		if(!OpenExplorer.USE_PRETTY_CONTEXT_MENUS)
 		{
-			return list.showContextMenu();
+			if(Build.VERSION.SDK_INT > 10)
+			{
+				final PopupMenu pop = new PopupMenu(view.getContext(), view);
+				pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						if(onOptionsItemSelected(item))
+						{
+							pop.dismiss();
+							return true;
+						}
+						else if(getExplorer() != null)
+							return getExplorer().onIconContextItemSelected(pop, item, item.getMenuInfo(), view);
+						return false;
+					}
+				});
+				pop.inflate(R.menu.context_file);
+				onPrepareOptionsMenu(pop.getMenu());
+				if(DEBUG)
+					Logger.LogDebug("PopupMenu.show()");
+				pop.show();
+				return true;
+			} else
+				return list.showContextMenu();
 		} else if(OpenExplorer.BEFORE_HONEYCOMB || !OpenExplorer.USE_ACTIONMODE) {
 			
 			try {
@@ -710,7 +735,7 @@ public class ContentFragment extends OpenFragment
 					MenuUtils.setMenuVisible(cmm, false, R.id.menu_context_paste);
 				MenuUtils.setMenuEnabled(cmm, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
 				final IconContextMenu cm = new IconContextMenu(
-						list.getContext(), cmm, view, null, null);
+						list.getContext(), cmm, view);
 				//cm.setAnchor(anchor);
 				cm.setNumColumns(2);
 				cm.setOnIconContextItemSelectedListener(getExplorer());
@@ -1164,6 +1189,9 @@ public class ContentFragment extends OpenFragment
 		super.onPrepareOptionsMenu(menu);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
+		
+		MenuUtils.setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
+		MenuUtils.setMenuVisible(menu, !(mPath instanceof OpenNetworkPath), R.id.menu_context_edit, R.id.menu_context_view);
 		
 		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(),
 				R.id.menu_sort_folders_first);

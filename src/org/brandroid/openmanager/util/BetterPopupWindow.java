@@ -175,12 +175,14 @@ public class BetterPopupWindow {
 		if(popup.isAboveAnchor())
 			layout = R.layout.context_bottom;
 		
+		if(anchor != null && ViewUtils.getAbsoluteTop(anchor) <= 100)
+			layout = R.layout.contextmenu_layout;
+		
 		if(backgroundView == null)
 		{
 			
-			backgroundView = ((LayoutInflater)mContext
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-					.inflate(layout, null);
+			backgroundView = LayoutInflater.from(mContext)
+								.inflate(layout, null);
 			if(this.root.getParent() == null)
 				((ViewGroup)backgroundView
 					.findViewById(android.R.id.widget_frame))
@@ -702,7 +704,7 @@ public class BetterPopupWindow {
 		mTitle = title;
 		if(backgroundView != null)
 		{
-			ViewUtils.setViewsVisible(backgroundView, true, R.id.contextmenu_title);
+			ViewUtils.inflateView(backgroundView, R.id.contextmenu_title_stub);
 			ViewUtils.setText(backgroundView, title, android.R.id.title);
 		}
 	}

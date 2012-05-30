@@ -11,6 +11,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
@@ -261,5 +262,12 @@ public class ViewUtils {
 				return true;
 		}
 		return false;
+	}
+
+	public static View inflateView(View view, int stubId)
+	{
+		if(view == null) return null;
+		if(view.findViewById(stubId) == null) return null;
+		return ((ViewStub)view.findViewById(stubId)).inflate();
 	}
 }

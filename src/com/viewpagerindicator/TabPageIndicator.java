@@ -137,10 +137,11 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
     private TabView addTab(View view, int index) {
     	final TabView tabView = (TabView)mInflater.inflate(R.layout.vpi__tab, null);
         tabView.init(this, view, index);
+        tabView.setId(android.R.id.tabcontent + index);
         tabView.setFocusable(true);
         tabView.setOnClickListener(mTabClickListener);
 
-        mTabLayout.addView(tabView, new LinearLayout.LayoutParams(0, LayoutParams.FILL_PARENT, 1));
+        mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         return tabView;
     }
     
@@ -148,10 +149,11 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         //Workaround for not being able to pass a defStyle on pre-3.0
         final TabView tabView = (TabView)mInflater.inflate(R.layout.vpi__tab, null);
         tabView.init(this, text, index);
+        tabView.setId(android.R.id.tabcontent + index);
         tabView.setFocusable(true);
         tabView.setOnClickListener(mTabClickListener);
 
-        mTabLayout.addView(tabView, new LinearLayout.LayoutParams(0, LayoutParams.FILL_PARENT, 1));
+        mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         return tabView;
     }
     

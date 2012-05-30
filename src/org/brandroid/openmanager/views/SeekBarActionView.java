@@ -54,11 +54,11 @@ public class SeekBarActionView
 		});
 	}
 	
-	public BetterPopupWindow getPopup(View anchor)
+	public BetterPopupWindow getPopup(Context context, View anchor)
 	{
 		if(pop == null)
 		{
-			pop = new BetterPopupWindow(anchor.getContext(), anchor);
+			pop = new BetterPopupWindow(context, anchor);
 			pop.setContentView(this);
 			setIconifiedByDefault(false);
 			setOnCloseClickListener(new OnCloseListener() {

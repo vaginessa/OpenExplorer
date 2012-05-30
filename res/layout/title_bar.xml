@@ -55,17 +55,18 @@
 
 	<FrameLayout
 	    android:layout_height="@dimen/actionbar_compat_height"
-		android:layout_width="wrap_content"
+		android:layout_width="match_parent"
 		android:layout_toRightOf="@id/title_icon"
 		android:layout_alignBottom="@id/title_icon"
 		android:layout_alignParentTop="true"
 		android:layout_toLeftOf="@+id/title_buttons"
+		android:nextFocusRight="@+id/title_buttons"
 		android:layout_alignWithParentIfMissing="true">
 
 		<com.viewpagerindicator.TabPageIndicator
 			android:id="@+id/content_pager_indicator"
 			android:minWidth="100dp"
-			android:layout_width="wrap_content"
+			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:nextFocusRight="@+id/title_buttons"
 			/>

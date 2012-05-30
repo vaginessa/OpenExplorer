@@ -12,6 +12,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.TouchDelegate;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -136,6 +137,22 @@ public class MenuUtils {
 			if(menu.getItem(i).isVisible())
 				ret++;
 		return ret;
+	}
+	public static void hideMenuGrandChildren(MenuBuilder menu) {
+		for(int i = 0; i < menu.size(); i++)
+		{
+			MenuItem item = menu.getItem(i);
+			if(item.hasSubMenu() && item.getSubMenu() != null && item.getSubMenu().size() > 0)
+			{
+				item.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						return true;
+					}
+				});
+				Menu sub = item.getSubMenu();
+				sub.clear();
+			}
+		}
 	}
 	
 }

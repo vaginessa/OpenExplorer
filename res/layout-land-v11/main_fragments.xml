@@ -33,8 +33,9 @@
     <RelativeLayout
         android:layout_toRightOf="@id/list_frag"
         android:layout_toLeftOf="@id/frag_log"
+        android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         >	
 	    <FrameLayout
@@ -54,8 +55,8 @@
 	
     <FrameLayout
 			android:id="@+id/frag_log"
-			android:layout_weight="1"
 	        android:layout_width="@dimen/bookmarks_width"
+	        android:layout_alignWithParentIfMissing="true"
 	        android:layout_height="match_parent"
 	        android:layout_alignParentRight="true"
 	        />

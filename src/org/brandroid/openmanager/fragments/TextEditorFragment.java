@@ -327,7 +327,7 @@ public class TextEditorFragment extends OpenFragment
 				if(USE_SEEK_ACTIONVIEW)
 					mFontSizeBar.onActionViewExpanded();
 				else
-					mFontSizeBar.getPopup(action).showLikePopDownMenu();
+					mFontSizeBar.getPopup(getActivity(), action).showLikePopDownMenu();
 				return true;
 		}
 		return onClick(item.getItemId(), (View)getActionView(item));
@@ -533,7 +533,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public boolean onClick(int id, View from) {
 		Context c = getActivity();
-		if(from == null)
+		if(from == null || !from.isShown())
 			from = getExplorer().findViewById(id);
 		switch(id)
 		{
@@ -550,7 +550,7 @@ public class TextEditorFragment extends OpenFragment
 			if(USE_SEEK_ACTIONVIEW)
 				mFontSizeBar.onActionViewExpanded();
 			else
-				mFontSizeBar.getPopup(from).showLikePopDownMenu();
+				mFontSizeBar.getPopup(getActivity(), from).showLikePopDownMenu();
 			return true;
 			
 		case R.id.menu_view:

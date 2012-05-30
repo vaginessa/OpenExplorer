@@ -18,6 +18,7 @@ package org.brandroid.openmanager.interfaces;
 
 import org.brandroid.openmanager.util.BetterPopupWindow;
 
+import android.content.Context;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -43,7 +44,7 @@ public interface OpenActionView {
      * @param anchor Popup anchor.
      * @return BetterPopupWindow instance containing ActionView.
      */
-    public BetterPopupWindow getPopup(View anchor);
+    public BetterPopupWindow getPopup(Context context, View anchor);
     
 
     public interface OnActionExpandListener {
