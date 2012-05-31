@@ -16,6 +16,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.CheckedTextView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -193,6 +194,9 @@ public class ViewUtils {
 	public static void setViewsVisible(View parent, boolean visible, int... ids)
 	{
 		if(parent == null) return;
+		if(ids.length == 0)
+			parent.setVisibility(visible ? View.VISIBLE : View.GONE);
+		else
 		for(int id : ids)
 			if(parent.findViewById(id) != null)
 				parent.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -268,6 +272,30 @@ public class ViewUtils {
 	{
 		if(view == null) return null;
 		if(view.findViewById(stubId) == null) return null;
+		if(!(view.findViewById(stubId) instanceof ViewStub)) return null;
 		return ((ViewStub)view.findViewById(stubId)).inflate();
+	}
+
+	public static void setImageResource(View parent, int drawableId, int... ids) {
+		if(parent == null) return;
+		if(ids.length == 0)
+			if(parent instanceof ImageView)
+				((ImageView)parent).setImageResource(drawableId);
+			else if(parent instanceof ImageButton)
+				((ImageButton)parent).setImageResource(drawableId);
+			else parent.setBackgroundResource(drawableId);
+		else 
+			for(int id : ids)
+				setImageResource(parent.findViewById(id), drawableId);
+	}
+
+	public static View getFirstView(Activity a, int... ids) {
+		if(a == null) return null;
+		for(int id : ids)
+		{
+			View v = a.findViewById(id);
+			if(v != null) return v;
+		}
+		return null;
 	}
 }

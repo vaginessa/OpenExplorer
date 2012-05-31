@@ -8,11 +8,13 @@ import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.Utils;
+import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -75,10 +77,9 @@ public class IconContextMenu implements OnKeyListener
 		rotation = ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
         //this.dialog = new AlertDialog.Builder(context);
         popup = new BetterPopupWindow(context, anchor);
-        mScroller = new ScrollView(context);
-        mScroller.setLayoutParams(new ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        mTable = new TableLayout(context); //new GridView(context);
-        mTable.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        mScroller = (ScrollView)LayoutInflater.from(context)
+        		.inflate(R.layout.icon_menu, null);
+        mTable = (TableLayout)mScroller.findViewById(R.id.icon_menu_table);
         refreshTable();
         //mTable.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         //mGrid.setNumColumns(maxColumns);
@@ -93,7 +94,6 @@ public class IconContextMenu implements OnKeyListener
         }
         if(mWidth == 0)
         	mWidth = context.getResources().getDimensionPixelSize(R.dimen.popup_width);
-        mScroller.addView(mTable);
         if(mWidth > 0)
         	popup.setPopupWidth(mWidth);
         popup.setContentView(mScroller);
@@ -150,10 +150,15 @@ public class IconContextMenu implements OnKeyListener
 			//mTable.setDividerDrawable(context.getResources().getDrawable(android.R.drawable.divider_horizontal_dark));
 			if(mTitle != null)
 			{
-				View ttl = LayoutInflater.from(context)
-							.inflate(R.layout.popup_title, mTable, false);
-				((TextView)ttl.findViewById(android.R.id.title)).setText(mTitle);
-				mTable.addView(ttl);
+				if(mScroller.findViewById(R.id.icon_menu_top) != null &&
+						mScroller.findViewById(R.id.icon_menu_top).findViewById(android.R.id.title) != null)
+					ViewUtils.setText(mScroller.findViewById(R.id.icon_menu_top), mTitle, android.R.id.title);
+				else {
+					View ttl = LayoutInflater.from(context)
+								.inflate(R.layout.popup_title, (ViewGroup)mScroller.findViewById(R.id.icon_menu_top), false);
+					((TextView)ttl.findViewById(android.R.id.title)).setText(mTitle);
+					((ViewGroup)mScroller.findViewById(R.id.icon_menu_top)).addView(ttl);
+				}
 			}
 			TableRow row = new TableRow(context);
 			for(int i = 0; i < menu.size(); i++)
@@ -177,6 +182,7 @@ public class IconContextMenu implements OnKeyListener
 				kid.setId(item.getItemId());
 				kid.setBackgroundResource(R.drawable.list_selector_background);
 				kid.setFocusable(true);
+				//kid.setFocusableInTouchMode(true);
 				if(i == 0)
 					kid.requestFocus();
 				kid.setOnKeyListener(IconContextMenu.this);
@@ -244,7 +250,25 @@ public class IconContextMenu implements OnKeyListener
 		return
 			rotation * 1000 +
 			maxColumns * 100 +
-			mTable.getChildCount();
+			getMenuSignature(menu);
+	}
+	
+	private int getMenuSignature(Menu menu)
+	{
+		if(menu == null) return 0;
+		int ret = 0;
+		for(int i = 0; i < menu.size(); i++)
+			ret += getMenuSignature(menu.getItem(i));
+		return ret;
+	}
+	
+	private int getMenuSignature(MenuItem item)
+	{
+		if(item == null) return 0;
+		if(!item.isVisible()) return 0;
+		if(item.getIcon() != null) return 3;
+		if(item.isCheckable()) return 2;
+		return 1;
 	}
 
     public boolean show()
@@ -323,6 +347,7 @@ public class IconContextMenu implements OnKeyListener
 
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
+		Logger.LogDebug("IconContextMenu.onKey(" + v + "," + keyCode + "," + event + ")");
 		if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
 		if(keyCode == KeyEvent.KEYCODE_MENU)
 		{

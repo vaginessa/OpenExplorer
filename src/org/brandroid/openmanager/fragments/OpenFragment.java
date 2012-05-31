@@ -241,6 +241,13 @@ public abstract class OpenFragment
 					if(DEBUG)
 						Logger.LogDebug("OpenFragment.onKey(" + from + "," + keyCode + "," + event + ")");
 					mOpenMenu.dismiss();
+					if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT && from.getNextFocusLeftId() > 0)
+					{
+						View nv = ((View)from.getParent()).findViewById(from.getNextFocusLeftId());
+						if(nv != null)
+							if(nv.performClick())
+								return true;
+					}
 					if(getExplorer() != null)
 						if(getExplorer().onKey(from, keyCode, event))
 							return true;

@@ -428,7 +428,7 @@ public class OpenSMB extends OpenNetworkPath
 	@Override
 	public boolean syncDownload(OpenFile f, NetworkListener l) {
 		try {
-			mFile.copyTo(f, null);
+			copyTo(f, null);
 			l.OnNetworkCopyFinished(this, f);
 			return true;
 		} catch(Exception e) {
@@ -438,7 +438,39 @@ public class OpenSMB extends OpenNetworkPath
 	}
 	
 	public void copyTo(OpenFile dest, BackgroundWork task) throws SmbException {
-		mFile.copyTo(dest, task);
+		try {
+			mFile.copyTo(dest, task);
+		} catch(Exception e) {
+			Logger.LogWarning("OpenSMB couldn't copy using Channels. Falling back to Streams.");
+			OutputStream os = null;
+			InputStream is = null;
+			try {
+				is = new BufferedInputStream(mFile.getInputStream());
+				os = dest.getOutputStream();
+				int pos = 0;
+				int len = (int)length();
+				while(is.available() > 0)
+				{
+					byte[] buffer = new byte[Math.max(4096, len - pos)];
+					int read = is.read(buffer);
+					if(read <= 0) break;
+					os.write(buffer);
+					pos += read;
+					task.publishMyProgress(pos, pos, len);
+				}
+			} catch(Exception e2) {
+				throw new SmbException("Unable to fallback", e);
+			} finally {
+				if(os != null)
+					try {
+						os.close();
+					} catch (IOException e1) { }
+				if(is != null)
+					try {
+						is.close();
+					} catch (IOException e1) { }
+			}
+		}
 	}
 	
 	public boolean copyTo(OpenSMB dest) {

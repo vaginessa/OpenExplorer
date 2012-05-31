@@ -137,6 +137,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
 	        res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);
 	        res.setCompoundDrawablePadding(8);
         }
+        
         res.setPadding(8, 8, 8, 8);
         return res;
     }

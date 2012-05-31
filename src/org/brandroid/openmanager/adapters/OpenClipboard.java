@@ -61,7 +61,6 @@ public class OpenClipboard
 	public interface OnClipboardUpdateListener
 	{
 		public void onClipboardUpdate();
-		public void onClipboardClear();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -69,12 +68,7 @@ public class OpenClipboard
 	{
 		super.notifyDataSetChanged();
 		if(listener != null)
-		{
-			if(list.size() == 0)
-				listener.onClipboardClear();
-			else
-				listener.onClipboardUpdate();
-		}
+			listener.onClipboardUpdate();
 		ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
 		StringBuilder clipText = new StringBuilder();
 		for(int i = 0; i < size(); i++)

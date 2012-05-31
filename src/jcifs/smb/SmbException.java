@@ -139,7 +139,7 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
         super( msg );
         status = NT_STATUS_UNSUCCESSFUL;
     }
-    SmbException( String msg, Throwable rootCause ) {
+    public SmbException( String msg, Throwable rootCause ) {
         super( msg );
         this.rootCause = rootCause;
         status = NT_STATUS_UNSUCCESSFUL;

@@ -174,6 +174,7 @@ import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
+import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
@@ -266,7 +267,8 @@ public class OpenExplorer
 	private Boolean mStateReady = true;
 	private String mLastMenuClass = "";
 	private long lastInvalidate = 0l;
-	private int mLastClipSize = 0;
+	private int mLastClipSize = -1;
+	private boolean mLastClipState = false;
 	
 	private static LogViewerFragment mLogFragment = null;
 	private static OperationsFragment mOpsFragment = null;
@@ -377,10 +379,8 @@ public class OpenExplorer
 					ab.setDisplayShowCustomEnabled(true);
 					ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 					ViewGroup cv = (ViewGroup)ab.getCustomView();
-					if(cv.findViewById(R.id.title_menu) != null)
-						cv.findViewById(R.id.title_menu).setVisibility(View.GONE);
-					if(cv.findViewById(R.id.title_paste) != null)
-						cv.removeView(cv.findViewById(R.id.title_paste));
+					//if(cv.findViewById(R.id.title_paste) != null)
+					//	cv.removeView(cv.findViewById(R.id.title_paste));
 					//ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
 				} catch(InflateException e) {
 					Logger.LogWarning("Couldn't set up ActionBar custom view", e);
@@ -455,7 +455,7 @@ public class OpenExplorer
 		setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
 		setOnClicks(
 				R.id.title_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
-				R.id.title_log, R.id.title_icon, R.id.title_menu,
+				R.id.title_log, R.id.title_icon, R.id.menu_more,
 				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
@@ -755,7 +755,6 @@ public class OpenExplorer
 		{
 		case R.menu.content:
 		case R.id.menu_more:
-		case R.id.title_menu:
 			if(showIContextMenu(mOptsMenu, from instanceof CheckedTextView ? null : from) != null) return true;
 			return true;
 		}
@@ -797,7 +796,7 @@ public class OpenExplorer
 				menuId = R.menu.content_sort;
 			else if(menuId == R.id.menu_view || menuId == R.menu.content_view)
 				menuId = R.menu.content_view;
-			else if(menuId == R.id.title_menu || menuId == R.menu.content)
+			else if(menuId == R.menu.content)
 				menuId = R.menu.content;
 			else if(menuId == R.menu.content_sort)
 				menuId = R.menu.content_sort;
@@ -1436,9 +1435,9 @@ public class OpenExplorer
 		boolean visible = false;
 		if(!usingSplitActionBar())
 			for(int id : new int[]{R.id.title_paste, R.id.title_log, R.id.title_ops})
-				if(findViewById(id) != null && findViewById(id).getVisibility() == View.VISIBLE)
+				if(findViewById(id) != null && findViewById(id).isShown())
 					visible = true;
-		ViewUtils.setViewsVisible(this, visible, R.id.title_divider);
+		ViewUtils.setViewsVisible(mToolbarButtons, visible, R.id.title_divider);
 	}
 	public void sendToLogView(final String txt, final int color)
 	{
@@ -1465,8 +1464,10 @@ public class OpenExplorer
 						.replace(R.id.frag_log, mLogFragment)
 						.disallowAddToBackStack()
 						.commitAllowingStateLoss();
-				logview.setVisibility(View.VISIBLE);
-				mLogFragment.setAdded(true);
+				logview.post(new Runnable(){public void run(){
+					logview.setVisibility(View.VISIBLE);
+					mLogFragment.setAdded(true);
+				}});
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
 		} catch(Exception e) {
@@ -1735,22 +1736,6 @@ public class OpenExplorer
 		return getOpenApplication().getClipboard();
 	}
 	
-	public void updateClipboard()
-	{
-		if(BEFORE_HONEYCOMB || !USE_ACTION_BAR)
-		{
-			View paste_view = findViewById(R.id.title_paste);
-			if(paste_view != null)
-			{
-				TextView paste_text = (TextView)findViewById(R.id.title_paste_text);
-				if(getClipboard().size() > 0)
-				{
-					paste_view.setVisibility(View.VISIBLE);
-					paste_text.setText("("+getClipboard().size()+")");
-				} else paste_view.setVisibility(View.GONE);
-			}
-		}
-	}
 	public void addHoldingFile(OpenPath path) { 
 		getClipboard().add(path);
 		invalidateOptionsMenu();
@@ -2226,7 +2211,7 @@ public class OpenExplorer
 		int contextMenuId = getMenuLookupSub(v.getId());
 		if(contextMenuId > -1)
 			getMenuInflater().inflate(contextMenuId, menu);
-		else if(v.getId() == R.id.title_menu)
+		else if(v.getId() == R.id.menu_more)
 			onCreateOptionsMenu(menu);
 		else
 			Logger.LogWarning("Submenu not found for " + Integer.toHexString(v.getId()));
@@ -2244,7 +2229,6 @@ public class OpenExplorer
 	@Override
 	public void invalidateOptionsMenu() {
 		mLastMenuClass = "";
-		onClipboardUpdate();
 		if(BEFORE_HONEYCOMB || USE_PRETTY_MENUS)
 			setupBaseBarButtons();
 		if(!BEFORE_HONEYCOMB)
@@ -2452,16 +2436,25 @@ public class OpenExplorer
 		if(!USE_PRETTY_MENUS) {
 			handleMoreMenu(menu, false);
 			fillSubMenus(menu, getMenuInflater());
-		} else if(isGTV()) {
-			handleMoreMenu(mMainMenu, true, 6); //*/
-			fillSubMenus(menu, getMenuInflater());
-			if(!menu.equals(mMainMenu))
-				menu.clear();
+		} else { // if(isGTV()) {
+			if(isGTV())
+			{
+				handleMoreMenu(mMainMenu, true, 6); //*/
+				if(!menu.equals(mMainMenu))
+					menu.clear();
+				else fillSubMenus(menu, getMenuInflater());
+			}
+			else {
+				handleMoreMenu(menu, true);
+				if(!menu.equals(mMainMenu) && !getResources().getBoolean(R.bool.allow_split_actionbar))
+					menu.clear();
+				fillSubMenus(mMainMenu, getMenuInflater());
+			}
 		} //else MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
-		else {
+		/*else {
 			fillSubMenus(mMainMenu, getMenuInflater());
 			handleMoreMenu(menu, false);
-		}
+		}*/
 		
 		return true;
 	}
@@ -2551,7 +2544,7 @@ public class OpenExplorer
 		{
 			MenuUtils.setMenuShowAsAction(menu, 0 // Never
 					, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
-			MenuUtils.setMenuVisible(menu, true, R.id.title_menu);
+			MenuUtils.setMenuVisible(menu, true, R.id.menu_more);
 		}
 		
 		//if(BEFORE_HONEYCOMB)
@@ -2629,6 +2622,11 @@ public class OpenExplorer
 	@Override
 	public boolean onMenuOpened(int featureId, Menu menu) {
 		Logger.LogDebug("OpenExplorer.onMenuOpened(0x" + Integer.toHexString(featureId) + "," + menu + ")");
+		if(USE_PRETTY_MENUS)
+		{
+			menu.clear();
+			return false;
+		}
 		return super.onMenuOpened(featureId, menu);
 	}
 	
@@ -2910,7 +2908,7 @@ public class OpenExplorer
 			case R.id.content_paste:
 				//if(BEFORE_HONEYCOMB)
 				getClipboard().setCurrentPath(getCurrentPath());
-				showClipboardDropdown(id);
+				onClipboardDropdown(from);
 				return true;
 				
 				//getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
@@ -2932,9 +2930,8 @@ public class OpenExplorer
 							}
 						});
 				return true;
-			case R.id.title_menu:
 			case R.id.menu_more:
-				showMenu(mOptsMenu, from);
+				showMenu(mOptsMenu, ViewUtils.getFirstView(this, R.id.menu_more, R.id.base_bar, R.id.title_buttons, android.R.id.home));
 				return true;
 				
 			default:
@@ -2964,15 +2961,11 @@ public class OpenExplorer
 	
 	public boolean isSinglePane() { return mSinglePane; }
 
-	private void showClipboardDropdown(int menuId)
+	private void onClipboardDropdown(View anchor)
 	{
-		View anchor = findViewById(menuId);
 		if(anchor == null)
-			anchor = findViewById(R.id.title_paste);
-		if(anchor == null)
-			anchor = findViewById(R.id.title_icon);
-		if(anchor == null)
-			anchor = findViewById(R.id.frag_holder);
+			anchor = ViewUtils.getFirstView(this,
+				R.id.title_paste, R.id.title_icon, R.id.frag_holder);
 		
 		final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
 		View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
@@ -3145,7 +3138,6 @@ public class OpenExplorer
 		if(keyCode == KeyEvent.KEYCODE_MENU)
 		{
 			View more = findViewById(R.id.menu_more);
-			if(more == null) more = findViewById(R.id.title_menu);
 			if(more != null && more.isShown() &&
 					more.isClickable() && more.performClick())
 			{
@@ -3677,54 +3669,34 @@ public class OpenExplorer
 		return mLastPath;
 	}
 	
+	public View getRootView()
+	{
+		if(getCurrentFocus() != null)
+			return getCurrentFocus().getRootView();
+		else if(findViewById(android.R.id.home) != null)
+			return findViewById(android.R.id.home).getRootView();
+		else return null;
+	}
+	
 	public void onClipboardUpdate() {
+		if(getClipboard().size() == mLastClipSize && getClipboard().isMultiselect() != mLastClipState) return;
 		if(DEBUG)
 			Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
 		View pb = findViewById(R.id.title_paste);
-		if(pb == null && mToolbarButtons != null)
-		{
-			pb = getLayoutInflater().inflate(R.layout.title_paste, null);
-			mToolbarButtons.addView(pb, 0);
-			pb.setOnClickListener(this);
-		}
-		if(getClipboard().size() == mLastClipSize) return;
 		mLastClipSize = getClipboard().size();
-		if(pb != null)
-		{
-			if(getClipboard().size() == 0)
-			{
-				pb.setVisibility(View.GONE);
-				return;
-			}
-			pb.setVisibility(View.VISIBLE);
-			if(pb.findViewById(R.id.title_paste_text) != null)
-				((TextView)pb.findViewById(R.id.title_paste_text))
-					.setText(""+getClipboard().size());
-			ImageView picon = (ImageView)pb.findViewById(R.id.title_paste_icon);
-			if(picon != null)
-			{
-				picon
-					.setImageResource(getClipboard().isMultiselect() ?
-							R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_clipboard
-							);
-			}
-		}
+		mLastClipState = getClipboard().isMultiselect();
+		ViewUtils.setViewsVisible(getRootView(), mLastClipSize > 0 || mLastClipState, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text);
+		ViewUtils.setText(pb, "" + mLastClipSize, R.id.title_paste_text);
+		ViewUtils.setImageResource(pb, mLastClipState ?
+					R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_clipboard,
+					R.id.title_paste_icon);
 		checkTitleSeparator();
 		//invalidateOptionsMenu();
 		if(!BEFORE_HONEYCOMB && USE_ACTIONMODE && mActionMode != null)
-			((ActionMode)mActionMode).setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
+			((ActionMode)mActionMode).setTitle(getString(R.string.s_menu_multi) + ": " + mLastClipSize + " " + getString(R.string.s_files));
 		ContentFragment cf = getDirContentFragment(false);
-		if(cf != null)
+		if(cf != null && cf.isAdded() && cf.isVisible())
 			cf.notifyDataSetChanged();
-	}
-	
-	public void onClipboardClear()
-	{
-		View pb = findViewById(R.id.title_paste);
-		if(pb != null)
-			pb.setVisibility(View.GONE);
-		invalidateOptionsMenu();
-		getDirContentFragment(false).notifyDataSetChanged();
 	}
 
 	@Override
@@ -4109,7 +4081,7 @@ public class OpenExplorer
 					return true;
 			if(ViewUtils.requestFocus(this,
 					findViewById(R.id.content_frag).getNextFocusRightId(),
-					R.id.log_clear, R.id.title_menu, android.R.id.home, R.id.menu_search))
+					R.id.log_clear, android.R.id.home, R.id.menu_search))
 				return true;
 		} else if (!toRight)
 		{
@@ -4121,7 +4093,7 @@ public class OpenExplorer
 					return true;
 			if(ViewUtils.requestFocus(this,
 					findViewById(R.id.content_frag).getNextFocusLeftId(),
-					R.id.bookmarks_list, R.id.list_frag, R.id.title_menu, android.R.id.home, R.id.frag_log, R.id.menu_search))
+					R.id.bookmarks_list, R.id.list_frag, android.R.id.home, R.id.frag_log, R.id.menu_search))
 				return true;
 		}
 		pos += toRight ? 1 : -1;
