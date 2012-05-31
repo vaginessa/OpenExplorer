@@ -266,6 +266,7 @@ public class OpenExplorer
 	private Boolean mStateReady = true;
 	private String mLastMenuClass = "";
 	private long lastInvalidate = 0l;
+	private int mLastClipSize = 0;
 	
 	private static LogViewerFragment mLogFragment = null;
 	private static OperationsFragment mOpsFragment = null;
@@ -330,6 +331,12 @@ public class OpenExplorer
 		if(s != null && new OpenFile(s).exists())
 			OpenFile.setInternalMemoryDrive(new OpenFile(s));
 		else prefs.setSetting("global", "pref_location_int", OpenFile.getInternalMemoryDrive().getPath());
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		onClipboardUpdate();
 	}
 	
 	public void onCreate(Bundle savedInstanceState)
@@ -1348,7 +1355,6 @@ public class OpenExplorer
 				}
 			}
 		}
-		onClipboardUpdate();
 	}
 	
 	@Override
@@ -1748,11 +1754,9 @@ public class OpenExplorer
 	public void addHoldingFile(OpenPath path) { 
 		getClipboard().add(path);
 		invalidateOptionsMenu();
-		updateClipboard();
 	}
 	public void clearHoldingFiles() {
 		getClipboard().clear();
-		updateClipboard();
 		invalidateOptionsMenu();
 	}
 	
@@ -2240,12 +2244,14 @@ public class OpenExplorer
 	@Override
 	public void invalidateOptionsMenu() {
 		mLastMenuClass = "";
+		onClipboardUpdate();
 		if(BEFORE_HONEYCOMB || USE_PRETTY_MENUS)
 			setupBaseBarButtons();
 		if(!BEFORE_HONEYCOMB)
 		try {
 			Runnable refresh = new Runnable(){public void run(){
 				try {
+					//onClipboardUpdate();
 					getWindow().invalidatePanelMenu(Window.FEATURE_OPTIONS_PANEL);
 					for(int i = 0; i < mMainMenu.size(); i++)
 					{
@@ -2345,14 +2351,15 @@ public class OpenExplorer
 				{
 					final MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
 					//if(item.getItemId() == R.id.title_menu) break;
-					if(!item.isCheckable())
+					if(!item.isCheckable() && item.isVisible())
 					{
 						ImageButton btn = makeMenuButton(item);
-						if(item.isVisible())
-							buttons.add(btn);
+						buttons.add(btn);
 						if(!USE_PRETTY_MENUS || topButtons)
 							btn.setOnCreateContextMenuListener(this);
 						menu.getItem(i).setVisible(false);
+						btn.setOnClickListener(this);
+						btn.setOnFocusChangeListener(this);
 						mToolbarButtons.addView(btn);
 						//menu.removeItem(item.getItemId());
 						Logger.LogDebug("Added " + item.getTitle() + " to base bar.");
@@ -2442,12 +2449,14 @@ public class OpenExplorer
 		MenuUtils.setMenuVisible(mOptsMenu, false, R.id.menu_more);
 		MenuUtils.hideMenuGrandChildren(mOptsMenu);
 		
-		fillSubMenus(menu, getMenuInflater());
 		if(!USE_PRETTY_MENUS) {
 			handleMoreMenu(menu, false);
-		/*} else if(isGTV()) {
-			fillSubMenus(mMainMenu, getMenuInflater());
-			handleMoreMenu(menu, true, 5);*/
+			fillSubMenus(menu, getMenuInflater());
+		} else if(isGTV()) {
+			handleMoreMenu(mMainMenu, true, 6); //*/
+			fillSubMenus(menu, getMenuInflater());
+			if(!menu.equals(mMainMenu))
+				menu.clear();
 		} //else MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 		else {
 			fillSubMenus(mMainMenu, getMenuInflater());
@@ -2680,8 +2689,8 @@ public class OpenExplorer
 			if(showMenu(getMenuLookupSub(id), v))
 				return;
 		} else if(id == R.id.menu_more) {
-			showMenu(R.id.menu_more, v);
-			return;
+			if(showMenu(R.id.menu_more, v))
+				return;
 		}
 		OpenFragment f = getSelectedFragment();
 		if(f.onClick(id, v)) return;
@@ -2968,10 +2977,10 @@ public class OpenExplorer
 		final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
 		View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
 				.inflate(R.layout.multiselect, null);
-		GridView cmds = (GridView)root.findViewById(R.id.multiselect_command_grid);
-		final ListView items = (ListView)root.findViewById(R.id.multiselect_item_list);
-		items.setAdapter(getClipboard());
-		items.setOnItemClickListener(new OnItemClickListener() {
+		GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
+		final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
+		mListClipboard.setAdapter(getClipboard());
+		mListClipboard.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, final int pos, long id) {
 				//OpenPath file = mClipboard.get(pos);
 				//if(file.getParent().equals(mLastPath))
@@ -2981,7 +2990,7 @@ public class OpenExplorer
 				list.getChildAt(pos).startAnimation(anim);
 				new Handler().postDelayed(new Runnable(){public void run() {
 					getClipboard().remove(pos);
-					items.invalidate();
+					mListClipboard.invalidate();
 					if(getClipboard().getCount() == 0)
 						clipdrop.dismiss();
 				}}, anim.getDuration());
@@ -2994,8 +3003,8 @@ public class OpenExplorer
 		MenuUtils.setMenuEnabled(menu, getClipboard().hasPastable(), R.id.menu_multi_all_copy, R.id.menu_multi_all_copy, R.id.menu_multi_all_move);
 		final IconContextMenuAdapter cmdAdapter = new IconContextMenuAdapter(this, menu);
 		cmdAdapter.setTextLayout(R.layout.context_item);
-		cmds.setAdapter(cmdAdapter);
-		cmds.setOnItemClickListener(new OnItemClickListener() {
+		mGridCommands.setAdapter(cmdAdapter);
+		mGridCommands.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 				MenuItem item = menu.getItem(pos);
 				onClick(item.getItemId(), item, view);
@@ -3288,6 +3297,8 @@ public class OpenExplorer
 			mLastPath = getDirContentFragment(false).getPath();
 		if(!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
 			force = true;
+		
+		onClipboardUpdate();
 		
 		//if(!BEFORE_HONEYCOMB) force = true;
 		//if(!force)
@@ -3667,15 +3678,17 @@ public class OpenExplorer
 	}
 	
 	public void onClipboardUpdate() {
+		if(DEBUG)
+			Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
 		View pb = findViewById(R.id.title_paste);
 		if(pb == null && mToolbarButtons != null)
 		{
-			pb = getLayoutInflater().inflate(R.layout.toolbar_button, null);
-			pb.setId(R.id.title_paste);
-			((ImageButton)pb).setImageResource(R.drawable.ic_menu_clipboard);
+			pb = getLayoutInflater().inflate(R.layout.title_paste, null);
 			mToolbarButtons.addView(pb, 0);
 			pb.setOnClickListener(this);
 		}
+		if(getClipboard().size() == mLastClipSize) return;
+		mLastClipSize = getClipboard().size();
 		if(pb != null)
 		{
 			if(getClipboard().size() == 0)
@@ -3700,7 +3713,9 @@ public class OpenExplorer
 		//invalidateOptionsMenu();
 		if(!BEFORE_HONEYCOMB && USE_ACTIONMODE && mActionMode != null)
 			((ActionMode)mActionMode).setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
-		getDirContentFragment(false).notifyDataSetChanged();
+		ContentFragment cf = getDirContentFragment(false);
+		if(cf != null)
+			cf.notifyDataSetChanged();
 	}
 	
 	public void onClipboardClear()
@@ -3708,8 +3723,7 @@ public class OpenExplorer
 		View pb = findViewById(R.id.title_paste);
 		if(pb != null)
 			pb.setVisibility(View.GONE);
-		if(!BEFORE_HONEYCOMB)
-			invalidateOptionsMenu();
+		invalidateOptionsMenu();
 		getDirContentFragment(false).notifyDataSetChanged();
 	}
 
@@ -4124,9 +4138,11 @@ public class OpenExplorer
 
 	@Override
 	public void onFocusChange(View v, boolean hasFocus) {
+		/*
 		if(hasFocus && mMainMenu.findItem(v.getId()) != null
 				&& mMainMenu.findItem(v.getId()).hasSubMenu())
-			v.performClick();
+			v.requestFocus();
+			*/
 	}
 
 }

@@ -1,74 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/title_buttons"
-    android:layout_height="@dimen/actionbar_compat_height"
     android:layout_width="wrap_content"
-    android:showDividers="middle"
+    android:layout_height="@dimen/actionbar_compat_height"
     android:layout_alignParentRight="true"
     android:layout_alignWithParentIfMissing="true"
     android:nextFocusRight="@android:id/home"
     android:paddingRight="3dp"
->   
+    android:showDividers="middle" >
 
-	<RelativeLayout
-	    android:id="@+id/title_paste"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:gravity="center"
-	    >
-	
-	    <ImageButton
-	        android:id="@+id/title_paste_icon"
-	        style="@style/ActionBarCompatHomeItem"
-	        android:layout_width="@dimen/actionbar_compat_button_width"
-	        android:layout_height="@dimen/actionbar_compat_height"
-	        android:layout_alignParentTop="true"
-	        android:clickable="true"
-	        android:longClickable="true"
-	        android:padding="0dp"
-	        android:src="@drawable/ic_menu_clipboard" />
-	
-	    <TextView
-	        android:id="@+id/title_paste_text"
-	        style="@style/Small"
-	        android:layout_width="@dimen/actionbar_compat_button_width"
-	        android:layout_height="@dimen/actionbar_compat_height"
-	        android:layout_alignBottom="@+id/title_paste_icon"
-	        android:gravity="center"
-	        android:layout_marginTop="5dp"
-	        android:text="1"
-	        android:clickable="false"
-	        android:textColor="@color/black" />
-	</RelativeLayout>
-	
-	<ImageButton
-	    android:id="@+id/title_ops"
-	    style="@style/ActionBarCompatHomeItem"
-	    android:layout_width="@dimen/actionbar_compat_button_width"
-	    android:layout_height="@dimen/actionbar_compat_height" 
-	    android:longClickable="true"
-	    android:padding="0dp"
-	    android:src="@drawable/ic_gear"
-	    />
-	
-	<ImageButton
-	    android:id="@+id/title_log"
-	    style="@style/ActionBarCompatHomeItem"
-	    android:layout_width="@dimen/actionbar_compat_button_width"
-	    android:layout_height="@dimen/actionbar_compat_height" 
-	    android:longClickable="true"
-	    android:padding="0dp"
-	    android:src="@drawable/ic_paper"
-	    />
-	
-	<View
-	    android:id="@+id/title_divider"
-	    android:layout_height="match_parent"
-	    android:layout_width="1dp"
-	    android:background="@color/darkGray"
-	    android:layout_marginLeft="3dp" 
-	    android:layout_marginTop="10dp"
-	    android:layout_marginBottom="10dp"
-	    />
-	
+    <include
+        android:id="@+id/title_paste_ref"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        layout="@layout/title_paste" />
+
+    <ImageButton
+        android:id="@+id/title_ops"
+        style="@style/ActionBarCompatHomeItem"
+        android:layout_width="@dimen/actionbar_compat_button_width"
+        android:layout_height="@dimen/actionbar_compat_height"
+        android:longClickable="true"
+        android:padding="0dp"
+        android:src="@drawable/ic_gear" />
+
+    <ImageButton
+        android:id="@+id/title_log"
+        style="@style/ActionBarCompatHomeItem"
+        android:layout_width="@dimen/actionbar_compat_button_width"
+        android:layout_height="@dimen/actionbar_compat_height"
+        android:longClickable="true"
+        android:padding="0dp"
+        android:src="@drawable/ic_paper" />
+
+    <View
+        android:id="@+id/title_divider"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="3dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/darkGray" />
+
 </LinearLayout>
