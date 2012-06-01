@@ -8,12 +8,15 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
 import android.os.StatFs;
 
 public class DFInfo
 {
+	private static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+	
 	private String mPath;
 	private int mSize, mUsed, mFree, mBlocksize;
 	
@@ -85,15 +88,17 @@ public class DFInfo
 			while((sl = is.readLine()) != null)
 			{
 				sl = sl.replaceAll("  *", " ");
-				//Logger.LogDebug("DF: " + sl);
+				if(DEBUG)
+					Logger.LogDebug("DF: " + sl);
 				if(!sl.startsWith("/")) continue;
-				if(!((sl.indexOf("/mnt") > -1 || sl.toLowerCase().startsWith("/remov"))&&(sl.indexOf("/",1) > -1))) continue;
+				if(!((sl.indexOf("/mnt") > -1 || sl.toLowerCase().startsWith("/remov") || sl.toLowerCase().startsWith("/media")) && (sl.indexOf("/",1) > -1))) continue;
 				if(sl.indexOf("/asec") > -1) continue;
 				if(sl.indexOf("/obb") > -1) continue;
 				try {
 					String[] slParts = sl.split(" ");
 					DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]), getSize(slParts[3]), getSize(slParts[4]));
-					//Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
+					if(DEBUG)
+						Logger.LogDebug("DF: Added " + item.getPath() + " - " + item.getFree() + "/" + item.getSize());
 					mDefault.put(slParts[0], item);
 				} catch(ArrayIndexOutOfBoundsException e) { Logger.LogWarning("DF: Unable to add " + sl); }
 				catch(CannotReadException e) { } 

@@ -293,6 +293,8 @@ public class ThumbnailCreator extends Thread {
 		try {
 			if(!file.requiresThread() && file.isDirectory())
 				hasKids = file.getChildCount(false) > 0;
+			else if(file instanceof OpenCursor)
+				hasKids = true;
 		} catch(IOException e) { }
 		
 		if(file.isDirectory()) {
@@ -314,7 +316,7 @@ public class ThumbnailCreator extends Thread {
 				return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
 			else if(hasKids && (sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2.indexOf("microsd") > -1))
 				return (useLarge ? R.drawable.lg_sdcard : R.drawable.sm_sdcard);
-			else if(hasKids && (sPath2.indexOf("usb") > -1 || sPath2.indexOf("removeable") > -1))
+			else if(hasKids && (sPath2.indexOf("usb") > -1 || sPath2.indexOf("/mnt/media/") > -1 || sPath2.indexOf("removeable") > -1))
 				return (useLarge ? R.drawable.lg_usb : R.drawable.sm_usb);
 			else if(hasKids)
 				return (useLarge ? R.drawable.lg_folder_full : R.drawable.sm_folder_full);

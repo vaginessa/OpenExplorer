@@ -125,6 +125,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -295,10 +296,10 @@ public class OpenExplorer
 	private FragmentManager fragmentManager;
 	
 	private final static OpenCursor
-			mPhotoParent = new OpenCursor("Photos"),
-			mVideoParent = new OpenCursor("Videos"),
-			mMusicParent = new OpenCursor("Music"),
-			mApkParent = new OpenCursor("Apps");
+			mPhotoParent = new OpenCursor("Photos", MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
+			mVideoParent = new OpenCursor("Videos", MediaStore.Video.Media.EXTERNAL_CONTENT_URI),
+			mMusicParent = new OpenCursor("Music", MediaStore.Audio.Media.EXTERNAL_CONTENT_URI),
+			mApkParent = new OpenCursor("Apps", BEFORE_HONEYCOMB ? Uri.fromFile(OpenFile.getExternalMemoryDrive(true).getFile()) : MediaStore.Files.getContentUri("/mnt"));
 	private final static OpenSmartFolder
 			mDownloadParent = new OpenSmartFolder("Downloads");
 
@@ -416,7 +417,8 @@ public class OpenExplorer
 				if(sig.toCharsString().indexOf("4465627567") > -1) // check for "Debug" in signature
 					IS_DEBUG_BUILD = true;
 			*/
-			IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), PackageManager.GET_META_DATA)
+			if(IS_DEBUG_BUILD)
+				IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(), PackageManager.GET_META_DATA)
 					.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) ==
 						ApplicationInfo.FLAG_DEBUGGABLE;
 			if(isBlackBerry())
@@ -545,10 +547,14 @@ public class OpenExplorer
 			}
 		} catch(Exception e) { }
 		try {
-			if(isGTV() && !getPreferences().getBoolean("global", "welcome", false))
+			if(isGTV())
 			{
-				showToast("Welcome, GoogleTV user!");
-				getPreferences().setSetting("global", "welcome", true);
+				//CAN_DO_CAROUSEL = true;
+				if(!getPreferences().getBoolean("global", "welcome", false))
+				{
+					showToast("Welcome, GoogleTV user!");
+					getPreferences().setSetting("global", "welcome", true);
+				}
 			}
 		} catch(Exception e) { Logger.LogWarning("Couldn't check for GTV", e); }
 	}
@@ -2307,12 +2313,26 @@ public class OpenExplorer
 		USE_SPLIT_ACTION_BAR = !topButtons;
 		if(mToolbarButtons != null)
 		{
-			mToolbarButtons.setVisibility(View.VISIBLE);
-			if(tbl != null)
-				tbl.setStretchAllColumns(false);
 			mToolbarButtons.removeAllViews();
 			if(!topButtons)
 				mToolbarButtons.measure(LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.actionbar_compat_height));
+			else
+			{
+				ViewGroup buts = (ViewGroup)LayoutInflater.from(this).inflate(R.layout.title_buttons, null);
+				for(int i = 0; i < buts.getChildCount(); i++)
+				{
+					View kid = buts.getChildAt(i);
+					if(kid.getId() != R.id.title_divider)
+					{
+						kid.setOnClickListener(this);
+						kid.setOnLongClickListener(this);
+						kid.setFocusable(true);
+						kid.setOnFocusChangeListener(this);
+					}
+					buts.removeView(kid);
+					mToolbarButtons.addView(kid);
+				}
+			}
 			int i = -1;
 			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (int)(16 * getResources().getDimension(R.dimen.one_dp));
 			int tblWidth = mToolbarButtons.getWidth();
@@ -3575,7 +3595,17 @@ public class OpenExplorer
 						last = last.substring(0, last.indexOf("]"));
 				}
 			} while(s != null);
-			if(last == null) throw new IOException("Couldn't find volume label.");
+			if(last == null) {
+				sPath2 = sPath2.substring(sPath2.lastIndexOf("/") + 1);
+				if(sPath2.indexOf("_") > -1 && sPath2.indexOf("usb") < sPath2.indexOf("_"))
+					sPath2 = sPath2.substring(0, sPath2.indexOf("_"));
+				else if (sPath2.indexOf("_") > -1 && sPath2.indexOf("USB") > sPath2.indexOf("_"))
+					sPath2 = sPath2.substring(sPath2.indexOf("_") + 1);
+				sPath2 = sPath2.toUpperCase();
+				return sPath2;
+			}
+			if(DEBUG)
+				Logger.LogDebug("OpenExplorer.getVolumeName(" + sPath2 + ") = " + last);
 			sPath2 = last;
 		} catch (IOException e) {
 			Logger.LogError("Couldn't read LogCat :(", e);

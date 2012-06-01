@@ -118,6 +118,7 @@ public class MenuUtils {
 	}
 	public static void fillSubMenus(int[] search, int[] replace, Menu menu, MenuInflater inflater)
 	{
+		if(search == null || replace == null || menu == null || inflater == null) return;
 		for(int i = 0; i < menu.size(); i++)
 		{
 			MenuItem item = menu.getItem(i);

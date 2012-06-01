@@ -73,5 +73,12 @@
 	</FrameLayout>
 	
 	<include layout="@layout/title_buttons" />
+	
+	<LinearLayout
+	    android:id="@+id/menu_buttons"
+	    android:layout_width="wrap_content"
+	    android:layout_height="@dimen/actionbar_compat_height"
+	    android:layout_alignParentRight="true"
+	    />
     
 </RelativeLayout>

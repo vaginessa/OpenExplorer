@@ -25,17 +25,20 @@
 	<item
 		android:id="@+id/menu_settings"
 		android:showAsAction="never"
+		android:alphabeticShortcut="p"
 		android:icon="@drawable/ic_menu_preferences"
 		android:title="@string/s_menu_prefs_global"
 		/>
 	<item
 	    android:id="@+id/menu_about"
 	    android:showAsAction="never"
+		android:alphabeticShortcut="a"
 		android:icon="@drawable/ic_menu_help"
 	    android:title="@string/s_menu_about" />
 	
 	<item android:id="@+id/menu_exit"
 	    android:showAsAction="never"
+		android:alphabeticShortcut="x"
 	    android:icon="@drawable/ic_menu_close_clear_cancel"
 	    android:title="@string/s_menu_exit"
 	    />

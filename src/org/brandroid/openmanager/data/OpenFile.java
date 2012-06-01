@@ -123,12 +123,12 @@ public class OpenFile
 		return mFile.getUsableSpace();
 	}
 	public long getTotalSpace() {
-		if(getDepth() > 3)
+		if(getDepth() > 4)
 		{
 			if(getPath().indexOf("/mnt/") > -1)
 			{
 				OpenFile toCheck = this;
-				for(int i=3; i < getDepth(); i++)
+				for(int i=4; i < getDepth(); i++)
 				{
 					toCheck = toCheck.getParent();
 					if(toCheck == null) break;
@@ -556,5 +556,13 @@ public class OpenFile
 			else
 				return getFile().createNewFile();
 		} catch(Exception e) { return false; }
+	}
+	
+	public boolean isRemoveable()
+	{
+		if(getPath().indexOf("/remov") > -1) return true;
+		if(getPath().indexOf("/mnt/media") > -1) return true;
+		if(getPath().indexOf("usb") > -1) return true;
+		return false;
 	}
 }

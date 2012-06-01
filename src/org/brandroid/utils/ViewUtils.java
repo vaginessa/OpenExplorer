@@ -298,4 +298,11 @@ public class ViewUtils {
 		}
 		return null;
 	}
+
+	public static int getChildIndex(ViewGroup parent, int searchId) {
+		for(int i = 0; i < parent.getChildCount(); i++)
+			if(parent.getChildAt(i).getId() == searchId)
+				return i;
+		return -1;
+	}
 }

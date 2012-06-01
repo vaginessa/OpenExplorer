@@ -45,6 +45,8 @@ import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.ViewUtils;
+
 import android.animation.Animator;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -61,6 +63,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager.BadTokenException;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
@@ -82,6 +85,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 								OnItemLongClickListener
 {
 	private Map<Integer, ArrayList<OpenPath>> mBookmarksArray;
+	private Hashtable<String, String> mTitles = new Hashtable<String, String>();
 	//private ImageView mLastIndicater = null;
 	private BookmarkAdapter mBookmarkAdapter;
 	private String mBookmarkString;
@@ -338,7 +342,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 	public String getPathTitleDefault(OpenPath file)
 	{
-		if(file.getDepth() > 3) return file.getName();
+		if(file.getDepth() > 4) return file.getName();
 		if(file instanceof OpenCursor || file instanceof OpenMediaStore) return file.getName();
 		String path = file.getPath().toLowerCase();
 		if(path.equals("/"))
@@ -349,7 +353,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			return mContextHelper.getString(R.string.s_downloads);
 		else if(path.indexOf("sdcard") > -1)
 			return mContextHelper.getString(mHasExternal ? R.string.s_internal : R.string.s_external);
-		else if(path.indexOf("usb") > -1 || path.indexOf("removeable") > -1)
+		else if(path.indexOf("usb") > -1 || path.indexOf("/media") > -1 || path.indexOf("removeable") > -1)
 		{
 			try {
 				return OpenExplorer.getVolumeName(file.getPath());
@@ -391,6 +395,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				return false;
 		} catch(NullPointerException e) { }
 		if(hasBookmark(path)) return false;
+		if(path instanceof OpenFile)
+		{
+			if(((OpenFile)path).isRemoveable())
+				if(((OpenFile) path).getUsableSpace() <= 0)
+					return false;
+		}
 		if(path instanceof OpenCursor ||
 				path instanceof OpenNetworkPath ||
 				path instanceof OpenSmartFolder ||
@@ -702,6 +712,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				free /= 10;
 			}
 			float total_percent = ((float)total / (float)Math.max(total,mLargestDataSize));
+			total_percent = Math.min(20, total_percent);
 			int percent_width = (int) (total_percent * total_width);
 			//Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " + total + " Percent: " + total_percent + " Width: " + percent_width + " / " + total_width);
 			if(size_bar instanceof ProgressBar)
@@ -757,6 +768,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			OpenPath path = getChild(group, pos);
 			if(path instanceof OpenCursor && path.getListLength() == 0)
 			{
+				ret = new View(getContext());
+				ret.setLayoutParams(new AbsListView.LayoutParams(0, 0));
+				ret.setFocusable(false);
 				ret.setVisibility(View.GONE);
 				return ret;
 			}
@@ -765,6 +779,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			ret.setTag(mHolder);
 		
 			final TextView mCountText = (TextView)ret.findViewById(R.id.content_count);
+			final ImageView mIcon = (ImageView)ret.findViewById(R.id.bookmark_icon);
+			
 			if(mCountText != null)
 			{
 				if(path instanceof OpenSmartFolder)
@@ -774,36 +790,39 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				}
 				if(path instanceof OpenCursor)
 				{
-					OpenCursor oc = (OpenCursor)path;
-					if(oc.isLoaded() && !mCountText.isShown())
-					{
-						mCountText.setText("(" + oc.length() + ")");
-						mCountText.setVisibility(View.VISIBLE);
-					} else if(!oc.hasListener()) {
-						mCountText.setVisibility(View.GONE);
-						((OpenCursor)path).setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
-							public void updateBookmarkText(final String txt) {
-								mCountText.post(new Runnable() {
-									public void run() {
-										mCountText.setText(txt);
-										mCountText.setVisibility(View.VISIBLE);
+					final OpenCursor oc = (OpenCursor)path;
+					oc.setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
+						public void updateBookmarkCount(final int count) {
+							mCountText.post(new Runnable() {
+								public void run() {
+									mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(oc, 36, 36));
+									if(count > 0)
+									{
+										String txt = " (" + count + ")";
+										if(!mCountText.getText().toString().equals(txt))
+										{
+											mCountText.setText(txt);
+											mCountText.setVisibility(View.VISIBLE);
+										}
+									} else {
+										mCountText.setVisibility(View.GONE);
 									}
-								});
-							}
-						});
-					}
+								}
+							});
+						}
+					});
+					new Thread(new Runnable(){public void run(){
+						oc.refresh();
+					}}).start();
 				} else mCountText.setVisibility(View.GONE);
 			}
 				
-			
 			if(group == BOOKMARK_DRIVE || path instanceof OpenSMB)
 				updateSizeIndicator(path, ret);
 			else 
-				ret.findViewById(R.id.size_layout).setVisibility(View.GONE);
+				ViewUtils.setViewsVisible(ret, false, R.id.size_layout);
 			
-			final ImageView mIcon = (ImageView)ret.findViewById(R.id.bookmark_icon);
-			
-			((TextView)ret.findViewById(R.id.content_text)).setText(getPathTitle(path));
+			ViewUtils.setText(ret, getPathTitle(path), R.id.content_text);
 			
 			if(group == BOOKMARK_FAVORITE)
 			{
@@ -813,7 +832,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 						mIcon.getResources().getDrawable(R.drawable.ic_favorites)
 					});
 				mIcon.setImageDrawable(ld);
-			} else
+			} else //if(!(path instanceof OpenCursor))
 				ThumbnailCreator.setThumbnail(mIcon, path, 36, 36,
 					new OnUpdateImageListener() {
 						public void updateImage(Bitmap b) {
