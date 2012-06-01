@@ -53,7 +53,7 @@
 	    android:layout_height="match_parent"
 	    android:layout_above="@id/base_bar"
 	    android:layout_alignParentLeft="true"
-	    android:layout_toLeftOf="@+id/frag_log"
+	    android:layout_alignParentRight="true"
 	    android:baselineAligned="false">
 	    
 	    
@@ -84,24 +84,5 @@
 	
 	
 	</LinearLayout>
-		
-		    <FrameLayout
-				android:id="@+id/frag_log"
-				android:layout_above="@id/base_bar"
-				android:layout_below="@+id/title_underline"
-		        android:layout_width="@dimen/bookmarks_width"
-		        android:layout_height="match_parent"
-		        android:layout_alignParentRight="true"
-		        android:layout_alignWithParentIfMissing="true"
-		        >
-		    </FrameLayout>
-	
-	<ViewStub
-	    android:id="@id/base_stub"
-	    android:layout="@layout/base_bar"
-	    android:layout_alignParentBottom="true"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    />
 	
 </RelativeLayout>

@@ -538,7 +538,7 @@ public class EventHandler {
 
 		public String getTitle() {
 			String title = getResourceString(mContext,
-					R.string.s_title_executing).toString();
+					R.string.s_title_executing);
 			switch (mType) {
 			case DELETE:
 				title = getResourceString(mContext, R.string.s_title_deleting)
@@ -572,7 +572,7 @@ public class EventHandler {
 				title = getResourceString(mContext, R.string.s_create).toString();
 				break;
 			}
-			title += " " + '\u2192' + " " + mIntoPath.getPath();
+			title += " " + '\u2192' + " " + mIntoPath;
 			return title;
 		}
 
@@ -1119,18 +1119,10 @@ public class EventHandler {
 				return;
 			Runnable runnable = new Runnable() {
 				public void run() {
-					if (view.findViewById(android.R.id.icon) != null)
-						((ImageView) view.findViewById(android.R.id.icon))
-								.setImageResource(getNotifIconResId());
-					if (view.findViewById(android.R.id.title) != null)
-						((TextView) view.findViewById(android.R.id.title))
-								.setText(getTitle());
-					if (view.findViewById(android.R.id.text1) != null)
-						((TextView) view.findViewById(android.R.id.text1))
-								.setText(getLastRate());
-					if (view.findViewById(android.R.id.text2) != null)
-						((TextView) view.findViewById(android.R.id.text2))
-								.setText(getSubtitle());
+					ViewUtils.setImageResource(view, getNotifIconResId(), android.R.id.icon);
+					ViewUtils.setText(view, getTitle(), android.R.id.title);
+					ViewUtils.setText(view, getLastRate(), android.R.id.text1);
+					ViewUtils.setText(view, getSubtitle(), android.R.id.text2);
 					if (view.findViewById(android.R.id.progress) != null) {
 						int progA = (int) (((float) mLastProgress[0] / (float) mLastProgress[1]) * 1000f);
 						int progB = (int) (((float) mLastProgress[0] / (float) mLastProgress[2]) * 1000f);

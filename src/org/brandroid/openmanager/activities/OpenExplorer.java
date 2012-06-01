@@ -164,6 +164,7 @@ import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.OperationsFragment;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentDPADListener;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentTitleLongClickListener;
+import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
@@ -283,6 +284,7 @@ public class OpenExplorer
 	private static OnBookMarkChangeListener mBookmarkListener;
 	protected MenuBuilder mMainMenu = null, mOptsMenu = null;
 	private ViewGroup mToolbarButtons = null;
+	private ViewGroup mStaticButtons = null;
 	private View mSearchView = null;
 	private int mTitleButtons = 0;
 	
@@ -458,7 +460,7 @@ public class OpenExplorer
 		setOnClicks(
 				R.id.title_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
 				R.id.title_log, R.id.title_icon, R.id.menu_more,
-				R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text
+				R.id.title_paste_icon
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
 		checkTitleSeparator();
@@ -1029,41 +1031,23 @@ public class OpenExplorer
 	
 	private void initLogPopup()
 	{
-		if(findViewById(R.id.frag_log) != null)
-			return;
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
-		View anchor = null;
-		if(anchor == null)
-			anchor = findViewById(R.id.title_log);
-		if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
-			anchor = getActionBar().getCustomView();
-		if(anchor == null)
-			anchor = findViewById(R.id.title_bar);
-		if(anchor == null)
-			anchor = findViewById(R.id.base_bar);
-		if(anchor == null)
-			anchor = findViewById(R.id.base_row);
+		if(findViewById(R.id.frag_log) != null)
+			return;
+		View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar,
+				R.id.base_bar, R.id.base_row);
 		mLogFragment.setupPopup(this, anchor);
 	}
 	
 	private void initOpsPopup()
 	{
-		if(findViewById(R.id.frag_log) != null)
-			return;
 		if(mOpsFragment == null)
 			mOpsFragment = new OperationsFragment();
-		View anchor = null;
-		if(anchor == null)
-			anchor = findViewById(R.id.title_ops);
-		if(anchor == null && USE_ACTION_BAR && !BEFORE_HONEYCOMB && getActionBar() != null && getActionBar().getCustomView() != null)
-			anchor = getActionBar().getCustomView();
-		if(anchor == null)
-			anchor = findViewById(R.id.title_bar);
-		if(anchor == null)
-			anchor = findViewById(R.id.base_bar);
-		if(anchor == null)
-			anchor = findViewById(R.id.base_row);
+		if(findViewById(R.id.frag_log) != null)
+			return;
+		View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar,
+						R.id.base_bar, R.id.base_row);
 		mOpsFragment.setupPopup(this, anchor);
 	}
 	
@@ -1438,12 +1422,15 @@ public class OpenExplorer
 	}
 	private void checkTitleSeparator()
 	{
+		if(mStaticButtons == null)
+			mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
 		boolean visible = false;
+		
 		if(!usingSplitActionBar())
 			for(int id : new int[]{R.id.title_paste, R.id.title_log, R.id.title_ops})
-				if(findViewById(id) != null && findViewById(id).isShown())
+				if(mStaticButtons.findViewById(id) != null && mStaticButtons.findViewById(id).isShown())
 					visible = true;
-		ViewUtils.setViewsVisible(mToolbarButtons, visible, R.id.title_divider);
+		ViewUtils.setViewsVisible(mStaticButtons, visible, R.id.title_divider);
 	}
 	public void sendToLogView(final String txt, final int color)
 	{
@@ -2299,6 +2286,7 @@ public class OpenExplorer
 		if(flush) mLastMenuClass = "";
 		TableLayout tbl = (TableLayout)findViewById(R.id.base_bar);
 		mToolbarButtons = (ViewGroup)findViewById(R.id.base_row);
+		mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
 		OpenFragment f = getSelectedFragment();
 		boolean topButtons = false;
 		if(!getResources().getBoolean(R.bool.allow_split_actionbar)
@@ -2316,23 +2304,7 @@ public class OpenExplorer
 			mToolbarButtons.removeAllViews();
 			if(!topButtons)
 				mToolbarButtons.measure(LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.actionbar_compat_height));
-			else
-			{
-				ViewGroup buts = (ViewGroup)LayoutInflater.from(this).inflate(R.layout.title_buttons, null);
-				for(int i = 0; i < buts.getChildCount(); i++)
-				{
-					View kid = buts.getChildAt(i);
-					if(kid.getId() != R.id.title_divider)
-					{
-						kid.setOnClickListener(this);
-						kid.setOnLongClickListener(this);
-						kid.setFocusable(true);
-						kid.setOnFocusChangeListener(this);
-					}
-					buts.removeView(kid);
-					mToolbarButtons.addView(kid);
-				}
-			}
+			
 			int i = -1;
 			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (int)(16 * getResources().getDimension(R.dimen.one_dp));
 			int tblWidth = mToolbarButtons.getWidth();
@@ -2340,8 +2312,6 @@ public class OpenExplorer
 				tblWidth = getWindowWidth();
 			if(topButtons || tblWidth <= 0 || tblWidth > getWindowWidth() || !getResources().getBoolean(R.bool.ignore_max_base_buttons))
 				tblWidth = btnWidth * getResources().getInteger(R.integer.max_base_buttons);
-			if(mToolbarButtons.findViewById(R.id.title_paste) != null)
-				tblWidth += btnWidth;
 			ArrayList<ImageButton> buttons = ViewUtils.findChildByClass(mToolbarButtons, ImageButton.class);
 			boolean maxedOut = false;
 			while(++i < menu.size())
@@ -2822,26 +2792,15 @@ public class OpenExplorer
 			//case R.id.menu_global_ops_icon:
 			case R.id.title_ops:
 				refreshOperations();
-				if(mSinglePane)
-					mOpsFragment.getPopup().showLikePopDownMenu();
-				else
-					ViewUtils.setViewsVisible(this,
-							findViewById(R.id.frag_log).getVisibility() == View.GONE,
-							R.id.frag_log);
+				showLogFrag(mOpsFragment, true);
 				checkTitleSeparator();
 				return true;
 				
 			case R.id.title_log:
 				if(mLogFragment == null)
 					mLogFragment = new LogViewerFragment();
-				if (findViewById(R.id.frag_log) != null)
-				{
-					findViewById(R.id.frag_log).setVisibility(findViewById(R.id.frag_log).getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
-					sendToLogView(null, 0);
-				} else {
-					initLogPopup();
-					mLogFragment.getPopup().showLikePopDownMenu();
-				}
+				showLogFrag(mLogFragment, true);
+				sendToLogView(null, 0);
 				return true;
 					
 			/*case R.id.menu_root:
@@ -2974,6 +2933,28 @@ public class OpenExplorer
 		//return super.onOptionsItemSelected(item);
 	}
 	
+	private void showLogFrag(OpenFragment frag, boolean toggle)
+	{
+		View frag_log = findViewById(R.id.frag_log);
+		if(frag_log == null)
+			((Poppable)frag).getPopup().showLikePopDownMenu();
+		else {
+			boolean isVis = frag_log.getVisibility() == View.VISIBLE;
+			boolean isFragged = false;
+			Fragment fl = fragmentManager.findFragmentById(R.id.frag_log);
+			if(fl != null && fl.equals(frag))
+				isFragged = true;
+			if(isVis && isFragged && toggle)
+				frag_log.setVisibility(View.GONE);
+			else if(isVis)
+				fragmentManager.beginTransaction()
+					.replace(R.id.frag_log, frag)
+					.disallowAddToBackStack()
+					.commitAllowingStateLoss();
+			else frag_log.setVisibility(View.VISIBLE);
+		}
+	}
+	
 	private void debugTest() {
 		//startActivity(new Intent(this, Authenticator.class));
 		
@@ -2983,6 +2964,7 @@ public class OpenExplorer
 
 	private void onClipboardDropdown(View anchor)
 	{
+		ViewUtils.setViewsVisible(mStaticButtons, true, R.id.title_paste);
 		if(anchor == null)
 			anchor = ViewUtils.getFirstView(this,
 				R.id.title_paste, R.id.title_icon, R.id.frag_holder);
@@ -3328,7 +3310,7 @@ public class OpenExplorer
 		if(path instanceof OpenNetworkPath)
 		{
 			if(mLogViewEnabled)
-				setViewVisibility(true, false, R.id.frag_log);
+				showLogFrag(mLogFragment, false);
 		} else
 			setViewVisibility(false, false, R.id.frag_log);
 		
@@ -3712,10 +3694,10 @@ public class OpenExplorer
 		if(getClipboard().size() == mLastClipSize && getClipboard().isMultiselect() != mLastClipState) return;
 		if(DEBUG)
 			Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
-		View pb = findViewById(R.id.title_paste);
+		View pb = mStaticButtons.findViewById(R.id.title_paste);
 		mLastClipSize = getClipboard().size();
 		mLastClipState = getClipboard().isMultiselect();
-		ViewUtils.setViewsVisible(getRootView(), mLastClipSize > 0 || mLastClipState, R.id.title_paste, R.id.title_paste_icon, R.id.title_paste_text);
+		ViewUtils.setViewsVisible(pb, mLastClipSize > 0 || mLastClipState);
 		ViewUtils.setText(pb, "" + mLastClipSize, R.id.title_paste_text);
 		ViewUtils.setImageResource(pb, mLastClipState ?
 					R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_clipboard,

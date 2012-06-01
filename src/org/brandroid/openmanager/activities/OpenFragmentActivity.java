@@ -84,7 +84,11 @@ public abstract class OpenFragmentActivity
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		try {
 		super.onCreate(savedInstanceState);
+		} catch(Exception e) { 
+			Logger.LogError("Error while creating.", e);
+		}
 		Logger.LogDebug("<-onCreate - " + getClassName());
 		//CONTENT_FRAGMENT_FREE = false;
 	}

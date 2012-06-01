@@ -129,7 +129,7 @@ public class OperationsFragment
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		mList = (ListView)view.findViewById(android.R.id.list);
+		mList = (ListView)view.findViewById(R.id.ops_list);
 		mList.setAdapter(new BackgroundTaskAdapter());
 	}
 	

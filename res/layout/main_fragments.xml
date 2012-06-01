@@ -87,7 +87,6 @@
 		        android:layout_alignParentRight="true"
 		        android:layout_alignWithParentIfMissing="true"
 		        >
-		    	<include layout="@layout/log_viewer" />
 		    </FrameLayout>
 	
 	<ViewStub
