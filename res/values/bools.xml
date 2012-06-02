@@ -8,4 +8,6 @@
     <item type="bool" name="prehoneycomb">true</item>
     <item type="bool" name="ignore_max_base_buttons">true</item>
     <item type="bool" name="allow_fullscreen">true</item>
+    <item type="bool" name="large">false</item>
+    <item type="bool" name="large_land">false</item>
 </resources>

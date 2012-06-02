@@ -29,13 +29,14 @@
 	    android:id="@+id/title_stub"
 	    android:inflatedId="@+id/title_bar"
 		android:layout_width="match_parent"
+		android:layout_alignWithParentIfMissing="true"
 		android:layout_height="@dimen/actionbar_compat_height"
 		/>
     
     <View android:background="@color/blue"
         android:layout_height="1dp"
         android:layout_width="match_parent"
-        android:layout_alignBottom="@+id/title_bar"
+        android:layout_alignBottom="@id/title_bar"
         android:layout_alignWithParentIfMissing="true"
         android:id="@+id/title_underline"
         />

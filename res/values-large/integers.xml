@@ -16,4 +16,5 @@
 
 <resources>
     <item type="integer" name="max_base_buttons">1</item>
+    <item type="bool" name="large">true</item>
 </resources>

@@ -178,7 +178,7 @@ public abstract class OpenFragmentActivity
 	public boolean isGTV() { return isGTV(this); }
 	public static boolean isGTV(Context context) { return context.getPackageManager().hasSystemFeature("com.google.android.tv"); }
 	public void showToast(final CharSequence message)  {
-		showToast(message, Toast.LENGTH_SHORT);
+		showToast(message, Toast.LENGTH_LONG);
 	}
 	public void showToast(final int iStringResource) { showToast(getResources().getString(iStringResource)); }
 	public void showToast(final CharSequence message, final int toastLength)  {

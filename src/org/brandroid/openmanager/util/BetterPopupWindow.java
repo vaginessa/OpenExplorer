@@ -56,6 +56,8 @@ public class BetterPopupWindow {
 	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	private OnKeyListener mKeyListener = null;
 	private CharSequence mTitle = null;
+	private float m1dp = 0;
+	private int availHeight = 0;
 
 	/**
 	 * Create a BetterPopupWindow
@@ -143,10 +145,14 @@ public class BetterPopupWindow {
 		if(popup == null) return;
 		if(Math.abs(popup.getHeight() - h) > 10 || popup.getHeight() >= getAvailableHeight() - mContext.getResources().getDimension(R.dimen.actionbar_compat_height))
 		{
-			if(exact != null && exact.y + h > getAvailableHeight())
-				h -= Math.abs(getAvailableHeight() - exact.y) + 10;
+			if(exact != null)
+			{
+				int maxh = popup.isAboveAnchor() ? exact.y : getAvailableHeight() - exact.y;
+				if(maxh > getPreferredMinHeight() && h > maxh)
+					h = maxh;
+			}
 			if(popup != null && popup.isShowing() && Math.abs(h - popup.getHeight()) > 10)
-				popup.update(w, h);
+				popup.update(popup.getWidth(), h);
 		}
 	}
 	
@@ -163,7 +169,7 @@ public class BetterPopupWindow {
 		else
 			popup.setBackgroundDrawable(new BitmapDrawable());
 		
-		int maxHeight = anchor.getRootView().getHeight();
+		int maxHeight = getAvailableHeight();
 		if(anchor == null || (maxHeight > ViewUtils.getAbsoluteTop(anchor) + anchor.getHeight() + Math.max(mHeight, getPreferredMinHeight())))
 			layout = R.layout.contextmenu_layout;
 		else {
@@ -205,23 +211,39 @@ public class BetterPopupWindow {
 						if(h <= 0) return;
 						int l = ViewUtils.getAbsoluteLeft(v);
 						int t = ViewUtils.getAbsoluteTop(v);
+						if(exact != null)
+						{
+							l = exact.x;
+							t = exact.y;
+						}
 						int w = right - left;
 						h = Math.max(h, backgroundView.getHeight());
-						if(backgroundView.findViewById(android.R.id.widget_frame) != null)
+						View widget = backgroundView.findViewById(android.R.id.widget_frame);
+						if(widget != null)
 						{
-							int wh = backgroundView.findViewById(android.R.id.widget_frame).getHeight();
-							if(wh > h)
-								h = wh + backgroundView.getPaddingTop() + backgroundView.getPaddingBottom() + getArrow().getHeight();
+							//widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+							int wh = widget.getHeight();
+							if(wh > getPreferredMinHeight() && Math.abs(wh - h) > 20)
+								h = wh + backgroundView.getPaddingTop() + backgroundView.getPaddingBottom() + getArrow().getHeight() + getDPs(3);
+							/*
+							widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+							wh = widget.getMeasuredHeight() + backgroundView.getPaddingTop() + backgroundView.getPaddingBottom() + getArrow().getHeight();
+							Logger.LogDebug("WH(m): " + wh);
+							if(wh > getPreferredMinHeight())
+								h = wh;
+							widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+							*/
 						}
+						if(h + t > getAvailableHeight()) return;
 						h = Math.max(getPreferredMinHeight(), h);
-						if(mHeight > 0 && h <= mHeight) return;
+						//if(mHeight > 0 && h <= mHeight) return;
 						if(DEBUG)
-							Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ") from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
-						root.removeOnLayoutChangeListener(this);
+							Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ":" + getAvailableWidth() + "x" + getAvailableHeight() + ") from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
+						//root.removeOnLayoutChangeListener(this);
 						OnPopupShown(w, h);
 					}
 				});
-			else
+		else
 			root.postDelayed(new Runnable(){public void run() {
 				int h = root.getHeight();
 				int w = popup.getWidth();
@@ -266,9 +288,15 @@ public class BetterPopupWindow {
 		onShow();
 	}
 	
+	private int getDPs(int pixels)
+	{
+		if(m1dp == 0)
+			m1dp = mContext.getResources().getDimension(R.dimen.one_dp);
+		return Math.round(m1dp * pixels);
+	}
 	private int getPreferredMinHeight()
 	{
-		return Math.round(mContext.getResources().getDimension(R.dimen.one_dp) * (100));
+		return getDPs(100);
 	}
 	
 	private View getArrow()
@@ -428,6 +456,9 @@ public class BetterPopupWindow {
 	
 			int popWidth = this.popup.getWidth(); //- (mContext.getResources().getDimensionPixelSize(R.dimen.popup_width) / 3);
 			int popLeft = ancLeft;
+			
+			exact = new Point(ancLeft + xOffset, ancTop + yOffset);
+			if(fromBottom) exact.y += anchor.getHeight();
 
 			popup.setAnimationStyle(R.style.Animations_Fade);
 
@@ -636,12 +667,24 @@ public class BetterPopupWindow {
 	}
 	private int getAvailableHeight()
 	{
+		if(availHeight > 0) return availHeight;
 		if(anchor == null)
 			return getWindowHeight() - forcePadding;
 		try {
 			View root = getAnchorRoot();
+			availHeight = root.getMeasuredHeight();
+			if(availHeight == 0) availHeight = root.getHeight();
+			if(availHeight == 0) availHeight = getWindowHeight() - forcePadding;
+			if(Build.VERSION.SDK_INT > 13)
+			{
+				if(OpenExplorer.IS_FULL_SCREEN)
+					availHeight = root.getRootView().getMeasuredHeight();
+				else
+					availHeight -= getDPs(50);
+			}
+			//Logger.LogVerbose("Root Height: " + availHeight);
 			//root.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			return (root.getHeight() > 0 ? root.getHeight() : getWindowHeight()) - forcePadding;
+			return availHeight;
 		} catch(Exception e) { return getWindowHeight() - forcePadding; }
 	}
 	private int getWindowWidth()

@@ -305,4 +305,10 @@ public class ViewUtils {
 				return i;
 		return -1;
 	}
+
+	public static void inflateView(Activity a, int... stubIds) {
+		for(int stubId : stubIds)
+			if(a.findViewById(stubId) != null && a.findViewById(stubId) instanceof ViewStub)
+				((ViewStub)a.findViewById(stubId)).inflate();
+	}
 }

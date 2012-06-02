@@ -115,6 +115,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
+import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
@@ -381,7 +382,7 @@ public class OpenExplorer
 					ab.setCustomView(R.layout.title_bar);
 					ab.setDisplayShowCustomEnabled(true);
 					ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-					ViewGroup cv = (ViewGroup)ab.getCustomView();
+					//ViewGroup cv = (ViewGroup)ab.getCustomView();
 					//if(cv.findViewById(R.id.title_paste) != null)
 					//	cv.removeView(cv.findViewById(R.id.title_paste));
 					//ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
@@ -436,26 +437,28 @@ public class OpenExplorer
 		
 		if(!BEFORE_HONEYCOMB)
 		{
-			if(Build.VERSION.SDK_INT < 15)
+			boolean show_underline = true;
+			if(Build.VERSION.SDK_INT < 14)
+				show_underline = isGTV();
+			else if(getResources().getBoolean(R.bool.large)) // ICS+ tablets
+				show_underline = false;
+			if(Build.VERSION.SDK_INT > 13 && !getResources().getBoolean(R.bool.large))
+				show_underline = true;
+			
+			View tu = findViewById(R.id.title_underline);
+			if(tu != null && !show_underline)
 			{
 				getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
-				setViewVisibility(false, false, R.id.title_underline);
+				tu.setVisibility(View.GONE);
 			}
+			
 			//if(USE_ACTION_BAR)
 			//	setViewVisibility(false, false, R.id.title_bar, R.id.title_underline, R.id.title_underline_2);
 		}
 		if(BEFORE_HONEYCOMB || !USE_ACTION_BAR)
-		{
-			ViewStub mTitleStub = (ViewStub)findViewById(R.id.title_stub);
-			if(mTitleStub != null)
-			{
-				mTitleStub.inflate();
-				setViewVisibility(true, false, R.id.title_underline);
-			}
-			ViewStub mBaseStub = (ViewStub)findViewById(R.id.base_stub);
-			if(mBaseStub != null)
-				mBaseStub.inflate();
-		}
+			ViewUtils.inflateView(this, R.id.title_stub);
+		if(BEFORE_HONEYCOMB)
+			ViewUtils.inflateView(this, R.id.base_stub);
 		setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
 		setOnClicks(
 				R.id.title_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
@@ -551,6 +554,7 @@ public class OpenExplorer
 		try {
 			if(isGTV())
 			{
+				//IS_DEBUG_BUILD = false;
 				//CAN_DO_CAROUSEL = true;
 				if(!getPreferences().getBoolean("global", "welcome", false))
 				{
@@ -2329,6 +2333,10 @@ public class OpenExplorer
 					{
 						ImageButton btn = makeMenuButton(item);
 						buttons.add(btn);
+						if(i > 0)
+							btn.setNextFocusLeftId(menu.getItem(i - 1).getItemId());
+						if(i < menu.size() - 1)
+							btn.setNextFocusRightId(menu.getItem(i + 1).getItemId());
 						if(!USE_PRETTY_MENUS || topButtons)
 							btn.setOnCreateContextMenuListener(this);
 						menu.getItem(i).setVisible(false);
@@ -2350,17 +2358,25 @@ public class OpenExplorer
 					ImageButton old = buttons.remove(buttons.size() - 1);
 					MenuUtils.setMenuVisible(mMainMenu, true, old.getId());
 					mToolbarButtons.removeView(old);
+					buttons.get(buttons.size() - 1).setNextFocusRightId(R.id.menu_more);
 				}
 				final ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
 				btn.setImageResource(R.drawable.ic_menu_more);
 				btn.setId(R.id.menu_more);
+				btn.setNextFocusLeftId(buttons.get(buttons.size() - 1).getId());
 				btn.setOnClickListener(this);
 				btn.setOnLongClickListener(this);
 				btn.setFocusable(true);
 				btn.setOnFocusChangeListener(this);
-				btn.setNextFocusRightId(android.R.id.home);
+				buttons.add(btn);
 				mToolbarButtons.addView(btn);
 			}
+			ImageButton last = buttons.get(buttons.size() - 1);
+			last.setNextFocusRightId(android.R.id.home);
+			last.setNextFocusLeftId(buttons.get(buttons.size() - 2).getId());
+			if(findViewById(android.R.id.home) != null)
+				findViewById(android.R.id.home).setNextFocusLeftId(last.getId());
+			
 			Logger.LogDebug("Added " + buttons.size() + " children to Base Bar.");
 			if(tbl != null)
 			{
@@ -3134,9 +3150,11 @@ public class OpenExplorer
 	}
 	
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		if(DEBUG)
 			Logger.LogDebug("OpenExplorer.onKeyDown(" + keyCode + "," + event + ")");
+		if(event.getAction() != KeyEvent.ACTION_UP)
+			return super.onKeyUp(keyCode, event);
 		if(keyCode == KeyEvent.KEYCODE_MENU)
 		{
 			View more = findViewById(R.id.menu_more);
@@ -3171,7 +3189,7 @@ public class OpenExplorer
 				return true;
 			}		
 		}*/
-		return super.onKeyDown(keyCode, event);
+		return super.onKeyUp(keyCode, event);
 	}
 		
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -4061,23 +4079,31 @@ public class OpenExplorer
 		if(v == null) return false;
 		if(DEBUG)
 			Logger.LogDebug("OpenExplorer.onKey(" + v + "," + keyCode + "," + event + ")");
-		if(mMainMenu != null)
+		//if(mMainMenu != null)
 		{
-			int index = mMainMenu.findItemIndex(v.getId());
+			int id = 0;
 			if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
-				index--;
+				id = v.getNextFocusLeftId();
+				//index--;
 			else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
-				index++;
-			else return false;
-			int max = mMainMenu.size() - 1;
-			if(mToolbarButtons != null && mToolbarButtons.isShown())
+				id = v.getNextFocusRightId();
+				//index++;
+			else {
+				Logger.LogDebug("No sibling for 0x" + Integer.toHexString(v.getId()));
+				return false;
+			}
+			
+			Logger.LogDebug("Searching for 0x" + Integer.toHexString(id) + " in " + Utils.joinArray(MENU_LOOKUP_IDS));
+			
+			if(id > 0)
 			{
-				max = mToolbarButtons.getChildCount() - 1;
-				if(index < 0) index = max;
-				if(index >= max) index = max;
-				View view = mToolbarButtons.getChildAt(index);
-				if(view != null)
-					view.requestFocus();
+				View view = findViewById(id);
+				if(view == null) return false;
+				view.setFocusableInTouchMode(true);
+				view.requestFocus();
+				if(id == R.id.menu_more || Arrays.binarySearch(MENU_LOOKUP_IDS, id) > -1)
+					view.performClick();
+				return true;
 			}
 		}
 		return false;

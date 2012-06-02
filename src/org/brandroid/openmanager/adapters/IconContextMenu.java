@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.adapters;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import org.brandroid.openmanager.R;
@@ -7,6 +8,7 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
@@ -83,8 +85,8 @@ public class IconContextMenu implements OnKeyListener
         refreshTable();
         //mTable.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         //mGrid.setNumColumns(maxColumns);
-        mTable.setOnKeyListener(this);
-        popup.setOnKeyListener(this);
+        //mTable.setOnKeyListener(this);
+        //popup.setOnKeyListener(this);
         //mTable.setColumnStretchable(0, true);
         //setAdapter(context, new IconContextMenuAdapter(context, menu));
         if(mWidth == 0)
@@ -161,12 +163,26 @@ public class IconContextMenu implements OnKeyListener
 				}
 			}
 			TableRow row = new TableRow(context);
+			row.setOnKeyListener(IconContextMenu.this);
+			Menu m2 = new MenuBuilder(context);
+			ArrayList<Integer> ida = new ArrayList<Integer>();
 			for(int i = 0; i < menu.size(); i++)
 			{
-				final MenuItem item = menu.getItem(i);
-				if(!item.isVisible()) continue;
+				MenuItem item = menu.getItem(i);
+				if(item.isVisible())
+				{
+					MenuUtils.transferMenu(item, m2);
+					ida.add(item.getItemId());
+				}
+			}
+			Integer[] ids = ida.toArray(new Integer[ida.size()]);
+			int id1 = 0, idL = 0;
+			for(int i = 0; i < m2.size(); i++)
+			{
+				final MenuItem item = m2.getItem(i);
+				final int id = item.getItemId();
 				int col = i % maxColumns;
-				boolean dbl = Utils.getArrayIndex(DOUBLE_WIDTH_IDS, item.getItemId()) > -1;
+				boolean dbl = Utils.getArrayIndex(DOUBLE_WIDTH_IDS, id) > -1;
 				if(col == 0)
 				{
 					if(i > 0)
@@ -175,17 +191,16 @@ public class IconContextMenu implements OnKeyListener
 					row.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
 				}
 				View kid = IconContextMenuAdapter.createView(row, item, textLayoutId);
-				if(i == menu.size() - 1)
-					kid.setNextFocusDownId(menu.getItem(0).getItemId());
-				else if(i == 0)
-					kid.setNextFocusUpId(menu.getItem(menu.size() - 1).getItemId());
-				kid.setId(item.getItemId());
+				kid.setId(id);
 				kid.setBackgroundResource(R.drawable.list_selector_background);
 				kid.setFocusable(true);
-				//kid.setFocusableInTouchMode(true);
 				if(i == 0)
+				{
+					kid.setFocusableInTouchMode(true);
 					kid.requestFocus();
-				kid.setOnKeyListener(IconContextMenu.this);
+				}
+				if(maxColumns == 1)
+					kid.setOnKeyListener(IconContextMenu.this);
 				kid.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
@@ -200,10 +215,21 @@ public class IconContextMenu implements OnKeyListener
 				else kid.setPadding(2, 2, 2, 2);
 				((TextView)kid).setCompoundDrawablePadding(8);
 				row.addView(kid);
+				if(i == maxColumns - 1)
+					kid.setNextFocusUpId(ids[ids.length - 1]);
+				else if(i == 0)
+					kid.setNextFocusUpId(ids[ids.length - maxColumns]);
+				else if(i == ids.length - 1)
+					kid.setNextFocusDownId(ids[maxColumns - 1]);
+				else if(i == ids.length - maxColumns)
+					kid.setNextFocusDownId(ids[0]);
 			}
 			if(row.getChildCount() > 0)
+			{
 				mTable.addView(row);
+			}
 			mTable.setStretchAllColumns(true);
+			mTable.setOnKeyListener(IconContextMenu.this);
 		}});
 	}
 	
@@ -347,16 +373,14 @@ public class IconContextMenu implements OnKeyListener
 
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		Logger.LogDebug("IconContextMenu.onKey(" + v + "," + keyCode + "," + event + ")");
-		if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
-		if(keyCode == KeyEvent.KEYCODE_MENU)
+		Logger.LogDebug("IconContextMenu.onKey(" + anchor + "," + keyCode + "," + event + ")");
+		if(keyCode == KeyEvent.KEYCODE_MENU && event.getAction() == KeyEvent.ACTION_UP)
 		{
 			dismiss();
 			return true;
 		}
-		if(mKeyListener != null)
-			if(mKeyListener.onKey(v, keyCode, event))
-				return true;
+		if(mKeyListener != null && mKeyListener.onKey(anchor, keyCode, event))
+			return true;
 		int pos = getSelectedItemPosition();
 		int col = pos % maxColumns;
 		if(col == 0 && keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
