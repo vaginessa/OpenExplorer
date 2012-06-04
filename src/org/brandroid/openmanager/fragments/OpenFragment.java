@@ -18,6 +18,8 @@ import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
+import org.brandroid.utils.MenuUtils;
+
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -175,6 +177,22 @@ public abstract class OpenFragment
 		if(DEBUG)
 			Logger.LogDebug(getClassName() + ".onActivityResult(" + requestCode + "," + resultCode + "," + (data != null ? data.toString() : "null") + ")");
 	}
+	
+	public boolean showMenu(final Menu menu, View anchor, CharSequence title)
+	{
+		if(menu == null || menu.size() == 0) return false;
+		onPrepareOptionsMenu(menu);
+		if(showIContextMenu(menu, anchor, title, 0, 0))
+			return true;
+		anchor.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+			@Override
+			public void onCreateContextMenu(ContextMenu cmenu, View v,
+					ContextMenuInfo menuInfo) {
+				MenuUtils.transferMenu(menu, cmenu, false);
+			}
+		});
+		return anchor.showContextMenu();
+	}
 
 	public boolean showMenu(final int menuId, View from, CharSequence title)
 	{
@@ -198,7 +216,7 @@ public abstract class OpenFragment
 					return false;
 				}
 			});
-			pop.inflate(menuId);
+			pop.getMenuInflater().inflate(menuId, pop.getMenu());
 			Logger.LogDebug("PopupMenu.show()");
 			pop.show();
 			return true;
@@ -221,6 +239,32 @@ public abstract class OpenFragment
 		return false;
 	}
 	
+	public boolean showIContextMenu(Menu menu, final View from, CharSequence title, int xOffset, int yOffset)
+	{
+		if(getActivity() == null) return false;
+		final IconContextMenu mOpenMenu =
+				new IconContextMenu(getActivity(), menu, from);
+		if(mOpenMenu == null) return false;
+		if(title != null && title.length() > 0)
+			mOpenMenu.setTitle(title);
+		if(DEBUG)
+			Logger.LogDebug("Showing menu " + menu + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
+		if(getActivity() != null)
+			getActivity().onPrepareOptionsMenu(menu);
+		mOpenMenu.setMenu(menu);
+		mOpenMenu.setAnchor(from);
+		mOpenMenu.setNumColumns(1);
+		mOpenMenu.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+			public void onIconContextItemSelected(final IconContextMenu menu, MenuItem item,
+					Object info, View view) {
+				if(onOptionsItemSelected(item))
+					menu.dismiss();
+				else if(getExplorer() != null)
+					getExplorer().onIconContextItemSelected(menu, item, info, view);
+			}});
+		return mOpenMenu.show(xOffset, yOffset);
+	}
+	
 	public boolean showIContextMenu(int menuId, final View from, CharSequence title, int xOffset, int yOffset)
 	{
 		if(getActivity() == null) return false;
@@ -231,33 +275,9 @@ public abstract class OpenFragment
 		if(mOpenMenu == null) return false;
 		if(title != null && title.length() > 0)
 			mOpenMenu.setTitle(title);
-		mOpenMenu.setOnKeyListener(new View.OnKeyListener() {
-			
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				if(event.getAction() != KeyEvent.ACTION_DOWN) return false;
-				if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
-				{
-					if(DEBUG)
-						Logger.LogDebug("OpenFragment.onKey(" + from + "," + keyCode + "," + event + ")");
-					mOpenMenu.dismiss();
-					if(keyCode == KeyEvent.KEYCODE_DPAD_LEFT && from.getNextFocusLeftId() > 0)
-					{
-						View nv = ((View)from.getParent()).findViewById(from.getNextFocusLeftId());
-						if(nv != null)
-							if(nv.performClick())
-								return true;
-					}
-					if(getExplorer() != null)
-						if(getExplorer().onKey(from, keyCode, event))
-							return true;
-				}
-				return false;
-			}
-		});
 		if(DEBUG)
 			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
-		MenuBuilder menu = mOpenMenu.getMenu();
+		Menu menu = mOpenMenu.getMenu();
 		if(getActivity() != null)
 			getActivity().onPrepareOptionsMenu(menu);
 		mOpenMenu.setMenu(menu);

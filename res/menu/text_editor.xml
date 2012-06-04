@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item
+        android:id="@+id/menu_view_font_size"
+        android:title="@string/s_view_font_size"
+        android:icon="@drawable/ic_menu_font_size"
+        android:showAsAction="always"
+        />
+    <item
         android:id="@+id/menu_text_ops"
         android:title="@string/s_title_operations"
         android:icon="@drawable/ic_menu_folder"
         android:showAsAction="always">
     	<menu />
     </item>
-    <item
-        android:id="@+id/menu_view_font_size"
-        android:title="@string/s_view_font_size"
-        android:icon="@drawable/ic_menu_font_size"
-        android:showAsAction="always"
-        />
     <item
         android:id="@+id/menu_text_view"
         android:title="@string/s_view"

@@ -113,7 +113,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
 public class ContentFragment extends OpenFragment
 		implements OnItemClickListener, OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
-					OnTaskUpdateListener, OnTouchListener
+					OnTaskUpdateListener
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -502,12 +502,19 @@ public class ContentFragment extends OpenFragment
 					return onFragmentDPAD(me, false);
 				else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && col == cols - 1)
 					return onFragmentDPAD(me, true);
-				else
-					return false;
+				else if(OpenExplorer.getMenuShortcut(keyCode) != null)
+				{
+					MenuItem item = OpenExplorer.getMenuShortcut(keyCode);
+					if(onOptionsItemSelected(item))
+					{
+						Toast.makeText(v.getContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
+						return true;
+					}
+				} 
+				return false;
 			}
 		});
 		v.setOnLongClickListener(this);
-		v.setOnTouchListener(this);
 		mGrid.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
 			@Override
 			public void onCreateContextMenu(ContextMenu menu, View v,
@@ -643,13 +650,6 @@ public class ContentFragment extends OpenFragment
 		onPrepareOptionsMenu(menu);
 	}
 	
-
-	@Override
-	public boolean onTouch(View v, MotionEvent event) {
-		v.setTag(event);
-		return false;
-	}
-	
 	@Override
 	public boolean onLongClick(View v) {
 		if(v.equals(mGrid))
@@ -704,7 +704,7 @@ public class ContentFragment extends OpenFragment
 						return false;
 					}
 				});
-				pop.inflate(R.menu.context_file);
+				pop.getMenuInflater().inflate(R.menu.context_file, pop.getMenu());
 				onPrepareOptionsMenu(pop.getMenu());
 				if(DEBUG)
 					Logger.LogDebug("PopupMenu.show()");
@@ -862,25 +862,35 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public boolean onClick(int id, View view) {
 		super.onClick(id, view);
+		if(getActivity() == null) return false;
+		if(view == null)
+			view = getActivity().findViewById(id);
+		if(view != null && view.getTag() != null && view.getTag() instanceof Menu)
+		{
+			Logger.LogDebug("Showing Tagged Menu! " + (Menu)view.getTag());
+			if(showMenu((Menu)view.getTag(), view, ViewUtils.getText(view)))
+				return true;
+		}
 		switch(id)
 		{
 		case R.id.menu_content_ops:
-			if(showMenu(R.menu.content_ops, view, getString(R.string.s_title_operations)))
+			if(OpenExplorer.USE_PRETTY_MENUS &&
+					showMenu(R.menu.content_ops, view, getString(R.string.s_title_operations)))
 				return true;
 			break;
 		case R.id.menu_sort:
-			if(showMenu(R.menu.content_sort, view, getString(R.string.s_menu_sort)))
+			if(OpenExplorer.USE_PRETTY_MENUS &&
+					showMenu(R.menu.content_sort, view, getString(R.string.s_menu_sort)))
 				return true;
 			break;
 		case R.id.menu_view:
-			if(showMenu(R.menu.content_view, view, getString(R.string.s_view)))
+			if(OpenExplorer.USE_PRETTY_MENUS &&
+					showMenu(R.menu.content_view, view, getString(R.string.s_view)))
 				return true;
 			break;
 		}
 		return false;
 	}
-	
-	
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
@@ -898,8 +908,9 @@ public class ContentFragment extends OpenFragment
 		case R.id.menu_sort:
 		case R.id.menu_view:
 		case R.id.menu_content_ops:
-			onPrepareOptionsMenu(item.getSubMenu());
-			return false;
+			if(OpenExplorer.USE_PRETTY_MENUS)
+				onPrepareOptionsMenu(item.getSubMenu());
+			return !OpenExplorer.USE_PRETTY_MENUS; // for system menus, return false
 		case R.id.menu_new_file:
 			EventHandler.createNewFile(getPath(), getActivity());
 			return true;
@@ -1174,7 +1185,9 @@ public class ContentFragment extends OpenFragment
 		if(DEBUG)
 			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu, inflater);
-		inflater.inflate(R.menu.content, menu);
+		if(!OpenExplorer.USE_PRETTY_MENUS)
+			inflater.inflate(R.menu.content_full, menu);
+		else inflater.inflate(R.menu.content, menu);
 		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
@@ -1242,6 +1255,7 @@ public class ContentFragment extends OpenFragment
 	
 	@Override
 	public boolean inflateMenu(Menu menu, int itemId, MenuInflater inflater) {
+		if(!OpenExplorer.USE_PRETTY_MENUS) return false;
 		switch(itemId)
 		{
 		case R.id.menu_view:
@@ -1254,7 +1268,7 @@ public class ContentFragment extends OpenFragment
 			inflater.inflate(R.menu.content_ops, menu);
 			return true;
 		}
-		return false;
+		return super.inflateMenu(menu, itemId, inflater);
 	}
 	
 	/*

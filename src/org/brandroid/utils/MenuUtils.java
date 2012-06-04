@@ -20,6 +20,7 @@ import android.widget.ImageButton;
 public class MenuUtils {
 	public static void transferMenu(Menu from, Menu to) { transferMenu(from, to, true); }
 	public static void transferMenu(Menu from, Menu to, Boolean clearFrom) {
+		if(from == null || to == null) return;
 		to.clear();
 		for(int i=0; i<from.size(); i++)
 			transferMenu(from.getItem(i), to);
@@ -40,6 +41,7 @@ public class MenuUtils {
 			.setCheckable(item.isCheckable())
 			.setChecked(item.isChecked())
 			.setVisible(item.isVisible())
+			.setAlphabeticShortcut(item.getAlphabeticShortcut())
 			.setIcon(item.getIcon());
 	}
 	public static void setMenuChecked(Menu menu, boolean checked, int toCheck, int... toOppose)

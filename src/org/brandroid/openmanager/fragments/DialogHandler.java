@@ -42,12 +42,15 @@ import android.support.v4.util.TimeUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -62,6 +65,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TabHost;
+import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -592,14 +596,18 @@ public class DialogHandler
 			((TextView)view.findViewById(R.id.about_buildtime)).setText(sBuildTime);
 		else
 			((TableRow)view.findViewById(R.id.row_buildtime)).setVisibility(View.GONE);
+		
+		fillShortcutsTable((TableLayout)view.findViewById(R.id.shortcuts_table));
 
 		final View tab1 = view.findViewById(R.id.tab1);
 		final View tab2 = view.findViewById(R.id.tab2);
+		final View tab3 = view.findViewById(R.id.tab3);
 		((Button)view.findViewById(R.id.btn_recent)).setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				tab1.setVisibility(View.VISIBLE);
 				tab2.setVisibility(View.GONE);
+				tab3.setVisibility(View.GONE);
 			}
 		});
 		((Button)view.findViewById(R.id.btn_hardware)).setOnClickListener(new OnClickListener() {
@@ -607,8 +615,19 @@ public class DialogHandler
 			public void onClick(View v) {
 				tab1.setVisibility(View.GONE);
 				tab2.setVisibility(View.VISIBLE);
+				tab3.setVisibility(View.GONE);
 			}
 		});
+		((Button)view.findViewById(R.id.btn_shortcuts)).setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				tab1.setVisibility(View.GONE);
+				tab2.setVisibility(View.GONE);
+				tab3.setVisibility(View.VISIBLE);
+			}
+		});
+		
 		
 		AlertDialog mDlgAbout = new AlertDialog.Builder(mContext)
 			.setTitle(R.string.app_name)
@@ -621,6 +640,23 @@ public class DialogHandler
 		mDlgAbout.show();
 	}
 	
+	private static void fillShortcutsTable(TableLayout table) {
+		final Context context = table.getContext();
+		for(int sc : OpenExplorer.getMenuShortcuts())
+		{
+			TableRow tr = new TableRow(context);
+			TextView tv1 = new TextView(context);
+			tv1.setPadding(0, 0, 100, 0);
+			char scc = (char)(sc + ('a' - KeyEvent.KEYCODE_A));
+			tv1.setText(""+scc);
+			TextView tv2 = new TextView(context);
+			MenuItem item = OpenExplorer.getMenuShortcut(sc);
+			tv2.setText(item.getTitle());
+			tr.addView(tv1);
+			tr.addView(tv2);
+			table.addView(tr);
+		}
+	}
 	private static String getNetworkInfoInfo(NetworkInfo info)
 	{
 		String ret = "";

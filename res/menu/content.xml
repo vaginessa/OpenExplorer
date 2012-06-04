@@ -6,6 +6,7 @@
 		android:id="@+id/menu_sort"
 		android:icon="@drawable/ic_menu_sort_by_size"
 		android:showAsAction="ifRoom"
+		android:alphabeticShortcut="1"
 		android:title="@string/s_menu_sort">
 		<!-- include menu_sort.xml -->
 		<menu />
@@ -14,6 +15,7 @@
 		android:id="@+id/menu_view"
 		android:icon="@drawable/ic_menu_view"
 		android:showAsAction="ifRoom"
+		android:alphabeticShortcut="2"
 		android:title="@string/s_view">
 		<!--  include menu_view.xml -->
 		<menu />
@@ -21,6 +23,7 @@
     <item android:id="@+id/menu_content_ops"
         android:title="@string/s_title_operations"
         android:icon="@drawable/ic_menu_folder"
+		android:alphabeticShortcut="3"
         android:showAsAction="always">
 		<!--  include content_ops.xml -->
     	<menu />
@@ -28,6 +31,7 @@
 	<item
 	    android:id="@+id/menu_refresh"
 	    android:icon="@drawable/ic_menu_refresh"
+		android:alphabeticShortcut="r"
 	    android:showAsAction="ifRoom"
 	    android:title="@string/s_menu_refresh"
 	    />

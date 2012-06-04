@@ -140,6 +140,8 @@ public class BetterPopupWindow {
 	private void OnPopupShown(int w, int h)
 	{
 		//if(forcedHeight) return;
+		if(DEBUG)
+			Logger.LogDebug("OnPopupShown(" + w + "," + h + ")");
 		if(mShownListener != null)
 			mShownListener.OnPopupShown(w, h);
 		if(popup == null) return;
@@ -234,7 +236,9 @@ public class BetterPopupWindow {
 							widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
 							*/
 						}
-						if(h + t > getAvailableHeight()) return;
+						if(h + t > getAvailableHeight())
+							return;
+							//h = Math.min(h, getAvailableHeight() - t);
 						h = Math.max(getPreferredMinHeight(), h);
 						//if(mHeight > 0 && h <= mHeight) return;
 						if(DEBUG)
@@ -275,9 +279,13 @@ public class BetterPopupWindow {
 		}
 		this.popup.setContentView(backgroundView);
 
+		if(mHeight > 0 && mHeight + yPos > getAvailableHeight())
+			mHeight = getAvailableHeight() - yPos;
+		
 		if(mHeight > 0)
 			popup.setHeight(mHeight);
-		else popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
+		else
+			popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		
 		//if(mHeight == 0) popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
 		//this.popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);

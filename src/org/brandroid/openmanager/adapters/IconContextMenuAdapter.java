@@ -1,20 +1,16 @@
 package org.brandroid.openmanager.adapters;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.ScaleDrawable;
+import android.text.Html;
 import android.view.*;
 import android.widget.*;
 
@@ -103,7 +99,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
         Drawable check = null;
         if(res instanceof CheckedTextView)
         {
-        	if(item.getTitle().toString().indexOf("View") > -1 || item.getTitle().toString().indexOf("Sort") > -1)
+        	if(item.getGroupId() > 0 || item.getTitle().toString().indexOf("View") > -1 || item.getTitle().toString().indexOf("Sort") > -1)
         		((CheckedTextView)res).setCheckMarkDrawable(android.R.drawable.btn_radio);
         	checkId = 0;
 	        if(item.isCheckable() || item.isChecked())
@@ -116,6 +112,21 @@ public class IconContextMenuAdapter extends BaseAdapter {
         	check = res.getResources().getDrawable(checkId);
         
         //else if(item.isChecked())
+        
+        CharSequence title = item.getTitle();
+        
+        if(OpenExplorer.IS_KEYBOARD_AVAILABLE)
+        {
+	        char sc = item.getAlphabeticShortcut();
+	        if(sc > 0)
+	        {
+	        	int pos = title.toString().toLowerCase().lastIndexOf(sc);
+	        	if(pos > -1)
+	        		title = title.subSequence(0, pos) + "<b><u>" + title.subSequence(pos, pos + 1) + "</u></b>" + title.subSequence(pos + 1, title.length());
+	        	else
+	        		title = title + " (<b><u>" + (sc == '*' ? "DEL" : sc) + "</u></b>)";
+	        }
+        }
         
         //res.setTextSize(context.getResources().getDimension(R.dimen.large_text_size));
         //res.setTextColor(context.getResources().getColor(android.R.color.primary_text_dark));
@@ -131,7 +142,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
         
     	res.setEnabled(item.isEnabled());
         res.setTag(item);
-        res.setText(item.getTitle());
+        res.setText(Html.fromHtml(title.toString()));
         if(src != null || check != null)
         {
 	        res.setCompoundDrawablesWithIntrinsicBounds(icon, null, check, null);

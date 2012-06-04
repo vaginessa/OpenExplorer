@@ -311,4 +311,18 @@ public class ViewUtils {
 			if(a.findViewById(stubId) != null && a.findViewById(stubId) instanceof ViewStub)
 				((ViewStub)a.findViewById(stubId)).inflate();
 	}
+
+	public static CharSequence getText(View view) {
+		if(view == null) return null;
+		if(view instanceof TextView)
+			return ((TextView)view).getText();
+		return null;
+	}
+
+	public static void setEnabled(boolean enabled, View... views)
+	{
+		for(View v : views)
+			if(v != null)
+				v.setEnabled(enabled);
+	}
 }

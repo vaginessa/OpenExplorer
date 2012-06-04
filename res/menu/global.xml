@@ -5,7 +5,7 @@
 	<item
 		android:id="@+id/menu_search"
 		android:icon="@drawable/ic_menu_search"
-		android:showAsAction="ifRoom"
+		android:showAsAction="always|collapseActionView"
 		android:title="@android:string/search_go"
 		/>
     <item
@@ -32,13 +32,13 @@
 	<item
 	    android:id="@+id/menu_about"
 	    android:showAsAction="never"
-		android:alphabeticShortcut="a"
+		android:alphabeticShortcut="o"
 		android:icon="@drawable/ic_menu_help"
 	    android:title="@string/s_menu_about" />
 	
 	<item android:id="@+id/menu_exit"
 	    android:showAsAction="never"
-		android:alphabeticShortcut="x"
+		android:alphabeticShortcut="q"
 	    android:icon="@drawable/ic_menu_close_clear_cancel"
 	    android:title="@string/s_menu_exit"
 	    />

@@ -112,7 +112,7 @@
     <string name="s_about_author">Author</string>
     <string name="s_about_site">Website</string>
     <string name="s_about_email">Email</string>
-    <string name="s_about_recent">Recent Updates</string>
+    <string name="s_about_recent">Updates</string>
     <string name="s_chooser_email">Send Feedback…</string>
     <string name="s_status_loading">Loading…</string>
     <string name="s_menu_open">Open with…</string>

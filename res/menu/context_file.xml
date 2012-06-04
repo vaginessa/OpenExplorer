@@ -19,12 +19,14 @@
     <item
 		android:id="@+id/menu_context_copy"
 		android:title="@android:string/copy"
-    	android:showAsAction="always|withText"
+    	android:alphabeticShortcut="c"
+		android:showAsAction="always|withText"
 		android:icon="@drawable/ic_menu_copy" />
     <item
 		android:id="@+id/menu_context_cut"
 		android:title="@android:string/cut"
-    	android:showAsAction="ifRoom|withText"
+    	android:alphabeticShortcut="x"
+		android:showAsAction="ifRoom|withText"
     	android:icon="@drawable/ic_menu_cut" />
     <item
 		android:id="@+id/menu_context_paste"
@@ -34,17 +36,20 @@
     <item
 		android:id="@+id/menu_context_delete"
 		android:title="@string/s_menu_delete"
+		android:alphabeticShortcut="*"
     	android:showAsAction="ifRoom|withText"
 		android:icon="@drawable/ic_menu_delete" />
     <item
         android:id="@+id/menu_context_selectall"
         android:title="@android:string/selectAll"
-        android:showAsAction="ifRoom"
+        android:alphabeticShortcut="a"
+		android:showAsAction="ifRoom"
         android:icon="@drawable/ic_menu_selectall_holo_dark" />
     <item
 		android:id="@+id/menu_context_info"
 		android:title="@string/s_menu_info"
-    	android:showAsAction="ifRoom"
+    	android:alphabeticShortcut="i"
+		android:showAsAction="ifRoom"
 		android:icon="@drawable/ic_menu_info_details" />
     <item
 		android:id="@+id/menu_context_share"
@@ -60,17 +65,20 @@
     <item
 		android:id="@+id/menu_multi"
     	android:showAsAction="ifRoom|withText"
-    	android:icon="@drawable/ic_multiselect"
+    	android:alphabeticShortcut="m"
+		android:icon="@drawable/ic_multiselect"
 		android:title="@string/s_menu_multi" />
     <item
 		android:id="@+id/menu_context_rename"
     	android:showAsAction="ifRoom|withText"
-    	android:icon="@drawable/ic_rename"
+    	android:alphabeticShortcut="r"
+		android:icon="@drawable/ic_rename"
 		android:title="@string/s_menu_rename" />
     <item
 		android:id="@+id/menu_context_zip"
     	android:showAsAction="ifRoom|withText"
-    	android:icon="@drawable/ic_zip"
+    	android:alphabeticShortcut="z"
+		android:icon="@drawable/ic_zip"
 		android:title="@string/s_menu_zip" />
     
 </menu>

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MenuBuilder implements Menu {
-    private static final String TAG = "MenuBuilder";
+    private static final String TAG = "OpenExplorer";
 
     private static final String PRESENTER_KEY = "android:menu:presenters";
     private static final String ACTION_VIEW_STATES_KEY = "android:menu:actionviewstates";

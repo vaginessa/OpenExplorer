@@ -31,8 +31,8 @@
 	
 	<!--  Disable for BB: -->
 	<uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
-	<!-- -->
-	<uses-permission android:name="android.permission.READ_LOGS" />
+	<!-- 
+	<uses-permission android:name="android.permission.READ_LOGS" /> -->
 	<!-- Not using donations for now:
 	<uses-permission android:name="com.android.vending.BILLING" />
 	-->

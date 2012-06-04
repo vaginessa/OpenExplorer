@@ -37,6 +37,7 @@ import org.brandroid.openmanager.views.SeekBarActionView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.ViewUtils;
 
 import android.R.anim;
 import android.animation.ObjectAnimator;
@@ -535,6 +536,8 @@ public class TextEditorFragment extends OpenFragment
 		Context c = getActivity();
 		if(from == null || !from.isShown())
 			from = getExplorer().findViewById(id);
+		if(from != null && from.getTag() != null && from.getTag() instanceof Menu)
+			showMenu((Menu)from.getTag(), from, ViewUtils.getText(from));
 		switch(id)
 		{
 		case R.id.menu_context_info:
@@ -553,15 +556,19 @@ public class TextEditorFragment extends OpenFragment
 				mFontSizeBar.getPopup(getActivity(), from).showLikePopDownMenu();
 			return true;
 			
+		case R.id.menu_text_view:
 		case R.id.menu_view:
-			if(OpenExplorer.BEFORE_HONEYCOMB)
-				showMenu(R.menu.text_view, from, getString(R.string.s_view));
-			return true;
+			if(OpenExplorer.USE_PRETTY_MENUS)
+				if(showMenu(R.menu.text_view, from, getString(R.string.s_view)))
+					return true;
+			break;
 			
+		case R.id.menu_content_ops:
 		case R.id.menu_text_ops:
-			if(OpenExplorer.BEFORE_HONEYCOMB)
-				showMenu(R.menu.text_file, from, getString(R.string.s_title_operations));
-			return true;
+			if(OpenExplorer.USE_PRETTY_MENUS)
+				if(showMenu(R.menu.text_file, from, getString(R.string.s_title_operations)))
+					return true;
+			break;
 			
 		case R.id.menu_view_keyboard_toggle:
 			setEditable(!mEditMode);
@@ -644,15 +651,6 @@ public class TextEditorFragment extends OpenFragment
 			}
 		}
 	}
-
-	
-	public static void setEnabled(boolean enabled, View... views)
-	{
-		for(View v : views)
-			if(v != null)
-				v.setEnabled(enabled);
-	}
-	
 	
 	public class FileSaveTask extends AsyncTask<String, Integer, Integer>
 	{
@@ -699,7 +697,7 @@ public class TextEditorFragment extends OpenFragment
 		protected void onPreExecute() {
 			super.onPreExecute();
 			setProgressVisibility(true);
-			setEnabled(false, mEditText);
+			ViewUtils.setEnabled(false, mEditText);
 		}
 		
 		@Override
@@ -712,7 +710,7 @@ public class TextEditorFragment extends OpenFragment
 			String msg = mPath + " " + c.getResources().getString(R.string.s_msg_saved) + " (" + result + " b)";
 			Logger.LogDebug(msg);
 			Toast.makeText(c, msg, Toast.LENGTH_LONG).show();
-			setEnabled(true, mEditText);
+			ViewUtils.setEnabled(true, mEditText);
 		}
 		
 	}
@@ -823,7 +821,7 @@ public class TextEditorFragment extends OpenFragment
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			setEnabled(false, mEditText);
+			ViewUtils.setEnabled(false, mEditText);
 			setProgressVisibility(true);
 		}
 		
@@ -841,7 +839,7 @@ public class TextEditorFragment extends OpenFragment
 			if(result != null)
 				setText(result);
 			setProgressVisibility(false);
-			setEnabled(true, mEditText);
+			ViewUtils.setEnabled(true, mEditText);
 		}
 	}
 

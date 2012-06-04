@@ -7,6 +7,7 @@ import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,7 +17,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class SeekBarActionView
 	extends LinearLayout
-	implements OpenActionView
+	implements OpenActionView, View.OnKeyListener
 {
     private OnCloseListener mOnCloseListener;
     private OnClickListener mOnClickListener;
@@ -45,6 +46,7 @@ public class SeekBarActionView
 		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		inflater.inflate(R.layout.seek_bar, this, true);
 		mSeekBar = (SeekBar)findViewById(android.R.id.progress);
+		mSeekBar.setOnKeyListener(this);
 		mActionIcon = (ImageView)findViewById(R.id.action_icon);
 		findViewById(R.id.closeButton).setOnClickListener(new OnClickListener() {
 			@Override
@@ -189,6 +191,16 @@ public class SeekBarActionView
 	}
 	public void setProgress(int progress) {
 		mSeekBar.setProgress(progress);
+	}
+	@Override
+	public boolean onKey(View v, int keyCode, KeyEvent event) {
+		if(v.equals(mSeekBar) && keyCode == KeyEvent.KEYCODE_BACK)
+		{
+			onCloseClicked();
+			requestFocus();
+			return true;
+		}
+		return false;
 	}
 
 }
