@@ -1,6 +1,5 @@
 package org.brandroid.openmanager.fragments;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +41,7 @@ public class SearchResultsFragment
 	private Button mCancel;
 	private SearchTask myTask = new SearchTask();
 	private int lastNotedCount = 0;
+	private String lastTitle = "";
 	
 	private SearchResultsFragment() {
 		setArguments(new Bundle());
@@ -62,8 +62,16 @@ public class SearchResultsFragment
 					publishProgress();
 				}
 			});
-			getSearch().start();
+			try {
+				getSearch().start();
+			} catch(Exception e) { }
 			return null;
+		}
+		
+		@Override
+		protected void onCancelled() {
+			super.onCancelled();
+			getSearch().cancel();
 		}
 		
 		@Override
@@ -88,6 +96,8 @@ public class SearchResultsFragment
 	{
 		Bundle data = new Bundle();
 		data.putString("query", query);
+		if(basePath instanceof OpenSearch)
+			basePath = ((OpenSearch)basePath).getBasePath();
 		data.putString("path", basePath.getPath());
 		return getInstance(data);
 	}
@@ -112,7 +122,7 @@ public class SearchResultsFragment
 		if(myTask.getStatus() == Status.RUNNING)
 			outState.putBoolean("running", true);
 		else
-			outState.putParcelableArrayList("results", getResults());
+			outState.putParcelableArrayList("results", (ArrayList<OpenPath>)getResults());
 	}
 	
 	@Override
@@ -120,16 +130,19 @@ public class SearchResultsFragment
 		return getSearch();
 	}
 	
-	public ArrayList<OpenPath> getResults() {
+	public final List<OpenPath> getResults() {
 		if(getSearch() != null)
-			return (ArrayList<OpenPath>) getSearch().getResults();
+			return getSearch().getResults();
 		else return null;
 	}
 	
 	@Override
 	public boolean onBackPressed() {
 		if(myTask.getStatus() == Status.RUNNING)
+		{
 			myTask.cancel(true);
+			getSearch().cancel();
+		}
 		else if(getExplorer() != null && getExplorer().isViewPagerEnabled())
 			getExplorer().closeFragment(this);
 		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
@@ -142,31 +155,37 @@ public class SearchResultsFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Bundle b = getArguments();
+		Bundle b = savedInstanceState;
+		if(b == null)
+			b = getArguments();
 		if(b == null)
 			b = new Bundle();
-		if(savedInstanceState != null && savedInstanceState.containsKey("path"))
-		{
-			Logger.LogDebug(b.toString() + " switching to " + savedInstanceState.toString());
-			b = savedInstanceState;
-		}
 		String q = "";
 		if(b.containsKey("query"))
 			q = b.getString("query");
 		OpenPath path = new OpenFile("/");
 		if(b.containsKey("path"))
 			path = FileManager.getOpenCache(b.getString("path"));
+		if(path instanceof OpenSearch)
+			path = ((OpenSearch)path).getBasePath();
 		if(b.containsKey("results"))
 		{
 			ArrayList<Parcelable> results = b.getParcelableArrayList("results");
 			mPath = new OpenSearch(q, path, this, results);
-			if(b.containsKey("running") && b.getBoolean("running"))
-				myTask.execute();
+			//setArguments(b);
+			if(b.containsKey("running") && b.getBoolean("running")) myTask.execute();
 		} else {
 			mPath = new OpenSearch(q, path, this);
 			myTask.execute();
 		}
 		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, getSearch());
+	}
+	
+	@Override
+	public void onStart() {
+		super.onStart();
+		if(myTask.getStatus() == Status.RUNNING) return;
+		//myTask.execute();
 	}
 	
 	@Override
@@ -200,19 +219,7 @@ public class SearchResultsFragment
 		mCancel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				myTask.cancel(true);
-				if(getExplorer() != null && getExplorer().isViewPagerEnabled())
-				{
-					final ViewPager pager = (ViewPager)getExplorer().findViewById(R.id.content_pager);
-					final ArrayPagerAdapter adapter = (ArrayPagerAdapter)pager.getAdapter();
-					final int pos = pager.getCurrentItem() - 1;
-					pager.post(new Runnable() {public void run() {
-						adapter.remove(SearchResultsFragment.this);
-						pager.setAdapter(adapter);
-						pager.setCurrentItem(pos, false);
-						}});
-				} else if(getFragmentManager() != null)
-					getFragmentManager().popBackStack();
+				onBackPressed();
 			}
 		});
 	}
@@ -225,18 +232,34 @@ public class SearchResultsFragment
 	public CharSequence getTitle() {
 		if(getSearch() != null)
 			return "\"" + getSearch().getQuery() + "\"" + " (" + getResults().size() + ")";
-		else return getString(android.R.string.search_go);
+		else if(getActivity() != null)
+			return getString(android.R.string.search_go);
+		else return "Search";
 	}
 	
 	@Override
 	public void onUpdate() {
 		if(mGrid == null) return;
+		if(isDetached()) return;
 		if(lastNotedCount >= getSearch().getListLength())
 		mGrid.post(new Runnable(){
 			public void run() {
 				mContentAdapter.notifyDataSetChanged();
-				notifyPager();
+				lastNotedCount = mContentAdapter.getCount();
 		}});
+		if(!lastTitle.equals(getTitle().toString()))
+		{
+			lastTitle = getTitle().toString();
+			if(mTextSummary != null)
+				mTextSummary.post(new Runnable() {
+					public void run() {
+						if(isDetached()) return;
+						notifyPager();
+						try {
+							mTextSummary.setText(getString(R.string.search_results, getResults().size(), getSearch().getQuery(), getSearch().getBasePath().getPath()));
+						} catch(Exception e) { }
+					}});
+		}
 	}
 	@Override
 	public void onFinish() {
@@ -249,5 +272,10 @@ public class SearchResultsFragment
 				mTextSummary.setText(getString(R.string.search_results, getResults().size(), getSearch().getQuery(), getSearch().getBasePath().getPath()));
 				mCancel.setText(android.R.string.ok);
 		}});
+	}
+	@Override
+	public void onAddResults(OpenPath[] results) {
+		for(OpenPath p : results)
+			mContentAdapter.add(p);
 	}
 }

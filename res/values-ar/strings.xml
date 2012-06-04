@@ -213,6 +213,8 @@
     <string name="s_pref_fancy_menus">قوائم جميلة</string>
     <string name="s_pref_fancy_context">القوائم الجميلة</string>
     <string name="s_search_files">بحث في ملفات النظام</string>
+    <string name="search_summary" formatted="false">جاري البحث عن %s في (%d)...</string>
+    <string name="search_results" formatted="false">تم إيجاد %d نتيجة عن &quot;%s&quot; \n في &quot;%s&quot;</string>
     <string name="s_menu_exit">خروج</string>
     <string name="s_warn_wtf_message">أوووبز! يبدو أن هناك أخطاء غير متوقعة قد حصلت! ولأن هذا أمر قد يحدث في أي تطبيق تحت التجربة .. نرجوا منك مساعدتنا بإرسال تقرير لنا عن هذا الخطأ علماً أنه معلوماتك الشخصية لن تصل إلينا.</string>
     <string name="s_warn_wtf_ps">الرجاء ملاحظة أن هذا البرنامج مازال تجريبي وتحت التطوير.

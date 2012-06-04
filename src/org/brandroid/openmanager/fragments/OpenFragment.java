@@ -143,6 +143,12 @@ public abstract class OpenFragment
 		{
 			OpenPath pa = ((ContentFragment)a).getPath();
 			OpenPath pb = ((ContentFragment)b).getPath();
+			if(pa == null && pb != null)
+				return 1;
+			else if(pb == null && pa != null)
+				return -1;
+			else if(pa == null || pb == null)
+				return 0;
 			priA = pa.getPath().length();
 			priB = pb.getPath().length();
 			if(priA > priB)

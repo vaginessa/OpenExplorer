@@ -900,10 +900,11 @@ public class EventHandler {
 				OpenPath[] files = old.list();
 
 				for (OpenPath file : files)
-					total += (int) file.length();
+					if(file != null)
+						total += (int) file.length();
 
 				for (int i = 0; i < files.length; i++)
-					if (!copyToDirectory(files[i], newDir, total)) {
+					if(files[i] != null && !copyToDirectory(files[i], newDir, total)) {
 						Logger.LogWarning("Couldn't copy " + files[i].getName()
 								+ ".");
 						return false;

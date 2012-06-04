@@ -2470,8 +2470,13 @@ public class OpenExplorer
 		}
 	}
 	
-	public static int[] getMenuShortcuts()
+	public static int[] getMenuShortcuts(Context context)
 	{
+		if(mMenuShortcuts == null) {
+			mMenuShortcuts = new SparseArray<MenuItem>();
+			MenuBuilder menu = new MenuBuilder(context);
+			scanMenuShortcuts(menu, new MenuInflater(context));
+		}
 		int[] ret = new int[mMenuShortcuts.size()];
 		for(int i = 0; i < mMenuShortcuts.size(); i++)
 			ret[i] = mMenuShortcuts.keyAt(i);
@@ -2487,8 +2492,7 @@ public class OpenExplorer
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		if(IS_KEYBOARD_AVAILABLE)
-			scanMenuShortcuts(menu, getMenuInflater());
+		scanMenuShortcuts(menu, getMenuInflater());
 		//mActionBarHelper.onCreateOptionsMenu(menu);
 		OpenFragment frag = getSelectedFragment();
 		
@@ -2598,9 +2602,7 @@ public class OpenExplorer
 						new SearchViewCompat.OnQueryTextListenerCompat() {
 						public boolean onQueryTextSubmit(String query) {
 							mSearchView.clearFocus();
-							Intent intent = getIntent();
-							if(intent == null)
-								intent = new Intent();
+							Intent intent = new Intent();
 							intent.setAction(Intent.ACTION_SEARCH);
 							Bundle appData = new Bundle();
 							appData.putString("path", getDirContentFragment(false).getPath().getPath());
@@ -4066,7 +4068,9 @@ public class OpenExplorer
 	}
 
 	public void notifyPager() {
-		mViewPager.notifyDataSetChanged();
+		mViewPager.post(new Runnable(){public void run(){
+			mViewPager.notifyDataSetChanged();
+		}});
 		if(USE_PRETTY_MENUS && mToolbarButtons != null && mToolbarButtons.getChildCount() > 0
 				&& mViewPager != null && mViewPager.getIndicator() != null
 				&& mViewPager.getIndicator() instanceof TabPageIndicator)

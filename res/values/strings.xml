@@ -213,8 +213,8 @@
     <string name="s_pref_fancy_menus">Fancy Menus</string>
     <string name="s_pref_fancy_context">Fancy Context Menus</string>
     <string name="s_search_files">Search Filesystem</string>
-    <string name="search_summary" formatted="false">Searching for "%s" \n within "%s" (%d)...</string>
-    <string name="search_results" formatted="false">Found %d results for "%s" \n within "%s"</string>
+    <string name="search_summary" formatted="false">Searching for &quot;%s&quot; \n within &quot;%s&quot; (%d)...</string>
+    <string name="search_results" formatted="false">Found %d results for &quot;%s&quot; \n within &quot;%s&quot;</string>
     <string name="s_menu_exit">Exit</string>
     <string name="s_warn_wtf_message">Oops! It appears that an unhandled error has occurred! As this is a common issue in many Beta apps, the only way to resolve these issues is to receive reports from various devices, such as yours, in order to determine how to fix the problem. May we send such report, containing only anonymous data, to the developer?</string>
     <string name="s_warn_wtf_ps">***Please note, this app is in Beta. Please do not give this app a bad rating simply because it crashes. Just uninstall if it really bothers you. Thanks!</string>

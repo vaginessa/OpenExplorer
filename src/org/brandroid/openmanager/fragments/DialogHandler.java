@@ -642,11 +642,12 @@ public class DialogHandler
 	
 	private static void fillShortcutsTable(TableLayout table) {
 		final Context context = table.getContext();
-		for(int sc : OpenExplorer.getMenuShortcuts())
+		for(int sc : OpenExplorer.getMenuShortcuts(context))
 		{
 			TableRow tr = new TableRow(context);
 			TextView tv1 = new TextView(context);
-			tv1.setPadding(0, 0, 100, 0);
+			tv1.setGravity(Gravity.RIGHT);
+			tv1.setPadding(20, 0, 20, 0);
 			char scc = (char)(sc + ('a' - KeyEvent.KEYCODE_A));
 			tv1.setText(""+scc);
 			TextView tv2 = new TextView(context);

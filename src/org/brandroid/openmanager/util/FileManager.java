@@ -400,7 +400,9 @@ public class FileManager {
 		{
 			String query = path.replace("content://org.brandroid.openmanager/search/", "");
 			path = path.substring(query.indexOf("/") + 1);
-			query = Uri.decode(query.substring(0, query.indexOf("/")));
+			if(query.indexOf("/") > -1)
+				query = Uri.decode(query.substring(0, query.indexOf("/")));
+			else query = "";
 			ret = new OpenSearch(query, getOpenCache(path), (SearchProgressUpdateListener)null);
 		} else if(path.startsWith("content://") && c != null)
 			ret = new OpenContent(Uri.parse(path), c);

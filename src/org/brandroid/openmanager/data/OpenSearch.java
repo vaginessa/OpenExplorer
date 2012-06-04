@@ -21,10 +21,12 @@ public class OpenSearch extends OpenPath
 	private final OpenPath mBasePath;
 	private final List<OpenPath> mResultsArray;
 	private final SearchProgressUpdateListener mListener;
+	private Thread mSearchThread = null;
 	private boolean mCancelled = false;
 	private boolean mFinished = false;
 	private int mSearchedDirs = 0;
 	private long mLastUpdate = 0;
+	private int mLastSent = 0;
 	private long mStart = 0;
 	private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
@@ -47,25 +49,35 @@ public class OpenSearch extends OpenPath
 	
 	public interface SearchProgressUpdateListener
 	{
+		void onAddResults(OpenPath[] results);
 		void onUpdate();
 		void onFinish();
 	}
 	
+	public void cancel() { mCancelled = true; }
+	
 	public boolean isRunning() { return mCancelled || mFinished ? false : true; }
 	
-	public void start()
+	public void start() throws IOException
 	{
 		mStart = new Date().getTime();
 		if(DEBUG)
 			Logger.LogDebug("OpenSearch.start()");
-		//new Thread(new Runnable() {public void run() {
-			SearchWithin(mBasePath);
-			mFinished = true;
-			mListener.onUpdate();
-			mListener.onFinish();
-			if(DEBUG)
-				Logger.LogDebug("OpenSearch finished!");
-		//}}).start();
+		
+		if(mSearchThread != null && mSearchThread.isAlive())
+			mSearchThread.interrupt();
+		
+		if(Thread.currentThread().equals(OpenExplorer.UiThread))
+			throw new IOException("Please run from non-UI thread!");
+		
+		if(DEBUG)
+			Logger.LogDebug("OpenSearch started!");
+		SearchWithin(mBasePath);
+		mFinished = true;
+		mListener.onUpdate();
+		mListener.onFinish();
+		if(DEBUG)
+			Logger.LogDebug("OpenSearch finished!");
 	}
 	private void SearchWithin(OpenPath dir)
 	{
@@ -77,18 +89,36 @@ public class OpenSearch extends OpenPath
 		} catch(IOException e) { return; }
 		for(OpenPath kid : kids)
 		{
+			if(mCancelled) return;
+			if(kid == null || !kid.exists()) continue;
+			if(kid.getName() == null) continue;
 			if(isMatch(kid.getName().toLowerCase(), getQuery().toLowerCase()))
 				if(!mResultsArray.contains(kid))
 					mResultsArray.add(kid);
 			if(new Date().getTime() - mLastUpdate > 500)
+			{
 				publishProgress();
-			if(kid.isDirectory())
+				try {
+					// It appears that no matter which thread this is run on,
+					// we need to explicitly sleep in order to not block the UI thread
+					Thread.sleep(10);
+				} catch(InterruptedException e) { }
+			}
+			if(kid.isDirectory() && !mCancelled)
 				SearchWithin(kid);
 		}
 	}
 	
 	public void publishProgress()
 	{
+		int sz = mResultsArray.size();
+		if(sz > mLastSent)
+		{
+			int cnt = sz - mLastSent;
+			OpenPath[] toSend = mResultsArray.subList(mLastSent, sz).toArray(new OpenPath[cnt]);
+			mLastSent = sz;
+			mListener.onAddResults(toSend);
+		}
 		mListener.onUpdate();
 	}
 
@@ -115,7 +145,7 @@ public class OpenSearch extends OpenPath
 	
 	public OpenPath getBasePath() { return mBasePath; }
 	public String getQuery() { return mQuery; }
-	public List<OpenPath> getResults() { return mResultsArray; }
+	public final List<OpenPath> getResults() { return mResultsArray; }
 
 	@Override
 	public String getAbsolutePath() {
@@ -227,8 +257,10 @@ public class OpenSearch extends OpenPath
 	}
 
 	@Override
-	public void clearChildren() {
+	public void clearChildren()
+	{
 		mResultsArray.clear();
-		start();
+		//start();
+		mListener.onUpdate();
 	}
 }
