@@ -572,7 +572,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		Preferences.Warn_Networking = true;
 		DialogHandler.showWarning(getContext(), R.string.warn_networking, 20, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				mContextHelper.setSetting(null, "warn_networking", true);
+				mContextHelper.setSetting("warn", "networking", true);
 			}
 		});
 	}

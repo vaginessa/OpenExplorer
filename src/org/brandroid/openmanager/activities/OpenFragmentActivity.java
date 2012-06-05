@@ -170,6 +170,30 @@ public abstract class OpenFragmentActivity
 	{
 		getPreferences().setSetting(file == null ? "global" : "views", key + (file != null ? "_" + file.getPath() : ""), value);
 	}
+	public void setSetting(String globalKey, Boolean value)
+	{
+		setSetting("global", globalKey, value);
+	}
+	public void setSetting(String globalKey, Integer value)
+	{
+		setSetting("global", globalKey, value);
+	}
+	public void setSetting(String globalKey, String value)
+	{
+		setSetting("global", globalKey, value);
+	}
+	public void setSetting(String file, String key, Boolean value)
+	{
+		getPreferences().setSetting(file, key, value);
+	}
+	public void setSetting(String file, String key, Integer value)
+	{
+		getPreferences().setSetting(file, key, value);
+	}
+	public void setSetting(String file, String key, String value)
+	{
+		getPreferences().setSetting(file, key, value);
+	}
 	
 	public static boolean isBlackBerry() {
 		return Build.MANUFACTURER.trim().equalsIgnoreCase("rim") ||

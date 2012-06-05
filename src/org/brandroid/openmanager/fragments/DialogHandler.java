@@ -110,7 +110,6 @@ public class DialogHandler
 {
 	public static View createFileInfoDialog(LayoutInflater inflater, OpenPath mPath) {
 		View v = inflater.inflate(R.layout.info_layout, null);
-		v.setBackgroundColor(0xcc000000);
 		/*
 		v.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {

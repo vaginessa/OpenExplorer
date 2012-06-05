@@ -502,9 +502,9 @@ public class ContentFragment extends OpenFragment
 					return onFragmentDPAD(me, false);
 				else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && col == cols - 1)
 					return onFragmentDPAD(me, true);
-				else if(OpenExplorer.getMenuShortcut(keyCode) != null)
+				else if(OpenExplorer.getMenuShortcut(event) != null)
 				{
-					MenuItem item = OpenExplorer.getMenuShortcut(keyCode);
+					MenuItem item = OpenExplorer.getMenuShortcut(event);
 					if(onOptionsItemSelected(item))
 					{
 						Toast.makeText(v.getContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
@@ -1185,7 +1185,7 @@ public class ContentFragment extends OpenFragment
 		if(DEBUG)
 			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu, inflater);
-		if(!OpenExplorer.USE_PRETTY_MENUS)
+		if(!OpenExplorer.USE_PRETTY_MENUS || Build.VERSION.SDK_INT > 10)
 			inflater.inflate(R.menu.content_full, menu);
 		else inflater.inflate(R.menu.content, menu);
 		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);

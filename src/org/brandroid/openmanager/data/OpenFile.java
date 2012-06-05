@@ -505,6 +505,8 @@ public class OpenFile
 	public void writeBytes(byte[] buffer) {
 		OutputStream os = null;
 		try {
+			if(!exists())
+				create();
 			os = getOutputStream();
 			os.write(buffer);
 			os.flush();

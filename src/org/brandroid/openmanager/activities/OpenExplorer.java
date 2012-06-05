@@ -778,7 +778,7 @@ public class OpenExplorer
 		{
 		//case R.menu.content:
 		case R.id.menu_more:
-			if(showIContextMenu(mOptsMenu, from instanceof CheckedTextView ? null : from, fromTouch) != null) return true;
+			if(showIContextMenu(mMainMenu, from instanceof CheckedTextView ? null : from, fromTouch) != null) return true;
 			return true;
 		}
 		
@@ -1011,7 +1011,7 @@ public class OpenExplorer
 
 	private void upgradeViewSettings() {
 		if(getSetting(null, "pref_up_views", false)) return;
-		setSetting(null, "pref_up_views", true);
+		setSetting("pref_up_views", true);
 		getPreferences().upgradeViewSettings();
 	}
 
@@ -1429,23 +1429,32 @@ public class OpenExplorer
 	
 	private boolean usingSplitActionBar()
 	{
-		if(!USE_SPLIT_ACTION_BAR) return false;
-		if(mToolbarButtons != null)
-			return ViewUtils.getAbsoluteTop(mToolbarButtons) > 10;
-		if(findViewById(R.id.menu_search) != null)
-			return ViewUtils.getAbsoluteTop(findViewById(R.id.menu_search)) > 10;
-		return false;
+		//if(!USE_SPLIT_ACTION_BAR) return false;
+		int pos = ViewUtils.getAbsoluteTop(this, R.id.title_buttons, R.id.menu_sort, R.id.menu_text_view, R.id.menu_more, R.id.base_row);
+		Logger.LogInfo("SPLIT AB TOP = " + pos);
+		return pos > 10;
 	}
 	private void checkTitleSeparator()
 	{
 		if(mStaticButtons == null)
 			mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
-		boolean visible = false;
+		if(mStaticButtons == null && !BEFORE_HONEYCOMB && USE_ACTION_BAR)
+			mStaticButtons = (ViewGroup)getActionBar().getCustomView().findViewById(R.id.title_static_buttons);
+		if(mStaticButtons == null)
+		{
+			Logger.LogWarning("Unable to find Title Separator");
+			return;
+		}
 		
+		boolean visible = false;
 		if(!usingSplitActionBar())
+		{
 			for(int id : new int[]{R.id.title_paste, R.id.title_log, R.id.title_ops})
-				if(mStaticButtons.findViewById(id) != null && mStaticButtons.findViewById(id).isShown())
+				if(mStaticButtons.findViewById(id) != null &&
+						mStaticButtons.findViewById(id).getVisibility() == View.VISIBLE)
 					visible = true;
+		} else Logger.LogDebug("Title Separator hidden since Split Action bar is used.");
+		
 		ViewUtils.setViewsVisible(mStaticButtons, visible, R.id.title_divider);
 	}
 	public void sendToLogView(final String txt, final int color)
@@ -2112,8 +2121,9 @@ public class OpenExplorer
 					editing.append(path + ",");
 			}
 		}
-		Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
-		setSetting(null, "editing", editing.toString());
+		if(DEBUG && !editing.equals(","))
+			Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
+		setSetting("editing", editing.toString());
 	}
 	private void restoreOpenedEditors()
 	{
@@ -2222,7 +2232,7 @@ public class OpenExplorer
 		if(contextMenuId > -1)
 			getMenuInflater().inflate(contextMenuId, menu);
 		else if(v.getId() == R.id.menu_more)
-			onCreateOptionsMenu(menu);
+			onCreateOptionsMenu(menu, false);
 		else
 			Logger.LogWarning("Submenu not found for " + Integer.toHexString(v.getId()));
 
@@ -2240,7 +2250,7 @@ public class OpenExplorer
 	public void invalidateOptionsMenu() {
 		mLastMenuClass = "";
 		if(BEFORE_HONEYCOMB && !USE_PRETTY_MENUS) return;
-		if(BEFORE_HONEYCOMB || USE_PRETTY_MENUS)
+		if(USE_PRETTY_MENUS)
 			setupBaseBarButtons();
 		if(!BEFORE_HONEYCOMB)
 		try {
@@ -2275,7 +2285,7 @@ public class OpenExplorer
 			mMainMenu.clearAll();
 
 		try {
-			onCreateOptionsMenu(mMainMenu);
+			onCreateOptionsMenu(mMainMenu, false);
 			onPrepareOptionsMenu(mMainMenu);
 			setupBaseBarButtons(mMainMenu, false);
 		} catch(Exception e) {
@@ -2311,6 +2321,8 @@ public class OpenExplorer
 				|| !(getSetting(null, "pref_basebar", true) || tbl == null || mToolbarButtons == null) && findViewById(R.id.title_buttons) != null)
 		{
 			mToolbarButtons = (ViewGroup)findViewById(R.id.title_buttons);
+			if(mToolbarButtons == null && !BEFORE_HONEYCOMB)
+				mToolbarButtons = (ViewGroup)getActionBar().getCustomView().findViewById(R.id.title_buttons);
 			if(tbl != null)
 				tbl.setVisibility(View.GONE);
 			topButtons = true;
@@ -2346,14 +2358,15 @@ public class OpenExplorer
 					//if(item.getItemId() == R.id.title_menu) break;
 					if(!item.isCheckable() && item.isVisible())
 					{
-						View btn = makeMenuButton(item);
-						if(!BEFORE_HONEYCOMB && item.getActionView() != null)
+						View btn = makeMenuButton(item, mToolbarButtons);
+						if(item.hasSubMenu())
+							btn.setTag(item.getSubMenu());
+						else if(!BEFORE_HONEYCOMB && item.getActionView() != null)
 						{
 							if(DEBUG)
 								Logger.LogDebug("ACTION VIEW!!!");
 							btn = item.getActionView();
 							//ActionBarHelper h = ActionBarHelper.createInstance(this);
-							
 						}
 						buttons.add(btn);
 						if(i > 0)
@@ -2366,11 +2379,8 @@ public class OpenExplorer
 						btn.setOnClickListener(this);
 						btn.setOnFocusChangeListener(this);
 						btn.setOnKeyListener(this);
-						if(item.hasSubMenu())
-							btn.setTag(item.getSubMenu());
-						else if(Arrays.binarySearch(MENU_LOOKUP_IDS, btn.getId()) > -1)
-							btn.setTag(IconContextMenu.newMenu(this, getMenuLookupSub(btn.getId())));
-						mToolbarButtons.addView(btn);
+						if(mToolbarButtons.findViewById(menu.getItem(i).getItemId()) == null)
+							mToolbarButtons.addView(btn);
 						//menu.removeItem(item.getItemId());
 						Logger.LogDebug("Added " + item.getTitle() + " to base bar.");
 					} 
@@ -2381,17 +2391,21 @@ public class OpenExplorer
 			mLastMenuClass = f.getClassName();
 			if(MenuUtils.countVisibleMenus(mMainMenu) > 0)
 			{
-				if(maxedOut)
+				if(maxedOut && buttons.size() > 0)
 				{
 					View old = buttons.remove(buttons.size() - 1);
 					MenuUtils.setMenuVisible(mMainMenu, true, old.getId());
 					mToolbarButtons.removeView(old);
-					buttons.get(buttons.size() - 1).setNextFocusRightId(R.id.menu_more);
 				}
 				final ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
 				btn.setImageResource(R.drawable.ic_menu_more);
+				//btn.measure(getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_home_width), getResources().getDimensionPixelSize(R.dimen.actionbar_compat_height));
 				btn.setId(R.id.menu_more);
-				btn.setNextFocusLeftId(buttons.get(buttons.size() - 1).getId());
+				if(buttons.size() > 0)
+				{
+					buttons.get(buttons.size() - 1).setNextFocusRightId(R.id.menu_more);
+					btn.setNextFocusLeftId(buttons.get(buttons.size() - 1).getId());
+				}
 				btn.setOnKeyListener(this);
 				btn.setOnClickListener(this);
 				btn.setOnLongClickListener(this);
@@ -2400,11 +2414,13 @@ public class OpenExplorer
 				buttons.add(btn);
 				mToolbarButtons.addView(btn);
 			}
-			View last = buttons.get(buttons.size() - 1);
-			last.setNextFocusRightId(android.R.id.home);
-			last.setNextFocusLeftId(buttons.get(buttons.size() - 2).getId());
-			if(findViewById(android.R.id.home) != null)
-				findViewById(android.R.id.home).setNextFocusLeftId(last.getId());
+			if(buttons.size() > 0)
+			{
+				View last = buttons.get(buttons.size() - 1);
+				last.setNextFocusRightId(android.R.id.home);
+				if(findViewById(android.R.id.home) != null)
+					findViewById(android.R.id.home).setNextFocusLeftId(last.getId());
+			}
 			
 			Logger.LogDebug("Added " + buttons.size() + " children to Base Bar.");
 			if(tbl != null)
@@ -2416,9 +2432,10 @@ public class OpenExplorer
 		} else if(BEFORE_HONEYCOMB) Logger.LogWarning("No Base Row!?");
 	}
 
-	private ImageButton makeMenuButton(final MenuItem item)
+	private ImageButton makeMenuButton(final MenuItem item, ViewGroup parent)
 	{
-		ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, null);
+		ImageButton btn = (ImageButton)getLayoutInflater()
+				.inflate(R.layout.toolbar_button, null);
 		if(!item.isVisible())
 			btn.setVisibility(View.GONE);
 		Drawable d = item.getIcon();
@@ -2462,7 +2479,7 @@ public class OpenExplorer
 	{
 		if(mMenuShortcuts != null) return;
 		mMenuShortcuts = new SparseArray<MenuItem>();
-		for(int menuId : new int[]{R.menu.global,R.menu.content_full,R.menu.text_editor,R.menu.text_file,R.menu.text_view})
+		for(int menuId : new int[]{R.menu.global,R.menu.content,R.menu.content_sort,R.menu.content_view,R.menu.content_ops,R.menu.text_editor,R.menu.text_file,R.menu.text_view,R.menu.multiselect,R.menu.context_file})
 		{
 			menu.clear();
 			inflater.inflate(menuId, menu);
@@ -2483,6 +2500,15 @@ public class OpenExplorer
 		return ret;
 	}
 	
+	public static MenuItem getMenuShortcut(KeyEvent event)
+	{
+		if(mMenuShortcuts == null) return null;
+		int keyCode = event.getKeyCode();
+		if(event.isAltPressed())
+			keyCode = event.getUnicodeChar();
+		return mMenuShortcuts.get(keyCode);
+	}
+	
 	public static MenuItem getMenuShortcut(int keyCode)
 	{
 		if(mMenuShortcuts == null) return null;
@@ -2491,6 +2517,10 @@ public class OpenExplorer
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		return onCreateOptionsMenu(menu, true);
+	}
+	public boolean onCreateOptionsMenu(Menu menu, boolean fromSystem)
 	{
 		scanMenuShortcuts(menu, getMenuInflater());
 		//mActionBarHelper.onCreateOptionsMenu(menu);
@@ -2510,7 +2540,7 @@ public class OpenExplorer
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 			return true;
 		}
-		
+	
 		if(mOptsMenu == null)
 			mOptsMenu = new MenuBuilder(this);
 		mOptsMenu.clear();
@@ -2526,15 +2556,15 @@ public class OpenExplorer
 			if(isGTV())
 			{
 				handleMoreMenu(mMainMenu, true, 6); //*/
-				if(!menu.equals(mMainMenu))
+				if(!fromSystem) //if(!menu.equals(mMainMenu))
 					menu.clear();
 				else fillSubMenus(menu, getMenuInflater());
 			}
 			else {
 				handleMoreMenu(menu, true);
-				if(!menu.equals(mMainMenu) && !getResources().getBoolean(R.bool.allow_split_actionbar))
-					menu.clear();
-				fillSubMenus(mMainMenu, getMenuInflater());
+				if(!fromSystem) // && !getResources().getBoolean(R.bool.allow_split_actionbar))
+					MenuUtils.setMenuVisible(menu, false);
+				//else fillSubMenus(menu, getMenuInflater());
 			}
 		} //else MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 		/*else {
@@ -2545,23 +2575,26 @@ public class OpenExplorer
 		return true;
 	}
 	
-	private void handleMoreMenu(Menu menu, boolean force)
+	private void handleMoreMenu(Menu menu, boolean forceFromToolbar)
 	{
 		int max = getResources().getInteger(R.integer.max_base_buttons);
 		if(getResources().getBoolean(R.bool.ignore_max_base_buttons))
+		{
+			//if(DEBUG) Logger.LogDebug("Ignoring max base buttons config (" + max + ")");
 			max = (int)Math.floor(Math.min(6, getWindowWidth() / getResources().getDimension(R.dimen.actionbar_compat_button_width)));
-		handleMoreMenu(menu, force, max);
+		}
+		handleMoreMenu(menu, forceFromToolbar, max);
 	}
-	private void handleMoreMenu(Menu menu, boolean force, int max)
+	private void handleMoreMenu(Menu menu, boolean forceFromToolbar, int max)
 	{
-		if(force || (menu.size() > max && Build.VERSION.SDK_INT > 13 && getWindowWidth() < 700))
+		if(forceFromToolbar || (menu.size() > max && Build.VERSION.SDK_INT > 13 && getWindowWidth() < 700))
 		{
 			MenuItem more = menu.findItem(R.id.menu_more);
 			if(more != null)
 			{
 				SubMenu moreSub = more.getSubMenu();
 				if(moreSub != null)
-					for(int i = max - 1; i < menu.size(); i++)
+					for(int i = Math.max(0, max - 1); i < menu.size(); i++)
 					{
 						MenuItem item = menu.getItem(i);
 						if(item.getItemId() == R.id.menu_more) continue;
@@ -2569,6 +2602,7 @@ public class OpenExplorer
 						item.setVisible(false);
 					}
 			}
+			
 		} else MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 	}
 
@@ -2708,8 +2742,8 @@ public class OpenExplorer
 		Logger.LogDebug("OpenExplorer.onMenuOpened(0x" + Integer.toHexString(featureId) + "," + menu + ")");
 		if(USE_PRETTY_MENUS)
 		{
-			menu.clear();
-			return false;
+			if(menu != null && featureId == Window.FEATURE_ACTION_BAR)
+				return false;
 		}
 		return super.onMenuOpened(featureId, menu);
 	}
@@ -2721,7 +2755,7 @@ public class OpenExplorer
 			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
 		if(item.getItemId() == R.id.menu_more && isGTV())
 		{
-			showMenu(mMainMenu, findViewById(item.getItemId()), false);
+			showMenu(mOptsMenu, findViewById(item.getItemId()), false);
 			return true;
 		}
 		
@@ -2736,13 +2770,19 @@ public class OpenExplorer
 				if(anchor == null && !BEFORE_HONEYCOMB && item.getActionView() != null)
 					anchor = item.getActionView();
 				if(anchor == null && !BEFORE_HONEYCOMB)
+				{
 					anchor = getActionBar().getCustomView();
+					if(anchor.findViewById(item.getItemId()) != null)
+						anchor = anchor.findViewById(item.getItemId());
+				}
 				if(anchor == null)
 					anchor = mToolbarButtons;
 				if(anchor == null)
-					anchor = getCurrentFocus();
-				if(anchor == null)
 					anchor = findViewById(android.R.id.home);
+				if(anchor == null && !BEFORE_HONEYCOMB && USE_ACTION_BAR)
+					anchor = getActionBar().getCustomView().findViewById(android.R.id.home);
+				if(anchor == null)
+					anchor = getCurrentFocus().getRootView();
 				OpenFragment f = getSelectedFragment();
 				if(f != null)
 					if(f.onClick(item.getItemId(), anchor))
@@ -2881,7 +2921,7 @@ public class OpenExplorer
 				return true;
 
 			case R.id.menu_view_split:
-				setSetting(null, "pref_basebar", !USE_SPLIT_ACTION_BAR);
+				setSetting("pref_basebar", !USE_SPLIT_ACTION_BAR);
 				goHome();
 				return true;
 				
@@ -3236,9 +3276,9 @@ public class OpenExplorer
 			Logger.LogDebug("OpenExplorer.onKeyUp(" + keyCode + "," + event + ")");
 		if(event.getAction() != KeyEvent.ACTION_UP)
 			return super.onKeyUp(keyCode, event);
-		if(getMenuShortcut(keyCode) != null)
+		if(getMenuShortcut(event) != null)
 		{
-			MenuItem item = getMenuShortcut(keyCode);
+			MenuItem item = getMenuShortcut(event);
 			if(item != null)
 				if(onOptionsItemSelected(item))
 				{
@@ -3269,6 +3309,20 @@ public class OpenExplorer
 				addBookmark(path);
 			else
 				removeBookmark(path);
+		} else if(keyCode >= KeyEvent.KEYCODE_1 && keyCode <= KeyEvent.KEYCODE_9)
+		{
+			int pos = keyCode - KeyEvent.KEYCODE_1;
+			if(mToolbarButtons != null)
+			{
+				if(pos < mToolbarButtons.getChildCount()
+						&& mToolbarButtons.getChildAt(pos).performClick())
+					return true;
+				return false;
+			}
+			if(mOptsMenu != null && pos < mOptsMenu.size())
+				return onOptionsItemSelected(mOptsMenu.getItem(pos));
+			if(mMainMenu != null && pos < mMainMenu.size())
+				return onOptionsItemSelected(mMainMenu.getItem(pos));
 		}
 		/*
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -3743,8 +3797,12 @@ public class OpenExplorer
 				}
 				return true;*/
 		}
-		if(getSelectedFragment() != null)
-			return getSelectedFragment().onLongClick(v);
+		OpenFragment f = getSelectedFragment();
+		if(f != null)
+		{
+			if(f.onLongClick(v)) return true;
+			Logger.LogDebug("No onLongClick?");
+		}
 		return false;
 	}
 	public void addBookmark(OpenPath file) {
@@ -3802,7 +3860,8 @@ public class OpenExplorer
 	}
 	
 	public void onClipboardUpdate() {
-		if(getClipboard().size() == mLastClipSize && getClipboard().isMultiselect() != mLastClipState) return;
+		if(getClipboard().size() == mLastClipSize &&
+				getClipboard().isMultiselect() == mLastClipState) return;
 		if(DEBUG)
 			Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
 		View pb = mStaticButtons.findViewById(R.id.title_paste);
@@ -3950,7 +4009,7 @@ public class OpenExplorer
 						loader.loadInBackground();
 					} catch(SQLiteException e) {
 						bRetrieveExtraVideoDetails = false;
-						setSetting(null, "tag_novidinfo", true);
+						setSetting("tag_novidinfo", true);
 						return onCreateLoader(id, arg1);
 					}
 				break;
@@ -3972,7 +4031,7 @@ public class OpenExplorer
 						loader.loadInBackground();
 					} catch(SQLiteException e) {
 						bRetrieveDimensionsForPhotos = false;
-						setSetting(null, "tag_nodims", true);
+						setSetting("tag_nodims", true);
 						return onCreateLoader(id, arg1);
 					}
 				}
@@ -4059,7 +4118,7 @@ public class OpenExplorer
 		if(!f.isDetached())
 		{
 			invalidateOptionsMenu();
-			if(isGTV())
+			if(Build.VERSION.SDK_INT < 14)
 				((ImageView)findViewById(R.id.title_icon)).setImageDrawable(f.getIcon());
 			else
 				ImageUtils.fadeToDrawable((ImageView)findViewById(R.id.title_icon), f.getIcon());

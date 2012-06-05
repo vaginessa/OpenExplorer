@@ -19,6 +19,7 @@ import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.ViewUtils;
 
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
@@ -204,12 +205,17 @@ public abstract class OpenFragment
 	{
 		return showMenu(menuId, from, title, 0, 0);
 	}
-	public boolean showMenu(final int menuId, final View from, CharSequence title, int xOffset, int yOffset)
+	public boolean showMenu(final int menuId, View from1, CharSequence title, int xOffset, int yOffset)
 	{
+		if(from1 == null)
+			from1 = ViewUtils.getFirstView(getActivity(), R.id.menu_more, android.R.id.home);
+		if(from1 == null)
+			from1 = getActivity().getCurrentFocus().getRootView();
+		final View from = from1;
 		if(showIContextMenu(menuId, from, title, xOffset, yOffset)) return true;
 		if(Build.VERSION.SDK_INT > 10)
 		{
-			final PopupMenu pop = new PopupMenu(from.getContext(), from);
+			final PopupMenu pop = new PopupMenu(getActivity(), from);
 			pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 				public boolean onMenuItemClick(MenuItem item) {
 					if(onOptionsItemSelected(item))
@@ -489,6 +495,19 @@ public abstract class OpenFragment
 		if(getExplorer() != null)
 			return getExplorer().getClipboard();
 		else return null;
+	}
+	
+	@Override
+	public boolean isMultiselect() {
+		if(getClipboard() != null)
+			return getClipboard().isMultiselect();
+		return false;
+	}
+	
+	@Override
+	public void removeFromClipboard(OpenPath file) {
+		if(getClipboard() != null)
+			getClipboard().remove(file);
 	}
 	
 	@Override

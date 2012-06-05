@@ -36,6 +36,8 @@
 		android:id="@+id/content_text"
 		android:text="Filename"
 		android:layout_toRightOf="@+id/content_icon"
+		android:layout_toLeftOf="@+id/content_check"
+		android:layout_alignWithParentIfMissing="true"
 		android:background="@android:color/transparent"
 		style="@style/Large" />
 	<TextView
@@ -52,7 +54,7 @@
 		android:gravity="left" />
 	<TextView
 		android:id="@+id/content_info"
-		android:layout_alignParentRight="true"
+		android:layout_toLeftOf="@+id/content_check"
 		android:layout_below="@+id/content_text"
 		android:gravity="right"
 		android:layout_marginLeft="4dp"
@@ -60,15 +62,23 @@
 		android:singleLine="true"
 		android:ellipsize="marquee"
 		android:typeface="monospace"
+		android:layout_alignWithParentIfMissing="true"
 		style="@style/Small"
 		android:layout_width="wrap_content"
 		/>
 	<ImageView
+	    style="@style/ActionBarCompatItem"
 	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content" 
+	    android:layout_height="wrap_content"
+	    android:layout_alignTop="@+id/content_icon"
+	    android:layout_alignBottom="@+id/content_icon"
 	    android:layout_alignParentRight="true"
+	    android:layout_alignWithParentIfMissing="true"
+	    android:layout_gravity="center"
+		android:paddingRight="5dip"
+		android:paddingLeft="5dip"
 	    android:visibility="gone"
 	    android:id="@+id/content_check"
-	    android:src="@android:drawable/checkbox_on_background"
+	    android:src="@android:drawable/checkbox_off_background"
 	    />
 </RelativeLayout>

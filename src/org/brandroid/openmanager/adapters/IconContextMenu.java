@@ -58,6 +58,7 @@ public class IconContextMenu implements OnKeyListener
 	//private static final Hashtable<Integer, IconContextMenu> mInstances = new Hashtable<Integer, IconContextMenu>();
 	private static final Hashtable<Integer, Integer> mHeights = new Hashtable<Integer, Integer>();
 	private static final int[] DOUBLE_WIDTH_IDS = new int[]{R.id.menu_context_download};
+	private static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	
 	private OnKeyListener mKeyListener;
 	private IconContextItemSelectedListener iconContextItemSelectedListener;
@@ -102,7 +103,7 @@ public class IconContextMenu implements OnKeyListener
         	//mWidth = mGrid.getMeasuredWidth();
         }
         if(mWidth == 0)
-        	mWidth = context.getResources().getDimensionPixelSize(R.dimen.popup_width);
+        	mWidth = LayoutParams.WRAP_CONTENT; // context.getResources().getDimensionPixelSize(R.dimen.popup_width);
         if(mWidth > 0)
         	popup.setPopupWidth(mWidth);
         popup.setContentView(mScroller);
@@ -327,13 +328,15 @@ public class IconContextMenu implements OnKeyListener
     	final int menuSig = getMenuSignature();
     	if(mHeights.containsKey(menuSig))
     	{
-    		Logger.LogDebug("Menu Signature (" + menuSig + ") found = " + mHeights.get(menuSig));
+    		if(DEBUG)
+    			Logger.LogDebug("Menu Signature (" + menuSig + ") found = " + mHeights.get(menuSig));
     		popup.setPopupHeight(mHeights.get(menuSig));
     	}
     	popup.setPopupShownListener(new OnPopupShownListener() {
 			@Override
 			public void OnPopupShown(int width, int height) {
-				Logger.LogVerbose("Popup Height: " + height);
+				if(DEBUG)
+					Logger.LogVerbose("Popup Height: " + height);
 				mHeights.put(menuSig, height);
 			}
 		});

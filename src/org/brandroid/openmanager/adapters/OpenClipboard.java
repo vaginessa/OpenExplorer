@@ -11,6 +11,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ViewUtils;
@@ -196,7 +197,12 @@ public class OpenClipboard
 		if(isCut)
 			d = new LayerDrawable(new Drawable[]{d,
 					c.getResources().getDrawable(R.drawable.ic_menu_cut)});
-		float alpha = isPastable(file) ? 1f : 0.5f;
+		float alpha = 1f;
+		int checkbox = android.R.drawable.checkbox_on_background;
+		if(!isPastable(file))
+			alpha = 0.5f;
+		
+		ret.setPadding(ret.getPaddingLeft(), ret.getPaddingTop(), 0, ret.getPaddingBottom());
 		
 		if(text != null)
 		{
@@ -204,9 +210,15 @@ public class OpenClipboard
 			TextView pathView = (TextView)ret.findViewById(R.id.content_fullpath);
 			TextView info = (TextView)ret.findViewById(R.id.content_info);
 			ImageView check = (ImageView)ret.findViewById(R.id.content_check);
+			check.setImageResource(checkbox);
 			check.setVisibility(View.VISIBLE);
+			check.setClickable(false);
 			
-			info.setVisibility(View.GONE);
+			//info.setVisibility(View.GONE);
+			if(file.isDirectory())
+				info.setText(file.getListLength() + " " + info.getContext().getResources().getString(R.string.s_files));
+			else
+				info.setText(DialogHandler.formatSize(file.length()));
 			if(file != null)
 			{
 				if(file.getName() != null)
@@ -223,9 +235,9 @@ public class OpenClipboard
 			ViewUtils.setAlpha(text, alpha);
 			text.setCompoundDrawables(
 				d,
-				(Drawable)null,
-				parent.getContext().getResources().getDrawable(android.R.drawable.checkbox_on_background),
-				(Drawable)null);
+				null,
+				parent.getContext().getResources().getDrawable(checkbox),
+				null);
 		}
 
 		return ret;

@@ -43,6 +43,7 @@ public class ViewUtils {
 	}
 
 	public static int getAbsoluteTop(View v) {
+		if(v == null) return 0;
 		try {
 			int[] ret = new int[2];
 			v.getLocationInWindow(ret);
@@ -53,6 +54,23 @@ public class ViewUtils {
 				ret += getAbsoluteTop((View)v.getParent());
 			return ret;
 		}
+	}
+	
+	/**
+	 * Get the first Absolute Top from a list of possible IDs.
+	 * @param a The parent activity.
+	 * @param ids The list of possible IDs.
+	 * @return The first Absolute Top. If none exit, returns -1;
+	 */
+	public static int getAbsoluteTop(Activity a, int... ids)
+	{
+		for(int id : ids)
+		{
+			View v = a.findViewById(id);
+			if(v != null && v.getVisibility() == View.VISIBLE)
+				return getAbsoluteTop(v);
+		}
+		return -1;
 	}
 
 	public static void setViewsOnClick(Activity a, OnClickListener onclick, int... ids)
@@ -194,12 +212,16 @@ public class ViewUtils {
 	public static void setViewsVisible(View parent, boolean visible, int... ids)
 	{
 		if(parent == null) return;
+		int vis = visible ? View.VISIBLE : View.GONE;
 		if(ids.length == 0)
-			parent.setVisibility(visible ? View.VISIBLE : View.GONE);
+			parent.setVisibility(vis);
 		else
 		for(int id : ids)
-			if(parent.findViewById(id) != null)
-				parent.findViewById(id).setVisibility(visible ? View.VISIBLE : View.GONE);
+		{
+			View v = parent.findViewById(id);
+			if(v != null && v.getVisibility() != vis)
+				v.setVisibility(vis);
+		}
 	}
 
 	public static void toggleChecked(View view) {

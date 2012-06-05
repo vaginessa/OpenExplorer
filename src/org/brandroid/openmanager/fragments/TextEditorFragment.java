@@ -108,7 +108,7 @@ public class TextEditorFragment extends OpenFragment
 	private float mTextSize = 10f;
 	private boolean mSalvage = true;
 	
-	private final static boolean USE_SEEK_ACTIONVIEW = !OpenExplorer.BEFORE_HONEYCOMB && Build.VERSION.SDK_INT < 14;
+	private final static boolean USE_SEEK_ACTIONVIEW = !OpenExplorer.BEFORE_HONEYCOMB;
 	
 	private AsyncTask<?, ?, ?> mTask = null;
 	
@@ -288,14 +288,13 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		inflater.inflate(R.menu.text_editor, menu);
+		inflater.inflate(OpenExplorer.USE_PRETTY_MENUS ? R.menu.text_editor : R.menu.text_full, menu);
 		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
 		//Class clz = Class.forName("org.brandroid.openmanagerviews.SeekBarActionView");
-		if(mFontSize != null && USE_SEEK_ACTIONVIEW)
+		if(mFontSize != null && USE_SEEK_ACTIONVIEW && (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
 		{
-			mFontSize
-				.setActionView((SeekBarActionView)mFontSizeBar)
-				.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+			MenuItemCompat.setActionView(mFontSize, mFontSizeBar);
+			MenuItemCompat.setShowAsAction(mFontSize, MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		}
 	}
 	
@@ -679,8 +678,8 @@ public class TextEditorFragment extends OpenFragment
 				fos = new BufferedOutputStream(mPath.getOutputStream());
 				fos.write(bytes);
 				fos.close();
-				if(mPath instanceof OpenPath.OpenPathByteIO)
-					((OpenPath.OpenPathByteIO)mPath).writeBytes(data.getBytes());
+				//if(mPath instanceof OpenPath.OpenPathByteIO)
+				//	((OpenPath.OpenPathByteIO)mPath).writeBytes(data.getBytes());
 				if(mPath instanceof NeedsTempFile)
 					((NeedsTempFile)mPath).tempUpload(this);
 				if(mPath instanceof OpenNetworkPath)

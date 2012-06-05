@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item
+        android:id="@+id/menu_view_font_size"
+        android:title="@string/s_view_font_size"
+        android:icon="@drawable/ic_menu_font_size"
+        android:showAsAction="always"
+        />
+    <item
+        android:id="@+id/menu_text_ops"
+        android:title="@string/s_title_operations"
+        android:icon="@drawable/ic_menu_folder"
+        android:showAsAction="always">
+    	<menu>
+    		<item android:id="@+id/menu_save"
+		        android:title="@string/s_save"
+		        android:icon="@drawable/ic_menu_save"
+		        android:showAsAction="always"
+		        />
+		    <item android:id="@+id/menu_save_as"
+		        android:title="@string/s_saveas"
+		        android:icon="@drawable/ic_menu_save"
+		        android:showAsAction="always"
+		       	/>
+		    <item
+		        android:id="@id/menu_context_info"
+		        android:title="@string/s_menu_info"
+		        android:icon="@drawable/ic_menu_info_details"
+		        android:showAsAction="ifRoom"
+		        />
+		    <item
+		        android:id="@+id/menu_close"
+		        android:title="@string/close"
+		        android:icon="@drawable/ic_menu_close_clear_cancel"
+		        android:showAsAction="always"
+		        />
+		    	    
+    	</menu>
+    </item>
+    <item
+        android:id="@+id/menu_text_view"
+        android:title="@string/s_view"
+        android:icon="@drawable/ic_menu_view"
+        android:showAsAction="always">
+        <menu>
+            <item
+		        android:id="@+id/menu_view_keyboard_toggle"
+		        android:title="@string/s_toggle_keyboard"
+		        android:checkable="true"
+		        android:showAsAction="ifRoom|withText"
+		        />
+		    <item
+		        android:id="@+id/menu_view_lines"
+		        android:title="@string/s_menu_view_line_numbers"
+		        android:checkable="true"
+		        android:checked="true"
+		        />
+			<item
+			    android:id="@+id/menu_view_fullscreen"
+			    android:checkable="true"
+			    android:title="@string/s_pref_fullscreen" />
+			<item
+			    android:id="@+id/menu_view_split"
+			    android:checkable="true"
+			    android:enabled="@bool/prehoneycomb"
+			    android:title="@string/s_pref_basebar" />
+        </menu>
+    </item>
+</menu>

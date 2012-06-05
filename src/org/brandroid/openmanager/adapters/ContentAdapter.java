@@ -70,6 +70,8 @@ public class ContentAdapter extends BaseAdapter {
 	public interface CheckClipboardListener
 	{
 		public boolean checkClipboard(OpenPath file);
+		public boolean isMultiselect();
+		public void removeFromClipboard(OpenPath file);
 	}
 	public void setCheckClipboardListener(CheckClipboardListener l) { mClipper = l; }
 	public void setShowPlusParent(boolean showUp) { mPlusParent = showUp; }
@@ -214,17 +216,40 @@ public class ContentAdapter extends BaseAdapter {
 		if(mInfo != null)
 		{
 			if(mShowDetails)
-				mInfo.setText(String.format(file.getDetails(getSorting().showHidden(), showLongDate), getResources().getString(R.string.s_files)));
+				mInfo.setText(String.format(
+						file.getDetails(getSorting().showHidden(), showLongDate),
+						getResources().getString(R.string.s_files)));
 			else mInfo.setText("");
 		}
 
 		if(mNameView != null)
 			mNameView.setText(mName);
 
-		if(mClipper != null && mClipper.checkClipboard(file))
+		boolean multi = mClipper != null && mClipper.isMultiselect();
+		boolean copied = mClipper != null && mClipper.checkClipboard(file);
+		int pad = view.getPaddingLeft();
+		if(multi || copied)
+			pad = 0;
+		view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), pad, view.getPaddingBottom());
+		ViewUtils.setViewsVisible(view, multi || copied, R.id.content_check);
+		if(copied)
+		{
+			ViewUtils.setImageResource(view,
+						android.R.drawable.checkbox_on_background,
+						R.id.content_check);
 			mNameView.setTextAppearance(getContext(), R.style.Highlight);
-		else
+			ViewUtils.setOnClicks(view, new View.OnClickListener() {
+					public void onClick(View v) {
+						mClipper.removeFromClipboard(file);
+					}
+				}, R.id.content_check);
+		} else {
 			mNameView.setTextAppearance(getContext(),  R.style.Large);
+			if(!copied && multi)
+				ViewUtils.setImageResource(view,
+						android.R.drawable.checkbox_off_background,
+						R.id.content_check);
+		}
 		
 		if(file.isHidden())
 			ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);

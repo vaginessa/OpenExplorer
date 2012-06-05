@@ -16,6 +16,7 @@ public interface OpenContextProvider
 	public void setSetting(OpenPath path, String key, Integer value);
 	public void setSetting(OpenPath path, String key, Boolean value);
 	public void setSetting(OpenPath path, String key, Float value);
+	public void setSetting(String file, String key, Boolean value);
 	public String getString(int stringId);
 	public Preferences getPreferences();
 	public void onChangeLocation(OpenPath path);

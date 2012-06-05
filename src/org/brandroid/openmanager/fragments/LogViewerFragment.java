@@ -133,7 +133,7 @@ public class LogViewerFragment extends OpenFragment
 		mInflater = inflater; 
 		View ret = inflater.inflate(R.layout.log_viewer, null);
 		ret.setOnLongClickListener(this);
-		ViewUtils.setOnClicks(ret, this, R.id.log_clear, R.id.log_copy, R.id.log_close);
+		ViewUtils.setOnClicks(ret, this, R.id.log_clear, R.id.log_copy);
 		mListView = (ListView)ret.findViewById(R.id.log_list);
 		return ret;
 	}
@@ -178,9 +178,6 @@ public class LogViewerFragment extends OpenFragment
 			Toast.makeText(mContext, R.string.s_alert_clipboard, Toast.LENGTH_LONG);
 			break;
 			//default: if(getExplorer() != null) getExplorer().onClick(id, item, from);
-		case R.id.log_close: // Close
-			doClose();
-			break;
 		}
 	}
 
