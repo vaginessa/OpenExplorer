@@ -4,6 +4,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.interfaces.OpenActionView;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
+import org.brandroid.utils.Logger;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -173,7 +174,11 @@ public class SeekBarActionView
     }
 
 	public void onActionViewExpanded() {
-        if (mExpandedInActionView) return;
+        if (mExpandedInActionView) {
+        	Logger.LogWarning("SeekBarActionView already expanded");
+        	return;
+        }
+    	Logger.LogDebug("SeekBarActionView expanding");
 
         mExpandedInActionView = true;
         

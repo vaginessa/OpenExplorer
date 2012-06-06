@@ -147,7 +147,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
     
     public TabView addTab(CharSequence text, int index) {
         //Workaround for not being able to pass a defStyle on pre-3.0
-        final TabView tabView = (TabView)mInflater.inflate(R.layout.vpi__tab, null);
+        final TabView tabView = (TabView)mInflater.inflate(R.layout.vpi__tab, mTabLayout, false);
         tabView.init(this, text, index);
         tabView.setId(android.R.id.tabcontent + index);
         tabView.setFocusable(true);

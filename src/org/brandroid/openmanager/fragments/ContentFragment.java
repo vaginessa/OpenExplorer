@@ -502,9 +502,9 @@ public class ContentFragment extends OpenFragment
 					return onFragmentDPAD(me, false);
 				else if(keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && col == cols - 1)
 					return onFragmentDPAD(me, true);
-				else if(OpenExplorer.getMenuShortcut(event) != null)
+				else if(MenuUtils.getMenuShortcut(event) != null)
 				{
-					MenuItem item = OpenExplorer.getMenuShortcut(event);
+					MenuItem item = MenuUtils.getMenuShortcut(event);
 					if(onOptionsItemSelected(item))
 					{
 						Toast.makeText(v.getContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
@@ -1662,7 +1662,7 @@ public class ContentFragment extends OpenFragment
 	public Drawable getIcon() {
 		if(isDetached()) return null;
 		if(getActivity() != null && getResources() != null)
-			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 36, 36));
+			return getResources().getDrawable(ThumbnailCreator.getDefaultResourceId(getPath(), 96, 96));
 		return null;
 	}
 	@Override

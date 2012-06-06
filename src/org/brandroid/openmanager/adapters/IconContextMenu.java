@@ -406,7 +406,7 @@ public class IconContextMenu implements OnKeyListener
 		}
 		if(iconContextItemSelectedListener != null)
 		{
-			final MenuItem item = OpenExplorer.getMenuShortcut(keyCode);
+			final MenuItem item = MenuUtils.getMenuShortcut(keyCode);
 			if(item != null)
 			{
 				final View view = mTable.findViewById(item.getItemId());

@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
+import android.os.Environment;
 
 public class OpenSmartFolder extends OpenPath 
 {
@@ -130,7 +131,7 @@ public class OpenSmartFolder extends OpenPath
 		for(OpenPath f : mChildren)
 			if(f.getName().equals(name))
 				return f;
-		return null;
+		return getFirstDir().getChild(name);
 	}
 
 	@Override
@@ -169,7 +170,7 @@ public class OpenSmartFolder extends OpenPath
 				return s.mParent;
 		if(mSearches.size() > 0)
 			return mSearches.get(0).mParent;
-		else return null;
+		else return new OpenFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
 	}
 
 	@Override

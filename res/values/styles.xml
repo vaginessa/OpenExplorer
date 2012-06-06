@@ -58,23 +58,20 @@
     </style>
     
    	<style name="MyTabPageIndicator" parent="Widget">
-        <item name="android:gravity">center_horizontal</item>
+        <item name="android:gravity">center</item>
         <item name="android:background">@drawable/vpi__tab_indicator</item>
         <item name="android:ellipsize">none</item>
-        <item name="android:paddingLeft">6dip</item>
-        <item name="android:paddingRight">6dip</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingLeft">@dimen/vpi_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/vpi_padding_horizontal</item>
     </style>
     <style name="MyTabPageIndicator.Text" parent="Widget">
         <item name="android:textAppearance">@style/TextAppearance.MyTabPageIndicator</item>
         <item name="android:textColor">@color/vpi__dark_theme</item>
-        <item name="android:textSize">12sp</item>
         <item name="android:maxLines">1</item>
+        <item name="android:gravity">center</item>
     </style>
     
     <style name="TextAppearance.MyTabPageIndicator" parent="Mid">
-        
     </style>
 
     <style name="ActionBarCompat">
@@ -112,7 +109,7 @@
 
     <style name="ActionBarCompatHomeItem" parent="style/ActionBarCompatItemBase">
         <item name="android:longClickable">true</item>
-        <item name="android:background">@drawable/list_selector_background</item>
+        <item name="android:background">@android:drawable/list_selector_background</item>
     </style>
     
     <style name="ActionBarCompatHomeAsUp" parent="style/ActionBarCompatItemBase">

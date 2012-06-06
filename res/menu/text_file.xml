@@ -4,23 +4,27 @@
     <item android:id="@+id/menu_save"
         android:title="@string/s_save"
         android:icon="@drawable/ic_menu_save"
+        android:alphabeticShortcut="s"
         android:showAsAction="always"
         />
     <item android:id="@+id/menu_save_as"
         android:title="@string/s_saveas"
         android:icon="@drawable/ic_menu_save"
+        android:alphabeticShortcut="a"
         android:showAsAction="always"
        	/>
     <item
         android:id="@id/menu_context_info"
         android:title="@string/s_menu_info"
         android:icon="@drawable/ic_menu_info_details"
+        android:alphabeticShortcut="i"
         android:showAsAction="ifRoom"
         />
     <item
         android:id="@+id/menu_close"
         android:title="@string/close"
         android:icon="@drawable/ic_menu_close_clear_cancel"
+        android:alphabeticShortcut="c"
         android:showAsAction="always"
         />
 

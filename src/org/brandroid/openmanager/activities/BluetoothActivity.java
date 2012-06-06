@@ -502,15 +502,13 @@ public class BluetoothActivity extends Activity implements OnClickListener,
 				classType = Integer.valueOf(name.substring(name.lastIndexOf(":") + 1,
 											name.length()));
 
-				if((classType & 0x200) > 0)
-					mHolder.setIconResource(R.drawable.cellphone);
-				if((classType & 0x100) > 0)
-					mHolder.setIconResource(R.drawable.computer);
+				//if((classType & 0x200) > 0) mHolder.setIconResource(R.drawable.cellphone);
+				//if((classType & 0x100) > 0) mHolder.setIconResource(R.drawable.computer);
 				
 				mHolder.setTitle(name.substring(0, name.lastIndexOf(":")));
 			
 			} else {
-				mHolder.setIconResource(R.drawable.computer);
+				//mHolder.setIconResource(R.drawable.computer);
 				mHolder.setTitle(name);
 			}
 			

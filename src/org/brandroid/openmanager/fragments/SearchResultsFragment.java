@@ -225,7 +225,7 @@ public class SearchResultsFragment
 	}
 	
 	public Drawable getIcon() {
-		return getDrawable(R.drawable.sm_folder_search);
+		return getDrawable(R.drawable.lg_folder_search);
 	}
 
 	@Override

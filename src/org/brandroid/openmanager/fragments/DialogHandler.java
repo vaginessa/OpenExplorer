@@ -102,6 +102,7 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 import org.brandroid.utils.Preferences.OnPreferenceInteraction;
@@ -641,7 +642,7 @@ public class DialogHandler
 	
 	private static void fillShortcutsTable(TableLayout table) {
 		final Context context = table.getContext();
-		for(int sc : OpenExplorer.getMenuShortcuts(context))
+		for(int sc : MenuUtils.getMenuShortcuts(context))
 		{
 			TableRow tr = new TableRow(context);
 			TextView tv1 = new TextView(context);
@@ -650,7 +651,7 @@ public class DialogHandler
 			char scc = (char)(sc + ('a' - KeyEvent.KEYCODE_A));
 			tv1.setText(""+scc);
 			TextView tv2 = new TextView(context);
-			MenuItem item = OpenExplorer.getMenuShortcut(sc);
+			MenuItem item = MenuUtils.getMenuShortcut(sc);
 			tv2.setText(item.getTitle());
 			tr.addView(tv1);
 			tr.addView(tv2);

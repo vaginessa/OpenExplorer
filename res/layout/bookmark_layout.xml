@@ -81,18 +81,7 @@
 		android:visibility="gone"
 		android:layout_toLeftOf="@+id/list_arrow"
 		/>
-	<ImageView
-		android:id="@+id/list_arrow"
-		android:layout_width="32dp"
-		android:layout_height="32dp"
-		android:layout_alignParentTop="true"
-		android:layout_alignParentRight="true"
-		android:layout_centerVertical="true"
-		android:contentDescription="@android:string/yes"
-		android:visibility="gone"
-		android:src="@drawable/indicate"
-		/>
-	
+
 	<RelativeLayout
 	    android:id="@+id/size_layout"
 	    android:layout_width="fill_parent"

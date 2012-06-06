@@ -10,4 +10,5 @@
     <item type="bool" name="allow_fullscreen">true</item>
     <item type="bool" name="large">false</item>
     <item type="bool" name="large_land">false</item>
+    <item type="bool" name="land">false</item>
 </resources>

@@ -579,6 +579,8 @@ public abstract class OpenFragment
 			Object o = m.invoke(item, new Object[0]);
 			if(o != null && o instanceof View)
 				return (View)o;
+			else if (getActivity().getActionBar() != null && getActivity().getActionBar().getCustomView().findViewById(item.getItemId()) != null)
+				return getActivity().getActionBar().getCustomView().findViewById(item.getItemId());
 			else return getActivity().findViewById(item.getItemId());
 		} catch(Exception e) {
 			return getActivity().findViewById(item.getItemId());

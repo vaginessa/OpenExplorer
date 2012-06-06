@@ -288,10 +288,15 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
+		if(isDetached()) return;
+		if(!isVisible()) return;
 		inflater.inflate(OpenExplorer.USE_PRETTY_MENUS ? R.menu.text_editor : R.menu.text_full, menu);
 		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
 		//Class clz = Class.forName("org.brandroid.openmanagerviews.SeekBarActionView");
-		if(mFontSize != null && USE_SEEK_ACTIONVIEW && (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
+		boolean isTop = false;
+		if(getResources() != null && !getResources().getBoolean(R.bool.allow_split_actionbar))
+			isTop = true;
+		if(mFontSize != null && USE_SEEK_ACTIONVIEW && !OpenExplorer.BEFORE_HONEYCOMB && isTop) // (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
 		{
 			MenuItemCompat.setActionView(mFontSize, mFontSizeBar);
 			MenuItemCompat.setShowAsAction(mFontSize, MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -315,8 +320,11 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		//super.onOptionsItemSelected(item);
+		if(DEBUG)
+			Logger.LogDebug("TextEditorFragment.onOptionsItemSelected(" + item + ")");
 		View action = getActionView(item);
-		if(action instanceof OpenActionView)
+		if(action != null && action instanceof OpenActionView)
 		{
 			((OpenActionView)action).onActionViewExpanded();
 			return true;
@@ -324,13 +332,10 @@ public class TextEditorFragment extends OpenFragment
 		switch(item.getItemId())
 		{
 			case R.id.menu_view_font_size:
-				if(USE_SEEK_ACTIONVIEW)
-					mFontSizeBar.onActionViewExpanded();
-				else
-					mFontSizeBar.getPopup(getActivity(), action).showLikePopDownMenu();
-				return true;
+				if(mFontSizeBar.getPopup(getActivity(), action).showLikePopDownMenu())
+					return true;
 		}
-		return onClick(item.getItemId(), (View)getActionView(item));
+		return onClick(item.getItemId(), action);
 	}
 	
 	private void showSeekBarPopup(View from)
@@ -849,7 +854,7 @@ public class TextEditorFragment extends OpenFragment
 	public Drawable getIcon() {
 		if(getActivity() == null) return null;
 		return new BitmapDrawable(getResources(),
-				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), false));
+				ThumbnailCreator.getFileExtIcon(getPath().getExtension(), getActivity(), true));
 	}
 	@Override
 	public CharSequence getTitle() {
