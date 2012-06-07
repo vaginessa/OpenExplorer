@@ -1,0 +1,19 @@
+C:\Users\Brent\Documents\GitHub\OpenExplorer\res\raw\carousel.bc \
+  C:\Users\Brent\Documents\GitHub\OpenExplorer\gen\org\brandroid\carousel\ScriptC_carousel.java \
+  C:\Users\Brent\Documents\GitHub\OpenExplorer\gen\org\brandroid\carousel\ScriptField_ProgramStore_s.java \
+  C:\Users\Brent\Documents\GitHub\OpenExplorer\gen\org\brandroid\carousel\ScriptField_Card.java \
+  C:\Users\Brent\Documents\GitHub\OpenExplorer\gen\org\brandroid\carousel\ScriptField_FragmentShaderConstants_s.java: \
+  C:\Users\Brent\Documents\GitHub\OpenExplorer\src\org\brandroid\carousel\carousel.rs \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include\rs_core.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_types.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\clang-include\stdbool.h \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_allocation.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_atomic.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_cl.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_debug.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_math.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_matrix.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_object.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_quaternion.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include/rs_time.rsh \
+  C:\Users\Brent\android-sdks\platform-tools\renderscript\include\rs_graphics.rsh

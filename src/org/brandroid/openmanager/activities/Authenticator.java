@@ -133,13 +133,8 @@ public class Authenticator extends Activity
 		{
 		case R.id.auth_test:
 			if(mLoggedIn)
-				try {
-					for(OpenPath kid : mDrop.list())
-						printLine(kid.getName());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				for(OpenPath kid : mDrop.list())
+					printLine(kid.getName());
 			else
 				mDrop.start(Authenticator.this);
 			break;
