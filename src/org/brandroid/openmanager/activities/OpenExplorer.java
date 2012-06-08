@@ -210,6 +210,7 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
+import com.example.google.tv.leftnavbar.LeftNavBarService;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.TabPageIndicator;
@@ -291,6 +292,7 @@ public class OpenExplorer
 	private ViewGroup mStaticButtons = null;
 	private View mSearchView = null;
 	private int mTitleButtons = 0;
+	private static ActionBar mBar = null;
 	
 	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
 	private static boolean bRetrieveExtraVideoDetails = Build.VERSION.SDK_INT > 8;
@@ -328,7 +330,7 @@ public class OpenExplorer
 		if(!Preferences.Pref_Language.equals(""))
 			setLanguage(getContext(), Preferences.Pref_Language);
 		
-		USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus", Build.VERSION.SDK_INT < 13);
+		USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus", Build.VERSION.SDK_INT < 14);
 		USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", true);
 		
 		String s = prefs.getString("global", "pref_location_ext", null);
@@ -376,28 +378,31 @@ public class OpenExplorer
 		{
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 			USE_ACTION_BAR = false;
+		//} else if(isGTV()) {
+		//	USE_ACTION_BAR = false;
+		//	mBar = (LeftNavBarService.instance()).getLeftNavBar(this);
 		} else if(!BEFORE_HONEYCOMB) {
 			USE_ACTION_BAR = true;
+			mBar = getActionBar();
 			requestWindowFeature(Window.FEATURE_ACTION_BAR);
-			ActionBar ab = getActionBar();
-			if(ab != null)
-			{
-				if(Build.VERSION.SDK_INT >= 14)
-					ab.setHomeButtonEnabled(true);
-				ab.setDisplayUseLogoEnabled(true);
-				try {
-					ab.setCustomView(R.layout.title_bar);
-					ab.setDisplayShowCustomEnabled(true);
-					ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-					//ViewGroup cv = (ViewGroup)ab.getCustomView();
-					//if(cv.findViewById(R.id.title_paste) != null)
-					//	cv.removeView(cv.findViewById(R.id.title_paste));
-					//ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
-				} catch(InflateException e) {
-					Logger.LogWarning("Couldn't set up ActionBar custom view", e);
-				}
-			} else USE_ACTION_BAR = false;
 		}
+		if(mBar != null)
+		{
+			if(Build.VERSION.SDK_INT >= 14)
+				mBar.setHomeButtonEnabled(true);
+			mBar.setDisplayUseLogoEnabled(true);
+			try {
+				mBar.setCustomView(R.layout.title_bar);
+				mBar.setDisplayShowCustomEnabled(true);
+				mBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+				//ViewGroup cv = (ViewGroup)ab.getCustomView();
+				//if(cv.findViewById(R.id.title_paste) != null)
+				//	cv.removeView(cv.findViewById(R.id.title_paste));
+				//ab.getCustomView().findViewById(R.id.title_icon).setVisibility(View.GONE);
+			} catch(InflateException e) {
+				Logger.LogWarning("Couldn't set up ActionBar custom view", e);
+			}
+		} else USE_ACTION_BAR = false;
 		
 		OpenFile.setTempFileRoot(new OpenFile(getFilesDir()).getChild("temp"));
 		setupLoggingDb();
@@ -2541,6 +2546,7 @@ public class OpenExplorer
 						MenuItem item = menu.getItem(i);
 						if(item.getItemId() == R.id.menu_more) continue;
 						MenuItem ni = MenuUtils.transferMenu(item, moreSub);
+						if(ni == null) continue;
 						ni.setAlphabeticShortcut((char)('a' + i));
 						item.setVisible(false);
 					}
