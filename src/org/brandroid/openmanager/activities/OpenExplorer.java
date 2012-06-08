@@ -32,7 +32,6 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
-import android.app.actionbarcompat.ActionBarHelper;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -117,7 +116,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
-import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
@@ -128,7 +126,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -179,7 +176,6 @@ import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
-import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.RootManager;
@@ -210,7 +206,6 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.example.google.tv.leftnavbar.LeftNavBarService;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.TabPageIndicator;
@@ -382,9 +377,9 @@ public class OpenExplorer
 		//	USE_ACTION_BAR = false;
 		//	mBar = (LeftNavBarService.instance()).getLeftNavBar(this);
 		} else if(!BEFORE_HONEYCOMB) {
+			requestWindowFeature(Window.FEATURE_ACTION_BAR);
 			USE_ACTION_BAR = true;
 			mBar = getActionBar();
-			requestWindowFeature(Window.FEATURE_ACTION_BAR);
 		}
 		if(mBar != null)
 		{
