@@ -1453,7 +1453,7 @@ public class OpenExplorer
 				if(mStaticButtons.findViewById(id) != null &&
 						mStaticButtons.findViewById(id).getVisibility() == View.VISIBLE)
 					visible = true;
-		} else Logger.LogDebug("Title Separator hidden since Split Action bar is used.");
+		} //else Logger.LogDebug("Title Separator hidden since Split Action bar is used.");
 		
 		ViewUtils.setViewsVisible(mStaticButtons, visible, R.id.title_divider);
 	}
@@ -3004,8 +3004,11 @@ public class OpenExplorer
 		View frag_log = findViewById(R.id.frag_log);
 		ViewUtils.setViewsVisible(this, true, R.id.title_log);
 		if(frag_log == null)
-			((Poppable)frag).getPopup().showLikePopDownMenu();
-		else {
+		{
+			BetterPopupWindow pw = ((Poppable)frag).getPopup();
+			if(!pw.hasShown() || toggle)
+				pw.showLikePopDownMenu();
+		} else {
 			boolean isVis = frag_log.getVisibility() == View.VISIBLE;
 			boolean isFragged = false;
 			Fragment fl = fragmentManager.findFragmentById(R.id.frag_log);

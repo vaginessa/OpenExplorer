@@ -959,6 +959,7 @@ public class ContentFragment extends OpenFragment
 					List<OpenPath> files = new ArrayList<OpenPath>();
 					files.add(file);
 					getEventHandler().copyFile(files, dl, getActivity());
+					refreshOperations();
 				} else
 					getExplorer().showToast(R.string.s_error_ftp);
 				return true;
