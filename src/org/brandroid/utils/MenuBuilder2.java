@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class MenuBuilder implements Menu {
+public class MenuBuilder2 implements Menu {
     private static final String TAG = "OpenExplorer";
 
     private static final String PRESENTER_KEY = "android:menu:presenters";
@@ -145,14 +145,14 @@ public class MenuBuilder implements Menu {
          * @param item The menu item that is selected
          * @return whether the menu item selection was handled
          */
-        public boolean onMenuItemSelected(MenuBuilder menu, MenuItem item);
+        public boolean onMenuItemSelected(MenuBuilder2 menu, MenuItem item);
         
         /**
          * Called when the mode of the menu changes (for example, from icon to expanded).
          * 
          * @param menu the menu that has changed modes
          */
-        public void onMenuModeChange(MenuBuilder menu);
+        public void onMenuModeChange(MenuBuilder2 menu);
     }
 
     /**
@@ -162,7 +162,7 @@ public class MenuBuilder implements Menu {
         public boolean invokeItem(MenuItemImpl item);
     }
 
-    public MenuBuilder(Context context) {
+    public MenuBuilder2(Context context) {
         mContext = context;
         mResources = context.getResources();
         
@@ -178,7 +178,7 @@ public class MenuBuilder implements Menu {
         setShortcutsVisibleInner(true);
     }
     
-    public MenuBuilder setDefaultShowAsAction(int defaultShowAsAction) {
+    public MenuBuilder2 setDefaultShowAsAction(int defaultShowAsAction) {
         mDefaultShowAsAction = defaultShowAsAction;
         return this;
     }
@@ -711,7 +711,7 @@ public class MenuBuilder implements Menu {
         return mContext;
     }
     
-    boolean dispatchMenuItemSelected(MenuBuilder menu, MenuItem item) {
+    boolean dispatchMenuItemSelected(MenuBuilder2 menu, MenuItem item) {
         return mCallback != null && mCallback.onMenuItemSelected(menu, item);
     }
 
@@ -773,7 +773,7 @@ public class MenuBuilder implements Menu {
         for (int i = 0; i < N; i++) {
             MenuItemImpl item = mItems.get(i);
             if (item.hasSubMenu()) {
-                ((MenuBuilder)item.getSubMenu()).findItemsWithShortcutForKey(items, keyCode, event);
+                ((MenuBuilder2)item.getSubMenu()).findItemsWithShortcutForKey(items, keyCode, event);
             }
             final char shortcutChar = qwerty ? item.getAlphabeticShortcut() : item.getNumericShortcut();
             if (((metaState & (KeyEvent.META_SHIFT_ON | KeyEvent.META_SYM_ON)) == 0) &&
@@ -1104,7 +1104,7 @@ public class MenuBuilder implements Menu {
      * @param title The new title.
      * @return This MenuBuilder so additional setters can be called.
      */
-    protected MenuBuilder setHeaderTitleInt(CharSequence title) {
+    protected MenuBuilder2 setHeaderTitleInt(CharSequence title) {
         setHeaderInternal(0, title, 0, null, null);
         return this;
     }
@@ -1116,7 +1116,7 @@ public class MenuBuilder implements Menu {
      * @param titleRes The new title (as a resource ID).
      * @return This MenuBuilder so additional setters can be called.
      */
-    protected MenuBuilder setHeaderTitleInt(int titleRes) {
+    protected MenuBuilder2 setHeaderTitleInt(int titleRes) {
         setHeaderInternal(titleRes, null, 0, null, null);
         return this;
     }
@@ -1128,7 +1128,7 @@ public class MenuBuilder implements Menu {
      * @param icon The new icon.
      * @return This MenuBuilder so additional setters can be called.
      */
-    protected MenuBuilder setHeaderIconInt(Drawable icon) {
+    protected MenuBuilder2 setHeaderIconInt(Drawable icon) {
         setHeaderInternal(0, null, 0, icon, null);
         return this;
     }
@@ -1140,7 +1140,7 @@ public class MenuBuilder implements Menu {
      * @param iconRes The new icon (as a resource ID).
      * @return This MenuBuilder so additional setters can be called.
      */
-    protected MenuBuilder setHeaderIconInt(int iconRes) {
+    protected MenuBuilder2 setHeaderIconInt(int iconRes) {
         setHeaderInternal(0, null, iconRes, null, null);
         return this;
     }
@@ -1152,7 +1152,7 @@ public class MenuBuilder implements Menu {
      * @param view The new view.
      * @return This MenuBuilder so additional setters can be called.
      */
-    protected MenuBuilder setHeaderViewInt(View view) {
+    protected MenuBuilder2 setHeaderViewInt(View view) {
         setHeaderInternal(0, null, 0, null, view);
         return this;
     }
@@ -1173,7 +1173,7 @@ public class MenuBuilder implements Menu {
      * Gets the root menu (if this is a submenu, find its root menu).
      * @return The root menu.
      */
-    public MenuBuilder getRootMenu() {
+    public MenuBuilder2 getRootMenu() {
         return this;
     }
     

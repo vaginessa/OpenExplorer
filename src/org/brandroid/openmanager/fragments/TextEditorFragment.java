@@ -39,10 +39,13 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
+
 import android.R.anim;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.app.actionbarcompat.ActionBarHelper;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -61,9 +64,6 @@ import android.text.TextWatcher;
 import android.text.style.StyleSpan;
 import android.view.CollapsibleActionView;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -298,8 +298,8 @@ public class TextEditorFragment extends OpenFragment
 			isTop = true;
 		if(mFontSize != null && USE_SEEK_ACTIONVIEW && !OpenExplorer.BEFORE_HONEYCOMB && isTop) // (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
 		{
-			MenuItemCompat.setActionView(mFontSize, mFontSizeBar);
-			MenuItemCompat.setShowAsAction(mFontSize, MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+			mFontSize.setActionView(mFontSizeBar);
+			mFontSize.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		}
 	}
 	

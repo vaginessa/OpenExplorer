@@ -43,11 +43,17 @@ import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
+
+import com.actionbarsherlock.internal.view.menu.MenuBuilder;
+import com.actionbarsherlock.view.ActionMode;
+import com.actionbarsherlock.view.ActionMode.Callback;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,9 +80,6 @@ import android.support.v4.app.FragmentManager;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
@@ -678,14 +681,14 @@ public class ContentFragment extends OpenFragment
 			{
 				final PopupMenu pop = new PopupMenu(view.getContext(), view);
 				pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-					public boolean onMenuItemClick(MenuItem item) {
+					public boolean onMenuItemClick(android.view.MenuItem item) {
 						if(onOptionsItemSelected(item))
 						{
 							pop.dismiss();
 							return true;
 						}
 						else if(getExplorer() != null)
-							return getExplorer().onIconContextItemSelected(pop, item, item.getMenuInfo(), view);
+							return getExplorer().onIconContextItemSelected(pop, MenuUtils.getMenuItem(item, new MenuBuilder(getActivity())), item.getMenuInfo(), view);
 						return false;
 					}
 				});
@@ -704,7 +707,7 @@ public class ContentFragment extends OpenFragment
 				//if(anchor == null) anchor = view;
 				//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 				//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
-				MenuBuilder cmm = IconContextMenu.newMenu(list.getContext(), R.menu.context_file);
+				Menu cmm = IconContextMenu.newMenu(list.getContext(), R.menu.context_file);
 				if(!file.canRead())
 				{
 					MenuUtils.setMenuEnabled(cmm, false);
@@ -740,22 +743,20 @@ public class ContentFragment extends OpenFragment
 		{
 			if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
 				try {
-					Method mStarter = getActivity().getClass().getMethod("startActionMode");
-					mActionMode = mStarter.invoke(getActivity(),
-							new ActionModeHelper.Callback() {
+					getSherlockActivity().startActionMode(new Callback() {
 						//@Override
-						public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 							return false;
 						}
 						
 						//@Override
-						public void onDestroyActionMode(android.view.ActionMode mode) {
+						public void onDestroyActionMode(ActionMode mode) {
 							mActionMode = null;
 							mActionModeSelected = false;
 						}
 						
 						//@Override
-						public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 							mode.getMenuInflater().inflate(R.menu.context_file, menu);
 				    		
 				    		mActionModeSelected = true;
@@ -763,7 +764,7 @@ public class ContentFragment extends OpenFragment
 						}
 
 						//@Override
-						public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 							//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 							
 							//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
@@ -792,23 +793,21 @@ public class ContentFragment extends OpenFragment
 			if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE)
 			{
 				try {
-					Method mStarter = getActivity().getClass().getMethod("startActionMode");
-					mActionMode = mStarter.invoke(getActivity(),
-							new ActionModeHelper.Callback() {
+					getSherlockActivity().startActionMode(new Callback() {
 					
 					//@Override
-					public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+					public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 						return false;
 					}
 					
 					//@Override
-					public void onDestroyActionMode(android.view.ActionMode mode) {
+					public void onDestroyActionMode(ActionMode mode) {
 						mActionMode = null;
 						mActionModeSelected = false;
 					}
 					
 					//@Override
-					public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+					public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 						mode.getMenuInflater().inflate(R.menu.context_file, menu);
 						menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
 						//menu.findItem(R.id.menu_context_unzip).setEnabled(mHoldingZip);
@@ -819,7 +818,7 @@ public class ContentFragment extends OpenFragment
 					}
 					
 					//@Override
-					public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+					public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 						return executeMenu(item.getItemId(), mode, file);
 					}
 				});
@@ -1163,7 +1162,7 @@ public class ContentFragment extends OpenFragment
 	}
 
 	@Override
-	public boolean onContextItemSelected(MenuItem item) {
+	public boolean onContextItemSelected(android.view.MenuItem item) {
 		if(item == null) return false;
 		OpenPath path = null;
 		if(item.getMenuInfo() != null &&

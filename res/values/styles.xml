@@ -42,7 +42,7 @@
     	<item name="android:layout_width">@dimen/list_icon_size</item>
 		<item name="android:layout_height">@dimen/list_icon_size</item>
     </style>
-    <style name="AppTheme" parent="@android:style/Theme.Black.NoTitleBar">
+    <style name="AppTheme" parent="Theme.Sherlock">
 
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>

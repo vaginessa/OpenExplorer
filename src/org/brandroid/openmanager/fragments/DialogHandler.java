@@ -44,7 +44,6 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -106,6 +105,8 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 import org.brandroid.utils.Preferences.OnPreferenceInteraction;
+
+import com.actionbarsherlock.view.MenuItem;
 
 public class DialogHandler
 {

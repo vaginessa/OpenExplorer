@@ -17,10 +17,13 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.ViewUtils;
 
+import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -39,9 +42,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.LruCache;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnCreateContextMenuListener;
@@ -54,7 +54,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
  * other sections of the application.
  */
 public abstract class OpenFragment
-			extends Fragment
+			extends SherlockFragment
 			implements View.OnClickListener, View.OnLongClickListener
 				, Comparator<OpenFragment>
 				, Comparable<OpenFragment>
@@ -96,6 +96,12 @@ public abstract class OpenFragment
 		private final OpenPath file;
 		public OpenContextMenuInfo(OpenPath path) { file = path; }
 		public OpenPath getPath() { return file; }
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO Auto-generated method stub
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 	
 	public static OpenFragment instantiate(Context context, String fname, Bundle args) {
@@ -191,14 +197,7 @@ public abstract class OpenFragment
 		onPrepareOptionsMenu(menu);
 		if(showIContextMenu(menu, anchor, title, 0, 0))
 			return true;
-		anchor.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
-			@Override
-			public void onCreateContextMenu(ContextMenu cmenu, View v,
-					ContextMenuInfo menuInfo) {
-				MenuUtils.transferMenu(menu, cmenu, false);
-			}
-		});
-		return anchor.showContextMenu();
+		return false;
 	}
 
 	public boolean showMenu(final int menuId, View from, CharSequence title)
@@ -208,14 +207,14 @@ public abstract class OpenFragment
 	public boolean showMenu(final int menuId, View from1, CharSequence title, int xOffset, int yOffset)
 	{
 		if(from1 == null)
-			from1 = ViewUtils.getFirstView(getActivity(), R.id.menu_more, android.R.id.home);
+			from1 = ViewUtils.getFirstView(getSherlockActivity(), R.id.menu_more, android.R.id.home);
 		if(from1 == null)
-			from1 = getActivity().getCurrentFocus().getRootView();
+			from1 = getSherlockActivity().getCurrentFocus().getRootView();
 		final View from = from1;
 		if(showIContextMenu(menuId, from, title, xOffset, yOffset)) return true;
 		if(Build.VERSION.SDK_INT > 10)
 		{
-			final PopupMenu pop = new PopupMenu(getActivity(), from);
+			final PopupMenu pop = new PopupMenu(getSherlockActivity(), from);
 			pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 				public boolean onMenuItemClick(MenuItem item) {
 					if(onOptionsItemSelected(item))
@@ -227,6 +226,11 @@ public abstract class OpenFragment
 						return getExplorer().onIconContextItemSelected(pop, item, item.getMenuInfo(), from);
 					return false;
 				}
+
+				@Override
+				public boolean onMenuItemClick(android.view.MenuItem item) {
+					return false;
+				}
 			});
 			pop.getMenuInflater().inflate(menuId, pop.getMenu());
 			Logger.LogDebug("PopupMenu.show()");
@@ -235,10 +239,11 @@ public abstract class OpenFragment
 		}
 		if(from == null) return false;
 		from.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
-			public void onCreateContextMenu(ContextMenu menu, View v,
+			public void onCreateContextMenu(ContextMenu cmenu, View v,
 					ContextMenuInfo menuInfo) {
-				getMenuInflater().inflate(menuId, menu);
-				onPrepareOptionsMenu(menu);
+				new android.view.MenuInflater(v.getContext()).inflate(menuId, cmenu);
+				onPrepareOptionsMenu(cmenu);
+				
 			}
 		});
 		boolean ret = from.showContextMenu();
@@ -253,16 +258,16 @@ public abstract class OpenFragment
 	
 	public boolean showIContextMenu(Menu menu, final View from, CharSequence title, int xOffset, int yOffset)
 	{
-		if(getActivity() == null) return false;
+		if(getSherlockActivity() == null) return false;
 		final IconContextMenu mOpenMenu =
-				new IconContextMenu(getActivity(), menu, from);
+				new IconContextMenu(getSherlockActivity(), menu, from);
 		if(mOpenMenu == null) return false;
 		if(title != null && title.length() > 0)
 			mOpenMenu.setTitle(title);
 		if(DEBUG)
 			Logger.LogDebug("Showing menu " + menu + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
-		if(getActivity() != null)
-			getActivity().onPrepareOptionsMenu(menu);
+		if(getSherlockActivity() != null)
+			getSherlockActivity().onPrepareOptionsMenu(menu);
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
@@ -279,19 +284,19 @@ public abstract class OpenFragment
 	
 	public boolean showIContextMenu(int menuId, final View from, CharSequence title, int xOffset, int yOffset)
 	{
-		if(getActivity() == null) return false;
+		if(getSherlockActivity() == null) return false;
 		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return false;
 		final IconContextMenu mOpenMenu =
-				IconContextMenu.getInstance(getActivity(), menuId, from);
+				IconContextMenu.getInstance(getSherlockActivity(), menuId, from);
 		if(mOpenMenu == null) return false;
 		if(title != null && title.length() > 0)
 			mOpenMenu.setTitle(title);
 		if(DEBUG)
 			Logger.LogDebug("Showing menu 0x" + Integer.toHexString(menuId) + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
 		Menu menu = mOpenMenu.getMenu();
-		if(getActivity() != null)
-			getActivity().onPrepareOptionsMenu(menu);
+		if(getSherlockActivity() != null)
+			getSherlockActivity().onPrepareOptionsMenu(menu);
 		mOpenMenu.setMenu(menu);
 		mOpenMenu.setAnchor(from);
 		mOpenMenu.setNumColumns(1);
@@ -327,11 +332,18 @@ public abstract class OpenFragment
 		return false;
 	}
 	
-	public MenuInflater getMenuInflater()
+	public MenuInflater getSupportMenuInflater()
+	{
+		if(getSherlockActivity() != null)
+			return getSherlockActivity().getSupportMenuInflater();
+		else return null;
+	}
+	
+	public android.view.MenuInflater getMenuInflater()
 	{
 		if(getActivity() != null)
-			return (MenuInflater)getActivity().getMenuInflater();
-		else return null;
+			return getActivity().getMenuInflater();
+		return null;
 	}
 
 	protected String getViewSetting(OpenPath path, String key, String def)
@@ -392,23 +404,23 @@ public abstract class OpenFragment
 	}
 	protected Integer getSetting(OpenPath file, String key, Integer defValue)
 	{
-		if(getActivity() == null) return defValue; 
+		if(getSherlockActivity() == null) return defValue; 
 		return getFragmentActivity().getSetting(file, key, defValue);
 	}
 	protected String getSetting(OpenPath file, String key, String defValue)
 	{
-		if(getActivity() == null) return defValue;
+		if(getSherlockActivity() == null) return defValue;
 		return getFragmentActivity().getSetting(file, key, defValue);
 	}
 	protected Boolean getSetting(String file, String key, Boolean defValue)
 	{
-		if(getActivity() == null) return defValue;
+		if(getSherlockActivity() == null) return defValue;
 		if(getFragmentActivity().getPreferences() == null) return defValue;
 		return getFragmentActivity().getPreferences().getSetting(file, key, defValue);
 	}
 	protected final void setSetting(String file, String key, Boolean value)
 	{
-		if(getActivity() == null) return;
+		if(getSherlockActivity() == null) return;
 		getFragmentActivity().getPreferences().setSetting(file, key, value);
 	}
 	
@@ -480,13 +492,13 @@ public abstract class OpenFragment
 	
 	public Drawable getDrawable(int resId)
 	{
-		if(getActivity() == null) return null;
+		if(getSherlockActivity() == null) return null;
 		if(getResources() == null) return null;
 		return getResources().getDrawable(resId);
 	}
 	public OpenFragmentActivity getFragmentActivity() { return (OpenFragmentActivity)getActivity(); }
 	public OpenExplorer getExplorer() { return (OpenExplorer)getActivity(); }
-	public Context getApplicationContext() { if(getActivity() != null) return getActivity().getApplicationContext(); else return null; }
+	public Context getApplicationContext() { if(getSherlockActivity() != null) return getSherlockActivity().getApplicationContext(); else return null; }
 	public static EventHandler getEventHandler() { return OpenExplorer.getEventHandler(); }
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
 	
@@ -566,24 +578,24 @@ public abstract class OpenFragment
 			getExplorer().closeFragment(this);				
 		else if(getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
 			getFragmentManager().popBackStack();
-		else if(getActivity() != null)
-			getActivity().finish();
+		else if(getSherlockActivity() != null)
+			getSherlockActivity().finish();
 	}
 	
 	public View getActionView(MenuItem item)
 	{
 		try {
 			if(Build.VERSION.SDK_INT < 11)
-				return getActivity().findViewById(item.getItemId());
+				return getSherlockActivity().findViewById(item.getItemId());
 			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
 			Object o = m.invoke(item, new Object[0]);
 			if(o != null && o instanceof View)
 				return (View)o;
-			else if (getActivity().getActionBar() != null && getActivity().getActionBar().getCustomView().findViewById(item.getItemId()) != null)
-				return getActivity().getActionBar().getCustomView().findViewById(item.getItemId());
-			else return getActivity().findViewById(item.getItemId());
+			else if (getSherlockActivity().getActionBar() != null && getSherlockActivity().getActionBar().getCustomView().findViewById(item.getItemId()) != null)
+				return getSherlockActivity().getActionBar().getCustomView().findViewById(item.getItemId());
+			else return getSherlockActivity().findViewById(item.getItemId());
 		} catch(Exception e) {
-			return getActivity().findViewById(item.getItemId());
+			return getSherlockActivity().findViewById(item.getItemId());
 		}
 	}
 	
