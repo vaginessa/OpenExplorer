@@ -59,7 +59,7 @@ import android.os.StatFs;
 import android.util.Log;
 
 public class FileManager {
-	public static final int BUFFER = 8 * 1024;
+	public static final int BUFFER = 128 * 1024;
 	
 	private boolean mShowHiddenFiles = false;
 	private SortType mSorting = SortType.ALPHA;
@@ -96,6 +96,7 @@ public class FileManager {
 	 * @param newDir	the directory to move the file to
 	 * @return
 	 */
+	/*
 	public int copyToDirectory(String old, String newDir) {
 		final File old_file = new File(old);
 		final File temp_dir = new File(newDir);
@@ -145,6 +146,7 @@ public class FileManager {
 		
 		return 0;
 	}
+	*/
 	
 	/**
 	 * 
