@@ -1484,7 +1484,8 @@ public class ContentFragment extends OpenFragment
 				try {
 					if(mPath.requiresThread())
 						mPath = FileManager.getOpenCache(mPath.getPath());
-					updateData(mPath.list());
+					if(mPath != null)
+						updateData(mPath.list());
 				} catch (IOException e) {
 					Logger.LogWarning("Couldn't update data after thread completion", e);
 				}
