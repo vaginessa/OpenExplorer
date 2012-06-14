@@ -49,10 +49,6 @@ import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -85,7 +81,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup.LayoutParams;
@@ -104,13 +99,11 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
@@ -118,8 +111,6 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -127,10 +118,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
-
-import jcifs.smb.ServerMessageBlock;
-import jcifs.smb.SmbFile;
-import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
@@ -149,7 +136,6 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.CarouselFragment;
@@ -189,7 +175,6 @@ import org.brandroid.utils.CustomExceptionHandler;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SubmitStatsTask;
@@ -197,16 +182,13 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.internal.app.ActionBarImpl;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
-import com.actionbarsherlock.internal.view.menu.MenuItemImpl;
 import com.actionbarsherlock.view.*;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.TabPageIndicator;
 import com.viewpagerindicator.TabPageIndicator.TabView;
@@ -378,6 +360,7 @@ public class OpenExplorer
 				mBar.setHomeButtonEnabled(true);
 			mBar.setDisplayUseLogoEnabled(true);
 			try {
+				//mBar.setDisplayOptions(ActionBar.NAVIGATION_MODE_TABS);
 				mBar.setCustomView(R.layout.title_bar);
 				mBar.setDisplayShowCustomEnabled(true);
 				mBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
@@ -433,7 +416,8 @@ public class OpenExplorer
 		
 		checkRoot();
 		
-		if(!BEFORE_HONEYCOMB)
+		getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
+		/*if(!BEFORE_HONEYCOMB)
 		{
 			boolean show_underline = true;
 			if(Build.VERSION.SDK_INT < 14)
@@ -446,7 +430,6 @@ public class OpenExplorer
 			View tu = findViewById(R.id.title_underline);
 			if(tu != null && !show_underline)
 			{
-				getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
 				tu.setVisibility(View.GONE);
 			}
 			
@@ -455,6 +438,7 @@ public class OpenExplorer
 		}
 		if(!USE_ACTION_BAR)
 			ViewUtils.inflateView(this, R.id.title_stub);
+			*/
 		setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
 		setOnClicks(
 				R.id.title_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
@@ -1018,10 +1002,6 @@ public class OpenExplorer
 				anchor = getActionBar().getCustomView();
 			if(anchor == null)
 				anchor = findViewById(R.id.title_bar);
-			if(anchor == null)
-				anchor = findViewById(R.id.base_bar);
-			if(anchor == null)
-				anchor = findViewById(R.id.base_row);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
 			mBookmarksPopup.setContentView(mBookmarksList);
 		}
@@ -1036,8 +1016,7 @@ public class OpenExplorer
 			mLogFragment = new LogViewerFragment();
 		if(findViewById(R.id.frag_log) != null)
 			return;
-		View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar,
-				R.id.base_bar, R.id.base_row);
+		View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar);
 		mLogFragment.setupPopup(this, anchor);
 	}
 	
@@ -1047,8 +1026,7 @@ public class OpenExplorer
 			mOpsFragment = new OperationsFragment();
 		if(findViewById(R.id.frag_log) != null)
 			return;
-		View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar,
-						R.id.base_bar, R.id.base_row);
+		View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar);
 		mOpsFragment.setupPopup(this, anchor);
 	}
 	
@@ -1058,7 +1036,7 @@ public class OpenExplorer
 		TabPageIndicator indicator = null;
 		if(mViewPagerEnabled && mViewPager != null)
 		{
-			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
+			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path);
 			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
 			mViewPager.setOnPageChangeListener(this);
 			//mViewPager.setOnPageIndicatorChangeListener(this);
@@ -1083,7 +1061,7 @@ public class OpenExplorer
 			//mViewPagerEnabled = false;
 			mViewPager = null; //(ViewPager)findViewById(R.id.content_pager);
 			setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
-			setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path, R.id.title_bar_inner, R.id.title_underline_2);
+			setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path);
 		}
 
 		if(mViewPager != null && mViewPagerEnabled)
@@ -1412,20 +1390,11 @@ public class OpenExplorer
 	}
 	*/
 	
-	public boolean usingSplitActionBar()
-	{
-		if(!USE_SPLIT_ACTION_BAR) return false;
-		if(findViewById(R.id.base_bar) != null && findViewById(R.id.base_bar).isShown())
-			return true;
-		int pos = ViewUtils.getAbsoluteTop(this, R.id.menu_more, R.id.menu_sort, R.id.menu_text_view, R.id.base_row);
-		//Logger.LogInfo("SPLIT AB TOP = " + pos);
-		return pos > 10;
-	}
 	private void checkTitleSeparator()
 	{
 		if(mStaticButtons == null)
 			mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
-		if(mStaticButtons == null && USE_ACTION_BAR)
+		if(mStaticButtons == null && USE_ACTION_BAR && getActionBar() != null && getActionBar().getCustomView() != null)
 			mStaticButtons = (ViewGroup)getActionBar().getCustomView().findViewById(R.id.title_static_buttons);
 		if(mStaticButtons == null)
 		{
@@ -1434,13 +1403,10 @@ public class OpenExplorer
 		}
 		
 		boolean visible = false;
-		if(!usingSplitActionBar())
-		{
-			for(int id : new int[]{R.id.title_paste, R.id.title_log, R.id.title_ops})
-				if(mStaticButtons.findViewById(id) != null &&
-						mStaticButtons.findViewById(id).getVisibility() == View.VISIBLE)
-					visible = true;
-		} //else Logger.LogDebug("Title Separator hidden since Split Action bar is used.");
+		for(int id : new int[]{R.id.title_paste, R.id.title_log, R.id.title_ops})
+			if(mStaticButtons.findViewById(id) != null &&
+					mStaticButtons.findViewById(id).getVisibility() == View.VISIBLE)
+				visible = true;
 		
 		ViewUtils.setViewsVisible(mStaticButtons, visible, R.id.title_divider);
 	}
@@ -2120,30 +2086,6 @@ public class OpenExplorer
 		}
 	}
 	
-	public void setupBaseBarButtons() {
-		
-		//if(!shouldFlushMenu(mMainMenu)) return;
-		
-		if(Build.VERSION.SDK_INT > 13 && usingSplitActionBar()) {
-			if(DEBUG)
-				Logger.LogDebug("No need to setupBaseBarButtons, split bar is being used!");
-			return;
-		}
-		
-		if(mMainMenu == null)
-			mMainMenu = new MenuBuilder(this);
-		else
-			mMainMenu.clearAll();
-
-		try {
-			onCreateOptionsMenu(mMainMenu, false);
-			onPrepareOptionsMenu(mMainMenu);
-			setupBaseBarButtons(mMainMenu, false);
-		} catch(Exception e) {
-			Logger.LogError("Couldn't set up base bar.", e);
-		}
-	}
-	
 	public static int getVisibleChildCount(ViewGroup parent)
 	{
 		int ret = 0;
@@ -2159,153 +2101,6 @@ public class OpenExplorer
 		OpenFragment f = getSelectedFragment();
 		if(f == null) return false;
 		return !f.getClassName().equals(mLastMenuClass);
-	}
-	public void setupBaseBarButtons(Menu menu, boolean flush)
-	{
-		if(flush) mLastMenuClass = "";
-		TableLayout mBaseBar = (TableLayout)findViewById(R.id.base_bar);
-		mToolbarButtons = (ViewGroup)findViewById(R.id.base_row);
-		mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
-		OpenFragment f = getSelectedFragment();
-		boolean topButtons = false;
-		if(!getResources().getBoolean(R.bool.allow_split_actionbar)
-				|| !(getSetting(null, "pref_basebar", true) || mBaseBar == null || mToolbarButtons == null) && findViewById(R.id.title_buttons) != null)
-		{
-			mToolbarButtons = (ViewGroup)findViewById(R.id.title_buttons);
-			if(mToolbarButtons == null)
-				mToolbarButtons = (ViewGroup)getActionBar().getCustomView().findViewById(R.id.title_buttons);
-			if(mBaseBar != null)
-				mBaseBar.setVisibility(View.GONE);
-			topButtons = true;
-		}
-		if(!shouldFlushMenu(menu)) return;
-		USE_SPLIT_ACTION_BAR = !topButtons;
-		if(mToolbarButtons != null)
-		{
-			mToolbarButtons.removeAllViews();
-			//if(!topButtons) mToolbarButtons.measure(LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.actionbar_compat_height));
-			
-			int i = -1;
-			int btnWidth = getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_width) + (getResources().getDimensionPixelSize(R.dimen.vpi_padding_horizontal) * 2); // (int)(16 * getResources().getDimension(R.dimen.one_dp));
-			int tblWidth = mToolbarButtons.getWidth();
-			if(tblWidth <= 0 && !topButtons)
-				tblWidth = getWindowWidth();
-			if(topButtons || tblWidth <= 0 || tblWidth > getWindowWidth() || !getResources().getBoolean(R.bool.ignore_max_base_buttons))
-				tblWidth = btnWidth * getResources().getInteger(R.integer.max_base_buttons);
-			ArrayList<View> buttons = new ArrayList<View>();
-			buttons.addAll(ViewUtils.findChildByClass(mToolbarButtons, ImageButton.class));
-			boolean maxedOut = false;
-			while(++i < menu.size())
-			{
-				if(buttons.size() * btnWidth >= tblWidth)
-				{
-					maxedOut = true;
-					Logger.LogDebug("Base bar full after #" + i + " ~ " + buttons.size() + " (" + (buttons.size() * btnWidth) + ">" + tblWidth + ")!");
-					break;
-				} else if(menu.getItem(i) instanceof MenuItemImpl)
-				{
-					final MenuItemImpl item = (MenuItemImpl) menu.getItem(i);
-					//if(item.getItemId() == R.id.title_menu) break;
-					if(!item.isCheckable() && item.isVisible())
-					{
-						View btn = makeMenuButton(item, mToolbarButtons);
-						if(item.hasSubMenu())
-							btn.setTag(item.getSubMenu());
-						else if(item.getActionView() != null)
-						{
-							if(DEBUG)
-								Logger.LogDebug("ACTION VIEW!!!");
-							btn = item.getActionView();
-							//ActionBarHelper h = ActionBarHelper.createInstance(this);
-						}
-						buttons.add(btn);
-						if(i > 0)
-							btn.setNextFocusLeftId(menu.getItem(i - 1).getItemId());
-						if(i < menu.size() - 1)
-							btn.setNextFocusRightId(menu.getItem(i + 1).getItemId());
-						if(!USE_PRETTY_MENUS || topButtons)
-							btn.setOnCreateContextMenuListener(this);
-						menu.getItem(i).setVisible(false);
-						btn.setOnClickListener(this);
-						btn.setOnFocusChangeListener(this);
-						btn.setOnKeyListener(this);
-						if(mToolbarButtons.findViewById(menu.getItem(i).getItemId()) == null)
-							mToolbarButtons.addView(btn);
-						//menu.removeItem(item.getItemId());
-						if(DEBUG)
-							Logger.LogDebug("Added " + item.getTitle() + " to base bar.");
-					} 
-					//else Logger.LogWarning(item.getTitle() + " should not show. " + item.getShowAsAction() + " :: " + item.getFlags());
-				}
-			}
-			mToolbarButtons.setVisibility(View.VISIBLE);
-			mLastMenuClass = f.getClassName();
-			if(MenuUtils.countVisibleMenus(mMainMenu) > 0)
-			{
-				if(maxedOut && buttons.size() > 0)
-				{
-					View old = buttons.remove(buttons.size() - 1);
-					MenuUtils.setMenuVisible(mMainMenu, true, old.getId());
-					mToolbarButtons.removeView(old);
-				}
-				final ImageButton btn = (ImageButton)getLayoutInflater().inflate(R.layout.toolbar_button, mToolbarButtons);
-				btn.setImageResource(R.drawable.ic_menu_more);
-				//btn.measure(getResources().getDimensionPixelSize(R.dimen.actionbar_compat_button_home_width), getResources().getDimensionPixelSize(R.dimen.actionbar_compat_height));
-				btn.setId(R.id.menu_more);
-				if(buttons.size() > 0)
-				{
-					buttons.get(buttons.size() - 1).setNextFocusRightId(R.id.menu_more);
-					btn.setNextFocusLeftId(buttons.get(buttons.size() - 1).getId());
-				}
-				btn.setOnKeyListener(this);
-				btn.setOnClickListener(this);
-				btn.setOnLongClickListener(this);
-				btn.setFocusable(true);
-				btn.setOnFocusChangeListener(this);
-				buttons.add(btn);
-				mToolbarButtons.addView(btn);
-			}
-			if(buttons.size() > 0)
-			{
-				View last = buttons.get(buttons.size() - 1);
-				last.setNextFocusRightId(android.R.id.home);
-				if(findViewById(android.R.id.home) != null)
-					findViewById(android.R.id.home).setNextFocusLeftId(last.getId());
-			}
-			
-			Logger.LogDebug("Added " + buttons.size() + " children to Base Bar.");
-			if(mBaseBar != null)
-			{
-				if(buttons.size() < 1)
-					mBaseBar.setVisibility(View.GONE);
-				else mBaseBar.setStretchAllColumns(true);
-			}
-		} else if(BEFORE_HONEYCOMB) Logger.LogWarning("No Base Row!?");
-	}
-
-	private ImageButton makeMenuButton(final MenuItem item, ViewGroup parent)
-	{
-		ImageButton btn = (ImageButton)getLayoutInflater()
-				.inflate(R.layout.toolbar_button, parent, false);
-		if(!item.isVisible())
-			btn.setVisibility(View.GONE);
-		Drawable d = item.getIcon();
-		if(d instanceof BitmapDrawable)
-			((BitmapDrawable)d).setGravity(Gravity.CENTER);
-		btn.setImageDrawable(d);
-		btn.setId(item.getItemId());
-		btn.setOnClickListener(this);
-		btn.setLongClickable(true);
-		btn.setFocusable(true);
-		btn.setOnFocusChangeListener(this);
-		btn.setOnLongClickListener(new OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				showToast(item.getTitle());
-				return true;
-			}
-		});
-		return btn;
 	}
 	
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -2834,7 +2629,7 @@ public class OpenExplorer
 						});
 				return true;
 			case R.id.menu_more:
-				showMenu(mOptsMenu, ViewUtils.getFirstView(this, R.id.menu_more, R.id.base_bar, R.id.title_buttons, android.R.id.home), true);
+				showMenu(mOptsMenu, ViewUtils.getFirstView(this, R.id.menu_more, R.id.title_buttons, android.R.id.home), true);
 				return true;
 				
 			default:
@@ -3896,7 +3691,7 @@ public class OpenExplorer
 
 	public void setProgressVisibility(boolean visible) {
 		setProgressBarIndeterminateVisibility(visible);
-		ViewUtils.setViewsVisible(this, visible, android.R.id.progress, R.id.title_progress);
+		ViewUtils.setViewsVisible(this, visible, R.id.title_progress);
 	}
 
 	public void removeFragment(OpenFragment frag) {
