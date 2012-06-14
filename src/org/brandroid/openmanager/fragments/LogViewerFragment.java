@@ -109,7 +109,7 @@ public class LogViewerFragment extends OpenFragment
 		if(isDetached()) return;
 		super.onCreateOptionsMenu(menu, inflater);
 		menu.clear();
-		inflater.inflate(R.menu.text_editor, menu);
+		inflater.inflate(R.menu.text_full, menu);
 	}
 	
 	@Override

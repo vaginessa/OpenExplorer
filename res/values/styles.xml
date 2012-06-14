@@ -70,6 +70,21 @@
         <item name="android:maxLines">1</item>
         <item name="android:gravity">center</item>
     </style>
+        
+    <style name="AppThemeCustom" parent="Theme.Sherlock">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="android:windowContentOverlay">@drawable/actionbar_shadow</item>
+    </style>
+
+    <style name="ActionBar" parent="Widget.Sherlock.ActionBar">
+        <item name="android:background">#eee</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitle</item>
+        <item name="android:icon">@drawable/icon</item>
+    </style>
+
+    <style name="ActionBarTitle">
+        <item name="android:textColor">@color/actionbar_title_color</item>
+    </style>
     
     <style name="TextAppearance.MyTabPageIndicator" parent="Mid">
     </style>
@@ -179,7 +194,7 @@
         <item name="@android:windowExitAnimation">@anim/push_down_in</item>
     </style>
     
-    <style name="Dialog" parent="@android:style/Theme.Dialog" />
+    <style name="Dialog" parent="Theme.Sherlock.Dialog" />
     
     <style name="Widget.ProgressBar.Horizontal" parent="@android:style/Widget.ProgressBar.Horizontal">
         <item name="android:minHeight">16dip</item>

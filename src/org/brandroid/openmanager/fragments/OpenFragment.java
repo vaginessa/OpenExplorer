@@ -584,19 +584,7 @@ public abstract class OpenFragment
 	
 	public View getActionView(MenuItem item)
 	{
-		try {
-			if(Build.VERSION.SDK_INT < 11)
-				return getSherlockActivity().findViewById(item.getItemId());
-			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
-			Object o = m.invoke(item, new Object[0]);
-			if(o != null && o instanceof View)
-				return (View)o;
-			else if (getSherlockActivity().getActionBar() != null && getSherlockActivity().getActionBar().getCustomView().findViewById(item.getItemId()) != null)
-				return getSherlockActivity().getActionBar().getCustomView().findViewById(item.getItemId());
-			else return getSherlockActivity().findViewById(item.getItemId());
-		} catch(Exception e) {
-			return getSherlockActivity().findViewById(item.getItemId());
-		}
+		return item.getActionView();
 	}
 	
 	@Override

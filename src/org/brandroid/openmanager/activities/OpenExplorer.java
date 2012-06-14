@@ -446,7 +446,7 @@ public class OpenExplorer
 			View tu = findViewById(R.id.title_underline);
 			if(tu != null && !show_underline)
 			{
-				getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
+				getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
 				tu.setVisibility(View.GONE);
 			}
 			
@@ -801,26 +801,8 @@ public class OpenExplorer
 		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return null;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return null;
 		try {
-			if(menuId == R.id.menu_sort || menuId == R.menu.content_sort)
-				menuId = R.menu.content_sort;
-			else if(menuId == R.id.menu_view || menuId == R.menu.content_view)
-				menuId = R.menu.content_view;
-			else if(menuId == R.menu.content)
-				menuId = R.menu.content;
-			else if(menuId == R.menu.content_sort)
-				menuId = R.menu.content_sort;
-			else if(menuId == R.menu.content_view)
-				menuId = R.menu.content_view;
-			else if(menuId == R.menu.text_view)
-				menuId = R.menu.text_view;
-			else if(menuId == R.menu.content_ops)
-				menuId = R.menu.content_ops;
-			else if(Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, menuId) > -1)
+			if(Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, menuId) > -1)
 				menuId = MenuUtils.getMenuLookupSub(menuId);
-			else {
-				Logger.LogWarning("Unknown menuId (0x" + Integer.toHexString(menuId) + ")!");
-				return null;
-			}
 			Logger.LogDebug("Trying to show context menu 0x" + Integer.toHexString(menuId) + (from != null ? " under " + from.toString() + " (" + ViewUtils.getAbsoluteLeft(from) + "," + ViewUtils.getAbsoluteTop(from) + ")" : "") + ".");
 			if(Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_SUBS, menuId) > -1)
 			{
@@ -2328,6 +2310,8 @@ public class OpenExplorer
 			frag.onCreateOptionsMenu(menu, getSupportMenuInflater());
 		getSupportMenuInflater().inflate(R.menu.global, menu);
 		
+		if(USE_PRETTY_MENUS) return true;
+		
 		if(!USE_PRETTY_MENUS) {
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 			return true;
@@ -2417,6 +2401,10 @@ public class OpenExplorer
 	{
 		//super.onPrepareOptionsMenu(menu);
 		//Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
+		super.onPrepareOptionsMenu(menu);
+		
+		if(IS_KEYBOARD_AVAILABLE)
+			MenuUtils.setMneumonics(menu);
 		
 		if(getClipboard() != null)
 		{
@@ -2773,7 +2761,8 @@ public class OpenExplorer
 				return true;
 			
 			case R.id.menu_search:
-				onSearchRequested();
+				if(BEFORE_HONEYCOMB)
+					onSearchRequested();
 				return true;
 
 			/*case R.id.menu_favorites:

@@ -855,24 +855,6 @@ public class ContentFragment extends OpenFragment
 			if(showMenu((Menu)view.getTag(), view, ViewUtils.getText(view)))
 				return true;
 		}
-		switch(id)
-		{
-		case R.id.menu_content_ops:
-			if(OpenExplorer.USE_PRETTY_MENUS &&
-					showMenu(R.menu.content_ops, view, getString(R.string.s_title_operations)))
-				return true;
-			break;
-		case R.id.menu_sort:
-			if(OpenExplorer.USE_PRETTY_MENUS &&
-					showMenu(R.menu.content_sort, view, getString(R.string.s_menu_sort)))
-				return true;
-			break;
-		case R.id.menu_view:
-			if(OpenExplorer.USE_PRETTY_MENUS &&
-					showMenu(R.menu.content_view, view, getString(R.string.s_view)))
-				return true;
-			break;
-		}
 		return false;
 	}
 	
@@ -1183,9 +1165,7 @@ public class ContentFragment extends OpenFragment
 		if(DEBUG)
 			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu, inflater);
-		if(!OpenExplorer.USE_PRETTY_MENUS || Build.VERSION.SDK_INT > 10)
-			inflater.inflate(R.menu.content_full, menu);
-		else inflater.inflate(R.menu.content, menu);
+		inflater.inflate(R.menu.content_full, menu);
 		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
@@ -1249,24 +1229,6 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuChecked(menu, getShowThumbnails(), R.id.menu_view_thumbs);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.CAN_DO_CAROUSEL, R.id.menu_view_carousel);
 		
-	}
-	
-	@Override
-	public boolean inflateMenu(Menu menu, int itemId, MenuInflater inflater) {
-		if(!OpenExplorer.USE_PRETTY_MENUS) return false;
-		switch(itemId)
-		{
-		case R.id.menu_view:
-			inflater.inflate(R.menu.content_view, menu);
-			return true;
-		case R.id.menu_sort:
-			inflater.inflate(R.menu.content_sort, menu);
-			return true;
-		case R.id.menu_content_ops:
-			inflater.inflate(R.menu.content_ops, menu);
-			return true;
-		}
-		return super.inflateMenu(menu, itemId, inflater);
 	}
 	
 	/*

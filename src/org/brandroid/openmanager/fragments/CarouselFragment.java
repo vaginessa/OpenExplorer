@@ -270,7 +270,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		if(!menu.hasVisibleItems())
-			inflater.inflate(R.menu.content, menu);
+			inflater.inflate(R.menu.content_full, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{

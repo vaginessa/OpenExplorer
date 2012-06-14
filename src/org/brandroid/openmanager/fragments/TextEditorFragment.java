@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -28,8 +27,6 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.interfaces.OpenActionView;
-import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -39,11 +36,12 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
+import com.actionbarsherlock.internal.view.menu.MenuBuilder;
+import com.actionbarsherlock.view.CollapsibleActionView;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
-import android.R.anim;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Context;
@@ -57,28 +55,22 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v4.view.MenuItemCompat;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.style.StyleSpan;
-import android.view.CollapsibleActionView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
-import android.view.animation.AnimationUtils;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -108,7 +100,7 @@ public class TextEditorFragment extends OpenFragment
 	private float mTextSize = 10f;
 	private boolean mSalvage = true;
 	
-	private final static boolean USE_SEEK_ACTIONVIEW = !OpenExplorer.BEFORE_HONEYCOMB;
+	private final static boolean USE_SEEK_ACTIONVIEW = true;
 	
 	private AsyncTask<?, ?, ?> mTask = null;
 	
@@ -290,13 +282,13 @@ public class TextEditorFragment extends OpenFragment
 		super.onCreateOptionsMenu(menu, inflater);
 		if(isDetached()) return;
 		if(!isVisible()) return;
-		inflater.inflate(OpenExplorer.USE_PRETTY_MENUS ? R.menu.text_editor : R.menu.text_full, menu);
+		inflater.inflate(R.menu.text_full, menu);
 		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
 		//Class clz = Class.forName("org.brandroid.openmanagerviews.SeekBarActionView");
 		boolean isTop = false;
 		if(getResources() != null && !getResources().getBoolean(R.bool.allow_split_actionbar))
 			isTop = true;
-		if(mFontSize != null && USE_SEEK_ACTIONVIEW && !OpenExplorer.BEFORE_HONEYCOMB && isTop) // (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
+		if(mFontSize != null && USE_SEEK_ACTIONVIEW) // (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
 		{
 			mFontSize.setActionView(mFontSizeBar);
 			mFontSize.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -324,31 +316,12 @@ public class TextEditorFragment extends OpenFragment
 		if(DEBUG)
 			Logger.LogDebug("TextEditorFragment.onOptionsItemSelected(" + item + ")");
 		View action = getActionView(item);
-		if(action != null && action instanceof OpenActionView)
+		if(action != null && action instanceof CollapsibleActionView)
 		{
-			((OpenActionView)action).onActionViewExpanded();
+			((CollapsibleActionView)action).onActionViewExpanded();
 			return true;
 		}
-		switch(item.getItemId())
-		{
-			case R.id.menu_view_font_size:
-				if(mFontSizeBar.getPopup(getActivity(), action).showLikePopDownMenu())
-					return true;
-		}
 		return onClick(item.getItemId(), action);
-	}
-	
-	private void showSeekBarPopup(View from)
-	{
-		SeekBar sb = new SeekBar(from.getContext());
-		sb.setMax(60);
-		sb.setProgress((int)mTextSize * 2);
-		sb.setOnSeekBarChangeListener(this);
-		sb.setPadding(20, 4, 20, 4);
-		BetterPopupWindow sizePop = new BetterPopupWindow(from.getContext(), from);
-		sizePop.setTitle(getString(R.string.s_view_font_size));
-		sizePop.setContentView(sb);
-		sizePop.showLikePopDownMenu();
 	}
 	
 	@Override
@@ -554,25 +527,8 @@ public class TextEditorFragment extends OpenFragment
 		case R.id.menu_close: doClose(); return true;
 			
 		case R.id.menu_view_font_size:
-			if(USE_SEEK_ACTIONVIEW)
-				mFontSizeBar.onActionViewExpanded();
-			else
-				mFontSizeBar.getPopup(getActivity(), from).showLikePopDownMenu();
+			mFontSizeBar.onActionViewExpanded();
 			return true;
-			
-		case R.id.menu_text_view:
-		case R.id.menu_view:
-			if(OpenExplorer.USE_PRETTY_MENUS)
-				if(showMenu(R.menu.text_view, from, getString(R.string.s_view)))
-					return true;
-			break;
-			
-		case R.id.menu_content_ops:
-		case R.id.menu_text_ops:
-			if(OpenExplorer.USE_PRETTY_MENUS)
-				if(showMenu(R.menu.text_file, from, getString(R.string.s_title_operations)))
-					return true;
-			break;
 			
 		case R.id.menu_view_keyboard_toggle:
 			setEditable(!mEditMode);
@@ -879,7 +835,9 @@ public class TextEditorFragment extends OpenFragment
 	
 	@Override
 	public boolean onTitleLongClick(View titleView) {
-		return showMenu(R.menu.text_file, titleView, null);
+		Menu menu = new MenuBuilder(getActivity());
+		getSupportMenuInflater().inflate(R.menu.text_full, menu);
+		return showMenu(menu.findItem(R.id.menu_text_ops).getSubMenu(), titleView, null);
 	}
 
 	public boolean isSalvagable() {
