@@ -38,7 +38,7 @@ public class OpenServer
 	public OpenServer(JSONObject obj, String decryptPW)
 	{
 		mData = obj;
-		if(decryptPW != null && decryptPW != "")
+		if(decryptPW != null && !decryptPW.equals(""))
 			try {
 				String mPassword = mData.optString("password");
 				mPassword = SimpleCrypto.decrypt(decryptPW, mPassword);
@@ -345,5 +345,23 @@ public class OpenServer
 		} catch(NumberFormatException e) {
 			return -1;
 		}
+	}
+	
+	@Override
+	public String toString() {
+		String ret = getType();
+		ret += "://";
+		if(!getUser().equals(""))
+		{
+			ret += getUser();
+			if(!getPassword().equals(""))
+				ret += ":" + getPassword();
+			ret += "@";
+		}
+		ret += getHost();
+		if(getPort() > 0)
+			ret += ":" + getPort();
+		ret += getPath();
+		return ret;
 	}
 }
