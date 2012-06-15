@@ -66,6 +66,9 @@ import android.view.WindowManager.BadTokenException;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -456,7 +459,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		switch(command)
 		{
 			case OpenCommand.COMMAND_ADD_SERVER:
-				showServerDialog(new OpenFTP((OpenFTP)null, null, null), null, true);
+				showServerDialog(getContext(), new OpenFTP((OpenFTP)null, null, null), null, true);
 				break;
 		}
 	}
@@ -511,54 +514,150 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		mBookmarkAdapter.notifyDataSetChanged();
 	}
 
-	public boolean showServerDialog(final OpenFTP mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
+	public static boolean showServerDialog(final Context context, final OpenFTP mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
 	{
-		return showServerDialog(mPath.getServersIndex(), mHolder, allowShowPass);
+		return showServerDialog(context, mPath.getServersIndex(), -1, mHolder, allowShowPass);
 	}
-	public boolean showServerDialog(final OpenNetworkPath mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
+	public static boolean showServerDialog(final Context context, final OpenNetworkPath mPath, final BookmarkHolder mHolder, final boolean allowShowPass)
 	{
-		return showServerDialog(mPath.getServersIndex(), mHolder, allowShowPass);
+		return showServerDialog(context, mPath.getServersIndex(), -1, mHolder, allowShowPass);
 	}
-	public boolean showServerDialog(final int iServersIndex, final BookmarkHolder mHolder, final boolean allowShowPass)
+	public static boolean showServerDialog(final Context context, final int iServersIndex, int serverType, final BookmarkHolder mHolder, final boolean allowShowPass)
 	{
-		final OpenServers servers = SettingsActivity.LoadDefaultServers(getContext());
+		final OpenServers servers = SettingsActivity.LoadDefaultServers(context);
 		final OpenServer server = iServersIndex > -1 ? servers.get(iServersIndex) : new OpenServer().setName("New Server");
-		LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		final View v = inflater.inflate(R.layout.server, null);
+		if(serverType > -1)
+		{
+			if(serverType==0)
+				server.setType("ftp");
+			else if(serverType==1)
+				server.setType("sftp");
+			else if(serverType==2)
+				server.setType("smb");
+		} else if(server.getType().equals("ftp"))
+			serverType = 0;
+		else if(server.getType().equals("sftp"))
+			serverType = 1;
+		else if(server.getType().equals("smb"))
+			serverType = 2;
+		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		int layout = R.layout.server;
+		if(serverType == 2)
+			layout = R.layout.server_smb;
+		final View v = inflater.inflate(layout, null);
 		OpenServer.setupServerDialog(server, iServersIndex, v);
 		int addStrId = iServersIndex >= 0 ? R.string.s_update : R.string.s_add;
-		final AlertDialog dialog = new AlertDialog.Builder(getContext())
+		final AlertDialog dialog = new AlertDialog.Builder(context)
 			.setView(v)
-			.setIcon(mHolder != null && mHolder.getIcon(getContext()) != null ? mHolder.getIcon(getContext()) : getContext().getResources().getDrawable(R.drawable.sm_ftp))
-			.setNegativeButton(mContextHelper.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
+			.setIcon(mHolder != null && mHolder.getIcon(context) != null ? mHolder.getIcon(context) : context.getResources().getDrawable(R.drawable.sm_ftp))
+			.setNegativeButton(context.getString(R.string.s_cancel), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
 				}
 			})
-			.setNeutralButton(mContextHelper.getString(R.string.s_remove), new DialogInterface.OnClickListener() {
+			.setNeutralButton(context.getString(R.string.s_remove), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					if(iServersIndex > -1)
 						servers.remove(iServersIndex);
 					dialog.dismiss();
-					mContextHelper.refreshBookmarks();
+					//mContextHelper.refreshBookmarks();
 				}
 			})
-			.setPositiveButton(mContextHelper.getString(addStrId), new DialogInterface.OnClickListener() {
+			.setPositiveButton(context.getString(addStrId), new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
 					if(iServersIndex > -1)
 						servers.set(iServersIndex, server);
 					else
 						servers.add(server);
-					SettingsActivity.SaveToDefaultServers(servers, getContext());
-					mContextHelper.refreshBookmarks();
+					SettingsActivity.SaveToDefaultServers(servers, context);
+					//mContextHelper.refreshBookmarks();
 					dialog.dismiss();
 				}
 			})
 			.setTitle(server.getName())
 			.create();
+		if(iServersIndex == -1)
+			dialog.setButton(AlertDialog.BUTTON_NEUTRAL, context.getString(R.string.test), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					
+				}
+			});
+		
+		final AutoCompleteTextView mServerHost = (AutoCompleteTextView)v.findViewById(R.id.text_server);
+		final ArrayList<String> mHosts = new ArrayList<String>();
+		mHosts.add("192.168.1.1");
+		final ArrayAdapter<String> mHostAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, mHosts);
+		final ProgressBar mScanProgress = (ProgressBar)v.findViewById(R.id.server_scan_progress);
+		if(mServerHost != null)
+			mServerHost.setAdapter(mHostAdapter);
+		
+		ViewUtils.setOnClicks(v, new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mServerHost.showDropDown();
+				mServerHost.setThreshold(0);
+				mScanProgress.setVisibility(View.VISIBLE);
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("WORKGROUP", "Administrator", "gunb0und2010");
+							final SmbFile smb = new SmbFile("smb://");
+							smb.setAuth(auth);
+							SmbFile[] workgroups = smb.listFiles();
+							for(int i = 0; i < workgroups.length; i++)
+							{
+								SmbFile group = workgroups[i];
+								group.setAuth(auth);
+								Logger.LogDebug("Found Workgroup: " + group.getName());
+								try {
+								final SmbFile[] comps = workgroups[i].listFiles();
+								mServerHost.post(new Runnable() {public void run() {
+									for(int j = 0; j < comps.length; j++)
+									{
+										SmbFile comp = comps[j];
+										comp.setAuth(auth);
+										try {
+											String server = comp.getServer();
+											Logger.LogDebug("Found Server: " + server);
+											mHosts.add(server);
+										} catch(Exception e3) { }
+									}
+								}});
+								} catch(Exception e2) { }
+							}
+							smb.disconnect();
+						} catch (Exception e) {
+							Logger.LogError("OpenBookmarks.showServerDialog.scan unable to get SMB data.", e);
+						}
+						mScanProgress.post(new Runnable(){public void run(){
+							mScanProgress.setVisibility(View.GONE);
+							mServerHost.dismissDropDown();
+							mHostAdapter.notifyDataSetChanged();
+							mServerHost.showDropDown();
+						}});
+					}
+				}).start();
+			}
+		}, R.id.server_scan);
+		
+		final int iServerType = serverType;
+		final Spinner mServerType = (Spinner)v.findViewById(R.id.server_type);
+		mServerType.setSelection(serverType);
+		mServerType.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+			{
+				if(position == iServerType) return;
+				dialog.dismiss();
+				showServerDialog(context, iServersIndex, position, mHolder, allowShowPass);
+			}
+			public void onNothingSelected(AdapterView<?> parent) { }
+		});
+		
 		try {
 			dialog.show();
-			showServerWarning();
+			showServerWarning(context);
 		} catch(BadTokenException e) {
 			Logger.LogError("Couldn't show dialog.", e);
 			return false;
@@ -566,13 +665,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		return true;
 	}
 	
-	public void showServerWarning()
+	public static void showServerWarning(final Context context)
 	{
 		if(Preferences.Warn_Networking) return;
 		Preferences.Warn_Networking = true;
-		DialogHandler.showWarning(getContext(), R.string.warn_networking, 20, new DialogInterface.OnClickListener() {
+		DialogHandler.showWarning(context, R.string.warn_networking, 20, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				mContextHelper.setSetting("warn", "networking", true);
+				new Preferences(context).setSetting("warn", "networking", true);
 			}
 		});
 	}
@@ -924,7 +1023,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(path instanceof OpenCommand)
 			handleCommand(((OpenCommand)path).getCommand());
 		else if(path instanceof OpenNetworkPath)
-			showServerDialog((OpenNetworkPath)path, h, false);
+			showServerDialog(getContext(), (OpenNetworkPath)path, h, false);
 		else
 			showStandardDialog(path, h);
 		return true;
