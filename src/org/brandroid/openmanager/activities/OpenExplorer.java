@@ -2109,66 +2109,12 @@ public class OpenExplorer
 	}
 	public boolean onCreateOptionsMenu(Menu menu, boolean fromSystem)
 	{
-		MenuUtils.scanMenuShortcuts(menu, getSupportMenuInflater());
-		//mActionBarHelper.onCreateOptionsMenu(menu);
-		OpenFragment frag = getSelectedFragment();
-		
-		//if(menu == null) menu = new MenuBuilder(this);
-		menu.clear();
-		
 		if(DEBUG)
 			Logger.LogDebug("OpenExplorer.onCreateOptionsMenu(" + menu + "," + fromSystem + ")");
-		//getSupportMenuInflater().inflate(R.menu.global_top, menu);
-		if(frag != null) // && frag.hasOptionsMenu())
-			frag.onCreateOptionsMenu(menu, getSupportMenuInflater());
+		getSupportMenuInflater().inflate(R.menu.global_top, menu);
+		super.onCreateOptionsMenu(menu);
 		getSupportMenuInflater().inflate(R.menu.global, menu);
-		
-		if(!USE_PRETTY_MENUS) {
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
-			return true;
-		}
-		
-		/*
-		if(!BEFORE_HONEYCOMB)
-			for(int i = 0; i < menu.size(); i++)
-			{
-				MenuItem item = menu.getItem(i);
-				if(item.getActionView() == null)
-					item.setActionView(makeMenuButton(item, null));
-			}
-		*/
-	
-		if(mOptsMenu == null)
-			mOptsMenu = new MenuBuilder(this);
-		mOptsMenu.clear();
-		mOptsMenu.setQwertyMode(true);
-		MenuUtils.transferMenu(menu, mOptsMenu, false);
-		MenuUtils.setMenuVisible(mOptsMenu, false, R.id.menu_more);
-		MenuUtils.hideMenuGrandChildren(mOptsMenu);
-		
-		if(!USE_PRETTY_MENUS) {
-			handleMoreMenu(menu, false);
-			MenuUtils.fillSubMenus(menu, getSupportMenuInflater());
-		} else { // if(isGTV()) {
-			if(isGTV() && mMainMenu != null)
-			{
-				handleMoreMenu(mMainMenu, true, 6); //*/
-				if(!menu.equals(mMainMenu))
-					menu.clear();
-				else MenuUtils.fillSubMenus(menu, getSupportMenuInflater());
-			}
-			else if(menu != null) {
-				handleMoreMenu(menu, true);
-				if(!menu.equals(mMainMenu) && !getResources().getBoolean(R.bool.allow_split_actionbar))
-					MenuUtils.setMenuVisible(menu, false);
-				//else fillSubMenus(menu, getSupportMenuInflater());
-			}
-		} //else MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
-		/*else {
-			fillSubMenus(mMainMenu, getSupportMenuInflater());
-			handleMoreMenu(menu, false);
-		}*/
-		
+		MenuUtils.scanMenuShortcuts(menu, getSupportMenuInflater());
 		return true;
 	}
 	
@@ -2230,28 +2176,29 @@ public class OpenExplorer
 			if(menu.findItem(R.id.menu_search) != null)
 			{
 				if(mSearchView == null)
+				{
 					mSearchView = SearchViewCompat.newSearchView(this);
+					SearchViewCompat.setOnQueryTextListener(mSearchView,
+							new SearchViewCompat.OnQueryTextListenerCompat() {
+							public boolean onQueryTextSubmit(String query) {
+								mSearchView.clearFocus();
+								Intent intent = new Intent();
+								intent.setAction(Intent.ACTION_SEARCH);
+								Bundle appData = new Bundle();
+								appData.putString("path", getDirContentFragment(false).getPath().getPath());
+								intent.putExtra(SearchManager.APP_DATA, appData);
+								intent.putExtra(SearchManager.QUERY, query);
+								handleIntent(intent);
+								return true;
+							}
+							public boolean onQueryTextChange(String newText) {
+								return false;
+							}
+						});
+				}
 				MenuItem item = menu.findItem(R.id.menu_search);
 				item.setShowAsAction(MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 				item.setActionView(mSearchView);
-				if(mSearchView != null)
-					SearchViewCompat.setOnQueryTextListener(mSearchView,
-						new SearchViewCompat.OnQueryTextListenerCompat() {
-						public boolean onQueryTextSubmit(String query) {
-							mSearchView.clearFocus();
-							Intent intent = new Intent();
-							intent.setAction(Intent.ACTION_SEARCH);
-							Bundle appData = new Bundle();
-							appData.putString("path", getDirContentFragment(false).getPath().getPath());
-							intent.putExtra(SearchManager.APP_DATA, appData);
-							intent.putExtra(SearchManager.QUERY, query);
-							handleIntent(intent);
-							return true;
-						}
-						public boolean onQueryTextChange(String newText) {
-							return false;
-						}
-					});
 			}
 		}
 		
@@ -2261,19 +2208,8 @@ public class OpenExplorer
 		if(!getResources().getBoolean(R.bool.allow_fullscreen))
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
 		else MenuUtils.setMenuChecked(menu, IS_FULL_SCREEN, R.id.menu_view_fullscreen);
-		if(getWindowWidth() < 500 && Build.VERSION.SDK_INT < 14) // ICS can split the actionbar
-		{
-			MenuUtils.setMenuShowAsAction(menu, 0 // Never
-					, R.id.menu_sort, R.id.menu_view, R.id.menu_new_folder);
-			MenuUtils.setMenuVisible(menu, true, R.id.menu_more);
-		}
 		
-		//if(BEFORE_HONEYCOMB)
-		{
-			OpenFragment f = getSelectedFragment();
-			if(f != null && f.hasOptionsMenu() && !f.isDetached() && f.isVisible())
-				f.onPrepareOptionsMenu(menu);
-		}
+		super.onPrepareOptionsMenu(menu);
 		
 		if(menu != null && menu.findItem(R.id.content_paste) != null && getClipboard() != null && getClipboard().size() > 0)
 		{

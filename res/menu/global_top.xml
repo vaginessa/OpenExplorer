@@ -11,12 +11,16 @@
         android:id="@+id/title_ops"
         android:icon="@drawable/ic_gear"
         android:title="@string/s_title_operations"
+        android:showAsAction="always"
+        android:visible="false"
         />
     
     <item
         android:id="@+id/title_log"
         android:icon="@drawable/ic_paper"
         android:title="@string/s_pref_logview"
+        android:showAsAction="always"
+        android:visible="false"
         />
     
 	<item
