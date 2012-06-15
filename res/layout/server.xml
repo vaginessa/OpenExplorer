@@ -78,6 +78,7 @@
             android:layout_height="wrap_content"
             android:text="@string/s_pref_server_host" />
 
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
         <AutoCompleteTextView
             android:id="@+id/text_server"
             android:layout_width="match_parent"
@@ -90,6 +91,8 @@
             <requestFocus />
 
         </AutoCompleteTextView>
+        <ImageButton android:id="@+id/text_server_drop" android:layout_width="wrap_content" android:layout_height="match_parent" android:src="@android:drawable/arrow_down_float" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"

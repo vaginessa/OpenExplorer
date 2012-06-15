@@ -27,31 +27,22 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
-import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.util.TimeUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.view.WindowManager.BadTokenException;
 import android.webkit.WebView;
@@ -62,15 +53,12 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
-import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -84,7 +72,6 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.ZipFile;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -96,10 +83,6 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.drawable;
-import org.brandroid.openmanager.R.id;
-import org.brandroid.openmanager.R.layout;
-import org.brandroid.openmanager.R.string;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
@@ -113,14 +96,13 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
-import org.brandroid.utils.Preferences.OnPreferenceInteraction;
 
 public class DialogHandler
 {
@@ -905,53 +887,68 @@ public class DialogHandler
 		if(mServerHost != null)
 			mServerHost.setAdapter(mHostAdapter);
 		
+		SmbFile.setDefaultAllowUserInteraction(true);
+		
 		ViewUtils.setOnClicks(v, new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mServerHost.showDropDown();
-				mServerHost.setThreshold(0);
-				mScanProgress.setVisibility(View.VISIBLE);
-				new Thread(new Runnable() {
+				final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("WORKGROUP", "", "");
+				final InputDialog indlg = new InputDialog(context)
+					.setMessageTop(R.string.s_pref_server_user)
+					.setMessage(R.string.s_pref_server_password)
+					.setNegativeButton(android.R.string.cancel, null);
+				final AlertDialog dlg = indlg.create();
+				dlg.setButton(DialogInterface.BUTTON_POSITIVE, context.getString(android.R.string.ok),
+						new DialogInterface.OnClickListener(){
 					@Override
-					public void run() {
-						try {
-							final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "", "");
-							final SmbFile smb = new SmbFile("smb://");
-							smb.setAuth(auth);
-							SmbFile[] workgroups = smb.listFiles();
-							for(int i = 0; i < workgroups.length; i++)
-							{
-								SmbFile group = workgroups[i];
-								group.setAuth(auth);
-								Logger.LogDebug("Found Workgroup: " + group.getName());
+					public void onClick(DialogInterface dialog, int which) {
+						auth.setUsername(indlg.getInputTopText());
+						auth.setPassword(indlg.getInputText());
+						mServerHost.setThreshold(0);
+						mScanProgress.setVisibility(View.VISIBLE);
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
 								try {
-								final SmbFile[] comps = workgroups[i].listFiles();
-								mServerHost.post(new Runnable() {public void run() {
-									for(int j = 0; j < comps.length; j++)
+									final SmbFile smb = new SmbFile("smb://");
+									smb.setAuth(auth);
+									SmbFile[] workgroups = smb.listFiles();
+									for(int i = 0; i < workgroups.length; i++)
 									{
-										SmbFile comp = comps[j];
-										comp.setAuth(auth);
+										SmbFile group = workgroups[i];
+										final String gname = group.getName();
+										group.setAuth(auth);
+										Logger.LogDebug("Found Workgroup: " + group.getName());
 										try {
-											String server = comp.getServer();
-											Logger.LogDebug("Found Server: " + server);
-											mHosts.add(server);
-										} catch(Exception e3) { }
+										final SmbFile[] comps = workgroups[i].listFiles();
+										mServerHost.post(new Runnable() {public void run() {
+											for(int j = 0; j < comps.length; j++)
+											{
+												SmbFile comp = comps[j];
+												comp.setAuth(auth);
+												try {
+													String server = comp.getServer();
+													Logger.LogDebug("Found Server: " + server);
+													mHosts.add(gname + "/" + server);
+												} catch(Exception e3) { }
+											}
+										}});
+										} catch(Exception e2) { }
 									}
+									smb.disconnect();
+								} catch (Exception e) {
+									Logger.LogError("OpenBookmarks.showServerDialog.scan unable to get SMB data.", e);
+								}
+								mScanProgress.post(new Runnable(){public void run(){
+									mScanProgress.setVisibility(View.GONE);
+									mServerHost.dismissDropDown();
+									mHostAdapter.notifyDataSetChanged();
+									mServerHost.showDropDown();
 								}});
-								} catch(Exception e2) { }
 							}
-							smb.disconnect();
-						} catch (Exception e) {
-							Logger.LogError("OpenBookmarks.showServerDialog.scan unable to get SMB data.", e);
-						}
-						mScanProgress.post(new Runnable(){public void run(){
-							mScanProgress.setVisibility(View.GONE);
-							mServerHost.dismissDropDown();
-							mHostAdapter.notifyDataSetChanged();
-							mServerHost.showDropDown();
-						}});
-					}
-				}).start();
+						}).start();
+					}});
+				dlg.show();
 			}
 		}, R.id.server_scan);
 		
