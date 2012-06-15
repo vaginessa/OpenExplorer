@@ -416,7 +416,7 @@ public class OpenExplorer
 		
 		checkRoot();
 		
-		getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
+		//getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_shadow));
 		/*if(!BEFORE_HONEYCOMB)
 		{
 			boolean show_underline = true;
@@ -2150,14 +2150,14 @@ public class OpenExplorer
 			handleMoreMenu(menu, false);
 			MenuUtils.fillSubMenus(menu, getSupportMenuInflater());
 		} else { // if(isGTV()) {
-			if(isGTV())
+			if(isGTV() && mMainMenu != null)
 			{
 				handleMoreMenu(mMainMenu, true, 6); //*/
 				if(!menu.equals(mMainMenu))
 					menu.clear();
 				else MenuUtils.fillSubMenus(menu, getSupportMenuInflater());
 			}
-			else {
+			else if(menu != null) {
 				handleMoreMenu(menu, true);
 				if(!menu.equals(mMainMenu) && !getResources().getBoolean(R.bool.allow_split_actionbar))
 					MenuUtils.setMenuVisible(menu, false);
@@ -2174,6 +2174,7 @@ public class OpenExplorer
 	
 	private void handleMoreMenu(Menu menu, boolean forceFromToolbar)
 	{
+		if(menu == null) return;
 		int max = getResources().getInteger(R.integer.max_base_buttons);
 		if(getResources().getBoolean(R.bool.ignore_max_base_buttons))
 		{
@@ -2184,6 +2185,7 @@ public class OpenExplorer
 	}
 	private void handleMoreMenu(Menu menu, boolean forceFromToolbar, int max)
 	{
+		if(menu == null) return;
 		if(forceFromToolbar || (menu.size() > max && Build.VERSION.SDK_INT > 13 && getWindowWidth() < 700))
 		{
 			MenuItem more = menu.findItem(R.id.menu_more);
