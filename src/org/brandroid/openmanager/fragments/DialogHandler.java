@@ -915,7 +915,7 @@ public class DialogHandler
 					@Override
 					public void run() {
 						try {
-							final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("WORKGROUP", "Brandon", "79Studios");
+							final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "", "");
 							final SmbFile smb = new SmbFile("smb://");
 							smb.setAuth(auth);
 							SmbFile[] workgroups = smb.listFiles();
