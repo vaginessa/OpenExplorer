@@ -78,7 +78,7 @@
             android:layout_height="wrap_content"
             android:text="@string/s_pref_server_host" />
 
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/text_server"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -89,7 +89,7 @@
 
             <requestFocus />
 
-        </EditText>
+        </AutoCompleteTextView>
 
         <TextView
             android:layout_width="wrap_content"
