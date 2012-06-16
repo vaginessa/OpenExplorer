@@ -2920,22 +2920,6 @@ public class OpenExplorer
 	
 	private void debugTest() {
 		//startActivity(new Intent(this, Authenticator.class));
-		new Thread(new Runnable(){public void run(){
-		Logger.LogDebug("*****************");
-		try {
-			//NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("Workgorup", "Brandon", "79Studios");
-			UniAddress addr = UniAddress.getByName("BrandonSony8");
-			Logger.LogDebug("* ADDR: " + addr.getHostAddress());
-			SmbFile smb = new SmbFile("smb://BrandonSony8/");
-			//smb.setAuth(auth);
-			
-			for(SmbFile kid : smb.listFiles())
-				Logger.LogDebug("* " + kid.getName());
-		} catch (Exception e) {
-			Logger.LogError("*Pewp. " + e.getMessage(), e);
-		}
-		Logger.LogDebug("*****************");
-		}}).start();
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }
