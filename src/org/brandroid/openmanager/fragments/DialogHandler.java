@@ -26,6 +26,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -54,6 +55,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -78,6 +80,7 @@ import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 
+import jcifs.netbios.NbtAddress;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
@@ -830,10 +833,7 @@ public class DialogHandler
 		else if(server.getType().equals("smb"))
 			serverType = 2;
 		LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		int layout = R.layout.server;
-		if(serverType == 2)
-			layout = R.layout.server_smb;
-		final View v = inflater.inflate(layout, null);
+		final View v = inflater.inflate(R.layout.server, null);
 		OpenServer.setupServerDialog(server, iServersIndex, v);
 		int addStrId = iServersIndex >= 0 ? R.string.s_update : R.string.s_add;
 		final AlertDialog dialog = new AlertDialog.Builder(context)
@@ -866,7 +866,8 @@ public class DialogHandler
 			.setTitle(server.getName())
 			.create();
 		if(iServersIndex == -1)
-			dialog.setButton(AlertDialog.BUTTON_NEUTRAL, context.getString(R.string.test), new DialogInterface.OnClickListener() {
+			dialog.setButton(AlertDialog.BUTTON_NEUTRAL, null, (Message)null);
+		/*context.getString(R.string.test), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					OpenPath path = FileManager.getOpenCache(server.toString());
@@ -877,7 +878,7 @@ public class DialogHandler
 						Toast.makeText(context, R.string.httpError, Toast.LENGTH_LONG);
 					}
 				}
-			});
+			});*/
 		
 		final AutoCompleteTextView mServerHost = (AutoCompleteTextView)v.findViewById(R.id.text_server);
 		final ArrayList<String> mHosts = new ArrayList<String>();
@@ -886,81 +887,112 @@ public class DialogHandler
 		final ProgressBar mScanProgress = (ProgressBar)v.findViewById(R.id.server_scan_progress);
 		if(mServerHost != null)
 			mServerHost.setAdapter(mHostAdapter);
+		ViewUtils.setOnClicks(v, new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mServerHost.showDropDown();
+			}
+		}, R.id.server_drop);
+
+		final int iServerType = serverType;
+		final int[] OnlyOnSMB = new int[]{R.id.server_drop, R.id.server_scan};
+		final int[] NotOnSMB = new int[]{R.id.text_path, R.id.text_path_label, R.id.label_port, R.id.check_port, R.id.label_port};
+		ViewUtils.setViewsVisible(v, serverType == 2, OnlyOnSMB);
+		ViewUtils.setViewsVisible(v, serverType != 2, NotOnSMB);
 		
 		SmbFile.setDefaultAllowUserInteraction(true);
 		
 		ViewUtils.setOnClicks(v, new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("WORKGROUP", "", "");
-				final InputDialog indlg = new InputDialog(context)
-					.setMessageTop(R.string.s_pref_server_user)
-					.setMessage(R.string.s_pref_server_password)
-					.setNegativeButton(android.R.string.cancel, null);
-				final AlertDialog dlg = indlg.create();
-				dlg.setButton(DialogInterface.BUTTON_POSITIVE, context.getString(android.R.string.ok),
-						new DialogInterface.OnClickListener(){
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						auth.setUsername(indlg.getInputTopText());
-						auth.setPassword(indlg.getInputText());
-						mServerHost.setThreshold(0);
-						mScanProgress.setVisibility(View.VISIBLE);
-						new Thread(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									final SmbFile smb = new SmbFile("smb://");
-									smb.setAuth(auth);
-									SmbFile[] workgroups = smb.listFiles();
-									for(int i = 0; i < workgroups.length; i++)
-									{
-										SmbFile group = workgroups[i];
-										final String gname = group.getName();
-										group.setAuth(auth);
-										Logger.LogDebug("Found Workgroup: " + group.getName());
-										try {
-										final SmbFile[] comps = workgroups[i].listFiles();
-										mServerHost.post(new Runnable() {public void run() {
-											for(int j = 0; j < comps.length; j++)
-											{
-												SmbFile comp = comps[j];
-												comp.setAuth(auth);
-												try {
-													String server = comp.getServer();
-													Logger.LogDebug("Found Server: " + server);
-													mHosts.add(gname + "/" + server);
-												} catch(Exception e3) { }
-											}
-										}});
-										} catch(Exception e2) { }
-									}
-									smb.disconnect();
-								} catch (Exception e) {
-									Logger.LogError("OpenBookmarks.showServerDialog.scan unable to get SMB data.", e);
-								}
-								mScanProgress.post(new Runnable(){public void run(){
-									mScanProgress.setVisibility(View.GONE);
-									mServerHost.dismissDropDown();
-									mHostAdapter.notifyDataSetChanged();
-									mServerHost.showDropDown();
-								}});
+				new Thread(new Runnable(){public void run(){
+					try {
+						NbtAddress addr = NbtAddress.getLocalHost();
+						mHosts.add(addr.getHostAddress());
+						Logger.LogDebug("My Address: " + addr.getHostAddress() + " : " + addr.getHostName());
+						try {
+							NbtAddress[] network = NbtAddress.getAllByAddress(addr);
+							for(NbtAddress friend : network)
+							{
+								mHosts.add(friend.getHostAddress());
 							}
-						}).start();
-					}});
-				dlg.show();
+						} catch(Exception e3) {
+							Logger.LogError("DialogHandler.showServerDialog unable to get Network neighborhood.", e3);
+						}
+					} catch(Exception e) {
+						Logger.LogError("DialogHandler.showServerDialog Error getting Local Address", e);
+					}
+					if(mHosts.size() > 1) return; 
+					final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("WORKGROUP", "", "");
+					final InputDialog indlg = new InputDialog(context)
+						.setMessageTop(R.string.s_pref_server_user)
+						.setMessage(R.string.s_pref_server_password)
+						.setNegativeButton(android.R.string.cancel, null);
+					final AlertDialog dlg = indlg.create();
+					dlg.setButton(DialogInterface.BUTTON_POSITIVE, context.getString(android.R.string.ok),
+							new DialogInterface.OnClickListener(){
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							auth.setUsername(indlg.getInputTopText());
+							auth.setPassword(indlg.getInputText());
+							mServerHost.setThreshold(0);
+							mScanProgress.setVisibility(View.VISIBLE);
+							new Thread(new Runnable() {
+								@Override
+								public void run() {
+									try {
+										final SmbFile smb = new SmbFile("smb://");
+										smb.setAuth(auth);
+										SmbFile[] workgroups = smb.listFiles();
+										for(int i = 0; i < workgroups.length; i++)
+										{
+											SmbFile group = workgroups[i];
+											final String gname = group.getName();
+											group.setAuth(auth);
+											Logger.LogDebug("Found Workgroup: " + group.getName());
+											try {
+											final SmbFile[] comps = workgroups[i].listFiles();
+											mServerHost.post(new Runnable() {public void run() {
+												for(int j = 0; j < comps.length; j++)
+												{
+													SmbFile comp = comps[j];
+													comp.setAuth(auth);
+													try {
+														String server = comp.getServer();
+														
+														Logger.LogDebug("Found Server: " + server);
+														mHosts.add(gname + (gname.endsWith("/") ? "" : "/") + server);
+													} catch(Exception e3) { }
+												}
+											}});
+											} catch(Exception e2) { }
+										}
+										smb.disconnect();
+									} catch (Exception e) {
+										Logger.LogError("OpenBookmarks.showServerDialog.scan unable to get SMB data.", e);
+									}
+									mScanProgress.post(new Runnable(){public void run(){
+										mScanProgress.setVisibility(View.GONE);
+										mServerHost.dismissDropDown();
+										mHostAdapter.notifyDataSetChanged();
+										mServerHost.showDropDown();
+									}});
+								}
+							}).start();
+						}});
+					dlg.show();
+				}}).start();
 			}
+
+				//}}).start();
 		}, R.id.server_scan);
 		
-		final int iServerType = serverType;
 		final Spinner mServerType = (Spinner)v.findViewById(R.id.server_type);
-		mServerType.setSelection(serverType);
 		mServerType.setOnItemSelectedListener(new OnItemSelectedListener() {
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
 			{
-				if(position == iServerType) return;
-				dialog.dismiss();
-				showServerDialog(mContextHelper, iServersIndex, position, mHolder, allowShowPass);
+				ViewUtils.setViewsVisible(v, position == 2, OnlyOnSMB);
+				ViewUtils.setViewsVisible(v, position != 2, NotOnSMB);
 			}
 			public void onNothingSelected(AdapterView<?> parent) { }
 		});
