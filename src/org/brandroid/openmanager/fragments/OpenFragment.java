@@ -314,7 +314,7 @@ public abstract class OpenFragment
 	@Override
 	public void setHasOptionsMenu(boolean hasMenu) {
 		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
-		//super.setHasOptionsMenu(hasMenu);
+		super.setHasOptionsMenu(hasMenu);
 		mHasOptions = hasMenu;
 	}
 	public boolean hasOptionsMenu()
