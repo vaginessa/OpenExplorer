@@ -6,6 +6,7 @@ import java.util.Locale;
 import java.util.Properties;
 
 import jcifs.smb.ServerMessageBlock;
+import jcifs.smb.SmbComReadAndX;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
@@ -353,6 +354,8 @@ public abstract class OpenFragmentActivity
 					if(o instanceof ServerMessageBlock)
 					{
 						ServerMessageBlock blk = (ServerMessageBlock)o;
+						if(DEBUG && blk instanceof SmbComReadAndX)
+							continue;
 						String tmp = blk.toShortString();
 						if(tmp == null || tmp == "")
 							continue;
