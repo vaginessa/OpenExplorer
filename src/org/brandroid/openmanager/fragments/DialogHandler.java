@@ -895,8 +895,8 @@ public class DialogHandler
 		}, R.id.server_drop);
 
 		final int iServerType = serverType;
-		final int[] OnlyOnSMB = new int[]{R.id.server_drop, R.id.server_scan};
-		final int[] NotOnSMB = new int[]{R.id.text_path, R.id.text_path_label, R.id.label_port, R.id.check_port, R.id.label_port};
+		final int[] OnlyOnSMB = new int[]{}; //R.id.server_drop, R.id.server_scan};
+		final int[] NotOnSMB = new int[]{R.id.text_path, R.id.text_path_label, R.id.text_port, R.id.label_port, R.id.check_port};
 		ViewUtils.setViewsVisible(v, serverType == 2, OnlyOnSMB);
 		ViewUtils.setViewsVisible(v, serverType != 2, NotOnSMB);
 		
@@ -905,7 +905,8 @@ public class DialogHandler
 		ViewUtils.setOnClicks(v, new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				new Thread(new Runnable(){public void run(){
+//				new Thread(new Runnable(){public void run(){
+				/*
 					try {
 						NbtAddress addr = NbtAddress.getLocalHost();
 						mHosts.add(addr.getHostAddress());
@@ -922,7 +923,8 @@ public class DialogHandler
 					} catch(Exception e) {
 						Logger.LogError("DialogHandler.showServerDialog Error getting Local Address", e);
 					}
-					if(mHosts.size() > 1) return; 
+					//if(mHosts.size() > 1) return; 
+*/					
 					final NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("WORKGROUP", "", "");
 					final InputDialog indlg = new InputDialog(context)
 						.setMessageTop(R.string.s_pref_server_user)
@@ -981,7 +983,7 @@ public class DialogHandler
 							}).start();
 						}});
 					dlg.show();
-				}}).start();
+//				}}).start();
 			}
 
 				//}}).start();
@@ -993,9 +995,13 @@ public class DialogHandler
 			{
 				ViewUtils.setViewsVisible(v, position == 2, OnlyOnSMB);
 				ViewUtils.setViewsVisible(v, position != 2, NotOnSMB);
+				server.setType("ftp");
+				if(position == 1) server.setType("sftp");
+				if(position == 2) server.setType("smb");
 			}
 			public void onNothingSelected(AdapterView<?> parent) { }
 		});
+		mServerType.setSelection(serverType);
 		
 		try {
 			dialog.show();

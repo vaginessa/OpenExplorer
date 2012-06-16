@@ -126,6 +126,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -134,9 +135,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
 
+import jcifs.UniAddress;
+import jcifs.netbios.NbtAddress;
+import jcifs.smb.NtlmAuthenticator;
+import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFile.OnSMBCommunicationListener;
+import jcifs.smb.SmbNamedPipe;
+import jcifs.smb.SmbSession;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
@@ -2913,7 +2920,22 @@ public class OpenExplorer
 	
 	private void debugTest() {
 		//startActivity(new Intent(this, Authenticator.class));
-		
+		new Thread(new Runnable(){public void run(){
+		Logger.LogDebug("*****************");
+		try {
+			//NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("Workgorup", "Brandon", "79Studios");
+			UniAddress addr = UniAddress.getByName("BrandonSony8");
+			Logger.LogDebug("* ADDR: " + addr.getHostAddress());
+			SmbFile smb = new SmbFile("smb://BrandonSony8/");
+			//smb.setAuth(auth);
+			
+			for(SmbFile kid : smb.listFiles())
+				Logger.LogDebug("* " + kid.getName());
+		} catch (Exception e) {
+			Logger.LogError("*Pewp. " + e.getMessage(), e);
+		}
+		Logger.LogDebug("*****************");
+		}}).start();
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }

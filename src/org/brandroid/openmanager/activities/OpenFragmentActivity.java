@@ -3,6 +3,7 @@ package org.brandroid.openmanager.activities;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
+import java.util.Properties;
 
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbFile;
@@ -365,6 +366,14 @@ public abstract class OpenFragmentActivity
 			}
 			
 		});
+
+		jcifs.Config.registerSmbURLHandler();
+		jcifs.Config.setProperty("jcifs.resolveOrder", "WINS,LMHOSTS,BCAST,DNS");
+		jcifs.Config.setProperty("jcifs.smb.client.username", "Guest");
+		jcifs.Config.setProperty("jcifs.smb.client.password", "");
+		//jcifs.Config.setProperty("jcifs.smb.client.responseTimeout", "5000");
+		//jcifs.Config.setProperty("jcifs.smb.client.soTimeout", "5000");
+		
 	}
 
 	/*
