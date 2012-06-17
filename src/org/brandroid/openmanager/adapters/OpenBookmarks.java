@@ -1,19 +1,16 @@
 package org.brandroid.openmanager.adapters;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
 
 import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
@@ -26,23 +23,19 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.DFInfo;
-import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
-import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
@@ -51,7 +44,6 @@ import android.animation.Animator;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -60,19 +52,16 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager.BadTokenException;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
@@ -615,13 +604,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			Logger.LogError("Couldn't get SMB size.", e);
 			return;
 		}
-		int total_width = size_bar.getWidth();
-		if(total_width == 0)
+		int total_width = mParentView.getWidth() - size_bar.getLeft();
+		if(total_width <= 0)
 			total_width = mParentView.getWidth();
-		if(total_width == 0 && mParentView.getRootView().findViewById(R.id.list_frag) != null)
+		if(total_width <= 0 && mParentView.getRootView().findViewById(R.id.list_frag) != null)
 			total_width = mParentView.getRootView().findViewById(R.id.list_frag).getWidth();
-		if(total_width == 0)
-			total_width = getContext().getResources().getDimensionPixelSize(R.dimen.bookmarks_width);
+		if(total_width <= 0)
+			total_width = getContext().getResources().getDimensionPixelSize(R.dimen.popup_width);
 		if(mFile != null && mFile.getClass().equals(OpenFile.class) && mFile.getPath().indexOf("usic") == -1 && mFile.getPath().indexOf("ownload") ==-1)
 		{
 			OpenFile f = (OpenFile)mFile;
@@ -657,8 +646,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				else if(percent_width > 0) {
 					bar.setVisibility(View.VISIBLE);
 					RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)bar.getLayoutParams();
-					//lp.rightMargin = total_width - percent_width;
-					lp.width = percent_width;
+							//new LayoutParams(percent_width, LayoutParams.MATCH_PARENT);
+					lp.rightMargin = total_width - percent_width;
+					//lp.width = percent_width;
+					lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 					//bar.setLayoutParams(lp);
 					bar.requestLayout();
 				}
@@ -673,13 +664,15 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				size_bar.getBackground().setBounds(0,0,size_width,0);
 				size_bar.setTag(true);
 			}
-				
+			
+			ViewUtils.setViewsVisible(mParentView, true, R.id.size_bar, R.id.size_layout, R.id.size_text);
 			if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
 		} else if(mFile != null && OpenCursor.class.equals(mFile.getClass())) {
 			//bar.setVisibility(View.INVISIBLE);
 			if(size_bar.getTag() == null) size_bar.setVisibility(View.GONE);
 			mSizeText.setText(DialogHandler.formatSize(((OpenCursor)mFile).getTotalSize()));
-		} else mSizeView.setVisibility(View.GONE);
+			ViewUtils.setViewsVisible(mParentView, true, R.id.size_text);
+		} else ViewUtils.setViewsVisible(mParentView, false, R.id.size_bar, R.id.size_layout, R.id.size_text);
 	}
 	
 	
