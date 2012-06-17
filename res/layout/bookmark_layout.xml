@@ -19,8 +19,8 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="wrap_content"
-	android:layout_height="wrap_content"
-	android:gravity="top|left"
+	android:layout_height="40dp"
+	android:gravity="center|left"
 	android:layout_gravity="top|left"
 	android:paddingLeft="4dp"
 	android:paddingRight="4dp"
@@ -35,7 +35,7 @@
 	    android:id="@+id/size_bar"
 	    android:alpha="0.5"
 	    android:layout_width="fill_parent"
-	    android:layout_height="32dp"
+	    android:layout_height="match_parent"
 	    android:layout_alignTop="@+id/bookmark_icon"
 	    android:layout_alignBottom="@+id/size_layout"
 	    android:layout_toRightOf="@+id/bookmark_icon"
@@ -64,7 +64,7 @@
 	    android:layout_toRightOf="@+id/content_text"
 		android:layout_alignBaseline="@+id/content_text"
 		android:layout_marginLeft="2dp"
-		style="@style/Mid"
+		style="@style/Small"
 		android:textColor="@color/offWhite"
 		android:text="(0)"
 		android:layout_width="wrap_content"
@@ -89,6 +89,7 @@
 		android:layout_below="@+id/content_text"
 		android:layout_alignLeft="@+id/content_text"
 		android:layout_alignParentRight="true"
+		android:visibility="gone"
 		android:gravity="right"
 	    >
 		<TextView

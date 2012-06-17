@@ -695,17 +695,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 
 		public View getChildView(int group, int pos,
 				boolean isLastChild, View convertView, ViewGroup parent) {
-			View ret = ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-					.inflate(R.layout.bookmark_layout, null); //convertView;;
+			View ret = LayoutInflater.from(getContext())
+						.inflate(R.layout.bookmark_layout, null); //convertView;;
 			OpenPath path = getChild(group, pos);
-			if(path instanceof OpenCursor && path.getListLength() == 0)
-			{
-				ret = new View(getContext());
-				ret.setLayoutParams(new AbsListView.LayoutParams(0, 0));
-				ret.setFocusable(false);
-				ret.setVisibility(View.GONE);
-				return ret;
-			}
+			
 			BookmarkHolder mHolder = null;
 			mHolder = new BookmarkHolder(path, getPathTitle(path), ret, 0);
 			ret.setTag(mHolder);
@@ -717,42 +710,40 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			{
 				if(path instanceof OpenSmartFolder)
 				{
-					mCountText.setVisibility(View.VISIBLE);
-					mCountText.setText("(" + path.length() + ")");
+					if(!mCountText.isShown())
+						mCountText.setVisibility(View.VISIBLE);
+					if(!mCountText.getText().toString().equals(" (" + path.length() + ")"))
+						mCountText.setText(" (" + path.length() + ")");
 				}
-				if(path instanceof OpenCursor)
+				else if(path instanceof OpenCursor)
 				{
 					final OpenCursor oc = (OpenCursor)path;
+					int cnt = oc.getListLength();
+					if(cnt > 0 && !mCountText.getText().toString().equals(" (" + cnt + ")"))
+						mCountText.setText(" (" + cnt + ")");
 					oc.setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
 						public void updateBookmarkCount(final int count) {
 							mCountText.post(new Runnable() {
 								public void run() {
-									mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(oc, 36, 36));
-									if(count > 0)
+									if(count == 0) return;
+									String txt = " (" + count + ")";
+									if(!mCountText.getText().toString().equals(txt))
 									{
-										String txt = " (" + count + ")";
-										if(!mCountText.getText().toString().equals(txt))
-										{
-											mCountText.setText(txt);
-											mCountText.setVisibility(View.VISIBLE);
-										}
-									} else {
-										mCountText.setVisibility(View.GONE);
+										mCountText.setText(txt);
+										mCountText.setVisibility(View.VISIBLE);
 									}
 								}
 							});
 						}
 					});
-					new Thread(new Runnable(){public void run(){
-						oc.refresh();
-					}}).start();
 				} else mCountText.setVisibility(View.GONE);
 			}
+			
 				
 			if(group == BOOKMARK_DRIVE || path instanceof OpenSMB)
 				updateSizeIndicator(path, ret);
 			else 
-				ViewUtils.setViewsVisible(ret, false, R.id.size_layout);
+				ViewUtils.setViewsVisible(ret, false, R.id.size_layout, R.id.size_bar);
 			
 			ViewUtils.setText(ret, getPathTitle(path), R.id.content_text);
 			
@@ -764,13 +755,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 						mIcon.getResources().getDrawable(R.drawable.ic_favorites)
 					});
 				mIcon.setImageDrawable(ld);
-			} else //if(!(path instanceof OpenCursor))
-				ThumbnailCreator.setThumbnail(mIcon, path, 36, 36,
-					new OnUpdateImageListener() {
-						public void updateImage(Bitmap b) {
-							mIcon.setImageBitmap(b);
-						}
-					});
+			} else mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(path, 36, 36));
 			
             return ret;
 		}
