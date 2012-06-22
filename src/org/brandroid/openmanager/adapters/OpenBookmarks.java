@@ -705,21 +705,21 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 				{
 					if(!mCountText.isShown())
 						mCountText.setVisibility(View.VISIBLE);
-					if(!mCountText.getText().toString().equals(" (" + path.length() + ")"))
-						mCountText.setText(" (" + path.length() + ")");
+					if(!mCountText.getText().toString().equals("(" + path.length() + ")"))
+						mCountText.setText("(" + path.length() + ")");
 				}
 				else if(path instanceof OpenCursor)
 				{
 					final OpenCursor oc = (OpenCursor)path;
 					int cnt = oc.getListLength();
-					if(cnt > 0 && !mCountText.getText().toString().equals(" (" + cnt + ")"))
-						mCountText.setText(" (" + cnt + ")");
+					if(cnt > 0 && !mCountText.getText().toString().equals("(" + cnt + ")"))
+						mCountText.setText("(" + cnt + ")");
 					oc.setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
 						public void updateBookmarkCount(final int count) {
 							mCountText.post(new Runnable() {
 								public void run() {
 									if(count == 0) return;
-									String txt = " (" + count + ")";
+									String txt = "(" + count + ")";
 									if(!mCountText.getText().toString().equals(txt))
 									{
 										mCountText.setText(txt);
@@ -800,7 +800,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			
 			String[] groups = getContext().getResources().getStringArray(R.array.bookmark_groups);
 			if(mText != null)
-				mText.setText(groups[group] + (getChildrenCount(group) > 0 ? " (" + (getChildrenCount(group)  - (group == BOOKMARK_SERVER ? 1 : 0)) + ")" : ""));
+				mText.setText(groups[group] + (getChildrenCount(group) > 0 ? "(" + (getChildrenCount(group)  - (group == BOOKMARK_SERVER ? 1 : 0)) + ")" : ""));
 			return ret;
 		}
 
