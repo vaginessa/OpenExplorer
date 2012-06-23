@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -386,6 +387,12 @@ public class FileManager {
 			ret = new OpenFTP(path, null, new FTPManager());
 		else if(path.startsWith("sftp:/"))
 			ret = new OpenSFTP(path);
+		else if(path.startsWith("smb:/"))
+			try {
+				ret = new OpenSMB(path);
+			} catch (MalformedURLException e) {
+				Logger.LogError("FileManager.getOpenCache unable to instantiate SMB");
+			}
 		else if(path.equals("Videos"))
 			ret = OpenExplorer.getVideoParent();
 		else if(path.equals("Photos"))

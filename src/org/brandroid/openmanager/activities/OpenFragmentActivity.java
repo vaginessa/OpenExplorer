@@ -2,8 +2,10 @@ package org.brandroid.openmanager.activities;
 
 import java.net.URL;
 import java.util.Locale;
+import java.util.Properties;
 
 import jcifs.smb.ServerMessageBlock;
+import jcifs.smb.SmbComReadAndX;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
@@ -349,6 +351,8 @@ public abstract class OpenFragmentActivity
 					if(o instanceof ServerMessageBlock)
 					{
 						ServerMessageBlock blk = (ServerMessageBlock)o;
+						if(DEBUG && blk instanceof SmbComReadAndX)
+							continue;
 						String tmp = blk.toShortString();
 						if(tmp == null || tmp == "")
 							continue;
@@ -362,6 +366,14 @@ public abstract class OpenFragmentActivity
 			}
 			
 		});
+
+		jcifs.Config.registerSmbURLHandler();
+		jcifs.Config.setProperty("jcifs.resolveOrder", "WINS,LMHOSTS,BCAST,DNS");
+		jcifs.Config.setProperty("jcifs.smb.client.username", "Guest");
+		jcifs.Config.setProperty("jcifs.smb.client.password", "");
+		//jcifs.Config.setProperty("jcifs.smb.client.responseTimeout", "5000");
+		//jcifs.Config.setProperty("jcifs.smb.client.soTimeout", "5000");
+		
 	}
 
 	/*

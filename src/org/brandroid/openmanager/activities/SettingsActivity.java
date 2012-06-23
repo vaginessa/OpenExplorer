@@ -32,6 +32,7 @@ import java.util.Random;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -309,12 +310,25 @@ public class SettingsActivity extends PreferenceActivity
 					Logger.LogWarning("Couldn't parseInt " + path);
 				}
 				setTitle(getTitle() + " - " + path);
-				Preference p;
+				
+				Preference p = getPreferenceManager().findPreference("server_type");
+				String val = server.getString("type");
+				if(val == null)
+					val = "ftp";
+				String[] types = getApplicationContext().getResources().getStringArray(R.array.server_types_values);
+				int pos = 0;
+				for(int i = 0; i < types.length; i++)
+					if(types[i].toLowerCase().equals(val.toLowerCase()))
+						pos = i;
+				getIntent().putExtra("type", val);
+				((ListPreference)p).setValueIndex(pos);
+				p.setSummary(val);
+				
 				if(server != null)
 					for(String s : new String[]{"name","host","user","password","dir","port"})
 						if((p = getPreferenceManager().findPreference("server_" + s)) != null)
 						{
-							String val = server.getString(s);
+							val = server.getString(s);
 							if(val != null)
 							{
 								getIntent().putExtra(s, val);
@@ -494,7 +508,8 @@ public class SettingsActivity extends PreferenceActivity
     	} else if(preference.getKey().equals("server_update")) {
     		Intent iNew = getIntent();
     		//OpenServer server = new OpenServer();
-    		Preference p;
+    		Preference p = preferenceScreen.findPreference("server_type");
+    		iNew.putExtra("type", ((ListPreference)p).getValue());
     		for(String s : new String[]{"name","host","url","user","password","dir"})
     			if((p = preferenceScreen.findPreference("server_" + s)) != null)
     			{
@@ -552,19 +567,33 @@ public class SettingsActivity extends PreferenceActivity
 		return false;
 	}
 	
+	public static File GetDefaultServerFile(Context context)
+	{
+		File f = new File(context.getFilesDir().getPath(), "servers.json");
+		if(f.exists() && OpenExplorer.isBlackBerry())
+		{
+			if(OpenFile.getExternalMemoryDrive(true).getChild(".servers.json").copyFrom(new OpenFile(f)));
+				f.delete();
+		}
+		if(OpenExplorer.isBlackBerry())
+			f = new File(OpenFile.getExternalMemoryDrive(true).getFile(), ".servers.json");
+		return f;
+	}
 
 	public static void SaveToDefaultServers(OpenServers servers, Context context)
-	{		
-		File f = new File(context.getFilesDir().getPath(), "servers.json");
+	{
 		Writer w = null;
+		File f = GetDefaultServerFile(context);
 		try {
 			f.delete();
 			f.createNewFile();
 			w = new BufferedWriter(new FileWriter(f));
 			String data = servers.getJSONArray(true, context).toString();
+			Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
 			//data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
 			w.write(data);
 			w.close();
+			Logger.LogDebug("Wrote " + data.length() + " bytes to OpenServers (" + f.getPath() + ").");
 		} catch(IOException e) {
 			Logger.LogError("Couldn't save OpenServers.", e);
 		} catch (Exception e) {
@@ -588,10 +617,9 @@ public class SettingsActivity extends PreferenceActivity
 	{
 		if(OpenServers.DefaultServers != null)
 			return OpenServers.DefaultServers;
-		File f = new File(context.getFilesDir().getPath(), "servers.json");
+		File f = GetDefaultServerFile(context);
 		Reader r = null;
 		try {
-			//getApplicationContext().openFileInput("servers.json"); //, Context.MODE_PRIVATE);
 			if(!f.exists() && !f.createNewFile())
 			{
 				Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
@@ -608,6 +636,7 @@ public class SettingsActivity extends PreferenceActivity
 					return new OpenServers();
 				String data = sb.toString();
 				OpenServers.DefaultServers = new OpenServers(new JSONArray(data), GetSignatureKey(context));
+				Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ " + data.length() + " bytes from " + f.getPath());
 				return OpenServers.DefaultServers;
 			}
 		} catch (IOException e) {
