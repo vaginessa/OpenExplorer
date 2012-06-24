@@ -1796,53 +1796,32 @@ public class OpenExplorer
 	public ContentFragment getDirContentFragment(Boolean activate) { return getDirContentFragment(activate, mLastPath); }
 	public ContentFragment getDirContentFragment(Boolean activate, OpenPath path)
 	{
-		//Logger.LogDebug("getDirContentFragment");
 		OpenFragment ret = null;
-		//if(mViewPager != null && mViewPagerAdapter != null && mViewPagerAdapter instanceof OpenPathPagerAdapter && ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem() instanceof ContentFragment)
-		//	ret = ((ContentFragment)((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem());
+		int i = mViewPagerAdapter.getCount();
 		if(mViewPagerAdapter != null && mViewPager != null)
 		{
 			if(mViewPager.getCurrentItem() > -1)
 			{
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
-				//Logger.LogVerbose("Current Page: " + (mViewPager.getCurrentItem() + 1) + " of " + mViewPagerAdapter.getCount() + (ret instanceof ContentFragment ? " : " + ((ContentFragment)ret).getPath().getPath() : ""));
-				if(!(ret instanceof ContentFragment))
-					ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
 			} else {
 				Logger.LogWarning("Couldn't find current Page. Using last.");
-				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
+				ret = mViewPagerAdapter.getItem(i);
 			}
+			while(!(ret instanceof ContentFragment) && i >= 0)
+				ret = mViewPagerAdapter.getItem(i--);
 		}
 		if(ret == null)
 			ret = (OpenFragment)fragmentManager.findFragmentById(R.id.content_frag);
-		if(ret == null || !ret.getClass().equals(ContentFragment.class))
-		{
-			Logger.LogWarning("Do I need to create a new ContentFragment?");
-   			//ret = ContentFragment.newInstance(mLastPath, getSetting(mLastPath, "view", mViewMode));
-   			//mViewPagerAdapter.add(ret);
-			/*if(mViewPagerAdapter instanceof OpenPathPagerAdapter)
-			{
-				((OpenPathPagerAdapter)mViewPagerAdapter).setPath(mLastPath);
-				ret = ((OpenPathPagerAdapter)mViewPagerAdapter).getLastItem();
-			} else if(mViewPagerAdapter instanceof ArrayPagerAdapter)*/
-			if(mViewPagerAdapter != null && mViewPager != null)
-				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
-		}
 		if(ret == null && path != null)
 		{
 			ret = ContentFragment.getInstance(path, getSetting(path, "view", 0), getSupportFragmentManager());
 			if(mViewPager != null && ret != null)
-			{
-				//if(mViewPagerAdapter instanceof ArrayPagerAdapter)
-					mViewPagerAdapter.set(mViewPager.getCurrentItem(), ret);
-			}
+				mViewPagerAdapter.add(ret);
 		}
-		if(activate && !ret.isVisible())
-		{
+		if(activate && ret != null && !ret.isVisible())
 			setCurrentItem(mViewPagerAdapter.getItemPosition(ret), false);
-		}
 		
-		if(ret instanceof ContentFragment)
+		if(ret != null && ret instanceof ContentFragment)
 			return (ContentFragment)ret;
 		else return null;
 	}
