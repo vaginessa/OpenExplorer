@@ -207,7 +207,7 @@ public abstract class OpenFragment
 	public boolean showMenu(final int menuId, View from1, CharSequence title, int xOffset, int yOffset)
 	{
 		if(from1 == null)
-			from1 = ViewUtils.getFirstView(getSherlockActivity(), R.id.menu_more, android.R.id.home);
+			from1 = getSherlockActivity().findViewById(android.R.id.home);
 		if(from1 == null)
 			from1 = getSherlockActivity().getCurrentFocus().getRootView();
 		final View from = from1;
@@ -285,7 +285,6 @@ public abstract class OpenFragment
 	public boolean showIContextMenu(int menuId, final View from, CharSequence title, int xOffset, int yOffset)
 	{
 		if(getSherlockActivity() == null) return false;
-		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return false;
 		final IconContextMenu mOpenMenu =
 				IconContextMenu.getInstance(getSherlockActivity(), menuId, from);

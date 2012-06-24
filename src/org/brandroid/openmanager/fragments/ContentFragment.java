@@ -871,12 +871,6 @@ public class ContentFragment extends OpenFragment
 			return true;
 		switch(item.getItemId())
 		{
-		case R.id.menu_sort:
-		case R.id.menu_view:
-		case R.id.menu_content_ops:
-			if(OpenExplorer.USE_PRETTY_MENUS)
-				onPrepareOptionsMenu(item.getSubMenu());
-			return !OpenExplorer.USE_PRETTY_MENUS; // for system menus, return false
 		case R.id.menu_new_file:
 			EventHandler.createNewFile(getPath(), getActivity());
 			return true;

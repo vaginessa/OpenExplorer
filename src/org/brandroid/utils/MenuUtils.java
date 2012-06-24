@@ -249,14 +249,7 @@ public class MenuUtils {
 	}
 	public final static int[] MENU_LOOKUP_IDS = new int[]{};//	R.id.menu_view,		R.id.menu_sort,		R.id.menu_content_ops,	R.id.content_paste,R.id.menu_text_view,	R.id.menu_text_ops};
 	public final static int[] MENU_LOOKUP_SUBS = new int[]{};//	R.menu.content_view,R.menu.content_sort,R.menu.content_ops,		R.menu.multiselect,R.menu.text_view,	R.menu.text_file};
-	public static void fillSubMenus(Menu menu, MenuInflater inflater)
-	{
-		//if(!(menu instanceof MenuBuilder))
-		if(!OpenExplorer.USE_PRETTY_MENUS)
-		{
-			fillSubMenus(MENU_LOOKUP_IDS, MENU_LOOKUP_SUBS, menu, inflater);
-		}
-	}
+
 	public static void scanMenuShortcuts(Menu menu, MenuInflater inflater)
 	{
 		if(OpenExplorer.mMenuShortcuts != null) return;

@@ -94,11 +94,6 @@
 	
 	<PreferenceCategory android:title="@string/s_pref_fancy_category">
 	    <CheckBoxPreference
-	        android:key="pref_fancy_menus"
-	        android:title="@string/s_pref_fancy_menus"
-	        android:defaultValue="@bool/prehoneycomb"
-	        />
-	    <CheckBoxPreference
 	        android:key="pref_fancy_context"
 	        android:title="@string/s_pref_fancy_context"
 	        android:defaultValue="true"

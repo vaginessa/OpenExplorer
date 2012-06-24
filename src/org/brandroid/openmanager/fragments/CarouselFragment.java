@@ -274,7 +274,6 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 			try {
 			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
 			if(mSearchView != null)
