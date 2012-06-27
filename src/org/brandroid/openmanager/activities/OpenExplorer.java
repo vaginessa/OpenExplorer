@@ -202,40 +202,6 @@ public class OpenExplorer
 			OpenApp, IconContextItemSelectedListener, OnKeyListener,
 			OnFragmentDPADListener, OnFocusChangeListener
 	{
-	
-	// Action Bar Menu Variables
-	private Menu mMainOptionsMenu;
-	private MenuItem mMenuSearch;
-	private MenuItem mMenuSort;
-	private MenuItem mMenuFoldersFirst;
-	private MenuItem mMenuNameAsc;
-	private MenuItem mMenuNameDesc;
-	private MenuItem mMenuDateAsc;
-	private MenuItem mMenuDateDesc;
-	private MenuItem mMenuSizeAsc;
-	private MenuItem mMenuSizeDesc;
-	private MenuItem mMenuSortType;
-	private MenuItem mMenuView;
-	private MenuItem mMenuMulti;
-	private MenuItem mMenuViewGrid;
-	private MenuItem mMenuViewList;
-	private MenuItem mMenuViewCarousel;
-	private MenuItem mMenuViewHidden;
-	private MenuItem mMenuViewThumbs;
-	private MenuItem mMenuViewFullscreen;
-	private MenuItem mMenuViewSplit;
-	private MenuItem mMenuContentOps;
-	private MenuItem mMenuNewFolder;
-	private MenuItem mMenuNewFile;
-	private MenuItem mMenuContextInfo;
-	private MenuItem mMenuContextBookmark;
-	private MenuItem mMenuContextSelectAll;
-	private MenuItem mMenuContextPaste;
-	private MenuItem mMenuRefresh;
-	private MenuItem mMenuDebug;
-	private MenuItem mMenuSettings;
-	private MenuItem mMenuAbout;
-	private MenuItem mMenuExit;
 
 	public static final int REQ_PREFERENCES = 6;
 	public static final int REQ_SPLASH = 7;
@@ -2075,52 +2041,24 @@ public class OpenExplorer
 	{
 		return onCreateOptionsMenu(menu, true);
 	}
-	public boolean onCreateOptionsMenu(Menu menu, boolean fromSystem) {
-//		if(DEBUG)
-//			Logger.LogDebug("OpenExplorer.onCreateOptionsMenu(" + menu + "," + fromSystem + ")");
-//		getSupportMenuInflater().inflate(R.menu.global_top, menu);
-//		super.onCreateOptionsMenu(menu);
-//		getSupportMenuInflater().inflate(R.menu.global, menu);
-//		return true;
-		
-		mMainOptionsMenu = menu;
-		MenuInflater menuInflater = getSupportMenuInflater();
-		menuInflater.inflate(R.menu.menu_main, menu);
+	public boolean onCreateOptionsMenu(Menu menu, boolean fromSystem)
+	{
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onCreateOptionsMenu(" + menu + "," + fromSystem + ")");
+		getSupportMenuInflater().inflate(R.menu.global_top, menu);
+		super.onCreateOptionsMenu(menu);
+		getSupportMenuInflater().inflate(R.menu.global, menu);
+		return true;
+	}
+
+	public boolean onPrepareOptionsMenu(Menu menu)
+	{
+		//super.onPrepareOptionsMenu(menu);
+		//Logger.LogVerbose("OpenExplorer.onPrepareOptionsMenu");
+		super.onPrepareOptionsMenu(menu);
 		
 		if(IS_KEYBOARD_AVAILABLE)
 			MenuUtils.setMneumonics(menu);
-		
-		mMenuSearch = menu.findItem(R.id.menu_search);
-		mMenuSort = menu.findItem(R.id.menu_sort);
-		mMenuFoldersFirst = menu.findItem(R.id.menu_sort_folders_first);
-		mMenuNameAsc = menu.findItem(R.id.menu_sort_name_asc);
-		mMenuNameDesc = menu.findItem(R.id.menu_sort_name_desc);
-		mMenuDateAsc = menu.findItem(R.id.menu_sort_date_asc);
-		mMenuDateDesc = menu.findItem(R.id.menu_sort_date_desc);
-		mMenuSizeAsc = menu.findItem(R.id.menu_sort_size_asc);
-		mMenuSizeDesc = menu.findItem(R.id.menu_sort_size_desc);
-		mMenuSortType = menu.findItem(R.id.menu_sort_type);
-		mMenuView = menu.findItem(R.id.menu_view);
-		mMenuMulti = menu.findItem(R.id.menu_multi);
-		mMenuViewGrid = menu.findItem(R.id.menu_view_grid);
-		mMenuViewList = menu.findItem(R.id.menu_view_list);
-		mMenuViewCarousel = menu.findItem(R.id.menu_view_carousel);
-		mMenuViewHidden = menu.findItem(R.id.menu_view_hidden);
-		mMenuViewThumbs = menu.findItem(R.id.menu_view_thumbs);
-		mMenuViewFullscreen = menu.findItem(R.id.menu_view_fullscreen);
-		mMenuViewSplit = menu.findItem(R.id.menu_view_split);
-		mMenuContentOps = menu.findItem(R.id.menu_content_ops);
-		mMenuNewFolder = menu.findItem(R.id.menu_new_folder);
-		mMenuNewFile = menu.findItem(R.id.menu_new_file);
-		mMenuContextInfo = menu.findItem(R.id.menu_context_info);
-		mMenuContextBookmark = menu.findItem(R.id.menu_context_bookmark);
-		mMenuContextSelectAll = menu.findItem(R.id.menu_context_selectall);
-		mMenuContextPaste = menu.findItem(R.id.content_paste);
-		mMenuRefresh = menu.findItem(R.id.menu_refresh);
-		mMenuDebug = menu.findItem(R.id.menu_debug);
-		mMenuSettings = menu.findItem(R.id.menu_settings);
-		mMenuAbout = menu.findItem(R.id.menu_about);
-		mMenuExit = menu.findItem(R.id.menu_exit);
 		
 		if(getClipboard() != null)
 		{
@@ -2129,41 +2067,48 @@ public class OpenExplorer
 		} else
 			MenuUtils.setMenuVisible(menu,  false, R.id.content_paste);
 		
-		if(mSearchView == null) {
-			mSearchView = SearchViewCompat.newSearchView(this);
-			SearchViewCompat.setOnQueryTextListener(mSearchView,
-					new SearchViewCompat.OnQueryTextListenerCompat() {
-					public boolean onQueryTextSubmit(String query) {
-						mSearchView.clearFocus();
-						Intent intent = new Intent();
-						intent.setAction(Intent.ACTION_SEARCH);
-						Bundle appData = new Bundle();
-						appData.putString("path", getDirContentFragment(false).getPath().getPath());
-						intent.putExtra(SearchManager.APP_DATA, appData);
-						intent.putExtra(SearchManager.QUERY, query);
-						handleIntent(intent);
-						return true;
-					}
-					public boolean onQueryTextChange(String newText) {
-						return false;
-					}
-				});
+		MenuUtils.setMenuVisible(menu, IS_DEBUG_BUILD && !isBlackBerry(), R.id.menu_debug);
+		
+		if(USE_ACTION_BAR)
+		{
+			//MenuUtils.setMenuVisible(menu, false, R.id.title_menu);
+			if(menu.findItem(R.id.menu_search) != null)
+			{
+				if(mSearchView == null)
+				{
+					mSearchView = SearchViewCompat.newSearchView(this);
+					SearchViewCompat.setOnQueryTextListener(mSearchView,
+							new SearchViewCompat.OnQueryTextListenerCompat() {
+							public boolean onQueryTextSubmit(String query) {
+								mSearchView.clearFocus();
+								Intent intent = new Intent();
+								intent.setAction(Intent.ACTION_SEARCH);
+								Bundle appData = new Bundle();
+								appData.putString("path", getDirContentFragment(false).getPath().getPath());
+								intent.putExtra(SearchManager.APP_DATA, appData);
+								intent.putExtra(SearchManager.QUERY, query);
+								handleIntent(intent);
+								return true;
+							}
+							public boolean onQueryTextChange(String newText) {
+								return false;
+							}
+						});
+				}
+				MenuItem item = menu.findItem(R.id.menu_search);
+				item.setShowAsAction(MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+				item.setActionView(mSearchView);
+			}
 		}
-		mMenuSearch.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-		mMenuSearch.setActionView(mSearchView);
 		
-		return super.onCreateOptionsMenu(menu);
-	}
-
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		
-		
-		//MenuUtils.setMenuChecked(menu, USE_SPLIT_ACTION_BAR, R.id.menu_view_split);
+		MenuUtils.setMenuChecked(menu, USE_SPLIT_ACTION_BAR, R.id.menu_view_split);
 		//MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
-		//MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
+		MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		if(!getResources().getBoolean(R.bool.allow_fullscreen))
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_fullscreen);
 		else MenuUtils.setMenuChecked(menu, IS_FULL_SCREEN, R.id.menu_view_fullscreen);
+		
+		super.onPrepareOptionsMenu(menu);
 		
 		if(menu != null && menu.findItem(R.id.content_paste) != null && getClipboard() != null && getClipboard().size() > 0)
 		{
@@ -2190,56 +2135,104 @@ public class OpenExplorer
 		
 		if(!CAN_DO_CAROUSEL)
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_view_carousel);
-
-		// Calling super after populating the menu is necessary here to ensure
-		// that the action bar helpers have a chance to handle this event.
 		
+		//if(BEFORE_HONEYCOMB)
+		//	setupBaseBarButtons(menu, false);
 		
-		mMenuSearch.setVisible(true);
-		mMenuSort.setVisible(true);
-		mMenuFoldersFirst.setVisible(true);
-		mMenuNameAsc.setVisible(true);
-		mMenuNameDesc.setVisible(true);
-		mMenuDateAsc.setVisible(true);
-		mMenuDateDesc.setVisible(true);
-		mMenuSizeAsc.setVisible(true);
-		mMenuSizeDesc.setVisible(true);
-		mMenuSortType.setVisible(true);
-		mMenuView.setVisible(true);
-		mMenuMulti.setVisible(true);
-		mMenuViewGrid.setVisible(true);
-		mMenuViewList.setVisible(true);
-		mMenuViewCarousel.setVisible(true);
-		mMenuViewHidden.setVisible(true);
-		mMenuViewThumbs.setVisible(true);
-		mMenuViewFullscreen.setVisible(true);
-		mMenuViewSplit.setVisible(true);
-		mMenuContentOps.setVisible(true);
-		mMenuNewFolder.setVisible(true);
-		mMenuNewFile.setVisible(true);
-		mMenuContextInfo.setVisible(true);
-		mMenuContextBookmark.setVisible(true);
-		mMenuContextSelectAll.setVisible(true);
-		mMenuContextPaste.setVisible(true);
-		mMenuRefresh.setVisible(true);
-		mMenuDebug.setVisible(true);
-		mMenuSettings.setVisible(true);
-		mMenuAbout.setVisible(true);
-		mMenuExit.setVisible(true);
-
-		return super.onPrepareOptionsMenu(menu);
+		return true;
 	}
+	
+	
+
+	
+	
+	/*
+	private void hideMenuIfVisible(Menu menu, int menuId, int viewId) {
+		View v = findViewById(viewId);
+		if(v != null && v.isShown())
+			MenuUtils.setMenuVisible(menu, false, menuId);
+		else
+			MenuUtils.setMenuVisible(menu, true, menuId);
+	}
+	*/
 	
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		int id = item.getItemId();
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
+		
+		if(item.getSubMenu() != null)
+		{
+			onPrepareOptionsMenu(item.getSubMenu());
+			View anchor = findViewById(item.getItemId());
+			if(anchor == null && item.getActionView() != null)
+				anchor = item.getActionView();
+			if(anchor == null)
+			{
+				anchor = getActionBar().getCustomView();
+				if(anchor.findViewById(item.getItemId()) != null)
+					anchor = anchor.findViewById(item.getItemId());
+			}
+			if(anchor == null)
+				anchor = mToolbarButtons;
+			if(anchor == null)
+				anchor = findViewById(android.R.id.home);
+			if(anchor == null && USE_ACTION_BAR)
+				anchor = getActionBar().getCustomView().findViewById(android.R.id.home);
+			if(anchor == null)
+				anchor = getCurrentFocus().getRootView();
+			OpenFragment f = getSelectedFragment();
+			if(f != null)
+				if(f.onClick(item.getItemId(), anchor))
+					return true;
+		}
+		
+		if(item.isCheckable())
+			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
+		
+		OpenFragment f = getSelectedFragment();
+		if(f != null && f.onOptionsItemSelected(item))
+			return true;
+		
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
+		
+		return onClick(item.getItemId(), item, null);
+	}
+	
+	@Override
+	public void onClick(View v) {
+		super.onClick(v);
+		if(v == null) return;
+		int id = v.getId();
+		OpenFragment f = getSelectedFragment();
+		if(f != null && f.onClick(id, v)) return;
+		if(v.getTag() != null && v.getTag() instanceof MenuItem && id != ((MenuItem)v.getTag()).getItemId())
+		{
+			id = ((MenuItem)v.getTag()).getItemId();
+			if(f.onClick(id, v)) return;
+			if(MenuUtils.getMenuLookupID(id) > -1 && showMenu(MenuUtils.getMenuLookupSub(id), v, true)) return;
+		}
+		if(!v.showContextMenu())
+			onClick(id, (MenuItem)null, v);
+	}
+	
+	public boolean onClick(int id, MenuItem item, View from)
+	{
+		super.onClick(id);
+		if(from == null || !from.isShown())
+			from = findViewById(id);
 		if(id != R.id.title_icon && id != android.R.id.home);
 			toggleBookmarks(false);
 		OpenFragment f = getSelectedFragment();
-
+		if(f != null && f.onClick(id, from))
+			return true;
+		if(item != null && f != null && f.onOptionsItemSelected(item))
+			return true;
 		if(DEBUG)
-			Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + ")");
-		switch(id)	{
+			Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + "," + from + ")");
+		switch(id)
+		{
 			case R.id.menu_debug:
 				debugTest();
 				break;
@@ -2308,18 +2301,20 @@ public class OpenExplorer
 			case R.id.menu_view_list:
 				changeViewMode(OpenExplorer.VIEW_LIST, true);
 				return true;
-	
+
 			case R.id.menu_view_fullscreen:
 				getPreferences().setSetting("global", "pref_fullscreen", 
 						!getPreferences().getSetting("global", "pref_fullscreen", false));
 				goHome();
 				return true;
-	
+
 			case R.id.menu_view_split:
 				setSetting("pref_basebar", !USE_SPLIT_ACTION_BAR);
 				goHome();
 				return true;
 				
+			//case R.id.menu_global_ops_text:
+			//case R.id.menu_global_ops_icon:
 			case R.id.title_ops:
 				refreshOperations();
 				BetterPopupWindow pw = mOpsFragment.getPopup();
@@ -2359,7 +2354,7 @@ public class OpenExplorer
 				OpenPath.flushDbCache();
 				goHome();
 				return true;*/
-	
+
 			case R.id.menu_refresh:
 				ContentFragment content = getDirContentFragment(true);
 				if(content != null)
@@ -2382,7 +2377,7 @@ public class OpenExplorer
 				if(BEFORE_HONEYCOMB)
 					onSearchRequested();
 				return true;
-	
+
 			/*case R.id.menu_favorites:
 				toggleBookmarks();
 				return true;*/
@@ -2401,7 +2396,7 @@ public class OpenExplorer
 			case R.id.menu_multi_all_clear:
 				getClipboard().clear();
 				return true;
-	
+
 			case R.id.menu_multi_all_copy:
 				getClipboard().DeleteSource = false;
 				getDirContentFragment(false).executeMenu(R.id.content_paste, null, getDirContentFragment(false).getPath());
@@ -2416,9 +2411,13 @@ public class OpenExplorer
 			case R.id.title_paste_icon:
 			case R.id.title_paste_text:
 			case R.id.content_paste:
+				//if(BEFORE_HONEYCOMB)
 				getClipboard().setCurrentPath(getCurrentPath());
-				onClipboardDropdown(null);
+				onClipboardDropdown(from);
 				return true;
+				
+				//getDirContentFragment(false).executeMenu(R.id.menu_paste, null, mLastPath, mClipboard);
+				//return true;
 				
 			case R.id.menu_about:
 				DialogHandler.showAboutDialog(this);
@@ -2436,75 +2435,19 @@ public class OpenExplorer
 							}
 						});
 				return true;
+
+			default:
+				if(f instanceof ContentFragment)
+				{
+					ContentFragment cf = (ContentFragment)f;
+					if(cf.onClick(id, from)) return true;
+					else if(cf.onOptionsItemSelected(item)) return true;
+					return cf.executeMenu(id, null, getDirContentFragment(false).getPath());
+				}
+				else if(f instanceof TextEditorFragment)
+					((TextEditorFragment)f).onClick(id, from);
+				else if(f.onOptionsItemSelected(item)) return true;
 		}
-		
-		return super.onOptionsItemSelected(item);
-		
-//		if(DEBUG)
-//			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
-//		
-//		if(item.getSubMenu() != null)
-//		{
-//			onPrepareOptionsMenu(item.getSubMenu());
-//			View anchor = findViewById(item.getItemId());
-//			if(anchor == null && item.getActionView() != null)
-//				anchor = item.getActionView();
-//			if(anchor == null)
-//			{
-//				anchor = getActionBar().getCustomView();
-//				if(anchor.findViewById(item.getItemId()) != null)
-//					anchor = anchor.findViewById(item.getItemId());
-//			}
-//			if(anchor == null)
-//				anchor = mToolbarButtons;
-//			if(anchor == null)
-//				anchor = findViewById(android.R.id.home);
-//			if(anchor == null && USE_ACTION_BAR)
-//				anchor = getActionBar().getCustomView().findViewById(android.R.id.home);
-//			if(anchor == null)
-//				anchor = getCurrentFocus().getRootView();
-//			OpenFragment f = getSelectedFragment();
-//			if(f != null)
-//				if(f.onClick(item.getItemId(), anchor))
-//					return true;
-//		}
-//		
-//		if(item.isCheckable())
-//			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
-//		
-//		OpenFragment f = getSelectedFragment();
-//		if(f != null && f.onOptionsItemSelected(item))
-//			return true;
-//		
-//		if(DEBUG)
-//			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
-//		
-//		return onClick(item.getItemId(), item, null);
-	}
-	
-	@Override
-	public void onClick(View v) {
-		super.onClick(v);
-		if(v == null) return;
-		int id = v.getId();
-		OpenFragment f = getSelectedFragment();
-		if(f != null && f.onClick(id, v)) return;
-		if(v.getTag() != null && v.getTag() instanceof MenuItem && id != ((MenuItem)v.getTag()).getItemId())
-		{
-			id = ((MenuItem)v.getTag()).getItemId();
-			if(f.onClick(id, v)) return;
-			if(MenuUtils.getMenuLookupID(id) > -1 && showMenu(MenuUtils.getMenuLookupSub(id), v, true)) return;
-		}
-		if(!v.showContextMenu())
-			onClick(id, (MenuItem)null, v);
-	}
-	
-	public boolean onClick(int id, MenuItem item, View from)
-	{
-		super.onClick(id);
-		if(from == null || !from.isShown())
-			from = findViewById(id);
-		
 		
 		//showToast("oops");
 		return false;
