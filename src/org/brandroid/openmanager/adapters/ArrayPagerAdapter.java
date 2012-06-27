@@ -136,8 +136,9 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		if (state instanceof SavedState)
 		{
 			super.restoreState(state, loader);
-			bundle = ((SavedState)state).getBundle();
-		} else if(state instanceof Bundle)
+			//bundle = ((SavedState)state).getBundle();
+		}
+		if(state instanceof Bundle)
 			bundle = (Bundle)state;
 		else bundle = new Bundle();
 		

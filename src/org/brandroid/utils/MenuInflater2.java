@@ -42,7 +42,7 @@ import java.lang.reflect.Method;
  * it only works with an XmlPullParser returned from a compiled resource (R.
  * <em>something</em> file.)
  */
-public class MenuInflater {
+public class MenuInflater2 {
     private static final String LOG_TAG = "MenuInflater";
 
     /** Menu tag name in XML. */
@@ -71,7 +71,7 @@ public class MenuInflater {
      * 
      * @see Activity#getMenuInflater()
      */
-    public MenuInflater(Context context) {
+    public MenuInflater2(Context context) {
         mContext = context;
         mActionViewConstructorArguments = new Object[] {context};
         mActionProviderConstructorArguments = mActionViewConstructorArguments;
