@@ -36,7 +36,7 @@ import android.widget.TextView;
 
 public class BookmarkHolder {
 	private RemoteImageView mIcon;
-	private ImageView mEject, mIndicate;
+	private ImageView mEject;
 	private TextView mMainText, mInfo, mPath, mSizeText;
 	private View mParentView;
 	private String sTitle;
@@ -67,8 +67,6 @@ public class BookmarkHolder {
 			mIcon = (RemoteImageView)mParentView.findViewById(R.id.content_icon);
 		if(mMainText == null)
 			mMainText = (TextView)mParentView.findViewById(R.id.content_text);
-		if(mIndicate == null)
-			mIndicate = (ImageView)mParentView.findViewById(R.id.list_arrow);
 		if(mEject == null)
 			mEject = (ImageView)mParentView.findViewById(R.id.eject);
 		if(mInfo == null)
@@ -110,8 +108,6 @@ public class BookmarkHolder {
 	
 	public void setSelected(Boolean sel)
 	{
-		if(mIndicate != null)
-			mIndicate.setVisibility(sel ? View.VISIBLE : View.GONE);
 	}
 	
 	public String getPath() { return sPath; }
