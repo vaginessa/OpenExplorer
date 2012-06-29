@@ -1391,6 +1391,7 @@ public class ContentFragment extends OpenFragment
 		mGrid.setVisibility(View.VISIBLE);
 		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
+		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
