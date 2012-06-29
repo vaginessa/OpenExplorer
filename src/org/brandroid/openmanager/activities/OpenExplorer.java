@@ -63,7 +63,6 @@ import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.util.LruCache;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -203,6 +202,7 @@ import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuItemImpl;
 import org.brandroid.utils.MenuUtils;
@@ -1330,7 +1330,7 @@ public class OpenExplorer
 		super.onLowMemory();
 		LOW_MEMORY = true;
 		showToast(R.string.s_msg_low_memory);
-		ThumbnailCreator.flushCache(getApplicationContext(), false);
+		ThumbnailCreator.flushCache(this, false);
 		FileManager.clearOpenCache();
 		EventHandler.cancelRunningTasks();
 	}
@@ -3291,7 +3291,7 @@ public class OpenExplorer
 		
 		final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
-			ThumbnailCreator.setThumbnail(icon, path, 96, 96,
+			ThumbnailCreator.setThumbnail(this, icon, path, 96, 96,
 				new OnUpdateImageListener() {
 					public void updateImage(Bitmap b) {
 						BitmapDrawable d = new BitmapDrawable(getResources(), b);
@@ -3499,16 +3499,16 @@ public class OpenExplorer
 					try {
 						for(OpenPath kid : path.list())
 						{
-							ThumbnailCreator.generateThumb(kid, 36, 36, c);
-							ThumbnailCreator.generateThumb(kid, 128, 128, c);
+							ThumbnailCreator.generateThumb(OpenExplorer.this, kid, 36, 36, c);
+							ThumbnailCreator.generateThumb(OpenExplorer.this, kid, 128, 128, c);
 							//done++;
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				} else {
-					ThumbnailCreator.generateThumb(path, 36, 36, c);
-					ThumbnailCreator.generateThumb(path, 128, 128, c);
+					ThumbnailCreator.generateThumb(OpenExplorer.this, path, 36, 36, c);
+					ThumbnailCreator.generateThumb(OpenExplorer.this, path, 128, 128, c);
 					//done++;
 				}
 			}
@@ -3739,7 +3739,7 @@ public class OpenExplorer
 			}
 			final BetterPopupWindow mSiblingPopup = new BetterPopupWindow(mContext, anchor);
 			//mSiblingPopup.USE_INDICATOR = false;
-			OpenPathList mSiblingList = new OpenPathList(foster, mContext);
+			OpenPathList mSiblingList = new OpenPathList(foster, this);
 			mSiblingList.setOnItemClickListener(new OnItemClickListener() {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
@@ -3997,8 +3997,8 @@ public class OpenExplorer
 	}
 
 	@Override
-	public Context getAndroidContext() {
-		return getOpenApplication().getAndroidContext();
+	public Context getContext() {
+		return getOpenApplication().getContext();
 	}
 	
 	public ShellSession getShellSession() {

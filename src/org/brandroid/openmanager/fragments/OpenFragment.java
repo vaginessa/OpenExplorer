@@ -17,8 +17,10 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
 import com.android.gallery3d.data.DataManager;
@@ -36,7 +38,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LruCache;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -588,9 +589,9 @@ public abstract class OpenFragment
 	}
 	
 	@Override
-	public Context getAndroidContext() {
+	public Context getContext() {
 		if(getExplorer() != null)
-			return getExplorer().getAndroidContext();
+			return getExplorer().getContext();
 		else return getApplicationContext();
 	}
 	
@@ -627,6 +628,16 @@ public abstract class OpenFragment
 	@Override
 	public LruCache<String, Bitmap> getMemoryCache() {
 		return getExplorer().getMemoryCache();
+	}
+	
+	@Override
+	public Preferences getPreferences() {
+		return getExplorer().getPreferences();
+	}
+	
+	@Override
+	public void refreshBookmarks() {
+		getExplorer().refreshBookmarks();
 	}
 	
 	@Override

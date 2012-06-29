@@ -8,6 +8,8 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
+import org.brandroid.utils.Preferences;
 
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
@@ -16,10 +18,10 @@ import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.ThreadPool;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.support.v4.util.LruCache;
 
 public class OpenApplication extends Application implements OpenApp
 {
@@ -46,7 +48,7 @@ public class OpenApplication extends Application implements OpenApp
     public void onTerminate() {
     	super.onTerminate();
     	if(mBitmapCache != null)
-    		mBitmapCache.evictAll();
+    		mBitmapCache.clear();
     	if(mBitmapDiskCache != null)
 			try {
 				mBitmapDiskCache.close();
@@ -62,7 +64,7 @@ public class OpenApplication extends Application implements OpenApp
     	
     }
 
-    public Context getAndroidContext() {
+    public Context getContext() {
         return this;
     }
     
@@ -89,7 +91,7 @@ public class OpenApplication extends Application implements OpenApp
     
     public synchronized ImageCacheService getImageCacheService() {
         if (mImageCacheService == null) {
-            mImageCacheService = new ImageCacheService(getAndroidContext());
+            mImageCacheService = new ImageCacheService(getContext());
         }
         return mImageCacheService;
     }
@@ -118,7 +120,7 @@ public class OpenApplication extends Application implements OpenApp
 	@Override
 	public synchronized LruCache<String, Bitmap> getMemoryCache() {
 		if(mBitmapCache == null)
-			mBitmapCache = new LruCache<String, Bitmap>(200);
+			mBitmapCache = new LruCache<String, Bitmap>(((ActivityManager)getSystemService(Context.ACTIVITY_SERVICE)).getMemoryClass() * 10);
 		return mBitmapCache;
 	}
 
@@ -131,5 +133,15 @@ public class OpenApplication extends Application implements OpenApp
 				Logger.LogError("Couldn't instantiate Disk Cache");
 			}
 		return mBitmapDiskCache;
+	}
+	
+	@Override
+	public Preferences getPreferences() {
+		return new Preferences(getContext());
+	}
+
+	@Override
+	public void refreshBookmarks() {
+		
 	}
 }

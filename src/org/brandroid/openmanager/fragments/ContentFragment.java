@@ -157,7 +157,7 @@ public class ContentFragment extends OpenFragment
 	}
 	private void setPath(String path)
 	{
-		mPath = FileManager.getOpenCache(path, getAndroidContext());
+		mPath = FileManager.getOpenCache(path, getContext());
 	}
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
@@ -211,7 +211,7 @@ public class ContentFragment extends OpenFragment
 	
 	protected ContentAdapter getContentAdapter() {
 		if(mContentAdapter == null)
-			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
+			mContentAdapter = new ContentAdapter(this, mViewMode, mPath);
 		return mContentAdapter;
 	}
 	
@@ -239,7 +239,7 @@ public class ContentFragment extends OpenFragment
 		if(mContentAdapter != null)
 		{
 			mGrid.setAdapter(null);
-			mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, mPath);
+			mContentAdapter = new ContentAdapter(this, mViewMode, mPath);
 			mContentAdapter.setCheckClipboardListener(this);
 			//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
 			mGrid.setAdapter(mContentAdapter);
@@ -263,7 +263,7 @@ public class ContentFragment extends OpenFragment
 		if(getArguments() != null && getArguments().containsKey("last"))
 			mBundle = getArguments();
 		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || !mPath.getPath().equals(mBundle.getString("last"))))
-			mPath = FileManager.getOpenCache(mBundle.getString("last"), getAndroidContext());
+			mPath = FileManager.getOpenCache(mBundle.getString("last"), getContext());
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
 		
@@ -277,7 +277,7 @@ public class ContentFragment extends OpenFragment
 	
 	public synchronized void notifyDataSetChanged() {
 		if(mContentAdapter == null) {
-			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
+			mContentAdapter = new ContentAdapter(this, mViewMode, mPath);
 			if(mGrid != null)
 				mGrid.setAdapter(mContentAdapter);
 		}
@@ -299,7 +299,7 @@ public class ContentFragment extends OpenFragment
 			//return;
 		}
 		
-		if(getAndroidContext() == null) {
+		if(getContext() == null) {
 			Logger.LogError("RefreshData out of context");
 			return;
 		}
@@ -317,7 +317,7 @@ public class ContentFragment extends OpenFragment
 		mRefreshReady = false;
 		
 		if(mContentAdapter == null)
-			mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, path);
+			mContentAdapter = new ContentAdapter(this, mViewMode, path);
 
 		if(path instanceof OpenFile && !path.getPath().startsWith("/"))
 		{
