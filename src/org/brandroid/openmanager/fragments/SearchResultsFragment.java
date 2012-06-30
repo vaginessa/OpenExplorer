@@ -178,7 +178,7 @@ public class SearchResultsFragment
 			mPath = new OpenSearch(q, path, this);
 			myTask.execute();
 		}
-		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, getSearch());
+		mContentAdapter = new ContentAdapter(getExplorer(), this, OpenExplorer.VIEW_LIST, getSearch());
 	}
 	
 	@Override

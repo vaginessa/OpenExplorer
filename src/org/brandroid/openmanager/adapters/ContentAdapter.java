@@ -5,6 +5,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -16,6 +19,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
+import org.brandroid.openmanager.views.OpenPathView;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
@@ -57,8 +61,26 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowDetails = true;
 	private boolean mShowFiles = true;
 	
-	public ContentAdapter(Context context, int mode, OpenPath parent) {
+	/**
+	 * Set of seleced message IDs.
+	 */
+	private final HashSet<String> mSelectedSet = new HashSet<String>();
+
+	/**
+	 * Callback from MessageListAdapter. All methods are called on the UI
+	 * thread.
+	 */
+	public interface Callback {
+		/** Called when the user selects/unselects a message */
+		void onAdapterSelectedChanged(OpenPathView itemView,
+				boolean newSelected, int mSelectedCount);
+	}
+	
+	private final Callback mCallback;
+	
+	public ContentAdapter(Context context, Callback callback, int mode, OpenPath parent) {
 		//super(context, layout, data);
+		mCallback = callback;
 		mContext = context;
 		mParent = parent;
 		
@@ -341,4 +363,56 @@ public class ContentAdapter extends BaseAdapter {
 		return mData2;
 	}
 	
+	public Set<String> getSelectedSet() {
+		return mSelectedSet;
+	}
+	
+	public void setSelectedSet(Set<String> set) {
+		for (String rememberedPath: set) {  
+			mSelectedSet.add(rememberedPath);
+		}
+	}
+
+	/**
+	 * Clear the selection. It's preferable to calling {@link Set#clear()} on
+	 * {@link #getSelectedSet()}, because it also notifies observers.
+	 */
+	public void clearSelection() {
+		Set<String> checkedset = getSelectedSet();
+		if (checkedset.size() > 0) {
+			checkedset.clear();
+			notifyDataSetChanged();
+		}
+	}
+
+	public boolean isSelected(OpenPathView itemView) {
+		return getSelectedSet().contains(itemView.getIdentifer());
+	}
+	
+	public void toggleSelected(OpenPathView itemView) {
+		updateSelected(itemView, !isSelected(itemView));
+	}
+
+	/**
+	 * This is used as a callback from the list items, to set the selected state
+	 * 
+	 * <p>
+	 * Must be called on the UI thread.
+	 * 
+	 * @param itemView
+	 *            the item being changed
+	 * @param newSelected
+	 *            the new value of the selected flag (checkbox state)
+	 */
+	private void updateSelected(OpenPathView itemView, boolean newSelected) {
+		if (newSelected) {
+			mSelectedSet.add(itemView.getIdentifer());
+		} else {
+			mSelectedSet.remove(itemView.getIdentifer());
+		}
+		if (mCallback != null) {
+			mCallback.onAdapterSelectedChanged(itemView, newSelected,
+					mSelectedSet.size());
+		}
+	}
 }

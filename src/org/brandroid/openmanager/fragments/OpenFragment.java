@@ -21,6 +21,7 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.app.SherlockListFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
@@ -54,7 +55,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
  * other sections of the application.
  */
 public abstract class OpenFragment
-			extends SherlockFragment
+			extends SherlockListFragment
 			implements View.OnClickListener, View.OnLongClickListener
 				, Comparator<OpenFragment>
 				, Comparable<OpenFragment>
@@ -310,12 +311,12 @@ public abstract class OpenFragment
 		return mOpenMenu.show(xOffset, yOffset);
 	}
 	
-	@Override
-	public void setHasOptionsMenu(boolean hasMenu) {
-		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
-		super.setHasOptionsMenu(hasMenu);
-		mHasOptions = hasMenu;
-	}
+//	@Override
+//	public void setHasOptionsMenu(boolean hasMenu) {
+//		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
+//		super.setHasOptionsMenu(hasMenu);
+//		mHasOptions = hasMenu;
+//	}
 	public boolean hasOptionsMenu()
 	{
 		return mHasOptions;
