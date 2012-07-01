@@ -380,10 +380,8 @@ public class OpenExplorer
 		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
-		//mActionBarHelper = ActionBarHelper.createInstance(this);
-		//mActionBarHelper.onCreate(savedInstanceState);
 		USE_ACTION_BAR = true;
-//		requestWindowFeature(Window.FEATURE_ACTION_BAR);
+
 		mBar = getSupportActionBar();
 		if(mBar != null)
 		{
@@ -990,7 +988,7 @@ public class OpenExplorer
 		if(findViewById(R.id.frag_log) != null)
 			return;
 		View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar);
-		mLogFragment.setupPopup(this, anchor);
+//		mLogFragment.setupPopup(this, anchor);
 	}
 	
 	private void initOpsPopup() {
@@ -1297,13 +1295,13 @@ public class OpenExplorer
 		super.onStart();
 		if(DEBUG && IS_DEBUG_BUILD)
 			Logger.LogVerbose("OpenExplorer.onStart");
-		if(findViewById(R.id.frag_log) != null)
-		{
-			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
-			findViewById(R.id.frag_log).setVisibility(View.GONE);
-		} else {
-			initLogPopup();
-		}
+//		if(findViewById(R.id.frag_log) != null)
+//		{
+//			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
+//			findViewById(R.id.frag_log).setVisibility(View.GONE);
+//		} else {
+//			initLogPopup();
+//		}
 		//submitStats();
 		//new Thread(new Runnable(){public void run() {refreshCursors();}}).start();;
 		//refreshCursors();

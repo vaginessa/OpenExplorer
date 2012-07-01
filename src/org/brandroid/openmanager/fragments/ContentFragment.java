@@ -81,6 +81,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -141,7 +142,6 @@ public class ContentFragment extends OpenFragment
 	
 	protected Integer mViewMode = null;
 	protected ContentAdapter mContentAdapter;
-	protected ContentAdapter mListAdapter;
 	private OnCreateContextMenuListener mConvListOnCreateContextMenuListener;
 	
 	/**
@@ -288,18 +288,6 @@ public class ContentFragment extends OpenFragment
 		
 		mActivity = (OpenExplorer) getActivity();
 		
-		final ListView listView = getListView();
-        //listView.setOnCreateContextMenuListener(mConvListOnCreateContextMenuListener);
-        //listView.setOnKeyListener(mThreadListKeyListener);
-        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        listView.setOnItemLongClickListener(this);
-        
-        // Tell the list view which view to display when the list is empty
-//        View emptyView = findViewById(R.id.empty);
-//        listView.setEmptyView(emptyView);
-
-        initListAdapter();
-		
 		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
 		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
 		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
@@ -320,13 +308,50 @@ public class ContentFragment extends OpenFragment
 		
 	}
 	
+	/**
+	 * The Fragment's UI is just a list fragment
+	 */
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.fragment_pager_list, container,
+				false);
+		mIsViewCreated = true;
+		return v;
+	}
+	
+	/**
+	 * Called when the activity's onCreate() method has returned.
+	 */
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) { 
+		super.onActivityCreated(savedInstanceState);
+
+		final ListView lv = getListView();
+		lv.setOnItemLongClickListener(this);
+		lv.setItemsCanFocus(false);
+		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		
+        // Tell the list view which view to display when the list is empty
+//      View emptyView = findViewById(R.id.empty);
+//      listView.setEmptyView(emptyView);
+		
+        initListAdapter();
+
+//		if (savedInstanceState != null) {
+//			// Fragment doesn't have this method. Call it manually.
+//			restoreInstanceState(savedInstanceState);
+//		}
+	}
+	
 	private void initListAdapter() {
-        mListAdapter = new ContentAdapter(getActivity(), this, mViewMode, mPath);
-        setListAdapter(mListAdapter);
+		mContentAdapter = new ContentAdapter(getActivity(), this, mViewMode, mPath);
+        this.setListAdapter(mContentAdapter);
+        mContentAdapter.updateData();
     }
 	
-	public synchronized void notifyDataSetChanged() {
-		if(mContentAdapter == null) {
+/*	public synchronized void notifyDataSetChanged() {
+		if(mListAdapter == null) {
 			mContentAdapter = new ContentAdapter(getActivity(), this, mViewMode, mPath);
 			if(mGrid != null)
 				mGrid.setAdapter(mContentAdapter);
@@ -336,7 +361,7 @@ public class ContentFragment extends OpenFragment
 		//else
 		
 			mContentAdapter.updateData();
-	}
+	}*/
 	public synchronized void refreshData()
 	{
 		refreshData(getArguments(), false);
@@ -446,7 +471,7 @@ public class ContentFragment extends OpenFragment
 			
 		}
 		
-		notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 		
 		mRefreshReady = true;
 		
@@ -509,8 +534,12 @@ public class ContentFragment extends OpenFragment
 	}
 	
 
-	//@Override
+/*	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.fragment_pager_list, container,
+				false);
+		mIsViewCreated = true;
+		
 		View v = inflater.inflate(R.layout.content_layout, container, false);
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		final OpenFragment me = this;
@@ -566,7 +595,7 @@ public class ContentFragment extends OpenFragment
 		super.onCreateView(inflater, container, savedInstanceState);
 		//v.setBackgroundResource(R.color.lightgray);
 		
-		/*
+		
 		if (savedInstanceState != null && savedInstanceState.containsKey("location")) {
 			String location = savedInstanceState.getString("location");
 			if(location != null && !location.equals("") && location.startsWith("/"))
@@ -578,10 +607,10 @@ public class ContentFragment extends OpenFragment
 			}
 			//setContentPath(path, false);
 		}
-		*/
+		
 
 		return v;
-	}
+	}*/
 	
 	/**
 	 * @return true if the content view is created and not destroyed yet. (i.e.
@@ -920,49 +949,6 @@ public class ContentFragment extends OpenFragment
 		}
 		return false;
 	}
-	
-/*	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		if(item == null) return false;
-		if(DEBUG)
-			Logger.LogDebug("ContentFragment.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
-		OpenPath path = null;
-		if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
-			path = getContentAdapter().getItem(mMenuContextItemIndex);
-		if(path != null && executeMenu(item.getItemId(), mActionMode, path))
-			return true;
-		switch(item.getItemId())
-		{
-		case R.id.menu_new_file:
-			EventHandler.createNewFile(getPath(), getActivity());
-			return true;
-		case R.id.menu_new_folder:
-			EventHandler.createNewFolder(getPath(), getActivity());
-			return true;
-		case R.id.menu_sort_name_asc:	onSortingChanged(SortType.ALPHA); return true; 
-		case R.id.menu_sort_name_desc:	onSortingChanged(SortType.ALPHA_DESC); return true; 
-		case R.id.menu_sort_date_asc: 	onSortingChanged(SortType.DATE); return true;
-		case R.id.menu_sort_date_desc: 	onSortingChanged(SortType.DATE_DESC); return true; 
-		case R.id.menu_sort_size_asc: 	onSortingChanged(SortType.SIZE); return true; 
-		case R.id.menu_sort_size_desc: 	onSortingChanged(SortType.SIZE_DESC); return true; 
-		case R.id.menu_sort_type: 		onSortingChanged(SortType.TYPE); return true;
-		case R.id.menu_view_hidden:
-			onHiddenFilesChanged(!getShowHiddenFiles());
-			return true;
-		case R.id.menu_view_thumbs:
-			onThumbnailChanged(!getShowThumbnails());
-			return true;
-		case R.id.menu_sort_folders_first:
-			onFoldersFirstChanged(!getFoldersFirst());
-			return true;
-		default:
-			if(executeMenu(item.getItemId(), null, mPath))
-				return true;
-		}
-		return false;
-	}*/
-
 	
 	public boolean executeMenu(final int id, final Object mode, final OpenPath file)
 	{
@@ -1738,7 +1724,7 @@ public class ContentFragment extends OpenFragment
 	 * @return the number of messages that are currently selected.
 	 */
 	private int getSelectedCount() {
-		return mListAdapter.getSelectedSet().size();
+		return mContentAdapter.getSelectedSet().size();
 	}
 
 	/**
@@ -1749,7 +1735,7 @@ public class ContentFragment extends OpenFragment
 	}
 
 	public void onDeselectAll() {
-		mListAdapter.clearSelection();
+		mContentAdapter.clearSelection();
 		if (isInSelectionMode()) {
 			finishSelectionMode();
 		}
@@ -1839,8 +1825,8 @@ public class ContentFragment extends OpenFragment
 
 		@Override
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			Set<String> selectedConversations = mListAdapter.getSelectedSet();
-			Object[] selectedFilePaths = mListAdapter.getSelectedSet()
+			Set<String> selectedConversations = mContentAdapter.getSelectedSet();
+			Object[] selectedFilePaths = mContentAdapter.getSelectedSet()
 					.toArray();
 
 //			/*
@@ -2017,7 +2003,7 @@ public class ContentFragment extends OpenFragment
 			int position, long id) {
 		// FileListItem f = mListAdapter.getItem(position);
 		boolean toggled = false;
-		if (!mListAdapter.isSelected((OpenPathView) view)) {
+		if (!mContentAdapter.isSelected((OpenPathView) view)) {
 			toggleSelection((OpenPathView) view);
 			toggled = true;
 			updateSelectionMode();
@@ -2027,7 +2013,11 @@ public class ContentFragment extends OpenFragment
 
 	private void toggleSelection(OpenPathView itemView) {
 		itemView.invalidate();
-		mListAdapter.toggleSelected(itemView);
+		mContentAdapter.toggleSelected(itemView);
+	}
+
+	public void notifyDataSetChanged() {
+		mContentAdapter.notifyDataSetChanged();
 	}
 	
 }
