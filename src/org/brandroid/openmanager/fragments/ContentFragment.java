@@ -105,6 +105,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
+@TargetApi(11)
 public class ContentFragment extends OpenFragment
 		implements  OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
@@ -1783,10 +1784,13 @@ public class ContentFragment extends OpenFragment
 
 			// Set file with share history to the provider and set the share
 			// intent.
-			mShareActionProvider = (ShareActionProvider) mShare
-					.getActionProvider();
-			mShareActionProvider
-					.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+			if(mShare != null)
+			{
+				mShareActionProvider = (ShareActionProvider) mShare
+						.getActionProvider();
+				mShareActionProvider
+						.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+			}
 
 			return true;
 		}

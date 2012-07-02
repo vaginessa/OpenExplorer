@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.StatFs;
 import android.provider.MediaStore;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
@@ -194,6 +195,7 @@ import com.viewpagerindicator.TabPageIndicator;
 import com.viewpagerindicator.TabPageIndicator.TabView;
 import org.xmlpull.v1.XmlPullParserException;
 
+@TargetApi(11)
 public class OpenExplorer
 		extends OpenFragmentActivity
 		implements OnBackStackChangedListener, OnClipboardUpdateListener,
