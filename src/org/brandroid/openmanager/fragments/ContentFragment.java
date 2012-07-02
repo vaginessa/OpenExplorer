@@ -95,6 +95,7 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -2012,7 +2013,8 @@ public class ContentFragment extends OpenFragment
 	}
 
 	private void toggleSelection(OpenPathView itemView) {
-		itemView.invalidate();
+		CheckBox listItemCB = (CheckBox)itemView.findViewById(R.id.checkbox);
+		listItemCB.setChecked(!listItemCB.isChecked());
 		mContentAdapter.toggleSelected(itemView);
 	}
 

@@ -39,6 +39,7 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.LinearLayout;
 
 
 
@@ -163,39 +164,46 @@ public class ContentAdapter extends BaseAdapter {
 	}
 	
 	////@Override
-	public View getView(int position, View view, ViewGroup parent)
+	public View getView(int position, View convertView, ViewGroup parent)
 	{
 		int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
-				R.layout.grid_content_layout : R.layout.list_content_layout;
+				R.layout.grid_content_layout : R.layout.file_list_item;
 		final boolean useLarge = mode == R.layout.grid_content_layout;
 		
-		if(view == null
+		OpenPathView row;
+						
+		if(convertView == null
 					//|| view.getTag() == null
 					//|| !BookmarkHolder.class.equals(view.getTag())
 					//|| ((BookmarkHolder)view.getTag()).getMode() != mode
-					)
-		{
+					) {
 			LayoutInflater in = (LayoutInflater)getContext()
 									.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			
-			view = in.inflate(mode, parent, false);
+			row = (OpenPathView) in.inflate(R.layout.file_list_item, parent, false);
 			//mHolder = new BookmarkHolder(file, mName, view, mode);
 			//view.setTag(mHolder);
 			//file.setTag(mHolder);
-		} //else mHolder = (BookmarkHolder)view.getTag();
+		} else {
+			row = (OpenPathView)convertView;
+		}
 		
 		final OpenPath file = getItem(position); //super.getItem(position);
 		
-		if(file == null) return view;
+		if(file == null) {
+			return row;
+		} else {
+			row.associateFile(file);
+		}
 		
 		Object o = file.getTag();
 		if(o != null && o instanceof OpenPath && ((OpenPath)o).equals(file))
-			return view;
+			return row;
 		
-		TextView mInfo = (TextView)view.findViewById(R.id.content_info);
-		TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath); 
-		TextView mNameView = (TextView)view.findViewById(R.id.content_text);
-		final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+		TextView mInfo = (TextView)row.findViewById(R.id.content_info);
+		TextView mPathView = (TextView)row.findViewById(R.id.content_fullpath); 
+		TextView mNameView = (TextView)row.findViewById(R.id.content_text);
+		final ImageView mIcon = (ImageView)row.findViewById(R.id.content_icon);
 		
 		if(mPlusParent && position == 0)
 		{
@@ -203,7 +211,7 @@ public class ContentAdapter extends BaseAdapter {
 			mIcon.setImageResource(useLarge ? R.drawable.lg_folder_up : R.drawable.sm_folder_up);
 			if(mInfo != null) mInfo.setText("");
 			if(mPathView != null) mPathView.setText("");
-			return view;
+			return row;
 		}
 		final String mName = file.getName();
 		
@@ -249,11 +257,11 @@ public class ContentAdapter extends BaseAdapter {
 
 		boolean multi = mClipper != null && mClipper.isMultiselect();
 		boolean copied = mClipper != null && mClipper.checkClipboard(file);
-		int pad = view.getPaddingLeft();
+		int pad = row.getPaddingLeft();
 		if(multi || copied)
 			pad = 0;
-		view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), pad, view.getPaddingBottom());
-		ImageView mCheck = (ImageView)view.findViewById(R.id.content_check);
+		row.setPadding(row.getPaddingLeft(), row.getPaddingTop(), pad, row.getPaddingBottom());
+		ImageView mCheck = (ImageView)row.findViewById(R.id.content_check);
 		if(mCheck != null)
 		{
 			if(mCheck.getVisibility() != (multi || copied ? View.VISIBLE : View.GONE))
@@ -264,7 +272,7 @@ public class ContentAdapter extends BaseAdapter {
 		if(copied)
 		{
 			mNameView.setTextAppearance(getContext(), R.style.Highlight);
-			ViewUtils.setOnClicks(view, new View.OnClickListener() {
+			ViewUtils.setOnClicks(row, new View.OnClickListener() {
 					public void onClick(View v) {
 						mClipper.removeFromClipboard(file);
 					}
@@ -272,7 +280,7 @@ public class ContentAdapter extends BaseAdapter {
 		} else {
 			mNameView.setTextAppearance(getContext(),  R.style.Large);
 			if(!copied && multi)
-				ViewUtils.setImageResource(view,
+				ViewUtils.setImageResource(row,
 						android.R.drawable.checkbox_off_background,
 						R.id.content_check);
 		}
@@ -327,9 +335,9 @@ public class ContentAdapter extends BaseAdapter {
 			}
 		}
 		
-		view.setTag(file);
+		row.setTag(file);
 		
-		return view;
+		return row;
 	}
 
 	@Override
