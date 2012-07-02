@@ -106,7 +106,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
 public class ContentFragment extends OpenFragment
-		implements OnItemClickListener, OnItemLongClickListener,
+		implements  OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
 					OnTaskUpdateListener, ContentAdapter.Callback
 {
@@ -632,10 +632,10 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 	
-
-	//@Override
-	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
-		OpenPath file = (OpenPath)list.getItemAtPosition(pos);
+	@Override
+	public void onListItemClick(ListView list, View view, int position, long id) {
+		super.onListItemClick(list, view, position, id);
+		OpenPath file = (OpenPath)list.getItemAtPosition(position);
 		
 		Logger.LogInfo("File clicked: " + file.getPath());
 		
@@ -1394,7 +1394,7 @@ public class ContentFragment extends OpenFragment
 	public void setupGridView()
 	{
 		mGrid.setVisibility(View.VISIBLE);
-		mGrid.setOnItemClickListener(this);
+//		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
