@@ -2013,8 +2013,6 @@ public class ContentFragment extends OpenFragment
 	}
 
 	private void toggleSelection(OpenPathView itemView) {
-		CheckBox listItemCB = (CheckBox)itemView.findViewById(R.id.checkbox);
-		listItemCB.setChecked(!listItemCB.isChecked());
 		mContentAdapter.toggleSelected(itemView);
 	}
 
