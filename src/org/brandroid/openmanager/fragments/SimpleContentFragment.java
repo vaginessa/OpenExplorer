@@ -4,6 +4,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.views.OpenPathView;
 
@@ -25,9 +26,11 @@ public class SimpleContentFragment extends Fragment implements ContentAdapter.Ca
 	private boolean mShowFiles = true;
 	private boolean mShowUp = false;
 	private Bundle mData;
+	private OpenApp mApp;
 	
-	public SimpleContentFragment(Context c, OpenPath path)
+	public SimpleContentFragment(OpenApp app, OpenPath path)
 	{
+		mApp = app;
 		mPath = path;
 	}
 	
@@ -69,7 +72,7 @@ public class SimpleContentFragment extends Fragment implements ContentAdapter.Ca
 			mPath = (OpenPath)mData.getParcelable("path");
 		mGrid = (GridView)inflater.inflate(R.layout.content_grid, container, false);
 		mGrid.setNumColumns(container.getContext().getResources().getInteger(R.integer.max_grid_columns));
-		mAdapter = new ContentAdapter(container.getContext(), this, OpenExplorer.VIEW_LIST, mPath);
+		mAdapter = new ContentAdapter(mApp, this, OpenExplorer.VIEW_LIST, mPath);
 		mAdapter.setShowDetails(false);
 		mAdapter.setSorting(SortType.ALPHA);
 		mAdapter.setShowPlusParent(mShowUp);
