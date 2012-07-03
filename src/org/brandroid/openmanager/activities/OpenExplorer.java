@@ -232,7 +232,7 @@ public class OpenExplorer
 	public static boolean IS_FULL_SCREEN = false;
 	public static boolean IS_KEYBOARD_AVAILABLE = false;
 	
-	private final static boolean DEBUG = IS_DEBUG_BUILD && false;
+	private final static boolean DEBUG = IS_DEBUG_BUILD && true;
 	
 	public static int SCREEN_WIDTH = -1;
 	public static int SCREEN_HEIGHT = -1;
@@ -2100,6 +2100,8 @@ public class OpenExplorer
 				}
 			}
 		}
+		
+		getSelectedFragment().onPrepareOptionsMenu(menu);
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -2286,51 +2288,49 @@ public class OpenExplorer
 				return true;
 		}
 		
-		return super.onOptionsItemSelected(item);
+		//return super.onOptionsItemSelected(item);
 		
-//		if(DEBUG)
-//			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
-//		
-//		if(item.getSubMenu() != null)
-//		{
-//			onPrepareOptionsMenu(item.getSubMenu());
-//			View anchor = findViewById(item.getItemId());
-//			if(anchor == null && item.getActionView() != null)
-//				anchor = item.getActionView();
-//			if(anchor == null)
-//			{
-//				anchor = getActionBar().getCustomView();
-//				if(anchor.findViewById(item.getItemId()) != null)
-//					anchor = anchor.findViewById(item.getItemId());
-//			}
-//			if(anchor == null)
-//				anchor = mToolbarButtons;
-//			if(anchor == null)
-//				anchor = findViewById(android.R.id.home);
-//			if(anchor == null && USE_ACTION_BAR)
-//				anchor = getActionBar().getCustomView().findViewById(android.R.id.home);
-//			if(anchor == null)
-//				anchor = getCurrentFocus().getRootView();
-//			OpenFragment f = getSelectedFragment();
-//			if(f != null)
-//				if(f.onClick(item.getItemId(), anchor))
-//					return true;
-//		}
-//		
-//		if(item.isCheckable())
-//			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
-//		
-//		OpenFragment f = getSelectedFragment();
-//		if(f != null && f.onOptionsItemSelected(item))
-//			return true;
-//		
-//		if(DEBUG)
-//			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
-//		
-//		return onClick(item.getItemId(), item, null);
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
+		
+		if(item.getSubMenu() != null)
+		{
+			onPrepareOptionsMenu(item.getSubMenu());
+			View anchor = findViewById(item.getItemId());
+			if(anchor == null && item.getActionView() != null)
+				anchor = item.getActionView();
+			if(anchor == null)
+			{
+				anchor = getActionBar().getCustomView();
+				if(anchor.findViewById(item.getItemId()) != null)
+					anchor = anchor.findViewById(item.getItemId());
+			}
+			if(anchor == null)
+				anchor = mToolbarButtons;
+			if(anchor == null)
+				anchor = findViewById(android.R.id.home);
+			if(anchor == null && USE_ACTION_BAR)
+				anchor = getActionBar().getCustomView().findViewById(android.R.id.home);
+			if(anchor == null)
+				anchor = getCurrentFocus().getRootView();
+			if(f != null)
+				if(f.onClick(item.getItemId(), anchor))
+					return true;
+		}
+		
+		if(item.isCheckable())
+			item.setChecked(item.getGroupId() > 0 ? true : !item.isChecked());
+		
+		if(f != null && f.onOptionsItemSelected(item))
+			return true;
+		
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
+		
+		return onClick(item.getItemId(), item, null);
 	}
 	
-/*	@Override
+	@Override
 	public void onClick(View v) {
 		super.onClick(v);
 		if(v == null) return;
@@ -2345,9 +2345,9 @@ public class OpenExplorer
 		}
 		if(!v.showContextMenu())
 			onClick(id, (MenuItem)null, v);
-	}*/
+	}
 	
-/*	public boolean onClick(int id, MenuItem item, View from)
+	public boolean onClick(int id, MenuItem item, View from)
 	{
 		super.onClick(id);
 		if(from == null || !from.isShown())
@@ -2357,7 +2357,7 @@ public class OpenExplorer
 		//showToast("oops");
 		return false;
 		//return super.onOptionsItemSelected(item);
-	}*/
+	}
 	
 	private void showLogFrag(OpenFragment frag, boolean toggle)
 	{

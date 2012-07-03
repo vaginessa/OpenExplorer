@@ -5,6 +5,7 @@ import org.brandroid.openmanager.data.OpenPath;
 
 import org.brandroid.openmanager.R;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.view.ViewParent;
 import android.widget.LinearLayout;
 
+@SuppressLint("NewApi")
 public class OpenPathView extends LinearLayout {
 	
 	private OpenPath mFile;
@@ -61,7 +63,9 @@ public class OpenPathView extends LinearLayout {
 		while (view != null) {
 			x += (int) view.getX();
 			ViewParent parent = view.getParent();
-			view = parent != null ? (View) parent : null;
+			if(parent != null && parent instanceof View)
+				view = (View)parent;
+			else break;
 		}
 		mCheckmarkX = x;
 	}

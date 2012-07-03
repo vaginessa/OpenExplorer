@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
@@ -166,31 +167,32 @@ public class ContentAdapter extends BaseAdapter {
 	}
 	
 	////@Override
-	public View getView(int position, View convertView, ViewGroup parent)
+	public View getView(int position, View view, ViewGroup parent)
 	{
-		int mode = getViewMode() == OpenExplorer.VIEW_GRID ?
-				R.layout.grid_content_layout : R.layout.file_list_item;
-		final boolean useLarge = mode == R.layout.grid_content_layout;
+		int mode = getViewMode();
+		final int layout = getViewMode() == OpenExplorer.VIEW_GRID ?
+				R.layout.file_grid_item : R.layout.file_list_item;
+		final boolean useLarge = layout == R.layout.file_grid_item;
+		final OpenPath file = getItem(position); //super.getItem(position);
 		
 		OpenPathView row;
 						
-		if(convertView == null
-					//|| view.getTag() == null
-					//|| !BookmarkHolder.class.equals(view.getTag())
-					//|| ((BookmarkHolder)view.getTag()).getMode() != mode
+		if(view == null
+					|| view.getTag() == null
+					|| !(view.getTag() instanceof BookmarkHolder)
+					|| ((BookmarkHolder)view.getTag()).getMode() != mode
 					) {
 			LayoutInflater in = (LayoutInflater)getContext()
 									.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			
-			row = (OpenPathView) in.inflate(R.layout.file_list_item, parent, false);
-			//mHolder = new BookmarkHolder(file, mName, view, mode);
-			//view.setTag(mHolder);
+			row = (OpenPathView) in.inflate(layout, parent, false);
+			BookmarkHolder mHolder = new BookmarkHolder(file, file.getName(), row, mode);
+			row.setTag(mHolder);
 			//file.setTag(mHolder);
 		} else {
-			row = (OpenPathView)convertView;
+			row = (OpenPathView)view;
 		}
 		
-		final OpenPath file = getItem(position); //super.getItem(position);
 		
 		if(file == null) {
 			return row;
@@ -337,7 +339,7 @@ public class ContentAdapter extends BaseAdapter {
 			}
 		}
 		
-		row.setTag(file);
+		//row.setTag(file);
 		CheckBox listItemCB = (CheckBox)row.findViewById(R.id.checkbox);
 		listItemCB.setChecked(isSelected(row));
 		return row;

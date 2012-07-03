@@ -34,7 +34,6 @@ import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.NetworkIOTask;
 import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
-import org.brandroid.openmanager.util.ActionModeHelper;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
@@ -61,7 +60,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -81,33 +79,30 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.ContextMenu;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
-import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.GridView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
 @TargetApi(11)
 public class ContentFragment extends OpenFragment
-		implements  OnItemLongClickListener,
+		implements  OnItemLongClickListener, OnItemClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
 					OnTaskUpdateListener, ContentAdapter.Callback
 {
@@ -267,17 +262,45 @@ public class ContentFragment extends OpenFragment
 		return OpenExplorer.VIEW_LIST;
 	}
 	
+	@Override
+	public void setListAdapter(ListAdapter adapter) {
+		//super.setListAdapter(adapter);
+		ListView lv = getListView();
+		if(getViewMode() == OpenExplorer.VIEW_GRID)
+		{
+			if(lv != null && lv.isShown()) lv.setVisibility(View.GONE);
+			if(mGrid == null) mGrid = (GridView)getView().findViewById(R.id.content_grid);
+			mGrid.setVisibility(View.VISIBLE);
+			mGrid.setAdapter(adapter);
+			updateGridView();
+		} else {
+			if(mGrid != null && mGrid.isShown()) mGrid.setVisibility(View.GONE);
+			lv.setVisibility(View.VISIBLE);
+			lv.setAdapter(adapter);
+		}
+		if(adapter != null && adapter.equals(mContentAdapter))
+		{
+			mContentAdapter.updateData();
+			ViewUtils.setViewsVisible(getView(), mContentAdapter.getCount() == 0, android.R.id.empty);
+		}
+	}
+	
+	@Override
+	public ListAdapter getListAdapter() {
+		return mContentAdapter;
+	}
+	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
 		setViewSetting(mPath, "view", mode);
 		Logger.LogVerbose("Content View Mode: " + mode);
 		if(mContentAdapter != null)
 		{
-			mGrid.setAdapter(null);
+			setListAdapter(null);
 			mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
 			mContentAdapter.setCheckClipboardListener(this);
 			//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
-			mGrid.setAdapter(mContentAdapter);
+			setListAdapter(mContentAdapter);
 		} else {
 			mContentAdapter.setViewMode(mode);
 			refreshData(null, false);
@@ -299,8 +322,11 @@ public class ContentFragment extends OpenFragment
 			mBundle = getArguments();
 		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || !mPath.getPath().equals(mBundle.getString("last"))))
 			mPath = FileManager.getOpenCache(mBundle.getString("last"), getContext());
+		
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
+		else
+			mViewMode = getSetting(mPath, "view", getGlobalViewMode());
 		
 		if(mPath == null)
 			Logger.LogDebug("Creating empty ContentFragment", new Exception("Creating empty ContentFragment"));
@@ -318,6 +344,8 @@ public class ContentFragment extends OpenFragment
 			Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.fragment_pager_list, container,
 				false);
+		mGrid = (GridView)v.findViewById(R.id.content_grid);
+		
 		mIsViewCreated = true;
 		return v;
 	}
@@ -334,9 +362,8 @@ public class ContentFragment extends OpenFragment
 		lv.setItemsCanFocus(false);
 		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		
-        // Tell the list view which view to display when the list is empty
-//      View emptyView = findViewById(R.id.empty);
-//      listView.setEmptyView(emptyView);
+		mGrid.setOnItemLongClickListener(this);
+		mGrid.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		
         initListAdapter();
 
@@ -348,8 +375,7 @@ public class ContentFragment extends OpenFragment
 	
 	private void initListAdapter() {
 		mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
-        this.setListAdapter(mContentAdapter);
-        mContentAdapter.updateData();
+        setListAdapter(mContentAdapter);
     }
 	
 /*	public synchronized void notifyDataSetChanged() {
@@ -636,9 +662,13 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onListItemClick(ListView list, View view, int position, long id) {
 		super.onListItemClick(list, view, position, id);
+		onItemClick(list, view, position, id);
+	}
+	
+	@Override
+	public void onItemClick(AdapterView<?> list, View view, int position, long id) {
 		OpenPath file = (OpenPath)list.getItemAtPosition(position);
-		
-		Logger.LogInfo("File clicked: " + file.getPath());
+		Logger.LogInfo("ContentFragment.onItemClick (" + file.getPath() + ")");
 		
 		if(file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
 			file = new OpenZip((OpenFile)file);
@@ -957,7 +987,7 @@ public class ContentFragment extends OpenFragment
 	{
 		if(item == null) return false;
 		if(DEBUG)
-			Logger.LogDebug("ContentFragment.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
+			Logger.LogDebug("ContentFragment.onOptionsItemSelected(" + item + ")");
 		OpenPath path = null;
 		if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
 			path = getContentAdapter().getItem(mMenuContextItemIndex);
@@ -967,6 +997,7 @@ public class ContentFragment extends OpenFragment
 		{
 		case R.id.menu_sort:
 		case R.id.menu_view:
+			return true;
 		case R.id.menu_new_file:
 			EventHandler.createNewFile(getPath(), getActivity());
 			return true;
@@ -1307,13 +1338,12 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view, R.id.menu_sort, R.id.menu_content_ops);
 		
 		int mViewMode = getViewMode();
-		MenuUtils.setMenuChecked(menu, true, 0, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
 		if(mViewMode == OpenExplorer.VIEW_GRID)
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_grid, R.id.menu_view_list, R.id.menu_view_carousel);
-		else if(mViewMode == OpenExplorer.VIEW_LIST)
-			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_list, R.id.menu_view_grid, R.id.menu_view_carousel);
 		else if(mViewMode == OpenExplorer.VIEW_CAROUSEL)
 			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_carousel, R.id.menu_view_grid, R.id.menu_view_list);
+		else
+			MenuUtils.setMenuChecked(menu, true, R.id.menu_view_list, R.id.menu_view_grid, R.id.menu_view_carousel);
 		
 		MenuUtils.setMenuChecked(menu, getShowHiddenFiles(), R.id.menu_view_hidden);
 		MenuUtils.setMenuChecked(menu, getShowThumbnails(), R.id.menu_view_thumbs);
@@ -1403,6 +1433,7 @@ public class ContentFragment extends OpenFragment
 	@TargetApi(11)
 	public void updateGridView()
 	{
+		if(getViewMode() != OpenExplorer.VIEW_GRID) return;
 		Logger.LogDebug("updateGridView() @ " + mPath);
 		int mLayoutID;
 		if(mGrid == null)
@@ -1415,7 +1446,6 @@ public class ContentFragment extends OpenFragment
 			setupGridView();
 		}
 		mGrid.invalidateViews();
-		mViewMode = getViewMode();
 		if(getExplorer() == null) return;
 		//mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
 		//mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hide", true));
@@ -1423,24 +1453,14 @@ public class ContentFragment extends OpenFragment
 		
 		invalidateOptionsMenu();
 		
-		if(getViewMode() == OpenExplorer.VIEW_GRID)
-			mGrid.setColumnWidth(getResources().getDimensionPixelSize(R.dimen.grid_width));
-		else
-			mGrid.setColumnWidth(getResources().getDimensionPixelSize(R.dimen.list_width));
-		
-		if(mGrid == null) return;
-
-		mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
-		mContentAdapter.setCheckClipboardListener(this);
-
+		mGrid.setColumnWidth(getResources().getDimensionPixelSize(R.dimen.grid_width));
 		mGrid.setAdapter(mContentAdapter);
-		refreshData(getArguments(), false);
 		setupGridView();
 	}
 	public void setupGridView()
 	{
 		mGrid.setVisibility(View.VISIBLE);
-//		mGrid.setOnItemClickListener(this);
+		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
 		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
 		mGrid.setOnScrollListener(new OnScrollListener() {
