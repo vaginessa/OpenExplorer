@@ -43,6 +43,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
 import android.animation.ObjectAnimator;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -152,6 +153,7 @@ public class TextEditorFragment extends OpenFragment
 	{
 		showFilename(true);
 	}
+	@TargetApi(11)
 	public void showFilename(final boolean animateOut)
 	{
 		if(mFilename == null) return;
@@ -330,7 +332,7 @@ public class TextEditorFragment extends OpenFragment
 		View view = inflater.inflate(R.layout.edit_text, null);
 		view.setOnTouchListener(this);
 		mEditText = (EditText)view.findViewById(R.id.text_edit);
-		mViewList = (ListView)view.findViewById(R.id.text_view_list);
+		mViewList = (ListView)view.findViewById(android.R.id.list);
 		mFilename = (TextView)view.findViewById(R.id.text_filename);
 		showFilename();
 		setTextSize(getViewSetting(null, "text_size", mTextSize), true);

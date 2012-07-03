@@ -2,13 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/menu_search"
+        android:id="@id/menu_search"
         android:icon="@drawable/ic_menu_search"
         android:orderInCategory="1"
         android:showAsAction="always|collapseActionView"
         android:title="@android:string/search_go"/>
     <item
-        android:id="@+id/menu_sort"
+        android:id="@id/menu_sort"
         android:alphabeticShortcut="1"
         android:icon="@drawable/ic_menu_sort_by_size"
         android:orderInCategory="2"
@@ -16,44 +16,44 @@
         android:title="@string/s_menu_sort">
         <menu>
             <item
-                android:id="@+id/menu_sort_folders_first"
+                android:id="@id/menu_sort_folders_first"
                 android:alphabeticShortcut="f"
                 android:checkable="true"
                 android:title="@string/s_menu_sort_folders"/>
 
             <group android:checkableBehavior="single" >
                 <item
-                    android:id="@+id/menu_sort_name_asc"
+                    android:id="@id/menu_sort_name_asc"
                     android:alphabeticShortcut="n"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_name_asc"/>
                 <item
-                    android:id="@+id/menu_sort_name_desc"
+                    android:id="@id/menu_sort_name_desc"
                     android:alphabeticShortcut="m"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_name_desc"/>
                 <item
-                    android:id="@+id/menu_sort_date_asc"
+                    android:id="@id/menu_sort_date_asc"
                     android:alphabeticShortcut="d"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_date_asc"/>
                 <item
-                    android:id="@+id/menu_sort_date_desc"
+                    android:id="@id/menu_sort_date_desc"
                     android:alphabeticShortcut="e"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_date_desc"/>
                 <item
-                    android:id="@+id/menu_sort_size_asc"
+                    android:id="@id/menu_sort_size_asc"
                     android:alphabeticShortcut="s"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_size_asc"/>
                 <item
-                    android:id="@+id/menu_sort_size_desc"
+                    android:id="@id/menu_sort_size_desc"
                     android:alphabeticShortcut="z"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_size_desc"/>
                 <item
-                    android:id="@+id/menu_sort_type"
+                    android:id="@id/menu_sort_type"
                     android:alphabeticShortcut="t"
                     android:showAsAction="withText"
                     android:title="@string/s_menu_sort_type"/>
@@ -61,7 +61,7 @@
         </menu>
     </item>
     <item
-        android:id="@+id/menu_view"
+        android:id="@id/menu_view"
         android:alphabeticShortcut="2"
         android:icon="@drawable/ic_menu_view"
         android:orderInCategory="3"
@@ -69,7 +69,7 @@
         android:title="@string/s_view">
         <menu>
             <item
-                android:id="@+id/menu_multi"
+                android:id="@id/menu_multi"
                 android:checkable="true"
                 android:icon="@drawable/ic_multiselect"
                 android:showAsAction="ifRoom"
@@ -77,35 +77,35 @@
 
             <group android:checkableBehavior="single" >
                 <item
-                    android:id="@+id/menu_view_grid"
+                    android:id="@id/menu_view_grid"
                     android:alphabeticShortcut="g"
                     android:title="@string/s_menu_grid"/>
                 <item
-                    android:id="@+id/menu_view_list"
+                    android:id="@id/menu_view_list"
                     android:alphabeticShortcut="l"
                     android:title="@string/s_menu_list"/>
                 <item
-                    android:id="@+id/menu_view_carousel"
+                    android:id="@id/menu_view_carousel"
                     android:title="@string/s_menu_carousel"
                     android:visible="false"/>
             </group>
 
             <item
-                android:id="@+id/menu_view_hidden"
+                android:id="@id/menu_view_hidden"
                 android:checkable="true"
                 android:title="@string/s_menu_hidden"/>
             <item
-                android:id="@+id/menu_view_thumbs"
+                android:id="@id/menu_view_thumbs"
                 android:checkable="true"
                 android:title="@string/s_menu_thumbs"/>
 
             <group android:checkableBehavior="all" >
                 <item
-                    android:id="@+id/menu_view_fullscreen"
+                    android:id="@id/menu_view_fullscreen"
                     android:checkable="true"
                     android:title="@string/s_pref_fullscreen"/>
                 <item
-                    android:id="@+id/menu_view_split"
+                    android:id="@id/menu_view_split"
                     android:checkable="true"
                     android:title="@string/s_pref_basebar"
                     android:visible="@bool/prehoneycomb"/>
@@ -113,7 +113,7 @@
         </menu>
     </item>
     <item
-        android:id="@+id/menu_content_ops"
+        android:id="@id/menu_content_ops"
         android:alphabeticShortcut="3"
         android:icon="@drawable/ic_menu_folder"
         android:orderInCategory="4"
@@ -121,73 +121,75 @@
         android:title="@string/s_title_operations">
         <menu>
             <item
-                android:id="@+id/menu_new_folder"
+                android:id="@id/menu_new_folder"
                 android:alphabeticShortcut="c"
                 android:icon="@drawable/ic_menu_new_folder"
                 android:title="@string/s_menu_new_folder"/>
             <item
-                android:id="@+id/menu_new_file"
+                android:id="@id/menu_new_file"
                 android:alphabeticShortcut="v"
                 android:icon="@drawable/ic_menu_new_file"
                 android:title="@string/s_menu_new_file"/>
             <item
-                android:id="@+id/menu_context_info"
+                android:id="@id/menu_context_info"
                 android:alphabeticShortcut="i"
                 android:icon="@drawable/ic_menu_info_details"
                 android:showAsAction="ifRoom"
                 android:title="@string/s_menu_info"/>
             <item
-                android:id="@+id/menu_context_bookmark"
+                android:id="@id/menu_context_bookmark"
                 android:alphabeticShortcut="k"
                 android:icon="@drawable/ic_menu_star"
                 android:showAsAction="always|withText"
                 android:title="@string/s_menu_bookmark"/>
             <item
-                android:id="@+id/menu_context_selectall"
+                android:id="@id/menu_context_selectall"
                 android:alphabeticShortcut="a"
                 android:icon="@drawable/ic_menu_selectall_holo_dark"
                 android:showAsAction="ifRoom"
                 android:title="@android:string/selectAll"/>
             <item
-                android:id="@+id/content_paste"
+                android:id="@id/content_paste"
                 android:icon="@drawable/ic_menu_paste"
                 android:showAsAction="always"
                 android:title="@android:string/paste"/>
-<!--             <item
-                android:id="@+id/menu_refresh"
+            <!--
+                 <item
+                android:id="@id/menu_refresh"
                 android:icon="@drawable/ic_menu_refresh"
-                android:title="@string/s_menu_refresh"/> -->
+                android:title="@string/s_menu_refresh"/>
+            -->
         </menu>
     </item>
     <item
-        android:id="@+id/menu_refresh"
+        android:id="@id/menu_refresh"
         android:alphabeticShortcut="r"
         android:icon="@drawable/ic_menu_refresh"
         android:orderInCategory="5"
         android:showAsAction="ifRoom"
         android:title="@string/s_menu_refresh"/>
     <item
-        android:id="@+id/menu_debug"
+        android:id="@id/menu_debug"
         android:icon="@drawable/ic_menu_upload"
         android:orderInCategory="5"
         android:showAsAction="never|withText"
         android:title="DEBUG Test"/>
     <item
-        android:id="@+id/menu_settings"
+        android:id="@id/menu_settings"
         android:alphabeticShortcut="p"
         android:icon="@drawable/ic_menu_preferences"
         android:orderInCategory="6"
         android:showAsAction="never"
         android:title="@string/s_menu_prefs_global"/>
     <item
-        android:id="@+id/menu_about"
+        android:id="@id/menu_about"
         android:alphabeticShortcut="o"
         android:icon="@drawable/ic_menu_help"
         android:orderInCategory="7"
         android:showAsAction="never"
         android:title="@string/s_menu_about"/>
     <item
-        android:id="@+id/menu_exit"
+        android:id="@id/menu_exit"
         android:alphabeticShortcut="q"
         android:icon="@drawable/ic_menu_close_clear_cancel"
         android:orderInCategory="8"

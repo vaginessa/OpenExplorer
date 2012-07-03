@@ -34,7 +34,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 
 public class SearchResultsFragment
 		extends ContentFragment
-		implements OnItemClickListener, OnItemLongClickListener, SearchProgressUpdateListener
+		implements OnItemLongClickListener, SearchProgressUpdateListener
 {
 	private TextView mTextSummary;
 	private ProgressBar mProgressBar;
@@ -178,7 +178,7 @@ public class SearchResultsFragment
 			mPath = new OpenSearch(q, path, this);
 			myTask.execute();
 		}
-		mContentAdapter = new ContentAdapter(getExplorer(), OpenExplorer.VIEW_LIST, getSearch());
+		mContentAdapter = new ContentAdapter(getExplorer(), this, OpenExplorer.VIEW_LIST, getSearch());
 	}
 	
 	@Override
@@ -196,7 +196,7 @@ public class SearchResultsFragment
 		mTextSummary = (TextView)ret.findViewById(R.id.search_summary);
 		mProgressBar = (ProgressBar)ret.findViewById(android.R.id.progress);
 		mCancel = (Button)ret.findViewById(R.id.search_cancel);
-		mGrid.setOnItemClickListener(this);
+//		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
 		if(!OpenExplorer.USE_PRETTY_CONTEXT_MENUS) //|| !USE_ACTIONMODE)
 			registerForContextMenu(mGrid);

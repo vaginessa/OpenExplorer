@@ -42,6 +42,7 @@ import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.OpenPathView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
@@ -54,12 +55,15 @@ import com.actionbarsherlock.view.ActionMode.Callback;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.widget.ShareActionProvider;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -77,6 +81,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -90,6 +95,8 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,10 +105,11 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
+@TargetApi(11)
 public class ContentFragment extends OpenFragment
-		implements OnItemClickListener, OnItemLongClickListener,
+		implements  OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
-					OnTaskUpdateListener
+					OnTaskUpdateListener, ContentAdapter.Callback
 {
 	
 	//private static MultiSelectHandler mMultiSelect;
@@ -132,8 +140,26 @@ public class ContentFragment extends OpenFragment
 	
 	private Bundle mBundle;
 	
+	private boolean mIsViewCreated;
+	
 	protected Integer mViewMode = null;
 	protected ContentAdapter mContentAdapter;
+	private OnCreateContextMenuListener mConvListOnCreateContextMenuListener;
+	
+	/**
+	 * If true, we disable the CAB even if there are selected messages. It's
+	 * used in portrait on the tablet when the message view becomes visible and
+	 * the message list gets pushed out of the screen, in which case we want to
+	 * keep the selection but the CAB should be gone.
+	 */
+	private boolean mDisableCab;
+
+	/**
+	 * {@link ActionMode} shown when 1 or more message is selected.
+	 */
+	private ActionMode mSelectionMode;
+	private SelectionModeCallback mLastSelectionModeCallback;
+	private OpenExplorer mActivity;
 	
 	//private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 	
@@ -149,23 +175,28 @@ public class ContentFragment extends OpenFragment
 			setPath(getArguments().getString("last"));
 		}
 	}
+	
 	private ContentFragment(OpenPath path)
 	{
 		mPath = path;
 	}
+	
 	private ContentFragment(OpenPath path, int view)
 	{
 		mPath = path;
 		mViewMode = view;
 	}
+	
 	private void setPath(String path)
 	{
 		mPath = FileManager.getOpenCache(path, getAndroidContext());
 	}
+	
 	public static ContentFragment getInstance(OpenPath path, int mode)
 	{
 		return getInstance(path, mode, null);
 	}
+	
 	public static ContentFragment getInstance(OpenPath path, int mode, FragmentManager fm)
 	{
 		ContentFragment ret = null;
@@ -185,10 +216,12 @@ public class ContentFragment extends OpenFragment
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
 		return ret;
 	}
+	
 	public static ContentFragment getInstance(OpenPath path)
 	{
 		return getInstance(path, new Bundle());
 	}
+	
 	public static ContentFragment getInstance(OpenPath path, Bundle args)
 	{
 		ContentFragment ret = new ContentFragment(path);
@@ -214,7 +247,7 @@ public class ContentFragment extends OpenFragment
 	
 	protected ContentAdapter getContentAdapter() {
 		if(mContentAdapter == null)
-			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
+			mContentAdapter = new ContentAdapter(getActivity(), this, mViewMode, mPath);
 		return mContentAdapter;
 	}
 	
@@ -233,7 +266,6 @@ public class ContentFragment extends OpenFragment
 			return OpenExplorer.VIEW_CAROUSEL;
 		return OpenExplorer.VIEW_LIST;
 	}
-
 	
 	private void setViewMode(int mode) {
 		mViewMode = mode;
@@ -242,7 +274,7 @@ public class ContentFragment extends OpenFragment
 		if(mContentAdapter != null)
 		{
 			mGrid.setAdapter(null);
-			mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, mPath);
+			mContentAdapter = new ContentAdapter(getAndroidContext(), this, mViewMode, mPath);
 			mContentAdapter.setCheckClipboardListener(this);
 			//mContentAdapter = new OpenPathAdapter(mPath, mode, getExplorer());
 			mGrid.setAdapter(mContentAdapter);
@@ -256,7 +288,7 @@ public class ContentFragment extends OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		setHasOptionsMenu(true);
+		mActivity = (OpenExplorer) getActivity();
 		
 		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
 		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
@@ -278,9 +310,51 @@ public class ContentFragment extends OpenFragment
 		
 	}
 	
-	public synchronized void notifyDataSetChanged() {
-		if(mContentAdapter == null) {
-			mContentAdapter = new ContentAdapter(getActivity(), mViewMode, mPath);
+	/**
+	 * The Fragment's UI is just a list fragment
+	 */
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.fragment_pager_list, container,
+				false);
+		mIsViewCreated = true;
+		return v;
+	}
+	
+	/**
+	 * Called when the activity's onCreate() method has returned.
+	 */
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) { 
+		super.onActivityCreated(savedInstanceState);
+
+		final ListView lv = getListView();
+		lv.setOnItemLongClickListener(this);
+		lv.setItemsCanFocus(false);
+		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		
+        // Tell the list view which view to display when the list is empty
+//      View emptyView = findViewById(R.id.empty);
+//      listView.setEmptyView(emptyView);
+		
+        initListAdapter();
+
+//		if (savedInstanceState != null) {
+//			// Fragment doesn't have this method. Call it manually.
+//			restoreInstanceState(savedInstanceState);
+//		}
+	}
+	
+	private void initListAdapter() {
+		mContentAdapter = new ContentAdapter(getActivity(), this, mViewMode, mPath);
+        this.setListAdapter(mContentAdapter);
+        mContentAdapter.updateData();
+    }
+	
+/*	public synchronized void notifyDataSetChanged() {
+		if(mListAdapter == null) {
+			mContentAdapter = new ContentAdapter(getActivity(), this, mViewMode, mPath);
 			if(mGrid != null)
 				mGrid.setAdapter(mContentAdapter);
 		}
@@ -289,11 +363,12 @@ public class ContentFragment extends OpenFragment
 		//else
 		
 			mContentAdapter.updateData();
-	}
+	}*/
 	public synchronized void refreshData()
 	{
 		refreshData(getArguments(), false);
 	}
+	
 	public synchronized void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
 		if(!mRefreshReady) return;
@@ -320,7 +395,7 @@ public class ContentFragment extends OpenFragment
 		mRefreshReady = false;
 		
 		if(mContentAdapter == null)
-			mContentAdapter = new ContentAdapter(getAndroidContext(), mViewMode, path);
+			mContentAdapter = new ContentAdapter(getAndroidContext(), this, mViewMode, path);
 
 		if(path instanceof OpenFile && !path.getPath().startsWith("/"))
 		{
@@ -398,7 +473,7 @@ public class ContentFragment extends OpenFragment
 			
 		}
 		
-		notifyDataSetChanged();
+		mContentAdapter.notifyDataSetChanged();
 		
 		mRefreshReady = true;
 		
@@ -411,6 +486,7 @@ public class ContentFragment extends OpenFragment
 	}
 	
 	public void runUpdateTask() { runUpdateTask(false); }
+	
 	public void runUpdateTask(boolean reconnect)
 	{
 		if(mPath == null) return;
@@ -460,8 +536,12 @@ public class ContentFragment extends OpenFragment
 	}
 	
 
-	//@Override
+/*	//@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.fragment_pager_list, container,
+				false);
+		mIsViewCreated = true;
+		
 		View v = inflater.inflate(R.layout.content_layout, container, false);
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		final OpenFragment me = this;
@@ -517,7 +597,7 @@ public class ContentFragment extends OpenFragment
 		super.onCreateView(inflater, container, savedInstanceState);
 		//v.setBackgroundResource(R.color.lightgray);
 		
-		/*
+		
 		if (savedInstanceState != null && savedInstanceState.containsKey("location")) {
 			String location = savedInstanceState.getString("location");
 			if(location != null && !location.equals("") && location.startsWith("/"))
@@ -529,9 +609,23 @@ public class ContentFragment extends OpenFragment
 			}
 			//setContentPath(path, false);
 		}
-		*/
+		
 
 		return v;
+	}*/
+	
+	/**
+	 * @return true if the content view is created and not destroyed yet. (i.e.
+	 *         between {@link #onCreateView} and {@link #onDestroyView}.
+	 */
+	private boolean isViewCreated() {
+		// Note that we don't use "getView() != null". This method is used in
+		// updateSelectionMode()
+		// to determine if CAB shold be shown. But because it's called from
+		// onDestroyView(), at
+		// this point the fragment still has views but we want to hide CAB, we
+		// can't use getView() here.
+		return mIsViewCreated;
 	}
 	
 	@Override
@@ -539,10 +633,10 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 	
-
-	//@Override
-	public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
-		OpenPath file = (OpenPath)list.getItemAtPosition(pos);
+	@Override
+	public void onListItemClick(ListView list, View view, int position, long id) {
+		super.onListItemClick(list, view, position, id);
+		OpenPath file = (OpenPath)list.getItemAtPosition(position);
 		
 		Logger.LogInfo("File clicked: " + file.getPath());
 		
@@ -653,16 +747,16 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 	
-	public boolean onItemLongClick(AdapterView<?> list, final View view, int pos, long id) {
-		mMenuContextItemIndex = pos;
-		//view.setBackgroundResource(R.drawable.selector_blue);
-		//list.setSelection(pos);
-		//if(list.showContextMenu()) return true;
-		
-		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
-		
-		return createContextMenu(file, list, view, pos);
-	}
+//	public boolean onItemLongClick(AdapterView<?> list, final View view, int pos, long id) {
+//		mMenuContextItemIndex = pos;
+//		//view.setBackgroundResource(R.drawable.selector_blue);
+//		//list.setSelection(pos);
+//		//if(list.showContextMenu()) return true;
+//		
+//		final OpenPath file = (OpenPath)((BaseAdapter)list.getAdapter()).getItem(pos);
+//		
+//		return createContextMenu(file, list, view, pos);
+//	}
 	public boolean createContextMenu(final OpenPath file, final AdapterView<?> list,
 			final View view, final int pos)
 	{
@@ -857,49 +951,6 @@ public class ContentFragment extends OpenFragment
 		}
 		return false;
 	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		if(item == null) return false;
-		if(DEBUG)
-			Logger.LogDebug("ContentFragment.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ")");
-		OpenPath path = null;
-		if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
-			path = getContentAdapter().getItem(mMenuContextItemIndex);
-		if(path != null && executeMenu(item.getItemId(), mActionMode, path))
-			return true;
-		switch(item.getItemId())
-		{
-		case R.id.menu_new_file:
-			EventHandler.createNewFile(getPath(), getActivity());
-			return true;
-		case R.id.menu_new_folder:
-			EventHandler.createNewFolder(getPath(), getActivity());
-			return true;
-		case R.id.menu_sort_name_asc:	onSortingChanged(SortType.ALPHA); return true; 
-		case R.id.menu_sort_name_desc:	onSortingChanged(SortType.ALPHA_DESC); return true; 
-		case R.id.menu_sort_date_asc: 	onSortingChanged(SortType.DATE); return true;
-		case R.id.menu_sort_date_desc: 	onSortingChanged(SortType.DATE_DESC); return true; 
-		case R.id.menu_sort_size_asc: 	onSortingChanged(SortType.SIZE); return true; 
-		case R.id.menu_sort_size_desc: 	onSortingChanged(SortType.SIZE_DESC); return true; 
-		case R.id.menu_sort_type: 		onSortingChanged(SortType.TYPE); return true;
-		case R.id.menu_view_hidden:
-			onHiddenFilesChanged(!getShowHiddenFiles());
-			return true;
-		case R.id.menu_view_thumbs:
-			onThumbnailChanged(!getShowThumbnails());
-			return true;
-		case R.id.menu_sort_folders_first:
-			onFoldersFirstChanged(!getFoldersFirst());
-			return true;
-		default:
-			if(executeMenu(item.getItemId(), null, mPath))
-				return true;
-		}
-		return false;
-	}
-
 	
 	public boolean executeMenu(final int id, final Object mode, final OpenPath file)
 	{
@@ -1137,7 +1188,7 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 
-	@Override
+/*	@Override
 	public boolean onContextItemSelected(android.view.MenuItem item) {
 		if(item == null) return false;
 		OpenPath path = null;
@@ -1152,7 +1203,7 @@ public class ContentFragment extends OpenFragment
 			return false;
 		}
 		return executeMenu(item.getItemId(), null, path);
-	}
+	}*/
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -1164,7 +1215,7 @@ public class ContentFragment extends OpenFragment
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
 	}
-
+	
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
@@ -1334,7 +1385,7 @@ public class ContentFragment extends OpenFragment
 		
 		if(mGrid == null) return;
 
-		mContentAdapter = new ContentAdapter(getExplorer(), mViewMode, mPath);
+		mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
 		mContentAdapter.setCheckClipboardListener(this);
 
 		mGrid.setAdapter(mContentAdapter);
@@ -1344,7 +1395,7 @@ public class ContentFragment extends OpenFragment
 	public void setupGridView()
 	{
 		mGrid.setVisibility(View.VISIBLE);
-		mGrid.setOnItemClickListener(this);
+//		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
@@ -1632,6 +1683,346 @@ public class ContentFragment extends OpenFragment
 	public void addFiles(OpenPath[] files) {
 		for(OpenPath f : files)
 			mContentAdapter.add(f);
+	}
+	
+	/**
+	 * Show/hide the "selection" action mode, according to the number of
+	 * selected messages and the visibility of the fragment. Also update the
+	 * content (title and menus) if necessary.
+	 */
+	public void updateSelectionMode() {
+		final int numSelected = getSelectedCount();
+		if ((numSelected == 0) || mDisableCab || !isViewCreated()) {
+			finishSelectionMode();
+			return;
+		}
+		if (isInSelectionMode()) {
+			updateSelectionModeView();
+		} else {
+			mLastSelectionModeCallback = new SelectionModeCallback();
+			mActivity.startActionMode(mLastSelectionModeCallback);
+		}
+	}
+
+	/**
+	 * Finish the "selection" action mode.
+	 * 
+	 * Note this method finishes the contextual mode, but does *not* clear the
+	 * selection. If you want to do so use {@link #onDeselectAll()} instead.
+	 */
+	private void finishSelectionMode() {
+		if (isInSelectionMode()) {
+			mLastSelectionModeCallback.mClosedByUser = false;
+			mSelectionMode.finish();
+		}
+	}
+
+	/** Update the "selection" action mode bar */
+	private void updateSelectionModeView() {
+		mSelectionMode.invalidate();
+	}
+
+	/**
+	 * @return the number of messages that are currently selected.
+	 */
+	private int getSelectedCount() {
+		return mContentAdapter.getSelectedSet().size();
+	}
+
+	/**
+	 * @return true if the list is in the "selection" mode.
+	 */
+	public boolean isInSelectionMode() {
+		return mSelectionMode != null;
+	}
+
+	public void onDeselectAll() {
+		mContentAdapter.clearSelection();
+		if (isInSelectionMode()) {
+			finishSelectionMode();
+		}
+	}
+
+
+	/** Implements {@link MessagesAdapter.Callback} */
+	@Override
+	public void onAdapterSelectedChanged(OpenPathView itemView,
+			boolean newSelected, int mSelectedCount) {
+		updateSelectionMode();
+	}
+
+	private class SelectionModeCallback implements ActionMode.Callback {
+		private MenuItem mCut;
+		private MenuItem mCopy;
+		private MenuItem mPaste;
+		private MenuItem mArchive;
+		private MenuItem mDelete;
+		private MenuItem mShare;
+		private MenuItem mRename;
+		private MenuItem mDetails;
+		private int viewPageNum;
+		private ShareActionProvider mShareActionProvider;
+
+		private boolean pasteReady = false;
+
+		/* package */boolean mClosedByUser = true;
+
+		@Override
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			mSelectionMode = mode;
+
+			MenuInflater inflater = mActivity.getSupportMenuInflater();
+			inflater.inflate(R.menu.multiselect, menu);
+//			mCut = menu.findItem(R.id.action_cut);
+//			mCopy = menu.findItem(R.id.action_copy);
+//			mPaste = menu.findItem(R.id.action_paste);
+//			mArchive = menu.findItem(R.id.action_zip);
+//			mDelete = menu.findItem(R.id.action_confirm_delete);
+//			mShare = menu.findItem(R.id.action_share);
+//			mRename = menu.findItem(R.id.action_rename);
+//			mDetails = menu.findItem(R.id.action_details);
+
+			// Set file with share history to the provider and set the share
+			// intent.
+			if(mShare != null)
+			{
+				mShareActionProvider = (ShareActionProvider) mShare
+						.getActionProvider();
+				mShareActionProvider
+						.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+			}
+
+			return true;
+		}
+
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			int num = getSelectedCount();
+			// Set title -- "# selected"
+//			mSelectionMode.setTitle(mActivity.getResources().getQuantityString(
+//					R.plurals.message_view_selected_message_count, num, num));
+//
+//			// Show appropriate menu items.
+//			if (!FileActions.canPaste()) {
+//				mCut.setVisible(true);
+//				mCopy.setVisible(true);
+//				mPaste.setVisible(false);
+//				mArchive.setVisible(true);
+//				mShare.setVisible(true);
+//			} else {
+//				mCut.setVisible(true);
+//				mCopy.setVisible(true);
+//				mPaste.setVisible(true);
+//				mArchive.setVisible(true);
+//				mShare.setVisible(true);
+//			}
+//
+//			if (num == 1) {
+//				mRename.setVisible(true);
+//				mDetails.setVisible(true);
+//			} else {
+//				mRename.setVisible(false);
+//				mDetails.setVisible(false);
+//			}
+//			viewPageNum = mNum;
+			return true;
+		}
+
+		@Override
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			Set<String> selectedConversations = mContentAdapter.getSelectedSet();
+			Object[] selectedFilePaths = mContentAdapter.getSelectedSet()
+					.toArray();
+
+//			/*
+//			 * Paste gets special handling. All other Contextual Action Mode
+//			 * actions go in a switch statement below.
+//			 */
+//
+//			// Paste clicked and files are available for pasting
+//			if (FileActions.canPaste() && item.getItemId() == R.id.action_paste) {
+//				new Mover(mActivity, FileActions.getPasteMode())
+//						.execute(mActivity.getCurrentDir());
+//				/*
+//				 * !!! TODO: Mover.java refreshes the directory after finishing,
+//				 * which keeps the following from running
+//				 * 
+//				 * Test to see if there is any current selection: If there
+//				 * aren't any selections, then the user's selection of paste can
+//				 * be presumed to be the final action for the Action Mode.
+//				 * Otherwise the action mode should be left open and
+//				 * invalidated/reloaded to remove the paste action.
+//				 */
+//				if (selectedFilePaths.length < 1) {
+//					onDeselectAll(); // Close Action Mode
+//				} else {
+//					mSelectionMode.invalidate(); // Update Action Mode
+//				}
+//
+//				// Paste clicked but no files available. Should never happen.
+//			} else if (!FileActions.canPaste()
+//					&& item.getItemId() == R.id.action_paste) {
+//				Toast.makeText(mActivity, "No files stored in clipboard",
+//						Toast.LENGTH_SHORT).show();
+//
+//				// No items selected and we've already determined that there is
+//				// no pending paste to keep the action mode open. Should never
+//				// happen.
+//			} else if (selectedFilePaths.length < 1) {
+//				Toast.makeText(
+//						mActivity,
+//						"Why is this action mode still open? Because it shouldn't be.",
+//						Toast.LENGTH_SHORT).show();
+//
+//				// By process of elimination, we have established that paste has
+//				// not been clicked and that there is a selection to be operated
+//				// on. Get to it!
+//			} else {
+				// Convert selected items into a list of files
+				ArrayList<File> selectedFiles = new ArrayList<File>();
+				for (Object s : selectedFilePaths) {
+					selectedFiles.add(new File((String) s));
+				}
+
+				// Trigger appropriate CAB item code
+				switch (item.getItemId()) {
+//				case R.id.action_share:
+//					mActivity.setPage(viewPageNum);
+//					if (selectedFiles.size() > 0) {
+//						Intent shareIntent = FileActions.createShareIntent(
+//								selectedFiles, mActivity);
+//						startActivity(Intent.createChooser(shareIntent,
+//								"Share via"));
+//						// Commented out pending solution for
+//						// shareactionprovider/splitactionbar bug
+//						// mShareActionProvider.setShareIntent(FileActions
+//						// .createShareIntent(selectedFiles, mActivity));
+//						// mSelectionMode.invalidate();
+//					} else {
+//						Toast.makeText(mActivity, "Error. No items selected.",
+//								Toast.LENGTH_SHORT).show();
+//					}
+//					onDeselectAll();
+//					break;
+//				case R.id.action_rename:
+//					mActivity.setPage(viewPageNum);
+//					Toast.makeText(mActivity, "Rename isn't implemented yet",
+//							Toast.LENGTH_SHORT).show();
+//					break;
+//				case R.id.action_details:
+//					mActivity.setPage(viewPageNum);
+//					Intent fileIntent = new Intent(mActivity, FileView.class);
+//					fileIntent.putExtra("absPath", selectedFiles.get(0)
+//							.getPath());
+//					startActivity(fileIntent);
+//					break;
+//				case R.id.action_zip:
+//					mActivity.setPage(viewPageNum);
+//					mActivity.showDialog(mActivity.DIALOG_ZIP);
+//					// Problem here. Zipfiles needs to run after dialog returns.
+//					// FileActions.zipFiles(selectedFiles, getCurrentDir(),
+//					// mActivity.getNewZipName(), mActivity);
+//					break;
+//
+//				case R.id.action_cut:
+//					mActivity.setPage(viewPageNum);
+//					if (selectedFiles.size() > 0) {
+//						FileActions.cutFiles(selectedFiles, mActivity);
+//						mSelectionMode.invalidate(); // After cutting, the menu
+//														// should be rebuilt to
+//														// include paste
+//					} else {
+//						Toast.makeText(mActivity, "Error. No items selected.",
+//								Toast.LENGTH_SHORT).show();
+//					}
+//					break;
+//
+//				case R.id.action_copy:
+//					mActivity.setPage(viewPageNum);
+//					if (selectedFiles.size() > 0) {
+//						FileActions.copyFiles(selectedFiles, mActivity);
+//						mSelectionMode.invalidate(); // After copying, the menu
+//														// should be rebuilt to
+//														// include paste
+//					} else {
+//						Toast.makeText(mActivity, "Error. No items selected.",
+//								Toast.LENGTH_SHORT).show();
+//					}
+//					break;
+//
+//				case R.id.action_confirm_delete:
+//					// new
+//					// AlertDialog.Builder(mActivity).setIcon(android.R.drawable.ic_dialog_alert).setMessage("Quit the application?")
+//					// .setPositiveButton("Yes", new
+//					// DialogInterface.OnClickListener() {
+//					//
+//					// @Override
+//					// public void onClick(DialogInterface dialog, int which) {
+//					// mActivity.setPage(viewPageNum);
+//					// new Trasher(mActivity).execute(selectedFiles);
+//					// // Toast.makeText(mActivity,
+//					// // "Deleted " + getSelectedCount() + " items",
+//					// // Toast.LENGTH_SHORT).show();
+//					// onDeselectAll();
+//					// }
+//					//
+//					// }).setNegativeButton("No", null).show();
+//
+//					mActivity.setPage(viewPageNum);
+//					new Trasher(mActivity).execute(selectedFiles);
+//					// Toast.makeText(mActivity,
+//					// "Deleted " + getSelectedCount() + " items",
+//					// Toast.LENGTH_SHORT).show();
+//					onDeselectAll();
+//
+//					break;
+
+				default:
+					break;
+				}
+//			}
+			return true;
+		}
+
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			// Clear this before onDeselectAll() to prevent onDeselectAll() from
+			// trying to close the
+			// contextual mode again.
+			mSelectionMode = null;
+			if (mClosedByUser) {
+				// Clear selection, only when the contextual mode is explicitly
+				// closed by the user.
+				//
+				// We close the contextual mode when the fragment becomes
+				// temporary invisible
+				// (i.e. mIsVisible == false) too, in which case we want to keep
+				// the selection.
+				onDeselectAll();
+			}
+		}
+	}
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> parent, View view,
+			int position, long id) {
+		// FileListItem f = mListAdapter.getItem(position);
+		boolean toggled = false;
+		if (!mContentAdapter.isSelected((OpenPathView) view)) {
+			toggleSelection((OpenPathView) view);
+			toggled = true;
+			updateSelectionMode();
+		}
+		return true;
+	}
+
+	private void toggleSelection(OpenPathView itemView) {
+		mContentAdapter.toggleSelected(itemView);
+	}
+
+	public void notifyDataSetChanged() {
+		if(mContentAdapter != null)
+			mContentAdapter.notifyDataSetChanged();
 	}
 	
 }
