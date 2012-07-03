@@ -30,6 +30,7 @@ import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -54,6 +55,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
  * Base class for all OpenExplorer fragments. Provides convenient methods to access
  * other sections of the application.
  */
+@SuppressLint("NewApi")
 public abstract class OpenFragment
 			extends SherlockListFragment
 			implements View.OnClickListener, View.OnLongClickListener
@@ -311,12 +313,13 @@ public abstract class OpenFragment
 		return mOpenMenu.show(xOffset, yOffset);
 	}
 	
-//	@Override
-//	public void setHasOptionsMenu(boolean hasMenu) {
-//		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
-//		super.setHasOptionsMenu(hasMenu);
-//		mHasOptions = hasMenu;
-//	}
+	@Override
+	public void setHasOptionsMenu(boolean hasMenu) {
+		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
+		//super.setHasOptionsMenu(hasMenu);
+		mHasOptions = hasMenu;
+	}
+	
 	public boolean hasOptionsMenu()
 	{
 		return mHasOptions;

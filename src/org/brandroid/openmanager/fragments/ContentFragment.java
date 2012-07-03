@@ -1205,7 +1205,7 @@ public class ContentFragment extends OpenFragment
 		return executeMenu(item.getItemId(), null, path);
 	}*/
 	
-/*	@Override
+	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		if(DEBUG)
 			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
@@ -1214,9 +1214,9 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)
-	}*/
-
-/*	@Override
+	}
+	
+	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
 		if(getActivity() == null) return;
@@ -1274,7 +1274,7 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuChecked(menu, getShowThumbnails(), R.id.menu_view_thumbs);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.CAN_DO_CAROUSEL, R.id.menu_view_carousel);
 		
-	}*/
+	}
 	
 	/*
 	@Override
@@ -2021,7 +2021,8 @@ public class ContentFragment extends OpenFragment
 	}
 
 	public void notifyDataSetChanged() {
-		mContentAdapter.notifyDataSetChanged();
+		if(mContentAdapter != null)
+			mContentAdapter.notifyDataSetChanged();
 	}
 	
 }

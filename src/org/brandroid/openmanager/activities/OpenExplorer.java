@@ -207,38 +207,8 @@ public class OpenExplorer
 	
 	// Action Bar Menu Variables
 	private Menu mMainOptionsMenu;
-	private MenuItem mMenuSearch;
-	private MenuItem mMenuSort;
-	private MenuItem mMenuFoldersFirst;
-	private MenuItem mMenuNameAsc;
-	private MenuItem mMenuNameDesc;
-	private MenuItem mMenuDateAsc;
-	private MenuItem mMenuDateDesc;
-	private MenuItem mMenuSizeAsc;
-	private MenuItem mMenuSizeDesc;
-	private MenuItem mMenuSortType;
-	private MenuItem mMenuView;
-	private MenuItem mMenuMulti;
-	private MenuItem mMenuViewGrid;
-	private MenuItem mMenuViewList;
-	private MenuItem mMenuViewCarousel;
-	private MenuItem mMenuViewHidden;
-	private MenuItem mMenuViewThumbs;
-	private MenuItem mMenuViewFullscreen;
-	private MenuItem mMenuViewSplit;
-	private MenuItem mMenuContentOps;
-	private MenuItem mMenuNewFolder;
-	private MenuItem mMenuNewFile;
-	private MenuItem mMenuContextInfo;
-	private MenuItem mMenuContextBookmark;
-	private MenuItem mMenuContextSelectAll;
-	private MenuItem mMenuContextPaste;
-	private MenuItem mMenuRefresh;
-	private MenuItem mMenuDebug;
-	private MenuItem mMenuSettings;
-	private MenuItem mMenuAbout;
-	private MenuItem mMenuExit;
-
+	private MenuItem mMenuPaste;
+	
 	public static final int REQ_PREFERENCES = 6;
 	public static final int REQ_SPLASH = 7;
 	public static final int REQ_INTENT = 8;
@@ -2031,44 +2001,18 @@ public class OpenExplorer
 //		getSupportMenuInflater().inflate(R.menu.global, menu);
 //		return true;
 		
-		mMainOptionsMenu = menu;
 		MenuInflater menuInflater = getSupportMenuInflater();
-		menuInflater.inflate(R.menu.menu_main, menu);
+		//menuInflater.inflate(R.menu.menu_main, menu);
+		//menuInflater.inflate(R.menu.global_top, menu);
+		getSelectedFragment().onCreateOptionsMenu(menu, menuInflater);
+		menuInflater.inflate(R.menu.global, menu);
+		
+		mMenuPaste = menu.findItem(R.id.menu_context_paste);
+		
+		mMainOptionsMenu = menu;
 		
 		if(IS_KEYBOARD_AVAILABLE)
 			MenuUtils.setMneumonics(menu);
-		
-		mMenuSearch = menu.findItem(R.id.menu_search);
-		mMenuSort = menu.findItem(R.id.menu_sort);
-		mMenuFoldersFirst = menu.findItem(R.id.menu_sort_folders_first);
-		mMenuNameAsc = menu.findItem(R.id.menu_sort_name_asc);
-		mMenuNameDesc = menu.findItem(R.id.menu_sort_name_desc);
-		mMenuDateAsc = menu.findItem(R.id.menu_sort_date_asc);
-		mMenuDateDesc = menu.findItem(R.id.menu_sort_date_desc);
-		mMenuSizeAsc = menu.findItem(R.id.menu_sort_size_asc);
-		mMenuSizeDesc = menu.findItem(R.id.menu_sort_size_desc);
-		mMenuSortType = menu.findItem(R.id.menu_sort_type);
-		mMenuView = menu.findItem(R.id.menu_view);
-		mMenuMulti = menu.findItem(R.id.menu_multi);
-		mMenuViewGrid = menu.findItem(R.id.menu_view_grid);
-		mMenuViewList = menu.findItem(R.id.menu_view_list);
-		mMenuViewCarousel = menu.findItem(R.id.menu_view_carousel);
-		mMenuViewHidden = menu.findItem(R.id.menu_view_hidden);
-		mMenuViewThumbs = menu.findItem(R.id.menu_view_thumbs);
-		mMenuViewFullscreen = menu.findItem(R.id.menu_view_fullscreen);
-		mMenuViewSplit = menu.findItem(R.id.menu_view_split);
-		mMenuContentOps = menu.findItem(R.id.menu_content_ops);
-		mMenuNewFolder = menu.findItem(R.id.menu_new_folder);
-		mMenuNewFile = menu.findItem(R.id.menu_new_file);
-		mMenuContextInfo = menu.findItem(R.id.menu_context_info);
-		mMenuContextBookmark = menu.findItem(R.id.menu_context_bookmark);
-		mMenuContextSelectAll = menu.findItem(R.id.menu_context_selectall);
-		mMenuContextPaste = menu.findItem(R.id.content_paste);
-		mMenuRefresh = menu.findItem(R.id.menu_refresh);
-		mMenuDebug = menu.findItem(R.id.menu_debug);
-		mMenuSettings = menu.findItem(R.id.menu_settings);
-		mMenuAbout = menu.findItem(R.id.menu_about);
-		mMenuExit = menu.findItem(R.id.menu_exit);
 			
 		if(mSearchView == null) {
 			mSearchView = SearchViewCompat.newSearchView(this);
@@ -2090,8 +2034,12 @@ public class OpenExplorer
 					}
 				});
 		}
-		mMenuSearch.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-		mMenuSearch.setActionView(mSearchView);
+		MenuItem mMenuSearch = menu.findItem(R.id.menu_search);
+		if(mMenuSearch != null)
+		{
+			mMenuSearch.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+			mMenuSearch.setActionView(mSearchView);
+		}
 		
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -2103,52 +2051,11 @@ public class OpenExplorer
 		//MenuUtils.setMenuChecked(menu, mLogFragment != null && mLogFragment.isVisible(), R.id.menu_view_logview);
 		//MenuUtils.setMenuChecked(menu, getPreferences().getBoolean("global", "pref_fullscreen", false), R.id.menu_view_fullscreen);
 		
-		mMenuSearch.setVisible(true);
-		mMenuSort.setVisible(true);
-		mMenuFoldersFirst.setVisible(true);
-		mMenuNameAsc.setVisible(true);
-		mMenuNameDesc.setVisible(true);
-		mMenuDateAsc.setVisible(true);
-		mMenuDateDesc.setVisible(true);
-		mMenuSizeAsc.setVisible(true);
-		mMenuSizeDesc.setVisible(true);
-		mMenuSortType.setVisible(true);
-		mMenuView.setVisible(true);
-		mMenuMulti.setVisible(true);
-		mMenuViewGrid.setVisible(true);
-		mMenuViewList.setVisible(true);
-		if(!CAN_DO_CAROUSEL) {
-			mMenuViewCarousel.setVisible(false);
-		} else {
-			mMenuViewCarousel.setVisible(true);
-		}
-		mMenuViewHidden.setVisible(true);
-		mMenuViewThumbs.setVisible(true);
-		if(!getResources().getBoolean(R.bool.allow_fullscreen)) {
-			mMenuViewFullscreen.setVisible(false);
-		} else {
-			mMenuViewFullscreen.setVisible(true);
-			mMenuViewFullscreen.setChecked(IS_FULL_SCREEN);
-		}
-		mMenuViewSplit.setVisible(true);
-		mMenuContentOps.setVisible(true);
-		mMenuNewFolder.setVisible(true);
-		mMenuNewFile.setVisible(true);
-		mMenuContextInfo.setVisible(true);
-		mMenuContextBookmark.setVisible(true);
-		mMenuContextSelectAll.setVisible(true);
-		if(getClipboard() != null) {
-			mMenuMulti.setChecked(getClipboard().isMultiselect());
-			mMenuContextPaste.setVisible(getClipboard().size() > 0);
-		} else
-			mMenuContextPaste.setVisible(false);
-		mMenuRefresh.setVisible(true);
-		mMenuDebug.setVisible(true);
-		mMenuSettings.setVisible(true);
-		mMenuAbout.setVisible(true);
-		mMenuExit.setVisible(true);
+		MenuUtils.setMenuVisible(menu, getResources().getBoolean(R.bool.allow_fullscreen), R.id.menu_view_fullscreen);
+		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
+		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
 		
-		if(menu != null && mMenuContextPaste != null && getClipboard() != null && getClipboard().size() > 0)
+		if(menu != null && mMenuPaste != null && getClipboard() != null && getClipboard().size() > 0)
 		{
 			SubMenu sub = menu.findItem(R.id.content_paste).getSubMenu();
 			if(sub != null)
