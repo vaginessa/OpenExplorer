@@ -194,7 +194,7 @@ public class ContentAdapter extends BaseAdapter {
 		if(file == null) {
 			return row;
 		} else {
-			row.associateFile(file);
+			row.associateFile(file, this);
 		}
 		
 		Object o = file.getTag();
@@ -337,7 +337,8 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		
 		row.setTag(file);
-		
+		CheckBox listItemCB = (CheckBox)row.findViewById(R.id.checkbox);
+		listItemCB.setChecked(isSelected(row));
 		return row;
 	}
 
