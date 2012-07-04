@@ -64,11 +64,12 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mPlusParent = false;
 	private boolean mShowDetails = true;
 	private boolean mShowFiles = true;
+	private boolean mShowChecks = false;
 	
 	/**
 	 * Set of seleced message IDs.
 	 */
-	private final HashSet<String> mSelectedSet = new HashSet<String>();
+	private final HashSet<OpenPath> mSelectedSet = new HashSet<OpenPath>();
 
 	/**
 	 * Callback from MessageListAdapter. All methods are called on the UI
@@ -340,7 +341,7 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		
 		//row.setTag(file);
-		CheckBox listItemCB = (CheckBox)row.findViewById(R.id.checkbox);
+		CheckBox listItemCB = (CheckBox)row.findViewById(R.id.content_checkbox);
 		listItemCB.setChecked(isSelected(row));
 		return row;
 	}
@@ -376,12 +377,12 @@ public class ContentAdapter extends BaseAdapter {
 		return mData2;
 	}
 	
-	public Set<String> getSelectedSet() {
+	public Set<OpenPath> getSelectedSet() {
 		return mSelectedSet;
 	}
 	
-	public void setSelectedSet(Set<String> set) {
-		for (String rememberedPath: set) {  
+	public void setSelectedSet(Set<OpenPath> set) {
+		for (OpenPath rememberedPath : set) {  
 			mSelectedSet.add(rememberedPath);
 		}
 	}
@@ -391,7 +392,7 @@ public class ContentAdapter extends BaseAdapter {
 	 * {@link #getSelectedSet()}, because it also notifies observers.
 	 */
 	public void clearSelection() {
-		Set<String> checkedset = getSelectedSet();
+		Set<OpenPath> checkedset = getSelectedSet();
 		if (checkedset.size() > 0) {
 			checkedset.clear();
 			notifyDataSetChanged();
@@ -399,11 +400,11 @@ public class ContentAdapter extends BaseAdapter {
 	}
 
 	public boolean isSelected(OpenPathView itemView) {
-		return getSelectedSet().contains(itemView.getIdentifer());
+		return getSelectedSet().contains(itemView.getOpenPath());
 	}
 	
 	public void toggleSelected(OpenPathView itemView) {
-		CheckBox listItemCB = (CheckBox)itemView.findViewById(R.id.checkbox);
+		CheckBox listItemCB = (CheckBox)itemView.findViewById(R.id.content_checkbox);
 		listItemCB.setChecked(!listItemCB.isChecked());
 		updateSelected(itemView, !isSelected(itemView));
 	}
@@ -421,9 +422,9 @@ public class ContentAdapter extends BaseAdapter {
 	 */
 	private void updateSelected(OpenPathView itemView, boolean newSelected) {
 		if (newSelected) {
-			mSelectedSet.add(itemView.getIdentifer());
+			mSelectedSet.add(itemView.getOpenPath());
 		} else {
-			mSelectedSet.remove(itemView.getIdentifer());
+			mSelectedSet.remove(itemView.getOpenPath());
 		}
 		if (mCallback != null) {
 			mCallback.onAdapterSelectedChanged(itemView, newSelected,

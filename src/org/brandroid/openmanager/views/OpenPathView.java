@@ -41,8 +41,8 @@ public class OpenPathView extends LinearLayout {
 		// TODO Auto-generated constructor stub
 	}
 
-	public String getIdentifer() {
-		return mFile.getAbsolutePath();
+	public OpenPath getOpenPath() {
+		return mFile;
 	}
 
 	public void associateFile(OpenPath file, ContentAdapter adapter) {
@@ -55,7 +55,7 @@ public class OpenPathView extends LinearLayout {
 			int bottom) {
 		super.onLayout(changed, left, top, right, bottom);
 		
-		View view = this.findViewById(R.id.checkbox);
+		View view = this.findViewById(R.id.content_checkbox);
 //		int[] xy = new int[2];
 //		view.getLocationOnScreen(xy);
 //		mCheckmarkX=xy[0];

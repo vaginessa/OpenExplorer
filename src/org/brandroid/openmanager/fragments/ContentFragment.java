@@ -1818,14 +1818,7 @@ public class ContentFragment extends OpenFragment
 	}
 
 	private class SelectionModeCallback implements ActionMode.Callback {
-		private MenuItem mCut;
-		private MenuItem mCopy;
-		private MenuItem mPaste;
-		private MenuItem mArchive;
-		private MenuItem mDelete;
 		private MenuItem mShare;
-		private MenuItem mRename;
-		private MenuItem mDetails;
 		private int viewPageNum;
 		private ShareActionProvider mShareActionProvider;
 
@@ -1850,6 +1843,7 @@ public class ContentFragment extends OpenFragment
 
 			// Set file with share history to the provider and set the share
 			// intent.
+			mShare = menu.findItem(R.id.menu_context_share);
 			if(mShare != null)
 			{
 				mShareActionProvider = (ShareActionProvider) mShare
@@ -1896,9 +1890,7 @@ public class ContentFragment extends OpenFragment
 
 		@Override
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			Set<String> selectedConversations = mContentAdapter.getSelectedSet();
-			Object[] selectedFilePaths = mContentAdapter.getSelectedSet()
-					.toArray();
+			Set<OpenPath> selectedConversations = mContentAdapter.getSelectedSet();
 
 //			/*
 //			 * Paste gets special handling. All other Contextual Action Mode
@@ -1944,12 +1936,6 @@ public class ContentFragment extends OpenFragment
 //				// not been clicked and that there is a selection to be operated
 //				// on. Get to it!
 //			} else {
-				// Convert selected items into a list of files
-				ArrayList<File> selectedFiles = new ArrayList<File>();
-				for (Object s : selectedFilePaths) {
-					selectedFiles.add(new File((String) s));
-				}
-
 				// Trigger appropriate CAB item code
 				switch (item.getItemId()) {
 //				case R.id.action_share:
@@ -2044,6 +2030,8 @@ public class ContentFragment extends OpenFragment
 //					break;
 
 				default:
+					if(onOptionsItemSelected(item))
+						return true;
 					break;
 				}
 //			}

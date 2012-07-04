@@ -2335,6 +2335,13 @@ public class OpenExplorer
 		super.onClick(v);
 		if(v == null) return;
 		int id = v.getId();
+		
+		if(id == R.id.title_paste_icon)
+		{
+			onClipboardDropdown(v);
+			return;
+		}
+		
 		OpenFragment f = getSelectedFragment();
 		if(f != null && f.onClick(id, v)) return;
 		if(v.getTag() != null && v.getTag() instanceof MenuItem && id != ((MenuItem)v.getTag()).getItemId())
