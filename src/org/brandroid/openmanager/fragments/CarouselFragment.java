@@ -112,7 +112,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		@Override
 		public void onCardLongPress(final int n, int touchPosition[], Rect detailCoordinates) {
 			runOnUiThread(new Runnable(){public void run() {
-			DialogHandler.showFileInfo(getActivity().getApplicationContext(), mPathItems[n]);
+			DialogHandler.showFileInfo(CarouselFragment.this, mPathItems[n]);
 			}});
 		}
 
@@ -142,7 +142,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			mPaint.setColor(0xffffffff);
 			mPaint.setAntiAlias(true);
 			
-			if(mPathItems != null && (thumb = ThumbnailCreator.generateThumb(mPath, textw, texth, getApplicationContext())) != null && thumb.get() != null)
+			if(mPathItems != null && (thumb = ThumbnailCreator.generateThumb(CarouselFragment.this, mPath, textw, texth, getApplicationContext())) != null && thumb.get() != null)
 			{
 				Bitmap b = thumb.get();
 				w = b.getWidth();

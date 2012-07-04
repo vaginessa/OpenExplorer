@@ -20,6 +20,7 @@ package org.brandroid.openmanager.data;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.Logger;
@@ -151,12 +152,12 @@ public class BookmarkHolder {
 	}*/
 	//public void cancelTask() { if(mTask!=null) mTask.cancel(true); }
 	
-	public Drawable getIcon(Context context) {
+	public Drawable getIcon(OpenApp app) {
 		if(getIconView() != null && getIconView().getDrawable() != null)
 			return getIconView().getDrawable();
 		if(mIcon != null && getOpenPath() != null)
 		{
-			Bitmap bmp = ThumbnailCreator.getThumbnailCache(context, getOpenPath(), ContentFragment.mListImageSize, ContentFragment.mListImageSize);
+			Bitmap bmp = ThumbnailCreator.getThumbnailCache(app, getOpenPath(), ContentFragment.mListImageSize, ContentFragment.mListImageSize);
 			if(bmp != null)
 				return new BitmapDrawable(bmp);
 		}
