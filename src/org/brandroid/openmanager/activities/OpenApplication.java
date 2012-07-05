@@ -11,6 +11,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 
+import com.actionbarsherlock.view.ActionMode;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.DownloadUtils;
@@ -36,6 +37,7 @@ public class OpenApplication extends Application implements OpenApp
     private DiskLruCache mBitmapDiskCache;
     private OpenClipboard mClipboard;
     private ShellSession mShell;
+    private ActionMode mActionMode;
     
     @Override
     public void onCreate() {
@@ -67,7 +69,15 @@ public class OpenApplication extends Application implements OpenApp
     public Context getContext() {
         return this;
     }
-    
+
+    public synchronized ActionMode getActionMode()
+    {
+    	return mActionMode;
+    }
+    public synchronized void setActionMode(ActionMode mode)
+    {
+    	mActionMode = mode;
+    }
     public synchronized OpenClipboard getClipboard()
     {
     	if(mClipboard == null)

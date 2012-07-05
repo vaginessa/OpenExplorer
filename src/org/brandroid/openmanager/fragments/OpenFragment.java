@@ -24,6 +24,7 @@ import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockListFragment;
+import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
@@ -66,7 +67,6 @@ public abstract class OpenFragment
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
-	protected boolean mActionModeSelected = false;
 	private boolean mHasOptions = false;
 	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	private OnFragmentDPADListener mDPAD = null;
@@ -456,16 +456,6 @@ public abstract class OpenFragment
 			getExplorer().refreshOperations();
 	}
 	
-	public void changeMultiSelectState(boolean multiSelectOn) {
-		if(multiSelectOn)
-			getClipboard().startMultiselect();
-		else
-			getClipboard().stopMultiselect();
-		//mMultiSelectDrawer.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
-	}
-
-
-	
 	protected final void finishMode(Object mode)
 	{
 		getClipboard().clear();
@@ -508,17 +498,23 @@ public abstract class OpenFragment
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
 	
 	@Override
+	public ActionMode getActionMode() {
+		if(getExplorer() != null)
+			return getExplorer().getActionMode();
+		else return null;
+	}
+
+	@Override
+	public void setActionMode(ActionMode mode) {
+		if(getExplorer() != null)
+			getExplorer().setActionMode(mode);
+	}
+
+	@Override
 	public OpenClipboard getClipboard() {
 		if(getExplorer() != null)
 			return getExplorer().getClipboard();
 		else return null;
-	}
-	
-	@Override
-	public boolean isMultiselect() {
-		if(getClipboard() != null)
-			return getClipboard().isMultiselect();
-		return false;
 	}
 	
 	@Override

@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.StatFs;
 import android.provider.MediaStore;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -223,7 +224,6 @@ public class OpenExplorer
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
 	public static boolean CAN_DO_CAROUSEL = false;
 	public static boolean USE_ACTION_BAR = false;
-	public static boolean USE_ACTIONMODE = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
 	public static boolean IS_DEBUG_BUILD = true;
 	public static boolean LOW_MEMORY = false;
@@ -1522,6 +1522,12 @@ public class OpenExplorer
 			unregisterReceiver(storageReceiver);
 	}
 	
+	public ActionMode getActionMode()
+	{
+		return mActionMode;
+	}
+	public void setActionMode(ActionMode mode) { mActionMode = mode; }
+	
 	@Override
 	public OpenClipboard getClipboard() {
 		return getOpenApplication().getClipboard();
@@ -2076,7 +2082,7 @@ public class OpenExplorer
 		
 		MenuUtils.setMenuVisible(menu, getResources().getBoolean(R.bool.allow_fullscreen), R.id.menu_view_fullscreen);
 		MenuUtils.setMenuVisible(menu, getClipboard().size() > 0, R.id.menu_context_paste);
-		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+		MenuUtils.setMenuChecked(menu, getActionMode() != null, R.id.menu_multi);
 		
 		if(menu != null && mMenuPaste != null && getClipboard() != null && getClipboard().size() > 0)
 		{
@@ -2106,6 +2112,44 @@ public class OpenExplorer
 		return super.onPrepareOptionsMenu(menu);
 	}
 	
+	public void startMultiselect()
+	{
+		if(mActionMode != null)
+			mActionMode.finish();
+		
+		mActionMode = getSherlock().startActionMode(new ActionMode.Callback() {
+			
+			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+				return false;
+			}
+			public void onDestroyActionMode(ActionMode mode) {
+				mActionMode = null;
+			}
+			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+				mode.setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
+				mode.getMenuInflater().inflate(R.menu.multiselect, menu);
+				//MenuUtils.setMenuVisible(menu, false, R.id.menu_context_paste, R.id.menu_context_unzip);
+				//getDirContentFragment(true).changeMultiSelectState(true);
+				return true;
+			}
+			public boolean onActionItemClicked(ActionMode mode, MenuItem item)
+			{
+				if(getClipboard().size() < 1)
+				{
+					mode.finish();
+					return true;
+				}
+				OpenPath file = getClipboard().get(0); //getMultiSelectHandler().getSelectedFiles();
+				
+				getClipboard().clear();
+			
+				return getDirContentFragment(false)
+						.executeMenu(item.getItemId(), mode, file);
+			}
+		});
+	}
+	
+	@SuppressLint("ParserError")
 	public boolean onOptionsItemSelected(MenuItem item)	{
 		int id = item.getItemId();
 		if(id != R.id.title_icon && id != android.R.id.home);
@@ -2123,54 +2167,7 @@ public class OpenExplorer
 				toggleBookmarks();
 				return true;
 				
-			case R.id.menu_multi:
-				if(getClipboard().isMultiselect())
-				{
-					getClipboard().stopMultiselect();
-					//getClipboard().clear();
-					if(mActionMode != null)
-						mActionMode.finish();
-					return true;
-				}
-				
-				if(!USE_ACTIONMODE)
-				{
-					getClipboard().startMultiselect();
-				} else {
-					mActionMode = getSherlock().startActionMode(new ActionMode.Callback() {
-						
-						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-							return false;
-						}
-						public void onDestroyActionMode(ActionMode mode) {
-							getClipboard().clear();
-							mActionMode = null;
-						}
-						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							mode.setTitle(getString(R.string.s_menu_multi) + ": " + getClipboard().size() + " " + getString(R.string.s_files));
-							mode.getMenuInflater().inflate(R.menu.multiselect, menu);
-							//MenuUtils.setMenuVisible(menu, false, R.id.menu_context_paste, R.id.menu_context_unzip);
-							getDirContentFragment(true).changeMultiSelectState(true);
-							return true;
-						}
-						public boolean onActionItemClicked(ActionMode mode, MenuItem item)
-						{
-							if(getClipboard().size() < 1)
-							{
-								mode.finish();
-								return true;
-							}
-							OpenPath file = getClipboard().get(0); //getMultiSelectHandler().getSelectedFiles();
-							
-							getClipboard().clear();
-						
-							return getDirContentFragment(false)
-									.executeMenu(item.getItemId(), mode, file);
-						}
-					});
-				}
-				return true;
-								
+			case R.id.menu_multi: startMultiselect(); return true;
 				
 			case R.id.menu_view_carousel:
 				changeViewMode(OpenExplorer.VIEW_CAROUSEL, true);
@@ -2441,7 +2438,7 @@ public class OpenExplorer
 			}
 		});
 		final Menu menu = IconContextMenu.newMenu(this, R.menu.multiselect);
-		MenuUtils.setMenuChecked(menu, getClipboard().isMultiselect(), R.id.menu_multi);
+		MenuUtils.setMenuChecked(menu, mActionMode != null, R.id.menu_multi);
 		MenuUtils.setMenuEnabled(menu, getClipboard().hasPastable(), R.id.menu_multi_all_copy, R.id.menu_multi_all_copy, R.id.menu_multi_all_move);
 		final IconContextMenuAdapter cmdAdapter = new IconContextMenuAdapter(this, menu);
 		cmdAdapter.setTextLayout(R.layout.context_item);
@@ -3153,13 +3150,11 @@ public class OpenExplorer
 	}
 	
 	public void onClipboardUpdate() {
-		if(getClipboard().size() == mLastClipSize &&
-				getClipboard().isMultiselect() == mLastClipState) return;
+		if(getClipboard().size() == mLastClipSize) return;
 		if(DEBUG)
 			Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
 		View pb = mStaticButtons.findViewById(R.id.title_paste);
 		mLastClipSize = getClipboard().size();
-		mLastClipState = getClipboard().isMultiselect();
 		ViewUtils.setViewsVisible(pb, mLastClipSize > 0 || mLastClipState);
 		ViewUtils.setText(pb, "" + mLastClipSize, R.id.title_paste_text);
 		ViewUtils.setImageResource(pb, mLastClipState ?
@@ -3167,7 +3162,7 @@ public class OpenExplorer
 					R.id.title_paste_icon);
 		checkTitleSeparator();
 		//invalidateOptionsMenu();
-		if(USE_ACTIONMODE && mActionMode != null)
+		if(mActionMode != null)
 			mActionMode.setTitle(getString(R.string.s_menu_multi) + ": " + mLastClipSize + " " + getString(R.string.s_files));
 		ContentFragment cf = getDirContentFragment(false);
 		if(cf != null && cf.isAdded() && cf.isVisible())

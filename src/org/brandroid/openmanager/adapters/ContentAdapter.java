@@ -97,7 +97,6 @@ public class ContentAdapter extends BaseAdapter {
 	public interface CheckClipboardListener
 	{
 		public boolean checkClipboard(OpenPath file);
-		public boolean isMultiselect();
 		public void removeFromClipboard(OpenPath file);
 	}
 	public void setCheckClipboardListener(CheckClipboardListener l) { mClipper = l; }
@@ -260,7 +259,7 @@ public class ContentAdapter extends BaseAdapter {
 		if(mNameView != null)
 			mNameView.setText(mName);
 
-		boolean multi = mClipper != null && mClipper.isMultiselect();
+		boolean multi = mApp.getActionMode() != null;
 		boolean copied = mClipper != null && mClipper.checkClipboard(file);
 		int pad = row.getPaddingLeft();
 		if(multi || copied)

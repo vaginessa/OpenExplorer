@@ -354,7 +354,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			MenuItem mPaste = menu.findItem(R.id.content_paste);
 			if(mPaste != null && getClipboard() != null && !isDetached())
 				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
-			if(getClipboard().isMultiselect())
+			if(getActionMode() != null)
 			{
 				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
 				d.getDrawable(1).setAlpha(127);

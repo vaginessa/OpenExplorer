@@ -112,7 +112,6 @@ public class ContentFragment extends OpenFragment
 	//private SlidingDrawer mMultiSelectDrawer;
 	//private GridView mMultiSelectView;
 	protected GridView mGrid = null;
-	protected Object mActionMode = null;
 	//private View mProgressBarLoading = null;
 	
 	//private ArrayList<OpenPath> mData2 = null; //the data that is bound to our array adapter.
@@ -152,9 +151,7 @@ public class ContentFragment extends OpenFragment
 	/**
 	 * {@link ActionMode} shown when 1 or more message is selected.
 	 */
-	private ActionMode mSelectionMode;
 	private SelectionModeCallback mLastSelectionModeCallback;
-	private OpenExplorer mActivity;
 	
 	//private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 	
@@ -311,8 +308,6 @@ public class ContentFragment extends OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		mActivity = (OpenExplorer) getActivity();
-		
 		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
 		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
 		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
@@ -445,7 +440,6 @@ public class ContentFragment extends OpenFragment
 		
 		Logger.LogDebug("Refreshing Data for " + mPath);
 		
-		mActionModeSelected = false;
 		SortType sort = SortType.ALPHA;
 		if(getExplorer() != null)
 			sort = new SortType(getViewSetting(path, "sort", 
@@ -673,12 +667,12 @@ public class ContentFragment extends OpenFragment
 		if(file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
 			file = new OpenZip((OpenFile)file);
 		
-		if(getClipboard().isMultiselect()) {
-			if(getClipboard().contains(file))
+		if(getActionMode() != null) {
+			if(mLastSelectionModeCallback != null)
 			{
 				getClipboard().remove(file);
-				if(getClipboard().size() == 0)
-					getClipboard().stopMultiselect();
+				if(getClipboard().size() == 0 && getActionMode() != null)
+					getActionMode().finish();
 				((BaseAdapter)list.getAdapter()).notifyDataSetChanged();
 			} else {
 				//Animation anim = Animation.
@@ -701,7 +695,7 @@ public class ContentFragment extends OpenFragment
 			return;
 		}
 		
-		if(file.isDirectory() && !mActionModeSelected ) {
+		if(file.isDirectory() && getActionMode() == null) {
 			/* if (mThumbnail != null) {
 				mThumbnail.setCancelThumbnails(true);
 				mThumbnail = null;
@@ -711,7 +705,7 @@ public class ContentFragment extends OpenFragment
 			//setContentPath(file, true);
 			getExplorer().onChangeLocation(file);
 
-		} else if (!file.isDirectory() && !mActionModeSelected) {
+		} else if (!file.isDirectory() && getActionMode() == null) {
 			
 			if(file.requiresThread() && FileManager.hasOpenCache(file.getAbsolutePath()))
 			{
@@ -824,137 +818,77 @@ public class ContentFragment extends OpenFragment
 				return true;
 			} else
 				return list.showContextMenu();
-		} else if(OpenExplorer.BEFORE_HONEYCOMB || !OpenExplorer.USE_ACTIONMODE) {
-			
-			try {
-				//View anchor = view; //view.findViewById(R.id.content_context_helper);
-				//if(anchor == null) anchor = view;
-				//view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-				//Rect r = new Rect(view.getLeft(),view.getTop(),view.getMeasuredWidth(),view.getMeasuredHeight());
-				Menu cmm = IconContextMenu.newMenu(list.getContext(), R.menu.context_file);
-				if(!file.canRead())
-				{
-					MenuUtils.setMenuEnabled(cmm, false);
-					MenuUtils.setMenuEnabled(cmm, true, R.id.menu_context_info);
+		}
+		
+		if(!file.isDirectory() && getActionMode() == null) {
+			getSherlockActivity().startActionMode(new Callback() {
+				//@Override
+				public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+					return false;
 				}
-				MenuUtils.setMenuEnabled(cmm, file.canWrite(), R.id.menu_context_paste, R.id.menu_context_cut, R.id.menu_context_delete, R.id.menu_context_rename);
-				onPrepareOptionsMenu(cmm);
 				
-				//if(!file.isArchive()) hideItem(cmm, R.id.menu_context_unzip);
-				if(getClipboard().size() > 0)
-					MenuUtils.setMenuVisible(cmm, false, R.id.menu_multi);
-				else
-					MenuUtils.setMenuVisible(cmm, false, R.id.menu_context_paste);
-				MenuUtils.setMenuEnabled(cmm, !file.isDirectory(), R.id.menu_context_edit, R.id.menu_context_view);
-				final IconContextMenu cm = new IconContextMenu(
-						list.getContext(), cmm, view);
-				//cm.setAnchor(anchor);
-				cm.setNumColumns(2);
-				cm.setOnIconContextItemSelectedListener(getExplorer());
-				cm.setInfo(info);
-				cm.setTextLayout(R.layout.context_item);
-				cm.setTitle(file.getName());
-				if(!cm.show()) //r.left, r.top);
-					return list.showContextMenu();
-				else return true;
-			} catch(Exception e) {
-				Logger.LogWarning("Couldn't show Iconified menu.", e);
-				return list.showContextMenu();
-			}
-		}
-		
-		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE)
-		{
-			if(!file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
-				try {
-					getSherlockActivity().startActionMode(new Callback() {
-						//@Override
-						public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-							return false;
-						}
-						
-						//@Override
-						public void onDestroyActionMode(ActionMode mode) {
-							mActionMode = null;
-							mActionModeSelected = false;
-						}
-						
-						//@Override
-						public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-							mode.getMenuInflater().inflate(R.menu.context_file, menu);
-				    		
-				    		mActionModeSelected = true;
-							return true;
-						}
-
-						//@Override
-						public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-							//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-							
-							//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
-							//files.add(file);
-							
-							if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_context_copy)
-							{
-								mode.finish();
-								mActionModeSelected = false;
-							}
-							return executeMenu(item.getItemId(), mode, file);
-						}
-					});
-					Class cAM = Class.forName("android.view.ActionMode");
-					Method mST = cAM.getMethod("setTitle", CharSequence.class);
-					mST.invoke(mActionMode, file.getName());
-				} catch (Exception e) {
-					Logger.LogError("Error using ActionMode", e);
+				//@Override
+				public void onDestroyActionMode(ActionMode mode) {
+					setActionMode(null);
 				}
-			}
+				
+				//@Override
+				public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+					setActionMode(mode);
+					mode.getMenuInflater().inflate(R.menu.context_file, menu);
+					return true;
+				}
+
+				//@Override
+				public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+					//ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+					
+					//OpenPath file = mLastPath.getChild(mode.getTitle().toString());
+					//files.add(file);
+					
+					if(item.getItemId() != R.id.menu_context_cut && item.getItemId() != R.id.menu_multi && item.getItemId() != R.id.menu_context_copy)
+					{
+						mode.finish();
+					}
+					return executeMenu(item.getItemId(), mode, file);
+				}
+			});
+			getActionMode().setTitle(file.getName());
 			return true;
-
 		}
 		
-		if(file.isDirectory() && mActionMode == null && !getClipboard().isMultiselect()) {
-			if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTIONMODE)
-			{
-				try {
-					getSherlockActivity().startActionMode(new Callback() {
-					
-					//@Override
-					public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-						return false;
-					}
-					
-					//@Override
-					public void onDestroyActionMode(ActionMode mode) {
-						mActionMode = null;
-						mActionModeSelected = false;
-					}
-					
-					//@Override
-					public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-						mode.getMenuInflater().inflate(R.menu.context_file, menu);
-						menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
-						//menu.findItem(R.id.menu_context_unzip).setEnabled(mHoldingZip);
-			        	
-			        	mActionModeSelected = true;
-						
-			        	return true;
-					}
-					
-					//@Override
-					public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-						return executeMenu(item.getItemId(), mode, file);
-					}
-				});
-					Class cAM = Class.forName("android.view.ActionMode");
-					Method mST = cAM.getMethod("setTitle", CharSequence.class);
-					mST.invoke(mActionMode, file.getName());
-				} catch (Exception e) {
-					Logger.LogError("Error using ActionMode", e);
+		if(file.isDirectory() && getActionMode() == null) {
+			getSherlockActivity().startActionMode(new Callback() {
+				//@Override
+				public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+					return false;
 				}
-			}
+				
+				//@Override
+				public void onDestroyActionMode(ActionMode mode) {
+					setActionMode(null);
+				}
+				
+				//@Override
+				public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+					mode.getMenuInflater().inflate(R.menu.context_file, menu);
+					menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
+					//menu.findItem(R.id.menu_context_unzip).setEnabled(mHoldingZip);
+		        	
+		        	setActionMode(mode);
+					
+		        	return true;
+				}
+				
+				//@Override
+				public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+					return executeMenu(item.getItemId(), mode, file);
+				}
+			});
 			
+			getActionMode().setTitle(file.getName());
 			return true;
+			
 		}
 		
 		return false;
@@ -991,7 +925,7 @@ public class ContentFragment extends OpenFragment
 		OpenPath path = null;
 		if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
 			path = getContentAdapter().getItem(mMenuContextItemIndex);
-		if(path != null && executeMenu(item.getItemId(), mActionMode, path))
+		if(path != null && executeMenu(item.getItemId(), getActionMode(), path))
 			return true;
 		switch(item.getItemId())
 		{
@@ -1116,7 +1050,7 @@ public class ContentFragment extends OpenFragment
 				break;
 
 			case R.id.menu_multi:
-				changeMultiSelectState(!getClipboard().isMultiselect());
+				//changeMultiSelectState(getActionMode() != null);
 				if(!fromPasteMenu)
 					getClipboard().add(file);
 				return true;
@@ -1324,13 +1258,6 @@ public class ContentFragment extends OpenFragment
 			MenuItem mPaste = menu.findItem(R.id.content_paste);
 			if(mPaste != null && getClipboard() != null && !isDetached())
 				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
-			if(getClipboard().isMultiselect())
-			{
-				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
-				d.getDrawable(1).setAlpha(127);
-				if(menu.findItem(R.id.content_paste) != null)
-					menu.findItem(R.id.content_paste).setIcon(d);
-			}
 			if(mPaste != null)
 				mPaste.setVisible(true);
 		}
@@ -1766,7 +1693,7 @@ public class ContentFragment extends OpenFragment
 			updateSelectionModeView();
 		} else {
 			mLastSelectionModeCallback = new SelectionModeCallback();
-			mActivity.startActionMode(mLastSelectionModeCallback);
+			getExplorer().startActionMode(mLastSelectionModeCallback);
 		}
 	}
 
@@ -1779,13 +1706,13 @@ public class ContentFragment extends OpenFragment
 	private void finishSelectionMode() {
 		if (isInSelectionMode()) {
 			mLastSelectionModeCallback.mClosedByUser = false;
-			mSelectionMode.finish();
+			getActionMode().finish();
 		}
 	}
 
 	/** Update the "selection" action mode bar */
 	private void updateSelectionModeView() {
-		mSelectionMode.invalidate();
+		getActionMode().invalidate();
 	}
 
 	/**
@@ -1799,7 +1726,7 @@ public class ContentFragment extends OpenFragment
 	 * @return true if the list is in the "selection" mode.
 	 */
 	public boolean isInSelectionMode() {
-		return mSelectionMode != null;
+		return getActionMode() != null;
 	}
 
 	public void onDeselectAll() {
@@ -1828,9 +1755,9 @@ public class ContentFragment extends OpenFragment
 
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			mSelectionMode = mode;
+			setActionMode(mode);
 
-			MenuInflater inflater = mActivity.getSupportMenuInflater();
+			MenuInflater inflater = getExplorer().getSupportMenuInflater();
 			inflater.inflate(R.menu.multiselect, menu);
 //			mCut = menu.findItem(R.id.action_cut);
 //			mCopy = menu.findItem(R.id.action_copy);
@@ -1859,7 +1786,7 @@ public class ContentFragment extends OpenFragment
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			int num = getSelectedCount();
 			// Set title -- "# selected"
-//			mSelectionMode.setTitle(mActivity.getResources().getQuantityString(
+//			getActionMode().setTitle(getExplorer().getResources().getQuantityString(
 //					R.plurals.message_view_selected_message_count, num, num));
 //
 //			// Show appropriate menu items.
@@ -1899,8 +1826,8 @@ public class ContentFragment extends OpenFragment
 //
 //			// Paste clicked and files are available for pasting
 //			if (FileActions.canPaste() && item.getItemId() == R.id.action_paste) {
-//				new Mover(mActivity, FileActions.getPasteMode())
-//						.execute(mActivity.getCurrentDir());
+//				new Mover(getExplorer(), FileActions.getPasteMode())
+//						.execute(getExplorer().getCurrentDir());
 //				/*
 //				 * !!! TODO: Mover.java refreshes the directory after finishing,
 //				 * which keeps the following from running
@@ -1914,13 +1841,13 @@ public class ContentFragment extends OpenFragment
 //				if (selectedFilePaths.length < 1) {
 //					onDeselectAll(); // Close Action Mode
 //				} else {
-//					mSelectionMode.invalidate(); // Update Action Mode
+//					getActionMode().invalidate(); // Update Action Mode
 //				}
 //
 //				// Paste clicked but no files available. Should never happen.
 //			} else if (!FileActions.canPaste()
 //					&& item.getItemId() == R.id.action_paste) {
-//				Toast.makeText(mActivity, "No files stored in clipboard",
+//				Toast.makeText(getExplorer(), "No files stored in clipboard",
 //						Toast.LENGTH_SHORT).show();
 //
 //				// No items selected and we've already determined that there is
@@ -1928,7 +1855,7 @@ public class ContentFragment extends OpenFragment
 //				// happen.
 //			} else if (selectedFilePaths.length < 1) {
 //				Toast.makeText(
-//						mActivity,
+//						getExplorer(),
 //						"Why is this action mode still open? Because it shouldn't be.",
 //						Toast.LENGTH_SHORT).show();
 //
@@ -1939,80 +1866,80 @@ public class ContentFragment extends OpenFragment
 				// Trigger appropriate CAB item code
 				switch (item.getItemId()) {
 //				case R.id.action_share:
-//					mActivity.setPage(viewPageNum);
+//					getExplorer().setPage(viewPageNum);
 //					if (selectedFiles.size() > 0) {
 //						Intent shareIntent = FileActions.createShareIntent(
-//								selectedFiles, mActivity);
+//								selectedFiles, getExplorer());
 //						startActivity(Intent.createChooser(shareIntent,
 //								"Share via"));
 //						// Commented out pending solution for
 //						// shareactionprovider/splitactionbar bug
 //						// mShareActionProvider.setShareIntent(FileActions
-//						// .createShareIntent(selectedFiles, mActivity));
-//						// mSelectionMode.invalidate();
+//						// .createShareIntent(selectedFiles, getExplorer()));
+//						// getActionMode().invalidate();
 //					} else {
-//						Toast.makeText(mActivity, "Error. No items selected.",
+//						Toast.makeText(getExplorer(), "Error. No items selected.",
 //								Toast.LENGTH_SHORT).show();
 //					}
 //					onDeselectAll();
 //					break;
 //				case R.id.action_rename:
-//					mActivity.setPage(viewPageNum);
-//					Toast.makeText(mActivity, "Rename isn't implemented yet",
+//					getExplorer().setPage(viewPageNum);
+//					Toast.makeText(getExplorer(), "Rename isn't implemented yet",
 //							Toast.LENGTH_SHORT).show();
 //					break;
 //				case R.id.action_details:
-//					mActivity.setPage(viewPageNum);
-//					Intent fileIntent = new Intent(mActivity, FileView.class);
+//					getExplorer().setPage(viewPageNum);
+//					Intent fileIntent = new Intent(getExplorer(), FileView.class);
 //					fileIntent.putExtra("absPath", selectedFiles.get(0)
 //							.getPath());
 //					startActivity(fileIntent);
 //					break;
 //				case R.id.action_zip:
-//					mActivity.setPage(viewPageNum);
-//					mActivity.showDialog(mActivity.DIALOG_ZIP);
+//					getExplorer().setPage(viewPageNum);
+//					getExplorer().showDialog(getExplorer().DIALOG_ZIP);
 //					// Problem here. Zipfiles needs to run after dialog returns.
 //					// FileActions.zipFiles(selectedFiles, getCurrentDir(),
-//					// mActivity.getNewZipName(), mActivity);
+//					// getExplorer().getNewZipName(), getExplorer());
 //					break;
 //
 //				case R.id.action_cut:
-//					mActivity.setPage(viewPageNum);
+//					getExplorer().setPage(viewPageNum);
 //					if (selectedFiles.size() > 0) {
-//						FileActions.cutFiles(selectedFiles, mActivity);
-//						mSelectionMode.invalidate(); // After cutting, the menu
+//						FileActions.cutFiles(selectedFiles, getExplorer());
+//						getActionMode().invalidate(); // After cutting, the menu
 //														// should be rebuilt to
 //														// include paste
 //					} else {
-//						Toast.makeText(mActivity, "Error. No items selected.",
+//						Toast.makeText(getExplorer(), "Error. No items selected.",
 //								Toast.LENGTH_SHORT).show();
 //					}
 //					break;
 //
 //				case R.id.action_copy:
-//					mActivity.setPage(viewPageNum);
+//					getExplorer().setPage(viewPageNum);
 //					if (selectedFiles.size() > 0) {
-//						FileActions.copyFiles(selectedFiles, mActivity);
-//						mSelectionMode.invalidate(); // After copying, the menu
+//						FileActions.copyFiles(selectedFiles, getExplorer());
+//						getActionMode().invalidate(); // After copying, the menu
 //														// should be rebuilt to
 //														// include paste
 //					} else {
-//						Toast.makeText(mActivity, "Error. No items selected.",
+//						Toast.makeText(getExplorer(), "Error. No items selected.",
 //								Toast.LENGTH_SHORT).show();
 //					}
 //					break;
 //
 //				case R.id.action_confirm_delete:
 //					// new
-//					// AlertDialog.Builder(mActivity).setIcon(android.R.drawable.ic_dialog_alert).setMessage("Quit the application?")
+//					// AlertDialog.Builder(getExplorer()).setIcon(android.R.drawable.ic_dialog_alert).setMessage("Quit the application?")
 //					// .setPositiveButton("Yes", new
 //					// DialogInterface.OnClickListener() {
 //					//
 //					// @Override
 //					// public void onClick(DialogInterface dialog, int which) {
-//					// mActivity.setPage(viewPageNum);
-//					// new Trasher(mActivity).execute(selectedFiles);
-//					// // Toast.makeText(mActivity,
+//					// getExplorer().setPage(viewPageNum);
+//					// new Trasher(getExplorer()).execute(selectedFiles);
+//					// // Toast.makeText(getExplorer(),
 //					// // "Deleted " + getSelectedCount() + " items",
 //					// // Toast.LENGTH_SHORT).show();
 //					// onDeselectAll();
@@ -2020,9 +1947,9 @@ public class ContentFragment extends OpenFragment
 //					//
 //					// }).setNegativeButton("No", null).show();
 //
-//					mActivity.setPage(viewPageNum);
-//					new Trasher(mActivity).execute(selectedFiles);
-//					// Toast.makeText(mActivity,
+//					getExplorer().setPage(viewPageNum);
+//					new Trasher(getExplorer()).execute(selectedFiles);
+//					// Toast.makeText(getExplorer(),
 //					// "Deleted " + getSelectedCount() + " items",
 //					// Toast.LENGTH_SHORT).show();
 //					onDeselectAll();
@@ -2043,7 +1970,7 @@ public class ContentFragment extends OpenFragment
 			// Clear this before onDeselectAll() to prevent onDeselectAll() from
 			// trying to close the
 			// contextual mode again.
-			mSelectionMode = null;
+			setActionMode(null);
 			if (mClosedByUser) {
 				// Clear selection, only when the contextual mode is explicitly
 				// closed by the user.
