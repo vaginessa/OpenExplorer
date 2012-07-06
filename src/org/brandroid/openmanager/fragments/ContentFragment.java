@@ -354,9 +354,11 @@ public class ContentFragment extends OpenFragment
 
 		final ListView lv = getListView();
 		lv.setOnItemLongClickListener(this);
-		lv.setItemsCanFocus(false);
-		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		lv.setOnItemClickListener(this);
+		//lv.setItemsCanFocus(false);
+		//lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		
+		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
 		//mGrid.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		
@@ -670,10 +672,12 @@ public class ContentFragment extends OpenFragment
 		if(getActionMode() != null) {
 			if(mLastSelectionModeCallback != null)
 			{
-				getClipboard().remove(file);
-				if(getClipboard().size() == 0 && getActionMode() != null)
+				mContentAdapter.toggleSelected(file);
+				if(getSelectedCount() == 0 && getActionMode() != null)
 					getActionMode().finish();
-				((BaseAdapter)list.getAdapter()).notifyDataSetChanged();
+				else if(getActionMode() != null)
+					getActionMode().invalidate();
+				notifyDataSetChanged();
 			} else {
 				//Animation anim = Animation.
 				/*
@@ -1713,6 +1717,7 @@ public class ContentFragment extends OpenFragment
 	/** Update the "selection" action mode bar */
 	private void updateSelectionModeView() {
 		getActionMode().invalidate();
+		notifyDataSetChanged();
 	}
 
 	/**
@@ -1758,24 +1763,17 @@ public class ContentFragment extends OpenFragment
 			setActionMode(mode);
 
 			MenuInflater inflater = getExplorer().getSupportMenuInflater();
-			inflater.inflate(R.menu.multiselect, menu);
-//			mCut = menu.findItem(R.id.action_cut);
-//			mCopy = menu.findItem(R.id.action_copy);
-//			mPaste = menu.findItem(R.id.action_paste);
-//			mArchive = menu.findItem(R.id.action_zip);
-//			mDelete = menu.findItem(R.id.action_confirm_delete);
-//			mShare = menu.findItem(R.id.action_share);
-//			mRename = menu.findItem(R.id.action_rename);
-//			mDetails = menu.findItem(R.id.action_details);
+			inflater.inflate(R.menu.content_action, menu);
 
 			// Set file with share history to the provider and set the share
 			// intent.
 			mShare = menu.findItem(R.id.menu_context_share);
-			if(mShare != null)
+			if(mShare != null && mShare.getActionProvider() != null)
 			{
 				mShareActionProvider = (ShareActionProvider) mShare
 						.getActionProvider();
-				mShareActionProvider
+				if(mShareActionProvider != null)
+					mShareActionProvider
 						.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
 			}
 
@@ -1786,176 +1784,33 @@ public class ContentFragment extends OpenFragment
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			int num = getSelectedCount();
 			// Set title -- "# selected"
-//			getActionMode().setTitle(getExplorer().getResources().getQuantityString(
-//					R.plurals.message_view_selected_message_count, num, num));
-//
-//			// Show appropriate menu items.
-//			if (!FileActions.canPaste()) {
-//				mCut.setVisible(true);
-//				mCopy.setVisible(true);
-//				mPaste.setVisible(false);
-//				mArchive.setVisible(true);
-//				mShare.setVisible(true);
-//			} else {
-//				mCut.setVisible(true);
-//				mCopy.setVisible(true);
-//				mPaste.setVisible(true);
-//				mArchive.setVisible(true);
-//				mShare.setVisible(true);
-//			}
-//
-//			if (num == 1) {
-//				mRename.setVisible(true);
-//				mDetails.setVisible(true);
-//			} else {
-//				mRename.setVisible(false);
-//				mDetails.setVisible(false);
-//			}
-//			viewPageNum = mNum;
+			getActionMode().setTitle(getExplorer().getResources().getQuantityString(
+					R.plurals.num_selected, num, num));
+
+			viewPageNum = num;
 			return true;
 		}
 
 		@Override
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			Set<OpenPath> selectedConversations = mContentAdapter.getSelectedSet();
-
-//			/*
-//			 * Paste gets special handling. All other Contextual Action Mode
-//			 * actions go in a switch statement below.
-//			 */
-//
-//			// Paste clicked and files are available for pasting
-//			if (FileActions.canPaste() && item.getItemId() == R.id.action_paste) {
-//				new Mover(getExplorer(), FileActions.getPasteMode())
-//						.execute(getExplorer().getCurrentDir());
-//				/*
-//				 * !!! TODO: Mover.java refreshes the directory after finishing,
-//				 * which keeps the following from running
-//				 * 
-//				 * Test to see if there is any current selection: If there
-//				 * aren't any selections, then the user's selection of paste can
-//				 * be presumed to be the final action for the Action Mode.
-//				 * Otherwise the action mode should be left open and
-//				 * invalidated/reloaded to remove the paste action.
-//				 */
-//				if (selectedFilePaths.length < 1) {
-//					onDeselectAll(); // Close Action Mode
-//				} else {
-//					getActionMode().invalidate(); // Update Action Mode
-//				}
-//
-//				// Paste clicked but no files available. Should never happen.
-//			} else if (!FileActions.canPaste()
-//					&& item.getItemId() == R.id.action_paste) {
-//				Toast.makeText(getExplorer(), "No files stored in clipboard",
-//						Toast.LENGTH_SHORT).show();
-//
-//				// No items selected and we've already determined that there is
-//				// no pending paste to keep the action mode open. Should never
-//				// happen.
-//			} else if (selectedFilePaths.length < 1) {
-//				Toast.makeText(
-//						getExplorer(),
-//						"Why is this action mode still open? Because it shouldn't be.",
-//						Toast.LENGTH_SHORT).show();
-//
-//				// By process of elimination, we have established that paste has
-//				// not been clicked and that there is a selection to be operated
-//				// on. Get to it!
-//			} else {
-				// Trigger appropriate CAB item code
-				switch (item.getItemId()) {
-//				case R.id.action_share:
-//					getExplorer().setPage(viewPageNum);
-//					if (selectedFiles.size() > 0) {
-//						Intent shareIntent = FileActions.createShareIntent(
-//								selectedFiles, getExplorer());
-//						startActivity(Intent.createChooser(shareIntent,
-//								"Share via"));
-//						// Commented out pending solution for
-//						// shareactionprovider/splitactionbar bug
-//						// mShareActionProvider.setShareIntent(FileActions
-//						// .createShareIntent(selectedFiles, getExplorer()));
-//						// getActionMode().invalidate();
-//					} else {
-//						Toast.makeText(getExplorer(), "Error. No items selected.",
-//								Toast.LENGTH_SHORT).show();
-//					}
-//					onDeselectAll();
-//					break;
-//				case R.id.action_rename:
-//					getExplorer().setPage(viewPageNum);
-//					Toast.makeText(getExplorer(), "Rename isn't implemented yet",
-//							Toast.LENGTH_SHORT).show();
-//					break;
-//				case R.id.action_details:
-//					getExplorer().setPage(viewPageNum);
-//					Intent fileIntent = new Intent(getExplorer(), FileView.class);
-//					fileIntent.putExtra("absPath", selectedFiles.get(0)
-//							.getPath());
-//					startActivity(fileIntent);
-//					break;
-//				case R.id.action_zip:
-//					getExplorer().setPage(viewPageNum);
-//					getExplorer().showDialog(getExplorer().DIALOG_ZIP);
-//					// Problem here. Zipfiles needs to run after dialog returns.
-//					// FileActions.zipFiles(selectedFiles, getCurrentDir(),
-//					// getExplorer().getNewZipName(), getExplorer());
-//					break;
-//
-//				case R.id.action_cut:
-//					getExplorer().setPage(viewPageNum);
-//					if (selectedFiles.size() > 0) {
-//						FileActions.cutFiles(selectedFiles, getExplorer());
-//						getActionMode().invalidate(); // After cutting, the menu
-//														// should be rebuilt to
-//														// include paste
-//					} else {
-//						Toast.makeText(getExplorer(), "Error. No items selected.",
-//								Toast.LENGTH_SHORT).show();
-//					}
-//					break;
-//
-//				case R.id.action_copy:
-//					getExplorer().setPage(viewPageNum);
-//					if (selectedFiles.size() > 0) {
-//						FileActions.copyFiles(selectedFiles, getExplorer());
-//						getActionMode().invalidate(); // After copying, the menu
-//														// should be rebuilt to
-//														// include paste
-//					} else {
-//						Toast.makeText(getExplorer(), "Error. No items selected.",
-//								Toast.LENGTH_SHORT).show();
-//					}
-//					break;
-//
-//				case R.id.action_confirm_delete:
-//					// new
-//					// AlertDialog.Builder(getExplorer()).setIcon(android.R.drawable.ic_dialog_alert).setMessage("Quit the application?")
-//					// .setPositiveButton("Yes", new
-//					// DialogInterface.OnClickListener() {
-//					//
-//					// @Override
-//					// public void onClick(DialogInterface dialog, int which) {
-//					// getExplorer().setPage(viewPageNum);
-//					// new Trasher(getExplorer()).execute(selectedFiles);
-//					// // Toast.makeText(getExplorer(),
-//					// // "Deleted " + getSelectedCount() + " items",
-//					// // Toast.LENGTH_SHORT).show();
-//					// onDeselectAll();
-//					// }
-//					//
-//					// }).setNegativeButton("No", null).show();
-//
-//					getExplorer().setPage(viewPageNum);
-//					new Trasher(getExplorer()).execute(selectedFiles);
-//					// Toast.makeText(getExplorer(),
-//					// "Deleted " + getSelectedCount() + " items",
-//					// Toast.LENGTH_SHORT).show();
-//					onDeselectAll();
-//
-//					break;
-
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item)
+		{
+			final Set<OpenPath> selections = mContentAdapter.getSelectedSet();
+			switch (item.getItemId())
+			{
+				case R.id.menu_context_selectall:
+					for(OpenPath path : mContentAdapter.getAll())
+						if(!selections.contains(path))
+							selections.add(path);
+					mode.invalidate();
+					break;
+				case R.id.menu_context_copy:
+					getClipboard().addAll(selections);
+					selections.clear();
+					mode.finish();
+					break;
+				case R.id.menu_context_delete:
+					getEventHandler().deleteFile(selections, getContext(), true);
+					break;
 				default:
 					if(onOptionsItemSelected(item))
 						return true;
@@ -1988,22 +1843,20 @@ public class ContentFragment extends OpenFragment
 	public boolean onItemLongClick(AdapterView<?> parent, View view,
 			int position, long id) {
 		// FileListItem f = mListAdapter.getItem(position);
-		boolean toggled = false;
-		if (!mContentAdapter.isSelected((OpenPathView) view)) {
-			toggleSelection((OpenPathView) view);
-			toggled = true;
-			updateSelectionMode();
-		}
+		OpenPath path = getContentAdapter().getItem(position);
+		mContentAdapter.toggleSelected(path);
+		updateSelectionMode();
+		notifyDataSetChanged();
 		return true;
-	}
-
-	private void toggleSelection(OpenPathView itemView) {
-		mContentAdapter.toggleSelected(itemView);
 	}
 
 	public void notifyDataSetChanged() {
 		if(mContentAdapter != null)
 			mContentAdapter.notifyDataSetChanged();
+		if(mViewMode == OpenExplorer.VIEW_GRID)
+			mGrid.invalidateViews();
+		else
+			getListView().invalidateViews();
 	}
 	
 }

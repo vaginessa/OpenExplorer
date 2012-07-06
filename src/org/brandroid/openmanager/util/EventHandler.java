@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.provider.MediaStore.Images;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -40,8 +41,10 @@ import android.widget.TextView;
 import android.net.Uri;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
@@ -194,16 +197,16 @@ public class EventHandler {
 		deleteFile(files, mContext, showConfirmation);
 	}
 
-	public void deleteFile(final List<OpenPath> path, final Context mContext,
+	public void deleteFile(final Collection<OpenPath> path, final Context mContext,
 			boolean showConfirmation) {
 		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		String name;
 
-		if (path.size() == 1)
-			name = path.get(0).getName();
+		if (files.length == 1)
+			name = files[0].getName();
 		else
-			name = path.size() + " "
+			name = files.length + " "
 					+ getResourceString(mContext, R.string.s_files);
 
 		if (!showConfirmation) {
@@ -706,6 +709,7 @@ public class EventHandler {
 			mNotifier.notify(mNotifyId, mNote);
 		}
 
+		@SuppressLint("NewApi")
 		@SuppressWarnings("deprecation")
 		public void prepareNotification(int notifIcon, boolean isCancellable) {
 			boolean showProgress = true;

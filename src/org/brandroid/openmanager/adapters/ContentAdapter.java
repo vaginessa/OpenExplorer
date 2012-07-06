@@ -175,7 +175,7 @@ public class ContentAdapter extends BaseAdapter {
 		final boolean useLarge = layout == R.layout.file_grid_item;
 		final OpenPath file = getItem(position); //super.getItem(position);
 		
-		OpenPathView row;
+		View row;
 						
 		if(view == null
 					|| view.getTag() == null
@@ -185,19 +185,19 @@ public class ContentAdapter extends BaseAdapter {
 			LayoutInflater in = (LayoutInflater)getContext()
 									.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			
-			row = (OpenPathView) in.inflate(layout, parent, false);
+			row = in.inflate(layout, parent, false);
 			BookmarkHolder mHolder = new BookmarkHolder(file, file.getName(), row, mode);
 			row.setTag(mHolder);
 			//file.setTag(mHolder);
 		} else {
-			row = (OpenPathView)view;
+			row = view;
 		}
 		
 		
 		if(file == null) {
 			return row;
-		} else {
-			row.associateFile(file, this);
+		} else if(row instanceof OpenPathView) {
+			((OpenPathView)row).associateFile(file, this);
 		}
 		
 		Object o = file.getTag();
@@ -340,8 +340,10 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		
 		//row.setTag(file);
+		ViewUtils.setViewsVisible(row, mApp.getClipboard().contains(file), R.id.content_clipboard);
 		CheckBox listItemCB = (CheckBox)row.findViewById(R.id.content_checkbox);
-		listItemCB.setChecked(isSelected(row));
+		listItemCB.setChecked(isSelected(file));
+		listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
 		return row;
 	}
 
@@ -398,14 +400,20 @@ public class ContentAdapter extends BaseAdapter {
 		}
 	}
 
-	public boolean isSelected(OpenPathView itemView) {
-		return getSelectedSet().contains(itemView.getOpenPath());
+	public boolean isSelected(OpenPath path) {
+		return getSelectedSet().contains(path);
 	}
 	
-	public void toggleSelected(OpenPathView itemView) {
-		CheckBox listItemCB = (CheckBox)itemView.findViewById(R.id.content_checkbox);
-		listItemCB.setChecked(!listItemCB.isChecked());
-		updateSelected(itemView, !isSelected(itemView));
+	public boolean toggleSelected(OpenPath path)
+	{
+		if(isSelected(path))
+		{
+			getSelectedSet().remove(path);
+			return false;
+		} else {
+			getSelectedSet().add(path);
+			return true;
+		}
 	}
 
 	/**

@@ -22,7 +22,7 @@
     - Text View should set text to a random long string (android:text="@string/long_string")
     - Image View should set source to a specific asset
 -->
-<org.brandroid.openmanager.views.OpenPathView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="60dp"
     android:orientation="horizontal" >
@@ -73,6 +73,14 @@
                 android:checked="false"
                 android:focusable="false"
                 android:clickable="false" />
+            
+            <ImageView
+                android:id="@+id/content_clipboard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_menu_clipboard"
+                android:clickable="false" 
+                />
 
             <!--
                  <ImageView
@@ -111,4 +119,4 @@
 
     </RelativeLayout>
 
-</org.brandroid.openmanager.views.OpenPathView>
+</LinearLayout>

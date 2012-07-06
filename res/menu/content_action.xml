@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/menu_context_selectall"
+        android:title="@android:string/selectAll"
+        android:icon="@drawable/ic_menu_selectall_holo_dark"
+        />
+    <item
+        android:id="@+id/menu_context_copy"
+        android:title="@string/s_menu_copy"
+        android:icon="@drawable/ic_menu_copy"
+        />
+    <item
+		android:id="@+id/menu_context_delete"
+		android:title="@string/s_menu_delete"
+		android:icon="@drawable/ic_menu_delete"
+		/>
+    <item
+		android:id="@+id/menu_context_share"
+		android:title="@string/s_menu_share"
+    	android:icon="@drawable/ic_menu_share"
+		/>
+    <item
+		android:id="@+id/menu_context_zip"
+		android:icon="@drawable/ic_zip"
+		android:title="@string/s_menu_zip"
+		/>
+
+</menu>
