@@ -66,19 +66,34 @@
 		style="@style/Small"
 		android:layout_width="wrap_content"
 		/>
-	<ImageView
-	    style="@style/ActionBarCompatItem"
+	<RelativeLayout
+	    android:id="@+id/checkmark_area"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:layout_alignTop="@+id/content_icon"
 	    android:layout_alignBottom="@+id/content_icon"
 	    android:layout_alignParentRight="true"
 	    android:layout_alignWithParentIfMissing="true"
+	    >
+	<ImageView
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
 	    android:layout_gravity="center"
 		android:paddingRight="5dip"
 		android:paddingLeft="5dip"
+		android:layout_centerInParent="true"
 	    android:visibility="gone"
 	    android:id="@+id/content_check"
 	    android:src="@android:drawable/checkbox_off_background"
 	    />
+	<ImageView
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_centerInParent="true"
+	    android:visibility="gone"
+	    android:id="@+id/content_clipboard"
+	    android:src="@drawable/ic_menu_clipboard"
+	    android:alpha="0.5"
+	    />
+	</RelativeLayout>
 </RelativeLayout>

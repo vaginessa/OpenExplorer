@@ -1526,7 +1526,10 @@ public class OpenExplorer
 	{
 		return mActionMode;
 	}
-	public void setActionMode(ActionMode mode) { mActionMode = mode; }
+	public void setActionMode(ActionMode mode) {
+		mActionMode = mode;
+		mViewPager.setLocked(mActionMode == null);
+	}
 	
 	@Override
 	public OpenClipboard getClipboard() {

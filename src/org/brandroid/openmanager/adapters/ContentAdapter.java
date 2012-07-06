@@ -171,8 +171,8 @@ public class ContentAdapter extends BaseAdapter {
 	{
 		int mode = getViewMode();
 		final int layout = getViewMode() == OpenExplorer.VIEW_GRID ?
-				R.layout.file_grid_item : R.layout.file_list_item;
-		final boolean useLarge = layout == R.layout.file_grid_item;
+				R.layout.grid_content_layout : R.layout.list_content_layout;
+		final boolean useLarge = getViewMode() == OpenExplorer.VIEW_GRID;
 		final OpenPath file = getItem(position); //super.getItem(position);
 		
 		View row;
@@ -341,9 +341,9 @@ public class ContentAdapter extends BaseAdapter {
 		
 		//row.setTag(file);
 		ViewUtils.setViewsVisible(row, mApp.getClipboard().contains(file), R.id.content_clipboard);
-		CheckBox listItemCB = (CheckBox)row.findViewById(R.id.content_checkbox);
-		listItemCB.setChecked(isSelected(file));
-		listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
+		ViewUtils.setViewsChecked(row, isSelected(file), R.id.content_checkbox, R.id.content_check);
+		ViewUtils.setViewsVisible(row, mSelectedSet != null && mSelectedSet.size() > 0, R.id.content_checkbox, R.id.content_check);
+		//listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
 		return row;
 	}
 

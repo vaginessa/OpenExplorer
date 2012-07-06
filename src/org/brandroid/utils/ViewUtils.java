@@ -15,6 +15,7 @@ import android.view.ViewStub;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -205,6 +206,27 @@ public class ViewUtils {
 					v.post(new Runnable(){public void run(){
 						v.setVisibility(visible ? View.VISIBLE : View.GONE);
 					}});
+			}
+		}
+	}
+
+	public static void setViewsChecked(final View parent, final boolean checked, final int... ids) {
+		boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
+		if(!ui)
+			parent.post(new Runnable(){public void run(){setViewsChecked(parent, checked, ids);}});
+		for(int id : ids)
+		{
+			final View v = parent.findViewById(id);
+			if(v != null)
+			{
+				if(v instanceof CheckedTextView)
+					((CheckedTextView)v).setChecked(checked);
+				else if(v instanceof CheckBox)
+					((CheckBox)v).setChecked(checked);
+				else if(v instanceof ImageView)
+					((ImageView)v).setImageResource(checked ? android.R.drawable.checkbox_on_background : android.R.drawable.checkbox_off_background);
+				else if(v instanceof TextView)
+					((TextView)v).setCompoundDrawables(parent.getContext().getResources().getDrawable(checked ? android.R.drawable.checkbox_on_background : android.R.drawable.checkbox_off_background), null, null, null);
 			}
 		}
 	}

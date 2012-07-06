@@ -70,6 +70,7 @@
                 android:id="@+id/content_checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
                 android:checked="false"
                 android:focusable="false"
                 android:clickable="false" />
@@ -79,7 +80,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_menu_clipboard"
+                android:layout_centerInParent="true"
                 android:clickable="false" 
+                android:alpha="0.5"
                 />
 
             <!--

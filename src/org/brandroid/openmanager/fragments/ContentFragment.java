@@ -262,6 +262,7 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void setListAdapter(ListAdapter adapter) {
 		//super.setListAdapter(adapter);
+		/*
 		ListView lv = getListView();
 		if(getViewMode() == OpenExplorer.VIEW_GRID)
 		{
@@ -275,6 +276,8 @@ public class ContentFragment extends OpenFragment
 			lv.setVisibility(View.VISIBLE);
 			lv.setAdapter(adapter);
 		}
+		*/
+		mGrid.setAdapter(adapter);
 		if(adapter != null && adapter.equals(mContentAdapter))
 		{
 			mContentAdapter.updateData();
@@ -337,7 +340,7 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.fragment_pager_list, container,
+		View v = inflater.inflate(R.layout.content_layout, container,
 				false);
 		mGrid = (GridView)v.findViewById(R.id.content_grid);
 		
@@ -352,9 +355,9 @@ public class ContentFragment extends OpenFragment
 	public void onActivityCreated(Bundle savedInstanceState) { 
 		super.onActivityCreated(savedInstanceState);
 
-		final ListView lv = getListView();
-		lv.setOnItemLongClickListener(this);
-		lv.setOnItemClickListener(this);
+		//final ListView lv = getListView();
+		//lv.setOnItemLongClickListener(this);
+		//lv.setOnItemClickListener(this);
 		//lv.setItemsCanFocus(false);
 		//lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		
@@ -1809,7 +1812,7 @@ public class ContentFragment extends OpenFragment
 					mode.finish();
 					break;
 				case R.id.menu_context_delete:
-					getEventHandler().deleteFile(selections, getContext(), true);
+					getEventHandler().deleteFile(selections, getActivity(), true);
 					break;
 				default:
 					if(onOptionsItemSelected(item))
@@ -1853,10 +1856,9 @@ public class ContentFragment extends OpenFragment
 	public void notifyDataSetChanged() {
 		if(mContentAdapter != null)
 			mContentAdapter.notifyDataSetChanged();
-		if(mViewMode == OpenExplorer.VIEW_GRID)
+		//if(mViewMode == OpenExplorer.VIEW_GRID)
 			mGrid.invalidateViews();
-		else
-			getListView().invalidateViews();
+		//else getListView().invalidateViews();
 	}
 	
 }
