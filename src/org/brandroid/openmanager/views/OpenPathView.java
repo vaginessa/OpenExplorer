@@ -61,7 +61,9 @@ public class OpenPathView extends LinearLayout {
 //		mCheckmarkX=xy[0];
 		int x = 0;
 		while (view != null) {
-			x += (int) view.getX();
+			if(Build.VERSION.SDK_INT > 10)
+				x += (int) view.getX();
+			else x +=view.getScrollX(); 
 			ViewParent parent = view.getParent();
 			if(parent != null && parent instanceof View)
 				view = (View)parent;

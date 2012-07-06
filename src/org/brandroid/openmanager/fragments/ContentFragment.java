@@ -358,7 +358,7 @@ public class ContentFragment extends OpenFragment
 		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		
 		mGrid.setOnItemLongClickListener(this);
-		mGrid.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+		//mGrid.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 		
         initListAdapter();
 
