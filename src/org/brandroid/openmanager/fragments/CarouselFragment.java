@@ -112,7 +112,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 		@Override
 		public void onCardLongPress(final int n, int touchPosition[], Rect detailCoordinates) {
 			runOnUiThread(new Runnable(){public void run() {
-			DialogHandler.showFileInfo(getActivity().getApplicationContext(), mPathItems[n]);
+			DialogHandler.showFileInfo(CarouselFragment.this, mPathItems[n]);
 			}});
 		}
 
@@ -142,7 +142,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			mPaint.setColor(0xffffffff);
 			mPaint.setAntiAlias(true);
 			
-			if(mPathItems != null && (thumb = ThumbnailCreator.generateThumb(mPath, textw, texth, getApplicationContext())) != null && thumb.get() != null)
+			if(mPathItems != null && (thumb = ThumbnailCreator.generateThumb(CarouselFragment.this, mPath, textw, texth, getApplicationContext())) != null && thumb.get() != null)
 			{
 				Bitmap b = thumb.get();
 				w = b.getWidth();
@@ -270,11 +270,10 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			MenuUtils.setMenuVisible(menu, false, R.id.menu_context_edit, R.id.menu_context_view);
 		Logger.LogVerbose("ContentFragment.onCreateOptionsMenu");
 		if(!menu.hasVisibleItems())
-			inflater.inflate(R.menu.content, menu);
+			inflater.inflate(R.menu.content_full, menu);
 		MenuUtils.setMenuVisible(menu, OpenExplorer.IS_DEBUG_BUILD, R.id.menu_debug);
 		if(!OpenExplorer.BEFORE_HONEYCOMB && OpenExplorer.USE_ACTION_BAR)
 		{
-			MenuUtils.setMenuVisible(menu, false, R.id.menu_more);
 			try {
 			final SearchView mSearchView = (SearchView)menu.findItem(R.id.menu_search).getActionView();
 			if(mSearchView != null)
@@ -355,7 +354,7 @@ public class CarouselFragment extends OpenFragment implements OpenPathFragmentIn
 			MenuItem mPaste = menu.findItem(R.id.content_paste);
 			if(mPaste != null && getClipboard() != null && !isDetached())
 				mPaste.setTitle(getString(R.string.s_menu_paste) + " (" + getClipboard().size() + ")");
-			if(getClipboard().isMultiselect())
+			if(getActionMode() != null)
 			{
 				LayerDrawable d = (LayerDrawable) getResources().getDrawable(R.drawable.ic_menu_paste_multi);
 				d.getDrawable(1).setAlpha(127);

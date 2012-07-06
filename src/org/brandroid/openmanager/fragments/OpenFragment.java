@@ -17,10 +17,14 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.app.SherlockListFragment;
+import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
@@ -29,6 +33,7 @@ import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -39,7 +44,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LruCache;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.View;
@@ -53,8 +57,9 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
  * Base class for all OpenExplorer fragments. Provides convenient methods to access
  * other sections of the application.
  */
+@SuppressLint("NewApi")
 public abstract class OpenFragment
-			extends SherlockFragment
+			extends SherlockListFragment
 			implements View.OnClickListener, View.OnLongClickListener
 				, Comparator<OpenFragment>
 				, Comparable<OpenFragment>
@@ -62,7 +67,6 @@ public abstract class OpenFragment
 {
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
-	protected boolean mActionModeSelected = false;
 	private boolean mHasOptions = false;
 	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	private OnFragmentDPADListener mDPAD = null;
@@ -207,7 +211,7 @@ public abstract class OpenFragment
 	public boolean showMenu(final int menuId, View from1, CharSequence title, int xOffset, int yOffset)
 	{
 		if(from1 == null)
-			from1 = ViewUtils.getFirstView(getSherlockActivity(), R.id.menu_more, android.R.id.home);
+			from1 = getSherlockActivity().findViewById(android.R.id.home);
 		if(from1 == null)
 			from1 = getSherlockActivity().getCurrentFocus().getRootView();
 		final View from = from1;
@@ -285,7 +289,6 @@ public abstract class OpenFragment
 	public boolean showIContextMenu(int menuId, final View from, CharSequence title, int xOffset, int yOffset)
 	{
 		if(getSherlockActivity() == null) return false;
-		if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return false;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return false;
 		final IconContextMenu mOpenMenu =
 				IconContextMenu.getInstance(getSherlockActivity(), menuId, from);
@@ -314,9 +317,10 @@ public abstract class OpenFragment
 	@Override
 	public void setHasOptionsMenu(boolean hasMenu) {
 		//if(!OpenExplorer.BEFORE_HONEYCOMB) super.setHasOptionsMenu(hasMenu);
-		super.setHasOptionsMenu(hasMenu);
+		//super.setHasOptionsMenu(hasMenu);
 		mHasOptions = hasMenu;
 	}
+	
 	public boolean hasOptionsMenu()
 	{
 		return mHasOptions;
@@ -452,16 +456,6 @@ public abstract class OpenFragment
 			getExplorer().refreshOperations();
 	}
 	
-	public void changeMultiSelectState(boolean multiSelectOn) {
-		if(multiSelectOn)
-			getClipboard().startMultiselect();
-		else
-			getClipboard().stopMultiselect();
-		//mMultiSelectDrawer.setVisibility(multiSelectOn ? View.VISIBLE : View.GONE);
-	}
-
-
-	
 	protected final void finishMode(Object mode)
 	{
 		getClipboard().clear();
@@ -504,17 +498,23 @@ public abstract class OpenFragment
 	public static FileManager getFileManager() { return OpenExplorer.getFileManager(); }
 	
 	@Override
+	public ActionMode getActionMode() {
+		if(getExplorer() != null)
+			return getExplorer().getActionMode();
+		else return null;
+	}
+
+	@Override
+	public void setActionMode(ActionMode mode) {
+		if(getExplorer() != null)
+			getExplorer().setActionMode(mode);
+	}
+
+	@Override
 	public OpenClipboard getClipboard() {
 		if(getExplorer() != null)
 			return getExplorer().getClipboard();
 		else return null;
-	}
-	
-	@Override
-	public boolean isMultiselect() {
-		if(getClipboard() != null)
-			return getClipboard().isMultiselect();
-		return false;
 	}
 	
 	@Override
@@ -585,25 +585,13 @@ public abstract class OpenFragment
 	
 	public View getActionView(MenuItem item)
 	{
-		try {
-			if(Build.VERSION.SDK_INT < 11)
-				return getSherlockActivity().findViewById(item.getItemId());
-			Method m = MenuItem.class.getMethod("getActionView", new Class[0]);
-			Object o = m.invoke(item, new Object[0]);
-			if(o != null && o instanceof View)
-				return (View)o;
-			else if (getSherlockActivity().getActionBar() != null && getSherlockActivity().getActionBar().getCustomView().findViewById(item.getItemId()) != null)
-				return getSherlockActivity().getActionBar().getCustomView().findViewById(item.getItemId());
-			else return getSherlockActivity().findViewById(item.getItemId());
-		} catch(Exception e) {
-			return getSherlockActivity().findViewById(item.getItemId());
-		}
+		return item.getActionView();
 	}
 	
 	@Override
-	public Context getAndroidContext() {
+	public Context getContext() {
 		if(getExplorer() != null)
-			return getExplorer().getAndroidContext();
+			return getExplorer().getContext();
 		else return getApplicationContext();
 	}
 	
@@ -640,6 +628,16 @@ public abstract class OpenFragment
 	@Override
 	public LruCache<String, Bitmap> getMemoryCache() {
 		return getExplorer().getMemoryCache();
+	}
+	
+	@Override
+	public Preferences getPreferences() {
+		return getExplorer().getPreferences();
+	}
+	
+	@Override
+	public void refreshBookmarks() {
+		getExplorer().refreshBookmarks();
 	}
 	
 	@Override

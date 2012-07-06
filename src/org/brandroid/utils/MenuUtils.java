@@ -12,7 +12,9 @@ import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
 import com.actionbarsherlock.view.SubMenu;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 
+import android.R.integer;
 import android.content.Context;
+import android.text.Html;
 import android.util.SparseArray;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -247,19 +249,12 @@ public class MenuUtils {
 	}
 	public final static int[] MENU_LOOKUP_IDS = new int[]{};//	R.id.menu_view,		R.id.menu_sort,		R.id.menu_content_ops,	R.id.content_paste,R.id.menu_text_view,	R.id.menu_text_ops};
 	public final static int[] MENU_LOOKUP_SUBS = new int[]{};//	R.menu.content_view,R.menu.content_sort,R.menu.content_ops,		R.menu.multiselect,R.menu.text_view,	R.menu.text_file};
-	public static void fillSubMenus(Menu menu, MenuInflater inflater)
-	{
-		//if(!(menu instanceof MenuBuilder))
-		if(!OpenExplorer.USE_PRETTY_MENUS)
-		{
-			fillSubMenus(MENU_LOOKUP_IDS, MENU_LOOKUP_SUBS, menu, inflater);
-		}
-	}
+
 	public static void scanMenuShortcuts(Menu menu, MenuInflater inflater)
 	{
 		if(OpenExplorer.mMenuShortcuts != null) return;
 		OpenExplorer.mMenuShortcuts = new SparseArray<MenuItem>();
-		for(int menuId : new int[]{R.menu.global,R.menu.content,R.menu.content_sort,R.menu.content_view,R.menu.content_ops,R.menu.text_editor,R.menu.text_file,R.menu.text_view,R.menu.multiselect,R.menu.context_file})
+		for(int menuId : new int[]{R.menu.global,R.menu.content_full,R.menu.text_full,R.menu.multiselect,R.menu.context_file})
 		{
 			menu.clear();
 			inflater.inflate(menuId, menu);
@@ -307,6 +302,24 @@ public class MenuUtils {
 			item.setEnabled(enabled);
 			if(enabled)
 				item.setVisible(true);
+		}
+	}
+	public static void setMneumonics(Menu menu) {
+		for(int i = 0; i < menu.size(); i++)
+		{
+			MenuItem item = menu.getItem(i);
+			if(item.getAlphabeticShortcut() > 0)
+			{
+				String tit = item.getTitle().toString();
+				if(tit.indexOf("<u>") > -1) continue;
+				int pos = tit.toLowerCase().indexOf(item.getAlphabeticShortcut());
+				if(tit.startsWith("Sort by ") && pos < 8 && tit.toLowerCase().substring(8).indexOf(item.getAlphabeticShortcut()) > -1)
+					pos = tit.toLowerCase().indexOf(item.getAlphabeticShortcut(), 8);
+				if(pos > -1)
+					tit = tit.substring(0, pos) + "<u>" + tit.charAt(pos) + "</u>" + tit.substring(pos + 1);
+				else tit += " (<u>" + item.getAlphabeticShortcut() + "</u>)";
+				item.setTitle(Html.fromHtml(tit));
+			}
 		}
 	}
 	

@@ -17,6 +17,7 @@ import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ViewUtils;
 
 import android.text.ClipboardManager;
+import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -29,6 +30,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+@SuppressLint("NewApi")
 public class OpenClipboard
 	extends BaseAdapter
 	implements List<OpenPath>
@@ -39,7 +41,7 @@ public class OpenClipboard
 	private final ArrayList<OpenPath> list = new ArrayList<OpenPath>();
 	private final Context mContext;
 	private OnClipboardUpdateListener listener = null;
-	private boolean mMultiselect = false;
+	//private boolean mMultiselect = false;
 	private OpenPath mCurrentPath = null;
 	
 	public static class OpenClipItem
@@ -120,6 +122,7 @@ public class OpenClipboard
 		}
 	}
 	
+	/* ActionMode should now control Multiselect
 	public void startMultiselect() {
 		mMultiselect = true; 
 		onClipboardUpdate();
@@ -129,6 +132,7 @@ public class OpenClipboard
 		onClipboardUpdate();
 	}
 	public boolean isMultiselect() { return mMultiselect; }
+	*/
 	
 	/*
 	 * Path hint for drop down menu
@@ -290,7 +294,6 @@ public class OpenClipboard
 
 	public void clear() {
 		list.clear();
-		stopMultiselect();
 		onClipboardUpdate();
 	}
 

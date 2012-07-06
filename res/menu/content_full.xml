@@ -13,6 +13,7 @@
 			    android:id="@+id/menu_sort_folders_first"
 			    android:title="@string/s_menu_sort_folders"
 			    android:checkable="true"
+			    android:checked="true"
 				android:alphabeticShortcut="f"
 			    />
 			<group android:checkableBehavior="single">
@@ -24,6 +25,7 @@
 				<item
 					android:id="@+id/menu_sort_name_desc"
 					android:title="@string/s_menu_sort_name_desc"
+					android:alphabeticShortcut="m"
 					android:showAsAction="withText" />
 				<item
 					android:id="@+id/menu_sort_date_asc"
