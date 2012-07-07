@@ -171,7 +171,8 @@ public class ContentAdapter extends BaseAdapter {
 	{
 		int mode = getViewMode();
 		final int layout = getViewMode() == OpenExplorer.VIEW_GRID ?
-				R.layout.grid_content_layout : R.layout.list_content_layout;
+				(OpenExplorer.DEBUG_TOGGLE ? R.layout.file_grid_item : R.layout.grid_content_layout) :
+				(OpenExplorer.DEBUG_TOGGLE ? R.layout.file_list_item : R.layout.list_content_layout);
 		final boolean useLarge = getViewMode() == OpenExplorer.VIEW_GRID;
 		final OpenPath file = getItem(position); //super.getItem(position);
 		

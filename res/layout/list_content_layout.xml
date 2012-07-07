@@ -36,7 +36,7 @@
 		android:id="@+id/content_text"
 		android:text="Filename"
 		android:layout_toRightOf="@+id/content_icon"
-		android:layout_toLeftOf="@+id/content_check"
+		android:layout_toLeftOf="@+id/checkmark_area"
 		android:layout_alignWithParentIfMissing="true"
 		android:background="@android:color/transparent"
 		style="@style/Large" />
@@ -54,7 +54,7 @@
 		android:gravity="left" />
 	<TextView
 		android:id="@+id/content_info"
-		android:layout_toLeftOf="@+id/content_check"
+		android:layout_toLeftOf="@+id/checkmark_area"
 		android:layout_below="@+id/content_text"
 		android:gravity="right"
 		android:layout_marginLeft="4dp"

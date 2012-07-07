@@ -257,6 +257,7 @@ public class OpenExplorer
 	private long lastInvalidate = 0l;
 	private int mLastClipSize = -1;
 	private boolean mLastClipState = false;
+	public static boolean DEBUG_TOGGLE = false;
 	//private ActionBarHelper mActionBarHelper = null;
 	
 	private static LogViewerFragment mLogFragment = null;
@@ -2405,6 +2406,8 @@ public class OpenExplorer
 	
 	private void debugTest() {
 		//startActivity(new Intent(this, Authenticator.class));
+		DEBUG_TOGGLE = !DEBUG_TOGGLE;
+		notifyPager();
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }

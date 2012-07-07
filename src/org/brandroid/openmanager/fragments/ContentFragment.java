@@ -278,6 +278,7 @@ public class ContentFragment extends OpenFragment
 		}
 		*/
 		mGrid.setAdapter(adapter);
+		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
 		if(adapter != null && adapter.equals(mContentAdapter))
 		{
 			mContentAdapter.updateData();
@@ -1381,14 +1382,14 @@ public class ContentFragment extends OpenFragment
 		}
 		mGrid.invalidateViews();
 		if(getExplorer() == null) return;
+		
 		//mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
 		//mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hide", true));
 		//mShowThumbnails = getExplorer().getSetting(mPath, "thumbs", getExplorer().getPreferences().getSetting("global", "pref_thumbs", true));
 		
 		invalidateOptionsMenu();
 		
-		mGrid.setColumnWidth(getResources().getDimensionPixelSize(R.dimen.grid_width));
-		mGrid.setAdapter(mContentAdapter);
+		setListAdapter(mContentAdapter);
 		setupGridView();
 	}
 	public void setupGridView()
