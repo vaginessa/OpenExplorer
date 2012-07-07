@@ -60,6 +60,7 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -95,6 +96,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
+@SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment
 		implements OnItemClickListener, OnItemLongClickListener,
 					OnWorkerUpdateListener, OpenPathFragmentInterface,
