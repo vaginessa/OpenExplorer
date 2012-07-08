@@ -2337,6 +2337,9 @@ public class OpenExplorer
 		if(v == null) return;
 		int id = v.getId();
 		
+		if(id == R.id.title_icon)
+			toggleBookmarks();
+		
 		if(id == R.id.title_paste_icon)
 				{
 			onClipboardDropdown(v);
