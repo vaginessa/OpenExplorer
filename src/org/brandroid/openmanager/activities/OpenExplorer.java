@@ -1753,8 +1753,9 @@ public class OpenExplorer
 			setViewVisibility(in, true, R.id.list_frag);
 	}
 
-	public void refreshOperations() {
-			initOpsPopup();
+	public void refreshOperations()
+	{
+		initOpsPopup();
 		int tasks = EventHandler.getTaskList().size();
 		ViewUtils.setViewsVisible(this, tasks > 0, R.id.title_ops);
 		checkTitleSeparator();
@@ -2441,7 +2442,7 @@ public class OpenExplorer
 					mListClipboard.invalidate();
 					if(getClipboard().getCount() == 0)
 						clipdrop.dismiss();
-				}}, anim.getDuration());
+				}}, getResources().getInteger(android.R.integer.config_shortAnimTime));
 				//else
 					//getEventHandler().copyFile(file, mLastPath, OpenExplorer.this);
 			}
@@ -2455,7 +2456,7 @@ public class OpenExplorer
 		mGridCommands.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
 				MenuItem item = menu.getItem(pos);
-//				onClick(item.getItemId(), item, view);
+				onClick(item.getItemId(), item, view);
 				clipdrop.dismiss();
 			}
 		});
@@ -3479,7 +3480,7 @@ public class OpenExplorer
 	{
 		if(menu != null)
 			menu.dismiss();
-//		if(onClick(item.getItemId(), item, view)) return;
+		if(onClick(item.getItemId(), item, view)) return;
 		if(onOptionsItemSelected(item)) return;
 		int index = Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, item.getItemId());
 		if(index > -1)
@@ -3492,7 +3493,7 @@ public class OpenExplorer
 			ContextMenuInfo menuInfo, View view) {
 		if(menu != null)
 			menu.dismiss();
-//		if(onClick(item.getItemId(), item, view)) return true;
+		if(onClick(item.getItemId(), item, view)) return true;
 		if(onOptionsItemSelected(item)) return true;
 		int index = Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, item.getItemId());
 		if(index > -1)
