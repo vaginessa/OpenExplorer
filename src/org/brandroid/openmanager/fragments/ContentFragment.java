@@ -59,7 +59,9 @@ import com.actionbarsherlock.widget.ShareActionProvider;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -259,7 +261,7 @@ public class ContentFragment extends OpenFragment
 		return OpenExplorer.VIEW_LIST;
 	}
 	
-	@Override
+	//@Override
 	public void setListAdapter(ListAdapter adapter) {
 		//super.setListAdapter(adapter);
 		/*
@@ -286,7 +288,7 @@ public class ContentFragment extends OpenFragment
 		}
 	}
 	
-	@Override
+	//@Override
 	public ListAdapter getListAdapter() {
 		return mContentAdapter;
 	}
@@ -659,9 +661,9 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 	
-	@Override
+	//@Override
 	public void onListItemClick(ListView list, View view, int position, long id) {
-		super.onListItemClick(list, view, position, id);
+		//super.onListItemClick(list, view, position, id);
 		onItemClick(list, view, position, id);
 	}
 	
@@ -970,7 +972,7 @@ public class ContentFragment extends OpenFragment
 	}
 
 	
-	public boolean executeMenu(final int id, final Object mode, final OpenPath file)
+	public boolean executeMenu(final int id, final ActionMode mode, final OpenPath file)
 	{
 		Logger.LogInfo("ContentFragment.executeMenu(0x" + Integer.toHexString(id) + ") on " + file);
 		final String path = file != null ? file.getPath() : null;
@@ -1115,9 +1117,13 @@ public class ContentFragment extends OpenFragment
 				return true;
 				
 			case R.id.menu_context_zip:
+				if(getClipboard() == null || getClipboard().size() == 0) return false;
+				OpenPath intoPath = mPath;
+				if(!(intoPath instanceof OpenFile))
+					intoPath = OpenFile.getExternalMemoryDrive(true);
 				if(!fromPasteMenu)
 					getClipboard().add(file);
-				else getClipboard().setCurrentPath(mPath);
+				else getClipboard().setCurrentPath(intoPath);
 				
 				getClipboard().ClearAfter = true;
 				String zname = getClipboard().get(0).getName()
@@ -1138,7 +1144,7 @@ public class ContentFragment extends OpenFragment
 					.setIcon(R.drawable.sm_zip)
 					.setTitle(R.string.s_menu_zip)
 					.setMessageTop(R.string.s_prompt_path)
-					.setDefaultTop(mPath.getPath())
+					.setDefaultTop(intoPath.getPath())
 					.setMessage(R.string.s_prompt_zip)
 					.setCancelable(true)
 					.setNegativeButton(android.R.string.no, new OnClickListener() {
@@ -1796,7 +1802,7 @@ public class ContentFragment extends OpenFragment
 		}
 
 		@Override
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item)
+		public boolean onActionItemClicked(final ActionMode mode, MenuItem item)
 		{
 			final Set<OpenPath> selections = mContentAdapter.getSelectedSet();
 			switch (item.getItemId())
@@ -1814,6 +1820,48 @@ public class ContentFragment extends OpenFragment
 					break;
 				case R.id.menu_context_delete:
 					getEventHandler().deleteFile(selections, getActivity(), true);
+					break;
+				case R.id.menu_context_zip:
+					OpenPath intoPath = mPath;
+					if(!(intoPath instanceof OpenFile))
+						intoPath = OpenFile.getExternalMemoryDrive(true);
+					final OpenPath folder = intoPath;
+					
+					final OpenPath[] toZip = selections.toArray(new OpenPath[selections.size()]);
+					if(toZip.length == 0) return false;
+					String zname = toZip[0].getName()
+							.replace("." + toZip[0].getExtension(), "") + ".zip";
+					if(toZip.length > 1)
+					{
+						OpenPath last = toZip[toZip.length - 1];
+						if(last != null && last.getParent() != null)
+							zname = last.getParent().getName() + "-" + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date()) + ".zip";
+					}
+					final String def = zname;
+					
+					final InputDialog dZip = new InputDialog(getExplorer())
+						.setIcon(R.drawable.sm_zip)
+						.setTitle(R.string.s_menu_zip)
+						.setMessageTop(R.string.s_prompt_path)
+						.setDefaultTop(intoPath.getPath())
+						.setMessage(R.string.s_prompt_zip)
+						.setCancelable(true);
+					dZip
+						.setPositiveButton(android.R.string.ok,
+							new OnClickListener() {
+								public void onClick(DialogInterface dialog, int which) {
+									OpenPath zFolder = new OpenFile(dZip.getInputTopText());
+									if(zFolder == null || !zFolder.exists())
+										zFolder = folder;
+									OpenPath zipFile = zFolder.getChild(dZip.getInputText());
+									Logger.LogVerbose("Zipping " + getClipboard().size() + " items to " + zipFile.getPath());
+									getHandler().zipFile(zipFile, toZip, getExplorer());
+									refreshOperations();
+									finishMode(mode);
+								}
+							})
+						.setDefaultText(def);
+					dZip.create().show();
 					break;
 				default:
 					if(onOptionsItemSelected(item))

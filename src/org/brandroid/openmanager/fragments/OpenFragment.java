@@ -59,7 +59,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
  */
 @SuppressLint("NewApi")
 public abstract class OpenFragment
-			extends SherlockListFragment
+			extends SherlockFragment
 			implements View.OnClickListener, View.OnLongClickListener
 				, Comparator<OpenFragment>
 				, Comparable<OpenFragment>
@@ -456,17 +456,9 @@ public abstract class OpenFragment
 			getExplorer().refreshOperations();
 	}
 	
-	protected final void finishMode(Object mode)
+	protected final void finishMode(ActionMode mode)
 	{
-		getClipboard().clear();
-		if(!OpenExplorer.BEFORE_HONEYCOMB && mode != null && mode.getClass().getName().equals("ActionMode"))
-		{
-			try {
-				Method mFinish = mode.getClass().getMethod("finish", new Class[0]);
-				if(mFinish != null)
-					mFinish.invoke(mode, new Object[0]);		
-			} catch(Exception e) { }
-		}
+		mode.finish();
 	}
 	
 	
