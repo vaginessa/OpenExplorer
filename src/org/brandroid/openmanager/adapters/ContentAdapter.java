@@ -13,6 +13,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
@@ -52,14 +53,14 @@ public class ContentAdapter extends BaseAdapter {
 	public boolean mShowThumbnails = true;
 	private SortType mSorting = SortType.ALPHA;
 	private CheckClipboardListener mClipper;
-	private Context mContext;
+	private OpenApp mApp;
 	private boolean mPlusParent = false;
 	private boolean mShowDetails = true;
 	private boolean mShowFiles = true;
 	
-	public ContentAdapter(Context context, int mode, OpenPath parent) {
+	public ContentAdapter(OpenApp app, int mode, OpenPath parent) {
 		//super(context, layout, data);
-		mContext = context;
+		mApp = app;
 		mParent = parent;
 		
 		if(Preferences.Pref_ShowUp && mParent.getParent() != null)
@@ -78,8 +79,8 @@ public class ContentAdapter extends BaseAdapter {
 	public void setShowDetails(boolean showDeets) { mShowDetails = showDeets; }
 	public void setShowFiles(boolean showFiles) { mShowFiles = showFiles; }
 	
-	public Context getContext() { return mContext; }
-	public Resources getResources() { if(mContext != null) return mContext.getResources(); else return null; }
+	public Context getContext() { return mApp.getContext(); }
+	public Resources getResources() { return mApp.getResources(); }
 	public int getViewMode() { return mViewMode; }
 	public void setViewMode(int mode) { mViewMode = mode; notifyDataSetChanged(); }
 	
@@ -177,7 +178,7 @@ public class ContentAdapter extends BaseAdapter {
 		
 		if(mPlusParent && position == 0)
 		{
-			mNameView.setText(mContext.getString(R.string.s_menu_up));
+			mNameView.setText(getResources().getString(R.string.s_menu_up));
 			mIcon.setImageResource(useLarge ? R.drawable.lg_folder_up : R.drawable.sm_folder_up);
 			if(mInfo != null) mInfo.setText("");
 			if(mPathView != null) mPathView.setText("");
@@ -279,7 +280,7 @@ public class ContentAdapter extends BaseAdapter {
 			} else { //if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath())) {
 				//Logger.LogDebug("Bitmapping " + file.getPath());
 				//if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
-				ThumbnailCreator.setThumbnail(mIcon, file, mWidth, mHeight,
+				ThumbnailCreator.setThumbnail(mApp, mIcon, file, mWidth, mHeight,
 					new OnUpdateImageListener() {
 						public void updateImage(final Bitmap b) {
 							//if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))

@@ -546,7 +546,7 @@ public class TextEditorFragment extends OpenFragment
 		{
 		case R.id.menu_context_info:
 			if(c != null)
-				DialogHandler.showFileInfo(c, getPath());
+				DialogHandler.showFileInfo(this, getPath());
 			return true;
 			
 		case R.id.menu_save: doSave(); return true;

@@ -63,7 +63,6 @@ import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.util.LruCache;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -203,6 +202,7 @@ import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.MenuItemImpl;
 import org.brandroid.utils.MenuUtils;
@@ -1064,12 +1064,12 @@ public class OpenExplorer
 	private void initOpsPopup()
 	{
 		if(mOpsFragment == null)
+		{
 			mOpsFragment = new OperationsFragment();
-		if(findViewById(R.id.frag_log) != null)
-			return;
-		View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar,
-						R.id.base_bar, R.id.base_row);
-		mOpsFragment.setupPopup(this, anchor);
+			View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar,
+							R.id.base_bar, R.id.base_row);
+			mOpsFragment.setupPopup(this, anchor);
+		}
 	}
 	
 	private void initPager()
@@ -1330,7 +1330,7 @@ public class OpenExplorer
 		super.onLowMemory();
 		LOW_MEMORY = true;
 		showToast(R.string.s_msg_low_memory);
-		ThumbnailCreator.flushCache(getApplicationContext(), false);
+		ThumbnailCreator.flushCache(this, false);
 		FileManager.clearOpenCache();
 		EventHandler.cancelRunningTasks();
 	}
@@ -1474,11 +1474,12 @@ public class OpenExplorer
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
 		mLogFragment.print(txt, color);
-		if(mLogFragment.getAdded()) return;
 		ViewUtils.setViewsVisible(this, true, R.id.title_log);
+		if(mLogFragment.getAdded()) return;
 		checkTitleSeparator();
 		if(!mLogFragment.getAdded() && !mLogFragment.isVisible())
 		{
+			mLogFragment.setAdded(true);
 			final View logview = findViewById(R.id.frag_log);
 			if(logview != null && !mLogFragment.getAdded())
 			{
@@ -1490,7 +1491,6 @@ public class OpenExplorer
 						.commitAllowingStateLoss();
 				logview.post(new Runnable(){public void run(){
 					logview.setVisibility(View.VISIBLE);
-					mLogFragment.setAdded(true);
 				}});
 			} //else mLogFragment.show(fragmentManager, "log");
 		}
@@ -1850,31 +1850,8 @@ public class OpenExplorer
 	}
 
 	public void refreshOperations() {
-		if(mOpsFragment == null)
-			mOpsFragment = (OperationsFragment)fragmentManager.findFragmentByTag("ops");
-		if(mOpsFragment == null)
-			mOpsFragment = new OperationsFragment();
-		int tasks = EventHandler.getRunningTasks().length;
-		if(tasks <= 0)
-		{
-			ViewUtils.setViewsVisible(this, false, R.id.frag_log, R.id.title_ops);
-			ViewUtils.setViewsVisible(this, true, R.id.title_ops);
-			checkTitleSeparator();
-			return;
-		}
-		if(findViewById(R.id.frag_log) != null)
-		{
-			if(fragmentManager.findFragmentByTag("ops") == null)
-				fragmentManager.beginTransaction().add(mOpsFragment, "ops");
-			if(fragmentManager.findFragmentById(R.id.frag_log) != mOpsFragment)
-				fragmentManager
-					.beginTransaction()
-					.replace(R.id.frag_log, mOpsFragment)
-					.disallowAddToBackStack()
-					.commitAllowingStateLoss();
-		} else {
-			initOpsPopup();
-		}
+		initOpsPopup();
+		int tasks = EventHandler.getTaskList().size();
 		ViewUtils.setViewsVisible(this, tasks > 0, R.id.title_ops);
 		checkTitleSeparator();
 	}
@@ -2458,6 +2435,7 @@ public class OpenExplorer
 				if(mSearchView == null)
 					mSearchView = SearchViewCompat.newSearchView(this);
 				MenuItem item = menu.findItem(R.id.menu_search);
+				try {
 				MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 				MenuItemCompat.setActionView(item, mSearchView);
 				if(mSearchView != null)
@@ -2478,6 +2456,9 @@ public class OpenExplorer
 							return false;
 						}
 					});
+				} catch(Exception e) {
+					Logger.LogWarning("Unable to setup Search ActionView", e);
+				}
 			}
 		}
 		
@@ -2740,15 +2721,15 @@ public class OpenExplorer
 			//case R.id.menu_global_ops_icon:
 			case R.id.title_ops:
 				refreshOperations();
-				showLogFrag(mOpsFragment, true);
-				checkTitleSeparator();
+				BetterPopupWindow pw = mOpsFragment.getPopup();
+				pw.showLikePopDownMenu();
 				return true;
 				
 			case R.id.title_log:
 				if(mLogFragment == null)
 					mLogFragment = new LogViewerFragment();
-				showLogFrag(mLogFragment, true);
 				sendToLogView(null, 0);
+				showLogFrag(mLogFragment, true);
 				return true;
 					
 			/*case R.id.menu_root:
@@ -2894,7 +2875,7 @@ public class OpenExplorer
 			boolean isVis = frag_log.getVisibility() == View.VISIBLE;
 			boolean isFragged = false;
 			Fragment fl = fragmentManager.findFragmentById(R.id.frag_log);
-			if(fl != null && fl.equals(frag))
+			if(isVis && (fl != null && fl.equals(frag)))
 				isFragged = true;
 			if(isFragged)
 			{
@@ -2902,7 +2883,7 @@ public class OpenExplorer
 				{
 					Logger.LogDebug("OpenExplorer.showLogFrag : Toggling " + frag.getTitle());
 					ViewUtils.setViewsVisible(frag_log, !isVis);
-				}
+				} else Logger.LogDebug("OpenExplorer.showLogFrag : Doing nothing for " + frag.getTitle());
 			} else if(isVis)
 			{
 				Logger.LogDebug("OpenExplorer.showLogFrag : Adding " + frag.getTitle());
@@ -3303,14 +3284,14 @@ public class OpenExplorer
 		
 		if(path instanceof OpenNetworkPath)
 		{
-			if(mLogViewEnabled)
+			if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())
 				showLogFrag(mLogFragment, false);
 		} else
 			setViewVisibility(false, false, R.id.frag_log);
 		
 		final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
-			ThumbnailCreator.setThumbnail(icon, path, 96, 96,
+			ThumbnailCreator.setThumbnail(this, icon, path, 96, 96,
 				new OnUpdateImageListener() {
 					public void updateImage(Bitmap b) {
 						BitmapDrawable d = new BitmapDrawable(getResources(), b);
@@ -3518,16 +3499,16 @@ public class OpenExplorer
 					try {
 						for(OpenPath kid : path.list())
 						{
-							ThumbnailCreator.generateThumb(kid, 36, 36, c);
-							ThumbnailCreator.generateThumb(kid, 128, 128, c);
+							ThumbnailCreator.generateThumb(OpenExplorer.this, kid, 36, 36, c);
+							ThumbnailCreator.generateThumb(OpenExplorer.this, kid, 128, 128, c);
 							//done++;
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				} else {
-					ThumbnailCreator.generateThumb(path, 36, 36, c);
-					ThumbnailCreator.generateThumb(path, 128, 128, c);
+					ThumbnailCreator.generateThumb(OpenExplorer.this, path, 36, 36, c);
+					ThumbnailCreator.generateThumb(OpenExplorer.this, path, 128, 128, c);
 					//done++;
 				}
 			}
@@ -3758,7 +3739,7 @@ public class OpenExplorer
 			}
 			final BetterPopupWindow mSiblingPopup = new BetterPopupWindow(mContext, anchor);
 			//mSiblingPopup.USE_INDICATOR = false;
-			OpenPathList mSiblingList = new OpenPathList(foster, mContext);
+			OpenPathList mSiblingList = new OpenPathList(foster, this);
 			mSiblingList.setOnItemClickListener(new OnItemClickListener() {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
@@ -4016,8 +3997,8 @@ public class OpenExplorer
 	}
 
 	@Override
-	public Context getAndroidContext() {
-		return getOpenApplication().getAndroidContext();
+	public Context getContext() {
+		return getOpenApplication().getContext();
 	}
 	
 	public ShellSession getShellSession() {
