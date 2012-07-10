@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -33,7 +34,7 @@ import android.widget.TextView;
 @SuppressLint("NewApi")
 public class OpenClipboard
 	extends BaseAdapter
-	implements List<OpenPath>
+	implements Set<OpenPath>
 {
 	private static final long serialVersionUID = 8847538312028343319L;
 	public boolean DeleteSource = false;
@@ -274,7 +275,8 @@ public class OpenClipboard
 		if(list.contains(path)) return;
 		if(path.getTag() == null || !(path.getTag() instanceof Integer))
 			path.setTag((Integer)(DeleteSource ? R.id.menu_context_cut : R.id.menu_context_copy));
-		list.add(index, path);
+		if(!list.contains(path))
+			list.add(index, path);
 		onClipboardUpdate();
 	}
 

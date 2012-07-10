@@ -357,6 +357,8 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) { 
 		super.onActivityCreated(savedInstanceState);
+		
+		getExplorer().setViewPagerLocked(false);
 
 		//final ListView lv = getListView();
 		//lv.setOnItemLongClickListener(this);
@@ -736,7 +738,7 @@ public class ContentFragment extends OpenFragment
 
 	private void addToMultiSelect(final OpenPath file)
 	{
-		getClipboard().add(file);
+		getContentAdapter().getSelectedSet().add(file);
 	}
 	
 
@@ -1707,6 +1709,8 @@ public class ContentFragment extends OpenFragment
 			updateSelectionModeView();
 		} else {
 			mLastSelectionModeCallback = new SelectionModeCallback();
+			for(OpenPath clip : getClipboard().getAll())
+				addToMultiSelect(clip);
 			getExplorer().startActionMode(mLastSelectionModeCallback);
 		}
 	}

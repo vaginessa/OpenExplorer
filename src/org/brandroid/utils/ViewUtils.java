@@ -235,17 +235,17 @@ public class ViewUtils {
 	{
 		if(parent == null) return;
 		final int vis = visible ? View.VISIBLE : View.GONE;
-		parent.post(new Runnable(){public void run(){
-			if(ids.length == 0)
-				parent.setVisibility(vis);
-			else
-				for(int id : ids)
-				{
-					View v = parent.findViewById(id);
-					if(v != null && v.getVisibility() != vis)
-						v.setVisibility(vis);
-				}
-		}});
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+			parent.post(new Runnable(){public void run(){setViewsVisible(parent, visible, ids);}});
+		if(ids.length == 0)
+			parent.setVisibility(vis);
+		else
+			for(int id : ids)
+			{
+				View v = parent.findViewById(id);
+				if(v != null && v.getVisibility() != vis)
+					v.setVisibility(vis);
+			}
 	}
 
 	public static void toggleChecked(View view) {
