@@ -964,7 +964,7 @@ public class OpenExplorer
 		if(findViewById(R.id.frag_log) != null)
 			return;
 		View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar);
-//		mLogFragment.setupPopup(this, anchor);
+		mLogFragment.setupPopup(this, anchor);
 	}
 	
 	private void initOpsPopup()
@@ -1277,13 +1277,13 @@ public class OpenExplorer
 		super.onStart();
 		if(DEBUG && IS_DEBUG_BUILD)
 			Logger.LogVerbose("OpenExplorer.onStart");
-//		if(findViewById(R.id.frag_log) != null)
-//		{
-//			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
-//			findViewById(R.id.frag_log).setVisibility(View.GONE);
-//		} else {
-//			initLogPopup();
-//		}
+		if(findViewById(R.id.frag_log) != null)
+		{
+			fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
+			findViewById(R.id.frag_log).setVisibility(View.GONE);
+		} else {
+			initLogPopup();
+		}
 		//submitStats();
 		//new Thread(new Runnable(){public void run() {refreshCursors();}}).start();;
 		//refreshCursors();
@@ -2773,6 +2773,8 @@ public class OpenExplorer
 		
 		if(path instanceof OpenNetworkPath)
 		{
+			if(mLogFragment != null && mLogFragment.getPopup() == null)
+				initLogPopup();
 			if(mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())
 				showLogFrag(mLogFragment, false);
 		} else

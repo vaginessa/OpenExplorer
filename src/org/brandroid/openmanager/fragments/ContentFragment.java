@@ -532,7 +532,7 @@ public class ContentFragment extends OpenFragment
 					@Override
 					public void doneUpdating() {
 						mContentAdapter.sort();
-						mContentAdapter.notifyDataSetChanged();
+						notifyDataSetChanged();
 					}
 				});
 				return;
@@ -1908,6 +1908,7 @@ public class ContentFragment extends OpenFragment
 		//if(mViewMode == OpenExplorer.VIEW_GRID)
 			mGrid.invalidateViews();
 		//else getListView().invalidateViews();
+		ViewUtils.setViewsVisible(getView(), mContentAdapter.getCount() == 0, android.R.id.empty);
 	}
 	
 }
