@@ -1748,7 +1748,7 @@ public class ContentFragment extends OpenFragment
 		return getActionMode() != null;
 	}
 
-	public void onDeselectAll() {
+	public void deselectAll() {
 		mContentAdapter.clearSelection();
 		if (isInSelectionMode()) {
 			finishSelectionMode();
@@ -1815,15 +1815,17 @@ public class ContentFragment extends OpenFragment
 					for(OpenPath path : mContentAdapter.getAll())
 						if(!selections.contains(path))
 							selections.add(path);
+					mContentAdapter.setSelectedSet(selections);
+					mContentAdapter.notifyDataSetChanged();
 					mode.invalidate();
 					break;
 				case R.id.menu_context_copy:
 					getClipboard().addAll(selections);
-					selections.clear();
-					mode.finish();
+					deselectAll();
 					break;
 				case R.id.menu_context_delete:
 					getEventHandler().deleteFile(selections, getActivity(), true);
+					deselectAll();
 					break;
 				case R.id.menu_context_zip:
 					OpenPath intoPath = mPath;
@@ -1861,7 +1863,7 @@ public class ContentFragment extends OpenFragment
 									Logger.LogVerbose("Zipping " + getClipboard().size() + " items to " + zipFile.getPath());
 									getHandler().zipFile(zipFile, toZip, getExplorer());
 									refreshOperations();
-									finishMode(mode);
+									deselectAll();
 								}
 							})
 						.setDefaultText(def);
@@ -1875,7 +1877,7 @@ public class ContentFragment extends OpenFragment
 //			}
 			return true;
 		}
-
+		
 		@Override
 		public void onDestroyActionMode(ActionMode mode) {
 			// Clear this before onDeselectAll() to prevent onDeselectAll() from
@@ -1890,7 +1892,7 @@ public class ContentFragment extends OpenFragment
 				// temporary invisible
 				// (i.e. mIsVisible == false) too, in which case we want to keep
 				// the selection.
-				onDeselectAll();
+				deselectAll();
 			}
 		}
 	}
