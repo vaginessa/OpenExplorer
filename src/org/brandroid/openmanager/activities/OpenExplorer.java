@@ -1529,7 +1529,11 @@ public class OpenExplorer
 	}
 	public void setActionMode(ActionMode mode) {
 		mActionMode = mode;
-		mViewPager.setLocked(mActionMode == null);
+		mViewPager.setLocked(mActionMode != null);
+	}
+	
+	public void setViewPagerLocked(boolean locked) {
+		mViewPager.setLocked(locked);
 	}
 	
 	@Override

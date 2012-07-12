@@ -244,7 +244,8 @@ public class ContentAdapter extends BaseAdapter {
 				mPathView.setText(s);
 				showLongDate = false;
 			}
-			else mPathView.setVisibility(View.GONE);
+			else if(mPathView.isShown())
+				mPathView.setVisibility(View.GONE);
 				//mHolder.showPath(false);
 		}
 
@@ -341,9 +342,11 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		
 		//row.setTag(file);
-		ViewUtils.setViewsVisible(row, mApp.getClipboard().contains(file), R.id.content_clipboard);
-		ViewUtils.setViewsChecked(row, isSelected(file), R.id.content_checkbox, R.id.content_check);
-		ViewUtils.setViewsVisible(row, mSelectedSet != null && mSelectedSet.size() > 0, R.id.content_checkbox, R.id.content_check);
+		boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file)) || mApp.getClipboard().contains(file);
+		//ViewUtils.setViewsVisible(row, mApp.getClipboard().contains(file) && (mSelectedSet == null || mSelectedSet.size() == 0), R.id.content_clipboard);
+		ViewUtils.setViewsChecked(row, mChecked, R.id.content_checkbox, R.id.content_check);
+		ViewUtils.setViewsVisible(row, mChecked || (mSelectedSet != null && mSelectedSet.size() > 0), R.id.content_checkbox, R.id.content_check);
+			
 		//listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
 		return row;
 	}

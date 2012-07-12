@@ -357,6 +357,8 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) { 
 		super.onActivityCreated(savedInstanceState);
+		
+		getExplorer().setViewPagerLocked(false);
 
 		//final ListView lv = getListView();
 		//lv.setOnItemLongClickListener(this);
@@ -736,7 +738,7 @@ public class ContentFragment extends OpenFragment
 
 	private void addToMultiSelect(final OpenPath file)
 	{
-		getClipboard().add(file);
+		getContentAdapter().getSelectedSet().add(file);
 	}
 	
 
@@ -1707,6 +1709,8 @@ public class ContentFragment extends OpenFragment
 			updateSelectionModeView();
 		} else {
 			mLastSelectionModeCallback = new SelectionModeCallback();
+			for(OpenPath clip : getClipboard().getAll())
+				addToMultiSelect(clip);
 			getExplorer().startActionMode(mLastSelectionModeCallback);
 		}
 	}
@@ -1744,7 +1748,7 @@ public class ContentFragment extends OpenFragment
 		return getActionMode() != null;
 	}
 
-	public void onDeselectAll() {
+	public void deselectAll() {
 		mContentAdapter.clearSelection();
 		if (isInSelectionMode()) {
 			finishSelectionMode();
@@ -1811,15 +1815,17 @@ public class ContentFragment extends OpenFragment
 					for(OpenPath path : mContentAdapter.getAll())
 						if(!selections.contains(path))
 							selections.add(path);
+					mContentAdapter.setSelectedSet(selections);
+					mContentAdapter.notifyDataSetChanged();
 					mode.invalidate();
 					break;
 				case R.id.menu_context_copy:
 					getClipboard().addAll(selections);
-					selections.clear();
-					mode.finish();
+					deselectAll();
 					break;
 				case R.id.menu_context_delete:
 					getEventHandler().deleteFile(selections, getActivity(), true);
+					deselectAll();
 					break;
 				case R.id.menu_context_zip:
 					OpenPath intoPath = mPath;
@@ -1857,7 +1863,7 @@ public class ContentFragment extends OpenFragment
 									Logger.LogVerbose("Zipping " + getClipboard().size() + " items to " + zipFile.getPath());
 									getHandler().zipFile(zipFile, toZip, getExplorer());
 									refreshOperations();
-									finishMode(mode);
+									deselectAll();
 								}
 							})
 						.setDefaultText(def);
@@ -1871,7 +1877,7 @@ public class ContentFragment extends OpenFragment
 //			}
 			return true;
 		}
-
+		
 		@Override
 		public void onDestroyActionMode(ActionMode mode) {
 			// Clear this before onDeselectAll() to prevent onDeselectAll() from
@@ -1886,7 +1892,7 @@ public class ContentFragment extends OpenFragment
 				// temporary invisible
 				// (i.e. mIsVisible == false) too, in which case we want to keep
 				// the selection.
-				onDeselectAll();
+				deselectAll();
 			}
 		}
 	}

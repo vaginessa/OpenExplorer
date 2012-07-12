@@ -192,7 +192,7 @@ public class EventHandler {
 
 	public void deleteFile(final OpenPath file, final Context mContext,
 			boolean showConfirmation) {
-		List<OpenPath> files = new ArrayList<OpenPath>();
+		Collection<OpenPath> files = new ArrayList<OpenPath>();
 		files.add(file);
 		deleteFile(files, mContext, showConfirmation);
 	}
@@ -377,7 +377,7 @@ public class EventHandler {
 		// bw.execute();
 	}
 
-	public void sendFile(final List<OpenPath> path, final Context mContext) {
+	public void sendFile(final Collection<OpenPath> path, final Context mContext) {
 		String name;
 		CharSequence[] list = { "Bluetooth", "Email" };
 		final OpenPath[] files = new OpenPath[path.size()];
@@ -385,7 +385,7 @@ public class EventHandler {
 		final int num = path.size();
 
 		if (num == 1)
-			name = path.get(0).getName();
+			name = files[0].getName();
 		else
 			name = path.size() + " "
 					+ getResourceString(mContext, R.string.s_files) + ".";
@@ -439,7 +439,7 @@ public class EventHandler {
 				.execute(source);
 	}
 
-	public void copyFile(List<OpenPath> files, OpenPath newPath,
+	public void copyFile(Collection<OpenPath> files, OpenPath newPath,
 			Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
@@ -451,7 +451,7 @@ public class EventHandler {
 		new BackgroundWork(COPY_TYPE, mContext, newPath, title).execute(array);
 	}
 
-	public void cutFile(List<OpenPath> files, OpenPath newPath, Context mContext) {
+	public void cutFile(Collection<OpenPath> files, OpenPath newPath, Context mContext) {
 		OpenPath[] array = new OpenPath[files.size()];
 		files.toArray(array);
 
@@ -462,7 +462,7 @@ public class EventHandler {
 		new BackgroundWork(SEARCH_TYPE, mContext, dir, query).execute();
 	}
 
-	public BackgroundWork zipFile(OpenPath into, List<OpenPath> files,
+	public BackgroundWork zipFile(OpenPath into, Collection<OpenPath> files,
 			Context mContext) {
 		return zipFile(into, files.toArray(new OpenPath[0]), mContext);
 	}
