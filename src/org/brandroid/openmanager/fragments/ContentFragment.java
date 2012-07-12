@@ -1709,8 +1709,10 @@ public class ContentFragment extends OpenFragment
 			updateSelectionModeView();
 		} else {
 			mLastSelectionModeCallback = new SelectionModeCallback();
+			/*
 			for(OpenPath clip : getClipboard().getAll())
 				addToMultiSelect(clip);
+			*/
 			getExplorer().startActionMode(mLastSelectionModeCallback);
 		}
 	}

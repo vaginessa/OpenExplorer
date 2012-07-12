@@ -281,6 +281,7 @@ public class OpenClipboard
 	}
 
 	public boolean addAll(Collection<? extends OpenPath> collection) {
+		list.removeAll(collection); // remove and re-add
 		boolean ret = list.addAll(collection);
 		list.remove(null);
 		onClipboardUpdate();
@@ -288,6 +289,7 @@ public class OpenClipboard
 	}
 
 	public boolean addAll(int index, Collection<? extends OpenPath> collection) {
+		list.removeAll(collection); // remove and re-add
 		boolean ret = list.addAll(index, collection);
 		list.remove(null);
 		onClipboardUpdate();
