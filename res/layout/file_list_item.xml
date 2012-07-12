@@ -50,6 +50,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical"
+        android:layout_gravity="center_vertical"
         android:padding="8dip">
 
         <View
@@ -99,12 +100,12 @@
         <TextView
             android:id="@+id/content_text"
             style="@style/Large"
+            android:layout_height="wrap_content"
             android:layout_alignRight="@+id/content_info"
             android:layout_alignWithParentIfMissing="true"
             android:layout_toRightOf="@+id/content_icon"
-            android:background="@android:color/transparent"
-            android:paddingBottom="8dip"
-            android:text="Filename" />
+            android:paddingBottom="2dip"
+            android:text="@string/filename" />
 
         <TextView
             android:id="@+id/content_info"
