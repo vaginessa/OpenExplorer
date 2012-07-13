@@ -70,7 +70,10 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ActionBar.LayoutParams;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -78,6 +81,7 @@ import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.support.v4.app.FragmentManager;
@@ -93,6 +97,7 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
@@ -1807,6 +1812,7 @@ public class ContentFragment extends OpenFragment
 			return true;
 		}
 
+		@SuppressLint("NewApi")
 		@Override
 		public boolean onActionItemClicked(final ActionMode mode, MenuItem item)
 		{
@@ -1823,7 +1829,47 @@ public class ContentFragment extends OpenFragment
 					break;
 				case R.id.menu_context_copy:
 					getClipboard().addAll(selections);
-					deselectAll();
+
+					View clipboard = getExplorer().findViewById(R.id.title_paste_icon);
+					int medAnim = getResources().getInteger(android.R.integer.config_mediumAnimTime);
+					
+					if(clipboard != null && Build.VERSION.SDK_INT > 11)
+					{
+						Rect rect = new Rect();
+						clipboard.getGlobalVisibleRect(rect);
+						final ViewGroup root = (ViewGroup)getView().getRootView();
+						final View[] nvs = new View[selections.size()];
+						int nvi = -1;
+						for(OpenPath path : selections)
+						{
+							nvi++;
+							View v = mContentAdapter.getView(path, null, mGrid);
+							if(v == null) continue;
+							if(v.findViewById(R.id.content_icon) == null) continue;
+							ImageView nv = new ImageView(getContext());
+							nvs[nvi] = nv;
+							nv.setImageDrawable(((ImageView)v.findViewById(R.id.content_icon)).getDrawable());
+							Rect cr = new Rect();
+							v.getGlobalVisibleRect(cr);
+							nv.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+							nv.setLeft(cr.left);
+							nv.setTop(cr.top);
+							root.addView(nv);
+							Logger.LogVerbose("Fly! " + path + " to (" + rect.right + "," + rect.bottom + ")");
+							nv.animate()
+								.x(rect.exactCenterX())
+								.y(rect.bottom)
+								.alpha(0.2f)
+								.setDuration(medAnim)
+								.start();
+						}
+						new Handler().postDelayed(new Runnable() {public void run() {
+							for(View nv : nvs)
+								if(nv != null)
+									root.removeView(nv);
+							deselectAll();
+						}}, medAnim);
+					} else deselectAll();
 					break;
 				case R.id.menu_context_delete:
 					getEventHandler().deleteFile(selections, getActivity(), true);
