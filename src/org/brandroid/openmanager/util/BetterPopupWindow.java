@@ -224,6 +224,8 @@ public class BetterPopupWindow {
 			if(mTitle != null && mTitle.length() > 0)
 				setTitle(mTitle);
 
+			if(!forceLayout)
+			{
 			if(Build.VERSION.SDK_INT > 10)
 				root.addOnLayoutChangeListener(new OnLayoutChangeListener() {
 					
@@ -296,7 +298,9 @@ public class BetterPopupWindow {
 				if(widget != null)
 				{
 					widget.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-					int wh = widget.getMeasuredHeight() + backgroundView.getPaddingTop() + backgroundView.getPaddingBottom() + getArrow().getHeight();
+					int wh = widget.getMeasuredHeight() + backgroundView.getPaddingTop() + backgroundView.getPaddingBottom();
+					if(getArrow() != null)
+						wh += getArrow().getHeight();
 					Logger.LogDebug("WH(m): " + wh);
 					if(wh > h)
 						h = wh;
@@ -310,13 +314,14 @@ public class BetterPopupWindow {
 					Logger.LogDebug("Popup Layout Change: (" + w + "x" + h + ":" + l + "," + t + ")@(" + left + "," + top + ")"); // from (" + (oldRight - oldLeft) + "x" + (oldBottom - oldTop) + ")@(" + oldLeft + "," + oldTop + ")");
 				OnPopupShown(w, h);
 			}}, mContext.getResources().getInteger(android.R.integer.config_mediumAnimTime) + 10);
+			}
 		}
 		this.popup.setContentView(backgroundView);
 
-		if(mHeight > 0 && mHeight + yPos > getAvailableHeight() && layout == R.layout.contextmenu_layout)
+		if(!forceLayout && mHeight > 0 && mHeight + yPos > getAvailableHeight() && layout == R.layout.contextmenu_layout)
 			mHeight = getAvailableHeight() - yPos;
 		
-		if(mHeight > 0)
+		if(mHeight != 0)
 			popup.setHeight(mHeight);
 		else
 			popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);

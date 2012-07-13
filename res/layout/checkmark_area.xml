@@ -26,6 +26,7 @@
         android:contentDescription="@string/clipboard"
         android:clickable="false" 
         android:alpha="0.5"
+	    android:visibility="gone"
         />
  
 </RelativeLayout>

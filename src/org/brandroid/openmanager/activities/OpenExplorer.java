@@ -952,7 +952,7 @@ public class OpenExplorer
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
 			mBookmarksPopup.setLayout(R.layout.contextmenu_simple);
 			mBookmarksPopup.setAnimation(R.style.Animations_SlideFromLeft);
-			mBookmarksPopup.setPopupHeight(SCREEN_HEIGHT);
+			mBookmarksPopup.setPopupHeight(LayoutParams.MATCH_PARENT);
 			mBookmarksPopup.setContentView(mBookmarksList);
 		}
 		mBookmarks = new OpenBookmarks(this, mBookmarksList);
