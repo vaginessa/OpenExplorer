@@ -422,7 +422,7 @@ public class OpenExplorer
 		setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
 		setOnClicks(
 				R.id.title_ops, //R.id.menu_global_ops_icon, R.id.menu_global_ops_text,
-				R.id.title_log, R.id.title_icon,
+				R.id.title_log, R.id.title_icon_holder,
 				R.id.title_paste_icon
 				//,R.id.title_sort, R.id.title_view, R.id.title_up
 				);
@@ -942,7 +942,7 @@ public class OpenExplorer
 		} else {
 			View anchor = null;
 			if(anchor == null)
-				anchor = findViewById(R.id.title_icon);
+				anchor = findViewById(R.id.title_icon_holder);
 			if(anchor == null)
 				anchor = findViewById(android.R.id.home);
 			if(anchor == null && USE_ACTION_BAR && getActionBar() != null && getActionBar().getCustomView() != null)
@@ -950,6 +950,9 @@ public class OpenExplorer
 			if(anchor == null)
 				anchor = findViewById(R.id.title_bar);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
+			mBookmarksPopup.setLayout(R.layout.contextmenu_simple);
+			mBookmarksPopup.setAnimation(R.style.Animations_SlideFromLeft);
+			mBookmarksPopup.setPopupHeight(SCREEN_HEIGHT);
 			mBookmarksPopup.setContentView(mBookmarksList);
 		}
 		mBookmarks = new OpenBookmarks(this, mBookmarksList);
@@ -2125,7 +2128,7 @@ public class OpenExplorer
 	@SuppressLint("ParserError")
 	public boolean onOptionsItemSelected(MenuItem item)	{
 		int id = item.getItemId();
-		if(id != R.id.title_icon && id != android.R.id.home);
+		if(id != R.id.title_icon_holder && id != android.R.id.home);
 			toggleBookmarks(false);
 		OpenFragment f = getSelectedFragment();
 
@@ -2135,7 +2138,7 @@ public class OpenExplorer
 			case R.id.menu_debug:
 				debugTest();
 				break;
-			case R.id.title_icon:
+			case R.id.title_icon_holder:
 			case android.R.id.home:
 				toggleBookmarks();
 				return true;
@@ -2304,7 +2307,7 @@ public class OpenExplorer
 		if(v == null) return;
 		int id = v.getId();
 		
-		if(id == R.id.title_icon)
+		if(id == R.id.title_icon_holder)
 			toggleBookmarks();
 		
 		if(id == R.id.title_paste_icon)
@@ -2387,7 +2390,7 @@ public class OpenExplorer
 		ViewUtils.setViewsVisible(mStaticButtons, true, R.id.title_paste);
 		if(anchor == null)
 			anchor = ViewUtils.getFirstView(this,
-				R.id.title_paste, R.id.title_icon, R.id.frag_holder);
+				R.id.title_paste, R.id.title_icon_holder, R.id.frag_holder);
 		
 		final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
 		View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
@@ -3068,7 +3071,7 @@ public class OpenExplorer
 	public boolean onLongClick(View v) {
 		switch(v.getId())
 		{
-			case R.id.title_icon:
+			case R.id.title_icon_holder:
 				goHome();
 				return true;
 			case R.id.title_ops:

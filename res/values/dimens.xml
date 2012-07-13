@@ -17,7 +17,7 @@
 <resources>
     <dimen name="actionbar_compat_height">48dp</dimen>
     <dimen name="actionbar_compat_button_width">48dp</dimen>
-    <dimen name="actionbar_compat_button_home_width">56dip</dimen>
+    <dimen name="actionbar_compat_button_home_width">72dip</dimen>
     <dimen name="actionbar_compat_button_padding">4dp</dimen>
     <dimen name="vpi_padding_horizontal">6dp</dimen>
     <dimen name="vpi_padding_vertical">6dp</dimen>

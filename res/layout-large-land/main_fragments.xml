@@ -23,7 +23,7 @@
     android:orientation="vertical"
     >
    
-	<LinearLayout
+	<RelativeLayout
 	    android:layout_alignParentTop="true"
 		android:id="@+id/frag_holder"
 	    android:orientation="horizontal"
@@ -35,13 +35,14 @@
 	    
 	    
 	    <FrameLayout android:id="@+id/list_frag"
-	        android:layout_weight="3"
-	        android:layout_width="match_parent"
+	        android:layout_width="@dimen/bookmarks_width"
 	        android:layout_height="match_parent"
+	        android:background="@color/darkGray"
+	        android:layout_alignWithParentIfMissing="true"
 	       	/>
 	    
 	    <RelativeLayout
-	        android:layout_weight="1"
+	        android:layout_toRightOf="@+id/list_frag"
 	        android:layout_width="match_parent"
 	        android:layout_height="match_parent"
 	        >	
@@ -60,7 +61,7 @@
 		</RelativeLayout>
 	
 	
-	</LinearLayout>
+	</RelativeLayout>
 		
 		    <FrameLayout
 				android:id="@+id/frag_log"

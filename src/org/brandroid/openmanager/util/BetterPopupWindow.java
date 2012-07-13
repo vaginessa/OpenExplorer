@@ -7,6 +7,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.ViewUtils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -52,6 +53,8 @@ public class BetterPopupWindow {
 	private boolean forcedHeight = false;
 	private static final boolean ALLOW_HORIZONTAL_MODE = false;
 	private int layout = R.layout.contextmenu_layout;
+	private boolean forceLayout = false;
+	private int animStyle = R.style.Animations_Fade;
 	private Point exact = null;
 	private boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 	private OnKeyListener mKeyListener = null;
@@ -132,7 +135,16 @@ public class BetterPopupWindow {
 
 		//backgroundView.addView(root);
 	}
+	
+	public void setLayout(int layout) {
+		this.layout = layout;
+		forceLayout = true;
+	}
 
+	public void setAnimation(int anim)
+	{
+		animStyle = anim;
+	}
 
 	/**
 	 * In case there is stuff to do right before displaying.
@@ -163,6 +175,7 @@ public class BetterPopupWindow {
 	
 	public void setOnKeyListener(OnKeyListener l) { mKeyListener = l; }
 	
+	@SuppressLint("NewApi")
 	private void preShow(int xPos, final int yPos) {
 		if(this.root == null) {
 				throw new IllegalStateException("setContentView was not called with a view to display.");
@@ -174,32 +187,34 @@ public class BetterPopupWindow {
 		else
 			popup.setBackgroundDrawable(new BitmapDrawable());
 		
-		int maxHeight = getAvailableHeight();
-		int at = ViewUtils.getAbsoluteTop(anchor);
-		if(anchor == null
-				|| (maxHeight > at + anchor.getHeight() + Math.max(mHeight, getPreferredMinHeight()))
-				|| at < maxHeight / 2
-			)
-			layout = R.layout.contextmenu_layout;
-		else {
-			if(DEBUG)
-				Logger.LogDebug("preShow: " + maxHeight + " < " + at + " + " + anchor.getHeight() + " + Math.max(" + mHeight + ", " + getPreferredMinHeight() + ")");
-			layout = R.layout.context_bottom;
-		}
-		
-		if(popup.isAboveAnchor())
+		if(!forceLayout)
 		{
-			if(DEBUG)
-				Logger.LogDebug("preShow: isAboveAnchor");
-			layout = R.layout.context_bottom;
-		}
+			int maxHeight = getAvailableHeight();
+			int at = ViewUtils.getAbsoluteTop(anchor);
+			if(anchor == null
+					|| (maxHeight > at + anchor.getHeight() + Math.max(mHeight, getPreferredMinHeight()))
+					|| at < maxHeight / 2
+				)
+				layout = R.layout.contextmenu_layout;
+			else {
+				if(DEBUG)
+					Logger.LogDebug("preShow: " + maxHeight + " < " + at + " + " + anchor.getHeight() + " + Math.max(" + mHeight + ", " + getPreferredMinHeight() + ")");
+				layout = R.layout.context_bottom;
+			}
+			
+			if(popup.isAboveAnchor())
+			{
+				if(DEBUG)
+					Logger.LogDebug("preShow: isAboveAnchor");
+				layout = R.layout.context_bottom;
+			}
 		
-		if(anchor != null && at <= 100)
-			layout = R.layout.contextmenu_layout;
+			if(anchor != null && at <= 100)
+				layout = R.layout.contextmenu_layout;
+		}
 		
 		if(backgroundView == null)
 		{
-			
 			backgroundView = LayoutInflater.from(mContext)
 								.inflate(layout, null);
 			if(this.root.getParent() == null)
@@ -418,6 +433,14 @@ public class BetterPopupWindow {
 			popup.showAtLocation(null, Gravity.CENTER, xOffset, yOffset);
 			*/
 			//popup.showAsDropDown(new View(mContext), xOffset, yOffset);
+		} else if(forceLayout)
+		{
+			if(mHeight > 0)
+				popup.setHeight(mHeight);
+			if(popup.getWidth() == 0)
+				popup.setWidth(mContext.getResources().getDimensionPixelSize(R.dimen.popup_width));
+			popup.setAnimationStyle(animStyle);
+			popup.showAsDropDown(this.anchor, xOffset, yOffset);
 		} else {
 			if(anchor.findViewById(R.id.content_icon) != null)
 				anchor = anchor.findViewById(R.id.content_icon);
@@ -489,7 +512,7 @@ public class BetterPopupWindow {
 			exact = new Point(ancLeft + xOffset, ancTop + yOffset);
 			if(fromBottom) exact.y += anchor.getHeight();
 
-			popup.setAnimationStyle(R.style.Animations_Fade);
+			popup.setAnimationStyle(animStyle);
 
 			//if(fromBottom)
 			//	popup.setHeight(popup.getMaxAvailableHeight(anchor));
@@ -628,7 +651,6 @@ public class BetterPopupWindow {
 			else
 				popup.setAnimationStyle(fromBottom ? R.style.Animations_GrowFromBottom : R.style.Animations_GrowFromTop);
 			
-			
 			/*
 			if(this.anchor.getY() > windowManager.getDefaultDisplay().getHeight() / 2)
 				popup.showAtLocation(anchor, Gravity.BOTTOM, xOffset, yOffset);
@@ -667,6 +689,7 @@ public class BetterPopupWindow {
 		}
 		return root;
 	}
+	@SuppressLint("NewApi")
 	private Rect getWindowRect()
 	{
 		Rect ret = new Rect();
