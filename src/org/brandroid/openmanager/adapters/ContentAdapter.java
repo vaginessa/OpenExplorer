@@ -166,6 +166,12 @@ public class ContentAdapter extends BaseAdapter {
 		}
 	}
 	
+	public View getView(OpenPath path, View view, ViewGroup parent)
+	{
+		if(!mData2.contains(path)) return null;
+		return getView(mData2.indexOf(path), view, parent);
+	}
+	
 	////@Override
 	public View getView(int position, View view, ViewGroup parent)
 	{
@@ -344,8 +350,8 @@ public class ContentAdapter extends BaseAdapter {
 		//row.setTag(file);
 		boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
 		ViewUtils.setViewsVisible(row, mApp.getClipboard().contains(file), R.id.content_clipboard);
-		ViewUtils.setViewsChecked(row, mChecked, R.id.content_checkbox, R.id.content_check);
-		ViewUtils.setViewsVisible(row, mSelectedSet != null && mSelectedSet.size() > 0, R.id.content_checkbox, R.id.content_check);
+		ViewUtils.setViewsChecked(row, mChecked, R.id.content_check);
+		ViewUtils.setViewsVisible(row, mSelectedSet != null && mSelectedSet.size() > 0, R.id.content_check);
 			
 		//listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
 		return row;

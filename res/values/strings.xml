@@ -323,6 +323,7 @@
     <string name="test">Test</string>
     <string name="test_success">Connection succeeded!</string>
     <string name="no_items">No items.</string>
+    <string name="clipboard">Clipboard</string>
     
     <plurals name="num_selected">
         <item quantity="one">One file selected</item>

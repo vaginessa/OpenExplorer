@@ -26,34 +26,7 @@
     android:paddingRight="10dip"
     android:paddingTop="2dip" >
 
-    <RelativeLayout
-        android:id="@+id/checkmark_area"
-        android:layout_alignParentRight="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-
-        <ImageView
-            android:id="@+id/content_check"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_gravity="center"
-            android:paddingLeft="5dip"
-            android:paddingRight="5dip"
-            android:src="@android:drawable/checkbox_off_background"
-            android:visibility="gone" />
-            
-        <ImageView
-            android:id="@+id/content_clipboard"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_menu_clipboard"
-            android:layout_centerInParent="true"
-            android:clickable="false" 
-            android:alpha="0.5"
-            />
-	    
-    </RelativeLayout>
+    <include layout="@layout/checkmark_area" />
 
     <org.brandroid.openmanager.views.RemoteImageView
         android:id="@+id/content_icon"

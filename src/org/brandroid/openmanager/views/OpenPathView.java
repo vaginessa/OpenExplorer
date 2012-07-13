@@ -55,7 +55,7 @@ public class OpenPathView extends LinearLayout {
 			int bottom) {
 		super.onLayout(changed, left, top, right, bottom);
 		
-		View view = this.findViewById(R.id.content_checkbox);
+		View view = this.findViewById(R.id.content_check);
 //		int[] xy = new int[2];
 //		view.getLocationOnScreen(xy);
 //		mCheckmarkX=xy[0];
