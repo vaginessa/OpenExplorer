@@ -3466,7 +3466,7 @@ public class OpenExplorer
 
 	@Override
 	public Context getContext() {
-		return getOpenApplication().getContext();
+		return super.getContext();
 	}
 	
 	public ShellSession getShellSession() {

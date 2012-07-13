@@ -42,6 +42,7 @@ import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
 import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -417,8 +418,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	public void setupListView(ExpandableListView lv)
 	{
 		Logger.LogDebug("Setting up ListView in OpenBookmarks");
-		lv.setDrawSelectorOnTop(true);
-		lv.setSelector(R.drawable.selector_blue);
+		//lv.setDrawSelectorOnTop(true);
+		//lv.setSelector(R.drawable.selector_blue);
 		lv.setOnChildClickListener(this);
 		lv.setOnGroupClickListener(this);
 		lv.setGroupIndicator(null);
@@ -521,6 +522,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			.setDefaultText(getPathTitle(mPath))
 			.setMessage(R.string.s_alert_bookmark_rename)
 			.setNeutralButton(removeId, new DialogInterface.OnClickListener() {
+				@SuppressLint("NewApi")
 				public void onClick(DialogInterface dialog, int which) {
 					if(mPath.getPath().equals("/"))
 						mApp.getPreferences().setSetting("global", "pref_show_root", false);
@@ -568,6 +570,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 
 	
+	@SuppressLint("NewApi")
 	protected void tryEject(String sPath, BookmarkHolder mHolder) {
 		final View viewf = mHolder.getView();
 		if(RootManager.tryExecute("umount " + sPath))
