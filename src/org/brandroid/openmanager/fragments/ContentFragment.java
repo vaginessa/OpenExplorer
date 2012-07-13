@@ -1830,6 +1830,7 @@ public class ContentFragment extends OpenFragment
 				case R.id.menu_context_copy:
 					getClipboard().addAll(selections);
 
+					/*
 					View clipboard = getExplorer().findViewById(R.id.title_paste_icon);
 					int medAnim = getResources().getInteger(android.R.integer.config_mediumAnimTime);
 					
@@ -1869,7 +1870,8 @@ public class ContentFragment extends OpenFragment
 									root.removeView(nv);
 							deselectAll();
 						}}, medAnim);
-					} else deselectAll();
+					} else */
+					deselectAll();
 					break;
 				case R.id.menu_context_delete:
 					getEventHandler().deleteFile(selections, getActivity(), true);
