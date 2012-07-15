@@ -458,7 +458,8 @@ public abstract class OpenFragment
 	
 	protected final void finishMode(ActionMode mode)
 	{
-		mode.finish();
+		if(mode != null)
+			mode.finish();
 	}
 	
 	

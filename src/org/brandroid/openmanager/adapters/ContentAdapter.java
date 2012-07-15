@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -69,7 +70,7 @@ public class ContentAdapter extends BaseAdapter {
 	/**
 	 * Set of seleced message IDs.
 	 */
-	private final HashSet<OpenPath> mSelectedSet = new HashSet<OpenPath>();
+	private final TreeSet<OpenPath> mSelectedSet = new TreeSet<OpenPath>();
 
 	/**
 	 * Callback from MessageListAdapter. All methods are called on the UI
@@ -388,7 +389,7 @@ public class ContentAdapter extends BaseAdapter {
 		return mData2;
 	}
 	
-	public Set<OpenPath> getSelectedSet() {
+	public TreeSet<OpenPath> getSelectedSet() {
 		return mSelectedSet;
 	}
 	

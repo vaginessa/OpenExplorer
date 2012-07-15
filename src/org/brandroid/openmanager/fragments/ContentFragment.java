@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -712,6 +713,13 @@ public class ContentFragment extends OpenFragment
 			return;
 		}
 		
+		if(file instanceof OpenNetworkPath && getActionMode() == null 
+				&& (file.length() > 50000 || !file.isTextFile()))
+		{
+			downloadFile((OpenNetworkPath)file);
+			return;
+		}
+		
 		if(file.isDirectory() && getActionMode() == null) {
 			/* if (mThumbnail != null) {
 				mThumbnail.setCancelThumbnails(true);
@@ -978,6 +986,20 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 
+	public void downloadFile(OpenNetworkPath file)
+	{
+		OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
+		if(dl == null)
+			dl = OpenFile.getExternalMemoryDrive(true);
+		if(dl != null)
+		{
+			List<OpenPath> files = new ArrayList<OpenPath>();
+			files.add(file);
+			getEventHandler().copyFile(files, dl, getActivity());
+			refreshOperations();
+		} else
+			getExplorer().showToast(R.string.s_error_ftp);
+	}
 	
 	public boolean executeMenu(final int id, final ActionMode mode, final OpenPath file)
 	{
@@ -1004,17 +1026,7 @@ public class ContentFragment extends OpenFragment
 				return true;
 				
 			case R.id.menu_context_download:
-				OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
-				if(dl == null)
-					dl = OpenFile.getExternalMemoryDrive(true);
-				if(dl != null)
-				{
-					List<OpenPath> files = new ArrayList<OpenPath>();
-					files.add(file);
-					getEventHandler().copyFile(files, dl, getActivity());
-					refreshOperations();
-				} else
-					getExplorer().showToast(R.string.s_error_ftp);
+				downloadFile((OpenNetworkPath)file);
 				return true;
 			
 			case R.id.menu_context_selectall:
@@ -1805,8 +1817,13 @@ public class ContentFragment extends OpenFragment
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
 			int num = getSelectedCount();
 			// Set title -- "# selected"
-			getActionMode().setTitle(getExplorer().getResources().getQuantityString(
+			mode.setTitle(getExplorer().getResources().getQuantityString(
 					R.plurals.num_selected, num, num));
+					
+			MenuUtils.setMenuVisible(menu, num == 1, R.id.menu_context_rename, R.id.menu_context_info);
+			MenuUtils.setMenuShowAsAction(menu,
+				num == 1 ? MenuItem.SHOW_AS_ACTION_NEVER : MenuItem.SHOW_AS_ACTION_ALWAYS,
+				R.id.menu_context_selectall);
 
 			viewPageNum = num;
 			return true;
@@ -1816,7 +1833,8 @@ public class ContentFragment extends OpenFragment
 		@Override
 		public boolean onActionItemClicked(final ActionMode mode, MenuItem item)
 		{
-			final Set<OpenPath> selections = mContentAdapter.getSelectedSet();
+			final TreeSet<OpenPath> selections = mContentAdapter.getSelectedSet();
+			final OpenPath last = selections.last();
 			switch (item.getItemId())
 			{
 				case R.id.menu_context_selectall:
@@ -1889,7 +1907,6 @@ public class ContentFragment extends OpenFragment
 							.replace("." + toZip[0].getExtension(), "") + ".zip";
 					if(toZip.length > 1)
 					{
-						OpenPath last = toZip[toZip.length - 1];
 						if(last != null && last.getParent() != null)
 							zname = last.getParent().getName() + "-" + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date()) + ".zip";
 					}
@@ -1918,6 +1935,13 @@ public class ContentFragment extends OpenFragment
 							})
 						.setDefaultText(def);
 					dZip.create().show();
+					break;
+				case R.id.menu_context_rename:
+					getHandler().renameFile(last, last.isDirectory(), getActivity());
+					finishMode(mode);
+					break;
+				case R.id.menu_context_info:
+					DialogHandler.showFileInfo(getExplorer(), last);
 					break;
 				default:
 					if(onOptionsItemSelected(item))

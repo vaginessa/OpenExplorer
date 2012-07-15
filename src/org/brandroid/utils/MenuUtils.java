@@ -99,9 +99,7 @@ public class MenuUtils {
 		if(ids.length == 0)
 			setMenuVisible(menu, visible, getMenuIDs(menu));
 		for(int id : ids)
-			if(menu.findItem(id) != null && !visible)
-				menu.removeItem(id);
-			else if(menu.findItem(id) != null && visible)
+			if(menu.findItem(id) != null)
 				menu.findItem(id).setVisible(visible);
 			else for(int i=0; i<menu.size(); i++)
 				if(menu.getItem(i).hasSubMenu())
