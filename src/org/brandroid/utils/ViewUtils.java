@@ -231,21 +231,28 @@ public class ViewUtils {
 		}
 	}
 
-	public static void setViewsVisible(final View parent, final boolean visible, final int... ids)
+	public static void setViewsVisibleNow(final View parent, final boolean visible, final int... ids)
 	{
 		if(parent == null) return;
 		final int vis = visible ? View.VISIBLE : View.GONE;
-		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
-			parent.post(new Runnable(){public void run(){setViewsVisible(parent, visible, ids);}});
-		if(ids.length == 0)
-			parent.setVisibility(vis);
-		else
-			for(int id : ids)
-			{
-				View v = parent.findViewById(id);
-				if(v != null && v.getVisibility() != vis)
-					v.setVisibility(vis);
-			}
+		//parent.post(new Runnable(){public void run(){
+			if(ids.length == 0)
+				parent.setVisibility(vis);
+			else
+				for(int id : ids)
+				{
+					View v = parent.findViewById(id);
+					if(v != null && v.getVisibility() != vis)
+						v.setVisibility(vis);
+				}
+		//}});
+	}
+	public static void setViewsVisible(final View parent, final boolean visible, final int... ids)
+	{
+		if(parent == null) return;
+		parent.post(new Runnable(){public void run(){
+			setViewsVisibleNow(parent, visible, ids);
+		}});
 	}
 
 	public static void toggleChecked(View view) {

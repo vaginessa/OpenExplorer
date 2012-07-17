@@ -2127,6 +2127,7 @@ public class OpenExplorer
 		
 	@SuppressLint("ParserError")
 	public boolean onOptionsItemSelected(MenuItem item)	{
+		if(item == null) return false;
 		int id = item.getItemId();
 		if(id != R.id.title_icon_holder && id != android.R.id.home);
 			toggleBookmarks(false);
@@ -2311,10 +2312,10 @@ public class OpenExplorer
 			toggleBookmarks();
 		
 		if(id == R.id.title_paste_icon)
-				{
+		{
 			onClipboardDropdown(v);
 			return;
-				}
+		}
 		
 		OpenFragment f = getSelectedFragment();
 		if(f != null && f.onClick(id, v)) return;
@@ -2334,6 +2335,15 @@ public class OpenExplorer
 		if(from == null || !from.isShown())
 			from = findViewById(id);
 		
+		switch(id)
+		{
+		case R.id.title_log:
+			showLogFrag(mLogFragment, true);
+			break;
+		case R.id.title_ops:
+			showLogFrag(mOpsFragment, true);
+			break;
+		}
 		
 		//showToast("oops");
 		return false;

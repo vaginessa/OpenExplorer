@@ -117,7 +117,11 @@ public class ContentAdapter extends BaseAdapter {
 	public void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
-		if(items == null) return;
+		if(items == null) {
+			Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
+			super.notifyDataSetChanged();
+			return;
+		}
 		
 		//new Thread(new Runnable(){public void run() {
 		boolean showHidden = getSorting().showHidden();
@@ -145,7 +149,16 @@ public class ContentAdapter extends BaseAdapter {
 		if(doSort)
 			sort();
 		
-		notifyDataSetChanged();
+		super.notifyDataSetChanged();
+	}
+	
+	@Override
+	public void notifyDataSetChanged() {
+		//super.notifyDataSetChanged();
+		/* Please note, this is on purpose.
+		 * We want to hook into notifyDataSetChanged
+		 * to ensure filters & sorting are enabled. */
+		updateData();
 	}
 	
 	public void sort() { sort(mSorting); }

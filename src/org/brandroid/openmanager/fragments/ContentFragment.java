@@ -141,6 +141,7 @@ public class ContentFragment extends OpenFragment
 	public static final int[] sortMenuOpts = new int[]{R.id.menu_sort_name_asc,R.id.menu_sort_name_desc,R.id.menu_sort_size_asc,R.id.menu_sort_size_desc,R.id.menu_sort_date_asc,R.id.menu_sort_date_desc,R.id.menu_sort_type};
 	
 	private Bundle mBundle;
+	private NetworkIOTask mTask;
 	
 	private boolean mIsViewCreated;
 	
@@ -172,7 +173,7 @@ public class ContentFragment extends OpenFragment
 		if(getArguments() != null && getArguments().containsKey("last"))
 		{
 			Logger.LogDebug("ContentFragment Restoring to " + getArguments().getString("last"));
-			setPath(getArguments().getString("last"));
+			mPath = FileManager.getOpenCache(getArguments().getString("last"), getContext());
 		}
 	}
 	
@@ -185,11 +186,6 @@ public class ContentFragment extends OpenFragment
 	{
 		mPath = path;
 		mViewMode = view;
-	}
-	
-	private void setPath(String path)
-	{
-		mPath = FileManager.getOpenCache(path, getContext());
 	}
 	
 	public static ContentFragment getInstance(OpenPath path, int mode)
@@ -285,12 +281,17 @@ public class ContentFragment extends OpenFragment
 			lv.setAdapter(adapter);
 		}
 		*/
-		mGrid.setAdapter(adapter);
+		if(mGrid.getAdapter() == null || !mGrid.getAdapter().equals(adapter))
+			mGrid.setAdapter(adapter);
 		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
 		if(adapter != null && adapter.equals(mContentAdapter))
 		{
 			mContentAdapter.updateData();
-			ViewUtils.setViewsVisible(getView(), mContentAdapter.getCount() == 0, android.R.id.empty);
+			if(mContentAdapter.getCount() == 0)
+			{
+				ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
+				ViewUtils.setViewsVisible(getView(), true, android.R.id.empty);
+			} else ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
 		}
 	}
 	
@@ -408,7 +409,10 @@ public class ContentFragment extends OpenFragment
 	
 	public synchronized void refreshData(Bundle savedInstanceState, boolean allowSkips)
 	{
-		if(!mRefreshReady) return;
+		if(!mRefreshReady) {
+			Logger.LogWarning("ContentFragment.refreshData warning: Not ready!");
+			return;
+		}
 		if(!isVisible()) {
 			Logger.LogDebug("I'm invisible! " + mPath);
 			//return;
@@ -427,7 +431,10 @@ public class ContentFragment extends OpenFragment
 			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
 				path = new OpenFile(savedInstanceState.getString("last"));
 		
-		if(path == null) return;
+		if(path == null) {
+			Logger.LogWarning("ContentFragment.refreshData warning: path is null!");
+			return;
+		}
 		
 		mRefreshReady = false;
 		
@@ -509,7 +516,7 @@ public class ContentFragment extends OpenFragment
 			
 		}
 		
-		mContentAdapter.notifyDataSetChanged();
+		notifyDataSetChanged();
 		
 		mRefreshReady = true;
 		
@@ -525,7 +532,10 @@ public class ContentFragment extends OpenFragment
 	
 	public void runUpdateTask(boolean reconnect)
 	{
-		if(mPath == null) return;
+		if(mPath == null) {
+			Logger.LogWarning("ContentFragment.runUpdateTask warning: mPath is null!");
+			return;
+		}
 		if(mPath instanceof OpenPathUpdateListener)
 		{
 			try {
@@ -550,23 +560,27 @@ public class ContentFragment extends OpenFragment
 		}
 		final String sPath = mPath.getPath();
 		//NetworkIOTask.cancelTask(sPath);
-		final NetworkIOTask task = new NetworkIOTask(this);
+		if(mTask != null)
+			mTask.cancel(true);
+		mTask = new NetworkIOTask(this);
 		if(NetworkIOTask.isTaskRunning(sPath)) return;
 		setProgressVisibility(true);
+		/*
 		if(reconnect && (mPath instanceof OpenNetworkPath))
 			((OpenNetworkPath)mPath).disconnect();
+		*/
 		Logger.LogDebug("Running Task for " + sPath);
-		NetworkIOTask.addTask(sPath, task);
+		NetworkIOTask.addTask(sPath, mTask);
 		if(OpenExplorer.BEFORE_HONEYCOMB)
-			task.execute(mPath);
+			mTask.execute(mPath);
 		else
-			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mPath);
+			mTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mPath);
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
 				try { Thread.sleep(30000); } catch (InterruptedException e) { }
-				if(task.getStatus() == Status.RUNNING)
-					task.doCancel(false);
+				if(mTask.getStatus() == Status.RUNNING)
+					mTask.doCancel(false);
 			}
 		}).start();
 	}
@@ -714,7 +728,7 @@ public class ContentFragment extends OpenFragment
 		}
 		
 		if(file instanceof OpenNetworkPath && getActionMode() == null 
-				&& (file.length() > 50000 || !file.isTextFile()))
+				&& !file.isDirectory() && (file.length() > 50000 || !file.isTextFile()))
 		{
 			downloadFile((OpenNetworkPath)file);
 			return;
@@ -1389,13 +1403,18 @@ public class ContentFragment extends OpenFragment
 			}
 		}
 	}
+	
+	@Override
+	public void onDestroy() {
+		if(mTask != null)
+			mTask.cancel(true);
+		super.onDestroy();
+	}
 
 	@TargetApi(11)
 	public void updateGridView()
 	{
-		if(getViewMode() != OpenExplorer.VIEW_GRID) return;
 		Logger.LogDebug("updateGridView() @ " + mPath);
-		int mLayoutID;
 		if(mGrid == null)
 			mGrid = (GridView)getView().findViewById(R.id.content_grid);
 		if(mGrid == null)
@@ -1405,8 +1424,12 @@ public class ContentFragment extends OpenFragment
 			((ViewGroup)getView()).addView(mGrid);
 			setupGridView();
 		}
-		mGrid.invalidateViews();
-		if(getExplorer() == null) return;
+		if(mGrid != null)
+			mGrid.invalidateViews();
+		if(getExplorer() == null) {
+			Logger.LogWarning("ContentFragment.updateGridView warning: getExplorer() is null");
+			return;
+		}
 		
 		//mSorting = FileManager.parseSortType(getExplorer().getSetting(mPath, "sort", getExplorer().getPreferences().getSetting("global", "pref_sorting", mSorting.toString())));
 		//mShowHiddenFiles = !getExplorer().getSetting(mPath, "hide", getExplorer().getPreferences().getSetting("global", "pref_hide", true));
@@ -1415,6 +1438,7 @@ public class ContentFragment extends OpenFragment
 		invalidateOptionsMenu();
 		
 		setListAdapter(mContentAdapter);
+		refreshData(getArguments(), false);
 		setupGridView();
 	}
 	public void setupGridView()
@@ -1527,8 +1551,7 @@ public class ContentFragment extends OpenFragment
 			}
 			
 			//changePath(mPath, false);
-			if(mContentAdapter != null)
-				mContentAdapter.notifyDataSetChanged();
+			notifyDataSetChanged();
 			
 			refreshData(null, false);
 			//changePath(getManager().peekStack(), false);
@@ -1699,10 +1722,18 @@ public class ContentFragment extends OpenFragment
 	}
 	@Override
 	public void updateData(final OpenPath[] result) {
-		if(mContentAdapter == null) return;
+		if(mContentAdapter == null) {
+			Logger.LogWarning("ContentFragment.updateData warning: mContentAdapter is null");
+			return;
+		}
 		if(Thread.currentThread().equals(OpenExplorer.UiThread))
+		{
 			mContentAdapter.updateData(result);
-		else mGrid.post(new Runnable(){public void run(){mContentAdapter.updateData(result);}});
+			notifyDataSetChanged();
+		} else { mGrid.post(new Runnable(){public void run(){
+			mContentAdapter.updateData(result);}});
+			notifyDataSetChanged();
+		}
 		//notifyDataSetChanged();
 	}
 	@Override
@@ -1983,12 +2014,21 @@ public class ContentFragment extends OpenFragment
 	}
 
 	public void notifyDataSetChanged() {
+		if(mContentAdapter == null) {
+			mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
+		}
+		if(mGrid != null)
+			mGrid.setAdapter(mContentAdapter);
+		else Logger.LogError("ContentFragment.notifyDataSetChanged: Why is mGrid null?");
+		
+		ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
+		
 		if(mContentAdapter != null)
-			mContentAdapter.notifyDataSetChanged();
-		//if(mViewMode == OpenExplorer.VIEW_GRID)
-			mGrid.invalidateViews();
-		//else getListView().invalidateViews();
-		ViewUtils.setViewsVisible(getView(), mContentAdapter.getCount() == 0, android.R.id.empty);
+		{
+			if(!mPath.requiresThread())
+				mContentAdapter.updateData();
+			ViewUtils.setViewsVisible(getView(), mContentAdapter.getCount() == 0, android.R.id.empty);
+		} else ViewUtils.setViewsVisible(getView(), true, android.R.id.empty);
 	}
 	
 }
