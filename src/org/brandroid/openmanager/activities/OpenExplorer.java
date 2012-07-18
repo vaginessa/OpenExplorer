@@ -2805,7 +2805,7 @@ public class OpenExplorer
 			//setViewVisibility(true, false, R.id.content_pager_frame);
 			//setViewVisibility(false, false, R.id.content_frag);
 		
-		List<OpenPath> familyTree = path.getAncestors(false);
+		List<OpenPath> familyTree = path.getAncestors(true);
 		
 		if(addToStack)
 		{
@@ -2834,8 +2834,16 @@ public class OpenExplorer
 			if(force || addToStack || path.requiresThread())
 			{
 				int common = 0;
-
-				boolean removed = false;
+				
+				if(force)
+				{
+					mViewPagerAdapter.remove(cf);
+					mViewPagerAdapter.add(cf);
+					//removed = true;
+					//notifyPager();
+				}
+				
+				//boolean removed = false;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 				{
 					OpenFragment f = mViewPagerAdapter.getItem(i);
@@ -2843,17 +2851,9 @@ public class OpenExplorer
 					if(!familyTree.contains(((ContentFragment)f).getPath()))
 					{
 						mViewPagerAdapter.remove(i);
-						removed = true;
+						//removed = true;
 					}
 					else common++;
-				}
-				
-				if(force)
-				{
-					mViewPagerAdapter.remove(cf);
-					mViewPagerAdapter.add(cf);
-					removed = true;
-					//notifyPager();
 				}
 				
 				//mViewPagerAdapter.notifyDataSetChanged();
@@ -2878,6 +2878,7 @@ public class OpenExplorer
 					} catch(Exception e) { Logger.LogError("Downloads?", e); }
 					tmp = tmp.getParent();
 				}
+				
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;

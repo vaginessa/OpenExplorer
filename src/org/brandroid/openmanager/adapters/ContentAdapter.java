@@ -38,6 +38,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.GridView;
@@ -60,7 +61,6 @@ public class ContentAdapter extends BaseAdapter {
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
 	private SortType mSorting = SortType.ALPHA;
-	private CheckClipboardListener mClipper;
 	private OpenApp mApp;
 	private boolean mPlusParent = false;
 	private boolean mShowDetails = true;
@@ -100,7 +100,6 @@ public class ContentAdapter extends BaseAdapter {
 		public boolean checkClipboard(OpenPath file);
 		public void removeFromClipboard(OpenPath file);
 	}
-	public void setCheckClipboardListener(CheckClipboardListener l) { mClipper = l; }
 	public void setShowPlusParent(boolean showUp) { mPlusParent = showUp; }
 	public void setShowDetails(boolean showDeets) { mShowDetails = showDeets; }
 	public void setShowFiles(boolean showFiles) { mShowFiles = showFiles; }
@@ -158,7 +157,7 @@ public class ContentAdapter extends BaseAdapter {
 		/* Please note, this is on purpose.
 		 * We want to hook into notifyDataSetChanged
 		 * to ensure filters & sorting are enabled. */
-		updateData();
+		super.notifyDataSetChanged();
 	}
 	
 	public void sort() { sort(mSorting); }
@@ -280,36 +279,6 @@ public class ContentAdapter extends BaseAdapter {
 
 		if(mNameView != null)
 			mNameView.setText(mName);
-
-		boolean multi = mApp.getActionMode() != null;
-		boolean copied = mClipper != null && mClipper.checkClipboard(file);
-		int pad = row.getPaddingLeft();
-		if(multi || copied)
-			pad = 0;
-		row.setPadding(row.getPaddingLeft(), row.getPaddingTop(), pad, row.getPaddingBottom());
-		ImageView mCheck = (ImageView)row.findViewById(R.id.content_check);
-		if(mCheck != null)
-		{
-			if(mCheck.getVisibility() != (multi || copied ? View.VISIBLE : View.GONE))
-				mCheck.setVisibility(multi || copied ? View.VISIBLE : View.GONE);
-			if(copied)
-				mCheck.setImageResource(android.R.drawable.checkbox_on_background);
-		}
-		if(copied)
-		{
-			mNameView.setTextAppearance(getContext(), R.style.Highlight);
-			ViewUtils.setOnClicks(row, new View.OnClickListener() {
-					public void onClick(View v) {
-						mClipper.removeFromClipboard(file);
-					}
-				}, R.id.content_check);
-		} else {
-			mNameView.setTextAppearance(getContext(),  R.style.Large);
-			if(!copied && multi)
-				ViewUtils.setImageResource(row,
-						android.R.drawable.checkbox_off_background,
-						R.id.content_check);
-		}
 		
 		if(file.isHidden())
 			ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);
@@ -363,9 +332,25 @@ public class ContentAdapter extends BaseAdapter {
 		
 		//row.setTag(file);
 		boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
-		ViewUtils.setViewsVisible(row, mApp.getClipboard().contains(file), R.id.content_clipboard);
+		boolean mShowCheck = mChecked || (mSelectedSet != null && mSelectedSet.size() > 0);
+		boolean mShowClip = mApp.getClipboard().contains(file);
+		if(mShowCheck || mShowClip)
+		{
+			ViewStub stub = (ViewStub)row.findViewById(R.id.checkmark_area_stub);
+			if(stub != null)
+				stub.inflate();
+		}
+		if(mShowClip)
+		{
+			ViewUtils.setViewsVisible(row, true, R.id.content_clipboard);
+			ViewUtils.setOnClicks(row, new View.OnClickListener() {
+				public void onClick(View v) {
+					mApp.getClipboard().remove(file);
+				}
+			}, R.id.content_clipboard);
+		} else ViewUtils.setViewsVisible(row, false, R.id.content_clipboard);
 		ViewUtils.setViewsChecked(row, mChecked, R.id.content_check);
-		ViewUtils.setViewsVisible(row, mSelectedSet != null && mSelectedSet.size() > 0, R.id.content_check);
+		ViewUtils.setViewsVisible(row, mShowCheck, R.id.content_check);
 			
 		//listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
 		return row;
