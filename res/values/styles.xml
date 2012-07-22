@@ -42,22 +42,6 @@
     	<item name="android:layout_width">@dimen/list_icon_size</item>
 		<item name="android:layout_height">@dimen/list_icon_size</item>
     </style>
-    <style name="AppTheme" parent="Theme.Sherlock">
-        
-        <item name="absForceOverflow">true</item>
-
-        <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
-        <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
-        <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
-        <item name="vpiTabTextStyle">@style/MyTabPageIndicator.Text</item>
-        
-        <!-- for programmatic instantiation -->
-        <item name="actionbarCompatTitleStyle">@style/ActionBarCompatTitle</item>
-        <item name="actionbarCompatItemStyle">@style/ActionBarCompatItem</item>
-        <item name="actionbarCompatItemHomeStyle">@style/ActionBarCompatHomeItem</item>
-        <item name="actionbarCompatProgressIndicatorStyle">@style/ActionBarCompatProgressIndicator</item>
-        <item name="actionbarCompatItemHomeAsUpStyle">@style/ActionBarCompatHomeAsUp</item>
-    </style>
     
    	<style name="MyTabPageIndicator" parent="Widget">
         <item name="android:gravity">center</item>
