@@ -1830,6 +1830,8 @@ public class ContentFragment extends OpenFragment
 		private boolean pasteReady = false;
 
 		/* package */boolean mClosedByUser = true;
+		private MenuItem mRename;
+		private MenuItem mInfo;
 
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -1837,6 +1839,9 @@ public class ContentFragment extends OpenFragment
 
 			MenuInflater inflater = getExplorer().getSupportMenuInflater();
 			inflater.inflate(R.menu.content_action, menu);
+			
+			mRename = menu.findItem(R.id.menu_context_rename);
+			mInfo = menu.findItem(R.id.menu_context_info);
 
 			// Set file with share history to the provider and set the share
 			// intent.
@@ -1860,10 +1865,8 @@ public class ContentFragment extends OpenFragment
 			mode.setTitle(getExplorer().getResources().getQuantityString(
 					R.plurals.num_selected, num, num));
 					
-			MenuUtils.setMenuVisible(menu, num == 1, R.id.menu_context_rename, R.id.menu_context_info);
-			MenuUtils.setMenuShowAsAction(menu,
-				num == 1 ? MenuItem.SHOW_AS_ACTION_NEVER : MenuItem.SHOW_AS_ACTION_ALWAYS,
-				R.id.menu_context_selectall);
+			mRename.setVisible(num == 1);
+			mInfo.setVisible(num == 1);
 
 			viewPageNum = num;
 			return true;
