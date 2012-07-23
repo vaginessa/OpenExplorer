@@ -130,6 +130,7 @@ import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelecte
 import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
+import org.brandroid.openmanager.adapters.OpenPathPagerAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -137,6 +138,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.CarouselFragment;
@@ -264,7 +266,7 @@ public class OpenExplorer
 	private static OperationsFragment mOpsFragment = null;
 	private static boolean mLogViewEnabled = true;
 	private OpenViewPager mViewPager;
-	private static ArrayPagerAdapter mViewPagerAdapter;
+	private static OpenPathPagerAdapter mViewPagerAdapter;
 	private static final boolean mViewPagerEnabled = true; 
 	private ExpandableListView mBookmarksList;
 	private OpenBookmarks mBookmarks;
@@ -841,15 +843,23 @@ public class OpenExplorer
 				}
 			String query = intent.getStringExtra(SearchManager.QUERY);
 			Logger.LogDebug("ACTION_SEARCH for \"" + query + "\" in " + searchIn);
-			SearchResultsFragment srf = SearchResultsFragment.getInstance(searchIn, query);
+			//SearchResultsFragment srf = SearchResultsFragment.getInstance(searchIn, query);
+			OpenSearch sf = new OpenSearch(query, searchIn, new OpenSearch.SearchProgressUpdateListener() {
+				public void onUpdate() {
+				}
+				public void onFinish() {
+				}
+				public void onAddResults(OpenPath[] results) {
+				}
+			});
 			if(mViewPagerEnabled && mViewPagerAdapter != null)
 			{
-				mViewPagerAdapter.add(srf);
+				mViewPagerAdapter.add(sf);
 				setViewPageAdapter(mViewPagerAdapter, true);
 				setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 			} else {
 				getSupportFragmentManager().beginTransaction()
-					.replace(R.id.content_frag, srf)
+					.replace(R.id.content_frag, SearchResultsFragment.getInstance(searchIn, query))
 					.commit();
 			}
 		}
@@ -1018,7 +1028,8 @@ public class OpenExplorer
 			if(DEBUG && IS_DEBUG_BUILD)
 				Logger.LogDebug("Setting up ViewPager");
 			mViewPagerAdapter = //new PagerTabsAdapter(this, mViewPager, indicator);
-					new ArrayPagerAdapter(this, mViewPager);
+					//new ArrayPagerAdapter(this, mViewPager);
+					new OpenPathPagerAdapter(getSupportFragmentManager());
 			mViewPagerAdapter.setOnPageTitleClickListener(this);
 			setViewPageAdapter(mViewPagerAdapter);
 		}
@@ -1805,10 +1816,9 @@ public class OpenExplorer
 			ret = (OpenFragment)fragmentManager.findFragmentById(R.id.content_frag);
 		if(ret == null && path != null)
 		{
-			ret = ContentFragment.getInstance(path, getSetting(path, "view", 0), getSupportFragmentManager());
 			if(mViewPager != null && ret != null)
-				mViewPagerAdapter.add(ret);
-			}
+				mViewPagerAdapter.add(path);
+		}
 		if(activate && ret != null && !ret.isVisible())
 			setCurrentItem(mViewPagerAdapter.getItemPosition(ret), false);
 		
@@ -1829,7 +1839,7 @@ public class OpenExplorer
 				ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
 			} else {
 				Logger.LogWarning("Couldn't find current Page. Using last.");
-				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getLastPositionOfType(ContentFragment.class));
+				ret = mViewPagerAdapter.getItem(mViewPagerAdapter.getCount() - 1);
 			}
 		}
 		if(ret == null && fragmentManager != null)
@@ -1900,7 +1910,7 @@ public class OpenExplorer
 				((TextEditorFragment)frag).setSalvagable(false);
 			mViewPager.post(new Runnable() {public void run() {
 				int cp = mViewPager.getCurrentItem();
-				mViewPagerAdapter.remove(frag);
+				mViewPagerAdapter.remove(cp);
 				setViewPageAdapter(mViewPagerAdapter, true);
 				if(frag instanceof TextEditorFragment)
 					saveOpenedEditors();
@@ -1920,25 +1930,24 @@ public class OpenExplorer
 		if(path == null) return false;
 		if(!path.exists()) return false;
 		if(path.length() > getResources().getInteger(R.integer.max_text_editor_size)) return false;
-		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null)
 		{
-			int pos = mViewPagerAdapter.getItemPosition(editor);
+			int pos = mViewPagerAdapter.indexOf(path);
 			if(pos == -1)
 			{
-				mViewPagerAdapter.add(editor);
+				mViewPagerAdapter.add(path);
 				setViewPageAdapter(mViewPagerAdapter, !batch);
 				if(!batch)
 				{
 					saveOpenedEditors();
-					pos = mViewPagerAdapter.getItemPosition(editor);
+					pos = mViewPagerAdapter.indexOf(path);
 					if(pos > -1)
 						setCurrentItem(pos, true);
 				}
 			} else if(!batch) setCurrentItem(pos, true);
 		} else
 			fragmentManager.beginTransaction()
-				.replace(R.id.content_frag, editor)
+				.replace(R.id.content_frag, TextEditorFragment.getInstance(path, new Bundle()))
 				//.addToBackStack(null)
 				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 				.commit();
@@ -2046,7 +2055,9 @@ public class OpenExplorer
 		MenuInflater menuInflater = getSupportMenuInflater();
 		//menuInflater.inflate(R.menu.menu_main, menu);
 		//menuInflater.inflate(R.menu.global_top, menu);
-		getSelectedFragment().onCreateOptionsMenu(menu, menuInflater);
+		OpenFragment f = getSelectedFragment();
+		if(f != null)
+			f.onCreateOptionsMenu(menu, menuInflater);
 		menuInflater.inflate(R.menu.global, menu);
 		
 		mMenuPaste = menu.findItem(R.id.menu_context_paste);
@@ -2827,9 +2838,6 @@ public class OpenExplorer
 					.commitAllowingStateLoss();
 			}
 		}
-		final OpenFragment cf = (CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) ?
-			new CarouselFragment(path) :
-			ContentFragment.getInstance(path, newView, getSupportFragmentManager());
 				
 			if(force || addToStack || path.requiresThread())
 			{
@@ -2837,8 +2845,10 @@ public class OpenExplorer
 				
 				if(force)
 				{
-					mViewPagerAdapter.remove(cf);
-					mViewPagerAdapter.add(cf);
+					int pos = mViewPagerAdapter.indexOf(path);
+					if(pos > -1)
+						mViewPagerAdapter.remove(pos);
+					mViewPagerAdapter.add(path);
 					//removed = true;
 					//notifyPager();
 				}
@@ -2846,10 +2856,10 @@ public class OpenExplorer
 				//boolean removed = false;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
 				{
-					OpenFragment f = mViewPagerAdapter.getItem(i);
-					if(f == null || !(f instanceof ContentFragment)) continue;
-					if(!familyTree.contains(((ContentFragment)f).getPath()))
+					OpenPath p = mViewPagerAdapter.getPath(i);
+					if(!familyTree.contains(p))
 					{
+						Logger.LogDebug("FamilyTree does not contain " + p + ". Removing.");
 						mViewPagerAdapter.remove(i);
 						//removed = true;
 					}
@@ -2861,33 +2871,30 @@ public class OpenExplorer
 				//mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
 				if(common < 0)
-					mViewPagerAdapter.add(cf);
+					mViewPagerAdapter.add(path);
 				else
-					mViewPagerAdapter.add(common, cf);
+					mViewPagerAdapter.add(common, path);
 				OpenPath tmp = path.getParent();
 				while(tmp != null) 
 				{
-					Logger.LogDebug("Adding Parent: " + tmp.getPath());
-					try {
-						if(common > 0)
-							if(tmp.getPath().equals(((ContentFragment)mViewPagerAdapter.getItem(common - 1)).getPath()))
-								break;
-					} catch(Exception e) { Logger.LogError("I don't trust this!", e); }
-					try {
-						mViewPagerAdapter.add(common, ContentFragment.getInstance(tmp, getSetting(tmp, "view", newView), getSupportFragmentManager()));
-					} catch(Exception e) { Logger.LogError("Downloads?", e); }
+					if(mViewPagerAdapter.indexOf(tmp) == -1)
+					{
+						Logger.LogDebug("Adding Parent: " + tmp.getPath());
+						mViewPagerAdapter.add(common, tmp);
+					}
 					tmp = tmp.getParent();
 				}
 				
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, true); // TODO: I really want to set this to false, as it will speed up the app considerably
+				setViewPageAdapter(mViewPagerAdapter, false); // TODO: I really want to set this to false, as it will speed up the app considerably
 				//mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
-				int index = mViewPagerAdapter.getItemPosition(cf);
-				setCurrentItem(index, addToStack);
+				int index = mViewPagerAdapter.indexOf(path);
+				if(index > -1)
+					setCurrentItem(index, addToStack);
 				//if(cf instanceof ContentFragment) ((ContentFragment)cf).refreshData(null, false);
 				//updatePagerTitle(index);
 			} else {
@@ -2907,8 +2914,7 @@ public class OpenExplorer
 				OpenPath tmp = path;
 				while(tmp != null && (commonBase == null || !tmp.equals(commonBase)))
 				{
-					mViewPagerAdapter.add(depth,
-						ContentFragment.getInstance(path, getSetting(path, "view", newView), getSupportFragmentManager()));
+					mViewPagerAdapter.add(depth, path);
 					tmp = tmp.getParent();
 					if(tmp == null) break;
 				}
@@ -3406,8 +3412,8 @@ public class OpenExplorer
 
 	public void removeFragment(OpenFragment frag) {
 		setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
-		if(!mViewPagerAdapter.remove(frag))
-			Logger.LogWarning("Unable to remove fragment");
+		if(frag instanceof OpenPathFragmentInterface)
+			mViewPagerAdapter.remove(mViewPagerAdapter.indexOf(((OpenPathFragmentInterface)frag).getPath()));
 		setViewPageAdapter(mViewPagerAdapter);
 		//refreshContent();
 	}

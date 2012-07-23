@@ -2024,7 +2024,7 @@ public class ContentFragment extends OpenFragment
 	}
 
 	public void notifyDataSetChanged() {
-		if(mContentAdapter == null) {
+		if(mContentAdapter == null && getExplorer() != null) {
 			mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
 		}
 		if(mGrid != null && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))

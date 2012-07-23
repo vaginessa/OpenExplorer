@@ -33,13 +33,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.Fragment.SavedState;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
 
-public class ArrayPagerAdapter extends FragmentStatePagerAdapter
+public class ArrayPagerAdapter extends FragmentPagerAdapter
 		implements TitleProvider
 {
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
