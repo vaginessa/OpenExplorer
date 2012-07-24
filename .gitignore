@@ -1,6 +1,7 @@
 #Android generated
 bin
 gen
+res/raw/*
 lint.xml
 
 #Eclipse
