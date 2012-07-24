@@ -60,7 +60,14 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true" />
 
-        <include layout="@layout/checkmark_area" />
+        <ViewStub
+            android:id="@+id/checkmark_area_stub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignWithParentIfMissing="true"
+            android:layout="@layout/checkmark_area"
+            />
         
         <TextView
             android:id="@+id/content_text"
