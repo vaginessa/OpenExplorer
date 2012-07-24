@@ -738,10 +738,12 @@ public class ContentFragment extends OpenFragment
 			return;
 		}
 		
-		if(file instanceof OpenNetworkPath && getActionMode() == null 
-				&& !file.isDirectory() && (file.length() > 50000 || !file.isTextFile()))
+		if(file instanceof OpenNetworkPath && getActionMode() == null)
 		{
-			downloadFile((OpenNetworkPath)file);
+			if(file.isTextFile() && file.length() < 500000 && getExplorer() != null)
+				getExplorer().editFile(file);
+			else
+				downloadFile((OpenNetworkPath)file);
 			return;
 		}
 		
@@ -1143,20 +1145,24 @@ public class ContentFragment extends OpenFragment
 					into = folder;
 				}
 				OpenClipboard cb = getClipboard();
-				cb.setCurrentPath(into);
-				if(cb.size() > 0)
+				if(cb != null)
 				{
-					if(cb.DeleteSource)
-						getHandler().cutFile(cb, into, getActivity());
-					else
-						getHandler().copyFile(cb, into, getActivity());
-					refreshOperations();
-				}
+					cb.setCurrentPath(into);
+					if(cb.size() > 0)
+					{
+						if(cb.DeleteSource)
+							getHandler().cutFile(cb, into, getActivity());
+						else
+							getHandler().copyFile(cb, into, getActivity());
+						refreshOperations();
+					}
 				
-				cb.DeleteSource = false;
-				if(cb.ClearAfter)
-					getClipboard().clear();
-				getExplorer().updateTitle(path);
+					cb.DeleteSource = false;
+					if(cb.ClearAfter)
+						cb.clear();
+				}
+				if(getExplorer() != null)
+					getExplorer().updateTitle(path);
 				finishMode(mode);
 				return true;
 				
@@ -1626,7 +1632,7 @@ public class ContentFragment extends OpenFragment
 		saveTopPath();
 		setSorting(getSorting().setShowHiddenFiles(toShow));
 		//getManager().setShowHiddenFiles(state);
-		refreshData(null, false);
+		refreshData(new Bundle(), false);
 	}
 
 	public void onThumbnailChanged() { 
@@ -1636,14 +1642,14 @@ public class ContentFragment extends OpenFragment
 	public void onThumbnailChanged(boolean state) {
 		saveTopPath();
 		setShowThumbnails(state);
-		refreshData(null, false);
+		refreshData(new Bundle(), false);
 	}
 	
 	//@Override
 	public void onSortingChanged(SortType type) {
 		setSorting(type);
 		//getManager().setSorting(type);
-		refreshData(null, false);
+		refreshData(new Bundle(), false);
 	}
 	
 	public void setSorting(SortType type)
@@ -1668,7 +1674,7 @@ public class ContentFragment extends OpenFragment
 		setShowThumbnails(thumbs);
 		setSorting(getSorting().setShowHiddenFiles(hidden));
 		
-		refreshData(null, false);
+		refreshData(new Bundle(), false);
 	}
 
 	//@Override
@@ -2038,6 +2044,8 @@ public class ContentFragment extends OpenFragment
 		}
 		if(mGrid != null && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
 			mGrid.setAdapter(mContentAdapter);
+		
+		mContentAdapter.updateData();
 		
 		ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
 		ViewUtils.setViewsVisible(getView(), mContentAdapter == null || mContentAdapter.getCount() == 0, android.R.id.empty);

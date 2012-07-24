@@ -17,13 +17,13 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment.SavedState;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 
-public class ArrayPagerAdapter extends FragmentPagerAdapter
+public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 		implements TitleProvider
 {
 	//private static Hashtable<OpenPath, Fragment> mPathMap = new Hashtable<OpenPath, Fragment>();
