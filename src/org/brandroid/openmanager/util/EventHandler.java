@@ -62,6 +62,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.utils.Logger;
@@ -157,10 +158,8 @@ public class EventHandler {
 
 	private synchronized void OnWorkerThreadComplete(EventType type,
 			String... results) {
-		if (mThreadListener == null)
-			return;
-		mThreadListener.onWorkerThreadComplete(type, results);
-		mThreadListener = null;
+		if (mThreadListener != null)
+			mThreadListener.onWorkerThreadComplete(type, results);
 		if (mTaskListener != null)
 			mTaskListener.OnTasksChanged(getTaskList().size());
 	}
@@ -190,18 +189,19 @@ public class EventHandler {
 		return ret;
 	}
 
-	public void deleteFile(final OpenPath file, final Context mContext,
+	public void deleteFile(final OpenPath file, final OpenApp mApp,
 			boolean showConfirmation) {
 		Collection<OpenPath> files = new ArrayList<OpenPath>();
 		files.add(file);
-		deleteFile(files, mContext, showConfirmation);
+		deleteFile(files, mApp, showConfirmation);
 	}
 
-	public void deleteFile(final Collection<OpenPath> path, final Context mContext,
+	public void deleteFile(final Collection<OpenPath> path, final OpenApp mApp,
 			boolean showConfirmation) {
 		final OpenPath[] files = new OpenPath[path.size()];
 		path.toArray(files);
 		String name;
+		final Context mContext = mApp.getContext();
 
 		if (files.length == 1)
 			name = files[0].getName();
@@ -1231,7 +1231,6 @@ public class EventHandler {
 							getResourceString(mContext, R.string.s_msg_all,
 									R.string.s_msg_deleted), Toast.LENGTH_SHORT)
 							.show();
-				OnWorkerThreadComplete(mType);
 				break;
 
 			case SEARCH:

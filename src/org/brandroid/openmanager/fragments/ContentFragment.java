@@ -1117,7 +1117,7 @@ public class ContentFragment extends OpenFragment
 				
 			case R.id.menu_context_delete:
 				//fileList.add(file);
-				getHandler().deleteFile(file, getActivity(), true);
+				getHandler().deleteFile(file, this, true);
 				finishMode(mode);
 				if(getContentAdapter() != null)
 					getContentAdapter().notifyDataSetChanged();
@@ -1570,7 +1570,7 @@ public class ContentFragment extends OpenFragment
 			//changePath(mPath, false);
 			notifyDataSetChanged();
 			
-			refreshData(null, false);
+			refreshData(new Bundle(), false);
 			//changePath(getManager().peekStack(), false);
 		}
 		setProgressVisibility(false);
@@ -1944,7 +1944,7 @@ public class ContentFragment extends OpenFragment
 						deselectAll();
 					break;
 				case R.id.menu_context_delete:
-					getEventHandler().deleteFile(selections, getActivity(), true);
+					getEventHandler().deleteFile(selections, ContentFragment.this, true);
 					deselectAll();
 					break;
 				case R.id.menu_context_zip:

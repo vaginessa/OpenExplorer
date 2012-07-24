@@ -3275,7 +3275,7 @@ public class OpenExplorer
 		if(frag != null)
 		{
 			frag.onWorkerThreadComplete(type, results);
-			changePath(frag.getPath(), false, true);
+			//changePath(frag.getPath(), false, true);
 		}
 		if(getClipboard().ClearAfter)
 			getClipboard().clear();
