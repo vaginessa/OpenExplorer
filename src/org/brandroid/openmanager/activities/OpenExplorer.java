@@ -848,26 +848,14 @@ public class OpenExplorer
 			String query = intent.getStringExtra(SearchManager.QUERY);
 			Logger.LogDebug("ACTION_SEARCH for \"" + query + "\" in " + searchIn);
 			SearchResultsFragment srf = SearchResultsFragment.getInstance(searchIn, query);
-
-
-
-
-
-
-
-
-
 			if(mViewPagerEnabled && mViewPagerAdapter != null)
 			{
 				mViewPagerAdapter.add(srf);
-
-				setViewPageAdapter(mViewPagerAdapter, true);
 				setViewPageAdapter(mViewPagerAdapter, false);
 				setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 			} else {
 				getSupportFragmentManager().beginTransaction()
 					.replace(R.id.content_frag, srf)
-
 					.commit();
 			}
 		}
