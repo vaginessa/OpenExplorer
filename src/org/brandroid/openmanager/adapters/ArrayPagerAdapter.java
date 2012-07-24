@@ -33,7 +33,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.Fragment.SavedState;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.ViewGroup;
@@ -167,22 +169,10 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 	
 	@Override
 	public int getItemPosition(Object object) {
-		if(object instanceof OpenPathFragmentInterface)
-		{
-			OpenPath tofind = ((OpenPathFragmentInterface)object).getPath();
-			if(tofind == null) return super.getItemPosition(object);
-			for(int i = 0; i < getCount(); i++)
-			{
-				OpenFragment f = getItem(i);
-				if(f instanceof OpenPathFragmentInterface)
-				{
-					OpenPath tocheck = ((OpenPathFragmentInterface)f).getPath();
-					if(tocheck != null && tocheck.getPath().equals(tofind.getPath()))
-						return i;
-				}
-			}
-		}
-		return super.getItemPosition(object);
+		int pos = mFrags.indexOf(object);
+		if(pos == -1)
+			return PagerAdapter.POSITION_NONE;
+		else return pos;
 	}
 
 	@Override
@@ -342,7 +332,7 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 
 	public synchronized void replace(OpenFragment old, OpenFragment newFrag) {
 		int pos = getItemPosition(old);
-		if(pos == -1)
+		if(pos < 0)
 			mFrags.add(newFrag);
 		else
 			mFrags.set(pos, newFrag);

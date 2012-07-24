@@ -110,8 +110,9 @@ public class TextEditorFragment extends OpenFragment
 	public TextEditorFragment() {
 		if(getArguments() != null && getArguments().containsKey("edit_path"))
 		{
-			Logger.LogDebug("Creating TextEditorFragment @ " + getArguments().getString("edit_path") + " from scratch");
-			setPath(getArguments().getString("edit_path"));
+			OpenPath path = (OpenPath)getArguments().getParcelable("edit_path");
+			Logger.LogDebug("Creating TextEditorFragment @ " + path + " from scratch");
+			setPath(path);
 		} else Logger.LogWarning("Creating orphan TextEditorFragment");
 	}
 	
@@ -121,20 +122,26 @@ public class TextEditorFragment extends OpenFragment
 		Logger.LogDebug("Creating TextEditorFragment @ " + mPath + " from path");
 		Bundle b = new Bundle();
 		if(path != null && path.getPath() != null)
-			b.putString("edit_path", path.getPath());
+			b.putParcelable("edit_path", path);
 		//setArguments(b);
 		setHasOptionsMenu(true);
 	}
 	
 	public static TextEditorFragment getInstance(OpenPath path, Bundle args)
 	{
+		if(args == null)
+			args = new Bundle();
+		args.putParcelable("edit_path", path);
 		TextEditorFragment ret = getInstance(args);
 		ret.setPath(path);
 		return ret;
 	}
 	public static TextEditorFragment getInstance(Bundle args)
 	{
-		TextEditorFragment ret = new TextEditorFragment();
+		OpenPath path = null;
+		if(args != null && args.containsKey("edit_path"))
+			path = (OpenPath)args.getParcelable("edit_path");
+		TextEditorFragment ret = path != null ? new TextEditorFragment(path) : new TextEditorFragment();
 		ret.setArguments(args);
 		return ret;
 	}
@@ -247,10 +254,9 @@ public class TextEditorFragment extends OpenFragment
 			bundle = getArguments();
 		if(mPath == null && bundle != null && bundle.containsKey("edit_path"))
 		{
-			String path = bundle.getString("edit_path");
+			OpenPath mPath = (OpenPath)bundle.getParcelable("edit_path");
 			mData = null;
-			mPath = FileManager.getOpenCache(path);
-			Logger.LogDebug("load text editor (" + path + ")");
+			Logger.LogDebug("load text editor (" + mPath + ")");
 			if(mData == null && bundle.containsKey("edit_data"))
 				mData = bundle.getString("edit_data");
 			if(bundle.containsKey("edit_server"))
@@ -268,13 +274,6 @@ public class TextEditorFragment extends OpenFragment
 						mPath = new OpenFTP(mPath.getPath(), null, man);
 					}
 				}
-			} else //if (path.indexOf("ftp:/") > -1)
-			{
-				try {
-					mPath = FileManager.getOpenCache(path, false, null);
-				} catch (IOException e) {
-					Logger.LogError("Couldn't get Path to edit.", e);
-				}
 			}
 		}
 	}
@@ -282,13 +281,12 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		if(isDetached()) return;
-		if(!isVisible()) return;
+		
 		inflater.inflate(R.menu.text_full, menu);
 		MenuItem mFontSize = menu.findItem(R.id.menu_view_font_size);
 		//Class clz = Class.forName("org.brandroid.openmanagerviews.SeekBarActionView");
 		boolean isTop = false;
-		if(getResources() != null && !getResources().getBoolean(R.bool.allow_split_actionbar))
+		if(getActivity() != null && getResources() != null && !getResources().getBoolean(R.bool.allow_split_actionbar))
 			isTop = true;
 		if(mFontSize != null && USE_SEEK_ACTIONVIEW) // (Build.VERSION.SDK_INT < 14 || OpenExplorer.USE_PRETTY_MENUS))
 		{
@@ -300,6 +298,7 @@ public class TextEditorFragment extends OpenFragment
 	public void onPrepareOptionsMenu(Menu menu) {
 		if(getActivity() == null) return;
 		if(menu == null) return;
+		if(isDetached() || !isVisible()) return;
 		super.onPrepareOptionsMenu(menu);
 		if(mFontSizeBar != null)
 			mFontSizeBar.setProgress((int)(mTextSize * 2));
@@ -452,7 +451,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public void setInitialSavedState(SavedState state) {
 		super.setInitialSavedState(state);
-		Logger.LogInfo("setInitialSavedState @ TextEditor (" + mPath.getPath() + ")");
+		Logger.LogInfo("setInitialSavedState @ TextEditor (" + mPath + ")");
 	}
 	
 	@Override
@@ -460,7 +459,7 @@ public class TextEditorFragment extends OpenFragment
 		super.onSaveInstanceState(outState);
 		if(!mSalvage) return;
 		Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
-		outState.putString("edit_path", mPath.getPath());
+		outState.putParcelable("edit_path", mPath);
 		if(mData != null && mData.length() < 500000)
 			outState.putString("edit_data", mData);
 		if(mPath instanceof OpenNetworkPath)
@@ -513,7 +512,7 @@ public class TextEditorFragment extends OpenFragment
 	@Override
 	public boolean onClick(int id, View from) {
 		Context c = getActivity();
-		if(from == null || !from.isShown())
+		if((from == null || !from.isShown()) && getExplorer() != null)
 			from = getExplorer().findViewById(id);
 		if(from != null && from.getTag() != null && from.getTag() instanceof Menu)
 			showMenu((Menu)from.getTag(), from, ViewUtils.getText(from));

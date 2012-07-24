@@ -68,7 +68,7 @@ public abstract class OpenFragment
 	//public static boolean CONTENT_FRAGMENT_FREE = true;
 	//public boolean isFragmentValid = true;
 	private boolean mHasOptions = false;
-	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	private OnFragmentDPADListener mDPAD = null;
 	public final void setOnFragmentDPADListener(OnFragmentDPADListener listener) { mDPAD = listener; }
 		
@@ -110,11 +110,11 @@ public abstract class OpenFragment
 	
 	public static OpenFragment instantiate(Context context, String fname, Bundle args) {
         String sPath = null;
-    	if(args.containsKey("last"))
+        OpenPath path = null;
+        if(args.containsKey("last"))
     		sPath = args.getString("last");
     	if(args.containsKey("edit_path"))
-    		sPath = args.getString("edit_path");
-    	OpenPath path = FileManager.getOpenCache(sPath, context);
+    		return TextEditorFragment.getInstance(((OpenPath)args.getParcelable("edit_path")), args);
     	if(sPath != null)
     	{
         	if(fname.endsWith("ContentFragment"))
@@ -446,6 +446,13 @@ public abstract class OpenFragment
 	}
 	
 	@Override
+	public void onDestroy() {
+		if(DEBUG)
+			Logger.LogDebug("[-- onDestroy :: " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		super.onDestroy();
+	}
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		return super.onOptionsItemSelected(item);
 	}
@@ -539,9 +546,10 @@ public abstract class OpenFragment
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		//Logger.LogDebug("<-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+		if(DEBUG)
+			Logger.LogDebug("]-- onCreate - " + getClassName() + (this instanceof OpenPathFragmentInterface && ((OpenPathFragmentInterface)this).getPath() != null ? " @ " + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
 		//CONTENT_FRAGMENT_FREE = false;
-		setRetainInstance(true);
+		setRetainInstance(false);
 		super.onCreate(savedInstanceState);
 	}
 	

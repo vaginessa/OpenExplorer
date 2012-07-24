@@ -845,7 +845,7 @@ public class OpenExplorer
 			if(mViewPagerEnabled && mViewPagerAdapter != null)
 			{
 				mViewPagerAdapter.add(srf);
-				setViewPageAdapter(mViewPagerAdapter, true);
+				setViewPageAdapter(mViewPagerAdapter, false);
 				setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
 			} else {
 				getSupportFragmentManager().beginTransaction()
@@ -1020,7 +1020,7 @@ public class OpenExplorer
 			mViewPagerAdapter = //new PagerTabsAdapter(this, mViewPager, indicator);
 					new ArrayPagerAdapter(this, mViewPager);
 			mViewPagerAdapter.setOnPageTitleClickListener(this);
-			setViewPageAdapter(mViewPagerAdapter);
+			setViewPageAdapter(mViewPagerAdapter, true);
 		}
 
 	}
@@ -1076,7 +1076,9 @@ public class OpenExplorer
 					mViewPager.setAdapter(adapter);
 				else {
 					mViewPager.notifyDataSetChanged();
-					getDirContentFragment(false).notifyDataSetChanged();
+					ContentFragment cf = getDirContentFragment(false);
+					if(cf != null)
+						cf.notifyDataSetChanged();
 				}
 				return true;
 			} catch(IndexOutOfBoundsException e) {
@@ -1809,7 +1811,7 @@ public class OpenExplorer
 			if(mViewPager != null && ret != null)
 				mViewPagerAdapter.add(ret);
 			}
-		if(activate && ret != null && !ret.isVisible())
+		if(activate && ret != null && !ret.isVisible() && mViewPagerAdapter.getItemPosition(ret) > -1)
 			setCurrentItem(mViewPagerAdapter.getItemPosition(ret), false);
 		
 		if(ret != null && ret instanceof ContentFragment)
@@ -1901,7 +1903,7 @@ public class OpenExplorer
 			mViewPager.post(new Runnable() {public void run() {
 				int cp = mViewPager.getCurrentItem();
 				mViewPagerAdapter.remove(frag);
-				setViewPageAdapter(mViewPagerAdapter, true);
+				setViewPageAdapter(mViewPagerAdapter, false);
 				if(frag instanceof TextEditorFragment)
 					saveOpenedEditors();
 				if(mViewPagerAdapter.getCount() == 0)
@@ -1924,7 +1926,7 @@ public class OpenExplorer
 		if(mViewPagerAdapter != null)
 		{
 			int pos = mViewPagerAdapter.getItemPosition(editor);
-			if(pos == -1)
+			if(pos < 0)
 			{
 				mViewPagerAdapter.add(editor);
 				setViewPageAdapter(mViewPagerAdapter, !batch);
@@ -2881,7 +2883,7 @@ public class OpenExplorer
 				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
 				//mViewPagerAdapter = newAdapter;
 				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, true); // TODO: I really want to set this to false, as it will speed up the app considerably
+				setViewPageAdapter(mViewPagerAdapter, false); // TODO: I really want to set this to false, as it will speed up the app considerably
 				//mViewPagerAdapter.notifyDataSetChanged();
 				//index -= iNonContentPages;
 				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
@@ -2911,7 +2913,7 @@ public class OpenExplorer
 					tmp = tmp.getParent();
 					if(tmp == null) break;
 				}
-				setViewPageAdapter(mViewPagerAdapter, true);
+				setViewPageAdapter(mViewPagerAdapter, false);
 				//mViewPager.setAdapter(mViewPagerAdapter);
 				setCurrentItem(path.getDepth() - 1, false);
 				//getDirContentFragment(false).refreshData(null, false);
