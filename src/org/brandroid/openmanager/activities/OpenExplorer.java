@@ -1087,7 +1087,7 @@ public class OpenExplorer
 					mViewPager.setAdapter(adapter);
 				else {
 					mViewPager.notifyDataSetChanged();
-					getDirContentFragment(false).notifyDataSetChanged();
+					//getDirContentFragment(false).notifyDataSetChanged();
 				}
 				return true;
 			} catch(IndexOutOfBoundsException e) {
@@ -2131,7 +2131,9 @@ public class OpenExplorer
 			}
 		}
 		
-		getSelectedFragment().onPrepareOptionsMenu(menu);
+		OpenFragment f = getSelectedFragment();
+		if(f != null)
+			f.onPrepareOptionsMenu(menu);
 
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -2873,7 +2875,8 @@ public class OpenExplorer
 				if(common < 0)
 					mViewPagerAdapter.add(path);
 				else
-					mViewPagerAdapter.add(common, path);
+					mViewPagerAdapter.add(iNonContentPages, path);
+				
 				OpenPath tmp = path.getParent();
 				while(tmp != null) 
 				{

@@ -4,34 +4,47 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSearch;
+import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.utils.Logger;
+
 import com.viewpagerindicator.TabPageIndicator.TabView;
 import com.viewpagerindicator.TitleProvider;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
 
 public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 	implements TitleProvider
 {
 	private ArrayList<OpenPath> mChildren = new ArrayList<OpenPath>();
+	private HashMap<OpenPath, OpenFragment> mFragments = new HashMap<OpenPath, OpenFragment>();
 	private ArrayPagerAdapter.OnPageTitleClickListener mListener = null;
+	private final FragmentManager mFragMan;
+	protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
 	public OpenPathPagerAdapter(FragmentManager fm) {
 		super(fm);
+		mFragMan = fm;
 	}
 
 	public void setOnPageTitleClickListener(OnPageTitleClickListener l)
@@ -44,26 +57,76 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 	@Override
 	public CharSequence getPageTitle(int position) {
 		OpenPath path = mChildren.get(position);
-		if(path instanceof OpenMediaStore || path instanceof OpenCursor)
-			return path.getName();
-		if(path instanceof OpenZip)
+		if(path instanceof OpenMediaStore || path instanceof OpenCursor || path instanceof OpenSmartFolder || path instanceof OpenZip)
 			return path.getName();
 		return path.getName() + (path.isDirectory() ? "/" : "");
 	}
-
+	
+	public OpenFragment getFragment(int pos)
+	{
+		if(DEBUG)
+			Logger.LogDebug("OpenPathPagerAdapter.getFragment(" + pos + ")");
+		OpenPath path = mChildren.get(pos);
+		if(mFragments.containsKey(path))
+			return mFragments.get(path);
+		return getItem(pos);
+	}
+	
+	@Override
+	public int getItemPosition(Object object) {
+		if(DEBUG)
+			Logger.LogDebug("OpenPathPagerAdapter.getItemPosition(" + object + ")");
+		if(object instanceof OpenPathFragmentInterface)
+			if(mChildren.contains(((OpenPathFragmentInterface)object).getPath()))
+				return mChildren.indexOf(((OpenPathFragmentInterface)object).getPath());
+		return FragmentPagerAdapter.POSITION_NONE;
+	}
+	
+	/*
+	@Override
+	public Object instantiateItem(ViewGroup container, int position) {
+		if(DEBUG)
+			Logger.LogDebug("OpenPathPagerAdapter.instantiateItem(" + position + ")");
+		OpenPath path = mChildren.get(position);
+		OpenFragment ret = (OpenFragment)super.instantiateItem(container, position);
+		if(ret instanceof OpenPathFragmentInterface)
+		{
+			if(!((OpenPathFragmentInterface)ret).getPath().equals(path))
+			{
+				ret = getItem(position);
+				mFragMan.beginTransaction().attach(ret).commit();
+			}
+		}
+		return ret;
+	}
+	
+	@Override
+	public void destroyItem(ViewGroup container, int position, Object object) {
+		super.destroyItem(container, position, object);
+		if(object instanceof View)
+			container.removeView((View)object);
+		else
+			container.removeViewAt(position);
+	}
+	*/
+	
 	@Override
 	public OpenFragment getItem(int pos) {
 		if(mChildren.size() <= pos || pos < 0) return null;
 		OpenPath path = mChildren.get(pos);
+		OpenFragment ret = null;
 		if(path instanceof OpenSearch)
 		{
-			return SearchResultsFragment.getInstance((OpenSearch)path);
+			ret = SearchResultsFragment.getInstance((OpenSearch)path);
 		} else {
 			if(!path.isDirectory())
-				return TextEditorFragment.getInstance(path, new Bundle());
+				ret = TextEditorFragment.getInstance(path, new Bundle());
 			else
-				return ContentFragment.getInstance(path);
+				ret = ContentFragment.getInstance(path);
 		}
+		ret.setRetainInstance(false);
+		mFragments.put(path, ret);
+		return ret;
 	}
 	
 	public OpenPath getPath(int pos)
@@ -100,7 +163,10 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 	public void notifyDataSetChanged() {
 		Collections.sort(mChildren, new Comparator<OpenPath>() {
 			public int compare(OpenPath lhs, OpenPath rhs) {
-				return lhs.compareTo(rhs);
+				int da = lhs.getDepth();
+				int db = rhs.getDepth();
+				if(da == db) return 0;
+				return da > db ? 1 : -1;
 			}
 		});
 		super.notifyDataSetChanged();
@@ -109,7 +175,9 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 	public OpenFragment remove(int index)
 	{
 		OpenFragment ret = getItem(index);
+		mFragments.remove(mChildren.get(index));
 		mChildren.remove(index);
+		mFragMan.beginTransaction().detach(ret).commit();
 		notifyDataSetChanged();
 		return ret;
 	}
@@ -123,7 +191,7 @@ public class OpenPathPagerAdapter extends FragmentStatePagerAdapter
 
 	public void add(int index, OpenPath path) {
 		if(mChildren.contains(path))
-			mChildren.remove(mChildren.indexOf(path));
+			remove(mChildren.indexOf(path));
 		if(index >= mChildren.size())
 			add(path);
 		else

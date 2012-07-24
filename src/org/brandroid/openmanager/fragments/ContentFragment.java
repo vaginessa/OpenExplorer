@@ -177,10 +177,10 @@ public class ContentFragment extends OpenFragment
 	//private static Hashtable<OpenPath, ContentFragment> instances = new Hashtable<OpenPath, ContentFragment>();
 
 	public ContentFragment() {
-		if(getArguments() != null && getArguments().containsKey("last"))
+		if(getArguments() != null && getArguments().containsKey("path"))
 		{
-			Logger.LogDebug("ContentFragment Restoring to " + getArguments().getString("last"));
-			mPath = FileManager.getOpenCache(getArguments().getString("last"), getContext());
+			mPath = (OpenPath)getArguments().getParcelable("path");
+			Logger.LogDebug("ContentFragment Restoring to " + mPath);
 		}
 	}
 	
@@ -215,7 +215,7 @@ public class ContentFragment extends OpenFragment
 		if(path != null)
 		{
 			Logger.LogDebug("ContentFragment.getInstance(" + path + ", mode, " + fm + ")");
-			args.putString("last", path.getPath());
+			args.putParcelable("path", path);
 			ret.setArguments(args);
 		} else return null;
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ", " + mode + ")");
@@ -230,11 +230,8 @@ public class ContentFragment extends OpenFragment
 	public static ContentFragment getInstance(OpenPath path, Bundle args)
 	{
 		ContentFragment ret = new ContentFragment(path);
-		if(path != null && !args.containsKey("last"))
-		{
-			args.putString("last", path.getPath());
-			ret.setArguments(args);
-		} else return null;
+		args.putParcelable("path", path);
+		ret.setArguments(args);
 		//Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() + ")");
 		return ret;
 	}
@@ -335,10 +332,9 @@ public class ContentFragment extends OpenFragment
 		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
 		if(savedInstanceState != null)
 			mBundle = savedInstanceState;
-		if(getArguments() != null && getArguments().containsKey("last"))
-			mBundle = getArguments();
-		if(mBundle != null && mBundle.containsKey("last") && (mPath == null || !mPath.getPath().equals(mBundle.getString("last"))))
-			mPath = FileManager.getOpenCache(mBundle.getString("last"), getContext());
+		mBundle = getArguments();
+		if(mBundle != null && mBundle.containsKey("path"))
+			mPath = (OpenPath)mBundle.getParcelable("path");
 		
 		if(mBundle != null && mBundle.containsKey("view"))
 			mViewMode = mBundle.getInt("view");
@@ -437,8 +433,8 @@ public class ContentFragment extends OpenFragment
 		
 		OpenPath path = mPath;
 		if(path == null)
-			if (savedInstanceState != null && savedInstanceState.containsKey("last"))
-				path = new OpenFile(savedInstanceState.getString("last"));
+			if (savedInstanceState != null && savedInstanceState.containsKey("path"))
+				path = (OpenFile)savedInstanceState.getParcelable("path");
 		
 		if(path == null) {
 			Logger.LogWarning("ContentFragment.refreshData warning: path is null!");
@@ -1353,7 +1349,7 @@ public class ContentFragment extends OpenFragment
 			super.onSaveInstanceState(outState);
 			outState.putInt("view", mViewMode);
 			if(mPath != null)
-				outState.putString("last", mPath.getPath());
+				outState.putParcelable("path", mPath);
 			if(mListVisibleStartIndex > 0)
 				outState.putInt("first", mListVisibleStartIndex);
 			if(mListScrollY > 0)
