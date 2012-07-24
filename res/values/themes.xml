@@ -32,5 +32,8 @@
         <item name="actionIconSelectAll">@drawable/ic_action_select_all_holo_dark</item>
         <item name="actionIconZip">@drawable/ic_action_zip_holo_dark</item>
         
+        <!-- Misc. UI elements -->
+        <item name="checkboxButtonOn">@drawable/btn_check_on_holo_dark</item>
+        <item name="checkboxButtonOffn">@drawable/btn_check_off_holo_dark</item>
     </style>
 </resources>
