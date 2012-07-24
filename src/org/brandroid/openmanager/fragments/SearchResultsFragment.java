@@ -42,6 +42,7 @@ public class SearchResultsFragment
 	private SearchTask myTask = new SearchTask();
 	private int lastNotedCount = 0;
 	private String lastTitle = "";
+	private boolean mStopped = false;
 	
 	private SearchResultsFragment(Bundle b) {
 		setArguments(b);
@@ -134,10 +135,11 @@ public class SearchResultsFragment
 	
 	@Override
 	public boolean onBackPressed() {
-		if(myTask.getStatus() == Status.RUNNING)
+		if(!mStopped && myTask.getStatus() == Status.RUNNING)
 		{
 			myTask.cancel(true);
 			getSearch().cancel();
+			mStopped = true;
 		}
 		else if(getExplorer() != null)
 			getExplorer().closeFragment(this);

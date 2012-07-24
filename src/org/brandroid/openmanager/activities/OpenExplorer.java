@@ -51,6 +51,7 @@ import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -1028,7 +1029,6 @@ public class OpenExplorer
 
 
 			mViewPagerAdapter.setOnPageTitleClickListener(this);
-			setViewPageAdapter(mViewPagerAdapter);
 			setViewPageAdapter(mViewPagerAdapter, true);
 		}
 
@@ -2808,6 +2808,7 @@ public class OpenExplorer
 		} else
 			setViewVisibility(false, false, R.id.frag_log);
 		
+		/*
 		final ImageView icon = (ImageView)findViewById(R.id.title_icon);
 		if(icon != null)
 			ThumbnailCreator.setThumbnail(this, icon, path, 96, 96,
@@ -2818,6 +2819,7 @@ public class OpenExplorer
 						icon.setImageDrawable(d);
 					}
 				});
+		*/
 		
 		//mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
 		//setViewMode(newView);
@@ -2861,8 +2863,6 @@ public class OpenExplorer
 					OpenFragment f = mViewPagerAdapter.getItem(i);
 					if(f == null || !(f instanceof ContentFragment)) continue;
 					if(!familyTree.contains(((ContentFragment)f).getPath()))
-
-
 					{
 						mViewPagerAdapter.remove(i);
 						//removed = true;
@@ -2876,7 +2876,6 @@ public class OpenExplorer
 				int iNonContentPages = mViewPagerAdapter.getCount() - common;
 				if(common < 0)
 					mViewPagerAdapter.add(cf);
-
 				else
 					mViewPagerAdapter.add(common, cf);
 				OpenPath tmp = path.getParent();
@@ -2891,17 +2890,11 @@ public class OpenExplorer
 					tmp = tmp.getParent();
 				}
 				
-				//Logger.LogVerbose("All Titles: [" + getPagerTitles() + "] Paths: [" + getFragmentPaths(mViewPagerAdapter.getFragments()) + "]");
-				//mViewPagerAdapter = newAdapter;
-				//mViewPagerAdapter.getCount() - iNonContentPages - 1;
-				setViewPageAdapter(mViewPagerAdapter, false); // TODO: I really want to set this to false, as it will speed up the app considerably
-				//mViewPagerAdapter.notifyDataSetChanged();
-				//index -= iNonContentPages;
-				//int index = mViewPagerAdapter.getLastPositionOfType(ContentFragment.class);
+				setViewPageAdapter(mViewPagerAdapter, false); // DONE: Sped up app considerably!
+
 				int index = mViewPagerAdapter.getItemPosition(cf);
-				setCurrentItem(index, addToStack);
-				//if(cf instanceof ContentFragment) ((ContentFragment)cf).refreshData(null, false);
-				//updatePagerTitle(index);
+				if(index >= 0)
+					setCurrentItem(index, addToStack);
 			} else {
 				OpenPath commonBase = null;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
@@ -2930,7 +2923,7 @@ public class OpenExplorer
 			}
 		//}
 		//refreshContent();
-		invalidateOptionsMenu();
+		//invalidateOptionsMenu();
 		/*if(content instanceof ContentFragment)
 		((ContentFragment)content).setSettings(
 			SortType.DATE_DESC,
@@ -3419,9 +3412,7 @@ public class OpenExplorer
 		setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
 		if(!mViewPagerAdapter.remove(frag))
 			Logger.LogWarning("Unable to remove fragment");
-
-
-		setViewPageAdapter(mViewPagerAdapter);
+		setViewPageAdapter(mViewPagerAdapter, false);
 		//refreshContent();
 	}
 
@@ -3439,10 +3430,24 @@ public class OpenExplorer
 		if(!f.isDetached())
 		{
 			invalidateOptionsMenu();
+			final ImageView icon = (ImageView)findViewById(R.id.title_icon);
+			Drawable d = f.getIcon();
+			if(d == null && f instanceof OpenPathFragmentInterface)
+			{
+				OpenPath path = ((OpenPathFragmentInterface)f).getPath();
+				ThumbnailCreator.setThumbnail(this, icon, path, 96, 96, 
+					new OnUpdateImageListener() {
+						public void updateImage(Bitmap b) {
+							BitmapDrawable bd = new BitmapDrawable(getResources(), b);
+							bd.setGravity(Gravity.CENTER);
+							icon.setImageDrawable(bd);
+						}
+					});
+			}
 			if(Build.VERSION.SDK_INT < 14)
-				((ImageView)findViewById(R.id.title_icon)).setImageDrawable(f.getIcon());
+				icon.setImageDrawable(d);
 			else
-				ImageUtils.fadeToDrawable((ImageView)findViewById(R.id.title_icon), f.getIcon());
+				ImageUtils.fadeToDrawable(icon, d);
 		}
 		//if((f instanceof ContentFragment) && (((ContentFragment)f).getPath() instanceof OpenNetworkPath)) ((ContentFragment)f).refreshData(null, false);
 	}

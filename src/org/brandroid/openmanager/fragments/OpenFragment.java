@@ -113,9 +113,13 @@ public abstract class OpenFragment
         OpenPath path = null;
         if(args.containsKey("last"))
     		sPath = args.getString("last");
+        if(args.containsKey("path"))
+        	path = (OpenPath)args.getParcelable("path");
     	if(args.containsKey("edit_path"))
     		return TextEditorFragment.getInstance(((OpenPath)args.getParcelable("edit_path")), args);
     	if(sPath != null)
+    		path = FileManager.getOpenCache(sPath, context);
+    	if(path != null)
     	{
         	if(fname.endsWith("ContentFragment"))
         		return ContentFragment.getInstance(path, args);
