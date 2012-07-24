@@ -34,6 +34,6 @@
         
         <!-- Misc. UI elements -->
         <item name="checkboxButtonOn">@drawable/btn_check_on_holo_dark</item>
-        <item name="checkboxButtonOffn">@drawable/btn_check_off_holo_dark</item>
+        <item name="checkboxButtonOff">@drawable/btn_check_off_holo_dark</item>
     </style>
 </resources>
