@@ -101,6 +101,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.View.OnCreateContextMenuListener;
 import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
@@ -705,12 +706,17 @@ public class ContentFragment extends OpenFragment
 		if(getActionMode() != null) {
 			if(mLastSelectionModeCallback != null)
 			{
-				mContentAdapter.toggleSelected(file);
+				boolean sel = mContentAdapter.toggleSelected(file);
+				ViewStub stub = (ViewStub)view.findViewById(R.id.checkmark_area_stub);
+				if(stub != null)
+					stub.inflate();
+				ViewUtils.setViewsVisible(view, true, R.id.content_check);
+				ViewUtils.setViewsChecked(view, sel, R.id.content_check);
+				
 				if(getSelectedCount() == 0 && getActionMode() != null)
 					getActionMode().finish();
 				else if(getActionMode() != null)
 					getActionMode().invalidate();
-				notifyDataSetChanged();
 			} else {
 				//Animation anim = Animation.
 				/*
@@ -2016,9 +2022,13 @@ public class ContentFragment extends OpenFragment
 			int position, long id) {
 		// FileListItem f = mListAdapter.getItem(position);
 		OpenPath path = getContentAdapter().getItem(position);
-		mContentAdapter.toggleSelected(path);
+		boolean sel = mContentAdapter.toggleSelected(path);
 		updateSelectionMode();
-		notifyDataSetChanged();
+		ViewStub stub = (ViewStub)view.findViewById(R.id.checkmark_area_stub);
+		if(stub != null)
+			stub.inflate();
+		ViewUtils.setViewsVisible(view, true, R.id.content_check);
+		ViewUtils.setViewsChecked(view, sel, R.id.content_check);
 		return true;
 	}
 
