@@ -324,6 +324,9 @@
     <string name="test_success">Connection succeeded!</string>
     <string name="no_items">No items.</string>
     <string name="clipboard">Clipboard</string>
+    <string name="theme">Theme</string>
+    <string name="theme_dark">Dark UI</string>
+    <string name="theme_light">Light UI</string>
     
     <plurals name="num_selected">
         <item quantity="one">One file selected</item>
