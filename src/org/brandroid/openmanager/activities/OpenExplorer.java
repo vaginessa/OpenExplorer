@@ -40,6 +40,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
@@ -194,6 +195,7 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.jcraft.jsch.JSchException;
 import com.viewpagerindicator.TabPageIndicator;
 import com.viewpagerindicator.TabPageIndicator.TabView;
@@ -312,6 +314,30 @@ public class OpenExplorer
 		Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
 		Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
 		Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
+		Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
+
+		PackageInfo pi = null;
+		try {
+			pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+		} catch (NameNotFoundException e) { }
+		
+		VERSION = pi.versionCode;
+		
+		if(Preferences.Pref_Analytics)
+		{
+			String gaCode = "UA-20719255-4";
+			if(pi != null && pi.applicationInfo != null && pi.applicationInfo.metaData != null && pi.applicationInfo.metaData.containsKey("ga_code"))
+				gaCode = pi.applicationInfo.metaData.getString("ga_code");
+			
+			final String ga = gaCode;
+			final PackageInfo pi2 = pi;
+			final Context atc = getContext();
+			
+			queueToTracker(new Runnable(){public void run(){
+				getAnalyticsTracker().startNewSession(ga, atc);
+				getAnalyticsTracker().setCustomVar(0, "version", (pi2 != null ? pi2.versionName : VERSION) + (IS_DEBUG_BUILD ? "-debug" : ""));
+			}});
+		}
 		
 		if(!Preferences.Pref_Language.equals(""))
 			setLanguage(getContext(), Preferences.Pref_Language);
@@ -1264,9 +1290,6 @@ public class OpenExplorer
 		super.onAttachedToWindow();
 		handleNetworking();
 		handleMediaReceiver();
-		try {
-			VERSION = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-		} catch (NameNotFoundException e) { }
 		if(getWindowManager() != null)
 		{
 			Display d = getWindowManager().getDefaultDisplay();
@@ -1534,6 +1557,8 @@ public class OpenExplorer
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		if(Preferences.Pref_Analytics)
+			getAnalyticsTracker().stopSession();
 		if(storageReceiver != null)
 			unregisterReceiver(storageReceiver);
 	}
@@ -3123,7 +3148,7 @@ public class OpenExplorer
 		Logger.LogDebug("Adding Bookmark: " + file.getPath());
 		String sBookmarks = getPreferences().getSetting("bookmarks", "bookmarks", "");
 		sBookmarks += (sBookmarks != "" ? ";" : "") + file.getPath();
-		Logger.LogInfo("Bookmarks: " + sBookmarks);
+		Logger.LogVerbose("Bookmarks: " + sBookmarks);
 		getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
 		if(mBookmarkListener != null)
 			mBookmarkListener.onBookMarkAdd(file);
@@ -3500,6 +3525,16 @@ public class OpenExplorer
 	
 	public ShellSession getShellSession() {
 		return getOpenApplication().getShellSession();
+	}
+	
+	@Override
+	public GoogleAnalyticsTracker getAnalyticsTracker() {
+		return getOpenApplication().getAnalyticsTracker();
+	}
+	
+	@Override
+	public void queueToTracker(Runnable run) {
+		getOpenApplication().queueToTracker(run);
 	}
 
 	@Override

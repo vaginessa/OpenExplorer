@@ -972,6 +972,7 @@ public class ContentFragment extends OpenFragment
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		if(item == null) return false;
+		if(super.onOptionsItemSelected(item)) return true;
 		if(DEBUG)
 			Logger.LogDebug("ContentFragment.onOptionsItemSelected(" + item + ")");
 		OpenPath path = null;

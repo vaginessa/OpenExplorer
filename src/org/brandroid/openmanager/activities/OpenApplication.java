@@ -2,6 +2,7 @@ package org.brandroid.openmanager.activities;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.interfaces.OpenApp;
@@ -18,6 +19,7 @@ import com.android.gallery3d.data.DownloadUtils;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.GalleryUtils;
 import com.android.gallery3d.util.ThreadPool;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.app.ActivityManager;
 import android.app.Application;
@@ -38,11 +40,13 @@ public class OpenApplication extends Application implements OpenApp
     private OpenClipboard mClipboard;
     private ShellSession mShell;
     private ActionMode mActionMode;
+    private GoogleAnalyticsTracker mTracker;
     
     @Override
     public void onCreate() {
     	super.onCreate();
-    	Logger.LogDebug("OpenApplication.onCreate");
+    	//Logger.LogDebug("OpenApplication.onCreate");
+    	//mTracker = GoogleAnalyticsTracker.getInstance();
         //GalleryUtils.initialize(this);
     }
     
@@ -149,6 +153,66 @@ public class OpenApplication extends Application implements OpenApp
 	public Preferences getPreferences() {
 		return new Preferences(getContext());
 	}
+	
+	@Override
+	public GoogleAnalyticsTracker getAnalyticsTracker() {
+		return mTracker;
+	}
+	
+	private final LinkedBlockingQueue<Runnable> trackerQueue = new LinkedBlockingQueue<Runnable>();
+	private TrackerThread trackerThread;
+	private Object lock = new Object();
+	
+	/**
+	 * Queue the GoogleAnalytics call to the database thread, but only if
+	 * GoogleAnalytics has been enabled.
+	 *
+	 * @param r the Runnable to execute
+	 */
+	public void queueToTracker(Runnable r) {
+		if(mTracker == null)
+		{
+			mTracker = GoogleAnalyticsTracker.getInstance();
+			trackerThread = new TrackerThread();
+			trackerThread.start();
+		}
+		if (Preferences.Pref_Analytics) {
+			synchronized (lock) {
+				trackerQueue.add(r);
+			}
+		}
+	}
+
+	/**
+	 * All Access to GoogleAnalyticsTracker methods are done on this Thread.	This
+	 * is done as GoogleAnalyticsTracker makes database calls which should be done
+	 * off the Main UI Thread.	It's also done in order to preserve the order of
+	 * those calls.
+	 */
+	private class TrackerThread extends Thread {
+
+		TrackerThread() {
+			super("TrackerThread");
+		}
+
+		/**
+		 * Simply pull Runnables from the Queue trackerQueue and call their run
+		 * methods, blocking until there is something in the Queue.
+		 */
+		@Override
+		public void run() {
+			while (true) {
+				Runnable r;
+				try {
+					r = trackerQueue.take();
+					r.run();
+				} catch (InterruptedException e) {
+					Logger.LogWarning("Unable to run Tracker", e);
+				}
+			}
+		}
+	}
+	
 
 	@Override
 	public void refreshBookmarks() {
