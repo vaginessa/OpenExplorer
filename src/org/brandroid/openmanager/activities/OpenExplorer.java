@@ -356,7 +356,7 @@ public class OpenExplorer
 		loadPreferences();
 		
 		boolean theme = getPreferences().getBoolean("global", "pref_theme", true);
-		setTheme(theme ? R.style.AppTheme_Dark : R.style.AppThemeCustom);
+		setTheme(theme ? R.style.AppTheme_Dark : R.style.AppTheme_Light);
 		
 		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
