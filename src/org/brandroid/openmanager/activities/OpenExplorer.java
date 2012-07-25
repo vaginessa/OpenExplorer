@@ -1440,6 +1440,7 @@ public class OpenExplorer
 	protected void onStop() {
 		super.onStop();
 		saveOpenedEditors();
+		submitStats();
 		if(Logger.isLoggingEnabled() && Logger.hasDb())
 			Logger.closeDb();
 	}
@@ -1472,6 +1473,11 @@ public class OpenExplorer
 			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
 			new SubmitStatsTask(this).execute(logs);
 		//} else Logger.LogWarning("Logs not found.");
+		queueToTracker(new Runnable() {
+			public void run() {
+				getAnalyticsTracker().dispatch();
+			}
+		});
 	}
 	
 	
