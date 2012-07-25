@@ -3192,9 +3192,11 @@ public class OpenExplorer
 		//invalidateOptionsMenu();
 		if(mActionMode != null)
 			mActionMode.setTitle(getString(R.string.s_menu_multi) + ": " + mLastClipSize + " " + getString(R.string.s_files));
+		/*
 		ContentFragment cf = getDirContentFragment(false);
 		if(cf != null && cf.isAdded() && cf.isVisible())
 			cf.notifyDataSetChanged();
+		*/
 	}
 
 	@Override

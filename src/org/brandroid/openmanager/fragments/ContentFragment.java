@@ -1109,8 +1109,6 @@ public class ContentFragment extends OpenFragment
 				//fileList.add(file);
 				getHandler().deleteFile(file, this, true);
 				finishMode(mode);
-				if(getContentAdapter() != null)
-					getContentAdapter().notifyDataSetChanged();
 				return true;
 				
 			case R.id.menu_context_rename:

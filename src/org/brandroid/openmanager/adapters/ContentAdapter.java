@@ -68,9 +68,8 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
 	
-	private TypedArray themedAttributes;
-	private int checkboxOnId;
-	private int checkboxOffId;
+	private static int checkboxOnId = -1;
+	private static int checkboxOffId = -1;
 	
 	/**
 	 * Set of seleced message IDs.
@@ -102,11 +101,15 @@ public class ContentAdapter extends BaseAdapter {
 	}
 	
 	public void fetchThemedAttributes() {
-		themedAttributes = getContext().getTheme().obtainStyledAttributes(R.styleable.AppTheme);
-		checkboxOnId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOn,
-				R.drawable.btn_check_on_holo_light);
-		checkboxOffId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOff,
-				R.drawable.btn_check_off_holo_light);
+		if(checkboxOffId == -1)
+		{
+			TypedArray themedAttributes = getContext().getTheme().obtainStyledAttributes(R.styleable.AppTheme);
+			checkboxOnId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOn,
+					R.drawable.btn_check_on_holo_light);
+			checkboxOffId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOff,
+					R.drawable.btn_check_off_holo_light);
+			themedAttributes.recycle();
+		}
 	}
 	
 	public interface CheckClipboardListener
@@ -356,6 +359,7 @@ public class ContentAdapter extends BaseAdapter {
 			ViewUtils.setOnClicks(row, new View.OnClickListener() {
 				public void onClick(View v) {
 					mApp.getClipboard().remove(file);
+					v.setVisibility(View.GONE);
 				}
 			}, R.id.content_clipboard);
 		} else ViewUtils.setViewsVisible(row, false, R.id.content_clipboard);
