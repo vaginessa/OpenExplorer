@@ -706,17 +706,7 @@ public class ContentFragment extends OpenFragment
 		if(getActionMode() != null) {
 			if(mLastSelectionModeCallback != null)
 			{
-				boolean sel = mContentAdapter.toggleSelected(file);
-				ViewStub stub = (ViewStub)view.findViewById(R.id.checkmark_area_stub);
-				if(stub != null)
-					stub.inflate();
-				ViewUtils.setViewsVisible(view, true, R.id.content_check);
-				ViewUtils.setViewsChecked(view, sel, R.id.content_check);
-				
-				if(getSelectedCount() == 0 && getActionMode() != null)
-					getActionMode().finish();
-				else if(getActionMode() != null)
-					getActionMode().invalidate();
+				toggleSelection(view, file);
 			} else {
 				//Animation anim = Animation.
 				/*
@@ -1119,8 +1109,6 @@ public class ContentFragment extends OpenFragment
 				//fileList.add(file);
 				getHandler().deleteFile(file, this, true);
 				finishMode(mode);
-				if(getContentAdapter() != null)
-					getContentAdapter().notifyDataSetChanged();
 				return true;
 				
 			case R.id.menu_context_rename:
@@ -1779,6 +1767,8 @@ public class ContentFragment extends OpenFragment
 				addToMultiSelect(clip);
 			*/
 			getExplorer().startActionMode(mLastSelectionModeCallback);
+			mGrid.invalidateViews();
+			
 		}
 	}
 
@@ -1822,10 +1812,8 @@ public class ContentFragment extends OpenFragment
 		}
 	}
 
-
-	/** Implements {@link MessagesAdapter.Callback} */
 	@Override
-	public void onAdapterSelectedChanged(OpenPathView itemView,
+	public void onAdapterSelectedChanged(OpenPath path,
 			boolean newSelected, int mSelectedCount) {
 		updateSelectionMode();
 	}
@@ -2020,22 +2008,21 @@ public class ContentFragment extends OpenFragment
 				// the selection.
 				deselectAll();
 			}
+			mGrid.invalidateViews();
 		}
 	}
 
 	@Override
 	public boolean onItemLongClick(AdapterView<?> parent, View view,
 			int position, long id) {
-		// FileListItem f = mListAdapter.getItem(position);
 		OpenPath path = getContentAdapter().getItem(position);
-		boolean sel = mContentAdapter.toggleSelected(path);
-		updateSelectionMode();
-		ViewStub stub = (ViewStub)view.findViewById(R.id.checkmark_area_stub);
-		if(stub != null)
-			stub.inflate();
-		ViewUtils.setViewsVisible(view, true, R.id.content_check);
-		ViewUtils.setViewsChecked(view, sel, R.id.content_check);
+		toggleSelection(view, path);
 		return true;
+	}
+	
+	private void toggleSelection(View view, OpenPath path) {
+		view.invalidate();
+		mContentAdapter.toggleSelected(path);
 	}
 
 	public void notifyDataSetChanged() {
@@ -2050,6 +2037,7 @@ public class ContentFragment extends OpenFragment
 		ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
 		ViewUtils.setViewsVisible(getView(), mContentAdapter == null || mContentAdapter.getCount() == 0, android.R.id.empty);
 		
+		//TODO check to see if this is the source of inefficiency
 		if(mGrid != null)
 			mGrid.invalidateViews();
 	}

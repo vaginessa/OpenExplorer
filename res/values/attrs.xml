@@ -17,6 +17,8 @@
 <resources>
 
     <declare-styleable name="AppTheme">
+        <attr name="vpiTabTextColor" format="reference" />
+        
         <attr name="actionbarCompatTitleStyle" format="reference" />
         <attr name="actionbarCompatItemStyle" format="reference" />
         <attr name="actionbarCompatItemHomeStyle" format="reference" />
@@ -42,6 +44,11 @@
         <!-- Misc. UI Elements -->
         <attr name="checkboxButtonOn" format="reference" />
         <attr name="checkboxButtonOff" format="reference" />
+        
+        <!-- Colors -->
+        <attr name="colorWhite" format="reference" />
+        <attr name="colorOffWhite" format="reference" />
+        <attr name="colorBlack" format="reference" />
 	</declare-styleable>
 
     

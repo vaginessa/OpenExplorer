@@ -355,8 +355,8 @@ public class OpenExplorer
 		
 		loadPreferences();
 		
-		boolean theme = getPreferences().getBoolean("global", "pref_theme", true);
-		setTheme(theme ? R.style.AppTheme_Dark : R.style.AppThemeCustom);
+		boolean themeDark = getPreferences().getBoolean("global", "pref_theme", true);
+		setTheme(themeDark ? R.style.AppTheme_Dark : R.style.AppTheme_Light);
 		getOpenApplication().loadThemedAssets(this);
 		
 		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
@@ -392,7 +392,9 @@ public class OpenExplorer
 		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_fragments);
-		getWindow().setBackgroundDrawableResource(R.drawable.background_holo_dark);
+		if(Build.VERSION.SDK_INT < 11)
+			getWindow().setBackgroundDrawableResource(
+				themeDark ? R.drawable.background_holo_dark : R.drawable.background_holo_light);
 		
 		try {
 			upgradeViewSettings();
@@ -953,8 +955,8 @@ public class OpenExplorer
 				anchor = findViewById(R.id.title_icon_holder);
 			if(anchor == null)
 				anchor = findViewById(android.R.id.home);
-			if(anchor == null && USE_ACTION_BAR && getActionBar() != null && getActionBar().getCustomView() != null)
-				anchor = getActionBar().getCustomView();
+			if(anchor == null && USE_ACTION_BAR && mBar != null && mBar.getCustomView() != null)
+				anchor = mBar.getCustomView();
 			if(anchor == null)
 				anchor = findViewById(R.id.title_bar);
 			mBookmarksPopup = new BetterPopupWindow(this, anchor);
@@ -1357,8 +1359,8 @@ public class OpenExplorer
 	{
 		if(mStaticButtons == null)
 			mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
-		if(mStaticButtons == null && USE_ACTION_BAR && getActionBar() != null && getActionBar().getCustomView() != null)
-			mStaticButtons = (ViewGroup)getActionBar().getCustomView().findViewById(R.id.title_static_buttons);
+		if(mStaticButtons == null && USE_ACTION_BAR && mBar != null && mBar.getCustomView() != null)
+			mStaticButtons = (ViewGroup)mBar.getCustomView().findViewById(R.id.title_static_buttons);
 		if(mStaticButtons == null)
 		{
 			Logger.LogWarning("Unable to find Title Separator");
@@ -1854,13 +1856,13 @@ public class OpenExplorer
 	public void updateTitle(CharSequence cs)
 	{
 		TextView title = (TextView)findViewById(R.id.title_path);
-		if((title == null || !title.isShown()) && getActionBar() != null && getActionBar().getCustomView() != null)
-			title = (TextView)getActionBar().getCustomView().findViewById(R.id.title_path);
-		//if(BEFORE_HONEYCOMB || !USE_ACTION_BAR || getActionBar() == null)
+		if((title == null || !title.isShown()) && mBar != null && mBar.getCustomView() != null)
+			title = (TextView)mBar.getCustomView().findViewById(R.id.title_path);
+		//if(BEFORE_HONEYCOMB || !USE_ACTION_BAR || mBar == null)
 		if(title != null && title.getVisibility() != View.GONE)
 			title.setText(cs, BufferType.SPANNABLE);
-		if(!USE_ACTION_BAR && getActionBar() != null && (title == null || !title.isShown()))
-			getActionBar().setSubtitle(cs);
+		if(!USE_ACTION_BAR && mBar != null && (title == null || !title.isShown()))
+			mBar.setSubtitle(cs);
 		//else
 		{
 			SpannableStringBuilder sb = new SpannableStringBuilder(getResources().getString(R.string.app_title));
@@ -2295,7 +2297,7 @@ public class OpenExplorer
 				anchor = item.getActionView();
 			if(anchor == null)
 			{
-				anchor = getActionBar().getCustomView();
+				anchor = mBar.getCustomView();
 				if(anchor.findViewById(item.getItemId()) != null)
 					anchor = anchor.findViewById(item.getItemId());
 			}
@@ -2304,7 +2306,7 @@ public class OpenExplorer
 			if(anchor == null)
 				anchor = findViewById(android.R.id.home);
 			if(anchor == null && USE_ACTION_BAR)
-				anchor = getActionBar().getCustomView().findViewById(android.R.id.home);
+				anchor = mBar.getCustomView().findViewById(android.R.id.home);
 			if(anchor == null)
 				anchor = getCurrentFocus().getRootView();
 			if(f != null)
@@ -3178,7 +3180,9 @@ public class OpenExplorer
 		if(getClipboard().size() == mLastClipSize) return;
 		if(DEBUG)
 			Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
-		View pb = mStaticButtons.findViewById(R.id.title_paste);
+		View pb = null;
+		if(mStaticButtons != null)
+			pb = mStaticButtons.findViewById(R.id.title_paste);
 		mLastClipSize = getClipboard().size();
 		ViewUtils.setViewsVisible(pb, mLastClipSize > 0 || mLastClipState);
 		ViewUtils.setText(pb, "" + mLastClipSize, R.id.title_paste_text);
@@ -3189,9 +3193,11 @@ public class OpenExplorer
 		//invalidateOptionsMenu();
 		if(mActionMode != null)
 			mActionMode.setTitle(getString(R.string.s_menu_multi) + ": " + mLastClipSize + " " + getString(R.string.s_files));
+		/*
 		ContentFragment cf = getDirContentFragment(false);
 		if(cf != null && cf.isAdded() && cf.isVisible())
 			cf.notifyDataSetChanged();
+		*/
 	}
 
 	@Override
