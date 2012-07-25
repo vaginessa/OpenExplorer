@@ -357,6 +357,7 @@ public class OpenExplorer
 		
 		boolean theme = getPreferences().getBoolean("global", "pref_theme", true);
 		setTheme(theme ? R.style.AppTheme_Dark : R.style.AppThemeCustom);
+		getOpenApplication().loadThemedAssets(this);
 		
 		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
@@ -3596,5 +3597,10 @@ public class OpenExplorer
 				&& mMainMenu.findItem(v.getId()).hasSubMenu())
 			v.requestFocus();
 			*/
+	}
+
+	@Override
+	public int getThemedResourceId(int styleableId, int defaultResourceId) {
+		return getOpenApplication().getThemedResourceId(styleableId, defaultResourceId);
 	}
 }

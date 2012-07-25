@@ -36,4 +36,6 @@ public interface OpenApp {
     public Resources getResources();
 	public Preferences getPreferences();
 	public void refreshBookmarks();
+	
+	public int getThemedResourceId(int styleableId, int defaultResourceId);
 }

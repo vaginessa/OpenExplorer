@@ -93,6 +93,12 @@ public class ContentAdapter extends BaseAdapter {
 		if(Preferences.Pref_ShowUp && mParent.getParent() != null)
 			mPlusParent = true;
 		mViewMode = mode;
+		fetchThemedAttributes();	
+	}
+	
+	public void fetchThemedAttributes() {
+		checkboxOnId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_light);
+		checkboxOffId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_light);
 	}
 	
 	public interface CheckClipboardListener
