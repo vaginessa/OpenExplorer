@@ -29,6 +29,7 @@ public class Preferences {
 	public static boolean Pref_ShowUp = false;
 	public static boolean Warn_TextEditor = false;
 	public static boolean Warn_Networking = false;
+	public static boolean Pref_Analytics = true;
 	public static String Pref_Language = ""; // Default
 	
 	public interface OnPreferenceInteraction

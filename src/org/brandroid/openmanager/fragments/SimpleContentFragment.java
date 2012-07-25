@@ -6,6 +6,7 @@ import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
+import org.brandroid.openmanager.views.OpenPathView;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class SimpleContentFragment extends Fragment
+public class SimpleContentFragment extends Fragment implements ContentAdapter.Callback
 {
 	private OpenPath mPath;
 	private GridView mGrid;
@@ -71,7 +72,7 @@ public class SimpleContentFragment extends Fragment
 			mPath = (OpenPath)mData.getParcelable("path");
 		mGrid = (GridView)inflater.inflate(R.layout.content_grid, container, false);
 		mGrid.setNumColumns(container.getContext().getResources().getInteger(R.integer.max_grid_columns));
-		mAdapter = new ContentAdapter(mApp, OpenExplorer.VIEW_LIST, mPath);
+		mAdapter = new ContentAdapter(mApp, this, OpenExplorer.VIEW_LIST, mPath);
 		mAdapter.setShowDetails(false);
 		mAdapter.setSorting(SortType.ALPHA);
 		mAdapter.setShowPlusParent(mShowUp);
@@ -88,5 +89,12 @@ public class SimpleContentFragment extends Fragment
 		super.onViewCreated(view, savedInstanceState);
 		if(mClickCaller != null)
 			mGrid.setOnItemClickListener(mClickCaller);
+	}
+
+	@Override
+	public void onAdapterSelectedChanged(OpenPathView itemView,
+			boolean newSelected, int mSelectedCount) {
+		// TODO Auto-generated method stub
+		
 	}
 }

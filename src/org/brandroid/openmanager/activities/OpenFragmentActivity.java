@@ -1,9 +1,9 @@
 package org.brandroid.openmanager.activities;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbComReadAndX;
@@ -12,41 +12,31 @@ import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.interfaces.OpenContextProvider;
-import org.brandroid.openmanager.util.MimeTypeParser;
-import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
-import org.brandroid.utils.MenuBuilder;
 import org.brandroid.utils.Preferences;
-import org.xmlpull.v1.XmlPullParserException;
-
+import com.actionbarsherlock.ActionBarSherlock;
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.MenuInflater;
 import com.jcraft.jsch.JSch;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
-import android.content.res.XmlResourceParser;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 public abstract class OpenFragmentActivity
-			extends FragmentActivity
+			extends SherlockFragmentActivity
 			implements View.OnClickListener, View.OnLongClickListener
 				, OpenContextProvider
 {
@@ -55,10 +45,15 @@ public abstract class OpenFragmentActivity
 	public static Thread UiThread = Thread.currentThread();
 	private Preferences mPreferences = null;
 	private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
-	
+
 	public String getClassName()
 	{
 		return this.getClass().getSimpleName();
+	}
+	
+	public ActionBar getSupportActionBar()
+	{
+		return getSherlock().getActionBar(); 
 	}
 	
 	@Override
@@ -88,11 +83,15 @@ public abstract class OpenFragmentActivity
 		return false;
 	}
 	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
+	public boolean onOptionsItemSelected2(MenuItem item) {
 		if(DEBUG)
 			Logger.LogDebug("Menu selected(0x" + Integer.toHexString(item.getItemId()) + ") - " + item.toString());
 		return super.onOptionsItemSelected(item);
+	}
+	
+	public MenuInflater getSupportMenuInflater()
+	{
+		return getSherlock().getMenuInflater();
 	}
 	
 	@Override
@@ -135,6 +134,7 @@ public abstract class OpenFragmentActivity
         new Preferences(context).setSetting("global", "pref_language", language);
     }
 	
+	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	public int getWindowWidth() {
 		if(Build.VERSION.SDK_INT > 13)
