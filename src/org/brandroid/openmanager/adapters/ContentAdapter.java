@@ -30,6 +30,7 @@ import org.brandroid.utils.ViewUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
@@ -67,6 +68,9 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
 	
+	private static int checkboxOnId = -1;
+	private static int checkboxOffId = -1;
+	
 	/**
 	 * Set of seleced message IDs.
 	 */
@@ -78,7 +82,7 @@ public class ContentAdapter extends BaseAdapter {
 	 */
 	public interface Callback {
 		/** Called when the user selects/unselects a message */
-		void onAdapterSelectedChanged(OpenPathView itemView,
+		void onAdapterSelectedChanged(OpenPath path,
 				boolean newSelected, int mSelectedCount);
 	}
 	
@@ -93,6 +97,19 @@ public class ContentAdapter extends BaseAdapter {
 		if(Preferences.Pref_ShowUp && mParent.getParent() != null)
 			mPlusParent = true;
 		mViewMode = mode;
+		fetchThemedAttributes();	
+	}
+	
+	public void fetchThemedAttributes() {
+		if(checkboxOffId == -1)
+		{
+			TypedArray themedAttributes = getContext().getTheme().obtainStyledAttributes(R.styleable.AppTheme);
+			checkboxOnId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOn,
+					R.drawable.btn_check_on_holo_light);
+			checkboxOffId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOff,
+					R.drawable.btn_check_off_holo_light);
+			themedAttributes.recycle();
+		}
 	}
 	
 	public interface CheckClipboardListener
@@ -228,6 +245,7 @@ public class ContentAdapter extends BaseAdapter {
 		TextView mPathView = (TextView)row.findViewById(R.id.content_fullpath); 
 		TextView mNameView = (TextView)row.findViewById(R.id.content_text);
 		final ImageView mIcon = (ImageView)row.findViewById(R.id.content_icon);
+		ImageView mCheck = (ImageView)row.findViewById(R.id.content_check);
 		
 		if(mPlusParent && position == 0)
 		{
@@ -334,25 +352,20 @@ public class ContentAdapter extends BaseAdapter {
 		boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
 		boolean mShowCheck = mChecked || (mSelectedSet != null && mSelectedSet.size() > 0);
 		boolean mShowClip = mApp.getClipboard().contains(file);
-		if(mShowCheck || mShowClip)
-		{
-			ViewStub stub = (ViewStub)row.findViewById(R.id.checkmark_area_stub);
-			if(stub != null)
-				stub.inflate();
-		}
+
 		if(mShowClip)
 		{
 			ViewUtils.setViewsVisible(row, true, R.id.content_clipboard);
 			ViewUtils.setOnClicks(row, new View.OnClickListener() {
 				public void onClick(View v) {
 					mApp.getClipboard().remove(file);
+					v.setVisibility(View.GONE);
 				}
 			}, R.id.content_clipboard);
 		} else ViewUtils.setViewsVisible(row, false, R.id.content_clipboard);
-		ViewUtils.setViewsChecked(row, mChecked, R.id.content_check);
+		if(mCheck != null) mCheck.setImageResource(mChecked ? checkboxOnId : checkboxOffId);
 		ViewUtils.setViewsVisible(row, mShowCheck, R.id.content_check);
-			
-		//listItemCB.setVisibility(mSelectedSet != null && mSelectedSet.size() > 0 ? View.VISIBLE : View.GONE);
+
 		return row;
 	}
 
@@ -413,16 +426,8 @@ public class ContentAdapter extends BaseAdapter {
 		return getSelectedSet().contains(path);
 	}
 	
-	public boolean toggleSelected(OpenPath path)
-	{
-		if(isSelected(path))
-		{
-			getSelectedSet().remove(path);
-			return false;
-		} else {
-			getSelectedSet().add(path);
-			return true;
-		}
+	public void toggleSelected(OpenPath path) {
+		updateSelected(path, !isSelected(path));
 	}
 
 	/**
@@ -436,14 +441,14 @@ public class ContentAdapter extends BaseAdapter {
 	 * @param newSelected
 	 *            the new value of the selected flag (checkbox state)
 	 */
-	private void updateSelected(OpenPathView itemView, boolean newSelected) {
+	private void updateSelected(OpenPath path, boolean newSelected) {
 		if (newSelected) {
-			mSelectedSet.add(itemView.getOpenPath());
+			mSelectedSet.add(path);
 		} else {
-			mSelectedSet.remove(itemView.getOpenPath());
+			mSelectedSet.remove(path);
 		}
 		if (mCallback != null) {
-			mCallback.onAdapterSelectedChanged(itemView, newSelected,
+			mCallback.onAdapterSelectedChanged(path, newSelected,
 					mSelectedSet.size());
 		}
 	}
