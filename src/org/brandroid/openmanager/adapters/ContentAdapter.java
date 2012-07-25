@@ -421,7 +421,7 @@ public class ContentAdapter extends BaseAdapter {
 	
 	public void toggleSelected(OpenPath path) {
 		updateSelected(path, !isSelected(path));
-	}
+		}
 
 	/**
 	 * This is used as a callback from the list items, to set the selected state
