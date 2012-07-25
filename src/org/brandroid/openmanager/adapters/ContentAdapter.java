@@ -101,15 +101,8 @@ public class ContentAdapter extends BaseAdapter {
 	}
 	
 	public void fetchThemedAttributes() {
-		if(checkboxOffId == -1)
-		{
-			TypedArray themedAttributes = getContext().getTheme().obtainStyledAttributes(R.styleable.AppTheme);
-			checkboxOnId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOn,
-					R.drawable.btn_check_on_holo_light);
-			checkboxOffId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOff,
-					R.drawable.btn_check_off_holo_light);
-			themedAttributes.recycle();
-		}
+		checkboxOnId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_light);
+		checkboxOffId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_light);
 	}
 	
 	public interface CheckClipboardListener

@@ -40,4 +40,6 @@ public interface OpenApp {
 	public GoogleAnalyticsTracker getAnalyticsTracker();
 	
 	public void queueToTracker(Runnable run);
+	
+	public int getThemedResourceId(int styleableId, int defaultResourceId);
 }
