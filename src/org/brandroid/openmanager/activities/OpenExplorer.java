@@ -3226,8 +3226,6 @@ public class OpenExplorer
 					R.id.title_paste_icon);
 		checkTitleSeparator();
 		//invalidateOptionsMenu();
-		if(mActionMode != null)
-			mActionMode.setTitle(getString(R.string.s_menu_multi) + ": " + mLastClipSize + " " + getString(R.string.s_files));
 
 		ContentFragment cf = getDirContentFragment(false);
 		if(cf != null && cf.isAdded() && cf.isVisible())

@@ -26,6 +26,8 @@
         <attr name="actionbarCompatItemHomeAsUpStyle" format="reference" />
         
         <!-- Action Bar Icons -->
+        <attr name="actionIconClipboard" format="reference" />
+        <attr name="actionIconHomeUp" format="reference" />
         <attr name="actionIconSort" format="reference" />
         <attr name="actionIconView" format="reference" />
         <attr name="actionIconOperations" format="reference" />
@@ -48,6 +50,7 @@
         <!-- Colors -->
         <attr name="colorWhite" format="reference" />
         <attr name="colorOffWhite" format="reference" />
+        <attr name="colorDarkGray" format="reference" />
         <attr name="colorBlack" format="reference" />
 	</declare-styleable>
 
