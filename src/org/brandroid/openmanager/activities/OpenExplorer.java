@@ -281,6 +281,7 @@ public class OpenExplorer
 	private View mSearchView = null;
 	private int mTitleButtons = 0;
 	private static ActionBar mBar = null;
+    private OpenClipboard mClipboard;
 	
 	private static boolean bRetrieveDimensionsForPhotos = Build.VERSION.SDK_INT >= 10;
 	private static boolean bRetrieveExtraVideoDetails = Build.VERSION.SDK_INT > 8;
@@ -382,7 +383,9 @@ public class OpenExplorer
 		loadPreferences();
 		
 		boolean themeDark = getPreferences().getBoolean("global", "pref_theme", true);
-		setTheme(themeDark ? R.style.AppTheme_Dark : R.style.AppTheme_Light);
+		int theme = themeDark ? R.style.AppTheme_Dark : R.style.AppTheme_Light;
+		getApplicationContext().setTheme(theme);
+		setTheme(theme);
 		getOpenApplication().loadThemedAssets(this);
 		
 		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
@@ -1585,9 +1588,10 @@ public class OpenExplorer
 		mViewPager.setLocked(locked);
 	}
 	
-	@Override
 	public OpenClipboard getClipboard() {
-		return getOpenApplication().getClipboard();
+    	if(mClipboard == null)
+    		mClipboard = new OpenClipboard(this);
+    	return mClipboard;
 	}
 	
 	public void addHoldingFile(OpenPath path) { 
@@ -3224,11 +3228,10 @@ public class OpenExplorer
 		//invalidateOptionsMenu();
 		if(mActionMode != null)
 			mActionMode.setTitle(getString(R.string.s_menu_multi) + ": " + mLastClipSize + " " + getString(R.string.s_files));
-		/*
+
 		ContentFragment cf = getDirContentFragment(false);
 		if(cf != null && cf.isAdded() && cf.isVisible())
 			cf.notifyDataSetChanged();
-		*/
 	}
 
 	@Override

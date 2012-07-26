@@ -38,7 +38,6 @@ public class OpenApplication extends Application implements OpenApp
     private DownloadCache mDownloadCache;
     private LruCache<String, Bitmap> mBitmapCache;
     private DiskLruCache mBitmapDiskCache;
-    private OpenClipboard mClipboard;
     private ShellSession mShell;
     private ActionMode mActionMode;
     private GoogleAnalyticsTracker mTracker;
@@ -101,9 +100,7 @@ public class OpenApplication extends Application implements OpenApp
     }
     public synchronized OpenClipboard getClipboard()
     {
-    	if(mClipboard == null)
-    		mClipboard = new OpenClipboard(this);
-    	return mClipboard;
+    	return null; // Override in Activity
     }
     
     public synchronized ShellSession getShellSession() {
