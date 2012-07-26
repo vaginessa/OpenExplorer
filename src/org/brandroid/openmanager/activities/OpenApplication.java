@@ -46,6 +46,7 @@ public class OpenApplication extends Application implements OpenApp
     @Override
     public void onCreate() {
     	super.onCreate();
+    	setTheme(R.style.AppTheme_Dark);
     	//Logger.LogDebug("OpenApplication.onCreate");
     	//mTracker = GoogleAnalyticsTracker.getInstance();
         //GalleryUtils.initialize(this);

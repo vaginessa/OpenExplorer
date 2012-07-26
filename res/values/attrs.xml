@@ -50,6 +50,7 @@
         <attr name="checkboxButtonOff" format="reference" />
         
         <attr name="popupBackground" format="reference" />
+        <attr name="popupArrow" format="reference" />
         
         <!-- Colors -->
         <attr name="colorWhite" format="color" />

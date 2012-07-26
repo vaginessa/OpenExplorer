@@ -43,6 +43,7 @@
         <item name="checkboxButtonOff">@drawable/btn_check_off_holo_dark</item>
         
         <item name="popupBackground">@drawable/contextmenu_square</item>
+        <item name="popupArrow">@drawable/contextmenu_arrow</item>
         
         <!-- Colors -->
         <item name="colorWhite">@color/white</item>
@@ -93,7 +94,8 @@
         <item name="checkboxButtonOn">@drawable/btn_check_on_holo_light</item>
         <item name="checkboxButtonOff">@drawable/btn_check_off_holo_light</item>
         
-        <item name="popupBackground">@color/gray</item>
+        <item name="popupBackground">@drawable/contextmenu_square_gray</item>
+        <item name="popupArrow">@drawable/contextmenu_arrow_gray</item>
         
         <!-- Colors -->
         <item name="colorWhite">@color/black</item>

@@ -332,7 +332,7 @@ public class OpenExplorer
 			
 			final String ga = gaCode;
 			final PackageInfo pi2 = pi;
-			final Context atc = getContext();
+			final Context atc = getApplicationContext();
 			
 			queueToTracker(new Runnable(){public void run(){
 				getAnalyticsTracker().startNewSession(ga, atc);
@@ -537,8 +537,8 @@ public class OpenExplorer
 		
 		//handleMediaReceiver();
 
-		if(!getPreferences().getBoolean("global", "pref_splash", false))
-			showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
+		//if(!getPreferences().getBoolean("global", "pref_splash", false))
+		//	showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
 	}
 	
 	private void checkWelcome()	{
@@ -2450,6 +2450,16 @@ public class OpenExplorer
 		//startActivity(new Intent(this, Authenticator.class));
 		DEBUG_TOGGLE = !DEBUG_TOGGLE;
 		notifyPager();
+		queueToTracker(new Runnable() {
+			public void run() {
+				final boolean d = getAnalyticsTracker().dispatch();
+				runOnUiThread(new Runnable() {
+					public void run() {
+						showToast(d ? "Dispatch worked!" : "Dispatch failed!");
+					}
+				});
+			}
+		});
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }

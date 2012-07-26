@@ -47,6 +47,7 @@
 
 	<application android:icon="@drawable/icon_flat" android:label="@string/app_name"
 	    android:name=".activities.OpenApplication"
+	    android:theme="@style/AppTheme.Dark"
 	    android:uiOptions="splitActionBarWhenNarrow">
 
 		<activity android:name=".activities.OpenExplorer"
