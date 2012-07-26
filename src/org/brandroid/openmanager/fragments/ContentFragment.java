@@ -471,8 +471,19 @@ public class ContentFragment extends OpenFragment
 		
 		SortType sort = SortType.ALPHA;
 		if(getExplorer() != null)
-			sort = new SortType(getViewSetting(path, "sort", 
-					getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString())));
+		{
+			String ds = getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString());
+			Logger.LogVerbose("Default Sort String: " + ds);
+			
+			SortType defSort = new SortType(ds);
+			defSort.setFoldersFirst(getExplorer().getSetting(null, "pref_sorting_folders", true));
+			
+			Logger.LogVerbose("Default Sort: " + defSort.toString());
+			
+			sort = new SortType(getViewSetting(path, "sort", defSort.toString()));
+			
+			Logger.LogVerbose("Path Sort: " + sort.toString());
+		}
 		try {
 			mContentAdapter.mShowThumbnails = getViewSetting(path, "thumbs", 
 						getExplorer() != null ?
@@ -1292,8 +1303,21 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
 		MenuUtils.setMenuVisible(menu, !(mPath instanceof OpenNetworkPath), R.id.menu_context_edit, R.id.menu_context_view);
 		
-		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(),
-				R.id.menu_sort_folders_first);
+		MenuItem mMenuFF = menu.findItem(R.id.menu_sort_folders_first);
+		if(mMenuFF != null)
+		{
+			if(mMenuFF.isCheckable())
+			{
+				mMenuFF.setChecked(getSorting().foldersFirst());
+			} else {
+				if(getSorting().foldersFirst())
+					mMenuFF.setIcon(getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_blue));
+				else
+					mMenuFF.setIcon(getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off));
+			}
+		}
+		//MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(),
+		//		R.id.menu_sort_folders_first);
 		
 		if(mPath != null)
 			MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(),

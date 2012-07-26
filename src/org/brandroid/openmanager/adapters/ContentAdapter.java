@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -67,6 +68,7 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowDetails = true;
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
+	private long mLastUpdate = 0l;
 	
 	private int checkboxOnId = -1;
 	private int checkboxOffId = -1;
@@ -128,6 +130,13 @@ public class ContentAdapter extends BaseAdapter {
 	public void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
+		long time = new Date().getTime();
+		if(time - mLastUpdate < 500)
+		{
+			Logger.LogWarning("Too many updates!");
+			return;
+		} else Logger.LogDebug("Update interval: " + (time - mLastUpdate));
+		mLastUpdate = time;
 		if(items == null) {
 			Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
 			super.notifyDataSetChanged();

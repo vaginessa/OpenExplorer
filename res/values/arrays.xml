@@ -12,11 +12,11 @@
 	</string-array>
 	<string-array name="sorting_value">
 		<item>none</item>
-		<item>alpha_asc</item>
+		<item>alpha</item>
 		<item>alpha_desc</item>
-		<item>date_asc</item>
+		<item>date</item>
 		<item>date_desc</item>
-		<item>size_asc</item>
+		<item>size</item>
 		<item>size_desc</item>
 		<item>type</item>
 	</string-array>

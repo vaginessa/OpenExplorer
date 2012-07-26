@@ -96,6 +96,11 @@
 			android:entries="@array/sorting"
 			android:entryValues="@array/sorting_value"
 			android:dialogTitle="@string/s_pref_sort" />
+	    <CheckBoxPreference
+	        android:key="pref_sorting_folders"
+	        android:title="@string/s_menu_sort_folders"
+	        android:defaultValue="true" 
+	        />
 			
 	</PreferenceCategory>
 	
