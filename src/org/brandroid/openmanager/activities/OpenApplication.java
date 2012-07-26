@@ -77,6 +77,8 @@ public class OpenApplication extends Application implements OpenApp
     	TypedArray ta = c.getTheme().obtainStyledAttributes(R.styleable.AppTheme);
     	mThemedAssets.put(R.styleable.AppTheme_checkboxButtonOff, ta.getResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_dark));
     	mThemedAssets.put(R.styleable.AppTheme_checkboxButtonOn, ta.getResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_dark));
+    	mThemedAssets.put(R.styleable.AppTheme_actionIconClipboard, ta.getResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard));
+    	mThemedAssets.put(R.styleable.AppTheme_colorBlack, ta.getResourceId(R.styleable.AppTheme_colorBlack, R.color.black));
     	ta.recycle();
     }
     

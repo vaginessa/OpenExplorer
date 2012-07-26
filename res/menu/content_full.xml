@@ -123,7 +123,7 @@
 		        android:title="@android:string/selectAll"
 				android:alphabeticShortcut="a"
 		        android:showAsAction="ifRoom"
-		        android:icon="@drawable/ic_menu_selectall_holo_dark" />
+		        android:icon="?attr/actionIconSelectAll" />
 			<item
 			    android:id="@+id/content_paste"
 			    android:title="@android:string/paste"

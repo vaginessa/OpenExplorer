@@ -3219,11 +3219,17 @@ public class OpenExplorer
 		if(mStaticButtons != null)
 			pb = mStaticButtons.findViewById(R.id.title_paste);
 		mLastClipSize = getClipboard().size();
+		TextView pbt = (TextView)pb.findViewById(R.id.title_paste_text);
 		ViewUtils.setViewsVisible(pb, mLastClipSize > 0 || mLastClipState);
-		ViewUtils.setText(pb, "" + mLastClipSize, R.id.title_paste_text);
-		ViewUtils.setImageResource(pb, mLastClipState ?
-					R.drawable.ic_menu_paste_multi : R.drawable.ic_menu_clipboard,
-					R.id.title_paste_icon);
+		//ViewUtils.setText(pb, "" + mLastClipSize, R.id.title_paste_text);
+		if(pbt != null)
+		{
+			pbt.setText(""+mLastClipSize);
+			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_colorBlack, R.color.white)));
+		}
+		ViewUtils.setImageResource(pb,
+			getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard),
+			R.id.title_paste_icon);
 		checkTitleSeparator();
 		//invalidateOptionsMenu();
 

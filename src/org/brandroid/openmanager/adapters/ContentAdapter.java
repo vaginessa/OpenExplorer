@@ -68,8 +68,9 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
 	
-	private static int checkboxOnId = -1;
-	private static int checkboxOffId = -1;
+	private int checkboxOnId = -1;
+	private int checkboxOffId = -1;
+	private int clipboardId = -1;
 	
 	/**
 	 * Set of seleced message IDs.
@@ -103,6 +104,7 @@ public class ContentAdapter extends BaseAdapter {
 	public void fetchThemedAttributes() {
 		checkboxOnId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_light);
 		checkboxOffId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_light);
+		clipboardId = mApp.getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard_light);
 	}
 	
 	public interface CheckClipboardListener

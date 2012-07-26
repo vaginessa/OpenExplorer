@@ -44,7 +44,7 @@
     
     <LinearLayout
         android:layout_marginTop="@dimen/context_top_fix"
-        android:background="@drawable/contextmenu_square"
+    	android:background="?attr/popupBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
