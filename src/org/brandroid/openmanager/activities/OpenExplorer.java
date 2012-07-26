@@ -456,7 +456,7 @@ public class OpenExplorer
 
 		checkWelcome();
 		
-		//checkRoot();
+		checkRoot();
 		
 		setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
 		setOnClicks(
@@ -574,9 +574,9 @@ public class OpenExplorer
 	}
 	
 	private void requestRoot() {
-		//new Thread(new Runnable(){public void run(){
+		new Thread(new Runnable(){public void run(){
 			RootManager.Default.requestRoot();
-		//}}).start();
+		}}).start();
 	}
 	
 	private void exitRoot() {
