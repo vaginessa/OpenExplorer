@@ -2033,7 +2033,8 @@ public class ContentFragment extends OpenFragment
 		if(mGrid != null && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
 			mGrid.setAdapter(mContentAdapter);
 		
-		mContentAdapter.updateData();
+		if(mContentAdapter != null)
+			mContentAdapter.updateData();
 		
 		ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
 		ViewUtils.setViewsVisible(getView(), mContentAdapter == null || mContentAdapter.getCount() == 0, android.R.id.empty);
