@@ -68,7 +68,6 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowDetails = true;
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
-	private long mLastUpdate = 0l;
 	
 	private int checkboxOnId = -1;
 	private int checkboxOffId = -1;
@@ -131,12 +130,6 @@ public class ContentAdapter extends BaseAdapter {
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
 		long time = new Date().getTime();
-		if(time - mLastUpdate < 500)
-		{
-			Logger.LogWarning("Too many updates!");
-			return;
-		} else Logger.LogDebug("Update interval: " + (time - mLastUpdate));
-		mLastUpdate = time;
 		if(items == null) {
 			Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
 			super.notifyDataSetChanged();
