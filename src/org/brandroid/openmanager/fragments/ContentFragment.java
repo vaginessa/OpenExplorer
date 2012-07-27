@@ -763,15 +763,15 @@ public class ContentFragment extends OpenFragment
 			if(file.requiresThread() && FileManager.hasOpenCache(file.getAbsolutePath()))
 			{
 				//getExplorer().showToast("Still need to handle this.");
-				if(file.isTextFile())
-					getExplorer().editFile(file);
+				if(file.isTextFile() && getExplorer().editFile(file))
+					return;
 				else {
 					showCopyFromNetworkDialog(file);
 					//getEventHandler().copyFile(file, mPath, mContext);
 				}
 				return;
-			} else if(file.isTextFile() && Preferences.Pref_Text_Internal)
-				getExplorer().editFile(file);
+			} else if(file.isTextFile() && Preferences.Pref_Text_Internal && getExplorer().editFile(file))
+				return;
 			else if(!IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal))
 				getExplorer().editFile(file);
 		}
