@@ -2221,11 +2221,6 @@ public class OpenExplorer
 						!getPreferences().getSetting("global", "pref_fullscreen", false));
 				goHome();
 				return true;
-	
-			case R.id.menu_view_split:
-				setSetting("pref_basebar", !USE_SPLIT_ACTION_BAR);
-				goHome();
-				return true;
 				
 			case R.id.title_ops:
 				refreshOperations();
