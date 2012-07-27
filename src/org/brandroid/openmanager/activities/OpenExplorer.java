@@ -316,6 +316,7 @@ public class OpenExplorer
 		Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
 		Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
 		Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
+		Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
 
 		PackageInfo pi = null;
 		try {
@@ -1970,7 +1971,7 @@ public class OpenExplorer
 	{
 		if(path == null) return false;
 		if(!path.exists()) return false;
-		if(path.length() > getResources().getInteger(R.integer.max_text_editor_size)) return false;
+		if(path.length() > Preferences.Pref_Text_Max_Size) return false;
 		TextEditorFragment editor = new TextEditorFragment(path);
 		if(mViewPagerAdapter != null)
 		{

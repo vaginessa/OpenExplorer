@@ -94,6 +94,12 @@
 	        android:title="@string/s_menu_view_line_numbers"
 	        android:defaultValue="true" 
 	        />
+	    <ListPreference
+	        android:key="text_max"
+	        android:title="@string/s_pref_text_max_size"
+	        android:entries="@array/text_max_size"
+	        android:entryValues="@array/text_max_size_values"
+	        />
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/s_pref_view_category">

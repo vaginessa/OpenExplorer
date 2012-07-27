@@ -114,4 +114,19 @@
 	    <item>sv</item>
 	    <item>tr</item>
 	</string-array>
+	
+	<string-array name="text_max_size">
+	    <item>50kb</item>
+	    <item>500kb</item>
+	    <item>5mb</item>
+	    <item>20mb</item>
+	    <item>2gb</item>
+	</string-array>
+	<string-array name="text_max_size_values">
+	    <item>50000</item>
+	    <item>500000</item>
+	    <item>5000000</item>
+	    <item>20000000</item>
+	    <item>2000000000</item>
+	</string-array>
 </resources>
