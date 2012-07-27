@@ -16,6 +16,7 @@
 	    android:layout_marginRight="5dp"
 	    android:longClickable="true"
 	    android:clickable="true"
+	    android:focusable="true"
 	    android:gravity="center_horizontal"
 	    >
 	    <ImageView
