@@ -67,6 +67,7 @@ public class Preferences {
 	}
 	public static SharedPreferences getPreferences(String file)
 	{
+		if(file == null) file = "global";
 		return getPreferences(mContext, file);
 	}
 	

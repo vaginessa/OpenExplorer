@@ -52,30 +52,9 @@
 		    android:defaultValue="false"
 		    />
 		<CheckBoxPreference
-		    android:key="pref_pagers"
-		    android:title="@string/s_pref_pagers" 
-		    android:summaryOn="@string/s_pref_pagers_summary_on"
-		    android:summaryOff="@string/s_pref_pagers_summary_off"
-		    android:defaultValue="true"
-		    android:enabled="false"
-		    />
-		<CheckBoxPreference
-		    android:key="pref_basebar"
-		    android:title="@string/s_pref_basebar"
-		    android:summaryOn="@string/s_pref_basebar_on"
-		    android:summaryOff="@string/s_pref_basebar_off"
-		    android:defaultValue="true"
-		    android:enabled="@bool/prehoneycomb"
-		    />
-		<CheckBoxPreference
 		    android:key="pref_showup"
 		    android:title="@string/s_pref_showup"
 		    android:defaultValue="false" />
-		<CheckBoxPreference
-		    android:key="pref_logview"
-		    android:title="@string/s_pref_logview"
-		    android:defaultValue="true" 
-		    />
 		<Preference
 		    android:key="pref_translate"
 		    android:title="@string/button_translate"
@@ -102,14 +81,6 @@
 	        android:defaultValue="true" 
 	        />
 			
-	</PreferenceCategory>
-	
-	<PreferenceCategory android:title="@string/s_pref_fancy_category">
-	    <CheckBoxPreference
-	        android:key="pref_fancy_context"
-	        android:title="@string/s_pref_fancy_context"
-	        android:defaultValue="true"
-	        />
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/s_text_editor_title">
