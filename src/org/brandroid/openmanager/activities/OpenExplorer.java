@@ -1004,8 +1004,10 @@ public class OpenExplorer
 	{
 		if(mLogFragment == null)
 			mLogFragment = new LogViewerFragment();
+		/*
 		if(findViewById(R.id.frag_log) != null)
 			return;
+		*/
 		View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar);
 		mLogFragment.setupPopup(this, anchor);
 	}
@@ -1015,9 +1017,9 @@ public class OpenExplorer
 		if(mOpsFragment == null)
 		{
 			mOpsFragment = new OperationsFragment();
-		View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar);
-		mOpsFragment.setupPopup(this, anchor);
-	}
+			View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar);
+			mOpsFragment.setupPopup(this, anchor);
+		}
 	}
 	
 	private void initPager() {
@@ -2396,7 +2398,7 @@ public class OpenExplorer
 			showLogFrag(mLogFragment, true);
 			break;
 		case R.id.title_ops:
-			showLogFrag(mOpsFragment, true);
+			mOpsFragment.getPopup().showLikePopDownMenu();
 			break;
 		}
 		
