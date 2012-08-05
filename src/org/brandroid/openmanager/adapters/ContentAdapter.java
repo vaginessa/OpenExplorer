@@ -134,7 +134,7 @@ public class ContentAdapter extends BaseAdapter {
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
 		if(items == null) {
-			Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
+			//Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
 			super.notifyDataSetChanged();
 			return;
 		}
