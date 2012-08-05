@@ -147,7 +147,7 @@
     <string name="s_menu_copy_all">Copy Here</string>
     <string name="s_confirm_delete">Are you sure that you want to delete %s?</string>
     <string name="s_error_same_destination">The destination directory is the same.</string>
-    <string name="s_sample_notification">Copying -> sdcard: \n 3 Files</string>
+    <string name="s_sample_notification">Copying -> sdcard</string>
     <string name="s_pref_fullscreen">Full Screen</string>
     <string name="s_pref_fullscreen_summary_on">Hide Notification Bar</string>
     <string name="s_pref_fullscreen_summary_off">Show Notification Bar</string>
@@ -243,7 +243,7 @@
     <string name="alert_translate_google">Hello, this translation is provided by Google Translate. If you know English as well as %s, and would like to assist in providing a better translation, please click on this button:</string>
     <string name="alert_translate_none">Hello, it appears that you are using a non-supported language. Do you know English and %s? If you would you like to assist in providing a correct translation, click here:</string>
     <string name="button_translate">Translate</string>
-    <string name="s_status_remaining">Remaining:</string>
+    <string name="s_status_remaining">Time:</string>
     <string name="s_pref_logview">Network Log</string>
     <string name="s_alert_dirty" formatted="false">The contents of %s have changed. Would you like to save?</string>
     <string name="s_menu_sort_folders">Folders First</string>
@@ -307,6 +307,7 @@
     <string name="filename">Filename</string>
     <string name="s_msg_saved">saved</string>
     <string name="s_menu_view_line_numbers">Line Numbers</string>
+    <string name="s_pref_text_max_size">Maximum Editable Text Filesize</string>
     <string name="warn_text_editor">Welcome to Text Editor. Please long press the text to enter Edit mode.</string>
     <string name="warn_networking">Welcome to Networking. Please note that this feature is still under development and may contain bugs. Please do not give a bad market rating if you find any of these bugs.</string>
     <string name="s_menu_new_file">New Text File</string>

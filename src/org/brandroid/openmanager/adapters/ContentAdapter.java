@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -68,8 +69,9 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
 	
-	private static int checkboxOnId = -1;
-	private static int checkboxOffId = -1;
+	private int checkboxOnId = -1;
+	private int checkboxOffId = -1;
+	private int clipboardId = -1;
 	
 	/**
 	 * Set of seleced message IDs.
@@ -101,15 +103,9 @@ public class ContentAdapter extends BaseAdapter {
 	}
 	
 	public void fetchThemedAttributes() {
-		if(checkboxOffId == -1)
-		{
-			TypedArray themedAttributes = getContext().getTheme().obtainStyledAttributes(R.styleable.AppTheme);
-			checkboxOnId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOn,
-					R.drawable.btn_check_on_holo_light);
-			checkboxOffId = themedAttributes.getResourceId(R.styleable.AppTheme_checkboxButtonOff,
-					R.drawable.btn_check_off_holo_light);
-			themedAttributes.recycle();
-		}
+		checkboxOnId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_light);
+		checkboxOffId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_light);
+		clipboardId = mApp.getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard_light);
 	}
 	
 	public interface CheckClipboardListener
@@ -133,6 +129,7 @@ public class ContentAdapter extends BaseAdapter {
 	public void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
+		long time = new Date().getTime();
 		if(items == null) {
 			//Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
 			super.notifyDataSetChanged();
@@ -428,7 +425,7 @@ public class ContentAdapter extends BaseAdapter {
 	
 	public void toggleSelected(OpenPath path) {
 		updateSelected(path, !isSelected(path));
-	}
+		}
 
 	/**
 	 * This is used as a callback from the list items, to set the selected state

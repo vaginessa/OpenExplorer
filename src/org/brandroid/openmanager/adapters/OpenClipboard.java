@@ -70,7 +70,7 @@ public class OpenClipboard
 	@SuppressWarnings("deprecation")
 	private void onClipboardUpdate()
 	{
-		//super.notifyDataSetChanged();
+		super.notifyDataSetChanged();
 		if(listener != null)
 			listener.onClipboardUpdate();
 		ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
