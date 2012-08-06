@@ -1232,7 +1232,7 @@ public class OpenExplorer
 	{
 		String lang = DialogHandler.getLangCode();
 		if(lang.equals("EN")) return 0;
-		return ",ES,FR,KO,HE,DE,RU,".indexOf(","+DialogHandler.getLangCode()+",") == -1 ? 2 : 1;
+		return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf(","+DialogHandler.getLangCode()+",") == -1 ? 2 : 1;
 	}
 	
 	public static void showSplashIntent(Context context, String start)
