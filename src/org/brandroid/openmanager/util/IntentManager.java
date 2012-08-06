@@ -59,7 +59,10 @@ public class IntentManager
 		//ret.set
 		
 		String mimeType = OpenExplorer.getMimeTypes(activity).getMimeType(name);
-		ret.setDataAndType(file.getUri(), mimeType);
+		
+		if(!mimeType.equals("*/*"))
+			ret.setDataAndType(file.getUri(), mimeType);
+		else ret.setData(file.getUri());
     	
 		PackageManager pm = activity.getPackageManager();
 		List<ResolveInfo> lApps = pm.queryIntentActivities(ret, 0);
@@ -87,6 +90,15 @@ public class IntentManager
 			final Intent intent = getIntent(file, activity);
 			Logger.LogDebug("Chooser Intent: " + intent.toString());
 			final List<ResolveInfo> mResolves = activity.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+			final ArrayList<String> mNames = new ArrayList<String>();
+			for(int i = mResolves.size() - 1; i >= 0; i--)
+			{
+				ResolveInfo ri = mResolves.get(i);
+				if(ri.activityInfo != null && ri.activityInfo.applicationInfo != null && !mNames.contains(ri.activityInfo.applicationInfo.className))
+					mNames.add(ri.activityInfo.applicationInfo.className);
+				else
+					mResolves.remove(i);
+			}
 			if(mResolves.size() == 1)
 			{
 				ResolveInfo item = mResolves.get(0);
