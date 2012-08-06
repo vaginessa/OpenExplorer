@@ -2061,15 +2061,17 @@ public class ContentFragment extends OpenFragment
 		if(mGrid != null && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
 			mGrid.setAdapter(mContentAdapter);
 		
-		if(mContentAdapter != null)
-			mContentAdapter.updateData();
+		//if(mContentAdapter != null)
+		//	mContentAdapter.updateData();
+		mContentAdapter.notifyDataSetChanged();
 		
-		if(getResources() != null)
+		boolean empty = mContentAdapter == null || mContentAdapter.getCount() == 0;
+		if(empty && getResources() != null)
 			ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
-		ViewUtils.setViewsVisible(getView(), mContentAdapter == null || mContentAdapter.getCount() == 0, android.R.id.empty);
+		ViewUtils.setViewsVisibleNow(getView(), empty, android.R.id.empty);
 		
 		//TODO check to see if this is the source of inefficiency
-		if(mGrid != null)
-			mGrid.invalidateViews();
+		//if(mGrid != null)
+		//	mGrid.invalidateViews();
 	}
 }
