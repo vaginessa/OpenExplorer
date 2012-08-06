@@ -243,6 +243,12 @@ public class OpenExplorer
 	public static int SCREEN_HEIGHT = -1;
 	public static int SCREEN_DPI = -1;
 	public static int VERSION = 160;
+	public static int COLUMN_WIDTH_GRID = 128;
+	public static int COLUMN_WIDTH_LIST = 300;
+	public static int IMAGE_SIZE_GRID = 36;
+	public static int IMAGE_SIZE_LIST = 128;
+	public static int TEXT_EDITOR_MAX_SIZE = 500000;
+	public static float DP_RATIO = 1;
 
 	public static SparseArray<MenuItem> mMenuShortcuts;
 	
@@ -361,11 +367,16 @@ public class OpenExplorer
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("OpenExplorer.onResume");
 		onClipboardUpdate();
 	}
 	
 	public void onCreate(Bundle savedInstanceState)
 	{
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("OpenExplorer.onCreate");
+		
 		Thread.setDefaultUncaughtExceptionHandler(new CustomExceptionHandler());
 		
 		if(getPreferences().getBoolean("global", "pref_fullscreen", false))
@@ -389,7 +400,18 @@ public class OpenExplorer
 		setTheme(theme);
 		getOpenApplication().loadThemedAssets(this);
 		
-		if(getPreferences().getBoolean("global", "pref_hardware_accel", true) && !BEFORE_HONEYCOMB)
+		Resources res = getResources();
+		if(res != null)
+		{
+			COLUMN_WIDTH_GRID = res.getDimensionPixelSize(R.dimen.grid_width);
+			COLUMN_WIDTH_LIST = res.getDimensionPixelSize(R.dimen.list_width);
+			DP_RATIO = res.getDimension(R.dimen.one_dp);
+			IMAGE_SIZE_GRID = res.getInteger(R.integer.content_grid_image_size);
+			IMAGE_SIZE_LIST = res.getInteger(R.integer.content_list_image_size);
+			TEXT_EDITOR_MAX_SIZE = res.getInteger(R.integer.max_text_editor_size);
+		}
+		
+		if(getPreferences().getBoolean("global", "pref_hardware_accel", false) && !BEFORE_HONEYCOMB)
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
 		USE_ACTION_BAR = true;
@@ -1113,17 +1135,13 @@ public class OpenExplorer
 	private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload)
 	{
 		if(adapter == null) adapter = mViewPager.getAdapter();
-		if(mViewPager != null)
+		if(mViewPager != null && getResources() != null)
 		{
 			try {
 				if(!adapter.equals(mViewPager.getAdapter()) || reload)
 					mViewPager.setAdapter(adapter);
-				else {
+				else
 					mViewPager.notifyDataSetChanged();
-					ContentFragment cf = getDirContentFragment(false);
-					if(cf != null)
-						cf.notifyDataSetChanged();
-				}
 				return true;
 			} catch(IndexOutOfBoundsException e) {
 				Logger.LogError("Why is this happening?", e);
@@ -1297,6 +1315,8 @@ public class OpenExplorer
 	@Override
 	public void onAttachedToWindow() {
 		super.onAttachedToWindow();
+		if(DEBUG && IS_DEBUG_BUILD)
+			Logger.LogVerbose("OpenExplorer.onAttachedToWindow");
 		handleNetworking();
 		handleMediaReceiver();
 		if(getWindowManager() != null)
@@ -1558,6 +1578,8 @@ public class OpenExplorer
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
+		if(DEBUG)
+			Logger.LogDebug("OpenExplorer.onPostCreate");
 		//mActionBarHelper.onPostCreate(savedInstanceState);
 		ensureCursorCache();
 		/*
@@ -3445,10 +3467,12 @@ public class OpenExplorer
 		else if(l.getId() == 3)
 			mParent = mApkParent;
 		mParent.setCursor(c);
+		/*
 		mBookmarks.refresh();
 		OpenFragment f = getSelectedFragment();
 		if(f instanceof ContentFragment && ((ContentFragment)f).getPath().equals(mParent))
 			((ContentFragment)f).refreshData(null, false);
+		*/
 	}
 
 	@Override

@@ -141,7 +141,6 @@ public class ContentFragment extends OpenFragment
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
 	private int mListScrollY = 0;
-	public static float DP_RATIO = 1;
 	public static int mGridImageSize = 128;
 	public static int mListImageSize = 36;
 	public Boolean mShowLongDate = false;
@@ -290,12 +289,13 @@ public class ContentFragment extends OpenFragment
 		*/
 		if(mGrid.getAdapter() == null || !mGrid.getAdapter().equals(adapter))
 			mGrid.setAdapter(adapter);
-		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
+		
+		mGrid.setColumnWidth(getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.COLUMN_WIDTH_GRID : OpenExplorer.COLUMN_WIDTH_LIST);
 		if(adapter != null && adapter.equals(mContentAdapter))
 		{
 			Logger.LogDebug("ContentFragment.setListAdapter updateData()");
 			mContentAdapter.updateData();
-			if(mContentAdapter.getCount() == 0)
+			if(mContentAdapter.getCount() == 0 && !isDetached())
 			{
 				ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
 				ViewUtils.setViewsVisible(getView(), true, android.R.id.empty);
@@ -328,9 +328,8 @@ public class ContentFragment extends OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
-		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
-		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
+		mGridImageSize = (int) (OpenExplorer.DP_RATIO * OpenExplorer.IMAGE_SIZE_GRID);
+		mListImageSize = (int) (OpenExplorer.DP_RATIO * OpenExplorer.IMAGE_SIZE_LIST);
 		if(savedInstanceState != null)
 			mBundle = savedInstanceState;
 			mBundle = getArguments();
@@ -422,6 +421,10 @@ public class ContentFragment extends OpenFragment
 		if(!isVisible()) {
 			Logger.LogDebug("I'm invisible! " + mPath);
 			//return;
+		}
+		if(isDetached()) {
+			Logger.LogDebug("I'm detached! " + mPath);
+			return;
 		}
 		
 		if(getContext() == null) {
@@ -1080,7 +1083,7 @@ public class ContentFragment extends OpenFragment
 				else {
 					if(getExplorer() != null)
 						getExplorer().showToast(R.string.s_error_no_intents);
-					if(file.length() < getResources().getInteger(R.integer.max_text_editor_size))
+					if(file.length() < OpenExplorer.TEXT_EDITOR_MAX_SIZE)
 						getExplorer().editFile(file);
 				}
 				break;
@@ -1100,7 +1103,7 @@ public class ContentFragment extends OpenFragment
 							getExplorer().showToast(R.string.s_error_no_intents);
 							getExplorer().editFile(file);
 						}
-				} else if(file.length() < getResources().getInteger(R.integer.max_text_editor_size)) {
+				} else if(file.length() < OpenExplorer.TEXT_EDITOR_MAX_SIZE) {
 					getExplorer().editFile(file);
 				} else {
 					getExplorer().showToast(R.string.s_error_no_intents);
@@ -1476,7 +1479,7 @@ public class ContentFragment extends OpenFragment
 		mGrid.setVisibility(View.VISIBLE);
 		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
-		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
+		mGrid.setColumnWidth(getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.COLUMN_WIDTH_GRID : OpenExplorer.COLUMN_WIDTH_LIST);
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
@@ -2033,7 +2036,8 @@ public class ContentFragment extends OpenFragment
 				// the selection.
 				deselectAll();
 			}
-			mGrid.invalidateViews();
+			if(mGrid != null)
+				mGrid.invalidateViews();
 		}
 	}
 
@@ -2060,7 +2064,8 @@ public class ContentFragment extends OpenFragment
 		if(mContentAdapter != null)
 			mContentAdapter.updateData();
 		
-		ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
+		if(getResources() != null)
+			ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
 		ViewUtils.setViewsVisible(getView(), mContentAdapter == null || mContentAdapter.getCount() == 0, android.R.id.empty);
 		
 		//TODO check to see if this is the source of inefficiency
