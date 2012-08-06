@@ -681,7 +681,8 @@ public abstract class OpenFragment
 	
 	@Override
 	public void queueToTracker(Runnable run) {
-		getExplorer().queueToTracker(run);
+		if(getExplorer() != null)
+			getExplorer().queueToTracker(run);
 	}
 
 	@Override

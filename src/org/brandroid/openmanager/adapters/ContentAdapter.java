@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -58,7 +59,7 @@ public class ContentAdapter extends BaseAdapter {
 	private final int GB = MG * KB;
 	
 	private final OpenPath mParent;
-	private final ArrayList<OpenPath> mData2 = new ArrayList();
+	private final ArrayList<OpenPath> mData2 = new ArrayList<OpenPath>();
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
 	private SortType mSorting = SortType.ALPHA;
@@ -68,8 +69,9 @@ public class ContentAdapter extends BaseAdapter {
 	private boolean mShowFiles = true;
 	private boolean mShowChecks = false;
 	
-	private static int checkboxOnId = -1;
-	private static int checkboxOffId = -1;
+	private int checkboxOnId = -1;
+	private int checkboxOffId = -1;
+	private int clipboardId = -1;
 	
 	/**
 	 * Set of seleced message IDs.
@@ -103,6 +105,7 @@ public class ContentAdapter extends BaseAdapter {
 	public void fetchThemedAttributes() {
 		checkboxOnId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_light);
 		checkboxOffId = mApp.getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_light);
+		clipboardId = mApp.getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard_light);
 	}
 	
 	public interface CheckClipboardListener
@@ -126,8 +129,9 @@ public class ContentAdapter extends BaseAdapter {
 	public void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
+		long time = new Date().getTime();
 		if(items == null) {
-			Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
+			//Logger.LogWarning("ContentAdapter.updateData warning: Items are null!");
 			super.notifyDataSetChanged();
 			return;
 		}
@@ -242,7 +246,7 @@ public class ContentAdapter extends BaseAdapter {
 		
 		if(mPlusParent && position == 0)
 		{
-			mNameView.setText(getResources().getString(R.string.s_menu_up));
+			mNameView.setText(R.string.s_menu_up);
 			mIcon.setImageResource(useLarge ? R.drawable.lg_folder_up : R.drawable.sm_folder_up);
 			if(mInfo != null) mInfo.setText("");
 			if(mPathView != null) mPathView.setText("");
@@ -250,9 +254,9 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		final String mName = file.getName();
 		
-		int mWidth = getResources().getInteger(getViewMode() == OpenExplorer.VIEW_GRID ?
-				R.integer.content_grid_image_size :
-				R.integer.content_list_image_size);
+		int mWidth = getViewMode() == OpenExplorer.VIEW_GRID ?
+				OpenExplorer.IMAGE_SIZE_GRID :
+				OpenExplorer.IMAGE_SIZE_LIST;
 		int mHeight = mWidth;
 		
 		boolean showLongDate = false;
@@ -291,10 +295,12 @@ public class ContentAdapter extends BaseAdapter {
 		if(mNameView != null)
 			mNameView.setText(mName);
 		
+		/*
 		if(file.isHidden())
 			ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);
 		else
 			ViewUtils.setAlpha(1.0f, mNameView, mPathView, mInfo);
+		*/
 						
 		//if(!mHolder.getTitle().equals(mName))
 		//	mHolder.setTitle(mName);
@@ -318,6 +324,7 @@ public class ContentAdapter extends BaseAdapter {
 				ThumbnailCreator.setThumbnail(mApp, mIcon, file, mWidth, mHeight,
 					new OnUpdateImageListener() {
 						public void updateImage(final Bitmap b) {
+							if(mIcon.getTag() == null || (mIcon.getTag() instanceof OpenPath && ((OpenPath)mIcon.getTag()).equals(file)))
 							//if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
 							{
 								Runnable doit = new Runnable(){public void run(){
@@ -330,7 +337,7 @@ public class ContentAdapter extends BaseAdapter {
 										mIcon.setImageBitmap(b);
 										//mIcon.setAlpha(255);
 									}
-									mIcon.setTag(file.getPath());
+									mIcon.setTag(file);
 								}};
 								if(!Thread.currentThread().equals(OpenExplorer.UiThread))
 									mIcon.post(doit);

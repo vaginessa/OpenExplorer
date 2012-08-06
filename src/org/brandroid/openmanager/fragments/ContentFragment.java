@@ -141,7 +141,6 @@ public class ContentFragment extends OpenFragment
 	private int mListVisibleStartIndex = 0;
 	private int mListVisibleLength = 0; 
 	private int mListScrollY = 0;
-	public static float DP_RATIO = 1;
 	public static int mGridImageSize = 128;
 	public static int mListImageSize = 36;
 	public Boolean mShowLongDate = false;
@@ -290,12 +289,13 @@ public class ContentFragment extends OpenFragment
 		*/
 		if(mGrid.getAdapter() == null || !mGrid.getAdapter().equals(adapter))
 			mGrid.setAdapter(adapter);
-		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
+		
+		mGrid.setColumnWidth(getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.COLUMN_WIDTH_GRID : OpenExplorer.COLUMN_WIDTH_LIST);
 		if(adapter != null && adapter.equals(mContentAdapter))
 		{
 			Logger.LogDebug("ContentFragment.setListAdapter updateData()");
 			mContentAdapter.updateData();
-			if(mContentAdapter.getCount() == 0)
+			if(mContentAdapter.getCount() == 0 && !isDetached())
 			{
 				ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
 				ViewUtils.setViewsVisible(getView(), true, android.R.id.empty);
@@ -328,9 +328,8 @@ public class ContentFragment extends OpenFragment
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		DP_RATIO = getResources().getDimension(R.dimen.one_dp);
-		mGridImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_grid_image_size));
-		mListImageSize = (int) (DP_RATIO * getResources().getInteger(R.integer.content_list_image_size));
+		mGridImageSize = (int) (OpenExplorer.DP_RATIO * OpenExplorer.IMAGE_SIZE_GRID);
+		mListImageSize = (int) (OpenExplorer.DP_RATIO * OpenExplorer.IMAGE_SIZE_LIST);
 		if(savedInstanceState != null)
 			mBundle = savedInstanceState;
 			mBundle = getArguments();
@@ -423,6 +422,10 @@ public class ContentFragment extends OpenFragment
 			Logger.LogDebug("I'm invisible! " + mPath);
 			//return;
 		}
+		if(isDetached()) {
+			Logger.LogDebug("I'm detached! " + mPath);
+			return;
+		}
 		
 		if(getContext() == null) {
 			Logger.LogError("RefreshData out of context");
@@ -471,8 +474,19 @@ public class ContentFragment extends OpenFragment
 		
 		SortType sort = SortType.ALPHA;
 		if(getExplorer() != null)
-			sort = new SortType(getViewSetting(path, "sort", 
-					getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString())));
+		{
+			String ds = getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString());
+			Logger.LogVerbose("Default Sort String: " + ds);
+			
+			SortType defSort = new SortType(ds);
+			defSort.setFoldersFirst(getExplorer().getSetting(null, "pref_sorting_folders", true));
+			
+			Logger.LogVerbose("Default Sort: " + defSort.toString());
+			
+			sort = new SortType(getViewSetting(path, "sort", defSort.toString()));
+			
+			Logger.LogVerbose("Path Sort: " + sort.toString());
+		}
 		try {
 			mContentAdapter.mShowThumbnails = getViewSetting(path, "thumbs", 
 						getExplorer() != null ?
@@ -730,7 +744,7 @@ public class ContentFragment extends OpenFragment
 		
 		if(file instanceof OpenNetworkPath && getActionMode() == null)
 		{
-			if(file.isTextFile() && file.length() < 500000 && getExplorer() != null)
+			if(file.isTextFile() && file.length() < Preferences.Pref_Text_Max_Size && getExplorer() != null)
 				getExplorer().editFile(file);
 			else
 				downloadFile((OpenNetworkPath)file);
@@ -752,15 +766,15 @@ public class ContentFragment extends OpenFragment
 			if(file.requiresThread() && FileManager.hasOpenCache(file.getAbsolutePath()))
 			{
 				//getExplorer().showToast("Still need to handle this.");
-				if(file.isTextFile())
-					getExplorer().editFile(file);
+				if(file.isTextFile() && getExplorer().editFile(file))
+					return;
 				else {
 					showCopyFromNetworkDialog(file);
 					//getEventHandler().copyFile(file, mPath, mContext);
 				}
 				return;
-			} else if(file.isTextFile() && Preferences.Pref_Text_Internal)
-				getExplorer().editFile(file);
+			} else if(file.isTextFile() && Preferences.Pref_Text_Internal && getExplorer().editFile(file))
+				return;
 			else if(!IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal))
 				getExplorer().editFile(file);
 		}
@@ -1069,7 +1083,7 @@ public class ContentFragment extends OpenFragment
 				else {
 					if(getExplorer() != null)
 						getExplorer().showToast(R.string.s_error_no_intents);
-					if(file.length() < getResources().getInteger(R.integer.max_text_editor_size))
+					if(file.length() < OpenExplorer.TEXT_EDITOR_MAX_SIZE)
 						getExplorer().editFile(file);
 				}
 				break;
@@ -1089,7 +1103,7 @@ public class ContentFragment extends OpenFragment
 							getExplorer().showToast(R.string.s_error_no_intents);
 							getExplorer().editFile(file);
 						}
-				} else if(file.length() < getResources().getInteger(R.integer.max_text_editor_size)) {
+				} else if(file.length() < OpenExplorer.TEXT_EDITOR_MAX_SIZE) {
 					getExplorer().editFile(file);
 				} else {
 					getExplorer().showToast(R.string.s_error_no_intents);
@@ -1292,8 +1306,21 @@ public class ContentFragment extends OpenFragment
 		MenuUtils.setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
 		MenuUtils.setMenuVisible(menu, !(mPath instanceof OpenNetworkPath), R.id.menu_context_edit, R.id.menu_context_view);
 		
-		MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(),
-				R.id.menu_sort_folders_first);
+		MenuItem mMenuFF = menu.findItem(R.id.menu_sort_folders_first);
+		if(mMenuFF != null)
+		{
+			if(mMenuFF.isCheckable())
+			{
+				mMenuFF.setChecked(getSorting().foldersFirst());
+			} else {
+				if(getSorting().foldersFirst())
+					mMenuFF.setIcon(getThemedResourceId(R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_blue));
+				else
+					mMenuFF.setIcon(getThemedResourceId(R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off));
+			}
+		}
+		//MenuUtils.setMenuChecked(menu, getSorting().foldersFirst(),
+		//		R.id.menu_sort_folders_first);
 		
 		if(mPath != null)
 			MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(),
@@ -1452,7 +1479,7 @@ public class ContentFragment extends OpenFragment
 		mGrid.setVisibility(View.VISIBLE);
 		mGrid.setOnItemClickListener(this);
 		mGrid.setOnItemLongClickListener(this);
-		mGrid.setColumnWidth(getResources().getDimensionPixelSize(getViewMode() == OpenExplorer.VIEW_GRID ? R.dimen.grid_width : R.dimen.list_width));
+		mGrid.setColumnWidth(getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.COLUMN_WIDTH_GRID : OpenExplorer.COLUMN_WIDTH_LIST);
 		mGrid.setOnScrollListener(new OnScrollListener() {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 				mListScrollingState = scrollState;
@@ -2009,7 +2036,8 @@ public class ContentFragment extends OpenFragment
 				// the selection.
 				deselectAll();
 			}
-			mGrid.invalidateViews();
+			if(mGrid != null)
+				mGrid.invalidateViews();
 		}
 	}
 
@@ -2033,13 +2061,17 @@ public class ContentFragment extends OpenFragment
 		if(mGrid != null && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
 			mGrid.setAdapter(mContentAdapter);
 		
-		mContentAdapter.updateData();
+		//if(mContentAdapter != null)
+		//	mContentAdapter.updateData();
+		mContentAdapter.notifyDataSetChanged();
 		
-		ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
-		ViewUtils.setViewsVisible(getView(), mContentAdapter == null || mContentAdapter.getCount() == 0, android.R.id.empty);
+		boolean empty = mContentAdapter == null || mContentAdapter.getCount() == 0;
+		if(empty && getResources() != null)
+			ViewUtils.setText(getView(), getResources().getString(mPath.requiresThread() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
+		ViewUtils.setViewsVisibleNow(getView(), empty, android.R.id.empty);
 		
 		//TODO check to see if this is the source of inefficiency
-		if(mGrid != null)
-			mGrid.invalidateViews();
+		//if(mGrid != null)
+		//	mGrid.invalidateViews();
 	}
 }
