@@ -40,7 +40,7 @@
 	<!-- Package types -->
 	<type extension=".jar" mimetype="application/java-archive" />
 	<type extension=".gzip" mimetype="application/gzip" />
-	<type extension=".7z" mimetype="application/7zip" />
+	<type extension=".7z" mimetype="application/x-7z-compressed" />
 	<type extension=".tar" mimetype="application/tar" />
 	<type extension=".zip" mimetype="application/zip" />
 	<type extension=".rar" mimetype="application/rar" />
