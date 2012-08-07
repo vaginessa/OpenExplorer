@@ -2,8 +2,8 @@ package org.brandroid.openmanager.util;
 
 import java.util.List;
 
-import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath;
 
 import android.app.AlertDialog;
@@ -15,9 +15,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
 
 public class OpenIntentChooser
 {
@@ -30,25 +27,27 @@ public class OpenIntentChooser
 		void onIntentSelected(ResolveInfo item);
 	}
 
-	public OpenIntentChooser(final Context activity, final OpenPath file)
+	public OpenIntentChooser(final OpenExplorer activity, final OpenPath file)
 	{
 		this(activity,IntentManager.getIntent(file, activity));
 	}
-	public OpenIntentChooser(final Context activity, final Intent intent)
+	public OpenIntentChooser(final OpenExplorer activity, final Intent intent)
 	{
 		mListResolves = activity.getPackageManager().queryIntentActivities(
 				intent,
 				PackageManager.MATCH_DEFAULT_ONLY);
-		setAdapter(activity, new OpenIntentAdapter(activity, mListResolves));
+		setAdapter(activity, new OpenIntentAdapter(mListResolves));
 	}
 	public OpenIntentChooser(final Context activity, List<ResolveInfo> mResolves)
 	{
 		mListResolves = mResolves;
-		setAdapter(activity, new OpenIntentAdapter(activity, mResolves));
+		setAdapter(activity, new OpenIntentAdapter(mResolves));
 	}
 	public OpenIntentChooser setAdapter(Context context, final OpenIntentAdapter adapter)
 	{
+		View v = LayoutInflater.from(context).inflate(R.layout.chooser_layout, null); 
 		mDialog = new AlertDialog.Builder(context)
+			.setView(v)
 			.setAdapter(adapter, 
 						new OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
@@ -56,7 +55,6 @@ public class OpenIntentChooser
 									mListener.onIntentSelected(mListResolves.get(which));
 							}
 						})
-			.setInverseBackgroundForced(true)
 			.create();
 		return this;
 	}

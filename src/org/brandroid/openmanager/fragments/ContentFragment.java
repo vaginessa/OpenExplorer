@@ -776,7 +776,10 @@ public class ContentFragment extends OpenFragment
 			} else if(file.isTextFile() && Preferences.Pref_Text_Internal && getExplorer().editFile(file))
 				return;
 			else if(!IntentManager.startIntent(file, getExplorer(), Preferences.Pref_Intents_Internal))
+			{
+				getExplorer().showToast(R.string.noApplications);
 				getExplorer().editFile(file);
+			}
 		}
 	}
 
@@ -1082,7 +1085,7 @@ public class ContentFragment extends OpenFragment
 					getActivity().startActivity(vintent);
 				else {
 					if(getExplorer() != null)
-						getExplorer().showToast(R.string.s_error_no_intents);
+						getExplorer().showToast(R.string.noApplications);
 					if(file.length() < OpenExplorer.TEXT_EDITOR_MAX_SIZE)
 						getExplorer().editFile(file);
 				}
@@ -1100,13 +1103,13 @@ public class ContentFragment extends OpenFragment
 							Logger.LogVerbose("Starting Intent: " + intent.toString());
 							getExplorer().startActivity(intent);
 						} catch(ActivityNotFoundException e) {
-							getExplorer().showToast(R.string.s_error_no_intents);
+							getExplorer().showToast(R.string.noApplications);
 							getExplorer().editFile(file);
 						}
 				} else if(file.length() < OpenExplorer.TEXT_EDITOR_MAX_SIZE) {
 					getExplorer().editFile(file);
 				} else {
-					getExplorer().showToast(R.string.s_error_no_intents);
+					getExplorer().showToast(R.string.noApplications);
 				}
 				break;
 
