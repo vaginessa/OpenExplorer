@@ -74,6 +74,23 @@ public class IntentManager
 		if(bInnerChooser)
 		{
 			final Intent intent = getIntent(file, app);
+			final String mime = file.getMimeType();
+			String cls = app.getPreferences().getSetting("mimes", mime, "");
+			if(cls.indexOf("$")>-1)
+			{
+				Logger.LogInfo("Found default for " + mime + ": " + cls);
+				String pck = cls.substring(0, cls.indexOf("$"));
+				cls = cls.substring(cls.indexOf("$")+1);
+				intent.setClassName(pck, cls);	
+				try {
+					if(pck.equals("org.brandroid.openmanager"))
+						app.editFile(file);
+					else
+						app.startActivity(intent);
+				} catch(Exception e) {
+					Logger.LogError("Unable to start default activity for " + mime, e);
+				}
+			}
 			Logger.LogDebug("Chooser Intent: " + intent.toString());
 			final List<ResolveInfo> mResolves = app.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 			final ArrayList<String> mNames = new ArrayList<String>();
@@ -116,7 +133,7 @@ public class IntentManager
 				new OpenIntentChooser(app, mResolves)
 					.setTitle(file.getName() + " (" + intent.getType() + ")")
 					.setOnIntentSelectedListener(new IntentSelectedListener() {
-						public void onIntentSelected(ResolveInfo item) {
+						public void onIntentSelected(ResolveInfo item, boolean defaultSelected) {
 							//app.showToast("Package? [" + item.activityInfo.packageName + " / " + item.activityInfo.targetActivity + "]");
 							PackageInfo packInfo = null;
 							try {
@@ -132,6 +149,9 @@ public class IntentManager
 								//Intent activityIntent = new Intent();
 								String cls = packInfo != null ? packInfo.packageName : item.activityInfo.packageName;
 								intent.setClassName(cls, item.activityInfo.name);
+								
+								if(defaultSelected)
+									app.getPreferences().setSetting("mimes", file.getMimeType(), cls + "$" + item.activityInfo.name);
 								
 								//intent.setData(file.getUri());
 								//intent.setType(file.ge)

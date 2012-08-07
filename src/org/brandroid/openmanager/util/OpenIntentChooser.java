@@ -15,16 +15,18 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 
-public class OpenIntentChooser
+public class OpenIntentChooser implements android.view.View.OnClickListener
 {
 	private AlertDialog mDialog;
 	private Object mTag;
 	private List<ResolveInfo> mListResolves;
 	private IntentSelectedListener mListener;
+	private boolean mDefaultSelected = true;
 
 	public interface IntentSelectedListener {
-		void onIntentSelected(ResolveInfo item);
+		void onIntentSelected(ResolveInfo item, boolean defaultSelected);
 	}
 
 	public OpenIntentChooser(final OpenExplorer activity, final OpenPath file)
@@ -45,14 +47,15 @@ public class OpenIntentChooser
 	}
 	public OpenIntentChooser setAdapter(Context context, final OpenIntentAdapter adapter)
 	{
-		View v = LayoutInflater.from(context).inflate(R.layout.chooser_layout, null); 
+		View v = LayoutInflater.from(context).inflate(R.layout.chooser_layout, null);
+		v.findViewById(R.id.chooser_default).setOnClickListener(this);
 		mDialog = new AlertDialog.Builder(context)
 			.setView(v)
 			.setAdapter(adapter, 
 						new OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
 								if(mListener != null)
-									mListener.onIntentSelected(mListResolves.get(which));
+									mListener.onIntentSelected(mListResolves.get(which), mDefaultSelected);
 							}
 						})
 			.create();
@@ -84,4 +87,13 @@ public class OpenIntentChooser
     	mDialog.setTitle(titleId);
         return this;
     }
+	@Override
+	public void onClick(View v) {
+		switch(v.getId())
+		{
+		case R.id.chooser_default:
+			mDefaultSelected = ((CheckBox)v).isChecked();
+			break;
+		}
+	}
 }
