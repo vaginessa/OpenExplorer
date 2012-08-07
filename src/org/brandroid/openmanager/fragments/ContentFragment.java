@@ -204,8 +204,9 @@ public class ContentFragment extends OpenFragment
 	{
 		ContentFragment ret = null;
 		if(fm != null)
-			ret = (ContentFragment) fm.findFragmentByTag(path.getPath());
-		else return ret;
+			try {
+				ret = (ContentFragment) fm.findFragmentByTag(path.getPath());
+			} catch(NullPointerException e) { }
 		if(ret == null)
 			ret = new ContentFragment(path, mode);
 		//if(path instanceof OpenFile) return ret;
