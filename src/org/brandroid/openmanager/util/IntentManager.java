@@ -65,6 +65,7 @@ public class IntentManager
 	public static boolean startIntent(OpenPath file, OpenExplorer app) { return startIntent(file, app, Preferences.Pref_Intents_Internal); } 
 	public static boolean startIntent(final OpenPath file, final OpenExplorer app, boolean bInnerChooser)
 	{
+		final PackageManager pm = app.getPackageManager();
 		if(!isIntentAvailable(file, app))
 		{
 			Logger.LogWarning("No matching intents!");
@@ -74,8 +75,11 @@ public class IntentManager
 		if(bInnerChooser)
 		{
 			final Intent intent = getIntent(file, app);
-			final String mime = file.getMimeType();
-			String cls = app.getPreferences().getSetting("mimes", mime, "");
+			String mime = file.getMimeType();
+			if(mime == null || mime.equals("*/*"))
+				mime = file.getExtension();
+			final String mext = mime;
+			String cls = app.getPreferences().getSetting("mimes", mext, "");
 			if(cls.indexOf("$")>-1)
 			{
 				Logger.LogInfo("Found default for " + mime + ": " + cls);
@@ -92,21 +96,24 @@ public class IntentManager
 				}
 			}
 			Logger.LogDebug("Chooser Intent: " + intent.toString());
-			final List<ResolveInfo> mResolves = app.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+			final List<ResolveInfo> mResolves = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 			final ArrayList<String> mNames = new ArrayList<String>();
 			for(int i = mResolves.size() - 1; i >= 0; i--)
 			{
 				ResolveInfo ri = mResolves.get(i);
-				if(ri.activityInfo != null && ri.activityInfo.applicationInfo != null && !mNames.contains(ri.activityInfo.applicationInfo.className))
-					mNames.add(ri.activityInfo.applicationInfo.className);
+				String name = pm.getApplicationLabel(ri.activityInfo.applicationInfo).toString(); //ri.activityInfo.applicationInfo.className
+				if(!mNames.contains(name))
+					mNames.add(name);
 				else
 					mResolves.remove(i);
 			}
 			Collections.sort(mResolves, new Comparator<ResolveInfo>() {
 				@Override
 				public int compare(ResolveInfo lhs, ResolveInfo rhs) {
-					String a = lhs.loadLabel(app.getPackageManager()).toString();
-					String b = rhs.loadLabel(app.getPackageManager()).toString();
+					String a = pm.getApplicationLabel(lhs.activityInfo.applicationInfo).toString();
+					String b = pm.getApplicationLabel(rhs.activityInfo.applicationInfo).toString();
+					//String a = lhs.loadLabel(pm).toString();
+					//String b = rhs.loadLabel(pm).toString();
 					return a.compareTo(b);
 				}
 			});
@@ -115,7 +122,7 @@ public class IntentManager
 				ResolveInfo item = mResolves.get(0);
 				PackageInfo packInfo = null;
 				try {
-					app.getPackageManager().getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
+					pm.getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
 					intent.setClassName(packInfo != null ? packInfo.packageName : item.activityInfo.packageName, item.activityInfo.name);
 					Logger.LogInfo("Starting Intent(1): " + intent.toString());
 					if(intent.toString().indexOf("nitrodesk") == -1)
@@ -131,13 +138,13 @@ public class IntentManager
 			}
 			if(mResolves.size() > 0) {
 				new OpenIntentChooser(app, mResolves)
-					.setTitle(file.getName() + " (" + intent.getType() + ")")
+					.setTitle(app.getResources().getString(R.string.whichApplication) + " (" + mext + "):")
 					.setOnIntentSelectedListener(new IntentSelectedListener() {
 						public void onIntentSelected(ResolveInfo item, boolean defaultSelected) {
 							//app.showToast("Package? [" + item.activityInfo.packageName + " / " + item.activityInfo.targetActivity + "]");
 							PackageInfo packInfo = null;
 							try {
-								packInfo = app.getPackageManager().getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
+								packInfo = pm.getPackageInfo(item.activityInfo.packageName, PackageManager.GET_INTENT_FILTERS);
 								if(packInfo != null && packInfo.activities != null)
 								{
 									for(ActivityInfo info : packInfo.activities)
@@ -147,15 +154,16 @@ public class IntentManager
 									Logger.LogDebug("Intent chosen: " + item.activityInfo.toString());
 								}
 								//Intent activityIntent = new Intent();
-								String cls = packInfo != null ? packInfo.packageName : item.activityInfo.packageName;
-								intent.setClassName(cls, item.activityInfo.name);
+								String pck = packInfo != null ? packInfo.packageName : item.activityInfo.packageName;
+								String cls = item.activityInfo.name;
+								intent.setClassName(pck, cls);
 								
 								if(defaultSelected)
-									app.getPreferences().setSetting("mimes", file.getMimeType(), cls + "$" + item.activityInfo.name);
+									app.getPreferences().setSetting("mimes", mext, pck + "$" + cls);
 								
 								//intent.setData(file.getUri());
 								//intent.setType(file.ge)
-								if(!cls.equals("org.brandroid.openmanager"))
+								if(!pck.equals("org.brandroid.openmanager"))
 									app.startActivity(intent);
 								else
 									app.editFile(file);
