@@ -380,4 +380,11 @@ public class ViewUtils {
 			if(v != null)
 				v.setEnabled(enabled);
 	}
+
+	public static void setEnabled(View parent, boolean enabled, int... ids)
+	{
+		for(int id : ids)
+			if(parent.findViewById(id) != null)
+				parent.findViewById(id).setEnabled(enabled);
+	}
 }

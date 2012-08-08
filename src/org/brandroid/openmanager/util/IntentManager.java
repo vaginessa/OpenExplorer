@@ -138,8 +138,12 @@ public class IntentManager
 			}
 			if(mResolves.size() > 0) {
 				new OpenIntentChooser(app, mResolves)
-					.setTitle(app.getResources().getString(R.string.whichApplication) + " (" + mext + "):")
+					.setTitle(app.getResources().getString(R.string.whichApplication) + " (" + file.getName() + "):")
 					.setOnIntentSelectedListener(new IntentSelectedListener() {
+						@Override
+						public void onUseSystemClicked() {
+							startIntent(file, app, false);
+						}
 						public void onIntentSelected(ResolveInfo item, boolean defaultSelected) {
 							//app.showToast("Package? [" + item.activityInfo.packageName + " / " + item.activityInfo.targetActivity + "]");
 							PackageInfo packInfo = null;
