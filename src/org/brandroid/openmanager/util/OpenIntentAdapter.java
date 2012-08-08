@@ -52,7 +52,7 @@ public class OpenIntentAdapter extends BaseAdapter
 
         View res = convertView;
         if (res == null) {
-        	res = LayoutInflater.from(c).inflate(R.layout.select_dialog_item, null);
+        	res = LayoutInflater.from(c).inflate(R.layout.chooser_item, null);
         }
         
         TextView tv = (TextView)res.findViewById(android.R.id.text1);
