@@ -343,7 +343,6 @@ public class OpenExplorer
 			
 			queueToTracker(new Runnable(){public void run(){
 				getAnalyticsTracker().startNewSession(ga, atc);
-				getAnalyticsTracker().setCustomVar(0, "version", (pi2 != null ? pi2.versionName : VERSION) + (IS_DEBUG_BUILD ? "-debug" : ""));
 			}});
 		}
 		
@@ -2653,7 +2652,8 @@ public class OpenExplorer
 		if(Build.VERSION.SDK_INT > 100)
 		{
 			FragmentTransaction ft = fragmentManager.beginTransaction();
-			ft.hide(fragmentManager.findFragmentById(R.id.content_frag));
+			OpenFragment frag = getSelectedFragment();
+			ft.hide(frag);
 			//ft.replace(R.id.content_frag, new PreferenceFragment(this, path));
 			ft.setBreadCrumbTitle("prefs://" + (path != null ? path.getPath() : ""));
 			ft.addToBackStack("prefs");
@@ -2670,7 +2670,8 @@ public class OpenExplorer
 				}
 			});
 			android.app.FragmentTransaction ft2 = getFragmentManager().beginTransaction();
-			ft2.replace(R.id.content_frag, pf2);
+			ft2.replace(R.id.content_pager_frame, pf2);
+			ft2.setBreadCrumbTitle("prefs");
 			ft2.addToBackStack("prefs");
 			ft2.commit();
 		} else {
@@ -3581,7 +3582,9 @@ public class OpenExplorer
 	
 	@Override
 	public GoogleAnalyticsTracker getAnalyticsTracker() {
-		return getOpenApplication().getAnalyticsTracker();
+		if(getOpenApplication() != null)
+			return getOpenApplication().getAnalyticsTracker();
+		else return null;
 	}
 	
 	@Override
