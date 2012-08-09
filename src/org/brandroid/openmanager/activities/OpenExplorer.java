@@ -264,6 +264,7 @@ public class OpenExplorer
 	private static boolean mRunningCursorEnsure = false;
 	private Boolean mSinglePane = false;
 	private Boolean mStateReady = true;
+	private Boolean mTwoRowTitle = false;
 	private String mLastMenuClass = "";
 	private long lastInvalidate = 0l;
 	private int mLastClipSize = -1;
@@ -414,13 +415,21 @@ public class OpenExplorer
 			getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
 
 		USE_ACTION_BAR = true;
-
+		
 		mBar = getSupportActionBar();
+		
+		if(findViewById(R.id.content_pager_indicator_frame) != null)
+		{
+			mTwoRowTitle = true;
+			setTitle(R.string.app_name);
+		}
+		
 		if(mBar != null)
 		{
 			if(Build.VERSION.SDK_INT >= 14)
 				mBar.setHomeButtonEnabled(true);
 			mBar.setDisplayUseLogoEnabled(true);
+			//if(!mTwoRowTitle)
 			try {
 				//mBar.setDisplayOptions(ActionBar.NAVIGATION_MODE_TABS);
 				mBar.setCustomView(R.layout.title_bar);
@@ -433,6 +442,8 @@ public class OpenExplorer
 			} catch(InflateException e) {
 				Logger.LogWarning("Couldn't set up ActionBar custom view", e);
 			}
+			if(mTwoRowTitle)
+				setTitle(R.string.app_name);
 		} else USE_ACTION_BAR = false;
 		
 		OpenFile.setTempFileRoot(new OpenFile(getFilesDir()).getChild("temp"));
@@ -561,6 +572,28 @@ public class OpenExplorer
 
 		//if(!getPreferences().getBoolean("global", "pref_splash", false))
 		//	showSplashIntent(this, getPreferences().getString("global", "pref_start", "Internal"));
+	}
+	
+	@Override
+	public void setTitle(int titleId) {
+		setTitle(getText(titleId));
+	}
+	
+	@Override
+	public void setTitle(CharSequence title)
+	{
+		TextView tb = (TextView)findViewById(R.id.title_title);
+		if(tb == null && mBar != null && mBar.getCustomView() != null)
+			tb = (TextView)mBar.getCustomView().findViewById(R.id.title_title);
+		if(tb != null)
+		{
+			if(!tb.isShown())
+				tb.setVisibility(View.VISIBLE);
+			tb.setText(title);
+		} else if(mBar != null)
+			mBar.setTitle(title);
+		else
+			super.setTitle(title);
 	}
 	
 	private void checkWelcome()	{
@@ -1048,7 +1081,8 @@ public class OpenExplorer
 		TabPageIndicator indicator = null;
 		if(mViewPagerEnabled && mViewPager != null)
 		{
-			setViewVisibility(false, false, R.id.content_frag, R.id.title_text, R.id.title_path);
+			setViewVisibility(false, false, R.id.content_frag, R.id.title_path);
+			setViewVisibility(mTwoRowTitle, false, R.id.title_text);
 			setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
 			mViewPager.setOnPageChangeListener(this);
 			//mViewPager.setOnPageIndicatorChangeListener(this);

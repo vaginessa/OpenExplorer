@@ -15,6 +15,5 @@
   -->
 
 <resources>
-    <item type="integer" name="max_base_buttons">6</item>
-    <item type="integer" name="max_grid_columns">4</item>
+	<dimen name="list_width">250dp</dimen>
 </resources>
