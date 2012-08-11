@@ -24,7 +24,7 @@
         >
 	    <CheckBox 
 	        android:id="@+id/chooser_default"
-	        android:checked="true"
+	        android:checked="false"
 	        android:paddingLeft="40dp"
 	        android:textAppearance="@style/Large"
 	        android:textColor="?attr/colorWhite"

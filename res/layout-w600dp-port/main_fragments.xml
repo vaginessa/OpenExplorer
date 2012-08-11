@@ -46,27 +46,19 @@
 	    
 		<FrameLayout
 		    android:id="@+id/content_pager_indicator_frame"
-		    android:layout_height="@dimen/actionbar_compat_height"
+		    android:layout_height="40dp"
 			android:layout_width="match_parent"
 			android:layout_alignParentTop="true"
+			android:background="?attr/pagerBackground"
 			android:layout_alignLeft="@+id/list_frag_frame"
 			android:layout_alignWithParentIfMissing="true">
 	
 			<com.viewpagerindicator.TabPageIndicator
 				android:id="@+id/content_pager_indicator"
-				android:minWidth="100dp"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
 				/>
 		</FrameLayout>
-			
-		<View
-		    android:background="@color/blue"
-		    android:layout_alignLeft="@+id/content_pager_indicator_frame"
-		    android:layout_alignBottom="@+id/content_pager_indicator_frame"
-		    android:layout_height="1dp"
-		    android:layout_width="match_parent"
-		    />
 		
 	    <RelativeLayout
 	        android:id="@+id/list_frag_frame"

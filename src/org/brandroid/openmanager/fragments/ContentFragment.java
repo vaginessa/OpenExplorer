@@ -463,6 +463,9 @@ public class ContentFragment extends OpenFragment
 			return;
 		}
 		
+		if(DEBUG)
+			Logger.LogDebug("refreshData running...");
+		
 		mRefreshReady = false;
 		
 		if(mContentAdapter == null)
@@ -530,7 +533,7 @@ public class ContentFragment extends OpenFragment
 			runUpdateTask();
 		} else if(!path.requiresThread() && (!allowSkips || path.getListLength() < 300))
 			try {
-				path.listFiles();
+				updateData(path.listFiles());
 			} catch (IOException e) {
 				Logger.LogError("Error getting children from FileManager for " + path, e);
 			}
