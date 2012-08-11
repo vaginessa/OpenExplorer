@@ -609,10 +609,7 @@ public class ContentFragment extends OpenFragment
 		*/
 		Logger.LogDebug("Running Task for " + sPath);
 		NetworkIOTask.addTask(sPath, mTask);
-		if(OpenExplorer.BEFORE_HONEYCOMB)
-			mTask.execute(mPath);
-		else
-			mTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mPath);
+		EventHandler.executeNetwork(mTask, mPath);
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -1601,7 +1598,7 @@ public class ContentFragment extends OpenFragment
 				}
 			else {
 				//if(mProgressBarLoading == null) mProgressBarLoading = getView().findViewById(R.id.content_progress);
-				new NetworkIOTask(this).execute(mPath);
+				EventHandler.executeNetwork(new NetworkIOTask(this), mPath);
 			}
 			
 			//changePath(mPath, false);
