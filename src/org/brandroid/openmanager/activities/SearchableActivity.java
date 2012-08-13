@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.EventHandler.EventType;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanger.services.EventHandler;
+import org.brandroid.openmanger.services.EventHandler.EventType;
+import org.brandroid.openmanger.services.EventHandler.OnWorkerUpdateListener;
 
 import android.R.anim;
 import android.app.ListActivity;

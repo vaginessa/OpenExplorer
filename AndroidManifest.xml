@@ -83,6 +83,13 @@
 		    </intent-filter>
 		</activity>
 		
+		<service 
+		    android:name=".services.EventService"
+		    android:label="@string/app_name_event_handler"
+		    android:icon="@drawable/icon"
+		    android:stopWithTask="false"
+		    />
+		
 		<activity android:name=".activities.ServerSetupActivity"
 		    android:theme="@style/Dialog"
 		    android:configChanges="screenSize|keyboard|keyboardHidden"

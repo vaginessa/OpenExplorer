@@ -1,8 +1,8 @@
 package org.brandroid.openmanager.activities;
 
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanger.services.EventHandler;
 
 import android.app.Activity;
 import android.os.Bundle;

@@ -12,8 +12,8 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
 import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
-import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanger.services.EventHandler;
 import org.brandroid.utils.Logger;
 
 import android.graphics.drawable.Drawable;

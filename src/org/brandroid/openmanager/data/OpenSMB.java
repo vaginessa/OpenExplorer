@@ -24,9 +24,9 @@ import java.util.ArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SortType;
+import org.brandroid.openmanger.services.EventHandler.BackgroundWork;
 import org.brandroid.utils.Logger;
 
 import android.database.Cursor;

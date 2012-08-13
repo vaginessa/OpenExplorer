@@ -32,6 +32,7 @@ import java.util.Random;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
+import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
@@ -299,6 +300,8 @@ public class SettingsActivity extends PreferenceActivity
 			OpenServers servers = LoadDefaultServers(); //new OpenServers(prefs.getJSON("global", "servers", new JSONObject()));
 			if(path.equals("server_add"))
 			{
+				BookmarkHolder mHolder = null;
+				new DialogHandler().showServerDialog((OpenApp)this, -1, -1, mHolder, true);
 				setTitle(getTitle() + " - Add New");
 				getPreferenceScreen().findPreference("server_delete").setEnabled(false);
 			} else {
