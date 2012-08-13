@@ -31,18 +31,18 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
-import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.NetworkIOTask;
 import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
-import org.brandroid.openmanager.util.EventHandler.EventType;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.OpenPathView;
 import org.brandroid.openmanager.views.SpriteAnimatorSurfaceView;
+import org.brandroid.openmanger.services.EventHandler;
+import org.brandroid.openmanger.services.EventHandler.EventType;
+import org.brandroid.openmanger.services.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
@@ -612,10 +612,7 @@ public class ContentFragment extends OpenFragment
 		*/
 		Logger.LogDebug("Running Task for " + sPath);
 		NetworkIOTask.addTask(sPath, mTask);
-		if(OpenExplorer.BEFORE_HONEYCOMB)
-			mTask.execute(mPath);
-		else
-			mTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mPath);
+		EventHandler.executeNetwork(mTask, mPath);
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -1604,7 +1601,7 @@ public class ContentFragment extends OpenFragment
 				}
 			else {
 				//if(mProgressBarLoading == null) mProgressBarLoading = getView().findViewById(R.id.content_progress);
-				new NetworkIOTask(this).execute(mPath);
+				EventHandler.executeNetwork(new NetworkIOTask(this), mPath);
 			}
 			
 			//changePath(mPath, false);

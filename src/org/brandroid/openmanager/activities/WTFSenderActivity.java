@@ -7,8 +7,8 @@ import java.util.List;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanger.services.EventHandler;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SubmitStatsTask;
@@ -107,7 +107,7 @@ public class WTFSenderActivity extends Activity
 		{
 		case R.id.wtf_yes:
 			if(crashFile != null && crashFile.exists())
-				new SubmitStatsTask(this).execute(crashFile.readAscii());
+				EventHandler.execute(new SubmitStatsTask(this), crashFile.readAscii());
 			String version = "?";
 			try {
 				version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;

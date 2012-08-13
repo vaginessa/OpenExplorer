@@ -158,9 +158,6 @@ import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.EventHandler.EventType;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
@@ -176,6 +173,9 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
 import org.brandroid.openmanager.views.OpenViewPager;
+import org.brandroid.openmanger.services.EventHandler;
+import org.brandroid.openmanger.services.EventHandler.EventType;
+import org.brandroid.openmanger.services.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.utils.CustomExceptionHandler;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.ImageUtils;
@@ -227,6 +227,7 @@ public class OpenExplorer
 	public static final int VIEW_CAROUSEL = 2;
 	
 	public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
+	public static final boolean SDK_JELLYBEAN = Build.VERSION.SDK_INT > 15;
 	public static boolean CAN_DO_CAROUSEL = false;
 	public static boolean USE_ACTION_BAR = false;
 	public static boolean USE_SPLIT_ACTION_BAR = true;
@@ -545,7 +546,7 @@ public class OpenExplorer
 
 		Logger.LogDebug("Creating with " + path.getPath());
 		if(path instanceof OpenFile)
-			new PeekAtGrandKidsTask().execute((OpenFile)path);
+			EventHandler.execute(new PeekAtGrandKidsTask(), path);
 
 		initPager();
 		if(handleIntent(getIntent()))
@@ -1533,7 +1534,7 @@ public class OpenExplorer
 		if(logs == null || logs == "") logs = "[]";
 		//if(logs != null && logs != "") {
 			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
-			new SubmitStatsTask(this).execute(logs);
+			EventHandler.execute(new SubmitStatsTask(this), logs);
 		//} else Logger.LogWarning("Logs not found.");
 		queueToTracker(new Runnable() {
 			public void run() {
@@ -1809,7 +1810,7 @@ public class OpenExplorer
 								}
 							}, buff);
 						else*/
-							new EnsureCursorCacheTask().execute(buff);
+							EventHandler.execute(new EnsureCursorCacheTask(),buff);
 					} catch(RejectedExecutionException e) {
 						Logger.LogWarning("Couldn't ensure cache.", e);
 						return;
@@ -1831,7 +1832,7 @@ public class OpenExplorer
 						}
 					}, buff);
 				else*/
-					new EnsureCursorCacheTask().execute(buff);
+					EventHandler.execute(new EnsureCursorCacheTask(), buff);
 			} catch(RejectedExecutionException e) {
 				Logger.LogWarning("Couldn't ensure cache.", e);
 				return;
@@ -3034,7 +3035,7 @@ public class OpenExplorer
 			getSetting(path, "hide", true)
 			);*/
 		if(path instanceof OpenFile && !path.requiresThread())
-			new PeekAtGrandKidsTask().execute((OpenFile)path);
+			EventHandler.execute(new PeekAtGrandKidsTask(), path);
 		//ft.replace(R.id.content_frag, content);
 		//ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 		Logger.LogDebug("Setting path to " + path.getPath());
@@ -3090,10 +3091,10 @@ public class OpenExplorer
 		return mEvHandler;
 	}
 
-	public class EnsureCursorCacheTask extends AsyncTask<OpenPath, Void, Void>
+	public class EnsureCursorCacheTask extends AsyncTask<OpenPath, Integer, Integer>
 	{
 		@Override
-		protected Void doInBackground(OpenPath... params) {
+		protected Integer doInBackground(OpenPath... params) {
 			//int done = 0;
 			final Context c = getApplicationContext();
 			for(OpenPath path : params)
@@ -3248,17 +3249,19 @@ public class OpenExplorer
 		mBookmarkListener = bookmarkListener;
 	}
 	
-	public class PeekAtGrandKidsTask extends AsyncTask<OpenFile, Void, Void>
+	public class PeekAtGrandKidsTask extends AsyncTask<OpenPath, Integer, Integer>
 	{
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
 		}
 		@Override
-		protected Void doInBackground(OpenFile... params) {
-			for(OpenFile file : params)
-				file.listFiles(true);
-			return null;
+		protected Integer doInBackground(OpenPath... params) {
+			int ret = 0;
+			for(OpenPath file : params)
+				if(file instanceof OpenFile)
+					ret += ((OpenFile)file).listFiles(true).length;
+			return ret;
 		}
 		
 	}

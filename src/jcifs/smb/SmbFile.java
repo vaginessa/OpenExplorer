@@ -40,7 +40,7 @@ import java.util.Date;
 
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
+import org.brandroid.openmanger.services.EventHandler.BackgroundWork;
 import org.brandroid.utils.Logger;
 
 import android.os.AsyncTask;
