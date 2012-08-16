@@ -1846,8 +1846,19 @@ public class OpenExplorer
 		mRunningCursorEnsure = false;
 	}
 
+	/**
+	 * Toggle Bookmarks View.
+	 * @param visible Whether to show Bookmarks. Will only affect popup.
+	 * @return Visibility of Bookmarks after event has occurred.
+	 */
 	public boolean toggleBookmarks(boolean visible) { return toggleBookmarks(visible, true); }
 
+	/**
+	 * Toggle Bookmarks View.
+	 * @param visible Whether to show Bookmarks.
+	 * @param auto Is automatic? If true, will only dismiss popup (when available), and will not affect fragment. If false, will affect fragment. 
+	 * @return Visibility of Bookmarks after event has occurred.
+	 */
 	public boolean toggleBookmarks(boolean visible, boolean auto)
 	{
 		if(isSinglePane() && mBookmarksPopup != null)
