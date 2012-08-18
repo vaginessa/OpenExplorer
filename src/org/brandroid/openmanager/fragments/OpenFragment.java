@@ -127,8 +127,6 @@ public abstract class OpenFragment
         		return ContentFragment.getInstance(path, args);
         	else if(fname.endsWith("TextEditorFragment"))
         		return TextEditorFragment.getInstance(path, args);
-        	else if(fname.endsWith("CarouselFragment"))
-        		return CarouselFragment.getInstance(args);
     	}
         return null;
     }
