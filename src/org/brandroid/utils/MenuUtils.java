@@ -245,9 +245,6 @@ public class MenuUtils {
 		if(OpenExplorer.mMenuShortcuts == null) return null;
 		return OpenExplorer.mMenuShortcuts.get(keyCode);
 	}
-	public final static int[] MENU_LOOKUP_IDS = new int[]{};//	R.id.menu_view,		R.id.menu_sort,		R.id.menu_content_ops,	R.id.content_paste,R.id.menu_text_view,	R.id.menu_text_ops};
-	public final static int[] MENU_LOOKUP_SUBS = new int[]{};//	R.menu.content_view,R.menu.content_sort,R.menu.content_ops,		R.menu.multiselect,R.menu.text_view,	R.menu.text_file};
-
 	public static void scanMenuShortcuts(Menu menu, MenuInflater inflater)
 	{
 		if(OpenExplorer.mMenuShortcuts != null) return;
@@ -260,20 +257,6 @@ public class MenuUtils {
 		}
 	}
 
-    public static int getMenuLookupID(int id)
-	{
-		return Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, id);
-	}
-
-	public static int getMenuLookupSub(int index)
-	{
-		int index2 = getMenuLookupID(index);
-		if(index2 > -1)
-			index = index2;
-		if(index > -1 && index < MenuUtils.MENU_LOOKUP_SUBS.length)
-			return MenuUtils.MENU_LOOKUP_SUBS[index];
-		else return Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_SUBS, index);
-	}
 	public static MenuItem getMenuItem(android.view.MenuItem item, MenuBuilder to) {
 		
 		MenuItem newm = to.add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle())

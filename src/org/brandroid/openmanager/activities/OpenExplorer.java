@@ -805,7 +805,6 @@ public class OpenExplorer
 	}
 
 	public boolean showMenu(int menuId, final View from, final boolean fromTouch) {
-		if(!BEFORE_HONEYCOMB && MenuUtils.getMenuLookupSub(menuId) > -1) return false;
 		Logger.LogInfo("showMenu(0x" + Integer.toHexString(menuId) + "," + (from != null ? from.toString() : "NULL") + ")");
 		//if(mMenuPopup == null)
 		
@@ -841,32 +840,7 @@ public class OpenExplorer
 		//if(menuId != R.menu.context_file && !OpenExplorer.USE_PRETTY_MENUS) return null;
 		if(menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS) return null;
 		try {
-			if(Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, menuId) > -1)
-				menuId = MenuUtils.getMenuLookupSub(menuId);
 			Logger.LogDebug("Trying to show context menu 0x" + Integer.toHexString(menuId) + (from != null ? " under " + from.toString() + " (" + ViewUtils.getAbsoluteLeft(from) + "," + ViewUtils.getAbsoluteTop(from) + ")" : "") + ".");
-			if(Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_SUBS, menuId) > -1)
-			{
-				//IconContextMenu icm1 = new IconContextMenu(getApplicationContext(), menu, from, null, null);
-				//MenuBuilder menu = IconContextMenu.newMenu(this, menuId);
-				IconContextMenu mOpenMenu = IconContextMenu.getInstance(this, menuId, from);
-				onPrepareOptionsMenu(mOpenMenu.getMenu());
-				mOpenMenu.setAnchor(from);
-				if(menuId == R.menu.context_file)
-				{
-					mOpenMenu.setNumColumns(2);
-					//icm.setPopupWidth(getResources().getDimensionPixelSize(R.dimen.popup_width) / 2);
-					mOpenMenu.setTextLayout(R.layout.context_item);
-				} else mOpenMenu.setNumColumns(1);
-				mOpenMenu.setOnIconContextItemSelectedListener(this);
-				/*
-				if(menuId == R.menu.menu_sort || menuId == R.menu.content_sort)
-					mOpenMenu.setTitle(getString(R.string.s_menu_sort) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
-				else if(menuId == R.menu.menu_view || menuId == R.menu.content_view)
-					mOpenMenu.setTitle(getString(R.string.s_view) + " (" + getDirContentFragment(false).getPath().getPath() + ")");
-				*/
-				mOpenMenu.show();
-				return mOpenMenu;
-			}
 		} catch(Exception e) {
 			Logger.LogWarning("Couldn't show icon context menu" + (from != null ? " under " + from.toString() + " (" + from.getLeft() + "," + from.getTop() + ")" : "") + ".", e);
 			if(from != null)
@@ -2452,7 +2426,6 @@ public class OpenExplorer
 		{
 			id = ((MenuItem)v.getTag()).getItemId();
 			if(f.onClick(id, v)) return;
-			if(MenuUtils.getMenuLookupID(id) > -1 && showMenu(MenuUtils.getMenuLookupSub(id), v, true)) return;
 		}
 		if(!v.showContextMenu())
 			onClick(id, (MenuItem)null, v);
@@ -3627,11 +3600,7 @@ public class OpenExplorer
 			menu.dismiss();
 		if(onClick(item.getItemId(), item, view)) return;
 		if(onOptionsItemSelected(item)) return;
-		int index = Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, item.getItemId());
-		if(index > -1)
-			showMenu(MenuUtils.getMenuLookupSub(index), view, true);
-		else
-			onClick(item.getItemId());
+		onClick(item.getItemId());
 	}
 
 	public boolean onIconContextItemSelected(PopupMenu menu, MenuItem item,
@@ -3640,16 +3609,11 @@ public class OpenExplorer
 			menu.dismiss();
 		if(onClick(item.getItemId(), item, view)) return true;
 		if(onOptionsItemSelected(item)) return true;
-		int index = Utils.getArrayIndex(MenuUtils.MENU_LOOKUP_IDS, item.getItemId());
-		if(index > -1)
-			return showMenu(MenuUtils.getMenuLookupSub(index), view, true);
-		else {
-			View v = findViewById(item.getItemId());
-			if(v != null && v.isClickable())
-			{
-				onClick(v);
-				return true;
-			}
+		View v = findViewById(item.getItemId());
+		if(v != null && v.isClickable())
+		{
+			onClick(v);
+			return true;
 		}
 		return false;
 	}
@@ -3660,12 +3624,6 @@ public class OpenExplorer
 		if(DEBUG)
 			Logger.LogDebug("OpenExplorer.onKey(" + v + "," + keyCode + "," + event + ")");
 		if(event.getAction() != KeyEvent.ACTION_UP) return false;
-		if(keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)
-		{
-			if(MenuUtils.getMenuLookupID(v.getId()) > 0)
-				if(showMenu(MenuUtils.getMenuLookupSub(v.getId()), v, false))
-					return true;
-		}
 		return false;
 	}
 	
