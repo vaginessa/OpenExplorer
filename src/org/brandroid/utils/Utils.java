@@ -35,6 +35,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
+import org.brandroid.openmanager.util.SortType;
+
 public class Utils {
     private static final String TAG = Logger.LOG_KEY;
     private static final String DEBUG_TAG = TAG;
@@ -436,13 +438,14 @@ public class Utils {
     	ret += "]";
     	return ret;
     }
-    public static <T> String joinArray(T[] array, String separator)
+    public static String joinArray(CharSequence[] array, String separator)
     {
     	StringBuilder ret = new StringBuilder();
-    	for(T item : array)
+    	for(CharSequence item : array)
     		ret.append(item + separator);
     	return ret.toString();
     }
+
 	public static int getArrayIndex(int[] search, int value)
 	{
 		for(int i = 0; i < search.length; i++)
@@ -457,7 +460,14 @@ public class Utils {
 				return i;
 		return -1;
 	}
-	public static <T> int getArrayIndex(T[] search, T value)
+	public static int getArrayIndex(String[] search, String value)
+	{
+		for(int i = 0; i < search.length; i++)
+			if(search[i].equals(value))
+				return i;
+		return -1;
+	}
+	public static int getArrayIndex(SortType.Type[] search, SortType.Type value)
 	{
 		for(int i = 0; i < search.length; i++)
 			if(value.equals(search[i]))
