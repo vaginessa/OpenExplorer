@@ -1,20 +1,30 @@
 package org.brandroid.openmanager.fragments;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.utils.Logger;
 
+import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 
+@TargetApi(11)
 public class PreferenceFragmentV11 extends PreferenceFragment
 {
 	private OpenPath mPath;
+	
+	public PreferenceFragmentV11()
+	{
+		super();
+	}
 	
 	public PreferenceFragmentV11(OpenPath path)
 	{
@@ -27,19 +37,25 @@ public class PreferenceFragmentV11 extends PreferenceFragment
 		super.onCreate(savedInstanceState);
 		
 		addPreferencesFromResource(R.xml.preferences);
+		
 		PreferenceManager pm = getPreferenceManager();
 		pm.setSharedPreferencesName("global");
 		PreferenceManager.setDefaultValues(getActivity(), "global", R.xml.preferences, PreferenceActivity.MODE_PRIVATE, false);
 		
-		PreferenceScreen root = getPreferenceScreen();
-		root.getPreference(0).setTitle(root.getPreference(0).getTitle() + " - Global");
-		int iCount = root.getPreferenceCount();
-		if(mPath != null && mPath.getPath() != "")
+		PreferenceScreen ps = getPreferenceScreen();
+		String key = null;
+		if(getArguments().containsKey("key"))
 		{
-			addPreferencesFromResource(R.xml.preferences);
-			pm.setSharedPreferencesName(mPath.getPath());
-			root.getPreference(iCount).setTitle(root.getPreference(iCount).getTitle() + " - " + mPath.getPath());
-			PreferenceManager.setDefaultValues(getActivity(), mPath.getPath(), PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
+			Preference p = ps.findPreference(getArguments().getCharSequence("key"));
+			ps.removeAll();
+			if(p instanceof PreferenceCategory)
+			{
+				PreferenceCategory pc = (PreferenceCategory)p;
+				for(int i = 0; i < pc.getPreferenceCount(); i++)
+					ps.addPreference(pc.getPreference(i));
+			} else
+				ps.addPreference(p);
+			setPreferenceScreen(ps);
 		}
 	}
 	
@@ -47,6 +63,10 @@ public class PreferenceFragmentV11 extends PreferenceFragment
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
 			Preference preference) {
 		super.onPreferenceTreeClick(preferenceScreen, preference);
+		
+		if(((SettingsActivity)getActivity()).onPreferenceTreeClick(preferenceScreen, preference))
+			return true;
+		
 		if(preference.getKey().equals("server_prefs"))
 		{
 			getFragmentManager()

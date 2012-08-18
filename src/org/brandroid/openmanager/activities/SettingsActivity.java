@@ -27,36 +27,42 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Locale;
-import java.util.Random;
-
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.xml;
+import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.ShellSession;
+import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
-import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
+import com.actionbarsherlock.view.ActionMode;
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
-import android.app.AlertDialog;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
+import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.RemoteException;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -64,24 +70,15 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
-import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.text.method.PasswordTransformationMethod;
-import android.text.method.ReplacementTransformationMethod;
-import android.text.method.TransformationMethod;
-import android.util.Log;
 import android.view.Menu;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.animation.TranslateAnimation;
-import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
 
 public class SettingsActivity extends PreferenceActivity
-	implements OnPreferenceChangeListener
+	implements OnPreferenceChangeListener, OpenApp
 {
 	//keys used for preference file
 	/*
@@ -116,6 +113,11 @@ public class SettingsActivity extends PreferenceActivity
 		
 	}
 	
+	@TargetApi(11) @Override
+	public void onBuildHeaders(List<Header> target) {
+		loadHeadersFromResource(R.xml.preference_headers, target);
+	}
+	
 	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -145,13 +147,16 @@ public class SettingsActivity extends PreferenceActivity
 		if(!config.containsKey("path"))
 			config.putString("path", path);
 		
-		PreferenceManager pm = getPreferenceManager();
-		pm.setSharedPreferencesName(pathSafe);
+		intent.putExtras(config);
+		setIntent(intent);
+		
 		//getPreferences(MODE_PRIVATE);
 		prefs = new Preferences(getApplicationContext());
 		
-		if(mode == MODE_PREFERENCES)
+		if(mode == MODE_PREFERENCES && Build.VERSION.SDK_INT < 11)
 		{
+			PreferenceManager pm = getPreferenceManager();
+			pm.setSharedPreferencesName(pathSafe);
 			if(!path.equals("global")) // folder preferences
 			{
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);
@@ -346,8 +351,8 @@ public class SettingsActivity extends PreferenceActivity
 		}
 		setOnChange(getPreferenceScreen(), false);
 		
-		mHandler = new Handler();
 		/*
+		mHandler = new Handler();
 		mDonationObserver = new DonationObserver(mHandler);
 		mBillingService = new BillingService();
 		mBillingService.setContext(this);
@@ -403,6 +408,7 @@ public class SettingsActivity extends PreferenceActivity
 	
 	private void setOnChange(Preference p, Boolean forceSummaries)
 	{
+		if(p == null) return;
 		if(p.getClass().equals(PreferenceScreen.class))
 		{
 			PreferenceScreen ps = (PreferenceScreen)p;
@@ -492,10 +498,13 @@ public class SettingsActivity extends PreferenceActivity
     		return true;
     	} else if(preference.getKey().equals("server_add"))
     	{
+    		DialogHandler.showServerDialog(this, new OpenFTP((OpenFTP)null, null, null), null, true);
+    		/*
     		Intent intentServer = new Intent(this, SettingsActivity.class);
     		intentServer.putExtra("path", "server_add");
     		intentServer.putExtra("mode", MODE_SERVER);
     		startActivityForResult(intentServer, MODE_SERVER);
+    		*/
     		return true;
     	} else if(preference.getKey().equals("pref_start"))
     	{
@@ -503,10 +512,27 @@ public class SettingsActivity extends PreferenceActivity
     		return true;
     	}
     	else if(preference.getKey().startsWith("server_modify")) {
-    		Intent intentServer = new Intent(this, SettingsActivity.class);
-    		intentServer.putExtra("path", preference.getKey());
-    		intentServer.putExtra("mode", MODE_SERVER);
-    		startActivityForResult(intentServer, MODE_SERVER);
+    		int snum = -1;
+    		try {
+    			snum = Integer.parseInt(preference.getKey().replace("server_modify_", ""));
+    		} catch(NumberFormatException e) { }
+    		if(snum > -1)
+    		{
+    			String type = OpenServers.DefaultServers.get(snum).getType();
+				if(type == null)
+					type = "ftp";
+				String[] types = getApplicationContext().getResources().getStringArray(R.array.server_types_values);
+				int pos = 0;
+				for(int i = 0; i < types.length; i++)
+					if(types[i].toLowerCase().equals(type.toLowerCase()))
+						pos = i;
+				DialogHandler.showServerDialog(this, snum, pos, null, true);
+    		} else {
+	    		Intent intentServer = new Intent(this, SettingsActivity.class);
+	    		intentServer.putExtra("path", preference.getKey());
+	    		intentServer.putExtra("mode", MODE_SERVER);
+	    		startActivityForResult(intentServer, MODE_SERVER);
+    		}
     		return true;
     	} else if(preference.getKey().equals("server_update")) {
     		Intent iNew = getIntent();
@@ -676,5 +702,96 @@ public class SettingsActivity extends PreferenceActivity
 			Logger.LogError("No Package for Signature?", e);
 		}
 		return ret;
+	}
+
+	@Override
+	public DataManager getDataManager() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ImageCacheService getImageCacheService() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DownloadCache getDownloadCache() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ThreadPool getThreadPool() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public LruCache<String, Bitmap> getMemoryCache() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DiskLruCache getDiskCache() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ActionMode getActionMode() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setActionMode(ActionMode mode) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public OpenClipboard getClipboard() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ShellSession getShellSession() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Context getContext() {
+		return this;
+	}
+
+	@Override
+	public Preferences getPreferences() {
+		return ((OpenApplication)getApplication()).getPreferences();
+	}
+
+	@Override
+	public void refreshBookmarks() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public GoogleAnalyticsTracker getAnalyticsTracker() {
+		return ((OpenApplication)getApplication()).getAnalyticsTracker();
+	}
+
+	@Override
+	public void queueToTracker(Runnable run) {
+		((OpenApplication)getApplication()).queueToTracker(run);
+	}
+
+	@Override
+	public int getThemedResourceId(int styleableId, int defaultResourceId) {
+		return ((OpenApplication)getApplication()).getThemedResourceId(styleableId, defaultResourceId);
 	}
 }

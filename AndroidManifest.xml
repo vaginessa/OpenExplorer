@@ -162,8 +162,8 @@
 		
 		<activity android:name=".activities.WTFSenderActivity" android:theme="@style/Dialog" />
 
-		<activity android:name=".activities.SettingsActivity" android:theme="@style/Dialog" android:label="@string/s_menu_prefs_global" />
-
+		<activity android:name=".activities.SettingsActivity" android:label="@string/s_menu_prefs_global" />
+		
 		<activity android:name=".activities.BluetoothActivity" android:label="Bluetooth"
 			android:theme="@style/Dialog" />
 		
