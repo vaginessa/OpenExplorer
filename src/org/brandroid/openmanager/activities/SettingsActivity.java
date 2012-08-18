@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.brandroid.openmanager.R;
@@ -70,6 +73,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.view.Menu;
@@ -150,6 +154,8 @@ public class SettingsActivity extends PreferenceActivity
 		intent.putExtras(config);
 		setIntent(intent);
 		
+		PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
+		
 		//getPreferences(MODE_PRIVATE);
 		prefs = new Preferences(getApplicationContext());
 		
@@ -168,22 +174,7 @@ public class SettingsActivity extends PreferenceActivity
 				
 				
 			} else { // global preferences
-				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				addPreferencesFromResource(R.xml.preferences);
-				
-				final PreferenceActivity pa = this;
-				
-				ViewUtils.setOnPrefChange(pm, new OnPreferenceChangeListener() {
-					public boolean onPreferenceChange(Preference preference, Object newValue) {
-						if(preference.getKey().equals("pref_language"))
-							preference.setSummary(getDisplayLanguage((String)newValue));
-						if(newValue instanceof String)
-							preference.setSummary((String)newValue);
-						pa.setResult(OpenExplorer.RESULT_RESTART_NEEDED);
-						return true;
-					}
-				}, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
-					"pref_stats", "pref_root", "pref_language");
 				
 				Preference pLanguage = pm.findPreference("pref_language");
 				if(pLanguage == null) pLanguage = findPreference("pref_language");
@@ -194,19 +185,6 @@ public class SettingsActivity extends PreferenceActivity
 						pLanguage.setSummary(getDisplayLanguage(lang));
 					else pLanguage.setSummary(pLanguage.getSummary() +
 							" (" + Locale.getDefault().getDisplayLanguage() + ")");
-				}
-
-				Preference pTranslate = pm.findPreference("pref_translate");
-				if(pTranslate == null) pTranslate = findPreference("pref_translate");
-				if(pTranslate != null)
-				{
-					pTranslate.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-						@Override
-						public boolean onPreferenceClick(Preference preference) {
-							OpenExplorer.launchTranslator(SettingsActivity.this);
-							return true;
-						}
-					});
 				}
 				
 				final Preference pSize = pm.findPreference("text_size") != null ? pm.findPreference("text_size") : findPreference("text_size");
@@ -266,34 +244,6 @@ public class SettingsActivity extends PreferenceActivity
 							return true;
 						}
 					});
-				
-				Preference preference = pm.findPreference("pref_stats");
-				if(preference != null) { // "Help improve..."
-					/*
-					preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-						public boolean onPreferenceClick(Preference preference) {
-				    		try {
-					    		if(mBillingService == null)
-					    		{
-					    			mBillingService = new BillingService();
-					    			mBillingService.setContext(SettingsActivity.this);
-					    		}
-					    		if (mBillingService.checkBillingSupported())
-					    		{
-					    			if(mBillingService.requestPurchase("donate_01", null))
-					    				Logger.LogDebug("Donation success!");
-					    			else
-					    				Logger.LogWarning("Donation fail?");
-					    		} else
-					    			Logger.LogWarning("Billing not supported");
-				    		} catch(Exception e) {
-				    			Logger.LogError("Error using billing service.", e);
-				    		}
-				    		return false;
-						}
-					});
-					*/
-				} else Logger.LogWarning("Couldn't find donation button");
 				
 				refreshServerList();
 			}
@@ -491,12 +441,19 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
     		Preference preference) {
-    	if(preference.getKey().equals("pref_global"))
+    	final String key = preference.getKey();
+    	if(key.equals("pref_global"))
     	{
     		Intent intentGlobal = new Intent(this, SettingsActivity.class);
     		startActivity(intentGlobal);
     		return true;
-    	} else if(preference.getKey().equals("server_add"))
+    	} else if(key.equals("pref_translate"))
+    	{
+    		OpenExplorer.launchTranslator(SettingsActivity.this);
+    	} else if(key.equals("pref_language"))
+    	{
+    		
+    	} else if(key.equals("server_add"))
     	{
     		DialogHandler.showServerDialog(this, new OpenFTP((OpenFTP)null, null, null), null, true);
     		/*
@@ -506,15 +463,15 @@ public class SettingsActivity extends PreferenceActivity
     		startActivityForResult(intentServer, MODE_SERVER);
     		*/
     		return true;
-    	} else if(preference.getKey().equals("pref_start"))
+    	} else if(key.equals("pref_start"))
     	{
     		OpenExplorer.showSplashIntent(this, new Preferences(this).getSetting("global", "pref_start", "External"));
     		return true;
     	}
-    	else if(preference.getKey().startsWith("server_modify")) {
+    	else if(key.startsWith("server_modify")) {
     		int snum = -1;
     		try {
-    			snum = Integer.parseInt(preference.getKey().replace("server_modify_", ""));
+    			snum = Integer.parseInt(key.replace("server_modify_", ""));
     		} catch(NumberFormatException e) { }
     		if(snum > -1)
     		{
@@ -529,12 +486,12 @@ public class SettingsActivity extends PreferenceActivity
 				DialogHandler.showServerDialog(this, snum, pos, null, true);
     		} else {
 	    		Intent intentServer = new Intent(this, SettingsActivity.class);
-	    		intentServer.putExtra("path", preference.getKey());
+	    		intentServer.putExtra("path", key);
 	    		intentServer.putExtra("mode", MODE_SERVER);
 	    		startActivityForResult(intentServer, MODE_SERVER);
     		}
     		return true;
-    	} else if(preference.getKey().equals("server_update")) {
+    	} else if(key.equals("server_update")) {
     		Intent iNew = getIntent();
     		//OpenServer server = new OpenServer();
     		Preference p = preferenceScreen.findPreference("server_type");
@@ -555,7 +512,7 @@ public class SettingsActivity extends PreferenceActivity
     		//prefs.setSetting("global", "servers", servers.getJSONObject());
     		setResult(RESULT_OK, iNew);
     		finish();
-    	} else if(preference.getKey().equals("server_delete")) {
+    	} else if(key.equals("server_delete")) {
     		setResult(RESULT_FIRST_USER, getIntent());
     		finish();
     	}
@@ -598,6 +555,9 @@ public class SettingsActivity extends PreferenceActivity
 				app.getAnalyticsTracker().trackEvent("Preferences", "Change", preference.getKey(), newValue instanceof Integer ? (Integer)newValue : 0);
 			}
 		});
+		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
+					"pref_stats", "pref_root", "pref_language"}, preference.getKey()) > -1)
+			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
 		setIntent(intent);
 		return false;
 	}
