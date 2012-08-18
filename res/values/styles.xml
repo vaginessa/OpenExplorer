@@ -57,7 +57,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <style name="ActionBar" parent="Widget.Sherlock.ActionBar">
+    <style name="ActionBar" parent="@style/Widget.Sherlock.ActionBar">
         <item name="android:background">#eee</item>
         <item name="android:titleTextStyle">@style/ActionBarTitle</item>
         <item name="android:icon">@drawable/icon</item>
@@ -180,7 +180,7 @@
         <item name="@android:windowExitAnimation">@anim/slide_out_left</item>
     </style>
     
-    <style name="Dialog" parent="Theme.Sherlock" />
+    <style name="Dialog" parent="@style/Theme.Sherlock" />
     
     <style name="Widget.ProgressBar.Horizontal" parent="@android:style/Widget.ProgressBar.Horizontal">
         <item name="android:minHeight">16dip</item>
