@@ -2703,37 +2703,10 @@ public class OpenExplorer
 	
 	public void showPreferences(OpenPath path)
 	{
-		if(Build.VERSION.SDK_INT > 100)
-		{
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			OpenFragment frag = getSelectedFragment();
-			ft.hide(frag);
-			//ft.replace(R.id.content_frag, new PreferenceFragment(this, path));
-			ft.setBreadCrumbTitle("prefs://" + (path != null ? path.getPath() : ""));
-			ft.addToBackStack("prefs");
-			ft.commit();
-			final PreferenceFragmentV11 pf2 = new PreferenceFragmentV11(path);
-			getFragmentManager().addOnBackStackChangedListener(new android.app.FragmentManager.OnBackStackChangedListener() {
-				
-				public void onBackStackChanged() {
-					//android.app.FragmentTransaction ft3 = getFragmentManager().beginTransaction();
-					Logger.LogDebug("hide me!");
-					//getFragmentManager().removeOnBackStackChangedListener(this);
-					if(pf2 != null && pf2.getView() != null && getFragmentManager().getBackStackEntryCount() == 0)
-						pf2.getView().setVisibility(View.GONE);
-				}
-			});
-			android.app.FragmentTransaction ft2 = getFragmentManager().beginTransaction();
-			ft2.replace(R.id.content_pager_frame, pf2);
-			ft2.setBreadCrumbTitle("prefs");
-			ft2.addToBackStack("prefs");
-			ft2.commit();
-		} else {
-			Intent intent = new Intent(this, SettingsActivity.class);
-			if(path != null)
-				intent.putExtra("path", path.getPath());
-			startActivityForResult(intent, REQ_PREFERENCES);
-		}
+		Intent intent = new Intent(this, SettingsActivity.class);
+		if(path != null)
+			intent.putExtra("path", path.getPath());
+		startActivityForResult(intent, REQ_PREFERENCES);
 	}
 	
 	@Override
