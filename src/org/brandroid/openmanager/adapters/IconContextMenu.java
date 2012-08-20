@@ -202,7 +202,7 @@ public class IconContextMenu implements OnKeyListener
 				final MenuItem item = m2.getItem(i);
 				final int id = item.getItemId();
 				int col = i % maxColumns;
-				boolean dbl = Utils.getArrayIndex(DOUBLE_WIDTH_IDS, id) > -1;
+				//boolean dbl = Utils.getArrayIndex(DOUBLE_WIDTH_IDS, id) > -1;
 				if(col == 0)
 				{
 					if(i > 0)
