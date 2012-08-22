@@ -1014,6 +1014,9 @@ public class ContentFragment extends OpenFragment
 		case R.id.menu_sort:
 		case R.id.menu_view:
 			return true;
+		case R.id.menu_context_heatmap:
+			DialogHandler.showFileHeatmap(getExplorer(), getPath());
+			return true;
 		case R.id.menu_new_file:
 			EventHandler.createNewFile(getPath(), getActivity());
 			return true;
@@ -1261,6 +1264,11 @@ public class ContentFragment extends OpenFragment
 			
 			case R.id.menu_context_info:
 				DialogHandler.showFileInfo(getExplorer(), file);
+				finishMode(mode);
+				return true;
+				
+			case R.id.menu_context_heatmap:
+				DialogHandler.showFileHeatmap(getExplorer(), file);
 				finishMode(mode);
 				return true;
 				

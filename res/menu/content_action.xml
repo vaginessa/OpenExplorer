@@ -30,6 +30,11 @@
     	android:orderInCategory="8"
         />
     <item
+        android:id="@+id/menu_context_heatmap"
+        android:title="@string/s_menu_heatmap"
+        android:showAsAction="ifRoom|withText"
+        />
+    <item
         android:id="@+id/menu_context_rename"
         android:title="@string/s_menu_rename"
         android:icon="?attr/actionIconRename" 
