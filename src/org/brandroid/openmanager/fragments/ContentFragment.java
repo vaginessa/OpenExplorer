@@ -485,9 +485,9 @@ public class ContentFragment extends OpenFragment
 		}
 		
 		if(path instanceof OpenFile &&
-				(path.getName().equalsIgnoreCase("data") ||
-				path.getPath().indexOf("/data") > -1 ||
-				path.getPath().indexOf("/system") > -1))
+				(((path.getName().equalsIgnoreCase("data") ||
+				path.getPath().indexOf("/data") > -1) && !path.getPath().startsWith(OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
+				|| path.getPath().startsWith("/system")))
 			path = new OpenFileRoot(path);
 		
 		mPath = path;
