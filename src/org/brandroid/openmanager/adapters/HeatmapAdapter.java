@@ -2,12 +2,12 @@ package org.brandroid.openmanager.adapters;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenPath;
@@ -16,10 +16,8 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
-import com.android.gallery3d.common.Utils;
-
-import android.content.Context;
 import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,8 +32,21 @@ public class HeatmapAdapter extends BaseAdapter
 	private long mTotalBytes = 0l;
 	private final OpenPath mParent;
 	private final OpenApp mApp;
-	private final List<Pair<Long, OpenPath>> mPairs;
+	private final List<OpenPath> mPaths;
+	private final HashMap<OpenPath, Long> mSizes = new HashMap<OpenPath, Long>();
 	private final Hashtable<OpenPath, ScanSizeTask> mTasks = new Hashtable<OpenPath, HeatmapAdapter.ScanSizeTask>();
+	private int mTaskCount = 0;
+	private HeatmapCallback mCallback = null;
+	
+	public interface HeatmapCallback
+	{
+		public void OnHeatmapTasksComplete(long mTotalBytes, boolean allDone);
+	}
+	
+	public void setHeatmapCallback(HeatmapCallback callback)
+	{
+		mCallback = callback;
+	}
 	
 	public HeatmapAdapter(OpenApp app, OpenPath parent)
 	{
@@ -47,20 +58,30 @@ public class HeatmapAdapter extends BaseAdapter
 		} catch (IOException e) {
 			Logger.LogError("Couldn't list for Heatmap.", e);
 		}
-		mPairs = new ArrayList<Pair<Long,OpenPath>>();
+		mPaths = new ArrayList<OpenPath>();
 		for(OpenPath kid : items)
-			mPairs.add(new Pair<Long, OpenPath>(kid.length(), kid));
+		{
+			mSizes.put(kid, kid.length());
+			mPaths.add(kid);
+			if(kid.isDirectory())
+			{
+				ScanSizeTask task = new ScanSizeTask(null, null);
+				mTasks.put(kid, task);
+				task.execute(kid);
+			}
+		}
 	}
 	
 	@Override
 	public void notifyDataSetChanged() {
-		Collections.sort(mPairs, new Comparator<Pair<Long, OpenPath>>() {
+		Collections.sort(mPaths, new Comparator<OpenPath>() {
 			@Override
-			public int compare(Pair<Long, OpenPath> lhs,
-					Pair<Long, OpenPath> rhs) {
-				if(lhs.first.equals(rhs.first))
-					return lhs.second.getName().compareTo(rhs.second.getName());
-				return rhs.first.compareTo(lhs.first);
+			public int compare(OpenPath lhs, OpenPath rhs) {
+				Long sa = mSizes.get(lhs);
+				Long sb = mSizes.get(rhs);
+				if(sa != null && sb != null && !sa.equals(sb))
+					return sb.compareTo(sa);
+				return rhs.getName().compareTo(lhs.getName());
 			}
 		});
 		super.notifyDataSetChanged();
@@ -81,19 +102,40 @@ public class HeatmapAdapter extends BaseAdapter
 		OpenPath path = getItem(position);
 		mIcon.setImageBitmap(ThumbnailCreator.generateThumb(mApp, path, 32, 32, parent.getContext()).get());
 		mText.setText(path.getName());
+		mSize.setText(R.string.s_status_loading);
 		
-		mBar.setMax((int)mTotalBytes);
+		mBar.setMax((int)mTotalBytes / 1000);
 		
 		if(!path.isDirectory())
 		{
-			mSize.setText("Size: " + DialogHandler.formatSize(path.length()));
-			mBar.setProgress((int)path.length());
+			long size = path.length();
+			mSizes.put(path, size);
+			mSize.setText("Size: " + DialogHandler.formatSize(size));
+			mBar.setProgress((int)size / 1000);
 		} else if(!mTasks.containsKey(path))
 		{
 			mBar.setProgress(0);
+			mBar.setIndeterminate(true);
 			ScanSizeTask task = new ScanSizeTask(mSize, mBar);
 			mTasks.put(path, task);
 			task.execute(path);
+		} else
+		{
+			ScanSizeTask task = mTasks.get(path);
+			if(task.getStatus() == Status.FINISHED)
+			{
+				long bytes = 0;
+				try {
+					bytes = task.get();
+				} catch (InterruptedException e) {
+				} catch (ExecutionException e) {
+				}
+				if(bytes > 0)
+				{
+					mBar.setProgress((int)(bytes / 1000));
+					mSize.setText("Size: " + DialogHandler.formatSize(bytes));
+				}
+			} else task.setViews(mBar, mSize);
 		}
 		
 		return view;
@@ -101,8 +143,14 @@ public class HeatmapAdapter extends BaseAdapter
 	
 	public class ScanSizeTask extends AsyncTask<OpenPath, Long, Long>
 	{
-		private final ProgressBar mBar;
-		private final TextView mSizeText;
+		private ProgressBar mBar;
+		private TextView mSizeText;
+		
+		public void setViews(ProgressBar bar, TextView txt)
+		{
+			mBar = bar;
+			mSizeText = txt;
+		}
 		
 		public ScanSizeTask(TextView sizeText, ProgressBar bar)
 		{
@@ -112,13 +160,21 @@ public class HeatmapAdapter extends BaseAdapter
 
 		@Override
 		protected Long doInBackground(OpenPath... params) {
-			return ScanDir(params[0]);
+			OpenPath path = params[0];
+			Long size = ScanDir(params[0]);
+			mSizes.put(path, size);
+			return size;
 		}
 		
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			mBar.setIndeterminate(true);
+			if(mBar != null)
+			{
+				mBar.setIndeterminate(false);
+				mBar.setProgress(0);
+			}
+			mTaskCount++;
 		}
 		
 		@Override
@@ -131,11 +187,22 @@ public class HeatmapAdapter extends BaseAdapter
 		@Override
 		protected void onPostExecute(Long result) {
 			super.onPostExecute(result);
-			mSizeText.setText("Size: " + DialogHandler.formatSize(result));
-			mBar.setMax((int)mTotalBytes);
-			mBar.setProgress((int)(long)result);
-			mBar.setIndeterminate(false);
+			if(mCallback != null)
+				mCallback.OnHeatmapTasksComplete(mTotalBytes, false);
+			if(mSizeText != null)
+				mSizeText.setText("Size: " + DialogHandler.formatSize(result));
+			if(mBar != null)
+			{
+				mBar.setMax((int)mTotalBytes / 1000);
+				mBar.setProgress((int)((long)result / 1000));
+				mBar.setIndeterminate(false);
+			}
 			notifyDataSetChanged();
+			if(--mTaskCount <= 0)
+			{
+				if(mCallback != null)
+					mCallback.OnHeatmapTasksComplete(mTotalBytes, true);
+			}
 		}
 		
 		private Long ScanDir(OpenPath path)
@@ -162,12 +229,12 @@ public class HeatmapAdapter extends BaseAdapter
 
 	@Override
 	public int getCount() {
-		return mPairs.size();
+		return mPaths.size();
 	}
 
 	@Override
 	public OpenPath getItem(int position) {
-		return mPairs.get(position).second;
+		return mPaths.get(position);
 	}
 
 	@Override
