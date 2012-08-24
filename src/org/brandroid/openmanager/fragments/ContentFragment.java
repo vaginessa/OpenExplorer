@@ -485,9 +485,9 @@ public class ContentFragment extends OpenFragment
 		}
 		
 		if(path instanceof OpenFile &&
-				(path.getName().equalsIgnoreCase("data") ||
-				path.getPath().indexOf("/data") > -1 ||
-				path.getPath().indexOf("/system") > -1))
+				(((path.getName().equalsIgnoreCase("data") ||
+				path.getPath().indexOf("/data") > -1) && !path.getPath().startsWith(OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
+				|| path.getPath().startsWith("/system")))
 			path = new OpenFileRoot(path);
 		
 		mPath = path;
@@ -1014,6 +1014,9 @@ public class ContentFragment extends OpenFragment
 		case R.id.menu_sort:
 		case R.id.menu_view:
 			return true;
+		case R.id.menu_context_heatmap:
+			DialogHandler.showFileHeatmap(getExplorer(), getPath());
+			return true;
 		case R.id.menu_new_file:
 			EventHandler.createNewFile(getPath(), getActivity());
 			return true;
@@ -1261,6 +1264,11 @@ public class ContentFragment extends OpenFragment
 			
 			case R.id.menu_context_info:
 				DialogHandler.showFileInfo(getExplorer(), file);
+				finishMode(mode);
+				return true;
+				
+			case R.id.menu_context_heatmap:
+				DialogHandler.showFileHeatmap(getExplorer(), file);
 				finishMode(mode);
 				return true;
 				
