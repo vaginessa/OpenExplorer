@@ -46,6 +46,8 @@
         <item name="popupArrow">@drawable/contextmenu_arrow</item>
         <item name="pagerBackground">@drawable/ab_stacked_solid_inverse_holo</item>
         
+        <item name="listDivider">@drawable/divider_horizontal_dark</item>
+        
         <!-- Colors -->
         <item name="colorWhite">@color/white</item>
         <item name="colorOffWhite">@color/offWhite</item>
@@ -53,7 +55,7 @@
         <item name="colorBlack">@color/black</item>
     </style>
     
-    <style name="AppTheme.Light" parent="@style/Theme.Sherlock.Light">
+    <style name="AppTheme.Light" parent="@style/Theme.Sherlock.Light.DarkActionBar">
 		
         <item name="absForceOverflow">true</item>
 
@@ -98,6 +100,7 @@
         <item name="popupBackground">@drawable/contextmenu_square_gray</item>
         <item name="popupArrow">@drawable/contextmenu_arrow_gray</item>
         <item name="pagerBackground">@drawable/ab_stacked_solid_light_holo</item>
+        <item name="listDivider">@drawable/divider_horizontal_dark</item>
         
         <!-- Colors -->
         <item name="colorWhite">@color/black</item>
