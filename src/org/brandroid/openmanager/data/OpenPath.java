@@ -561,5 +561,13 @@ public abstract class OpenPath
 	public void clearChildren() {
 		
 	}
+	
+	/**
+	 * Complementary to requiresThread(), isLoaded() returns true when the thread completes. For non-threaded paths, this always returns true.
+	 * @return True if data can be read.
+	 */
+	public boolean isLoaded() {
+		return !requiresThread();
+	}
     
 }
