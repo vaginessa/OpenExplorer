@@ -54,6 +54,11 @@ public class OpenSearch extends OpenPath
 		void onFinish();
 	}
 	
+	@Override
+	public boolean isLoaded() {
+		return !isRunning();
+	}
+	
 	public void cancel() { mCancelled = true; }
 	
 	public boolean isRunning() { return mCancelled || mFinished ? false : true; }
