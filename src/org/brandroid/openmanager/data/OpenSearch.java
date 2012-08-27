@@ -59,7 +59,11 @@ public class OpenSearch extends OpenPath
 		return !isRunning();
 	}
 	
-	public void cancel() { mCancelled = true; }
+	public void cancel() {
+		mCancelled = true;
+		if(mListener != null)
+			mListener.onFinish();
+	}
 	
 	public boolean isRunning() { return mCancelled || mFinished ? false : true; }
 	
