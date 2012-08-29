@@ -56,6 +56,7 @@ import com.actionbarsherlock.view.ActionMode.Callback;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.SubMenu;
 import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
@@ -85,6 +86,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -773,7 +778,7 @@ public class ContentFragment extends OpenFragment
 			}
 		}
 		
-		if((file.isDirectory() || file.isArchive()) && getActionMode() == null) {
+		if((file.isDirectory() || (file.isArchive() && Preferences.Pref_Zip_Internal)) && getActionMode() == null) {
 			/* if (mThumbnail != null) {
 				mThumbnail.setCancelThumbnails(true);
 				mThumbnail = null;
@@ -783,7 +788,7 @@ public class ContentFragment extends OpenFragment
 			//setContentPath(file, true);
 			getExplorer().onChangeLocation(file);
 
-		} else if (!file.isDirectory() && getActionMode() == null) {
+		} else {
 			
 			if(file.requiresThread() && FileManager.hasOpenCache(file.getAbsolutePath()))
 			{
@@ -1318,9 +1323,9 @@ public class ContentFragment extends OpenFragment
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		if(DEBUG)
-			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu");
+			Logger.LogDebug(getClassName() + ".onCreateOptionsMenu (" + getPath() + ")");
 		super.onCreateOptionsMenu(menu, inflater);
-			inflater.inflate(R.menu.content_full, menu);
+		inflater.inflate(R.menu.content_full, menu);
 		MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);
 		//MenuInflater inflater = new MenuInflater(mContext);
 		//if(!OpenExplorer.USE_PRETTY_MENUS||!OpenExplorer.BEFORE_HONEYCOMB)

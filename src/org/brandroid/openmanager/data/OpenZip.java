@@ -16,6 +16,7 @@ import java.util.zip.ZipOutputStream;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 
 import android.net.Uri;
 
@@ -38,6 +39,11 @@ public class OpenZip extends OpenPath
 		} catch (IOException e) {
 			Logger.LogError("Couldn't open zip file (" + zipFile + ")");
 		}
+	}
+	
+	@Override
+	public boolean canHandleInternally() {
+		return Preferences.Pref_Zip_Internal;
 	}
 	
 	public ZipFile getZip() { return mZip; } 
@@ -103,6 +109,7 @@ public class OpenZip extends OpenPath
 		while(entries.hasMoreElements())
 		{
 			ZipEntry ze = entries.nextElement();
+			if(ze.isDirectory()) continue;
 			String name = ze.getName();
 			if(name.indexOf("/") > 0 && name.indexOf("/") < name.length() - 1)
 				name = name.substring(0, name.lastIndexOf("/") + 1);

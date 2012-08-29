@@ -575,5 +575,13 @@ public abstract class OpenPath
 	public boolean isLoaded() {
 		return !requiresThread();
 	}
+	
+	/**
+	 * Can OpenExplorer handle this file type?
+	 * @return True if OpenExplorer can handle file type (and it is enabled in preferences)
+	 */
+	public boolean canHandleInternally() {
+		return false;
+	}
     
 }
