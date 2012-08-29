@@ -3,12 +3,18 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.utils.Logger;
 
 import android.net.Uri;
@@ -17,7 +23,10 @@ public class OpenZip extends OpenPath
 {
 	private final OpenFile mFile;
 	private ZipFile mZip = null;
-	private OpenPath[] mChildren = null; 
+	private OpenPath[] mChildren = null;
+	private ArrayList<OpenZipEntry> mEntries = null;
+	private final Hashtable<String, List<OpenPath>> mFamily = new Hashtable<String, List<OpenPath>>();
+	private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	
 	public OpenZip(OpenFile zipFile)
 	{
@@ -34,7 +43,11 @@ public class OpenZip extends OpenPath
 
 	@Override
 	public String getName() {
-		return mFile.getName();
+		String ret = mFile.getName();
+		if(ret.endsWith("/"))
+			ret = ret.substring(0, ret.length() - 1);
+		ret = ret.substring(ret.lastIndexOf("/") + 1);
+		return ret;
 	}
 
 	@Override
@@ -69,7 +82,7 @@ public class OpenZip extends OpenPath
 	
 	@Override
 	public int getChildCount(boolean countHidden) throws IOException {
-		return 1;
+		return 1; // This is only used when determining if folder is empty, which we assume is not.
 	}
 	
 	@Override
@@ -78,6 +91,63 @@ public class OpenZip extends OpenPath
 			return mChildren != null ? mChildren.length : list().length;
 		} catch (IOException e) { }
 		return -1;
+	}
+	
+	public List<OpenZipEntry> getAllEntries() throws IOException
+	{
+		if(mEntries != null)
+			return mEntries;
+		mEntries = new ArrayList<OpenZipEntry>();
+		Enumeration<? extends ZipEntry> entries = mZip.entries();
+		while(entries.hasMoreElements())
+		{
+			OpenZipEntry entry = new OpenZipEntry(this, entries.nextElement());
+			mEntries.add(entry);
+			String name = entry.getName();
+			if(name.indexOf("/") > 0 && name.indexOf("/") < name.length() - 1)
+				name = name.substring(0, name.lastIndexOf("/") + 1);
+			else
+				name = "";
+			addFamilyEntry(name, entry);
+		}
+		Set<String> keys = mFamily.keySet();
+		for(String path : keys.toArray(new String[keys.size()]))
+		{
+			if(path.equals("")) continue;
+			addFamilyPath(path);
+		}
+		return mEntries;
+	}
+	
+	private void addFamilyPath(String path)
+	{
+		String parent = path;
+		if(parent.endsWith("/"))
+			parent = parent.substring(0, parent.length() - 1);
+		parent = parent.substring(0, parent.lastIndexOf("/") + 1);
+		if(!parent.equals("") && !parent.endsWith("/"))
+			parent += "/";
+		Logger.LogDebug("FamilyPath adding [" + path + "] to [" + parent + "]");
+		List<OpenPath> kids = mFamily.get(parent);
+		if(kids == null)
+			kids = new ArrayList<OpenPath>();
+		OpenZipVirtualPath vp = new OpenZipVirtualPath(path);
+		if(!kids.contains(vp))
+			kids.add(vp);
+		mFamily.put(parent, kids);
+		if(!parent.equals(""))
+			addFamilyPath(parent);
+	}
+	
+	private void addFamilyEntry(String path, OpenZipEntry entry)
+	{
+		List<OpenPath> list = mFamily.get(path);
+		if(list == null)
+			list = new ArrayList<OpenPath>();
+		if(DEBUG)
+			Logger.LogDebug("Adding [" + entry.getName() + "] into [" + path + "]");
+		list.add(entry);
+		mFamily.put(path, list);
 	}
 
 	@Override
@@ -90,19 +160,28 @@ public class OpenZip extends OpenPath
 	@Override
 	public OpenPath[] listFiles() throws IOException {
 		Logger.LogVerbose("Listing OpenZip " + mFile);
-		if(mZip != null)
-			mChildren = new OpenPath[mZip.size()];
-		else return mChildren;
-		Enumeration<? extends ZipEntry> entries = mZip.entries();
-		int i = 0;
-		while(entries.hasMoreElements())
-		{
-			mChildren[i++] = new OpenZipEntry(this, entries.nextElement());
-			//Logger.LogDebug("Zip Entry #" + i + " = " + mChildren[i - 1].getName());
-		}
+		if(mZip == null)
+			return mChildren;
+		
+		getAllEntries();
+		
+		mChildren = listFiles("");
+		
 		return mChildren;
 	}
-
+	
+	public OpenPath[] listFiles(String rootRelative) throws IOException
+	{
+		Logger.LogDebug("OpenZip.listFiles(" + rootRelative + ")");
+		if(!mFamily.containsKey(rootRelative)) {
+			Logger.LogWarning("No children found for [" + rootRelative + "]");
+			return new OpenPath[0];
+		}
+		List<OpenPath> ret = mFamily.get(rootRelative);
+		Logger.LogVerbose(ret.size() + " children found for [" + rootRelative + "]");
+		return ret.toArray(new OpenPath[ret.size()]);
+	}
+	
 	@Override
 	public Boolean isDirectory() {
 		return false; // this used to be true, but was causing too many issues
@@ -171,6 +250,147 @@ public class OpenZip extends OpenPath
 	@Override
 	public OutputStream getOutputStream() throws IOException {
 		return new ZipOutputStream(mFile.getOutputStream());
+	}
+	
+	public class OpenZipVirtualPath extends OpenPath
+	{
+		private final String path;
+		
+		public OpenZipVirtualPath(String path)
+		{
+			this.path = path;
+		}
+
+		@Override
+		public String getName() {
+			String name = path;
+			if(name.endsWith("/"))
+				name = name.substring(0, name.length() - 1);
+			name = name.substring(name.lastIndexOf("/") + 1);
+			return name;
+		}
+
+		@Override
+		public String getPath() {
+			return OpenZip.this.getPath() + "/" + path;
+		}
+
+		@Override
+		public String getAbsolutePath() {
+			return getPath();
+		}
+
+		@Override
+		public void setPath(String path) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public long length() {
+			return 0;
+		}
+
+		@Override
+		public OpenPath getParent() {
+			return OpenZip.this;
+		}
+
+		@Override
+		public OpenPath getChild(String name) {
+			try {
+				for(OpenPath kid : list())
+					if(kid.getName().equals(name))
+						return kid;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		@Override
+		public OpenPath[] list() throws IOException {
+			return OpenZip.this.listFiles(path);
+		}
+
+		@Override
+		public OpenPath[] listFiles() throws IOException {
+			return list();
+		}
+
+		@Override
+		public Boolean isDirectory() {
+			return true;
+		}
+
+		@Override
+		public Boolean isFile() {
+			return false;
+		}
+
+		@Override
+		public Boolean isHidden() {
+			return getName().startsWith(".");
+		}
+
+		@Override
+		public Uri getUri() {
+			return Uri.parse(getAbsolutePath());
+		}
+
+		@Override
+		public Long lastModified() {
+			return OpenZip.this.lastModified();
+		}
+
+		@Override
+		public Boolean canRead() {
+			return true;
+		}
+
+		@Override
+		public Boolean canWrite() {
+			return false;
+		}
+
+		@Override
+		public Boolean canExecute() {
+			return false;
+		}
+
+		@Override
+		public Boolean exists() {
+			return true;
+		}
+
+		@Override
+		public Boolean requiresThread() {
+			return false;
+		}
+
+		@Override
+		public Boolean delete() {
+			return false;
+		}
+
+		@Override
+		public Boolean mkdir() {
+			return false;
+		}
+
+		@Override
+		public InputStream getInputStream() throws IOException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public OutputStream getOutputStream() throws IOException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
 	}
 
 }

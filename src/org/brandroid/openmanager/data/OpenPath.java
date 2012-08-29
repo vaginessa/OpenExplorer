@@ -533,6 +533,12 @@ public abstract class OpenPath
 		return getName();
 	}
 	
+	/**
+	 * Get string to show in "List View"
+	 * @param countHiddenChildren Count Hidden Files?
+	 * @param showLongDate Show Long Date?
+	 * @return String to show
+	 */
 	public String getDetails(boolean countHiddenChildren, boolean showLongDate)
 	{
 		String deets = "";

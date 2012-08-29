@@ -773,7 +773,7 @@ public class ContentFragment extends OpenFragment
 			}
 		}
 		
-		if(file.isDirectory() && getActionMode() == null) {
+		if((file.isDirectory() || file.isArchive()) && getActionMode() == null) {
 			/* if (mThumbnail != null) {
 				mThumbnail.setCancelThumbnails(true);
 				mThumbnail = null;
