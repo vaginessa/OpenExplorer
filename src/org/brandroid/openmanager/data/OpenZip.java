@@ -26,6 +26,7 @@ public class OpenZip extends OpenPath
 	private OpenPath[] mChildren = null;
 	private ArrayList<OpenZipEntry> mEntries = null;
 	private final Hashtable<String, List<OpenPath>> mFamily = new Hashtable<String, List<OpenPath>>();
+	private final Hashtable<String, OpenZipVirtualPath> mVirtualPaths = new Hashtable<String, OpenZip.OpenZipVirtualPath>();
 	private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 	
 	public OpenZip(OpenFile zipFile)
@@ -77,7 +78,7 @@ public class OpenZip extends OpenPath
 
 	@Override
 	public OpenPath getChild(String name) {
-		return new OpenZipEntry(this, mZip.getEntry(name));
+		return new OpenZipEntry(this, this, mZip.getEntry(name));
 	}
 	
 	@Override
@@ -101,13 +102,15 @@ public class OpenZip extends OpenPath
 		Enumeration<? extends ZipEntry> entries = mZip.entries();
 		while(entries.hasMoreElements())
 		{
-			OpenZipEntry entry = new OpenZipEntry(this, entries.nextElement());
-			mEntries.add(entry);
-			String name = entry.getName();
+			ZipEntry ze = entries.nextElement();
+			String name = ze.getName();
 			if(name.indexOf("/") > 0 && name.indexOf("/") < name.length() - 1)
 				name = name.substring(0, name.lastIndexOf("/") + 1);
 			else
 				name = "";
+			OpenPath vp = findVirtualPath(name);
+			OpenZipEntry entry = new OpenZipEntry(this, vp, ze);
+			mEntries.add(entry);
 			addFamilyEntry(name, entry);
 		}
 		Set<String> keys = mFamily.keySet();
@@ -117,6 +120,25 @@ public class OpenZip extends OpenPath
 			addFamilyPath(path);
 		}
 		return mEntries;
+	}
+	
+	private OpenPath findVirtualPath(String name)
+	{
+		if(mVirtualPaths.containsKey(name)) return mVirtualPaths.get(name);
+		OpenZipVirtualPath path = null;
+		if(name.equals(""))
+			return OpenZip.this;
+		else
+		{
+			String par = name;
+			if(par.endsWith("/")) par = par.substring(0, par.length() - 1);
+			if(par.indexOf("/") > -1)
+				par = par.substring(0, par.lastIndexOf("/") + 1);
+			else par = "";
+			path = new OpenZipVirtualPath(findVirtualPath(par), name);
+		}
+		mVirtualPaths.put(name, path);
+		return path;
 	}
 	
 	private void addFamilyPath(String path)
@@ -131,7 +153,7 @@ public class OpenZip extends OpenPath
 		List<OpenPath> kids = mFamily.get(parent);
 		if(kids == null)
 			kids = new ArrayList<OpenPath>();
-		OpenZipVirtualPath vp = new OpenZipVirtualPath(path);
+		OpenPath vp = findVirtualPath(path);
 		if(!kids.contains(vp))
 			kids.add(vp);
 		mFamily.put(parent, kids);
@@ -255,9 +277,11 @@ public class OpenZip extends OpenPath
 	public class OpenZipVirtualPath extends OpenPath
 	{
 		private final String path;
+		private final OpenPath mParent;
 		
-		public OpenZipVirtualPath(String path)
+		public OpenZipVirtualPath(OpenPath parent, String path)
 		{
+			mParent = parent;
 			this.path = path;
 		}
 
@@ -288,12 +312,15 @@ public class OpenZip extends OpenPath
 
 		@Override
 		public long length() {
+			try {
+				return list().length;
+			} catch(IOException e) { }
 			return 0;
 		}
 
 		@Override
 		public OpenPath getParent() {
-			return OpenZip.this;
+			return mParent;
 		}
 
 		@Override

@@ -12,13 +12,15 @@ import android.net.Uri;
 
 public class OpenZipEntry extends OpenPath
 {
-	private final OpenZip p;
+	private final OpenZip mZip;
+	private final OpenPath mParent;
 	private final ZipEntry ze;
 	private OpenPath[] mChildren = null;
 	
-	public OpenZipEntry(OpenZip parent, ZipEntry entry)
+	public OpenZipEntry(OpenZip zip, OpenPath parent, ZipEntry entry)
 	{
-		p = parent;
+		mZip = zip;
+		mParent = parent;
 		ze = entry;
 		if(ze.getName().endsWith("/") || ze.isDirectory())
 		{
@@ -30,12 +32,16 @@ public class OpenZipEntry extends OpenPath
 
 	@Override
 	public String getName() {
-		return ze.getName();
+		String name = ze.getName();
+		if(name.endsWith("/"))
+			name = name.substring(0, name.length() - 1);
+		name = name.substring(name.lastIndexOf("/") + 1);
+		return name;
 	}
 
 	@Override
 	public String getPath() {
-		return p.getPath() + "/" + getName();
+		return mZip.getPath() + "/" + ze.getName();
 	}
 
 	@Override
@@ -55,7 +61,7 @@ public class OpenZipEntry extends OpenPath
 
 	@Override
 	public OpenPath getParent() {
-		return p;
+		return mParent;
 	}
 
 	@Override
@@ -78,7 +84,7 @@ public class OpenZipEntry extends OpenPath
 	@Override
 	public OpenPath[] listFiles() throws IOException
 	{
-		return p.listFiles(ze.getName());
+		return mZip.listFiles(ze.getName());
 	}
 	
 	@Override
@@ -160,7 +166,7 @@ public class OpenZipEntry extends OpenPath
 
 	@Override
 	public InputStream getInputStream() throws IOException {
-		return p.getZip().getInputStream(ze);
+		return mZip.getZip().getInputStream(ze);
 	}
 
 	@Override
