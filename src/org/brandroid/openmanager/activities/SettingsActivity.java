@@ -79,6 +79,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.view.Menu;
+import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -366,6 +367,12 @@ public class SettingsActivity extends PreferenceActivity
 		{
 			Button button = new Button(this);
 			button.setText(android.R.string.ok);
+			button.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					finish();
+				}
+			});
 			setListFooter(button);
 		}
 		
