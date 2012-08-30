@@ -27,12 +27,14 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -53,7 +55,9 @@ import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -68,11 +72,14 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.view.Menu;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
@@ -118,6 +125,22 @@ public class SettingsActivity extends PreferenceActivity
 		loadHeadersFromResource(R.xml.preference_headers, target);
 	}
 	
+	@TargetApi(11)
+	@Override
+	public void startPreferenceFragment(Fragment fragment, boolean push) {
+		super.startPreferenceFragment(fragment, push);
+		Logger.LogDebug("startPreferenceFragment(" + fragment.toString() + ", " + push + ")");
+		setOnChange(((PreferenceFragment)fragment).getPreferenceScreen(), false);
+	}
+	
+	@TargetApi(11)
+	@Override
+	public boolean onPreferenceStartFragment(PreferenceFragment caller, Preference pref) {
+		Logger.LogDebug("onPreferenceStartFragment(" + caller + ", " + pref + ")");
+		return super.onPreferenceStartFragment(caller, pref);
+	}
+	
+	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -172,18 +195,6 @@ public class SettingsActivity extends PreferenceActivity
 				addPreferencesFromResource(R.xml.preferences);
 				
 				final PreferenceActivity pa = this;
-				
-				ViewUtils.setOnPrefChange(pm, new OnPreferenceChangeListener() {
-					public boolean onPreferenceChange(Preference preference, Object newValue) {
-						if(preference.getKey().equals("pref_language"))
-							preference.setSummary(getDisplayLanguage((String)newValue));
-						if(newValue instanceof String)
-							preference.setSummary((String)newValue);
-						pa.setResult(OpenExplorer.RESULT_RESTART_NEEDED);
-						return true;
-					}
-				}, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
-					"pref_stats", "pref_root", "pref_language");
 				
 				Preference pLanguage = pm.findPreference("pref_language");
 				if(pLanguage == null) pLanguage = findPreference("pref_language");
@@ -351,6 +362,13 @@ public class SettingsActivity extends PreferenceActivity
 		}
 		setOnChange(getPreferenceScreen(), false);
 		
+		if(!OpenExplorer.BEFORE_HONEYCOMB && hasHeaders())
+		{
+			Button button = new Button(this);
+			button.setText(android.R.string.ok);
+			setListFooter(button);
+		}
+		
 		/*
 		mHandler = new Handler();
 		mDonationObserver = new DonationObserver(mHandler);
@@ -363,7 +381,7 @@ public class SettingsActivity extends PreferenceActivity
         }
         */
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -406,15 +424,23 @@ public class SettingsActivity extends PreferenceActivity
 		//ResponseHandler.unregister(mDonationObserver);
 	}
 	
+	public static void setOnPreferenceChangeListenerToChildren(PreferenceScreen parent, OnPreferenceChangeListener listener)
+	{
+		for(int i = 0; i < parent.getPreferenceCount(); i++)
+			parent.getPreference(i).setOnPreferenceChangeListener(listener);
+	}
+	
 	private void setOnChange(Preference p, Boolean forceSummaries)
 	{
 		if(p == null) return;
-		if(p.getClass().equals(PreferenceScreen.class))
+		if(p instanceof PreferenceScreen)
 		{
 			PreferenceScreen ps = (PreferenceScreen)p;
 			for(int i = 0; i < ps.getPreferenceCount(); i++)
 				setOnChange(ps.getPreference(i), forceSummaries);
+			return;
 		}
+		
 		p.setOnPreferenceChangeListener(this);
 		
 		if(forceSummaries || p.getSummary() == null || p.getSummary().equals(""))
@@ -589,8 +615,15 @@ public class SettingsActivity extends PreferenceActivity
 			preference.setSummary(newValue.toString());
 		if(preference.getKey().equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
 			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
-		//preference.getExtras().putString("value", newValue.toString());
 		Intent intent = getIntent();
+		if(Utils.inArray(preference.getKey(), "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
+					"pref_stats", "pref_root", "pref_language"))
+			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
+		if(preference.getKey().equals("pref_language"))
+			preference.setSummary(getDisplayLanguage((String)newValue));
+		else if(!(preference instanceof CheckBoxPreference) && newValue instanceof String)
+			preference.setSummary((String)newValue);
+		//preference.getExtras().putString("value", newValue.toString());
 		intent.putExtra(preference.getKey().replace("server_", ""), newValue.toString());
 		final OpenApp app = ((OpenApplication)getApplication());
 		app.queueToTracker(new Runnable() {
@@ -599,7 +632,7 @@ public class SettingsActivity extends PreferenceActivity
 			}
 		});
 		setIntent(intent);
-		return false;
+		return true;
 	}
 	
 	public static File GetDefaultServerFile(Context context)
@@ -793,5 +826,68 @@ public class SettingsActivity extends PreferenceActivity
 	@Override
 	public int getThemedResourceId(int styleableId, int defaultResourceId) {
 		return ((OpenApplication)getApplication()).getThemedResourceId(styleableId, defaultResourceId);
+	}
+	
+	@TargetApi(11)
+	public static class PreferenceFragmentV11 extends PreferenceFragment
+	{
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			
+			addPreferencesFromResource(R.xml.preferences);
+			
+			PreferenceManager pm = getPreferenceManager();
+			pm.setSharedPreferencesName("global");
+			PreferenceManager.setDefaultValues(getActivity(), "global", R.xml.preferences, PreferenceActivity.MODE_PRIVATE, false);
+			
+			PreferenceScreen ps = getPreferenceScreen();
+			String key = null;
+			if(getArguments().containsKey("key"))
+			{
+				Preference p = ps.findPreference(getArguments().getCharSequence("key"));
+				ps.removeAll();
+				if(p instanceof PreferenceCategory)
+				{
+					PreferenceCategory pc = (PreferenceCategory)p;
+					for(int i = 0; i < pc.getPreferenceCount(); i++)
+						ps.addPreference(pc.getPreference(i));
+				} else
+					ps.addPreference(p);
+				setPreferenceScreen(ps);
+			}
+			
+			((SettingsActivity)getActivity()).setOnChange(getPreferenceScreen(), false);
+		}
+		
+		@Override
+		public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+				Preference preference) {
+			super.onPreferenceTreeClick(preferenceScreen, preference);
+			
+			if(((SettingsActivity)getActivity()).onPreferenceTreeClick(preferenceScreen, preference))
+				return true;
+			
+			if(preference.getKey().equals("server_prefs"))
+			{
+				getFragmentManager()
+					.beginTransaction()
+					.replace(R.id.content_frag, new ServerSettings())
+					.addToBackStack(null)
+					.commit();
+				return true;
+			}
+			return false;
+		}
+		
+		public class ServerSettings extends PreferenceFragment
+		{
+			@Override
+			public void onCreate(Bundle savedInstanceState) {
+				super.onCreate(savedInstanceState);
+				addPreferencesFromResource(R.xml.server_prefs);
+			}
+		}
+
 	}
 }
