@@ -68,9 +68,18 @@ public abstract class OpenPath
 		return ((OpenPath[])list())[(int) index];
 		} catch(IOException e) { return null; }
 		}
+	
+	/**
+	 * Used to list cached files in directories. Use listFiles to ensure cache is current.
+	 * @return
+	 * @throws IOException
+	 */
 	public abstract OpenPath[] list() throws IOException;
 	
-	/* Provides a method to always get latest Files listing */
+	/**
+	 * Provides a method to always get latest Files listing.
+	 * @throws IOException
+	 */
 	public abstract OpenPath[] listFiles() throws IOException;
 	
 	public OpenPath[] listDirectories() throws IOException
@@ -524,6 +533,12 @@ public abstract class OpenPath
 		return getName();
 	}
 	
+	/**
+	 * Get string to show in "List View"
+	 * @param countHiddenChildren Count Hidden Files?
+	 * @param showLongDate Show Long Date?
+	 * @return String to show
+	 */
 	public String getDetails(boolean countHiddenChildren, boolean showLongDate)
 	{
 		String deets = "";
@@ -551,6 +566,22 @@ public abstract class OpenPath
 	}
 	public void clearChildren() {
 		
+	}
+	
+	/**
+	 * Complementary to requiresThread(), isLoaded() returns true when the thread completes. For non-threaded paths, this always returns true.
+	 * @return True if data can be read.
+	 */
+	public boolean isLoaded() {
+		return !requiresThread();
+	}
+	
+	/**
+	 * Can OpenExplorer handle this file type?
+	 * @return True if OpenExplorer can handle file type (and it is enabled in preferences)
+	 */
+	public boolean canHandleInternally() {
+		return false;
 	}
     
 }
