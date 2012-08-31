@@ -616,10 +616,6 @@ public class SettingsActivity extends PreferenceActivity
 	}
 
 	public boolean onPreferenceChange(final Preference preference, final Object newValue) {
-		if(EditTextPreference.class.equals(preference.getClass()) && ((EditTextPreference)preference).getEditText() != null && ((EditTextPreference)preference).getEditText().getTransformationMethod() != null)
-			preference.setSummary(((EditTextPreference)preference).getEditText().getTransformationMethod().getTransformation(newValue.toString(), ((EditTextPreference)preference).getEditText()));
-		else
-			preference.setSummary(newValue.toString());
 		if(preference.getKey().equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
 			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
 		Intent intent = getIntent();
@@ -628,8 +624,10 @@ public class SettingsActivity extends PreferenceActivity
 			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
 		if(preference.getKey().equals("pref_language"))
 			preference.setSummary(getDisplayLanguage((String)newValue));
-		else if(!(preference instanceof CheckBoxPreference) && newValue instanceof String)
+		else if(preference instanceof ListPreference && newValue instanceof String)
 			preference.setSummary((String)newValue);
+		else if(EditTextPreference.class.equals(preference.getClass()) && ((EditTextPreference)preference).getEditText() != null && ((EditTextPreference)preference).getEditText().getTransformationMethod() != null)
+			preference.setSummary(((EditTextPreference)preference).getEditText().getTransformationMethod().getTransformation(newValue.toString(), ((EditTextPreference)preference).getEditText()));
 		//preference.getExtras().putString("value", newValue.toString());
 		intent.putExtra(preference.getKey().replace("server_", ""), newValue.toString());
 		final OpenApp app = ((OpenApplication)getApplication());
