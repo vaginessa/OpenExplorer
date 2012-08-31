@@ -24,6 +24,18 @@
 			android:entries="@array/view"
 			android:entryValues="@array/view_value"
 			android:dialogTitle="@string/s_pref_view" />
+		<ListPreference
+			android:key="pref_sorting"
+			android:title="@string/s_pref_sort"
+			android:summary="@string/s_pref_sort_summary"
+			android:entries="@array/sorting"
+			android:entryValues="@array/sorting_value"
+			android:dialogTitle="@string/s_pref_sort" />
+	    <CheckBoxPreference
+	        android:key="pref_sorting_folders"
+	        android:title="@string/s_menu_sort_folders"
+	        android:defaultValue="true" 
+	        />
         <!-- <PreferenceScreen
             android:key="pref_reset_views"
             android:title="@string/s_pref_reset" 
@@ -74,24 +86,6 @@
 		    android:entryValues="@array/basebar_split_values"
 		    android:enabled="@bool/prehoneycomb"
 		    /> -->
-	</PreferenceScreen>
-	<PreferenceScreen
-	    android:key="sort"
-	    android:icon="@drawable/ic_action_sort_holo_dark"
-	    android:title="@string/s_pref_sort">
-		<ListPreference
-			android:key="pref_sorting"
-			android:title="@string/s_pref_sort"
-			android:summary="@string/s_pref_sort_summary"
-			android:entries="@array/sorting"
-			android:entryValues="@array/sorting_value"
-			android:dialogTitle="@string/s_pref_sort" />
-	    <CheckBoxPreference
-	        android:key="pref_sorting_folders"
-	        android:title="@string/s_menu_sort_folders"
-	        android:defaultValue="true" 
-	        />
-			
 	</PreferenceScreen>
 	
 	<PreferenceScreen
