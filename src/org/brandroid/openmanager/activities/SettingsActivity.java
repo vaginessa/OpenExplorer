@@ -80,7 +80,6 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
@@ -393,9 +392,9 @@ public class SettingsActivity extends PreferenceActivity
 	private void setOnChange(Preference p, Boolean forceSummaries)
 	{
 		if(p == null) return;
-		if(p instanceof PreferenceScreen)
+		if(p instanceof PreferenceGroup)
 		{
-			PreferenceScreen ps = (PreferenceScreen)p;
+			PreferenceGroup ps = (PreferenceGroup)p;
 			for(int i = 0; i < ps.getPreferenceCount(); i++)
 				setOnChange(ps.getPreference(i), forceSummaries);
 			return;
@@ -614,8 +613,9 @@ public class SettingsActivity extends PreferenceActivity
 	
 	private void askApplyToAll(final Preference preference, final String spKeyPrefix)
 	{
+		Preferences prefs = new Preferences(this);
 		final SharedPreferences sp = Preferences.getPreferences("views");
-		final SharedPreferences spGlobal = Preferences.getPreferences("global");
+		final SharedPreferences spGlobal = prefs.getPreferences();
 		final Runnable clearAll = new Runnable() {
 			public void run() {
 				SharedPreferences.Editor editor = sp.edit();
@@ -626,9 +626,9 @@ public class SettingsActivity extends PreferenceActivity
 				editor.commit();
 			}
 		};
-		if(spGlobal.getBoolean("pref_always_" + spKeyPrefix, false)) {
+		/*if(spGlobal.getBoolean("pref_always_" + spKeyPrefix, false)) {
 			clearAll.run();
-		}
+		}*/
 		DialogInterface.OnClickListener listener =
 			new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
@@ -643,14 +643,11 @@ public class SettingsActivity extends PreferenceActivity
 				}
 			};
 		
-		DialogHandler.showMultiButtonDialog(getContext(),
+		DialogHandler.showConfirmationDialog(getContext(),
 				getString(R.string.apply_to_all),
 				preference.getTitle().toString(),
-				listener,
-				R.string.activity_resolver_use_always,
-				R.string.activity_resolver_use_once,
-				R.string.s_no);
-	}
+				listener);
+		}
 	
 	public static File GetDefaultServerFile(Context context)
 	{
