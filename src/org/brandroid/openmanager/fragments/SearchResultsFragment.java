@@ -12,13 +12,14 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
 import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
-import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
+import android.annotation.SuppressLint;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.view.ViewPager;
@@ -49,11 +50,11 @@ public class SearchResultsFragment
 		setArguments(b);
 	}
 	
-	private class SearchTask extends AsyncTask<OpenPath, Integer, Integer> // Parameters specified for EventHandler compatibility
+	private class SearchTask extends AsyncTask<Void, Void, Void>
 	{
 
 		@Override
-		protected Integer doInBackground(OpenPath... params) {
+		protected Void doInBackground(Void... params) {
 			getSearch().setThreadUpdateCallback(new OpenPathThreadUpdater() {
 				@Override
 				public void update(String status) {
@@ -77,12 +78,12 @@ public class SearchResultsFragment
 		}
 		
 		@Override
-		protected void onProgressUpdate(Integer... values) {
+		protected void onProgressUpdate(Void... values) {
 			notifyDataSetChanged();
 		}
 		
 		@Override
-		protected void onPostExecute(Integer result) {
+		protected void onPostExecute(Void result) {
 			notifyDataSetChanged();
 		}
 		
@@ -110,6 +111,15 @@ public class SearchResultsFragment
 		super.onDestroy();
 		if(myTask.getStatus() == Status.RUNNING)
 			myTask.cancel(true);
+	}
+	
+	@SuppressLint("NewApi")
+	private void executeMyTask()
+	{
+		if(Build.VERSION.SDK_INT > 10)
+			myTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		else
+			myTask.execute();
 	}
 	
 	@Override
@@ -178,11 +188,11 @@ public class SearchResultsFragment
 			ArrayList<Parcelable> results = b.getParcelableArrayList("results");
 			mPath = new OpenSearch(q, path, this, results);
 			//setArguments(b);
-			if(b.containsKey("running") && b.getBoolean("running")) EventHandler.execute(myTask);
+			if(b.containsKey("running") && b.getBoolean("running")) executeMyTask();
 		} else {
 			mPath = new OpenSearch(q, path, this);
 			if(myTask != null)
-				EventHandler.execute(myTask);
+				executeMyTask();
 		}
 		mContentAdapter = new ContentAdapter(getExplorer(), this, OpenExplorer.VIEW_LIST, getSearch());
 	}
@@ -191,7 +201,7 @@ public class SearchResultsFragment
 	public void onStart() {
 		super.onStart();
 		if(myTask.getStatus() == Status.RUNNING) return;
-		//myTask.execute();
+		//executeMyTask();
 	}
 	
 	@Override
@@ -277,6 +287,14 @@ public class SearchResultsFragment
 				notifyPager();
 				mTextSummary.setText(getString(R.string.search_results, getResults().size(), getSearch().getQuery(), getSearch().getBasePath().getPath()));
 				mCancel.setText(android.R.string.ok);
+				TextView te = (TextView)getView().findViewById(android.R.id.empty);
+				if(te != null)
+				{
+					if(getResults().size() > 0)
+						te.setVisibility(View.GONE);
+					else
+						te.setText(R.string.no_items);
+				}
 		}});
 	}
 	@Override

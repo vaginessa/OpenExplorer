@@ -169,9 +169,9 @@ public class ContentAdapter extends BaseAdapter {
 	private OpenPath[] getList() {
 		try {
 			if(mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
-				return null;
-			else
 				return mParent.list();
+			else
+				return mParent.listFiles();
 		} catch (IOException e) {
 			Logger.LogError("Couldn't getList in ContentAdapter");
 			return null;
