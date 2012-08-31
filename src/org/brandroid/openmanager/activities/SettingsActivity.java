@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -61,7 +63,9 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
@@ -585,31 +589,58 @@ public class SettingsActivity extends PreferenceActivity
 	}
 
 	public boolean onPreferenceChange(final Preference preference, final Object newValue) {
-		if(preference.getKey().equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
+		final String key = preference.getKey();
+		if(key.equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
 			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
 		Intent intent = getIntent();
-		if(Utils.inArray(preference.getKey(), "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
+		if(Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
 					"pref_stats", "pref_root", "pref_language"))
 			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
-		if(preference.getKey().equals("pref_language"))
+		if(key.equals("pref_language"))
 			preference.setSummary(getDisplayLanguage((String)newValue));
 		else if(preference instanceof ListPreference && newValue instanceof String)
 			preference.setSummary((String)newValue);
 		else if(EditTextPreference.class.equals(preference.getClass()) && ((EditTextPreference)preference).getEditText() != null && ((EditTextPreference)preference).getEditText().getTransformationMethod() != null)
 			preference.setSummary(((EditTextPreference)preference).getEditText().getTransformationMethod().getTransformation(newValue.toString(), ((EditTextPreference)preference).getEditText()));
+		
+		if(key.equals("pref_show"))
+			askApplyToAll(preference, "show_");
+		else if(key.equals("pref_sorting"))
+			askApplyToAll(preference, "sort_");
+		else if(key.equals("pref_sorting_folders"))
+			askApplyToAll(preference, "ff_");
+		
 		//preference.getExtras().putString("value", newValue.toString());
-		intent.putExtra(preference.getKey().replace("server_", ""), newValue.toString());
+		intent.putExtra(key.replace("server_", ""), newValue.toString());
 		final OpenApp app = ((OpenApplication)getApplication());
 		app.queueToTracker(new Runnable() {
 			public void run() {
-				app.getAnalyticsTracker().trackEvent("Preferences", "Change", preference.getKey(), newValue instanceof Integer ? (Integer)newValue : 0);
+				app.getAnalyticsTracker().trackEvent("Preferences", "Change", key, newValue instanceof Integer ? (Integer)newValue : 0);
 			}
 		});
 		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
-					"pref_stats", "pref_root", "pref_language"}, preference.getKey()) > -1)
+					"pref_stats", "pref_root", "pref_language"}, key) > -1)
 			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
 		setIntent(intent);
 		return true;
+	}
+	
+	private void askApplyToAll(final Preference preference, final String spKeyPrefix)
+	{
+		DialogHandler.showConfirmationDialog(getContext(),
+				getString(R.string.apply_to_all),
+				preference.getTitle().toString(),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						SharedPreferences sp = Preferences.getPreferences("views");
+						SharedPreferences.Editor editor = sp.edit();
+						Map<String, ?> map = sp.getAll();
+						for(String pkey : map.keySet())
+							if(pkey.startsWith(spKeyPrefix))
+								editor.remove(pkey);
+						editor.commit();
+					}
+				});
 	}
 	
 	public static File GetDefaultServerFile(Context context)
