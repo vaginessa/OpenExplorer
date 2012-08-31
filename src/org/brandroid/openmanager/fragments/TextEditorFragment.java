@@ -67,13 +67,18 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
+import android.widget.Scroller;
 import android.widget.SeekBar;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -101,6 +106,7 @@ public class TextEditorFragment extends OpenFragment
 	private long lastClick = 0l;
 	private float mTextSize = 10f;
 	private boolean mSalvage = true;
+	private boolean mWrap = true;
 	
 	private final static boolean USE_SEEK_ACTIONVIEW = true;
 	
@@ -304,6 +310,7 @@ public class TextEditorFragment extends OpenFragment
 		super.onPrepareOptionsMenu(menu);
 		if(mFontSizeBar != null)
 			mFontSizeBar.setProgress((int)(mTextSize * 2));
+		MenuUtils.setMenuChecked(menu, mWrap, R.id.menu_text_wrap);
 		MenuUtils.setMenuEnabled(menu, mPath.canWrite(), R.id.menu_save);
 		MenuUtils.setMenuChecked(menu, mEditMode, R.id.menu_view_keyboard_toggle);
 		MenuUtils.setMenuVisible(menu, true, R.id.menu_view_font_size);
@@ -337,8 +344,12 @@ public class TextEditorFragment extends OpenFragment
 		mFilename = (TextView)view.findViewById(R.id.text_filename);
 		showFilename();
 		setTextSize(getViewSetting(null, "text_size", mTextSize), true);
+		mWrap = getViewSetting(getPath(), "wrap", getViewSetting(null, "text_wrap", true));
 		if(mViewListAdapter != null)
+		{
 			mViewListAdapter.setShowLines(getViewSetting(null, "text_lines", true));
+			mViewListAdapter.setTextWrap(mWrap);
+		}
 		//mViewTable = (TableLayout)view.findViewById(R.id.text_view_table);
 		//mViewScroller = (ScrollView)view.findViewById(R.id.text_view_scroller);
 		//mViewText = (TextView)view.findViewById(R.id.text_view);
@@ -540,6 +551,25 @@ public class TextEditorFragment extends OpenFragment
 		case R.id.menu_view_lines:
 			mViewListAdapter.setShowLines();
 			setViewSetting(null, "text_lines", mViewListAdapter.getShowLines());
+			return true;
+		case R.id.menu_text_wrap:
+			mWrap = !mWrap;
+			ListView list = (ListView)getView().findViewById(android.R.id.list);
+			if(list.getParent() instanceof HorizontalScrollView && mWrap)
+			{
+				((HorizontalScrollView)list.getParent()).removeAllViews();
+				((ViewGroup)getView().findViewById(R.id.text_view_noscroll))
+					.addView(list);
+				list.getLayoutParams().width = LayoutParams.WRAP_CONTENT;
+			} else if (!(list.getParent() instanceof HorizontalScrollView) && !mWrap)
+			{
+				((ViewGroup)list.getParent()).removeAllViews();
+				((HorizontalScrollView)getView().findViewById(R.id.text_view_scroller_horizontal))
+					.addView(list);
+				list.getLayoutParams().width = LayoutParams.MATCH_PARENT;
+			}
+			mViewListAdapter.setTextWrap(mWrap);
+			setViewSetting(getPath(), "wrap", mWrap);
 			return true;
 		}
 		return false;

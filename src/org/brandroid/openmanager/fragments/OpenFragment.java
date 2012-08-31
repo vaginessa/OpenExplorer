@@ -122,7 +122,7 @@ public abstract class OpenFragment
 		if(this instanceof OpenPathFragmentInterface)
 		{
 			OpenPath mPath = ((OpenPathFragmentInterface)this).getPath();
-			if(mPath.canHandleInternally())
+			if(mPath.canHandleInternally() && getExplorer() != null)
 			{
 				Intent intent = IntentManager.getIntent(mPath, getExplorer());
 				List<ResolveInfo> resolves = IntentManager.getResolvesAvailable(mPath, getExplorer());

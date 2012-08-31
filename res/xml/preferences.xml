@@ -102,6 +102,11 @@
 	        android:title="@string/s_menu_view_line_numbers"
 	        android:defaultValue="true" 
 	        />
+	    <CheckBoxPreference
+	        android:key="text_wrap"
+	        android:title="@string/s_pref_text_wrap"
+	        android:defaultValue="true" 
+	        />
 	    <ListPreference
 	        android:key="text_max"
 	        android:title="@string/s_pref_text_max_size"
