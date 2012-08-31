@@ -238,9 +238,14 @@ public class ContentFragment extends OpenFragment
 			mContentAdapter.setShowHiddenFiles(
 					getViewSetting(getPath(), "show", getViewSetting(null, "pref_show", false))
 							);
-			mContentAdapter.setSorting(new SortType(
+			SortType sort = new SortType(
 					getViewSetting(getPath(), "sort", getViewSetting(null, "pref_sorting", SortType.ALPHA.toString()))
-					));
+					);
+			if(getViewSetting(getPath(), "ff", (Boolean)null) != null)
+				sort.setFoldersFirst(getViewSetting(getPath(), "ff", true));
+			else
+				sort.setFoldersFirst(getSetting(null, "pref_sorting_folders", true));
+			mContentAdapter.setSorting(sort);
 		}
 		return mContentAdapter;
 	}

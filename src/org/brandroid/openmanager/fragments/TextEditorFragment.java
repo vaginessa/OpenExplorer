@@ -166,7 +166,8 @@ public class TextEditorFragment extends OpenFragment
 	{
 		if(mFilename == null) return;
 		
-		mFilename.setText(mPath.getPath());
+		if(mPath != null)
+			mFilename.setText(mPath.getPath());
 		mFilename.setVisibility(View.VISIBLE);
 		if(animateOut && Build.VERSION.SDK_INT > 10)
 		{
@@ -459,6 +460,7 @@ public class TextEditorFragment extends OpenFragment
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		if(!mSalvage) return;
+		if(mPath == null) return;
 		Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
 		outState.putParcelable("edit_path", mPath);
 		if(mData != null && mData.length() < Preferences.Pref_Text_Max_Size)
