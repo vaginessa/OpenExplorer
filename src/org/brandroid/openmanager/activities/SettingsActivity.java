@@ -82,6 +82,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.view.Menu;
@@ -147,7 +148,6 @@ public class SettingsActivity extends PreferenceActivity
 		return super.onPreferenceStartFragment(caller, pref);
 	}
 	
-	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -260,19 +260,6 @@ public class SettingsActivity extends PreferenceActivity
 					});
 				}
 				
-				PreferenceScreen pReset = (PreferenceScreen)pm.findPreference("pref_reset_views");
-				if(pReset != null)
-					pReset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-						@Override
-						public boolean onPreferenceClick(Preference preference)
-						{
-							
-							Toast.makeText(getApplicationContext(),
-									R.string.s_toast_complete, Toast.LENGTH_SHORT);
-							return true;
-						}
-					});
-				
 				refreshServerList();
 			}
 		} else if(mode == MODE_SERVER) {
@@ -362,7 +349,7 @@ public class SettingsActivity extends PreferenceActivity
 	}
 	
 	private void refreshServerList() {
-		PreferenceCategory mPrefServers = (PreferenceCategory)findPreference("servers");
+		PreferenceGroup mPrefServers = (PreferenceGroup)findPreference("servers");
 		if(mPrefServers != null)
 		{
 			//for(int i = mPrefServers.getPreferenceCount() - 1; i > 0; i--)
@@ -627,20 +614,42 @@ public class SettingsActivity extends PreferenceActivity
 	
 	private void askApplyToAll(final Preference preference, final String spKeyPrefix)
 	{
-		DialogHandler.showConfirmationDialog(getContext(),
+		final SharedPreferences sp = Preferences.getPreferences("views");
+		final SharedPreferences spGlobal = Preferences.getPreferences("global");
+		final Runnable clearAll = new Runnable() {
+			public void run() {
+				SharedPreferences.Editor editor = sp.edit();
+				Map<String, ?> map = sp.getAll();
+				for(String pkey : map.keySet())
+					if(pkey.startsWith(spKeyPrefix))
+						editor.remove(pkey);
+				editor.commit();
+			}
+		};
+		if(spGlobal.getBoolean("pref_always_" + spKeyPrefix, false)) {
+			clearAll.run();
+		}
+		DialogInterface.OnClickListener listener =
+			new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					switch(which)
+					{
+					case R.string.activity_resolver_use_always:
+						spGlobal.edit().putBoolean("pref_always_" + spKeyPrefix, true).commit();
+					case R.string.activity_resolver_use_once:
+						clearAll.run();
+						break;
+					}
+				}
+			};
+		
+		DialogHandler.showMultiButtonDialog(getContext(),
 				getString(R.string.apply_to_all),
 				preference.getTitle().toString(),
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						SharedPreferences sp = Preferences.getPreferences("views");
-						SharedPreferences.Editor editor = sp.edit();
-						Map<String, ?> map = sp.getAll();
-						for(String pkey : map.keySet())
-							if(pkey.startsWith(spKeyPrefix))
-								editor.remove(pkey);
-						editor.commit();
-					}
-				});
+				listener,
+				R.string.activity_resolver_use_always,
+				R.string.activity_resolver_use_once,
+				R.string.s_no);
 	}
 	
 	public static File GetDefaultServerFile(Context context)
@@ -855,9 +864,9 @@ public class SettingsActivity extends PreferenceActivity
 			{
 				Preference p = ps.findPreference(getArguments().getCharSequence("key"));
 				ps.removeAll();
-				if(p instanceof PreferenceCategory)
+				if(p instanceof PreferenceGroup)
 				{
-					PreferenceCategory pc = (PreferenceCategory)p;
+					PreferenceGroup pc = (PreferenceGroup)p;
 					for(int i = 0; i < pc.getPreferenceCount(); i++)
 						ps.addPreference(pc.getPreference(i));
 				} else
