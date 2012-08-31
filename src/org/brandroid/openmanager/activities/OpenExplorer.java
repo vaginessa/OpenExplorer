@@ -2219,7 +2219,7 @@ public class OpenExplorer
 		MenuItem mMenuSearch = menu.findItem(R.id.menu_search);
 		if(mMenuSearch != null)
 		{
-			mMenuSearch.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+			mMenuSearch.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 			mMenuSearch.setActionView(mSearchView);
 			}
 		
@@ -2755,7 +2755,8 @@ public class OpenExplorer
 				refreshBookmarks();
 				notifyPager();
 				getDirContentFragment(false).refreshData();
-				toggleBookmarks(getSetting(null, "pref_show_bookmarks", getResources().getBoolean(R.bool.large)), false);
+				if(!mSinglePane)
+					toggleBookmarks(getSetting(null, "pref_show_bookmarks", getResources().getBoolean(R.bool.large)), false);
 				invalidateOptionsMenu();
 			}
 		} else if (requestCode == REQ_SPLASH) {
