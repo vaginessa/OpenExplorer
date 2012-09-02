@@ -72,6 +72,8 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipData.Item;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -1909,8 +1911,15 @@ public class ContentFragment extends OpenFragment
 				mShareActionProvider = (ShareActionProvider) mShare
 						.getActionProvider();
 				if(mShareActionProvider != null)
+				{
+					OpenPath first = mContentAdapter.getSelectedSet().first();
+					Intent shareIntent = new Intent(Intent.ACTION_SEND);
+					shareIntent.setType(first.getMimeType());
+					shareIntent.putExtra(Intent.EXTRA_STREAM, first.getUri());
+					mShareActionProvider.setShareIntent(shareIntent);
 					mShareActionProvider
 						.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+				}
 			}
 
 			return true;
@@ -1922,6 +1931,31 @@ public class ContentFragment extends OpenFragment
 			// Set title -- "# selected"
 			mode.setTitle(getExplorer().getResources().getQuantityString(
 					R.plurals.num_selected, num, num));
+			
+			if(mShareActionProvider != null)
+			{
+				Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+				OpenPath first = mContentAdapter.getSelectedSet().first();
+				String type = first.getMimeType();
+				ArrayList<Uri> uris = new ArrayList<Uri>();
+				for(OpenPath sel : mContentAdapter.getSelectedSet())
+				{
+					if(!type.equals(sel.getMimeType()))
+						type = "*/*";
+					if(Build.VERSION.SDK_INT > 15)
+					{
+						ClipData data = shareIntent.getClipData();
+						if(data == null)
+							data = ClipData.newIntent(mode.getTitle(), shareIntent);
+						data.addItem(new Item(sel.getUri()));
+						shareIntent.setClipData(data);
+					}
+					uris.add(sel.getUri());
+				}
+				shareIntent.setType(type);
+				shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+				mShareActionProvider.setShareIntent(shareIntent);
+			}
 					
 			mRename.setVisible(num == 1);
 			mInfo.setVisible(num == 1);
