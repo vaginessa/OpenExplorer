@@ -52,7 +52,10 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
+
+import com.actionbarsherlock.app.SherlockPreferenceActivity;
 import com.actionbarsherlock.view.ActionMode;
+import com.actionbarsherlock.view.MenuItem;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -91,7 +94,7 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
 
-public class SettingsActivity extends PreferenceActivity
+public class SettingsActivity extends SherlockPreferenceActivity
 	implements OnPreferenceChangeListener, OpenApp
 {
 	//keys used for preference file
@@ -152,6 +155,8 @@ public class SettingsActivity extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		
 		setTheme(R.style.AppTheme_Dark);
+		
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		
 		Intent intent = getIntent();
 		if(intent == null) intent = new Intent();
@@ -315,19 +320,6 @@ public class SettingsActivity extends PreferenceActivity
 		}
 		setOnChange(getPreferenceScreen(), false);
 		
-		if(!OpenExplorer.BEFORE_HONEYCOMB && hasHeaders())
-		{
-			Button button = new Button(this);
-			button.setText(android.R.string.ok);
-			button.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					finish();
-				}
-			});
-			setListFooter(button);
-		}
-		
 		/*
 		mHandler = new Handler();
 		mDonationObserver = new DonationObserver(mHandler);
@@ -472,6 +464,17 @@ public class SettingsActivity extends PreferenceActivity
 			//prefs.setSetting("global", "servers", servers.getJSONObject());
 		}
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId())
+		{
+		case android.R.id.home:
+			finish();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
@@ -567,13 +570,6 @@ public class SettingsActivity extends PreferenceActivity
         return null;
     }
     
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		//getMenuInflater().inflate(R.menu.actbar, menu);
-		return true;
-	}
-
 	public boolean onPreferenceChange(final Preference preference, final Object newValue) {
 		final String key = preference.getKey();
 		if(key.equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
