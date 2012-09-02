@@ -2940,7 +2940,9 @@ public class OpenExplorer
 				{
 					OpenFragment f = mViewPagerAdapter.getItem(i);
 					if(f == null || !(f instanceof ContentFragment)) continue;
-					if(!familyTree.contains(((ContentFragment)f).getPath()))
+					OpenPath tp = ((ContentFragment)f).getPath();
+					if(tp instanceof OpenSmartFolder ||
+							!familyTree.contains(tp))
 					{
 						mViewPagerAdapter.remove(i);
 						//removed = true;
