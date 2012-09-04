@@ -579,18 +579,19 @@ public class ContentFragment extends OpenFragment
 		if(mPath instanceof OpenPathUpdateListener)
 		{
 			try {
+				mContentAdapter.clearData();
+				
 				((OpenPathUpdateListener)mPath).list(new OpenContentUpdater() {
 					public void addContentPath(OpenPath file) {
 						if(!mContentAdapter.contains(file))
-						{
 							mContentAdapter.add(file);
-						}
 					}
 
 					@Override
 					public void doneUpdating() {
 						mContentAdapter.sort();
 						notifyDataSetChanged();
+						ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
 					}
 				});
 				return;
@@ -2123,7 +2124,8 @@ public class ContentFragment extends OpenFragment
 	}
 
 	public void notifyDataSetChanged() {
-		if(mContentAdapter == null && getExplorer() != null) {
+		if(getExplorer() == null) return;
+		if(mContentAdapter == null) {
 			mContentAdapter = getContentAdapter();
 		}
 		if(mGrid != null && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
@@ -2134,8 +2136,8 @@ public class ContentFragment extends OpenFragment
 		mContentAdapter.notifyDataSetChanged();
 		
 		boolean empty = mContentAdapter == null || mContentAdapter.getCount() == 0;
-		if(empty && getResources() != null)
-			ViewUtils.setText(getView(), getResources().getString(!mPath.isLoaded() ? R.string.s_status_loading : R.string.no_items), android.R.id.empty);
+		if(empty)
+			ViewUtils.setText(getView(), getString(!mPath.isLoaded() ? R.string.s_status_loading : R.string.no_items, ""), android.R.id.empty);
 		ViewUtils.setViewsVisibleNow(getView(), empty, android.R.id.empty);
 		
 		//TODO check to see if this is the source of inefficiency

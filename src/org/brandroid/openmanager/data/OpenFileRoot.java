@@ -19,6 +19,7 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.RootManager.UpdateCallback;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
@@ -29,7 +30,7 @@ import android.os.PatternMatcher;
 
 public class OpenFileRoot
 	extends OpenPath
-	implements //OpenPath.OpenPathUpdateListener,
+	implements OpenPath.OpenPathUpdateListener,
 		OpenPath.NeedsTempFile, OpenPath.OpenPathCopyable,
 		OpenPathByteIO
 {
@@ -175,10 +176,10 @@ public class OpenFileRoot
 	@Override
 	public OpenPath[] list() throws IOException {
 		if(mChildren == null)
-			return listFiles();
+			return new OpenPath[0];
 		if(getChildren() != null)
 			return getChildren().toArray(new OpenPath[getChildren().size()]);
-		else return null;
+		else return new OpenPath[0];
 	}
 	
 	private void addChild(OpenPath kid)
@@ -187,11 +188,9 @@ public class OpenFileRoot
 		{
 			ArrayList<OpenPath> tmp = new ArrayList<OpenPath>();
 			mChildren = new WeakReference<List<OpenPath>>(tmp);
-		} else {
-			if(!mChildren.get().contains(kid))
-				mChildren.get().add(kid);
 		}
-		
+		if(!mChildren.get().contains(kid))
+			mChildren.get().add(kid);
 	}
 	
 	public void list(final OpenContentUpdater callback) throws IOException {
@@ -207,13 +206,15 @@ public class OpenFileRoot
 			path += "/";
 		Logger.LogDebug("Trying to list " + path + " via Su with Callback");
 		final String[] buff = new String[]{null};
-		final String w = "ls -" + getLSOpts() + " " + path;
+		String lsopts = getLSOpts();
+		final String w = "ls -l" + lsopts + " " + path;
 		RootManager proc = new RootManager();
 		UpdateCallback callback2 = new UpdateCallback() {
 			
 			@Override
 			public void onUpdate() {
 				Logger.LogDebug("CF onUpdate");
+				mLoaded = true;
 				callback.doneUpdating();
 				RootManager.Default.setUpdateCallback(null);
 			}
@@ -221,15 +222,15 @@ public class OpenFileRoot
 			private void processMessage(String msg)
 			{
 				String[] parts = msg.split(" +", 7);
-				if(parts.length < 7)
+				if(parts.length < 4)
 				{
 					if(buff[0] != null)
 					{
 						msg = buff[0] + msg;
-						parts = msg.split(" +", 7);
+						parts = msg.split(" +", 4);
 					} else buff[0] = msg;
 				}
-				if(parts.length >= 7)
+				if(parts.length >= 4)
 				{
 					OpenFileRoot kid = new OpenFileRoot(getPath(), msg);
 					addChild(kid);
@@ -300,10 +301,8 @@ public class OpenFileRoot
 	private String getLSOpts()
 	{
 		String lsOpts = "";
-		/*
-		if(Sorting.showHidden())
+		if(ShowHiddenFiles)
 			lsOpts += "A";
-		*/
 		switch(Sorting.getType())
 		{
 		case ALPHA_DESC:
@@ -441,20 +440,19 @@ public class OpenFileRoot
 		copyFrom(tmp);
 	}
 	
-	private String execute(final String cmd) { return execute(cmd, false, -1); }
-	private String execute(final String cmd, boolean useBusyBox) { return execute(cmd, useBusyBox, -1); }
-	private String execute(final String cmd, boolean useBusyBox, int size)
+	private String execute(final String cmd) { return execute(cmd, false); }
+	private String execute(final String cmd, boolean useBusyBox)
 	{
 		final boolean[] waiting = new boolean[]{true};
-		final int[] sizes = new int[]{size};
 		final String[] ret = new String[1];
 		String bb = useBusyBox ? RootManager.Default.getBusyBox() : "";
 		if(bb == null || !bb.startsWith("/"))
 			bb = "";
 		else if(!bb.equals(""))
 			bb += " ";
+		final String md5 = Utils.md5(cmd);
 		try {
-			RootManager.Default.write(bb + cmd,
+			RootManager.Default.write(bb + cmd + " && echo \"" + md5 + "\"",
 				new UpdateCallback() {
 					public void onUpdate() {
 						Logger.LogDebug("Done with command: " + cmd);
@@ -463,11 +461,12 @@ public class OpenFileRoot
 					public boolean onReceiveMessage(String msg) {
 						Logger.LogDebug("OpenFileRoot.execute.onReceiveMessage(" + msg + ")");
 						ret[0] = (ret[0] == null ? "" : ret[0]) + msg;
-						if(msg.length() > sizes[0])
+						if(msg.indexOf(md5) > -1)
 						{
+							ret[0] = ret[0].substring(0, ret[0].indexOf(md5));
 							waiting[0] = false;
 							return true;
-						} else sizes[0] -= msg.length();
+						}
 						return false;
 					}
 					public void onExit() {
