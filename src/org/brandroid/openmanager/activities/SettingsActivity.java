@@ -53,6 +53,7 @@ import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockPreferenceActivity;
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.MenuItem;
@@ -150,13 +151,21 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		return super.onPreferenceStartFragment(caller, pref);
 	}
 	
+	public ActionBar getSupportActionBar()
+	{
+		return super.getSupportActionBar();
+		//return null;
+	}
+	
 	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		setTheme(R.style.AppTheme_Dark);
 		
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		ActionBar bar = getSupportActionBar();
+		if(bar != null)
+			bar.setDisplayHomeAsUpEnabled(true);
 		
 		Intent intent = getIntent();
 		if(intent == null) intent = new Intent();
@@ -465,7 +474,6 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		}
 	}
 	
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId())
 		{
@@ -473,7 +481,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 			finish();
 			return true;
 		}
-		return super.onOptionsItemSelected(item);
+		return false;
 	}
 
     @Override
@@ -572,12 +580,18 @@ public class SettingsActivity extends SherlockPreferenceActivity
     
 	public boolean onPreferenceChange(final Preference preference, final Object newValue) {
 		final String key = preference.getKey();
+		
+		Logger.LogDebug("SettingsActivity.onPreferenceChange(" + key + ", " + newValue + ")");
+		
 		if(key.equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
 			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
 		Intent intent = getIntent();
 		if(Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
 					"pref_stats", "pref_root", "pref_language"))
-			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
+		{
+			intent.putExtra("restart", true);
+			setResult(OpenExplorer.RESULT_RESTART_NEEDED, intent);
+		}
 		if(key.equals("pref_language"))
 			preference.setSummary(getDisplayLanguage((String)newValue));
 		else if(preference instanceof ListPreference && newValue instanceof String)
@@ -600,10 +614,14 @@ public class SettingsActivity extends SherlockPreferenceActivity
 				app.getAnalyticsTracker().trackEvent("Preferences", "Change", key, newValue instanceof Integer ? (Integer)newValue : 0);
 			}
 		});
+		setIntent(intent);
 		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
 					"pref_stats", "pref_root", "pref_language"}, key) > -1)
-			setResult(OpenExplorer.RESULT_RESTART_NEEDED);
-		setIntent(intent);
+		{
+			intent.putExtra("restart", true);
+			setResult(OpenExplorer.RESULT_RESTART_NEEDED, intent);
+		} else
+			setResult(OpenExplorer.RESULT_OK, intent);
 		return true;
 	}
 	
