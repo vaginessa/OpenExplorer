@@ -532,7 +532,7 @@ public abstract class OpenFragment
 			getExplorer().refreshOperations();
 	}
 	
-	protected final void finishMode(ActionMode mode)
+	protected void finishMode(ActionMode mode)
 	{
 		if(mode != null)
 			mode.finish();

@@ -1005,7 +1005,9 @@ public class ContentFragment extends OpenFragment
 		if(DEBUG)
 			Logger.LogDebug("ContentFragment.onOptionsItemSelected(0x" + Integer.toHexString(item.getItemId()) + ":" + item.getTitle() + ")");
 		OpenPath path = null;
-		if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
+		if(getSelectedCount() > 0)
+			path = mContentAdapter.getSelectedSet().last();
+		else if(mMenuContextItemIndex > -1 && mMenuContextItemIndex < getContentAdapter().getCount())
 			path = getContentAdapter().getItem(mMenuContextItemIndex);
 		if(path != null && executeMenu(item.getItemId(), getActionMode(), path))
 			return true;
@@ -1086,7 +1088,19 @@ public class ContentFragment extends OpenFragment
 				return true;
 				
 			case R.id.menu_context_download:
-				downloadFile((OpenNetworkPath)file);
+				if(file instanceof OpenNetworkPath)
+					downloadFile((OpenNetworkPath)file);
+				else
+				{
+					OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
+					if(dl == null)
+						dl = OpenFile.getExternalMemoryDrive(true).getChild("download");
+					dl = dl.getChild(file.getName());
+					if(!file.equals(dl))
+						getEventHandler().copyFile(file, dl, getExplorer());
+					else return true;
+				}
+				finishMode(mode);
 				return true;
 			
 			case R.id.menu_context_selectall:
@@ -1306,6 +1320,13 @@ public class ContentFragment extends OpenFragment
 	//			return true;
 			}
 		return false;
+	}
+	
+	@Override
+	protected void finishMode(ActionMode mode) {
+		super.finishMode(mode);
+		if(getSelectedCount() > 0)
+			mContentAdapter.clearSelection();
 	}
 
 /*	@Override
