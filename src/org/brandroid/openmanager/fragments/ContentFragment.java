@@ -1943,14 +1943,6 @@ public class ContentFragment extends OpenFragment
 				{
 					if(!type.equals(sel.getMimeType()))
 						type = "*/*";
-					if(Build.VERSION.SDK_INT > 15)
-					{
-						ClipData data = shareIntent.getClipData();
-						if(data == null)
-							data = ClipData.newIntent(mode.getTitle(), shareIntent);
-						data.addItem(new Item(sel.getUri()));
-						shareIntent.setClipData(data);
-					}
 					uris.add(sel.getUri());
 				}
 				shareIntent.setType(type);
@@ -2125,6 +2117,12 @@ public class ContentFragment extends OpenFragment
 
 	public void notifyDataSetChanged() {
 		if(getExplorer() == null) return;
+		if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+		{
+			if(getView() != null)
+				getView().post(new Runnable() {public void run() { notifyDataSetChanged(); } });
+			return;
+		}
 		if(mContentAdapter == null) {
 			mContentAdapter = getContentAdapter();
 		}

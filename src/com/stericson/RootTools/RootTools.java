@@ -59,6 +59,7 @@ public class RootTools {
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
     public static String utilPath;
+    public static Boolean access = null;
 
     /**
      * You can use this to force sendshell to use a shell other than the deafult.
@@ -116,6 +117,7 @@ public class RootTools {
     public static void closeAllShells() throws IOException
     {
     	Shell.closeAll();
+    	access = null;
     }
 
     /**
@@ -485,7 +487,14 @@ public class RootTools {
      *             if this operation times out. (cannot determine if access is given)
      */
     public static boolean isAccessGiven() {
-    	return InternalMethods.isAccessGiven();
+    	if(access == null)
+    		access = InternalMethods.isAccessGiven();
+    	return access;
+    }
+    
+    public static boolean isAccessRequested()
+    {
+    	return access == null;
     }
 
     /**
