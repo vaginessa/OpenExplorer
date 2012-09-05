@@ -27,6 +27,7 @@ import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
@@ -1142,8 +1143,13 @@ public class ContentFragment extends OpenFragment
 				if(!fromPasteMenu)
 					getClipboard().add(file);
 				return true;
+				
 			case R.id.menu_context_bookmark:
-				getExplorer().addBookmark(file);
+				if(getSelectedCount() > 0)
+					for(OpenPath p : mContentAdapter.getSelectedSet())
+						getExplorer().addBookmark(p);
+				else
+					getExplorer().addBookmark(file);
 				finishMode(mode);
 				return true;
 				
@@ -1267,7 +1273,12 @@ public class ContentFragment extends OpenFragment
 				return true;
 				
 			case R.id.menu_context_heatmap:
-				DialogHandler.showFileHeatmap(getExplorer(), file);
+				if(getSelectedCount() > 0)
+				{
+					OpenPathArray sels = new OpenPathArray(mContentAdapter.getSelectedSet().toArray(new OpenPath[getSelectedCount()]));
+					DialogHandler.showFileHeatmap(getExplorer(), sels);
+				} else
+					DialogHandler.showFileHeatmap(getExplorer(), file);
 				finishMode(mode);
 				return true;
 				
@@ -1949,7 +1960,21 @@ public class ContentFragment extends OpenFragment
 				shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
 				mShareActionProvider.setShareIntent(shareIntent);
 			}
-					
+			
+			boolean writable = true, readable = true;
+			for(OpenPath p : mContentAdapter.getSelectedSet())
+			{
+				if(!p.canWrite())
+					writable = false;
+				if(!p.canRead())
+					readable = false;
+			}
+			
+			MenuUtils.setMenuEnabled(menu, writable, R.id.menu_context_delete, R.id.menu_context_cut);
+			MenuUtils.setMenuEnabled(menu, readable, R.id.menu_context_copy, R.id.menu_context_cut, R.id.menu_context_download, R.id.menu_context_rename, R.id.menu_context_zip);
+			
+			MenuUtils.setMenuVisible(menu, num == 1, R.id.menu_context_bookmark);
+			
 			mRename.setVisible(num == 1);
 			mInfo.setVisible(num == 1);
 
