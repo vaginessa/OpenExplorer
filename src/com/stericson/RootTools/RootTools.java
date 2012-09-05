@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -53,7 +55,7 @@ public class RootTools {
     // # Public Variables #
     // --------------------
 
-    public static boolean debugMode = false;
+    public static boolean debugMode = OpenExplorer.IS_DEBUG_BUILD;
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
     public static String utilPath;
