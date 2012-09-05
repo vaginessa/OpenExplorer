@@ -207,19 +207,20 @@ public class OpenFileRoot
 		Logger.LogDebug("Trying to list " + path + " via Su with Callback");
 		final String[] buff = new String[]{null};
 		String lsopts = getLSOpts();
+		if(!RootManager.hasBusybox())
+			lsopts = "";
 		final String w = "ls -l" + lsopts + " " + path;
-		RootManager proc = new RootManager();
+		final String md5 = Utils.md5(w);
 		UpdateCallback callback2 = new UpdateCallback() {
-			
 			@Override
 			public void onUpdate() {
 				Logger.LogDebug("CF onUpdate");
-				mLoaded = true;
-				callback.doneUpdating();
-				RootManager.Default.setUpdateCallback(null);
+				//mLoaded = true;
+				//callback.doneUpdating();
+				//RootManager.Default.setUpdateCallback(null);
 			}
 			
-			private void processMessage(String msg)
+			private boolean processMessage(String msg)
 			{
 				String[] parts = msg.split(" +", 7);
 				if(parts.length < 4)
@@ -235,30 +236,50 @@ public class OpenFileRoot
 					OpenFileRoot kid = new OpenFileRoot(getPath(), msg);
 					addChild(kid);
 					callback.addContentPath(kid);
+					return true;
 				}
 				else if(msg.trim().length() > 0)
+				{
 					Logger.LogDebug("CF Saving for later: " + msg);
+					return false;
+				}
+				return true;
 			}
 			
 			@Override
 			public boolean onReceiveMessage(String msg) {
-				Logger.LogDebug("CF Message: (" + w + "): " + msg.length()); //.replace("\n", "\\n"));
-				if(msg.indexOf("\n") > -1)
+				boolean isDone = false;
+				if(msg.indexOf(md5) > -1)
 				{
-					RootManager.Default.onUpdate();
-					while(msg.indexOf("\n") > -1)
-					{
-						String s = msg.substring(0, msg.indexOf("\n"));
-						msg = msg.substring(msg.indexOf("\n") + 1);
-						processMessage(s);
-					}
-					buff[0] = msg;
+					isDone = true;
 					mLoaded = true;
-					return true;
+					msg = msg.substring(0, msg.indexOf(md5));
+				}
+				Logger.LogDebug("CF Message: (" + w + "): " + msg.length()); //.replace("\n", "\\n"));
+				if(msg.indexOf("\n") > -1 || isDone)
+				{
+					for(String s : msg.split("\n"))
+						processMessage(s);
+					if(isDone && msg.lastIndexOf("\n") < msg.length() - 1)
+					{
+						buff[0] = msg.substring(msg.lastIndexOf("\n") + 1);
+						if(!buff[0].equals(""))
+							return false;
+					}
 				}
 				if(msg != null && !msg.trim().equals(""))
-					processMessage(msg);
-				return false;
+					if(!processMessage(msg))
+					{
+						isDone = false;
+						mLoaded = false;
+						buff[0] = msg;
+					}
+				if(isDone)
+				{
+					callback.doneUpdating();
+					onExit();
+				}
+				return isDone;
 			}
 			
 			@Override
@@ -268,7 +289,7 @@ public class OpenFileRoot
 				mLoaded = true;
 			}
 		};
-		RootManager.Default.write(w, callback2);
+		RootManager.Default.write(w + " && echo \"" + md5 + "\"", callback2);
 	}
 
 	@Override

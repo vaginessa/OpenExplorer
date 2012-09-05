@@ -37,7 +37,7 @@ public class RootManager
 	{
 		void onUpdate();
 		/**
-		 * Main Callback Function
+		 * Main Callback Function for RootManager.
 		 * @param msg
 		 * @return Return true to signal to RootManager to stop waiting for Process.
 		 * False if more is expected.
@@ -110,6 +110,8 @@ public class RootManager
 	
 	public RootManager setUpdateCallback(RootManager.UpdateCallback notify)
 	{
+		if(notify == null)
+			mLastWrite = null;
 		mNotify = notify;
 		return this;
 	}
@@ -502,5 +504,9 @@ public class RootManager
 		mIsRunning = false;
 		if(mNotify != null)
 			mNotify.onExit();
+	}
+
+	public static boolean hasBusybox() {
+		return false;
 	}
 }
