@@ -63,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import android.net.Uri;
@@ -1048,19 +1049,21 @@ public class ContentFragment extends OpenFragment
 		return false;
 	}
 
-	public void downloadFile(OpenNetworkPath file)
+	public void downloadFile(OpenPath... paths)
 	{
 		OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
 		if(dl == null)
 			dl = OpenFile.getExternalMemoryDrive(true);
-		if(dl != null)
+		if(dl == null)
 		{
-			List<OpenPath> files = new ArrayList<OpenPath>();
-			files.add(file);
-			getEventHandler().copyFile(files, dl, getActivity());
-			refreshOperations();
-		} else
 			getExplorer().showToast(R.string.s_error_ftp);
+			return;
+		}
+		List<OpenPath> files = new ArrayList<OpenPath>();
+		for(OpenPath path : paths)
+			files.add(path);
+		getEventHandler().copyFile(files, dl, getActivity());
+		refreshOperations();
 	}
 	
 	public boolean executeMenu(final int id, final ActionMode mode, final OpenPath file)
@@ -1072,6 +1075,7 @@ public class ContentFragment extends OpenFragment
 			parent = OpenFile.getExternalMemoryDrive(true);
 		final OpenPath folder = parent;
 		String name = file != null ? file.getName() : null;
+		Set<OpenPath> selection = mContentAdapter.getSelectedSet();
 		
 		final boolean fromPasteMenu = file.equals(mPath);
 		
@@ -1088,18 +1092,10 @@ public class ContentFragment extends OpenFragment
 				return true;
 				
 			case R.id.menu_context_download:
-				if(file instanceof OpenNetworkPath)
-					downloadFile((OpenNetworkPath)file);
+				if(selection != null && selection.size() > 0)
+					downloadFile(selection.toArray(new OpenPath[selection.size()]));
 				else
-				{
-					OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
-					if(dl == null)
-						dl = OpenFile.getExternalMemoryDrive(true).getChild("download");
-					dl = dl.getChild(file.getName());
-					if(!file.equals(dl))
-						getEventHandler().copyFile(file, dl, getExplorer());
-					else return true;
-				}
+					downloadFile(file);
 				finishMode(mode);
 				return true;
 			

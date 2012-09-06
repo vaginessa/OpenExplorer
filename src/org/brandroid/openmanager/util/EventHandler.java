@@ -572,6 +572,9 @@ public class EventHandler {
 		private final Date mStart;
 		private long mLastRate = 0;
 		private long mRemain = 0l;
+		private int mTotalCount = 0; 
+		private int mCurrentIndex = 0;
+		private OpenPath mCurrentPath;
 		private boolean notifReady = false;
 		private final int[] mLastProgress = new int[3];
 		private int notifIcon;
@@ -649,16 +652,20 @@ public class EventHandler {
 						.toString();
 				break;
 			}
-			title += " " + '\u2192' + " " + mIntoPath;
+			if(mCurrentPath != null)
+			{
+				title += " " + '\u2192' + " " + mCurrentPath.getName();
+			}
 			return title;
 		}
 
 		public String getSubtitle() {
-			String subtitle = "";
-			if (mInitParams != null && mInitParams.length > 0)
-				subtitle = (mInitParams.length > 1 ? mInitParams.length + " "
-						+ mContext.getString(R.string.s_files) : mInitParams[0]);
-			return subtitle;
+			String ret = "";
+			if(mTotalCount > 1)
+				ret += "(" + (mCurrentIndex + 1) + "/" + mTotalCount + ") ";
+			if(mIntoPath != null)
+				ret += '\u2192' + " " + mIntoPath;
+			return ret;
 		}
 
 		public String getLastRate() {
@@ -824,13 +831,13 @@ public class EventHandler {
 		}
 
 		protected Integer doInBackground(OpenPath... params) {
-			int len = params.length;
+			mTotalCount = params.length;
 			int ret = 0;
 
 			switch (mType) {
 
 			case DELETE:
-				for (int i = 0; i < len; i++)
+				for (int i = 0; i < mTotalCount; i++)
 					ret += mFileMang.deleteTarget(params[i]);
 				break;
 			case SEARCH:
@@ -851,33 +858,35 @@ public class EventHandler {
 				break;
 			case COPY:
 				// / TODO: Add existing file check
-				for (OpenPath file : params) {
-					if (file.requiresThread()) {
+				for (int i = 0; i < params.length; i++) {
+					mCurrentIndex = i;
+					mCurrentPath = params[i];
+					if (mCurrentPath.requiresThread())
 						isDownload = true;
-						this.publishProgress();
-					}
+					publishProgress();
 					try {
-						if (copyToDirectory(file, mIntoPath, 0))
+						if (copyToDirectory(mCurrentPath, mIntoPath, 0))
 							ret++;
 					} catch (IOException e) {
-						Logger.LogError("Couldn't copy file (" + file.getName()
+						Logger.LogError("Couldn't copy file (" + mCurrentPath.getName()
 								+ " to " + mIntoPath.getPath() + ")", e);
 					}
 				}
 				break;
 			case CUT:
-				for (OpenPath file : params) {
+				for (int i = 0; i < params.length; i++) {
+					mCurrentIndex = i;
+					mCurrentPath = params[i];
+					if (mCurrentPath.requiresThread())
+						isDownload = true;
+					publishProgress();
 					try {
-						if (file.requiresThread()) {
-							isDownload = true;
-							this.publishProgress();
-						}
-						if (copyToDirectory(file, mIntoPath, 0)) {
+						if (copyToDirectory(mCurrentPath, mIntoPath, 0)) {
 							ret++;
-							mFileMang.deleteTarget(file);
+							mFileMang.deleteTarget(mCurrentPath);
 						}
 					} catch (IOException e) {
-						Logger.LogError("Couldn't copy file (" + file.getName()
+						Logger.LogError("Couldn't copy file (" + mCurrentPath.getName()
 								+ " to " + mIntoPath.getPath() + ")", e);
 					}
 				}
@@ -1182,6 +1191,8 @@ public class EventHandler {
 
 				try {
 					RemoteViews noteView = mNote.contentView;
+					noteView.setTextViewText(android.R.id.title, getTitle());
+					noteView.setTextViewText(android.R.id.text2, getSubtitle());
 					noteView.setTextViewText(android.R.id.text1, getLastRate());
 					if (values.length == 0 && isDownload)
 						noteView.setImageViewResource(android.R.id.icon,
