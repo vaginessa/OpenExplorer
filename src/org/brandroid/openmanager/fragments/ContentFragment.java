@@ -1986,11 +1986,19 @@ public class ContentFragment extends OpenFragment
 				if(!p.canRead())
 					readable = false;
 			}
+			OpenPath last = mContentAdapter.getSelectedSet().last();
 			
 			MenuUtils.setMenuEnabled(menu, writable, R.id.menu_context_delete, R.id.menu_context_cut);
 			MenuUtils.setMenuEnabled(menu, readable, R.id.menu_context_copy, R.id.menu_context_cut, R.id.menu_context_download, R.id.menu_context_rename, R.id.menu_context_zip);
 			
-			MenuUtils.setMenuVisible(menu, num == 1, R.id.menu_context_bookmark);
+			if(num == 1)
+			{
+				MenuUtils.setMenuVisible(menu, true, R.id.menu_context_bookmark);
+				if(!last.isDirectory())
+				MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_NEVER, R.id.menu_context_bookmark);
+				if(last.isFile())
+					mRename.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS);
+			} else mRename.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 			
 			mRename.setVisible(num == 1);
 			mInfo.setVisible(num == 1);
