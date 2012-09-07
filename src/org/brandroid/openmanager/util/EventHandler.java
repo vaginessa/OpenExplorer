@@ -59,6 +59,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -86,7 +87,7 @@ public class EventHandler {
 	public static final EventType TOUCH_TYPE = EventType.TOUCH;
 	public static final EventType ERROR_TYPE = EventType.ERROR;
 	public static final int BACKGROUND_NOTIFICATION_ID = 123;
-	private static boolean ENABLE_MULTITHREADS = !OpenExplorer.BEFORE_HONEYCOMB && false;
+	private static boolean ENABLE_MULTITHREADS = !OpenExplorer.BEFORE_HONEYCOMB;
 
 	public enum EventType {
 		SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, UNZIP, UNZIPTO, ZIP, ERROR
@@ -203,8 +204,7 @@ public class EventHandler {
 
 	public void deleteFile(final Collection<OpenPath> path, final OpenApp mApp,
 			boolean showConfirmation) {
-		final OpenPath[] files = new OpenPath[path.size()];
-		path.toArray(files);
+		final OpenPath[] files = path.toArray(new OpenPath[path.size()]);
 		String name;
 		final Context mContext = mApp.getContext();
 
@@ -279,7 +279,7 @@ public class EventHandler {
 						BackgroundWork work = new BackgroundWork(RENAME_TYPE,
 								mContext, path, newName);
 						if (newName.length() > 0) {
-							execute(work);
+							execute(work, path);
 						} else
 							dialog.dismiss();
 					}
@@ -504,7 +504,7 @@ public class EventHandler {
 	}
 
 	public void searchFile(OpenPath dir, String query, Context mContext) {
-		execute(new BackgroundWork(SEARCH_TYPE, mContext, dir, query));
+		execute(new BackgroundWork(SEARCH_TYPE, mContext, dir, query), dir);
 	}
 
 	public BackgroundWork zipFile(OpenPath into, Collection<OpenPath> files,
@@ -607,9 +607,9 @@ public class EventHandler {
 				mNotifier = (NotificationManager) context
 						.getSystemService(Context.NOTIFICATION_SERVICE);
 			taskId = mTasks.size();
-			mTasks.add(this);
 			mStart = new Date();
 			mNotifyId = BACKGROUND_NOTIFICATION_ID + EventCount++;
+			mTasks.add(this);
 			if (mTaskListener != null)
 				mTaskListener.OnTasksChanged(getRunningTasks().length);
 		}
@@ -831,6 +831,7 @@ public class EventHandler {
 		}
 
 		protected Integer doInBackground(OpenPath... params) {
+			Logger.LogDebug("Starting Op!");
 			mTotalCount = params.length;
 			int ret = 0;
 
@@ -845,8 +846,11 @@ public class EventHandler {
 				searchDirectory(mIntoPath, mInitParams[0], mSearchResults);
 				break;
 			case RENAME:
-				ret += FileManager.renameTarget(mIntoPath.getPath(),
-						mInitParams[0]) ? 1 : 0;
+				OpenPath old = mIntoPath;
+				if(old instanceof OpenMediaStore)
+					old = ((OpenMediaStore)mIntoPath).getFile();
+				if(old instanceof OpenFile)
+					ret += FileManager.renameTarget((OpenFile)old, mInitParams[0]) ? 1 : 0;
 				break;
 			case MKDIR:
 				for (OpenPath p : params)
@@ -911,7 +915,7 @@ public class EventHandler {
 		 */
 		private Boolean copyFileToDirectory(final OpenFile source,
 				OpenFile into, final int total) {
-			Logger.LogVerbose("Using Channel copy");
+			Logger.LogVerbose("Using Channel copy for " + source);
 			if (into.isDirectory() || !into.exists())
 				into = into.getChild(source.getName());
 			if (source.getPath().equals(into.getPath()))
