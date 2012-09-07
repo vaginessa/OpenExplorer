@@ -72,10 +72,12 @@
 				<item
 					android:id="@+id/menu_view_grid"
 					android:alphabeticShortcut="g"
+					android:icon="?attr/actionIconViewGrid"
 					android:title="@string/s_menu_grid" />
 				<item
 					android:id="@+id/menu_view_list"
 					android:alphabeticShortcut="l"
+					android:icon="?attr/actionIconViewList"
 					android:title="@string/s_menu_list" />
 			</group>
 	 		<item
