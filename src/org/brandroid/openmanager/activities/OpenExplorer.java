@@ -2353,7 +2353,7 @@ public class OpenExplorer
 			
 			case R.id.menu_search:
 				if(BEFORE_HONEYCOMB)
-				onSearchRequested();
+					onSearchRequested();
 				return true;
 			
 			case R.id.menu_multi_all_delete:

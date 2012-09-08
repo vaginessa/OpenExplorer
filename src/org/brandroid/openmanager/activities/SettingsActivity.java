@@ -180,8 +180,12 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		Bundle config = intent.getExtras();
 		if(savedInstanceState != null)
 			config = savedInstanceState;
+		if(config == null && getIntent() != null)
+			config = getIntent().getExtras();
 		if(config == null)
 			config = new Bundle();
+
+		Logger.LogDebug("SettingsActivity.onCreate(" + config + ")");
 		
 		String path = "global";
 		if(config.containsKey("path"))
@@ -201,8 +205,6 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		intent.putExtras(config);
 		setIntent(intent);
 		
-		PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
-		
 		//getPreferences(MODE_PRIVATE);
 		prefs = new Preferences(getApplicationContext());
 		
@@ -212,8 +214,8 @@ public class SettingsActivity extends SherlockPreferenceActivity
 			pm.setSharedPreferencesName(pathSafe);
 			if(!path.equals("global")) // folder preferences
 			{
-				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);
 				addPreferencesFromResource(R.xml.preferences_folders);
+				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences_folders, false);
 				
 				Preference pTitle = findPreference("folder_title");
 				if(pTitle != null)
@@ -221,7 +223,9 @@ public class SettingsActivity extends SherlockPreferenceActivity
 				
 				
 			} else { // global preferences
-				addPreferencesFromResource(R.xml.preferences);
+				addPreferencesFromResource(R.xml.prefs_display);
+				addPreferencesFromResource(R.xml.prefs_text_editor);
+				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				
 				final PreferenceActivity pa = this;
 				
@@ -430,6 +434,8 @@ public class SettingsActivity extends SherlockPreferenceActivity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		
+		Logger.LogDebug("SettingsActivity.onActivityResult(" + requestCode + ", " + resultCode + ", " + data + ")");
 
 		if(requestCode == MODE_SERVER && data != null)
 		{
@@ -570,7 +576,8 @@ public class SettingsActivity extends SherlockPreferenceActivity
     		setResult(RESULT_FIRST_USER, getIntent());
     		finish();
     	}
-    	super.onPreferenceTreeClick(preferenceScreen, preference);
+    	if(Build.VERSION.SDK_INT < 11)
+    		return super.onPreferenceTreeClick(preferenceScreen, preference);
     	return false;
     }
 
@@ -866,34 +873,61 @@ public class SettingsActivity extends SherlockPreferenceActivity
 	
 	@TargetApi(11)
 	public static class PreferenceFragmentV11 extends PreferenceFragment
+		implements OnPreferenceChangeListener
 	{
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			
-			addPreferencesFromResource(R.xml.preferences);
-			
-			PreferenceManager pm = getPreferenceManager();
-			pm.setSharedPreferencesName("global");
-			PreferenceManager.setDefaultValues(getActivity(), "global", R.xml.preferences, PreferenceActivity.MODE_PRIVATE, false);
-			
-			PreferenceScreen ps = getPreferenceScreen();
 			String key = null;
 			if(getArguments().containsKey("key"))
-			{
-				Preference p = ps.findPreference(getArguments().getCharSequence("key"));
-				ps.removeAll();
-				if(p instanceof PreferenceGroup)
-				{
-					PreferenceGroup pc = (PreferenceGroup)p;
-					for(int i = 0; i < pc.getPreferenceCount(); i++)
-						ps.addPreference(pc.getPreference(i));
-				} else
-					ps.addPreference(p);
-				setPreferenceScreen(ps);
+				key = getArguments().getString("key", "display");
+			else {
+				addPreferencesFromResource(R.xml.prefs_display);
+				addPreferencesFromResource(R.xml.prefs_text_editor);
+				return;
 			}
 			
+			int resId = getActivity().getResources()
+					.getIdentifier("prefs_" + key, "xml", getActivity().getPackageName());
+			addPreferencesFromResource(resId);
+			PreferenceManager.setDefaultValues(getActivity(), "global",
+					PreferenceActivity.MODE_PRIVATE, resId, true);
+			
+			setOnChange(getPreferenceScreen());
 			((SettingsActivity)getActivity()).setOnChange(getPreferenceScreen(), false);
+		}
+		
+		private void setOnChange(Preference p)
+		{
+			if(p instanceof PreferenceGroup)
+				for(Preference kid : getPreferenceChildren((PreferenceGroup)p))
+					setOnChange(kid);
+			else
+				p.setOnPreferenceChangeListener(this);
+		}
+		
+		@Override
+		public boolean onPreferenceChange(Preference p, Object newValue) {
+			Bundle data = getArguments();
+			final String key = p.getKey();
+			if(Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
+					"pref_stats", "pref_root", "pref_language"))
+			{
+				data.putBoolean("restart", true);
+				setArguments(data);
+			}
+			Logger.LogDebug("PreferenceFragment.onPreferenceChange(" + data + ")");
+			((SettingsActivity)getActivity()).onPreferenceChange(p, newValue);
+			return true;
+		}
+		
+		private static List<Preference> getPreferenceChildren(PreferenceGroup parent)
+		{
+			ArrayList<Preference> ret = new ArrayList<Preference>();
+			for(int i = 0; i < parent.getPreferenceCount(); i++)
+				ret.add(parent.getPreference(i));
+			return ret;
 		}
 		
 		@Override

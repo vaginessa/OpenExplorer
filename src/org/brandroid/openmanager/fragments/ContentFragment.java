@@ -1361,6 +1361,7 @@ public class ContentFragment extends OpenFragment
 		if(isDetached() || !isVisible()) return;
 		super.onPrepareOptionsMenu(menu);
 		
+		MenuUtils.setMenuEnabled(menu, getPath().canWrite(), R.id.menu_new_file, R.id.menu_new_folder);
 		MenuUtils.setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
 		MenuUtils.setMenuVisible(menu, !(mPath instanceof OpenNetworkPath), R.id.menu_context_edit, R.id.menu_context_view);
 		
