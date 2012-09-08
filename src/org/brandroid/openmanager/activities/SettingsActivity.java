@@ -151,6 +151,14 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		return super.onPreferenceStartFragment(caller, pref);
 	}
 	
+	@Override
+	public boolean onIsMultiPane() {
+		// non-multipane doesn't work very well,
+		// it does not return intent to OpenExplorer for some reason,
+		// so we'll make sure to use multipane if there is enough room
+		return getResources().getBoolean(R.bool.large) || getResources().getBoolean(R.bool.land);
+	}
+	
 	public ActionBar getSupportActionBar()
 	{
 		return super.getSupportActionBar();
@@ -883,7 +891,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 				} else
 					ps.addPreference(p);
 				setPreferenceScreen(ps);
-}
+			}
 			
 			((SettingsActivity)getActivity()).setOnChange(getPreferenceScreen(), false);
 		}
