@@ -11,7 +11,6 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -37,9 +36,6 @@ public interface OpenApp {
     public Resources getResources();
 	public Preferences getPreferences();
 	public void refreshBookmarks();
-	public GoogleAnalyticsTracker getAnalyticsTracker();
-	
-	public void queueToTracker(Runnable run);
 	
 	public int getThemedResourceId(int styleableId, int defaultResourceId);
 }

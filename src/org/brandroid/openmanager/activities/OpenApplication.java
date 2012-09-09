@@ -18,7 +18,6 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.app.ActivityManager;
 import android.app.Application;
@@ -42,7 +41,6 @@ public class OpenApplication extends Application implements OpenApp {
 	private DiskLruCache mBitmapDiskCache;
 	private ShellSession mShell;
 	private ActionMode mActionMode;
-	private GoogleAnalyticsTracker mTracker;
 	private SparseArray<Integer> mThemedAssets = new SparseArray<Integer>();
 
 	@Override
@@ -186,84 +184,6 @@ public class OpenApplication extends Application implements OpenApp {
 	@Override
 	public Preferences getPreferences() {
 		return new Preferences(getContext());
-	}
-
-	@Override
-	public GoogleAnalyticsTracker getAnalyticsTracker() {
-		return mTracker;
-	}
-
-	private final LinkedBlockingQueue<Runnable> trackerQueue = new LinkedBlockingQueue<Runnable>();
-	private TrackerThread trackerThread;
-	private Object lock = new Object();
-
-	/**
-	 * Queue the GoogleAnalytics call to the database thread, but only if
-	 * GoogleAnalytics has been enabled.
-	 * 
-	 * @param r
-	 *            the Runnable to execute
-	 */
-	public void queueToTracker(Runnable r) {
-		if(mTracker == null)
-		{
-			mTracker = GoogleAnalyticsTracker.getInstance();
-			trackerThread = new TrackerThread();
-			trackerThread.start();
-			queueToTracker(new Runnable() {
-				@Override
-				public void run() {
-					boolean IS_DEBUG_BUILD = OpenExplorer.IS_DEBUG_BUILD;
-					int VERSION = OpenExplorer.VERSION;
-					PackageInfo pi2 = null;
-					try {
-						pi2 = getPackageManager().getPackageInfo(getPackageName(), 0);
-						mTracker.setProductVersion(getPackageName(), pi2.versionName);
-					} catch (NameNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					mTracker.setCustomVar(1, "SDK", Build.VERSION.SDK, 1);
-					mTracker.setCustomVar(1, "Display", Build.DISPLAY, 1);
-					mTracker.setCustomVar(1, "Version", (pi2 != null ? pi2.versionName : VERSION) + (IS_DEBUG_BUILD ? "-debug" : ""));
-				}
-			});
-		}
-		if (Preferences.Pref_Analytics) {
-			synchronized (lock) {
-				trackerQueue.add(r);
-			}
-		}
-	}
-
-	/**
-	 * All Access to GoogleAnalyticsTracker methods are done on this Thread.
-	 * This is done as GoogleAnalyticsTracker makes database calls which should
-	 * be done off the Main UI Thread. It's also done in order to preserve the
-	 * order of those calls.
-	 */
-	private class TrackerThread extends Thread {
-
-		TrackerThread() {
-			super("TrackerThread");
-		}
-
-		/**
-		 * Simply pull Runnables from the Queue trackerQueue and call their run
-		 * methods, blocking until there is something in the Queue.
-		 */
-		@Override
-		public void run() {
-			while (true) {
-				Runnable r;
-				try {
-					r = trackerQueue.take();
-					r.run();
-				} catch (InterruptedException e) {
-					Logger.LogWarning("Unable to run Tracker", e);
-				}
-			}
-		}
 	}
 
 	@Override

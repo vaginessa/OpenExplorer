@@ -61,7 +61,6 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -623,12 +622,6 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		
 		//preference.getExtras().putString("value", newValue.toString());
 		intent.putExtra(key.replace("server_", ""), newValue.toString());
-		final OpenApp app = ((OpenApplication)getApplication());
-		app.queueToTracker(new Runnable() {
-			public void run() {
-				app.getAnalyticsTracker().trackEvent("Preferences", "Change", key, newValue instanceof Integer ? (Integer)newValue : 0);
-			}
-		});
 		setIntent(intent);
 		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
 					"pref_stats", "pref_root", "pref_language"}, key) > -1)
@@ -854,16 +847,6 @@ public class SettingsActivity extends SherlockPreferenceActivity
 	public void refreshBookmarks() {
 		// TODO Auto-generated method stub
 		
-	}
-
-	@Override
-	public GoogleAnalyticsTracker getAnalyticsTracker() {
-		return ((OpenApplication)getApplication()).getAnalyticsTracker();
-	}
-
-	@Override
-	public void queueToTracker(Runnable run) {
-		((OpenApplication)getApplication()).queueToTracker(run);
 	}
 
 	@Override

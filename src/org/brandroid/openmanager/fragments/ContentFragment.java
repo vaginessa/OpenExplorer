@@ -55,7 +55,6 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import java.io.File;
 import java.io.IOException;
@@ -350,21 +349,6 @@ public class ContentFragment extends OpenFragment
 		
 		//OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 		
-	}
-	
-	@Override
-	public void onAttach(Activity activity) {
-		queueToTracker(new Runnable(){public void run(){
-			GoogleAnalyticsTracker tracker = getAnalyticsTracker();
-			if(tracker != null)
-			{
-				if(mViewMode != null)
-					tracker.setCustomVar(3, "View", mViewMode.toString(), 3);
-				if(getSorting() != null)
-					tracker.setCustomVar(3, "Sort", getSorting().toString(), 3);
-			}
-		}});
-		super.onAttach(activity);
 	}
 	
 	/**

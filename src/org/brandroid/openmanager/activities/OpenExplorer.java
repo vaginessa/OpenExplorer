@@ -190,7 +190,6 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.jcraft.jsch.JSchException;
 import com.stericson.RootTools.RootTools;
 import com.viewpagerindicator.TabPageIndicator;
@@ -331,21 +330,6 @@ public class OpenExplorer
 		} catch (NameNotFoundException e) { }
 		
 		VERSION = pi.versionCode;
-		
-		if(Preferences.Pref_Analytics)
-		{
-			String gaCode = "UA-20719255-4";
-			if(pi != null && pi.applicationInfo != null && pi.applicationInfo.metaData != null && pi.applicationInfo.metaData.containsKey("ga_code"))
-				gaCode = pi.applicationInfo.metaData.getString("ga_code");
-			
-			final String ga = gaCode;
-			final PackageInfo pi2 = pi;
-			final Context atc = getApplicationContext();
-			
-			queueToTracker(new Runnable(){public void run(){
-				getAnalyticsTracker().startNewSession(ga, atc);
-			}});
-		}
 		
 		if(!Preferences.Pref_Language.equals(""))
 			setLanguage(getContext(), Preferences.Pref_Language);
@@ -1545,11 +1529,6 @@ public class OpenExplorer
 			Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
 			EventHandler.execute(new SubmitStatsTask(this), logs);
 		//} else Logger.LogWarning("Logs not found.");
-		queueToTracker(new Runnable() {
-			public void run() {
-				getAnalyticsTracker().dispatch();
-			}
-		});
 	}
 	
 	
@@ -1637,8 +1616,6 @@ public class OpenExplorer
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		if(Preferences.Pref_Analytics)
-			getAnalyticsTracker().stopSession();
 		if(storageReceiver != null)
 			unregisterReceiver(storageReceiver);
 	}
@@ -2540,16 +2517,6 @@ public class OpenExplorer
 		//startActivity(new Intent(this, Authenticator.class));
 		DEBUG_TOGGLE = !DEBUG_TOGGLE;
 		notifyPager();
-		queueToTracker(new Runnable() {
-			public void run() {
-				final boolean d = getAnalyticsTracker().dispatch();
-				runOnUiThread(new Runnable() {
-					public void run() {
-						showToast(d ? "Dispatch worked!" : "Dispatch failed!");
-					}
-				});
-			}
-		});
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }
@@ -3608,18 +3575,6 @@ public class OpenExplorer
 		return getOpenApplication().getShellSession();
 	}
 	
-	@Override
-	public GoogleAnalyticsTracker getAnalyticsTracker() {
-		if(getOpenApplication() != null)
-			return getOpenApplication().getAnalyticsTracker();
-		else return null;
-	}
-	
-	@Override
-	public void queueToTracker(Runnable run) {
-		getOpenApplication().queueToTracker(run);
-	}
-
 	@Override
 	public void onIconContextItemSelected(IconContextMenu menu,
 			MenuItem item, Object info, View view)
