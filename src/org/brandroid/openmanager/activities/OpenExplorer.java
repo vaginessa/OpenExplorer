@@ -2394,16 +2394,7 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_exit:
-				DialogHandler.showConfirmationDialog(this,
-						getString(R.string.s_alert_exit),
-						getString(R.string.s_menu_exit),
-						getPreferences(), "exit",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								finish();
-							}
-						});
+				showExitDialog();
 				return true;
 		}
 		
@@ -2449,6 +2440,19 @@ public class OpenExplorer
 		return onClick(item.getItemId(), item, null);
 	}
 	
+	private void showExitDialog() {
+		DialogHandler.showConfirmationDialog(this,
+			getString(R.string.s_alert_exit),
+			getString(R.string.s_menu_exit),
+			getPreferences(), "exit",
+			new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					finish();
+				}
+			});
+	}
+
 	@Override
 	public void onClick(View v) {
 		super.onClick(v);
@@ -2841,7 +2845,8 @@ public class OpenExplorer
 						Logger.LogDebug("last path set to " + mLastPath.getPath());
 						changePath(mLastPath, false);
 						//updateTitle(mLastPath.getPath());
-					} else finish();
+					} else
+						showExitDialog();
 					
 				} 
 				else {
@@ -2849,8 +2854,7 @@ public class OpenExplorer
 				}
 			}
 			else {
-				//updateTitle("");
-				showToast(R.string.s_alert_back_to_exit);
+				showExitDialog();
 			}
 		}
 		mLastBackIndex = i;
