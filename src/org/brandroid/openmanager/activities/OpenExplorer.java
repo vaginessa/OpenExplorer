@@ -2760,7 +2760,11 @@ public class OpenExplorer
 		Logger.LogDebug("OpenExplorer.onActivityResult(" + requestCode + ", " + resultCode + ", " + (data != null ? data.toString() : "null") + ")");
 		if(requestCode == REQ_PREFERENCES)
 		{
-			if(resultCode == RESULT_RESTART_NEEDED || (data != null && data.hasExtra("restart") && data.getBooleanExtra("restart", true))) {
+			boolean needRestart = getPreferences().getSetting("global", "restart", false);
+			if(resultCode == RESULT_RESTART_NEEDED
+					|| (data != null && data.hasExtra("restart") && data.getBooleanExtra("restart", true))
+					|| needRestart) {
+				getPreferences().setSetting("global", "restart", false);
 				showToast(R.string.s_alert_restart);
 				goHome(); // just restart
 			} else {
