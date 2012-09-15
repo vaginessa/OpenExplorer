@@ -1913,6 +1913,9 @@ public class OpenExplorer
 		checkTitleSeparator();
 	}
 	
+	/**
+	 * Refresh list of bookmarks.
+	 */
 	public void refreshBookmarks()
 	{
 		if(DEBUG && IS_DEBUG_BUILD)
