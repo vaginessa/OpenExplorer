@@ -232,7 +232,7 @@ public abstract class OpenFragment
 		}
 	}
 	
-	/*
+	/**
 	 * Return priority for ordering in ViewPager (Low to High)
 	 */
 	public int getPagerPriority() { return 5; }
@@ -532,11 +532,19 @@ public abstract class OpenFragment
 		return this.getClass().getSimpleName();
 	}
 	
+	/**
+	 * Get instance of Event Handler.
+	 * @return
+	 */
 	protected EventHandler getHandler()
 	{
 		return OpenExplorer.getEventHandler();
 	}
 	
+	/**
+	 * Get instance of File Manager.
+	 * @return
+	 */
 	protected FileManager getManager()
 	{
 		return OpenExplorer.getFileManager();

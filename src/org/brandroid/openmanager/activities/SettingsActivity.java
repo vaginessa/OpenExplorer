@@ -164,6 +164,24 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		//return null;
 	}
 	
+	@Override
+	protected void onResume() {
+		Intent intent = getIntent();
+		Bundle data = intent != null ? intent.getExtras() : null;
+		if(data == null || (data.size() == 1 && data.containsKey("path")))
+		{
+			
+		}
+		Logger.LogDebug("SettingsActivity.onResume(" + data + ")");
+		super.onResume();
+	}
+	
+	@Override
+	protected void onRestoreInstanceState(Bundle state) {
+		Logger.LogDebug("SettingsActivity.onRestoreInstanceState(" + state + ")");
+		super.onRestoreInstanceState(state);
+	}
+	
 	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -185,6 +203,8 @@ public class SettingsActivity extends SherlockPreferenceActivity
 			config = new Bundle();
 
 		Logger.LogDebug("SettingsActivity.onCreate(" + config + ")");
+		
+		Logger.LogDebug("SettingsActivity.onCreate(" + savedInstanceState + ")");
 		
 		String path = "global";
 		if(config.containsKey("path"))
@@ -602,10 +622,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		Intent intent = getIntent();
 		if(Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
 					"pref_stats", "pref_root", "pref_language"))
-		{
-			intent.putExtra("restart", true);
-			setResult(OpenExplorer.RESULT_RESTART_NEEDED, intent);
-		}
+			getPreferences().setSetting("global", "restart", true);
 		if(key.equals("pref_language"))
 			preference.setSummary(getDisplayLanguage((String)newValue));
 		else if(preference instanceof ListPreference && newValue instanceof String)
@@ -626,7 +643,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
 					"pref_stats", "pref_root", "pref_language"}, key) > -1)
 		{
-			intent.putExtra("restart", true);
+			getPreferences().setSetting("global", "restart", true);
 			setResult(OpenExplorer.RESULT_RESTART_NEEDED, intent);
 		} else
 			setResult(OpenExplorer.RESULT_OK, intent);
@@ -862,6 +879,8 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			
+			getPreferenceManager().setSharedPreferencesName("global");
+
 			String key = null;
 			if(getArguments().containsKey("key"))
 				key = getArguments().getString("key", "display");
