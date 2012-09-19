@@ -427,10 +427,10 @@ public abstract class OpenPath
 	 */
 	public String getExtension() {
 		String ret = getName();
+		if(ret == null) return "";
 		if(ret.indexOf(".") > -1)
-			ret = ret.substring(getPath().lastIndexOf(".") + 1);
-		else ret = "";
-		return ret;
+			return ret.substring(ret.lastIndexOf(".") + 1);
+		else return "";
 	}
 	
     
