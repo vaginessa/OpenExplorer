@@ -242,8 +242,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 				
 				
 			} else { // global preferences
-				addPreferencesFromResource(R.xml.prefs_display);
-				addPreferencesFromResource(R.xml.prefs_text_editor);
+				addPreferencesFromResource(R.xml.preferences);
 				PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE, R.xml.preferences, false);
 				
 				final PreferenceActivity pa = this;
@@ -885,8 +884,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 			if(getArguments().containsKey("key"))
 				key = getArguments().getString("key", "display");
 			else {
-				addPreferencesFromResource(R.xml.prefs_display);
-				addPreferencesFromResource(R.xml.prefs_text_editor);
+				addPreferencesFromResource(R.xml.preferences);
 				return;
 			}
 			
