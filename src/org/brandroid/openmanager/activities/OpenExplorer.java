@@ -321,7 +321,7 @@ public class OpenExplorer
 		Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
 		Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
 		Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
-		Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
+		Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", false);
 		Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
 
 		PackageInfo pi = null;
@@ -1513,9 +1513,9 @@ public class OpenExplorer
 	}
 	
 	@SuppressWarnings("deprecation")
-	private void submitStats()
+	private void submitStats() // submit anonymous error log
 	{
-		if(!Logger.isLoggingEnabled()) return;
+		if(!Logger.isLoggingEnabled()) return; // Disable by default
 		setupLoggingDb();
 		if(IS_DEBUG_BUILD) return;
 		if(new Date().getTime() - lastSubmit < 6000)

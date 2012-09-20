@@ -21,7 +21,7 @@ public class Logger
 	private static Integer[] iLastCount = new Integer[] {0,0,0,0,0};
 	private final static Boolean DO_LOG = true; // global static
 	private final static Boolean DEBUG = true; // && OpenExplorer.IS_DEBUG_BUILD;
-	private static Boolean bLoggingEnabled = true; // this can be set view preferences
+	private static Boolean bLoggingEnabled = false; // this can be set view preferences
 	public final static Integer MIN_DB_LEVEL = Log.WARN;
 	public final static String LOG_KEY = "OpenExplorer";
 	private static LoggerDbAdapter dbLog;

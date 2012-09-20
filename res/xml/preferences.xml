@@ -219,7 +219,7 @@
             android:key="pref_stats"
             android:title="@string/s_pref_stats_title"
             android:summary="@string/s_pref_stats_summary"
-            android:defaultValue="true"
+            android:defaultValue="false"
             />
         <CheckBoxPreference
             android:key="pref_autowtf"
