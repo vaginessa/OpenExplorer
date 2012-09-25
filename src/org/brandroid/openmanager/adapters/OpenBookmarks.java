@@ -330,7 +330,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	
 	public void setPathTitle(OpenPath path, String title)
 	{
-		setSetting("title_" + path.getAbsolutePath(), title);
+		setSetting("title_" + path.getPath(), title);
 	}
 	public String getPathTitleDefault(OpenPath file)
 	{
@@ -456,7 +456,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 
 	public boolean onItemLongClick(AdapterView<?> list, View v, int pos, long id) {
-		Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.getTag() + "!)");
+		//Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.getTag() + "!)");
 		return onLongClick(v);
 	}
 	
@@ -542,7 +542,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					else if(idRemove == R.string.s_eject)
 						tryEject(mPath.getPath(), mHolder);
 					else {
-						setSetting("hide_" + mPath.getAbsolutePath(), true);
+						setSetting("hide_" + mPath.getPath(), true);
 						if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
 							mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
 						if(Build.VERSION.SDK_INT >= 12)
