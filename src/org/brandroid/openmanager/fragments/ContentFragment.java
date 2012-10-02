@@ -1382,7 +1382,7 @@ public class ContentFragment extends OpenFragment
 		
 		if(mPath != null)
 			MenuUtils.setMenuEnabled(menu, !mPath.requiresThread() && mPath.canWrite(),
-					R.id.menu_multi_all_copy, R.id.menu_multi_all_move);		
+					R.id.menu_multi_all_copy, R.id.menu_multi_all_move, R.id.menu_new_file, R.id.menu_new_folder);
 		
 		SortType.Type st = getSorting().getType();
 		int sti = Utils.getArrayIndex(sortTypes, st);
