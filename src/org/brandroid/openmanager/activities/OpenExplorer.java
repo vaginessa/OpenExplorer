@@ -2686,7 +2686,7 @@ public class OpenExplorer
 			} else {
 				fragmentManager.beginTransaction()
 					.replace(R.id.content_frag, ContentFragment.getInstance(getCurrentPath(), mViewMode, getSupportFragmentManager()))
-					.setBreadCrumbTitle(getCurrentPath().getAbsolutePath())
+					.setBreadCrumbTitle(getCurrentPath().getPath())
 					//.addToBackStack(null)
 					.commit();
 				updateTitle(getCurrentPath().getPath());
