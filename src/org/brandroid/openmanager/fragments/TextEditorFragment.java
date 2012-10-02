@@ -617,13 +617,14 @@ public class TextEditorFragment extends OpenFragment
 			if(mPath.canWrite() && mDirty)
 			{
 				DialogHandler.showConfirmationDialog(getActivity(),
-						getString(R.string.s_alert_dirty, mPath.getName()),
+						getString(R.string.s_alert_dirty, mPath.getName()).replace("%s", mPath.getName()),
 						getText(R.string.s_save).toString() + "?",
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
 								doSave();
 								mEditText.setVisibility(View.GONE);
 								mViewList.setVisibility(View.VISIBLE);
+								refreshList();
 							}
 						},
 						new DialogInterface.OnClickListener() {
