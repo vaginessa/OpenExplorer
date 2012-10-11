@@ -757,7 +757,7 @@ public class ContentFragment extends OpenFragment
 				*/
 				
 				addToMultiSelect(file);
-				((TextView)view.findViewById(R.id.content_text)).setTextAppearance(list.getContext(), R.style.Highlight);
+				((TextView)view.findViewById(R.id.content_text)).setTextAppearance(list.getContext(), R.style.Large_Hilite);
 			}
 			return;
 		}
