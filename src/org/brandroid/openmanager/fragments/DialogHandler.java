@@ -36,6 +36,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
@@ -55,6 +56,9 @@ import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
@@ -81,6 +85,8 @@ import jcifs.smb.SmbFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.adapters.HeatmapAdapter;
+import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -92,6 +98,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.interfaces.OpenContextProvider;
+import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -123,6 +130,55 @@ public class DialogHandler
 		
 		return v;
 	}
+	public static View createFileHeatmapDialog(final OpenApp app, LayoutInflater inflater, OpenPath file)
+	{
+		View v = inflater.inflate(R.layout.heatmap_layout, null);
+		
+		final HeatmapAdapter adapter = new HeatmapAdapter(app, file);
+		
+		ListView lv = (ListView)v.findViewById(android.R.id.list);
+		final TextView mTotalSize = (TextView)v.findViewById(R.id.heatmap_total);
+		Button mRefresh = (Button)v.findViewById(R.id.heatmap_refresh);
+		mRefresh.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				adapter.notifyDataSetChanged();
+			}
+		});
+		
+		adapter.setHeatmapCallback(new HeatmapAdapter.HeatmapCallback() {
+			@Override
+			public void OnHeatmapTasksComplete(long mTotalBytes, boolean allDone) {
+				mTotalSize.setText(app.getContext().getResources().getString(R.string.s_size) + ": " + formatSize(mTotalBytes) + (allDone ? "" : "..."));
+			}
+		});
+		
+		lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				OpenPath path = adapter.getItem(position);
+				if(path.isDirectory())
+					showFileHeatmap(app, path);
+			}
+		});
+		
+		lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				OpenPath path = adapter.getItem(position);
+				IconContextMenu icm = new IconContextMenu(app.getContext(), R.menu.context_file, view);
+				icm.show();
+				return true;
+			}
+		});
+		
+		lv.setAdapter(adapter);
+		
+		return v;
+	}
 	public static String formatSize(long size) { return formatSize(size, true); }
 	public static String formatSize(long size, boolean includeUnits) { return formatSize(size, 2, includeUnits); }
 	public static String formatSize(long size, int decimalPoints) { return formatSize(size, decimalPoints, true); }
@@ -145,10 +201,9 @@ public class DialogHandler
 		
 		return ssize;
 	}
-	
+
 	public static void populateFileInfoViews(OpenApp app, View v, OpenPath file) throws IOException {
 			
-		String apath = file.getAbsolutePath();
 		if(file instanceof OpenMediaStore)
 			file = ((OpenMediaStore)file).getFile();
 		Date date = new Date();
@@ -182,6 +237,10 @@ public class DialogHandler
 			((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.lg_folder);
 		else
 			((ImageView)v.findViewById(R.id.info_icon)).setImageDrawable(getFileIcon(app, file, false));
+	}
+
+	public static void populateFileHeatmapList(OpenApp app, View v, OpenPath file)
+	{
 	}
 	
 	public static Drawable getFileIcon(OpenApp app, OpenPath file, boolean largeSize) {
@@ -351,6 +410,23 @@ public class DialogHandler
 		//dialogInfo.setFilePath(path.getPath());
 		//dialogInfo.show(fragmentManager, "info");
 	}
+	
+	public static void showFileHeatmap(final OpenApp app, final OpenPath path)
+	{
+		final Context mContext = app.getContext();
+		try {
+		new AlertDialog.Builder(mContext)
+			.setView(createFileHeatmapDialog(app, (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE), path))
+			.setTitle(path.getName())
+			.setIcon(new BitmapDrawable(mContext.getResources(),
+						path.getThumbnail(app, ContentFragment.mListImageSize, ContentFragment.mListImageSize)
+							.get()))
+			.create()
+			.show();
+		} catch(Exception e) {
+			Logger.LogError("Couldn't show File Info.", e);
+		}
+	}
 
 	/**
 	 * Show a warning that has a specific count down to auto-cancel.
@@ -444,6 +520,39 @@ public class DialogHandler
 			
 			dialog.show();
 		} else onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
+	}
+	public static void showMultiButtonDialog(Context context,
+			String message, String title,
+			final DialogInterface.OnClickListener listener,
+			int... buttonStringIds) {
+		final View layout = ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+				.inflate(R.layout.alert_multibutton_view, null);
+
+		ViewUtils.setText(layout, message, R.id.confirm_message);
+		
+		final AlertDialog dialog = new AlertDialog.Builder(context)
+			.setTitle(title)
+			.setView(layout)
+			.create();
+		
+		final LinearLayout buttons = (LinearLayout)layout.findViewById(R.id.buttons);
+		
+		for(final int id : buttonStringIds)
+		{
+			Button btn = new Button(context);
+			btn.setText(id);
+			btn.setId(id);
+			((LinearLayout.LayoutParams)btn.getLayoutParams()).weight = 1;
+			btn.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					listener.onClick(dialog, id);
+				}
+			});
+			buttons.addView(btn);
+		}
+		
+		dialog.show();
 	}
 
 	public static AlertDialog showConfirmationDialog(final Context context, String msg, String title, DialogInterface.OnClickListener onYes)

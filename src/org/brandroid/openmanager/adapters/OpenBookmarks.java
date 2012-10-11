@@ -1,5 +1,6 @@
 package org.brandroid.openmanager.adapters;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -24,6 +25,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSCP;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
@@ -32,6 +34,7 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
@@ -328,22 +331,23 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	
 	public void setPathTitle(OpenPath path, String title)
 	{
-		setSetting("title_" + path.getAbsolutePath(), title);
+		setSetting("title_" + path.getPath(), title);
 	}
 	public String getPathTitleDefault(OpenPath file)
 	{
 		if(file.getDepth() > 4) return file.getName();
-		if(file instanceof OpenCursor || file instanceof OpenMediaStore) return file.getName();
+		if(file instanceof OpenCursor || file instanceof OpenMediaStore || file instanceof OpenPathMerged) return file.getName();
 		String path = file.getPath().toLowerCase();
+		String name = file.getName().toLowerCase();
 		if(path.equals("/"))
 			return "/";
-		else if(path.indexOf("ext") > -1)
+		else if(name.indexOf("ext") > -1 || name.equals("sdcard1"))
 			return mApp.getResources().getString(R.string.s_external);
-		else if(path.indexOf("download") > -1)
+		else if(name.indexOf("download") > -1)
 			return mApp.getResources().getString(R.string.s_downloads);
-		else if(path.indexOf("sdcard") > -1)
+		else if(name.indexOf("sdcard") > -1)
 			return mApp.getResources().getString(mHasExternal ? R.string.s_internal : R.string.s_external);
-		else if(path.indexOf("usb") > -1 || path.indexOf("/media") > -1 || path.indexOf("removeable") > -1)
+		else if(name.indexOf("usb") > -1 || name.indexOf("/media") > -1 || name.indexOf("removeable") > -1)
 		{
 			try {
 				return OpenExplorer.getVolumeName(file.getPath());
@@ -394,6 +398,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		if(path instanceof OpenCursor ||
 				path instanceof OpenNetworkPath ||
 				path instanceof OpenSmartFolder ||
+				path instanceof OpenPathMerged ||
 				path.exists())
 		{
 			addBookmark(type, path);
@@ -452,7 +457,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	}
 
 	public boolean onItemLongClick(AdapterView<?> list, View v, int pos, long id) {
-		Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.getTag() + "!)");
+		//Logger.LogDebug("Long Click pos: " + pos + " (" + id + "," + v.getTag() + "!)");
 		return onLongClick(v);
 	}
 	
@@ -510,16 +515,19 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			|| mPath.equals(OpenFile.getExternalMemoryDrive(false))
 			|| mPath.equals(OpenFile.getInternalMemoryDrive()))
 			removeId = R.string.s_hide;
-		else if(mPath instanceof OpenMediaStore || mPath instanceof OpenCursor)
+		else if(mPath instanceof OpenMediaStore || mPath instanceof OpenCursor || mPath instanceof OpenPathMerged)
 			removeId = R.string.s_hide;
 		final int idRemove = removeId;
 		
 		final View v = mHolder != null ? mHolder.getView() : new View(getContext());
 		
+		final String oldPath = mPath.getPath();
+		
 		final InputDialog builder = new InputDialog(getContext())
 			.setTitle(R.string.s_title_bookmark_prefix)
 			.setIcon(mHolder != null ? mHolder.getIcon(mApp) : null)
 			.setDefaultText(getPathTitle(mPath))
+			.setDefaultTop(oldPath)
 			.setMessage(R.string.s_alert_bookmark_rename)
 			.setNeutralButton(removeId, new DialogInterface.OnClickListener() {
 				@SuppressLint("NewApi")
@@ -535,7 +543,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					else if(idRemove == R.string.s_eject)
 						tryEject(mPath.getPath(), mHolder);
 					else {
-						setSetting("hide_" + mPath.getAbsolutePath(), true);
+						setSetting("hide_" + mPath.getPath(), true);
 						if(mBookmarkString != null && (";"+mBookmarkString+";").indexOf(mPath.getPath()) > -1)
 							mBookmarkString = (";" + mBookmarkString + ";").replace(";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
 						if(Build.VERSION.SDK_INT >= 12)
@@ -556,7 +564,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		builder
 			.setPositiveButton(R.string.s_update, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					setPathTitle(mPath, builder.getInputText().toString());					
+					String path = builder.getInputTopText();
+					if(!path.equals(oldPath))
+					{
+						SharedPreferences sp = mApp.getPreferences().getPreferences("bookmarks");
+						String full = sp.getString("bookmarks", "") + ";";
+						full = full.replace(oldPath + ";", path + ";");
+						sp.edit().putString("bookmarks", full).commit();
+						setPathTitle(FileManager.getOpenCache(path), builder.getInputText());
+					} else
+						setPathTitle(mPath, builder.getInputText().toString());					
 					mBookmarkAdapter.notifyDataSetChanged();
 				}
 			})
@@ -650,13 +667,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 					bar.setVisibility(View.GONE);
 				else if(percent_width > 0) {
 					bar.setVisibility(View.VISIBLE);
-					RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)bar.getLayoutParams();
-							//new LayoutParams(percent_width, LayoutParams.MATCH_PARENT);
-					lp.rightMargin = total_width - percent_width;
-					//lp.width = percent_width;
-					lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-					//bar.setLayoutParams(lp);
-					bar.requestLayout();
+//					RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams)bar.getLayoutParams();
+//							//new LayoutParams(percent_width, LayoutParams.MATCH_PARENT);
+//					lp.rightMargin = total_width - percent_width;
+//					//lp.width = percent_width;
+//					lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+//					//bar.setLayoutParams(lp);
+//					bar.requestLayout();
 				}
 				size_bar.setTag(true);
 			} else {
@@ -706,7 +723,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			
 			if(mCountText != null)
 			{
-				if(path instanceof OpenSmartFolder)
+				if(path instanceof OpenSmartFolder || path instanceof OpenPathMerged)
 				{
 					if(!mCountText.isShown())
 						mCountText.setVisibility(View.VISIBLE);
@@ -743,17 +760,24 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 			else 
 				ViewUtils.setViewsVisible(ret, false, R.id.size_layout, R.id.size_bar);
 			
+			boolean hasKids = true;
+			try {
+				hasKids = path.getChildCount(true) > 0;
+			} catch(IOException e) { }
+			
 			ViewUtils.setText(ret, getPathTitle(path), R.id.content_text);
 			
 			if(group == BOOKMARK_FAVORITE)
 			{
 				Drawable d = mIcon.getResources().getDrawable(
-						ThumbnailCreator.getDefaultResourceId(path, 36, 36));
+						ThumbnailCreator.getDefaultResourceId(path, 48, 48));
 				LayerDrawable ld = new LayerDrawable(new Drawable[]{d,
 						mIcon.getResources().getDrawable(R.drawable.ic_favorites)
 					});
 				mIcon.setImageDrawable(ld);
-			} else mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(path, 36, 36));
+			} else mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(path, 48, 48));
+			
+			ViewUtils.setAlpha(mIcon, !hasKids ? 0.5f : 1.0f);	
 			
             return ret;
 		}

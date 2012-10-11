@@ -11,6 +11,8 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
+import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -25,6 +27,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.style.UnderlineSpan;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,6 +52,7 @@ public class ContentAdapter extends BaseAdapter {
 	private final ArrayList<OpenPath> mData2 = new ArrayList<OpenPath>();
 	public int mViewMode = OpenExplorer.VIEW_LIST;
 	public boolean mShowThumbnails = true;
+	private boolean mShowHiddenFiles = false;
 	private SortType mSorting = SortType.ALPHA;
 	private OpenApp mApp;
 	private boolean mPlusParent = false;
@@ -110,7 +116,12 @@ public class ContentAdapter extends BaseAdapter {
 	public void setSorting(SortType sort) { mSorting = sort; notifyDataSetChanged(); }
 	public SortType getSorting() { return mSorting; }
 	
-	public void updateData() { updateData(getList()); } 
+	public void updateData() {
+		OpenPath[] list = getList();
+		if(list == null)
+			list = new OpenPath[0];
+		updateData(list);
+	} 
 	public void updateData(final OpenPath[] items) { updateData(items, true); }
 	private void updateData(final OpenPath[] items,
 			final boolean doSort) {
@@ -122,7 +133,7 @@ public class ContentAdapter extends BaseAdapter {
 		}
 		
 		//new Thread(new Runnable(){public void run() {
-		boolean showHidden = getSorting().showHidden();
+		boolean showHidden = getShowHiddenFiles();
 		boolean foldersFirst = getSorting().foldersFirst();
 		Logger.LogVerbose("updateData on " + items.length + " items (for " + mParent + ") : " +
 				(showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files") + " + " + (doSort ? mSorting.toString() : "no sort"));
@@ -168,13 +179,15 @@ public class ContentAdapter extends BaseAdapter {
 	
 	private OpenPath[] getList() {
 		try {
+			if(!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener)
+				return new OpenPath[0];
 			if(mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
-				return null;
-			else
 				return mParent.list();
+			else
+				return mParent.listFiles();
 		} catch (IOException e) {
 			Logger.LogError("Couldn't getList in ContentAdapter");
-			return null;
+			return new OpenPath[0];
 		}
 	}
 	
@@ -224,6 +237,7 @@ public class ContentAdapter extends BaseAdapter {
 			return row;
 		
 		TextView mInfo = (TextView)row.findViewById(R.id.content_info);
+		TextView mDate = (TextView)row.findViewById(R.id.content_date);
 		TextView mPathView = (TextView)row.findViewById(R.id.content_fullpath); 
 		TextView mNameView = (TextView)row.findViewById(R.id.content_text);
 		final ImageView mIcon = (ImageView)row.findViewById(R.id.content_icon);
@@ -234,6 +248,7 @@ public class ContentAdapter extends BaseAdapter {
 			mNameView.setText(R.string.s_menu_up);
 			mIcon.setImageResource(useLarge ? R.drawable.lg_folder_up : R.drawable.sm_folder_up);
 			if(mInfo != null) mInfo.setText("");
+			if(mDate != null) mDate.setText("");
 			if(mPathView != null) mPathView.setText("");
 			return row;
 		}
@@ -272,9 +287,12 @@ public class ContentAdapter extends BaseAdapter {
 		{
 			if(mShowDetails)
 				mInfo.setText(String.format(
-						file.getDetails(getSorting().showHidden(), showLongDate),
+						file.getDetails(getShowHiddenFiles()),
 						getResources().getString(R.string.s_files)));
 			else mInfo.setText("");
+			if(mDate != null)
+				mDate.setText(file.getFormattedDate(showLongDate));
+			else mInfo.append(" | " + file.getFormattedDate(showLongDate));
 		}
 
 		if(mNameView != null)
@@ -360,6 +378,25 @@ public class ContentAdapter extends BaseAdapter {
 		if(mCheck != null) mCheck.setImageResource(mChecked ? checkboxOnId : checkboxOffId);
 		ViewUtils.setViewsVisible(row, mShowCheck, R.id.content_check);
 
+		TextView tvHilight = mNameView;
+		TextView[] tvLowlight = new TextView[] {mDate, mInfo};
+		switch(OpenPath.Sorting.getType())
+		{
+		case DATE:
+		case DATE_DESC:
+			tvHilight = mDate;
+			break;
+		case SIZE:
+		case SIZE_DESC:
+			tvHilight = mInfo;
+			break;
+		case ALPHA:
+		case ALPHA_DESC:
+			tvHilight = mNameView;
+			break;
+		}
+		tvHilight.setText(Html.fromHtml("<b>" + tvHilight.getText() + "</b>"));
+
 		return row;
 	}
 
@@ -380,6 +417,10 @@ public class ContentAdapter extends BaseAdapter {
 	@Override
 	public long getItemId(int position) {
 		return position;
+	}
+	
+	public void clearData() {
+		mData2.clear();
 	}
 	
 	public void add(OpenPath p) {
@@ -445,5 +486,13 @@ public class ContentAdapter extends BaseAdapter {
 			mCallback.onAdapterSelectedChanged(path, newSelected,
 					mSelectedSet.size());
 		}
+	}
+
+	public void setShowHiddenFiles(boolean show)
+	{
+		mShowHiddenFiles = show;
+	}
+	public boolean getShowHiddenFiles() {
+		return mShowHiddenFiles;
 	}
 }

@@ -19,11 +19,11 @@
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.brandroid.openmanager"
-	android:versionName="0.178"
-	android:versionCode="178"
+	android:versionName="0.193"
+	android:versionCode="193"
 	android:installLocation="auto">
 
-	<uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15" />
+	<uses-sdk android:minSdkVersion="8" android:targetSdkVersion="16" />
 
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.BLUETOOTH" />
@@ -65,6 +65,11 @@
 			</intent-filter>
 			<meta-data android:name="android.app.searchable"
 			    android:resource="@xml/searchable" />
+		    <intent-filter>
+		        <action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:mimeType="application/zip" />
+		    </intent-filter>
 		    <intent-filter>
 		        <action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
@@ -122,19 +127,6 @@
             android:launchMode="singleTop">
 	    </activity>
 	    
-
-        <activity
-          android:name="com.dropbox.client2.android.AuthActivity"
-          android:launchMode="singleTask"
-          android:configChanges="orientation|keyboard">
-          <intent-filter>
-            <data android:scheme="db-vjbm22k8blhj61g" />
-            <action android:name="android.intent.action.VIEW" />                
-            <category android:name="android.intent.category.BROWSABLE"/>
-            <category android:name="android.intent.category.DEFAULT" /> 
-          </intent-filter>
-        </activity>
-		
 		<activity android:name=".activities.UsbActivity" android:label="@string/app_name" android:launchMode="singleInstance">
 			<intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
@@ -162,8 +154,12 @@
 		
 		<activity android:name=".activities.WTFSenderActivity" android:theme="@style/Dialog" />
 
-		<activity android:name=".activities.SettingsActivity" android:theme="@style/Dialog" android:label="@string/s_menu_prefs_global" />
-
+		<activity
+		    android:name=".activities.SettingsActivity"
+		    android:label="@string/s_menu_prefs_global" 
+	    	android:theme="@style/AppTheme.Dark"
+	    	/>
+		
 		<activity android:name=".activities.BluetoothActivity" android:label="Bluetooth"
 			android:theme="@style/Dialog" />
 		

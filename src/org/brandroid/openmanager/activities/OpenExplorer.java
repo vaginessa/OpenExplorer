@@ -29,7 +29,6 @@ import android.os.Handler;
 import android.os.StatFs;
 import android.provider.MediaStore;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
@@ -62,7 +61,6 @@ import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.support.v4.widget.SearchViewCompat;
@@ -88,7 +86,6 @@ import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewStub;
-import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -107,11 +104,13 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -132,15 +131,14 @@ import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelecte
 import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
-import org.brandroid.openmanager.adapters.OpenPathPagerAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
+import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -152,7 +150,6 @@ import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentDPADListener;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentTitleLongClickListener;
 import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
-import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.interfaces.OpenApp;
@@ -196,8 +193,8 @@ import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.jcraft.jsch.JSchException;
+import com.stericson.RootTools.RootTools;
 import com.viewpagerindicator.TabPageIndicator;
-import com.viewpagerindicator.TabPageIndicator.TabView;
 import org.xmlpull.v1.XmlPullParserException;
 
 @SuppressLint("NewApi")
@@ -213,6 +210,7 @@ public class OpenExplorer
 	// Action Bar Menu Variables
 	private Menu mMainOptionsMenu;
 	private MenuItem mMenuPaste;
+	private MenuItem mMenuSearch;
 	
 	public static final int REQ_PREFERENCES = 6;
 	public static final int REQ_SPLASH = 7;
@@ -305,7 +303,10 @@ public class OpenExplorer
 			mMusicParent = new OpenCursor("Music", MediaStore.Audio.Media.EXTERNAL_CONTENT_URI),
 			mApkParent = new OpenCursor("Apps", BEFORE_HONEYCOMB ? Uri.fromFile(OpenFile.getExternalMemoryDrive(true).getFile()) : MediaStore.Files.getContentUri("/mnt"));
 	private final static OpenSmartFolder
+			mVideoSearchParent = new OpenSmartFolder("Videos"),
 			mDownloadParent = new OpenSmartFolder("Downloads");
+	private final static OpenPathMerged
+			mVideosMerged = new OpenPathMerged("Videos");
 
 	
 	public boolean isViewPagerEnabled() { return mViewPagerEnabled; }
@@ -324,6 +325,7 @@ public class OpenExplorer
 		Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
 		Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
 		Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
+		ThumbnailCreator.showCenteredCroppedPreviews = prefs.getBoolean("global", "prefs_thumbs_crop", true);
 
 		PackageInfo pi = null;
 		try {
@@ -621,24 +623,33 @@ public class OpenExplorer
 	
 	private void checkRoot() {
 		try {
-			if(getPreferences().getSetting("global", "pref_root", false)
-					&& (RootManager.Default == null || !RootManager.Default.isRoot()))
+			if(getPreferences().getSetting("global", "pref_root", false))
+					//&& (RootManager.Default == null || !RootManager.Default.isRoot()))
 				requestRoot();
-			else if(RootManager.Default != null)
+			else //if(RootManager.Default != null)
 				exitRoot();
 		} catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
 	}
 	
 	private void requestRoot() {
 		new Thread(new Runnable(){public void run(){
-			RootManager.Default.requestRoot();
+			if(RootTools.isAccessGiven())
+				try {
+					RootTools.getShell(true);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}}).start();
 	}
 	
 	private void exitRoot() {
-		if(RootManager.Default == null) return;
 		new Thread(new Runnable(){public void run(){
-			RootManager.Default.exitRoot();
+			try {
+				RootTools.closeAllShells();
+			} catch (IOException e) {
+				Logger.LogWarning("An exception occurred while closing root shells.", e);
+			}
 		}}).start();
 	}
 	
@@ -925,9 +936,20 @@ public class OpenExplorer
 		else if ((Intent.ACTION_VIEW.equals(intent.getAction()) || Intent.ACTION_EDIT.equals(intent.getAction()))
 				&& intent.getData() != null)
 		{
-			OpenPath path = FileManager.getOpenCache(intent.getDataString(), this);
+			Uri uri = intent.getData();
+			OpenPath path = FileManager.getOpenCache(uri.toString(), this);
+			if(path == null && uri.getScheme().equals("file"))
+				path = new OpenFile(uri.toString().replace("file:///", "/").replace("file://", "/").replace("file:/", "/"));
+			if(path == null) return false;
+			if(path.isArchive())
+			{
+				onChangeLocation(path);
+				return true;
+			}
 			if(editFile(path))
 				return true;
+			else
+				changePath(path, true, true);
 		}else if(intent.hasExtra("state"))
 		{
 			Bundle state = intent.getBundleExtra("state");
@@ -1415,7 +1437,11 @@ public class OpenExplorer
 	private void checkTitleSeparator()
 	{
 		if(mStaticButtons == null)
-			mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
+		{
+			View tsb = findViewById(R.id.title_static_buttons);
+			if(tsb != null && tsb instanceof ViewGroup)
+				mStaticButtons = (ViewGroup)tsb;
+		}
 		if(mStaticButtons == null && USE_ACTION_BAR && mBar != null && mBar.getCustomView() != null)
 			mStaticButtons = (ViewGroup)mBar.getCustomView().findViewById(R.id.title_static_buttons);
 		if(mStaticButtons == null)
@@ -1640,9 +1666,9 @@ public class OpenExplorer
 		//if(mPhotoParent == null) refreshCursors();
 		return mPhotoParent;
 	}
-	public static final OpenCursor getVideoParent() {
+	public static final OpenPathMerged getVideoParent() {
 		//if(mVideoParent == null) refreshCursors();
-		return mVideoParent;
+		return mVideosMerged;
 	}
 	public static final OpenCursor getMusicParent() {
 		//if(mMusicParent == null) refreshCursors();
@@ -1655,10 +1681,15 @@ public class OpenExplorer
 	
 	private boolean findCursors()
 	{
-		mVideoParent.setName(getString(R.string.s_videos));
+		mVideosMerged.setName(getString(R.string.s_videos));
 		mPhotoParent.setName(getString(R.string.s_photos));
 		mMusicParent.setName(getString(R.string.s_music));
 		mDownloadParent.setName(getString(R.string.s_downloads));
+		
+		final OpenFile extDrive = OpenFile.getExternalMemoryDrive(false);
+		final OpenFile intDrive = OpenFile.getInternalMemoryDrive();
+		final boolean mHasExternal = extDrive != null && extDrive.exists();
+		final boolean mHasInternal = intDrive != null && intDrive.exists();
 		
 		if(mVideoParent.isLoaded())
 		{
@@ -1671,7 +1702,24 @@ public class OpenExplorer
 				Logger.LogVerbose("Finding videos");
 			//if(!IS_DEBUG_BUILD)
 			try {
+				mVideosMerged.addParent(mVideoParent);
+				mVideosMerged.addParent(mVideoSearchParent);
 				getSupportLoaderManager().initLoader(0, null, this);
+				new Thread(new Runnable(){public void run(){
+					if(mHasExternal)
+						for(OpenPath kid : extDrive.list())
+							if(kid.getName().toLowerCase().indexOf("movies")>-1||kid.getName().toLowerCase().indexOf("video")>-1)
+								mVideoSearchParent.addSearch(new SmartSearch(kid, SmartSearch.SearchType.TypeIn, "avi", "3gp", "mkv", "mp4"));
+					if(mHasInternal)
+						for(OpenPath kid : intDrive.list())
+							if(kid.getName().toLowerCase().indexOf("movies")>-1||kid.getName().toLowerCase().indexOf("video")>-1)
+								mVideoSearchParent.addSearch(new SmartSearch(kid, SmartSearch.SearchType.TypeIn, "avi", "3gp", "mkv", "mp4"));
+					try {
+						mVideosMerged.refreshKids();
+					} catch (IOException e) {
+						Logger.LogError("Couldn't refresh merged Videos");
+					}
+				}}).start();
 			} catch(Exception e) { Logger.LogError("Couldn't query videos.", e); }
 			Logger.LogDebug("Done looking for videos");
 		}
@@ -1707,16 +1755,6 @@ public class OpenExplorer
 		if(!mDownloadParent.isLoaded())
 		{
 			new Thread(new Runnable(){public void run(){
-				OpenFile extDrive = OpenFile.getExternalMemoryDrive(false);
-				OpenFile intDrive = OpenFile.getInternalMemoryDrive();
-				boolean mHasExternal = false;
-				boolean mHasInternal = false;
-				if(extDrive != null && extDrive.exists())
-					mHasExternal = true;
-				if(intDrive != null && intDrive.exists())
-					mHasInternal = true;
-					//OpenSmartFolder dlSmart = new OpenSmartFolder("Downloads");
-				
 				if(mHasExternal)
 					for(OpenPath kid : extDrive.list())
 						if(kid.getName().toLowerCase().indexOf("download")>-1)
@@ -1866,6 +1904,9 @@ public class OpenExplorer
 		checkTitleSeparator();
 	}
 	
+	/**
+	 * Refresh list of bookmarks.
+	 */
 	public void refreshBookmarks()
 	{
 		if(DEBUG && IS_DEBUG_BUILD)
@@ -2160,33 +2201,34 @@ public class OpenExplorer
 		
 		if(IS_KEYBOARD_AVAILABLE)
 			MenuUtils.setMneumonics(menu);
-			
-		if(mSearchView == null) {
-					mSearchView = SearchViewCompat.newSearchView(this);
-					SearchViewCompat.setOnQueryTextListener(mSearchView,
-							new SearchViewCompat.OnQueryTextListenerCompat() {
-							public boolean onQueryTextSubmit(String query) {
-								mSearchView.clearFocus();
-								Intent intent = new Intent();
-								intent.setAction(Intent.ACTION_SEARCH);
-								Bundle appData = new Bundle();
-								appData.putString("path", getDirContentFragment(false).getPath().getPath());
-								intent.putExtra(SearchManager.APP_DATA, appData);
-								intent.putExtra(SearchManager.QUERY, query);
-								handleIntent(intent);
-								return true;
-							}
-							public boolean onQueryTextChange(String newText) {
-								return false;
-							}
-						});
+
+		mMenuSearch = menu.findItem(R.id.menu_search);
+		if(mMenuSearch != null && mSearchView == null) {
+			mSearchView = SearchViewCompat.newSearchView(this);
+			SearchViewCompat.setOnQueryTextListener(mSearchView,
+				new SearchViewCompat.OnQueryTextListenerCompat() {
+				public boolean onQueryTextSubmit(String query) {
+					mSearchView.clearFocus();
+					Intent intent = new Intent();
+					intent.setAction(Intent.ACTION_SEARCH);
+					Bundle appData = new Bundle();
+					appData.putString("path", getDirContentFragment(false).getPath().getPath());
+					intent.putExtra(SearchManager.APP_DATA, appData);
+					intent.putExtra(SearchManager.QUERY, query);
+					handleIntent(intent);
+					mMenuSearch.collapseActionView();
+					return true;
 				}
-		MenuItem mMenuSearch = menu.findItem(R.id.menu_search);
+				public boolean onQueryTextChange(String newText) {
+					return false;
+				}
+			});
+		}
 		if(mMenuSearch != null)
 		{
-			mMenuSearch.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+			mMenuSearch.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 			mMenuSearch.setActionView(mSearchView);
-			}
+		}
 		
 		return super.onCreateOptionsMenu(menu);
 		}
@@ -2251,11 +2293,7 @@ public class OpenExplorer
 				setSetting("pref_show_bookmarks",
 					toggleBookmarks());
 				return true;
-				
-			case R.id.menu_view_carousel:
-				changeViewMode(OpenExplorer.VIEW_CAROUSEL, true);
-				return true;
-				
+
 			case R.id.menu_view_grid:
 				changeViewMode(OpenExplorer.VIEW_GRID, true);
 				return true;
@@ -2350,16 +2388,7 @@ public class OpenExplorer
 				return true;
 				
 			case R.id.menu_exit:
-				DialogHandler.showConfirmationDialog(this,
-						getString(R.string.s_alert_exit),
-						getString(R.string.s_menu_exit),
-						getPreferences(), "exit",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								finish();
-							}
-						});
+				showExitDialog();
 				return true;
 		}
 		
@@ -2405,6 +2434,19 @@ public class OpenExplorer
 		return onClick(item.getItemId(), item, null);
 	}
 	
+	private void showExitDialog() {
+		DialogHandler.showConfirmationDialog(this,
+			getString(R.string.s_alert_exit),
+			getString(R.string.s_menu_exit),
+			getPreferences(), "exit",
+			new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					finish();
+				}
+			});
+	}
+
 	@Override
 	public void onClick(View v) {
 		super.onClick(v);
@@ -2633,7 +2675,7 @@ public class OpenExplorer
 			} else {
 				fragmentManager.beginTransaction()
 					.replace(R.id.content_frag, ContentFragment.getInstance(getCurrentPath(), mViewMode, getSupportFragmentManager()))
-					.setBreadCrumbTitle(getCurrentPath().getAbsolutePath())
+					.setBreadCrumbTitle(getCurrentPath().getPath())
 					//.addToBackStack(null)
 					.commit();
 				updateTitle(getCurrentPath().getPath());
@@ -2648,37 +2690,10 @@ public class OpenExplorer
 	
 	public void showPreferences(OpenPath path)
 	{
-		if(Build.VERSION.SDK_INT > 100)
-		{
-			FragmentTransaction ft = fragmentManager.beginTransaction();
-			OpenFragment frag = getSelectedFragment();
-			ft.hide(frag);
-			//ft.replace(R.id.content_frag, new PreferenceFragment(this, path));
-			ft.setBreadCrumbTitle("prefs://" + (path != null ? path.getPath() : ""));
-			ft.addToBackStack("prefs");
-			ft.commit();
-			final PreferenceFragmentV11 pf2 = new PreferenceFragmentV11(path);
-			getFragmentManager().addOnBackStackChangedListener(new android.app.FragmentManager.OnBackStackChangedListener() {
-				
-				public void onBackStackChanged() {
-					//android.app.FragmentTransaction ft3 = getFragmentManager().beginTransaction();
-					Logger.LogDebug("hide me!");
-					//getFragmentManager().removeOnBackStackChangedListener(this);
-					if(pf2 != null && pf2.getView() != null && getFragmentManager().getBackStackEntryCount() == 0)
-						pf2.getView().setVisibility(View.GONE);
-				}
-			});
-			android.app.FragmentTransaction ft2 = getFragmentManager().beginTransaction();
-			ft2.replace(R.id.content_pager_frame, pf2);
-			ft2.setBreadCrumbTitle("prefs");
-			ft2.addToBackStack("prefs");
-			ft2.commit();
-		} else {
-			Intent intent = new Intent(this, SettingsActivity.class);
-			if(path != null)
-				intent.putExtra("path", path.getPath());
-			startActivityForResult(intent, REQ_PREFERENCES);
-		}
+		Intent intent = new Intent(this, SettingsActivity.class);
+		if(path != null)
+			intent.putExtra("path", path.getPath());
+		startActivityForResult(intent, REQ_PREFERENCES);
 	}
 	
 	@Override
@@ -2735,9 +2750,14 @@ public class OpenExplorer
 	}
 		
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Logger.LogDebug("OpenExplorer.onActivityResult(" + requestCode + ", " + resultCode + ", " + (data != null ? data.toString() : "null") + ")");
 		if(requestCode == REQ_PREFERENCES)
 		{
-			if(resultCode == RESULT_RESTART_NEEDED) {
+			boolean needRestart = getPreferences().getSetting("global", "restart", false);
+			if(resultCode == RESULT_RESTART_NEEDED
+					|| (data != null && data.hasExtra("restart") && data.getBooleanExtra("restart", true))
+					|| needRestart) {
+				getPreferences().setSetting("global", "restart", false);
 				showToast(R.string.s_alert_restart);
 				goHome(); // just restart
 			} else {
@@ -2745,7 +2765,8 @@ public class OpenExplorer
 				refreshBookmarks();
 				notifyPager();
 				getDirContentFragment(false).refreshData();
-				toggleBookmarks(getSetting(null, "pref_show_bookmarks", getResources().getBoolean(R.bool.large)), false);
+				if(!mSinglePane)
+					toggleBookmarks(getSetting(null, "pref_show_bookmarks", getResources().getBoolean(R.bool.large)), false);
 				invalidateOptionsMenu();
 			}
 		} else if (requestCode == REQ_SPLASH) {
@@ -2757,7 +2778,7 @@ public class OpenExplorer
 				if(!start.equals(getCurrentPath().getPath()))
 				{
 					if("Videos".equals(start))
-						changePath(mVideoParent, true);
+						changePath(getVideoParent(), true);
 					else if("Photos".equals(start))
 						changePath(mPhotoParent, true);
 					else if("External".equals(start))
@@ -2821,7 +2842,8 @@ public class OpenExplorer
 						Logger.LogDebug("last path set to " + mLastPath.getPath());
 						changePath(mLastPath, false);
 						//updateTitle(mLastPath.getPath());
-					} else finish();
+					} else
+						showExitDialog();
 					
 				} 
 				else {
@@ -2829,8 +2851,7 @@ public class OpenExplorer
 				}
 			}
 			else {
-				//updateTitle("");
-				showToast(R.string.s_alert_back_to_exit);
+				showExitDialog();
 			}
 		}
 		mLastBackIndex = i;
@@ -2929,7 +2950,9 @@ public class OpenExplorer
 				{
 					OpenFragment f = mViewPagerAdapter.getItem(i);
 					if(f == null || !(f instanceof ContentFragment)) continue;
-					if(!familyTree.contains(((ContentFragment)f).getPath()))
+					OpenPath tp = ((ContentFragment)f).getPath();
+					if(tp instanceof OpenSmartFolder ||
+							!familyTree.contains(tp))
 					{
 						mViewPagerAdapter.remove(i);
 						//removed = true;
@@ -3439,7 +3462,7 @@ public class OpenExplorer
 				if(bRetrieveCursorFiles)
 				loader = new CursorLoader(
 					getApplicationContext(),
-					MediaStore.Files.getContentUri("/mnt"),
+					MediaStore.Files.getContentUri(OpenFile.getExternalMemoryDrive(true).getParent().getPath()),
 					new String[]{"_id", "_display_name", "_data", "_size", "date_modified"},
 					"_size > 10000 AND _data LIKE '%apk'", null,
 					"date modified DESC"
@@ -3468,6 +3491,12 @@ public class OpenExplorer
 		else if(l.getId() == 3)
 			mParent = mApkParent;
 		mParent.setCursor(c);
+		if(l.getId() == 0)
+			try {
+				mVideosMerged.refreshKids();
+			} catch (IOException e) {
+				Logger.LogError("Unable to merge videos after Cursor", e);
+			}
 		/*
 		mBookmarks.refresh();
 		OpenFragment f = getSelectedFragment();

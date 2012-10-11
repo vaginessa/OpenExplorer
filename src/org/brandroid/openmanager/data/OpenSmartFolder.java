@@ -73,19 +73,20 @@ public class OpenSmartFolder extends OpenPath
 	}
 	
 	public boolean isLoaded() { return mLoaded; }
-	public void setLoaded() { mLoaded = true; }
 	
 	public void addSearch(SmartSearch search)
 	{
 		if(search.mParent == null || !search.mParent.exists()) return;
 		if(!mSearches.contains(search))
 		{
+			mLoaded = false;
 			mSearches.add(search);
 			try {
 				doSearch(search);
 			} catch (IOException e) {
 				Logger.LogError("Error adding Search");
 			}
+			mLoaded = true;
 		}
 	}
 	
@@ -114,6 +115,11 @@ public class OpenSmartFolder extends OpenPath
 	@Override
 	public long length() {
 		return mChildren.size();
+	}
+	
+	@Override
+	public int getListLength() {
+		return (int) length();
 	}
 
 	@Override
@@ -150,6 +156,16 @@ public class OpenSmartFolder extends OpenPath
 					if(!mChildren.contains(p))
 						mChildren.add(p);
 				break;
+			case TypeIn:
+				ArrayList<String> types = new ArrayList<String>();
+				for(Object o : search.mParams)
+					if(o instanceof String && ((String)o).length() <= 8)
+						types.add(((String)o).toLowerCase());
+				for(OpenPath kid : search.mParent.listFiles())
+					if(types.contains(kid.getExtension().toLowerCase()))
+						if(!mChildren.contains(kid))
+							mChildren.add(kid);
+				break;
 			default:
 				throw new IOException("Type " + search.mType.toString() + " not yet implemented");
 		}
@@ -157,9 +173,11 @@ public class OpenSmartFolder extends OpenPath
 
 	@Override
 	public OpenPath[] listFiles() throws IOException {
+		mLoaded = false;
 		mChildren.clear();
 		for(SmartSearch search : mSearches)
 			doSearch(search);
+		mLoaded = true;
 		return mChildren.toArray(new OpenPath[mChildren.size()]);
 	}
 	

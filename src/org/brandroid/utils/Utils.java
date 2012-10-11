@@ -493,4 +493,11 @@ public class Utils {
 	    }
 	    return "";
 	}
+
+	public static boolean inArray(String key, String... array) {
+		for(String item : array)
+			if(item.equals(key))
+				return true;
+		return false;
+	}
 }
