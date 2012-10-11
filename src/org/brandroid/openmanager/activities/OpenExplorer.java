@@ -1463,7 +1463,11 @@ public class OpenExplorer
 	private void checkTitleSeparator()
 	{
 		if(mStaticButtons == null)
-			mStaticButtons = (ViewGroup)findViewById(R.id.title_static_buttons);
+		{
+			View tsb = findViewById(R.id.title_static_buttons);
+			if(tsb != null && tsb instanceof ViewGroup)
+				mStaticButtons = (ViewGroup)tsb;
+		}
 		if(mStaticButtons == null && USE_ACTION_BAR && mBar != null && mBar.getCustomView() != null)
 			mStaticButtons = (ViewGroup)mBar.getCustomView().findViewById(R.id.title_static_buttons);
 		if(mStaticButtons == null)
