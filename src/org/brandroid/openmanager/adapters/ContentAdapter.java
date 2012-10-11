@@ -67,7 +67,7 @@ public class ContentAdapter extends BaseAdapter {
 	/**
 	 * Set of seleced message IDs.
 	 */
-	private final TreeSet<OpenPath> mSelectedSet = new TreeSet<OpenPath>();
+	private final ArrayList<OpenPath> mSelectedSet = new ArrayList<OpenPath>();
 
 	/**
 	 * Callback from MessageListAdapter. All methods are called on the UI
@@ -443,11 +443,11 @@ public class ContentAdapter extends BaseAdapter {
 		return mData2;
 	}
 	
-	public TreeSet<OpenPath> getSelectedSet() {
+	public ArrayList<OpenPath> getSelectedSet() {
 		return mSelectedSet;
 	}
 	
-	public void setSelectedSet(Set<OpenPath> set) {
+	public void setSelectedSet(ArrayList<OpenPath> set) {
 		for (OpenPath rememberedPath : set) {  
 			mSelectedSet.add(rememberedPath);
 		}
@@ -458,9 +458,8 @@ public class ContentAdapter extends BaseAdapter {
 	 * {@link #getSelectedSet()}, because it also notifies observers.
 	 */
 	public void clearSelection() {
-		Set<OpenPath> checkedset = getSelectedSet();
-		if (checkedset.size() > 0) {
-			checkedset.clear();
+		if (mSelectedSet.size() > 0) {
+			mSelectedSet.clear();
 			notifyDataSetChanged();
 		}
 	}
