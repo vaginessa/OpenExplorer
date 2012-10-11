@@ -378,24 +378,21 @@ public class ContentAdapter extends BaseAdapter {
 		if(mCheck != null) mCheck.setImageResource(mChecked ? checkboxOnId : checkboxOffId);
 		ViewUtils.setViewsVisible(row, mShowCheck, R.id.content_check);
 
-		TextView tvHilight = mNameView;
-		TextView[] tvLowlight = new TextView[] {mDate, mInfo};
 		switch(OpenPath.Sorting.getType())
 		{
 		case DATE:
 		case DATE_DESC:
-			tvHilight = mDate;
+			mDate.setTextAppearance(getContext(), R.style.Small_Hilite);
 			break;
 		case SIZE:
 		case SIZE_DESC:
-			tvHilight = mInfo;
+			mInfo.setTextAppearance(getContext(), R.style.Small_Hilite);
 			break;
 		case ALPHA:
 		case ALPHA_DESC:
-			tvHilight = mNameView;
+			mNameView.setTextAppearance(getContext(), R.style.Large_Hilite);
 			break;
 		}
-		tvHilight.setText(Html.fromHtml("<b>" + tvHilight.getText() + "</b>"));
 
 		return row;
 	}
