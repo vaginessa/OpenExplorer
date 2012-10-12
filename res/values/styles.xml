@@ -25,13 +25,13 @@
         <item name="android:textSize">@dimen/large_text_size</item>
     </style>
     <style name="Small.Hilite" parent="@style/Small">
-        <item name="android:textColor">?attr/colorHilite</item>
+        <item name="android:textStyle">bold</item>
     </style>
     <style name="Mid.Hilite" parent="@style/Mid">
-        <item name="android:textColor">?attr/colorHilite</item>
+        <item name="android:textStyle">bold</item>
     </style>
     <style name="Large.Hilite" parent="@style/Large">
-        <item name="android:textColor">?attr/colorHilite</item>
+        <item name="android:textStyle">bold</item>
     </style>
     <style name="Small.Dim" parent="@style/Small">
         <item name="android:textColor">?attr/colorWhiteDim</item>
