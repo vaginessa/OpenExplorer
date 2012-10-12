@@ -33,6 +33,15 @@
     <style name="Large.Hilite" parent="@style/Large">
         <item name="android:textColor">?attr/colorHilite</item>
     </style>
+    <style name="Small.Dim" parent="@style/Small">
+        <item name="android:textColor">?attr/colorWhiteDim</item>
+    </style>
+    <style name="Mid.Dim" parent="@style/Mid">
+        <item name="android:textColor">?attr/colorWhiteDim</item>
+    </style>
+    <style name="Large.Dim" parent="@style/Large">
+        <item name="android:textColor">?attr/colorWhiteDim</item>
+    </style>
     <style name="icon"></style>
     <style name="icon.grid">
     	<item name="android:layout_width">wrap_content</item>

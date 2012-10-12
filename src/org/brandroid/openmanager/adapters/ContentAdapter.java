@@ -382,21 +382,21 @@ public class ContentAdapter extends BaseAdapter {
 		{
 		case DATE:
 		case DATE_DESC:
-			mDate.setTextAppearance(getContext(), R.style.Small_Hilite);
-			mInfo.setTextAppearance(getContext(), R.style.Small);
-			mNameView.setTextAppearance(getContext(), R.style.Large);
+			mDate.setTextAppearance(getContext(), R.style.Small);
+			mInfo.setTextAppearance(getContext(), R.style.Small_Dim);
+			mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
 			break;
 		case SIZE:
 		case SIZE_DESC:
-			mInfo.setTextAppearance(getContext(), R.style.Small_Hilite);
-			mDate.setTextAppearance(getContext(), R.style.Small);
-			mNameView.setTextAppearance(getContext(), R.style.Large);
+			mInfo.setTextAppearance(getContext(), R.style.Small);
+			mDate.setTextAppearance(getContext(), R.style.Small_Dim);
+			mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
 			break;
 		case ALPHA:
 		case ALPHA_DESC:
-			mNameView.setTextAppearance(getContext(), R.style.Large_Hilite);
-			mInfo.setTextAppearance(getContext(), R.style.Small);
-			mDate.setTextAppearance(getContext(), R.style.Small);
+			mNameView.setTextAppearance(getContext(), R.style.Large);
+			mInfo.setTextAppearance(getContext(), R.style.Small_Dim);
+			mDate.setTextAppearance(getContext(), R.style.Small_Dim);
 			break;
 		default:
 			mNameView.setTextAppearance(getContext(), R.style.Large);
