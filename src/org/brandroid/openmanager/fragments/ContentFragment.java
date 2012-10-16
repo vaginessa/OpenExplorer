@@ -1853,7 +1853,8 @@ public class ContentFragment extends OpenFragment
 			for(OpenPath clip : getClipboard().getAll())
 				addToMultiSelect(clip);
 			*/
-			getExplorer().startActionMode(mLastSelectionModeCallback);
+			if(getExplorer() != null)
+				getExplorer().startActionMode(mLastSelectionModeCallback);
 			mGrid.invalidateViews();
 			
 		}
@@ -1935,10 +1936,15 @@ public class ContentFragment extends OpenFragment
 						.getActionProvider();
 				if(mShareActionProvider != null)
 				{
+					int cnt = getSelectedCount();
 					OpenPath first = mContentAdapter.getSelectedSet().get(0);
-					Intent shareIntent = new Intent(Intent.ACTION_SEND);
-					shareIntent.setType(first.getMimeType());
-					shareIntent.putExtra(Intent.EXTRA_STREAM, first.getUri());
+					Intent shareIntent = null;
+					shareIntent = new Intent(cnt > 1 ? Intent.ACTION_SEND : Intent.ACTION_VIEW);
+					if(first != null)
+					{
+						shareIntent.setType(first.getMimeType());
+						shareIntent.putExtra(Intent.EXTRA_STREAM, first.getUri());
+					}
 					mShareActionProvider.setShareIntent(shareIntent);
 					mShareActionProvider
 						.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
@@ -1957,19 +1963,30 @@ public class ContentFragment extends OpenFragment
 			
 			if(mShareActionProvider != null)
 			{
-				Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+				Intent shareIntent = null;
+				int cnt = getSelectedCount();
 				OpenPath first = mContentAdapter.getSelectedSet().get(0);
-				String type = first.getMimeType();
-				ArrayList<Uri> uris = new ArrayList<Uri>();
-				for(OpenPath sel : mContentAdapter.getSelectedSet())
+				if(cnt > 1)
 				{
-					if(!type.equals(sel.getMimeType()))
-						type = "*/*";
-					uris.add(sel.getUri());
+					shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+					String type = first.getMimeType();
+					ArrayList<Uri> uris = new ArrayList<Uri>();
+					for(OpenPath sel : mContentAdapter.getSelectedSet())
+					{
+						if(!type.equals(sel.getMimeType()))
+							type = "*/*";
+						uris.add(sel.getUri());
+					}
+					shareIntent.setType(type);
+					shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+				} else {
+					shareIntent = new Intent(Intent.ACTION_VIEW);
+					shareIntent.setDataAndType(first.getUri(), first.getMimeType());
 				}
-				shareIntent.setType(type);
-				shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-				mShareActionProvider.setShareIntent(shareIntent);
+				boolean hasIntents = IntentManager.getResolvesAvailable(shareIntent, getExplorer()).size() > 0;
+				MenuUtils.setMenuVisible(menu, hasIntents, R.id.menu_context_share);
+				if(hasIntents)
+					mShareActionProvider.setShareIntent(shareIntent);
 			}
 			
 			boolean writable = true, readable = true;
