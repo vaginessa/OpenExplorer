@@ -598,7 +598,54 @@ public class OpenExplorer
 			super.setTitle(title);
 	}
 	
+	public static boolean isNook()
+	{
+		if(Build.DISPLAY.toLowerCase().contains("acclaim"))	
+			return true;
+		if(Build.BRAND.toLowerCase().contains("nook"))
+			return true;
+		return false;
+	}
+	
+	private void checkNook()
+	{
+		if(isNook())
+		{
+			if(!getPreferences().getBoolean("warn", "nook_donate", false))
+			{
+				DialogHandler.showMultiButtonDialog(
+					getContext(),
+					getString(R.string.msg_nook_donate),
+					"Hello Nook user!",
+					new OnClickListener() {	
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							switch(which)
+							{
+								case R.string.s_no:
+									getPreferences().setSetting("warn", "nook_donate", true);
+									break;
+								case R.string.s_cancel:
+									break;
+								default:
+									getPreferences().setSetting("warn", "nook_donate", true);
+									launchDonation(OpenExplorer.this);
+									break;
+							}
+							if(dialog != null)
+								dialog.dismiss();
+						}
+					},
+					R.string.s_menu_donate,
+					R.string.s_no,
+					R.string.s_cancel
+					);
+			}
+		}
+	}
+	
 	private void checkWelcome()	{
+		checkNook();
 		try {
 			if(isBlackBerry() && !getPreferences().getBoolean("global", "welcome_bb", false))
 			{
@@ -1212,6 +1259,13 @@ public class OpenExplorer
 		return false;
 	}
 	
+	public static void launchDonation(Activity a)
+	{
+		Uri uri = Uri.parse("http://brandroid.org/donate.php");
+		Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+		a.startActivity(intent);
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static void launchTranslator(Activity a)
 	{
@@ -1221,13 +1275,13 @@ public class OpenExplorer
 		//Intent intent = new Intent(a, WebViewActivity.class);
 		//intent.setData();
 		//a.startActivity(intent);
-		WebViewFragment web = new WebViewFragment().setUri(uri);
 		if(Build.VERSION.SDK_INT < 100)
 		{
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 			a.startActivity(intent);
 		} else if(a.findViewById(R.id.frag_log) != null)
 		{
+			WebViewFragment web = new WebViewFragment().setUri(uri);
 			((FragmentActivity)a).getSupportFragmentManager()
 				.beginTransaction()
 				.replace(R.id.frag_log, web)
@@ -1238,6 +1292,7 @@ public class OpenExplorer
 			lp.width = a.getResources().getDimensionPixelSize(R.dimen.bookmarks_width) * 2;
 			a.findViewById(R.id.frag_log).setLayoutParams(lp);
 		} else {
+			WebViewFragment web = new WebViewFragment().setUri(uri);
 			web.setShowsDialog(true);
 			web.show(((FragmentActivity)a).getSupportFragmentManager(), "trans");
 			if(web.getDialog() != null)
@@ -1734,11 +1789,22 @@ public class OpenExplorer
 					if(mHasExternal)
 						for(OpenPath kid : extDrive.list())
 							if(kid.getName().toLowerCase().indexOf("movies")>-1||kid.getName().toLowerCase().indexOf("video")>-1)
-								mVideoSearchParent.addSearch(new SmartSearch(kid, SmartSearch.SearchType.TypeIn, "avi", "3gp", "mkv", "mp4"));
+								mVideoSearchParent.addSearch(new SmartSearch(kid, SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp", "mkv", "mp4"));
 					if(mHasInternal)
 						for(OpenPath kid : intDrive.list())
 							if(kid.getName().toLowerCase().indexOf("movies")>-1||kid.getName().toLowerCase().indexOf("video")>-1)
-								mVideoSearchParent.addSearch(new SmartSearch(kid, SmartSearch.SearchType.TypeIn, "avi", "3gp", "mkv", "mp4"));
+								mVideoSearchParent.addSearch(new SmartSearch(kid, SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp", "mkv", "mp4"));
+					if(isNook())
+					{
+						OpenFile files = OpenFile.getExternalMemoryDrive(true);
+						files = files.getChild("My Files");
+						if(files != null && files.exists())
+						{
+							files = files.getChild("Videos");
+							if(files != null && files.exists())
+								mVideoSearchParent.addSearch(new SmartSearch(files, SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp", "mkv", "mp4"));
+						}
+					}
 					try {
 						mVideosMerged.refreshKids();
 					} catch (IOException e) {
@@ -1788,6 +1854,18 @@ public class OpenExplorer
 					for(OpenPath kid : intDrive.list())
 						if(kid.getName().toLowerCase().indexOf("download")>-1)
 							mDownloadParent.addSearch(new SmartSearch(kid));
+				if(isNook())
+				{
+					OpenFile files = OpenFile.getExternalMemoryDrive(true);
+					files = files.getChild("My Files");
+					if(files != null && files.exists())
+					{
+						for(OpenPath kid : intDrive.list())
+							if(kid.getName().toLowerCase().indexOf("download")>-1)
+								mDownloadParent.addSearch(new SmartSearch(kid));
+					}
+				}
+
 			}}).start();
 		}
 		if(DEBUG && IS_DEBUG_BUILD)
@@ -2312,6 +2390,9 @@ public class OpenExplorer
 		switch(id)	{
 			case R.id.menu_debug:
 				debugTest();
+				break;
+			case R.id.menu_donate:
+				launchDonation(this);
 				break;
 			case R.id.title_icon_holder:
 			case android.R.id.home:
