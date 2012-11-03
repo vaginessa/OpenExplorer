@@ -606,7 +606,7 @@ public class OpenExplorer
 			return true;
 		return false;
 	}
-	
+
 	private void checkNook()
 	{
 		if(isNook())
@@ -643,16 +643,46 @@ public class OpenExplorer
 			}
 		}
 	}
+	private void checkRIM()
+	{
+		if(isBlackBerry())
+		{
+			if(!getPreferences().getBoolean("warn", "rim_donate", false))
+			{
+				DialogHandler.showMultiButtonDialog(
+					getContext(),
+					getString(R.string.msg_bb_donate),
+					Build.BRAND,
+					new OnClickListener() {	
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							switch(which)
+							{
+								case R.string.s_no:
+									getPreferences().setSetting("warn", "rim_donate", true);
+									break;
+								case R.string.s_cancel:
+									break;
+								default:
+									getPreferences().setSetting("warn", "rim_donate", true);
+									launchDonation(OpenExplorer.this);
+									break;
+							}
+							if(dialog != null)
+								dialog.dismiss();
+						}
+					},
+					R.string.s_menu_donate,
+					R.string.s_no,
+					R.string.s_cancel
+					);
+			}
+		}
+	}
 	
 	private void checkWelcome()	{
 		checkNook();
-		try {
-			if(isBlackBerry() && !getPreferences().getBoolean("global", "welcome_bb", false))
-			{
-				showToast("Welcome, PlayBook user!");
-				getPreferences().setSetting("global", "welcome_bb", true);
-			}
-		} catch(Exception e) { }
+		checkRIM();
 		try {
 			if(isGTV())
 			{
