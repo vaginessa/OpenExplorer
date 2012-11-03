@@ -1212,6 +1212,13 @@ public class OpenExplorer
 		return false;
 	}
 	
+	public static void launchDonation(Activity a)
+	{
+		Uri uri = Uri.parse("http://brandroid.org/donate.php");
+		Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+		a.startActivity(intent);
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static void launchTranslator(Activity a)
 	{
@@ -2312,6 +2319,9 @@ public class OpenExplorer
 		switch(id)	{
 			case R.id.menu_debug:
 				debugTest();
+				break;
+			case R.id.menu_donate:
+				launchDonation(this);
 				break;
 			case R.id.title_icon_holder:
 			case android.R.id.home:
