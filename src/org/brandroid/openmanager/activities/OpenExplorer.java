@@ -794,17 +794,18 @@ public class OpenExplorer
 	private void handleExceptionHandler() {
 		if(Logger.checkWTF())
 		{
-			if(!getSetting(null, "pref_autowtf", false))
-				showWTFIntent();
+			OpenFile crashFile = Logger.getCrashFile();
+			if(crashFile.exists())
+			{
+				Logger.LogWTF(crashFile.readAscii(), new Exception());
+				crashFile.delete();
+			}
+			//if(!getSetting(null, "pref_autowtf", false))
+			//	showWTFIntent();
 			//else if(isNetworkConnected())
 			//	new SubmitStatsTask(this).execute(
 			//			Logger.getCrashReport(true));
 		}
-	}
-
-	private void showWTFIntent() {
-		Intent intent = new Intent(this, WTFSenderActivity.class);
-		startActivity(intent);
 	}
 
 	@Override
@@ -2571,18 +2572,8 @@ public class OpenExplorer
 	
 	private void debugTest() {
 		//startActivity(new Intent(this, Authenticator.class));
-		DEBUG_TOGGLE = !DEBUG_TOGGLE;
-		notifyPager();
-		queueToTracker(new Runnable() {
-			public void run() {
-				final boolean d = getAnalyticsTracker().dispatch();
-				runOnUiThread(new Runnable() {
-					public void run() {
-						showToast(d ? "Dispatch worked!" : "Dispatch failed!");
-					}
-				});
-			}
-		});
+		int divide0 = 10 / (5 - 5);
+		Logger.LogVerbose("I did it! 10 / 0 = " + divide0 + "!!!");
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }
