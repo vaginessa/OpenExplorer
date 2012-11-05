@@ -3,14 +3,14 @@
     <style name="Small" parent="@android:style/TextAppearance.Small">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">?attr/colorOffWhite</item>
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
 		<item name="android:textSize">10dp</item>
     </style>
     <style name="Mid" parent="@android:style/TextAppearance.Medium">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center|top</item>
-        <item name="android:textColor">?attr/colorWhite</item>
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
         <item name="android:text">Mid</item>
         <item name="android:ellipsize">marquee</item>
         <item name="android:textSize">14dp</item>
@@ -18,7 +18,7 @@
     <style name="Large" parent="@android:style/TextAppearance.Large">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/large_text_height</item>
-        <item name="android:textColor">?attr/colorWhite</item>
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
         <item name="android:text">Big</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">marquee</item>
@@ -34,13 +34,13 @@
         <item name="android:textStyle">bold</item>
     </style>
     <style name="Small.Dim" parent="@style/Small">
-        <item name="android:textColor">?attr/colorWhiteDim</item>
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
     </style>
     <style name="Mid.Dim" parent="@style/Mid">
-        <item name="android:textColor">?attr/colorWhiteDim</item>
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
     </style>
     <style name="Large.Dim" parent="@style/Large">
-        <item name="android:textColor">?attr/colorWhiteDim</item>
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
     </style>
     <style name="icon"></style>
     <style name="icon.grid">

@@ -131,7 +131,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignBottom="@+id/content_bottom"
         android:id="@+id/content_right"
-        android:background="?attr/colorDarkGray"
+        android:background="?attr/appDividerColor"
         android:layout_marginLeft="3dp"
         android:layout_alignParentRight="true"
         /> 
@@ -140,7 +140,7 @@
         android:layout_width="match_parent"
         android:id="@+id/content_bottom"
         android:layout_height="1dp"
-        android:background="?attr/colorDarkGray"
+        android:background="?attr/appDividerColor"
         android:layout_below="@+id/item_wrapper"
         />
     

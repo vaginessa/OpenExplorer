@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp"
-    android:background="?attr/colorBlack"
+    android:background="?attr/dialogBackgroundColorPrimary"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -17,7 +17,7 @@
 	        android:layout_weight="1"
 	        android:layout_height="wrap_content"
 	        style="@android:style/TextAppearance.Medium"
-	        android:textColor="?attr/colorWhite"
+	        android:textColor="?attr/dialogTextColorPrimary"
 	        android:text="@string/s_size"
 	        />
 	    <Button
@@ -31,7 +31,7 @@
     <LinearLayout
         android:layout_height="1dp"
         android:layout_width="match_parent"
-        android:background="?attr/colorWhite"
+        android:background="?attr/dialogAccentColorPrimary"
         />
     
     <ListView

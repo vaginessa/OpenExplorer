@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string-array name="sorting">
+    <string-array name="themes">
+        <item>@string/s_theme_dark</item>
+        <item>@string/s_theme_light</item>
+        <item>@string/s_theme_lightdark</item>
+        <item>@string/s_theme_custom</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>dark</item>
+        <item>light</item>
+        <item>lightdark</item>
+        <item>custom</item>
+    </string-array>
+    
+    <string-array name="sorting">
 		<item>@string/s_none</item>
 		<item>@string/s_menu_sort_name_asc</item>
 		<item>@string/s_menu_sort_name_desc</item>

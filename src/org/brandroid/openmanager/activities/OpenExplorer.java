@@ -397,8 +397,10 @@ public class OpenExplorer
 		loadPreferences();
 		checkRoot();
 		
-		boolean themeDark = getPreferences().getBoolean("global", "pref_theme", true);
-		int theme = themeDark ? R.style.AppTheme_Dark : R.style.AppTheme_Light;
+
+		int theme = getThemeId ();	
+		boolean themeDark = R.style.AppTheme_Dark == theme;
+		
 		getApplicationContext().setTheme(theme);
 		setTheme(theme);
 		getOpenApplication().loadThemedAssets(this);
@@ -3279,7 +3281,7 @@ public class OpenExplorer
 		if(pbt != null)
 		{
 			pbt.setText(""+mLastClipSize);
-			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_colorBlack, R.color.white)));
+			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_dialogBackgroundColorPrimary, R.color.white)));
 		}
 		ViewUtils.setImageResource(pb,
 			getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard),
@@ -3720,5 +3722,14 @@ public class OpenExplorer
 	@Override
 	public int getThemedResourceId(int styleableId, int defaultResourceId) {
 		return getOpenApplication().getThemedResourceId(styleableId, defaultResourceId);
+	}
+	
+	public int getThemeId () {
+	    String themeName = getPreferences().getString("global", "pref_themes", "dark");
+	    if (themeName.equals("dark")) return R.style.AppTheme_Dark;
+	    else if (themeName.equals("light")) return R.style.AppTheme_Light;
+	    else if (themeName.equals("lightdark")) return R.style.AppTheme_LightAndDark;
+	    else if (themeName.equals("custom")) return R.style.AppTheme_Custom;    
+	    return 0;
 	}
 }

@@ -618,7 +618,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 		if(key.equals("server_host") && (!getIntent().hasExtra("name") || getIntent().getStringExtra("name") == null))
 			onPreferenceChange(getPreferenceScreen().findPreference("server_name"), newValue);
 		Intent intent = getIntent();
-		if(Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
+		if(Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_themes",
 					"pref_stats", "pref_root", "pref_language"))
 			getPreferences().setSetting("global", "restart", true);
 		if(key.equals("pref_language"))
@@ -644,7 +644,7 @@ public class SettingsActivity extends SherlockPreferenceActivity
 			}
 		});
 		setIntent(intent);
-		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_theme",
+		if(Arrays.binarySearch(new String[]{"pref_fullscreen", "pref_fancy_menus", "pref_basebar", "pref_themes",
 					"pref_stats", "pref_root", "pref_language"}, key) > -1)
 		{
 			getPreferences().setSetting("global", "restart", true);
