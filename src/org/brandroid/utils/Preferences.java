@@ -35,6 +35,7 @@ public class Preferences {
 	public static int Pref_Text_Max_Size = 500000;
 	public static boolean Pref_Analytics = true;
 	public static String Pref_Language = ""; // Default
+	public static boolean Pref_Root = false;
 	
 	public interface OnPreferenceInteraction
 	{

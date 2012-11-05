@@ -47,6 +47,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
+import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.RootToolsException;
 
@@ -93,8 +94,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	private Long mAllDataSize = 0l;
 	private Long mLargestDataSize = 0l;
 	private SharedPreferences mPrefs;
-	private List<String> mBlkids = null;
-	private List<String> mProcMounts = null;
+	private static List<String> mBlkids = null;
+	private static List<Mount> mProcMounts = null;
 	private final OpenApp mApp;
 	public static final int BOOKMARK_DRIVE = 0;
 	public static final int BOOKMARK_SMART_FOLDER = 1;
@@ -120,15 +121,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 	public void scanRoot()
 	{
 		Logger.LogDebug("Trying to get roots");
-		if(mBlkids == null && mProcMounts == null && RootTools.isRootAvailable())
+		if(mBlkids == null && mProcMounts == null)
 		{
+			mProcMounts = new ArrayList<Mount>();
 			mBlkids = new ArrayList<String>();
-			mProcMounts = new ArrayList<String>();
 			new Thread(new Runnable() {
 				public void run() {
 					try {
-						mProcMounts = RootTools.sendShell("cat /proc/mounts", 0);
-						mBlkids = RootTools.sendShell("blkid", 0);
+						mProcMounts = RootTools.getMounts();
+						if(Preferences.Pref_Root && RootTools.isAccessRequested() && RootTools.isAccessGiven())
+							mBlkids = RootTools.sendShell("blkid", 0);
 						Logger.LogVerbose("Successfully got " + mProcMounts.size() + " procmounts and " + mBlkids.size() + " blkids!");
 					} catch(Exception e) {
 						Logger.LogError("Unable to get roots from shell", e);
@@ -363,11 +365,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener,
 		else if(path.getPath().startsWith("/") && mBlkids != null && mProcMounts != null)
 		{
 			Logger.LogDebug("Looking for " + path + " in procmounts");
-			for(String pm : mProcMounts)
+			for(Mount m : mProcMounts)
 			{
-				if(pm.indexOf(path.getPath()) > -1)
+				if(path.getPath().startsWith(m.getMountPoint().toString()))
 				{
-					String dev = pm.substring(0, pm.indexOf(" "));
+					String dev = m.getDevice().getPath();
 					for(String blk : mBlkids)
 						if(blk.indexOf(dev) > -1 && blk.toLowerCase().indexOf("label=") > -1)
 						{
