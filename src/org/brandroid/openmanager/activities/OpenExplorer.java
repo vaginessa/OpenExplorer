@@ -398,8 +398,10 @@ public class OpenExplorer
 		loadPreferences();
 		checkRoot();
 		
-		boolean themeDark = getPreferences().getBoolean("global", "pref_theme", true);
-		int theme = themeDark ? R.style.AppTheme_Dark : R.style.AppTheme_Light;
+
+		int theme = getThemeId ();	
+		boolean themeDark = R.style.AppTheme_Dark == theme;
+		
 		getApplicationContext().setTheme(theme);
 		setTheme(theme);
 		getOpenApplication().loadThemedAssets(this);
@@ -800,17 +802,18 @@ public class OpenExplorer
 	private void handleExceptionHandler() {
 		if(Logger.checkWTF())
 		{
-			if(!getSetting(null, "pref_autowtf", false))
-				showWTFIntent();
+			OpenFile crashFile = Logger.getCrashFile();
+			if(crashFile.exists())
+			{
+				Logger.LogWTF(crashFile.readAscii(), new Exception());
+				crashFile.delete();
+			}
+			//if(!getSetting(null, "pref_autowtf", false))
+			//	showWTFIntent();
 			//else if(isNetworkConnected())
 			//	new SubmitStatsTask(this).execute(
 			//			Logger.getCrashReport(true));
 		}
-	}
-
-	private void showWTFIntent() {
-		Intent intent = new Intent(this, WTFSenderActivity.class);
-		startActivity(intent);
 	}
 
 	@Override
@@ -1216,6 +1219,13 @@ public class OpenExplorer
 			}
 		}
 		return false;
+	}
+	
+	public static void launchDonation(Activity a)
+	{
+		Uri uri = Uri.parse("http://brandroid.org/donate.php");
+		Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+		a.startActivity(intent);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -2319,6 +2329,9 @@ public class OpenExplorer
 			case R.id.menu_debug:
 				debugTest();
 				break;
+			case R.id.menu_donate:
+				launchDonation(this);
+				break;
 			case R.id.title_icon_holder:
 			case android.R.id.home:
 				setSetting("pref_show_bookmarks",
@@ -2567,18 +2580,8 @@ public class OpenExplorer
 	
 	private void debugTest() {
 		//startActivity(new Intent(this, Authenticator.class));
-		DEBUG_TOGGLE = !DEBUG_TOGGLE;
-		notifyPager();
-		queueToTracker(new Runnable() {
-			public void run() {
-				final boolean d = getAnalyticsTracker().dispatch();
-				runOnUiThread(new Runnable() {
-					public void run() {
-						showToast(d ? "Dispatch worked!" : "Dispatch failed!");
-					}
-				});
-			}
-		});
+		int divide0 = 10 / (5 - 5);
+		Logger.LogVerbose("I did it! 10 / 0 = " + divide0 + "!!!");
 	}
 	
 	public boolean isSinglePane() { return mSinglePane; }
@@ -3293,7 +3296,7 @@ public class OpenExplorer
 		if(pbt != null)
 		{
 			pbt.setText(""+mLastClipSize);
-			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_colorBlack, R.color.white)));
+			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_dialogBackgroundColorPrimary, R.color.white)));
 		}
 		ViewUtils.setImageResource(pb,
 			getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard),
@@ -3734,5 +3737,14 @@ public class OpenExplorer
 	@Override
 	public int getThemedResourceId(int styleableId, int defaultResourceId) {
 		return getOpenApplication().getThemedResourceId(styleableId, defaultResourceId);
+	}
+	
+	public int getThemeId () {
+	    String themeName = getPreferences().getString("global", "pref_themes", "dark");
+	    if (themeName.equals("dark")) return R.style.AppTheme_Dark;
+	    else if (themeName.equals("light")) return R.style.AppTheme_Light;
+	    else if (themeName.equals("lightdark")) return R.style.AppTheme_LightAndDark;
+	    else if (themeName.equals("custom")) return R.style.AppTheme_Custom;    
+	    return 0;
 	}
 }

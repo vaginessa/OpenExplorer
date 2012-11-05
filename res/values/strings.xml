@@ -326,8 +326,11 @@
     <string name="no_items">No items.</string>
     <string name="clipboard">Clipboard</string>
     <string name="theme">Theme</string>
-    <string name="theme_dark">Dark UI</string>
-    <string name="theme_light">Light UI</string>
+    <string name="s_pref_theme">Select Theme</string>
+    <string name="s_theme_dark">Dark</string>
+    <string name="s_theme_light">Light</string>
+    <string name="s_theme_lightdark">Light and Dark</string>
+    <string name="s_theme_custom">Pinstripes</string>
     <string name="chooser_remember">Remember my choice</string>
     <string name="use_system">Use System &gt;&gt;</string>
     <string name="activity_resolver_use_always">Always</string>
@@ -341,6 +344,7 @@
     <string name="s_pref_thumbs_crop">Crop/Center Thumbnails</string>
     <string name="s_pref_thumbs_cache_clear">Clear Thumbnail Cache</string>
     <string name="s_msg_folder_none">Folder unable to be created</string>
+    <string name="s_menu_donate">Donate</string>
     
     <plurals name="num_selected">
         <item quantity="one">One file selected</item>

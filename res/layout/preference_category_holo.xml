@@ -22,7 +22,7 @@
     android:id="@android:id/title"
     android:padding="2dp"
     android:textSize="16sp"
-	android:textColor="?attr/colorWhite"
+	android:textColor="?attr/appTextColorPrimary"
     android:layout_margin="0dp"
     android:paddingLeft="@dimen/preference_item_padding_side"
     android:paddingRight="@dimen/preference_item_padding_side"
