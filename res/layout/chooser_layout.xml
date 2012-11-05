@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorBlack"
+    android:background="?attr/dialogBackgroundColorPrimary"
     android:orientation="vertical" >
     
     <GridView android:id="@android:id/list"
@@ -20,14 +20,14 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="?attr/colorDarkGray"
+        android:background="?attr/dialogBackgroundColorPrimary"
         >
 	    <CheckBox 
 	        android:id="@+id/chooser_default"
 	        android:checked="false"
 	        android:paddingLeft="40dp"
 	        android:textAppearance="@style/Large"
-	        android:textColor="?attr/colorWhite"
+	        android:textColor="?attr/dialogTextColorPrimary"
 	        android:layout_width="0dp"
 	        android:layout_height="wrap_content"
 	        android:layout_weight="1"

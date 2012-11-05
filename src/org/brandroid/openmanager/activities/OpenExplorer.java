@@ -3280,7 +3280,7 @@ public class OpenExplorer
 		if(pbt != null)
 		{
 			pbt.setText(""+mLastClipSize);
-			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_colorBlack, R.color.white)));
+			pbt.setTextColor(getResources().getColor(getThemedResourceId(R.styleable.AppTheme_dialogBackgroundColorPrimary, R.color.white)));
 		}
 		ViewUtils.setImageResource(pb,
 			getThemedResourceId(R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard),

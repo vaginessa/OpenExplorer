@@ -53,12 +53,33 @@
         <item name="listColumnBackground">@drawable/list_column_background_dark</item>
         
         <!-- Colors -->
-        <item name="colorWhite">@color/white</item>
+        <item name="actionBarTextColorPrimary">@color/white</item>
+        <item name="actionBarTextColorSecondary">@color/offWhite</item>
+        <item name="actionBarTextColorHighlight">@color/lightBlue</item>
+        <item name="actionBarTextColorInverse">@color/black</item>
+        
+        <item name="appTextColorPrimary">@color/white</item>
+        <item name="appTextColorSecondary">@color/offWhite</item>
+        <item name="appTextColorHighlight">@color/lightBlue</item>
+        <item name="appTextColorInverse">@color/black</item>
+        
+        <item name="appBackgroundColorPrimary">@color/darkGray</item>
+        <item name="appDividerColor">@color/darkGray</item>
+        
+        <item name="dialogTextColorPrimary">@color/white</item>
+        <item name="dialogTextColorSecondary">@color/offWhite</item>
+        <item name="dialogTextColorHighlight">@color/lightBlue</item>
+        <item name="dialogTextColorInverse">@color/black</item>
+        <item name="dialogAccentColorPrimary">@color/white</item>
+        
+        <item name="dialogBackgroundColorPrimary">@color/black</item>
+        
+<!--         <item name="colorWhite">@color/white</item>
         <item name="colorOffWhite">@color/offWhite</item>
         <item name="colorDarkGray">@color/darkGray</item>
         <item name="colorBlack">@color/black</item>
         <item name="colorHilite">@color/lightBlue</item>
-        <item name="colorWhiteDim">@color/dark_dim</item>
+        <item name="colorWhiteDim">@color/dark_dim</item> -->
     </style>
     
     <style name="AppTheme.Light" parent="@style/Theme.Sherlock.Light">
@@ -114,12 +135,33 @@
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
         
         <!-- Colors -->
-        <item name="colorWhite">@color/black</item>
+        <item name="actionBarTextColorPrimary">@color/black</item>
+        <item name="actionBarTextColorSecondary">@color/darkGray</item>
+        <item name="actionBarTextColorHighlight">@color/darkBlue</item>
+        <item name="actionBarTextColorInverse">@color/white</item>
+        
+        <item name="appTextColorPrimary">@color/black</item>
+        <item name="appTextColorSecondary">@color/darkGray</item>
+        <item name="appTextColorHighlight">@color/darkBlue</item>
+        <item name="appTextColorInverse">@color/white</item>
+        
+        <item name="appBackgroundColorPrimary">@color/offWhite</item>
+        <item name="appDividerColor">@color/offWhite</item>
+        
+        <item name="dialogTextColorPrimary">@color/black</item>
+        <item name="dialogTextColorSecondary">@color/darkGray</item>
+        <item name="dialogTextColorHighlight">@color/darkBlue</item>
+        <item name="dialogTextColorInverse">@color/white</item>
+        <item name="dialogAccentColorPrimary">@color/black</item>
+        
+        <item name="dialogBackgroundColorPrimary">@color/offWhite</item>
+        
+<!--         <item name="colorWhite">@color/black</item>
         <item name="colorOffWhite">@color/darkGray</item>
         <item name="colorDarkGray">@color/offWhite</item>
         <item name="colorBlack">@color/white</item>
         <item name="colorHilite">@color/darkBlue</item>
-        <item name="colorWhiteDim">@color/light_dim</item>
+        <item name="colorWhiteDim">@color/light_dim</item> -->
     </style>
     
     <style name="AppTheme.LightAndDark" parent="Theme.Sherlock.Light.DarkActionBar">
@@ -175,12 +217,33 @@
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
         
         <!-- Colors -->
-        <item name="colorWhite">@color/black</item>
+        <item name="actionBarTextColorPrimary">@color/white</item>
+        <item name="actionBarTextColorSecondary">@color/offWhite</item>
+        <item name="actionBarTextColorHighlight">@color/lightBlue</item>
+        <item name="actionBarTextColorInverse">@color/black</item>
+        
+        <item name="appTextColorPrimary">@color/black</item>
+        <item name="appTextColorSecondary">@color/darkGray</item>
+        <item name="appTextColorHighlight">@color/darkBlue</item>
+        <item name="appTextColorInverse">@color/white</item>
+        
+        <item name="appBackgroundColorPrimary">@color/offWhite</item>
+        <item name="appDividerColor">@color/offWhite</item>
+        
+        <item name="dialogTextColorPrimary">@color/white</item>
+        <item name="dialogTextColorSecondary">@color/offWhite</item>
+        <item name="dialogTextColorHighlight">@color/lightBlue</item>
+        <item name="dialogTextColorInverse">@color/black</item>
+        <item name="dialogAccentColorPrimary">@color/white</item>
+        
+        <item name="dialogBackgroundColorPrimary">@color/black</item>
+        
+<!--         <item name="colorWhite">@color/black</item>
         <item name="colorOffWhite">@color/darkGray</item>
         <item name="colorDarkGray">@color/offWhite</item>
         <item name="colorBlack">@color/white</item>
         <item name="colorHilite">@color/darkBlue</item>
-        <item name="colorWhiteDim">@color/light_dim</item>
+        <item name="colorWhiteDim">@color/light_dim</item> -->
     </style>
     
     <style name="AppTheme.Custom" parent="Theme.Sherlock.Light.DarkActionBar">
@@ -236,11 +299,32 @@
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
         
         <!-- Colors -->
-        <item name="colorWhite">@color/black</item>
+        <item name="actionBarTextColorPrimary">@color/white</item>
+        <item name="actionBarTextColorSecondary">@color/offWhite</item>
+        <item name="actionBarTextColorHighlight">@color/lightBlue</item>
+        <item name="actionBarTextColorInverse">@color/black</item>
+        
+        <item name="appTextColorPrimary">@color/black</item>
+        <item name="appTextColorSecondary">@color/darkGray</item>
+        <item name="appTextColorHighlight">@color/darkBlue</item>
+        <item name="appTextColorInverse">@color/white</item>
+        
+        <item name="appBackgroundColorPrimary">@color/offWhite</item>
+        <item name="appDividerColor">@color/offWhite</item>
+        
+        <item name="dialogTextColorPrimary">@color/white</item>
+        <item name="dialogTextColorSecondary">@color/offWhite</item>
+        <item name="dialogTextColorHighlight">@color/lightBlue</item>
+        <item name="dialogTextColorInverse">@color/black</item>
+        <item name="dialogAccentColorPrimary">@color/white</item>
+        
+        <item name="dialogBackgroundColorPrimary">@color/black</item>
+        
+<!--         <item name="colorWhite">@color/black</item>
         <item name="colorOffWhite">@color/darkGray</item>
         <item name="colorDarkGray">@color/offWhite</item>
         <item name="colorBlack">@color/white</item>
         <item name="colorHilite">@color/darkBlue</item>
-        <item name="colorWhiteDim">@color/light_dim</item>
+        <item name="colorWhiteDim">@color/light_dim</item> -->
     </style>
 </resources>

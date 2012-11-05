@@ -40,7 +40,7 @@
 	        android:layout_width="@dimen/bookmarks_width"
 	        android:layout_height="match_parent"
 	        android:layout_alignParentTop="true"
-	        android:background="?attr/colorDarkGray"
+	        android:background="?attr/appBackgroundColorPrimary"
 	        android:layout_alignWithParentIfMissing="true"
 	       	/>
 	    

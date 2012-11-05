@@ -49,6 +49,6 @@
 	    android:paddingRight="5dip"
 	    android:text="@string/app_title"
 	    android:textAppearance="@style/Large"
-	    android:textColor="?attr/colorWhite" />
+	    android:textColor="?attr/dialogTextColorPrimary" />
 
 </LinearLayout>
