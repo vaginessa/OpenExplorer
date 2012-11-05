@@ -15,6 +15,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.RemoteImageView;
+import org.brandroid.utils.Logger;
 import org.brandroid.utils.ViewUtils;
 
 import android.text.ClipboardManager;
@@ -32,6 +33,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * System Clipboard Wrapper. Also implements Adapter so that it can be directly
@@ -84,14 +86,24 @@ public class OpenClipboard
 		if(listener != null)
 			listener.onClipboardUpdate();
 		ClipboardManager clip = (ClipboardManager)mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+		if(clip == null) return;
 		StringBuilder clipText = new StringBuilder();
 		for(int i = 0; i < size(); i++)
-			if(get(i) != null)
+			if(get(i) != null && get(i).getPath() != null)
 				clipText.append(get(i).getPath() + "\n");
-		if(!OpenExplorer.BEFORE_HONEYCOMB)
+		if(!OpenExplorer.BEFORE_HONEYCOMB && clip instanceof android.content.ClipboardManager)
 		{
 			ClipData data = ClipData.newPlainText("files", clipText);
-			((android.content.ClipboardManager)clip).setPrimaryClip(data);
+			try {
+				((android.content.ClipboardManager)clip).setPrimaryClip(data);
+			} catch(Exception e) {
+				Logger.LogWarning("Unable to set Clipboard data.");
+				try {
+					Toast.makeText(mContext, "Error setting clipboard data", Toast.LENGTH_LONG).show();
+				} catch(Exception te) {
+					
+				}
+			}
 		} else {
 			clip.setText(clipText);
 		}
