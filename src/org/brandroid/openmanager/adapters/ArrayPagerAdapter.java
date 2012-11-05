@@ -157,6 +157,14 @@ public class ArrayPagerAdapter extends FragmentStatePagerAdapter
 			return PagerAdapter.POSITION_NONE;
 		else return pos;
 	}
+	
+	public int getItemPosition(OpenPath path) {
+		for(int i = 0; i < mFrags.size(); i++)
+			if(mFrags.get(i) instanceof OpenPathFragmentInterface)
+				if(((OpenPathFragmentInterface)mFrags.get(i)).getPath().equals(path))
+					return i;
+		return PagerAdapter.POSITION_NONE;
+	}
 
 	@Override
 	public CharSequence getPageTitle(int position) {

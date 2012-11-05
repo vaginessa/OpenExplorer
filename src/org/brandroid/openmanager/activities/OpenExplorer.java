@@ -325,6 +325,7 @@ public class OpenExplorer
 		Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
 		Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
 		Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
+		Preferences.Pref_Root = prefs.getBoolean("global", "pref_root",	Preferences.Pref_Root);
 		ThumbnailCreator.showCenteredCroppedPreviews = prefs.getBoolean("global", "prefs_thumbs_crop", true);
 
 		PackageInfo pi = null;
@@ -622,11 +623,14 @@ public class OpenExplorer
 	
 	private void checkRoot() {
 		try {
-			if(getPreferences().getSetting("global", "pref_root", false))
+			if(Preferences.Pref_Root)
+			{
+				showToast("Root preference selected, requesting now.");
 					//&& (RootManager.Default == null || !RootManager.Default.isRoot()))
 				requestRoot();
-			else //if(RootManager.Default != null)
+			} else { //if(RootManager.Default != null)
 				exitRoot();
+			}
 		} catch(Exception e) { Logger.LogWarning("Couldn't get root.", e); }
 	}
 	
@@ -782,6 +786,8 @@ public class OpenExplorer
 					public void run() {
 						if(mViewPager.getCurrentItem() != page)
 							mViewPager.setCurrentItem(page, smooth);
+						else
+							Logger.LogDebug("Current page already set to " + page);
 					}
 				});
 			//else if(mViewPager.getCurrentItem() != page)
@@ -2953,6 +2959,7 @@ public class OpenExplorer
 					if(tp instanceof OpenSmartFolder ||
 							!familyTree.contains(tp))
 					{
+						Logger.LogDebug("Removing from View Pager Adapter: " + tp);
 						mViewPagerAdapter.remove(i);
 						//removed = true;
 					}
@@ -2967,23 +2974,31 @@ public class OpenExplorer
 					mViewPagerAdapter.add(cf);
 				else
 					mViewPagerAdapter.add(common, cf);
+				
+				ArrayList<OpenPath> vpaPaths = new ArrayList<OpenPath>();
+				for(OpenFragment frag : mViewPagerAdapter.getFragments())
+					if(frag instanceof OpenPathFragmentInterface)
+						vpaPaths.add(((OpenPathFragmentInterface)frag).getPath());
+				
 				OpenPath tmp = path.getParent();
 				while(tmp != null) 
 				{
 					ContentFragment cft = ContentFragment.getInstance(tmp);
-					if(mViewPagerAdapter.getItemPosition(cft) < 0)
+					if(!vpaPaths.contains(tmp))
 					{
 						Logger.LogDebug("Adding Parent: " + tmp);
 						mViewPagerAdapter.add(common, cft);
+						vpaPaths.add(common, tmp);
 					}
 					tmp = tmp.getParent();
 				}
 				
 				setViewPageAdapter(mViewPagerAdapter, false); // DONE: Sped up app considerably!
 
-				int index = mViewPagerAdapter.getItemPosition(cf);
+				int index = vpaPaths.indexOf(path);
 				if(index >= 0)
 					setCurrentItem(index, addToStack);
+				else Logger.LogDebug("No need to set index to 0");
 			} else {
 				OpenPath commonBase = null;
 				for(int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--)
