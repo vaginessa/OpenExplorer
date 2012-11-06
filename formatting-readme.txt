@@ -14,3 +14,5 @@
 14. Now go to Window->Preferences->XML->XML Files->Editor
 15. Check “Split multiple attributes each on a new line”
 16. Check “indent using spaces” and make sure the value is set to 4
+
+There you have it. Eclipse will now help you format your changes according the standards set at source.android.com
