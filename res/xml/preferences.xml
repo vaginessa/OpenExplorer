@@ -6,6 +6,44 @@
         android:icon="@drawable/ic_menu_view"
         android:key="display"
         android:title="@string/s_pref_display" >
+        <PreferenceCategory android:title="@string/s_pref_view_general" >
+            <ListPreference
+                android:dialogTitle="@string/s_pref_theme"
+                android:entries="@array/themes"
+                android:entryValues="@array/theme_values"
+                android:key="pref_themes"
+                android:title="@string/s_pref_theme" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:enabled="@bool/allow_fullscreen"
+                android:key="pref_fullscreen"
+                android:summaryOff="@string/s_pref_fullscreen_summary_off"
+                android:summaryOn="@string/s_pref_fullscreen_summary_on"
+                android:title="@string/s_pref_fullscreen" />
+
+            <PreferenceScreen
+                android:dialogTitle="@string/s_pref_start"
+                android:key="pref_start"
+                android:summary="@string/s_pref_start_summary"
+                android:title="@string/s_pref_start" />
+
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="pref_showup"
+                android:title="@string/s_pref_showup" />
+
+            <ListPreference
+                android:entries="@array/languages"
+                android:entryValues="@array/languages_values"
+                android:key="pref_language"
+                android:summary="@string/s_default"
+                android:title="@string/language" />
+
+            <Preference
+                android:key="pref_translate"
+                android:title="@string/button_translate" />
+        </PreferenceCategory>
         <PreferenceCategory android:title="@string/s_pref_view_folders" >
             <CheckBoxPreference
                 android:key="pref_show"
@@ -51,46 +89,8 @@
             android:key="pref_reset_views"
             android:title="@string/s_pref_reset" 
             android:summary="@string/s_pref_reset_summary"
-            />
+            />
             -->
-        </PreferenceCategory>
-        <PreferenceCategory android:title="@string/s_pref_view_general" >
-            <ListPreference
-                android:dialogTitle="@string/s_pref_theme"
-                android:entries="@array/themes"
-                android:entryValues="@array/theme_values"
-                android:key="pref_themes"
-                android:title="@string/s_pref_theme" />
-
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:enabled="@bool/allow_fullscreen"
-                android:key="pref_fullscreen"
-                android:summaryOff="@string/s_pref_fullscreen_summary_off"
-                android:summaryOn="@string/s_pref_fullscreen_summary_on"
-                android:title="@string/s_pref_fullscreen" />
-
-            <PreferenceScreen
-                android:dialogTitle="@string/s_pref_start"
-                android:key="pref_start"
-                android:summary="@string/s_pref_start_summary"
-                android:title="@string/s_pref_start" />
-
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="pref_showup"
-                android:title="@string/s_pref_showup" />
-
-            <ListPreference
-                android:entries="@array/languages"
-                android:entryValues="@array/languages_values"
-                android:key="pref_language"
-                android:summary="@string/s_default"
-                android:title="@string/language" />
-
-            <Preference
-                android:key="pref_translate"
-                android:title="@string/button_translate" />
         </PreferenceCategory>
         <!--
              <ListPreference
@@ -99,7 +99,7 @@
 		    android:entries="@array/basebar_split"
 		    android:entryValues="@array/basebar_split_values"
 		    android:enabled="@bool/prehoneycomb"
-		    />
+		    />
         -->
     </PreferenceScreen>
     <PreferenceScreen
