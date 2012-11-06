@@ -23,6 +23,7 @@
     android:layout_height="40dp"
     android:layout_gravity="top|left"
     android:gravity="center|left"
+    android:background="?attr/dialogBackgroundColorPrimary"
     android:paddingLeft="4dp"
     android:paddingRight="4dp" >
 
@@ -52,6 +53,7 @@
     <TextView
         android:id="@+id/content_text"
         style="@style/Large"
+        android:textColor="?attr/dialogTextColorPrimary"
         android:layout_width="wrap_content"
         android:layout_alignTop="@+id/bookmark_icon"
         android:layout_alignWithParentIfMissing="true"
@@ -63,6 +65,7 @@
     <TextView
         android:id="@+id/content_count"
         style="@style/Small"
+        android:textColor="?attr/dialogTextColorSecondary"
         android:layout_width="wrap_content"
         android:layout_alignBaseline="@+id/content_text"
         android:layout_marginLeft="2dp"
@@ -72,7 +75,7 @@
         android:maxLines="1"
         android:singleLine="true"
         android:text="(0)"
-        android:textColor="?attr/appTextColorSecondary" />
+        />
 
     <ImageView
         android:id="@+id/eject"

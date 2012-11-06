@@ -36,8 +36,7 @@
             android:id="@+id/list_frag"
             android:layout_width="@dimen/bookmarks_width"
             android:layout_height="match_parent"
-            android:layout_alignWithParentIfMissing="true"
-            android:background="?attr/appBackgroundColorPrimary" />
+            android:layout_alignWithParentIfMissing="true" />
 
         <RelativeLayout
             android:layout_width="match_parent"
