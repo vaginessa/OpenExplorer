@@ -36,4 +36,6 @@
     <color name="card_skyjam_listen_buy">#ff33bede</color>
     <color name="card_hangout_join">#ffffffff</color>
     <color name="card_hangout_unsupported">#ffcccccc</color>
+    <color name="actionbarstripedbackground">#0f0f0f</color>
+    <color name="icsblue">#33B5E5</color>
 </resources>

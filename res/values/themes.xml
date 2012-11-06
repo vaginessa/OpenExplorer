@@ -257,6 +257,9 @@
         
         <item name="vpiTabTextColor">@color/vpi__dark_theme</item>
         
+        <item name="android:actionBarStyle">@style/Widget.Styled.ActionBar</item>
+        <item name="actionBarStyle">@style/Widget.Styled.ActionBar</item>
+        
         <!-- for programmatic instantiation -->
         <item name="actionbarCompatTitleStyle">@style/ActionBarCompatTitle</item>
         <item name="actionbarCompatItemStyle">@style/ActionBarCompatItem</item>
