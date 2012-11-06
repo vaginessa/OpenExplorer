@@ -653,6 +653,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             askApplyToAll(preference, "ff_");
 
         // preference.getExtras().putString("value", newValue.toString());
+        Logger.LogInfo("Preference: " + key + ": " + newValue.toString());
         intent.putExtra(key.replace("server_", ""), newValue.toString());
         final OpenApp app = ((OpenApplication)getApplication());
         app.queueToTracker(new Runnable() {

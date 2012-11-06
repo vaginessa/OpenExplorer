@@ -591,7 +591,7 @@ public class BetterPopupWindow {
                 ancTop = ViewUtils.getAbsoluteTop(anchor);
                 // yOffset = getWindowHeight() - getAvailableHeight();
                 if (DEBUG)
-                    Logger.LogInfo("Switching to absolute popup! " + "anch=" + ancLeft + ","
+                    Logger.LogVerbose("Switching to absolute popup! " + "anch=" + ancLeft + ","
                             + ancTop + "-" + anchor.getWidth() + "x" + anchor.getHeight() + "/"
                             + "win=" + getWindowWidth() + "x" + getWindowHeight() + "/" + "avail="
                             + getAvailableWidth() + "x" + getAvailableHeight() + "/" + "off="
@@ -627,7 +627,7 @@ public class BetterPopupWindow {
             }
 
             if (DEBUG)
-                Logger.LogInfo("Widths: " + "space(x,y)=" + spaceHorizontal + "," + spaceVertical
+                Logger.LogVerbose("Widths: " + "space(x,y)=" + spaceHorizontal + "," + spaceVertical
                         + "/" + "anch=" + ancLeft + "," + ancTop + "-" + anchor.getWidth() + "x"
                         + anchor.getHeight() + "/" + "win=" + getWindowWidth() + "x"
                         + getWindowHeight() + "/" + "off=" + xOffset + "," + yOffset + "/"

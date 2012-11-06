@@ -28,7 +28,7 @@ public class Logger {
                                                // OpenExplorer.IS_DEBUG_BUILD;
     private static Boolean bLoggingEnabled = true; // this can be set view
                                                    // preferences
-    public final static Integer MIN_DB_LEVEL = Log.WARN;
+    public final static Integer MIN_DB_LEVEL = Log.INFO;
     public final static String LOG_KEY = "OpenExplorer";
     private static LoggerDbAdapter dbLog;
 

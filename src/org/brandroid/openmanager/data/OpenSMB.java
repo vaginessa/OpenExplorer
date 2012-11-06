@@ -237,7 +237,7 @@ public class OpenSMB extends OpenNetworkPath {
             mDiskSpace = disk.getCapacity();
             mDiskFreeSpace = disk.getFree();
         }
-        Logger.LogInfo("Listing children under " + getPath());
+        Logger.LogVerbose("Listing children under " + getPath());
         SmbFile[] kids = null;
         try {
             getAttributes();
@@ -455,7 +455,7 @@ public class OpenSMB extends OpenNetworkPath {
             mFile.copyTo(dest, task);
             if (dest.length() <= 0 || dest.length() < length())
                 throw new IOException("Copied file size is too small.");
-            Logger.LogInfo("OpenSMB.copyTo - Copied " + dest.length() + " bytes - " + dest);
+            Logger.LogVerbose("OpenSMB.copyTo - Copied " + dest.length() + " bytes - " + dest);
         } catch (Exception e) {
             Logger.LogError("OpenSMB couldn't copy using Channels. Falling back to Streams.", e);
             OutputStream os = null;

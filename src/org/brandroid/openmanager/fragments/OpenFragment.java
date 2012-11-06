@@ -560,7 +560,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        if (!item.hasSubMenu())
+        if (!item.hasSubMenu()) {
+            Logger.LogInfo("Click: MenuItem: " + item.getTitle().toString());
             queueToTracker(new Runnable() {
                 public void run() {
                     if (getAnalyticsTracker() != null)
@@ -568,6 +569,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                                 item.getTitle().toString(), 1);
                 }
             });
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -671,6 +673,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     public void onClick(final View v) {
+        Logger.LogInfo("Click: Other: " + v != null ? v.getClass().getSimpleName() : "Unknown",
+                ViewUtils.getText(v).toString());
         queueToTracker(new Runnable() {
             public void run() {
                 if (getAnalyticsTracker() != null)
@@ -679,10 +683,11 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                             ViewUtils.getText(v).toString(), 1);
             }
         });
-        Logger.LogInfo(getClassName() + ".onClick(" + v + ")");
     }
 
     public boolean onClick(final int id, final View from) {
+        Logger.LogInfo("Click: Other: " + from != null ? from.getClass().getSimpleName()
+                : "Unknown", ViewUtils.getText(from).toString());
         queueToTracker(new Runnable() {
             public void run() {
                 if (getAnalyticsTracker() != null)
@@ -691,11 +696,11 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                             ViewUtils.getText(from).toString(), 1);
             }
         });
-        Logger.LogInfo(getClassName() + ".onClick(0x" + Integer.toHexString(id) + ")");
         return false;
     }
 
     public boolean onLongClick(final View v) {
+        Logger.LogInfo("Long Click: Other: " + ViewUtils.getText(v).toString());
         queueToTracker(new Runnable() {
             public void run() {
                 if (v != null && getAnalyticsTracker() != null)
@@ -703,8 +708,6 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                             ViewUtils.getText(v).toString(), 1);
             }
         });
-        Logger.LogInfo(getClassName() + ".onLongClick(" + Integer.toHexString(v.getId()) + ") - "
-                + v.toString());
         return false;
     }
 

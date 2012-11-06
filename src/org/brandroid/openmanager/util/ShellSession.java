@@ -77,9 +77,9 @@ public class ShellSession {
         mWatcherThread = new Thread() {
             @Override
             public void run() {
-                Logger.LogInfo("waiting for: " + mProcId);
+                Logger.LogVerbose("waiting for: " + mProcId);
                 int result = 0; // Exec.waitFor(mProcId);
-                Logger.LogInfo("Subprocess exited: " + result);
+                Logger.LogVerbose("Subprocess exited: " + result);
                 mMsgHandler.sendMessage(mMsgHandler.obtainMessage(PROCESS_EXITED, result));
             }
         };

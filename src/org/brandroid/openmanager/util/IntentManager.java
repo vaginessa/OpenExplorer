@@ -85,7 +85,7 @@ public class IntentManager {
             final String mext = mime;
             String cls = app.getPreferences().getSetting("mimes", mext, "");
             if (cls.indexOf("$") > -1) {
-                Logger.LogInfo("Found default for " + mime + ": " + cls);
+                Logger.LogVerbose("Found default for " + mime + ": " + cls);
                 String pck = cls.substring(0, cls.indexOf("$"));
                 cls = cls.substring(cls.indexOf("$") + 1);
                 intent.setClassName(pck, cls);
