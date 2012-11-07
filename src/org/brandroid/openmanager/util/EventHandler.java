@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.provider.MediaStore.Images;
+import android.support.v4.app.NotificationCompat;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -33,20 +34,16 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.Context;
-import android.widget.ImageView;
+import android.graphics.BitmapFactory;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-import android.widget.TextView;
+import android.widget.RemoteViews.RemoteView;
 import android.net.Uri;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
@@ -60,7 +57,6 @@ import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenMediaStore;
-import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
@@ -68,7 +64,6 @@ import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
-import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
@@ -526,9 +521,11 @@ public class EventHandler {
         private final int mNotifyId;
         private ArrayList<String> mSearchResults = null;
         private boolean isDownload = false;
+        private boolean isCancellable = true;
         private int taskId = -1;
         private final Date mStart;
         private long mLastRate = 0;
+        private long mElapsed = 0l;
         private long mRemain = 0l;
         private int mTotalCount = 0;
         private int mCurrentIndex = 0;
@@ -571,35 +568,31 @@ public class EventHandler {
                 mTaskListener.OnTasksChanged(getRunningTasks().length);
         }
 
-        public String getTitle() {
-            String title = getResourceString(mContext, R.string.s_title_executing);
+        public String getOperation() {
             switch (mType) {
                 case DELETE:
-                    title = getResourceString(mContext, R.string.s_title_deleting).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_title_deleting).toString();
                 case SEARCH:
-                    title = getResourceString(mContext, R.string.s_title_searching).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_title_searching).toString();
                 case COPY:
-                    title = getResourceString(mContext, R.string.s_title_copying).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_title_copying).toString();
                 case CUT:
-                    title = getResourceString(mContext, R.string.s_title_moving).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_title_moving).toString();
                 case UNZIP:
                 case UNZIPTO:
-                    title = getResourceString(mContext, R.string.s_title_unzipping).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_title_unzipping).toString();
                 case ZIP:
-                    title = getResourceString(mContext, R.string.s_title_zipping).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_title_zipping).toString();
                 case MKDIR:
-                    title = getResourceString(mContext, R.string.s_menu_rename).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_menu_rename).toString();
                 case TOUCH:
-                    title = getResourceString(mContext, R.string.s_create).toString();
-                    break;
+                    return getResourceString(mContext, R.string.s_create).toString();
             }
+            return getResourceString(mContext, R.string.s_title_executing);
+        }
+
+        public String getTitle() {
+            String title = getOperation();
             if (mCurrentPath != null) {
                 title += " " + '\u2192' + " " + mCurrentPath.getName();
             }
@@ -616,6 +609,18 @@ public class EventHandler {
         }
 
         public String getLastRate() {
+            return getLastRate(true);
+        }
+
+        public String getLastRate(Boolean auto) {
+            if (!auto) {
+                if (mLastRate > 0)
+                    return getResourceString(mContext, R.string.s_status_rate)
+                            + DialogHandler.formatSize(mLastRate).replace(" ", "").toLowerCase()
+                            + "/s";
+                else
+                    return "";
+            }
             if (getStatus() == Status.FINISHED)
                 return getResourceString(mContext, R.string.s_complete);
             else if (getStatus() == Status.PENDING)
@@ -623,16 +628,32 @@ public class EventHandler {
             if (isCancelled())
                 return getResourceString(mContext, R.string.s_cancelled);
             if (mRemain > 0) {
-                Integer min = (int)(mRemain / 60);
-                Integer sec = (int)(mRemain % 60);
-                return getResourceString(mContext, R.string.s_status_remaining)
-                        + (min > 15 ? ">15m" : (min > 0 ? min + ":" : "")
-                                + (min > 0 && sec < 10 ? "0" : "") + sec + (min > 0 ? "" : "s"));
-            }
-            if (mLastRate > 0)
-                return getResourceString(mContext, R.string.s_status_rate)
-                        + DialogHandler.formatSize(mLastRate).replace(" ", "").toLowerCase() + "/s";
-            return "";
+                return getTimeRemaining();
+            } else
+                return getLastRate(false);
+        }
+
+        public String getTimeElapsed() {
+            Integer min = (int)(mElapsed / 60000);
+            Integer sec = (int)((mElapsed / 1000) % 60);
+            if (min > 0)
+                return min + ":" + (sec < 10 ? "0" : "") + sec;
+            else
+                return sec + "s";
+        }
+
+        public String getTimeRemaining() {
+            return getTimeRemaining(true);
+        }
+
+        public String getTimeRemaining(boolean title) {
+            if (mRemain <= 0)
+                return "";
+            Integer min = (int)(mRemain / 60);
+            Integer sec = (int)(mRemain % 60);
+            return (title ? getResourceString(mContext, R.string.s_status_remaining) : "")
+                    + (min > 15 ? ">15m" : (min > 0 ? min + ":" : "")
+                            + (min > 0 && sec < 10 ? "0" : "") + sec + (min > 0 ? "" : "s"));
         }
 
         @Override
@@ -650,7 +671,8 @@ public class EventHandler {
         }
 
         protected void onPreExecute() {
-            boolean showDialog = true, showNotification = false, isCancellable = true;
+            boolean showDialog = true, showNotification = false;
+            isCancellable = true;
             notifIcon = R.drawable.icon;
             switch (mType) {
                 case DELETE:
@@ -704,50 +726,75 @@ public class EventHandler {
             return notifIcon;
         }
 
+        public CharSequence getDetailedText() {
+            String ret = "";
+            ret += "Source: " + mCurrentPath.getParent() + "\n";
+            ret += "Destination: " + mIntoPath + "\n";
+            if (mLastProgress.length > 2 && mLastProgress[0] > 0 && mLastProgress[1] > 0) {
+                ret += "Copied: " + DialogHandler.formatSize(mLastProgress[0]) + " / "
+                        + DialogHandler.formatSize(mLastProgress[1]) + " ";
+                ret += "(" + getLastRate(false) + ")\n";
+            }
+            ret += getResourceString(mContext, R.string.s_status_remaining) + " ";
+            ret += getTimeElapsed();
+            if (mRemain > 0)
+                ret += " [" + getTimeRemaining(false) + "]";
+            return ret;
+        }
+
         @SuppressLint("NewApi")
-        public void prepareNotification(int notifIcon, boolean isCancellable) {
+        public Notification prepareNotification(int notifIcon, boolean isCancellable,
+                Integer... values) {
             boolean showProgress = true;
             try {
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext)
+                        .setContentTitle(getTitle())
+                        .setContentText(getSubtitle())
+                        .setLargeIcon(
+                                BitmapFactory.decodeResource(mContext.getResources(),
+                                        R.drawable.icon)).setSmallIcon(notifIcon);
+                int progA = 0;
+                if (showProgress) {
+                    if (mLastProgress[1] > 0)
+                        progA = (int)(((float)mLastProgress[0] / (float)mLastProgress[1]) * 1000f);
+                    if (SHOW_NOTIFICATION_STATUS) {
+                        mBuilder.setProgress(1000, progA, values.length == 0);
+                        mBuilder.setNumber(progA / 10);
+                    }
+                } else {
+                    mBuilder.setTicker(getTitle());
+                }
                 Intent intent = new Intent(mContext, OpenExplorer.class);
                 intent.putExtra("TaskId", taskId);
                 PendingIntent pendingIntent = PendingIntent.getActivity(mContext,
                         OpenExplorer.REQUEST_VIEW, intent, 0);
-                mNote = new Notification(notifIcon, getTitle(), System.currentTimeMillis());
-                if (showProgress) {
-                    PendingIntent pendingCancel = PendingIntent.getActivity(mContext,
-                            OpenExplorer.REQUEST_VIEW, intent, 0);
-                    RemoteViews noteView = new RemoteViews(mContext.getPackageName(),
-                            R.layout.notification);
-                    if (isCancellable)
-                        noteView.setOnClickPendingIntent(android.R.id.button1, pendingCancel);
-                    else
-                        noteView.setViewVisibility(android.R.id.button1, View.GONE);
-                    noteView.setImageViewResource(android.R.id.icon, R.drawable.icon);
+                mBuilder.setContentIntent(pendingIntent);
+                mBuilder.setOngoing(false);
+                mBuilder.setOnlyAlertOnce(true);
+                NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
+                style.bigText(getDetailedText());
+                style.setBigContentTitle(getOperation() + " " + mCurrentPath.getName());
+                mBuilder.setStyle(style);
+                if (Build.VERSION.SDK_INT < 11) {
+                    RemoteViews noteView = mNote.contentView;
                     noteView.setTextViewText(android.R.id.title, getTitle());
                     noteView.setTextViewText(android.R.id.text2, getSubtitle());
-                    noteView.setViewVisibility(android.R.id.closeButton, View.GONE);
-                    if (SHOW_NOTIFICATION_STATUS) {
-                        noteView.setTextViewText(android.R.id.text1, getLastRate());
-                        noteView.setProgressBar(android.R.id.progress, 100, 0, true);
-                    }
-                    // noteView.setViewVisibility(R.id.title_search, View.GONE);
-                    // noteView.setViewVisibility(R.id.title_path, View.GONE);
-                    mNote.contentView = noteView;
-                    if (!OpenExplorer.BEFORE_HONEYCOMB)
-                        mNote.tickerView = noteView;
-                } else {
-                    mNote.tickerText = getTitle();
+                    noteView.setTextViewText(android.R.id.text1, getLastRate());
+                    if (values.length == 0 && isDownload)
+                        noteView.setImageViewResource(android.R.id.icon,
+                                android.R.drawable.stat_sys_download);
+                    else
+                        noteView.setImageViewResource(android.R.id.icon,
+                                android.R.drawable.stat_notify_sync);
+                    noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
+                    mBuilder.setContent(noteView);
                 }
-                mNote.contentIntent = pendingIntent;
-                mNote.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
-                // mNote.flags |= Notification.FLAG_ONGOING_EVENT;
-                if (!isCancellable)
-                    mNote.flags |= Notification.FLAG_NO_CLEAR;
-                // mNotifier.notify(mNotifyId, mNote);
+                mNote = mBuilder.build();
                 notifReady = true;
             } catch (Exception e) {
                 Logger.LogWarning("Couldn't post notification", e);
             }
+            return mNote;
         }
 
         public void searchDirectory(OpenPath dir, String pattern, ArrayList<String> aList) {
@@ -1092,9 +1139,9 @@ public class EventHandler {
             int progA = (int)(((float)current / (float)size) * 1000f);
             int progB = (int)(((float)current / (float)total) * 1000f);
 
-            long running = new Date().getTime() - mStart.getTime();
-            if (running / 1000 > 0) {
-                mLastRate = ((long)current) / (running / 1000);
+            mElapsed = new Date().getTime() - mStart.getTime();
+            if (mElapsed / 1000 > 0) {
+                mLastRate = ((long)current) / (mElapsed / 1000);
                 if (mLastRate > 0)
                     mRemain = Utils.getAverage(mRemain, (long)(size - current) / mLastRate);
             }
@@ -1126,20 +1173,8 @@ public class EventHandler {
             if (SHOW_NOTIFICATION_STATUS) {
 
                 try {
-                    RemoteViews noteView = mNote.contentView;
-                    noteView.setTextViewText(android.R.id.title, getTitle());
-                    noteView.setTextViewText(android.R.id.text2, getSubtitle());
-                    noteView.setTextViewText(android.R.id.text1, getLastRate());
-                    if (values.length == 0 && isDownload)
-                        noteView.setImageViewResource(android.R.id.icon,
-                                android.R.drawable.stat_sys_download);
-                    else
-                        noteView.setImageViewResource(android.R.id.icon,
-                                android.R.drawable.stat_notify_sync);
-                    noteView.setProgressBar(android.R.id.progress, 1000, progA, values.length == 0);
-                    mNotifier.notify(mNotifyId, mNote);
-                    // noteView.notify();
-                    // noteView.
+                    mNotifier.notify(mNotifyId,
+                            prepareNotification(notifIcon, isCancellable, values));
                 } catch (Exception e) {
                     Logger.LogWarning("Couldn't update notification progress.", e);
                 }
