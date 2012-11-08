@@ -605,7 +605,51 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             super.setTitle(title);
     }
 
+    public static boolean isNook() {
+        if (Preferences.Is_Nook != null)
+            return Preferences.Is_Nook;
+        if (Preferences.getPreferences("warn").contains("isNook"))
+            return (Preferences.Is_Nook = Preferences.getPreferences("warn").getBoolean("isNook",
+                    false));
+        if (Build.DISPLAY.toLowerCase().contains("acclaim")
+                || Build.BRAND.toLowerCase().contains("nook")
+                || Build.PRODUCT.toLowerCase().contains("nook"))
+            Preferences.Is_Nook = true;
+        else
+            Preferences.Is_Nook = false;
+        Preferences.getPreferences("warn").edit().putBoolean("isNook", Preferences.Is_Nook)
+                .commit();
+        return Preferences.Is_Nook;
+    }
+
+    private void checkNook() {
+        if (isNook()) {
+            if (!getPreferences().getBoolean("warn", "nook_donate", false)) {
+                DialogHandler.showMultiButtonDialog(this, getString(R.string.msg_nook_donate),
+                        "Hello Nook user!", new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case R.string.s_no:
+                                        getPreferences().setSetting("warn", "nook_donate", true);
+                                        break;
+                                    case R.string.s_cancel:
+                                        break;
+                                    default:
+                                        getPreferences().setSetting("warn", "nook_donate", true);
+                                        launchDonation(OpenExplorer.this);
+                                        break;
+                                }
+                                if (dialog != null)
+                                    dialog.dismiss();
+                            }
+                        }, R.string.s_menu_donate, R.string.s_no, R.string.s_cancel);
+            }
+        }
+    }
+
     private void checkWelcome() {
+        checkNook();
         try {
             if (isBlackBerry() && !getPreferences().getBoolean("global", "welcome_bb", false)) {
                 showToast("Welcome, PlayBook user!");
@@ -1743,6 +1787,17 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                     mVideoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                             "mkv", "mp4"));
+                        if (isNook()) {
+                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                            files = files.getChild("My Files");
+                            if (files != null && files.exists()) {
+                                files = files.getChild("Videos");
+                                if (files != null && files.exists())
+                                    mVideoSearchParent.addSearch(new SmartSearch(files,
+                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                            "mkv", "mp4"));
+                            }
+                        }
                         try {
                             mVideosMerged.refreshKids();
                         } catch (IOException e) {
@@ -1782,6 +1837,24 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                     mPhotoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
                                             "gif", "jpeg"));
+                        if (isNook()) {
+                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                            files = files.getChild("My Files");
+                            if (files != null && files.exists()) {
+                                files = files.getChild("Pictures");
+                                if (files != null && files.exists())
+                                    mPhotoSearchParent.addSearch(new SmartSearch(files,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
+                            }
+                        }
+                        try {
+                            mPhotosMerged.refreshKids();
+                        } catch (IOException e) {
+                            Logger.LogError("Couldn't refresh merged Videos");
+                        }
+                    }
+                }).start();
                 Logger.LogDebug("Done looking for photos");
 
             } catch (IllegalStateException e) {
@@ -1818,6 +1891,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         for (OpenPath kid : intDrive.list())
                             if (kid.getName().toLowerCase().indexOf("download") > -1)
                                 mDownloadParent.addSearch(new SmartSearch(kid));
+                    if (isNook()) {
+                        OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                        files = files.getChild("My Files");
+                        if (files != null && files.exists()) {
+                            for (OpenPath kid : intDrive.list())
+                                if (kid.getName().toLowerCase().indexOf("download") > -1)
+                                    mDownloadParent.addSearch(new SmartSearch(kid));
+                        }
+                    }
                 }
             }).start();
         }
@@ -3762,4 +3844,5 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return R.style.AppTheme_Custom;
         return 0;
     }
+
 }

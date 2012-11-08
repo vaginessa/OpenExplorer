@@ -37,6 +37,7 @@ public class Preferences {
     public static boolean Pref_Analytics = true;
     public static String Pref_Language = ""; // Default
     public static boolean Pref_Root = false;
+    public static Boolean Is_Nook = null;
 
     public interface OnPreferenceInteraction {
         public void setSetting(String key, String value);
