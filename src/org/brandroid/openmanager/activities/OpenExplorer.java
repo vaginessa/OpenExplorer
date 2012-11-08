@@ -300,8 +300,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             BEFORE_HONEYCOMB ? Uri.fromFile(OpenFile.getExternalMemoryDrive(true).getFile())
                     : MediaStore.Files.getContentUri("/mnt"));
     private final static OpenSmartFolder mVideoSearchParent = new OpenSmartFolder("Videos"),
+            mPhotoSearchParent = new OpenSmartFolder("Photos"),
             mDownloadParent = new OpenSmartFolder("Downloads");
-    private final static OpenPathMerged mVideosMerged = new OpenPathMerged("Videos");
+    private final static OpenPathMerged mVideosMerged = new OpenPathMerged("Videos"),
+            mPhotosMerged = new OpenPathMerged("Photos");
 
     public boolean isViewPagerEnabled() {
         return mViewPagerEnabled;
@@ -1683,9 +1685,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         invalidateOptionsMenu();
     }
 
-    public static final OpenCursor getPhotoParent() {
+    public static final OpenPathMerged getPhotoParent() {
         // if(mPhotoParent == null) refreshCursors();
-        return mPhotoParent;
+        return mPhotosMerged;
     }
 
     public static final OpenPathMerged getVideoParent() {
@@ -1704,7 +1706,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private boolean findCursors() {
         mVideosMerged.setName(getString(R.string.s_videos));
-        mPhotoParent.setName(getString(R.string.s_photos));
+        mPhotosMerged.setName(getString(R.string.s_photos));
         mMusicParent.setName(getString(R.string.s_music));
         mDownloadParent.setName(getString(R.string.s_downloads));
 
@@ -1732,15 +1734,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
                                     mVideoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "avi", "3gp", "mkv",
-                                            "mp4"));
+                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                            "mkv", "mp4"));
                         if (mHasInternal)
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
                                     mVideoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "avi", "3gp", "mkv",
-                                            "mp4"));
+                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                            "mkv", "mp4"));
                         try {
                             mVideosMerged.refreshKids();
                         } catch (IOException e) {
@@ -1759,7 +1761,27 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (DEBUG && IS_DEBUG_BUILD)
                 Logger.LogVerbose("Finding Photos");
             try {
+                mPhotosMerged.addParent(mPhotoParent);
+                mPhotosMerged.addParent(mPhotoSearchParent);
                 getSupportLoaderManager().initLoader(1, null, this);
+                new Thread(new Runnable() {
+                    public void run() {
+                        if (mHasExternal)
+                            for (OpenPath kid : extDrive.list())
+                                if (kid.getName().toLowerCase().indexOf("photo") > -1
+                                        || kid.getName().toLowerCase().indexOf("picture") > -1
+                                        || kid.getName().toLowerCase().indexOf("camera") > -1)
+                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
+                        if (mHasInternal)
+                            for (OpenPath kid : intDrive.list())
+                                if (kid.getName().toLowerCase().indexOf("photo") > -1
+                                        || kid.getName().toLowerCase().indexOf("picture") > -1
+                                        || kid.getName().toLowerCase().indexOf("camera") > -1)
+                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
                 Logger.LogDebug("Done looking for photos");
 
             } catch (IllegalStateException e) {
