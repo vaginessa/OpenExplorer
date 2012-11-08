@@ -20,7 +20,7 @@
     package="org.brandroid.openmanager"
     android:installLocation="auto"
     android:versionCode="196"
-    android:versionName="0.196" >
+    android:versionName="0.195n" >
 
     <uses-sdk
         android:minSdkVersion="8"
