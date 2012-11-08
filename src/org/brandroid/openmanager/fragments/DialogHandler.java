@@ -533,6 +533,8 @@ public class DialogHandler {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
                 R.layout.alert_multibutton_view, null);
 
+        ViewUtils.setViewsVisible(layout, false, R.id.confirm_remember);
+
         ViewUtils.setText(layout, message, R.id.confirm_message);
 
         final AlertDialog dialog = new AlertDialog.Builder(context).setTitle(title).setView(layout)
@@ -544,7 +546,9 @@ public class DialogHandler {
             Button btn = new Button(context);
             btn.setText(id);
             btn.setId(id);
-            ((LinearLayout.LayoutParams)btn.getLayoutParams()).weight = 1;
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)btn.getLayoutParams();
+            if (lp != null)
+                lp.weight = 1;
             btn.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
