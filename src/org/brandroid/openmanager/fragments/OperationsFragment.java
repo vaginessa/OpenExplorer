@@ -22,6 +22,7 @@ import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,7 +74,8 @@ public class OperationsFragment extends OpenFragment implements Poppable {
             if (closeButton != null) {
                 closeButton.setOnClickListener(new OnClickListener() {
                     public void onClick(View v) {
-                        bw.cancel(true);
+                        if(bw.getStatus() == Status.RUNNING)
+                            bw.cancel(true);
                     }
                 });
             }

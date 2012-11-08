@@ -124,7 +124,7 @@ public class EventHandler {
             if (bw.getStatus() == Status.RUNNING)
                 bw.cancel(true);
         if (mNotifier != null)
-            mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
+            mNotifier.cancelAll();
     }
 
     public void setTaskChangeListener(TaskChangeListener l) {
@@ -401,13 +401,8 @@ public class EventHandler {
     }
 
     public void copyFile(Collection<OpenPath> files, OpenPath newPath, Context mContext) {
-        OpenPath[] array = new OpenPath[files.size()];
-        files.toArray(array);
-
-        String title = array.length + " " + mContext.getString(R.string.s_files);
-        if (array.length == 1)
-            title = array[0].getPath();
-        execute(new BackgroundWork(COPY_TYPE, mContext, newPath, title), array);
+        for (OpenPath file : files)
+            copyFile(file, newPath.getChild(file.getName()), mContext);
     }
 
     @SuppressWarnings("unchecked")
@@ -613,6 +608,8 @@ public class EventHandler {
         }
 
         public String getLastRate(Boolean auto) {
+            if (getStatus() == Status.FINISHED)
+                return getResourceString(mContext, R.string.s_complete);
             if (!auto) {
                 if (mLastRate > 0)
                     return getResourceString(mContext, R.string.s_status_rate)
@@ -723,6 +720,10 @@ public class EventHandler {
         }
 
         public int getNotifIconResId() {
+            if (isCancelled())
+                return R.drawable.ic_action_remove_holo_dark;
+            if (getStatus() == Status.FINISHED)
+                return R.drawable.btn_check_on_holo_blue;
             return notifIcon;
         }
 
@@ -731,7 +732,7 @@ public class EventHandler {
             ret += "Source: " + mCurrentPath.getParent() + "\n";
             ret += "Destination: " + mIntoPath + "\n";
             if (mLastProgress.length > 2 && mLastProgress[0] > 0 && mLastProgress[1] > 0) {
-                ret += "Copied: " + DialogHandler.formatSize(mLastProgress[0]) + " / "
+                ret += "Progress: " + DialogHandler.formatSize(mLastProgress[0]) + " / "
                         + DialogHandler.formatSize(mLastProgress[1]) + " ";
                 ret += "(" + getLastRate(false) + ")\n";
             }
@@ -1195,15 +1196,19 @@ public class EventHandler {
                     if (view.findViewById(android.R.id.progress) != null) {
                         int progA = (int)(((float)mLastProgress[0] / (float)mLastProgress[1]) * 1000f);
                         int progB = (int)(((float)mLastProgress[0] / (float)mLastProgress[2]) * 1000f);
-                        if (getStatus() == Status.FINISHED)
-                            ViewUtils.setViewsVisible(view, false, android.R.id.closeButton,
-                                    android.R.id.progress);
+                        if (getStatus() != Status.RUNNING)
+                            ViewUtils.setViewsVisible(view, false, android.R.id.progress);
                         else {
                             ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
-                            pb.setIndeterminate(mLastRate == 0);
-                            pb.setMax(1000);
-                            pb.setProgress(progA);
-                            pb.setSecondaryProgress(progB);
+                            if (getStatus() == Status.PENDING || mLastRate == 0)
+                                pb.setIndeterminate(true);
+                            else
+                            {
+                                pb.setIndeterminate(false);
+                                pb.setMax(1000);
+                                pb.setProgress(progA);
+                                pb.setSecondaryProgress(progB);
+                            }
                         }
                     }
                 }
@@ -1228,9 +1233,9 @@ public class EventHandler {
             if (mPDialog != null && mPDialog.isShowing())
                 mPDialog.dismiss();
 
-            mTasks.remove(this);
+            // mTasks.remove(this);
 
-            if (mTasks.size() == 0)
+            if (getRunningTasks().length == 0)
                 mNotifier.cancelAll();
 
             switch (mType) {
