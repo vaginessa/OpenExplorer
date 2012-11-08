@@ -128,9 +128,10 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
         if (DFInfo.LoadDF().containsKey(getPath()))
             return (long)(DFInfo.LoadDF().get(getPath()).getSize() - DFInfo.LoadDF().get(getPath())
                     .getFree());
-        else if(Build.VERSION.SDK_INT > 8)
+        else if (Build.VERSION.SDK_INT > 8)
             return mFile.getUsableSpace();
-        else return 0;
+        else
+            return 0;
     }
 
     public long getTotalSpace() {
@@ -268,6 +269,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
         if (mInternalDrive != null)
             return mInternalDrive;
         OpenFile ret = new OpenFile(Environment.getExternalStorageDirectory());
+        Logger.LogVerbose("Internal Storage: " + ret);
         if (ret == null || !ret.exists()) {
             OpenFile mnt = new OpenFile("/mnt");
             if (mnt != null && mnt.exists())
@@ -277,7 +279,11 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
                             mInternalDrive = kid;
                             return kid;
                         }
-
+        } else if (ret.getName().endsWith("1"))
+        {
+            OpenFile sdcard0 = new OpenFile(ret.getPath().substring(0, ret.getPath().length() - 1) + "0");
+            if(sdcard0 != null && sdcard0.exists())
+                ret = sdcard0;
         }
         mInternalDrive = ret;
         return mInternalDrive;
