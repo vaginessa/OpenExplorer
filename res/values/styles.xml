@@ -18,6 +18,10 @@
         <item name="android:textColor">?attr/appTextColorPrimary</item>
         <item name="android:textSize">10dp</item>
     </style>
+    
+    <style name="Small.Dialog" parent="@style/Small">
+        <item name="android:textColor">?attr/dialogTextColorSecondary</item>
+    </style>
 
     <style name="Mid" parent="@android:style/TextAppearance.Medium">
         <item name="android:layout_width">wrap_content</item>
@@ -28,6 +32,10 @@
         <item name="android:ellipsize">marquee</item>
         <item name="android:textSize">14dp</item>
     </style>
+    
+    <style name="Mid.Dialog" parent="@style/Mid">
+        <item name="android:textColor">?attr/dialogTextColorPrimary</item>
+    </style>
 
     <style name="Large" parent="@android:style/TextAppearance.Large">
         <item name="android:layout_width">wrap_content</item>
@@ -37,6 +45,10 @@
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">marquee</item>
         <item name="android:textSize">@dimen/large_text_size</item>
+    </style>
+    
+    <style name="Large.Dialog" parent="@style/Large">
+        <item name="android:textColor">?attr/dialogTextColorPrimary</item>
     </style>
 
     <style name="Small.Hilite" parent="@style/Small">
