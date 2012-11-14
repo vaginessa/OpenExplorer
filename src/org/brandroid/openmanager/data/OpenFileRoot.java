@@ -74,21 +74,33 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
             }
             mPerms = listing.split(" ")[0];
         } else {
-            String[] parts = listing.split(" +");
-            if (parts.length > 5) {
-                mPerms = parts[0];
-                int i = 3;
-                try {
-                    if (parts.length >= 7)
-                        mSize = Long.parseLong(parts[i++]);
-                } catch (NumberFormatException e) {
+            String sPatFull = "([0-9]+) (Sun|Mon|Tue|Wed|Thu|Fri|Sat) "
+                    + "(Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec) *([0-9][0-9]?) "
+                    + "([0-9][0-9]\\:[0-9][0-9]\\:[0-9][0-9]) ([0-9]+) (.+)";
+            m = Pattern.compile(sPatFull).matcher(listing);
+            if (m.matches()) {
+                mDate = Date.parse(m.group(3) + " " + m.group(4) + " " + m.group());
+                mSize = Long.parseLong(m.group(1));
+                mPerms = listing.split(" ")[0];
+                mName = m.group(m.groupCount() - 1);
+            } else {
+                String[] parts = listing.split(" +");
+                if (parts.length > 5) {
+                    mPerms = parts[0];
+                    int i = 3;
+                    try {
+                        if (parts.length >= 7)
+                            mSize = Long.parseLong(parts[i++]);
+                    } catch (NumberFormatException e) {
+                    }
+                    try {
+                        mDate = Date.parse(parts[i + 1] + " " + parts[i + 2]
+                                + (parts.length > i + 3 ? " " + parts[i + 4] : ""));
+                    } catch (Exception e) {
+                    }
                 }
-                try {
-                    mDate = Date.parse(parts[i + 1] + " " + parts[i + 2]);
-                } catch (Exception e) {
-                }
+                mName = parts[parts.length - 1];
             }
-            mName = parts[parts.length - 1];
             if (mName.indexOf(" -> ") > -1) {
                 mSym = mName.substring(mName.indexOf(" -> ") + 4);
                 mName = mName.substring(0, mName.indexOf(" -> ") - 1).trim();
@@ -274,7 +286,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
     }
 
     private String getLSOpts() {
-        String lsOpts = "";
+        String lsOpts = "e"; // full date & time
         if (ShowHiddenFiles)
             lsOpts += "A";
         switch (Sorting.getType()) {
