@@ -478,10 +478,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         if (path instanceof OpenFile
-                && (((path.getName().equalsIgnoreCase("data") || path.getPath().indexOf("/data") > -1) && !path
-                        .getPath().startsWith(
-                                OpenFile.getExternalMemoryDrive(true).getParent().getPath())) || path
-                        .getPath().startsWith("/system")))
+                && (((path.getName().equalsIgnoreCase("data")
+                            || path.getPath().indexOf("/data") > -1)
+                        && !path.getPath().startsWith(
+                                OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
+                        || path.getPath().startsWith("/mnt/shell")
+                        || path.getPath().startsWith("/system")))
             path = new OpenFileRoot(path);
 
         mPath = path;
