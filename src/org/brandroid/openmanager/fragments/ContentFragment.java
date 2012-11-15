@@ -465,25 +465,28 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         mRefreshReady = false;
 
         mContentAdapter = null;
+        
+        final String sPath = path.getPath();
 
-        if (path instanceof OpenFile && !path.getPath().startsWith("/")) {
-            if (path.getPath().equals("Photos"))
+        if (path instanceof OpenFile && !sPath.startsWith("/")) {
+            if (sPath.equals("Photos"))
                 path = OpenExplorer.getPhotoParent();
-            if (path.getPath().equals("Videos"))
+            if (sPath.equals("Videos"))
                 path = OpenExplorer.getVideoParent();
-            if (path.getPath().equals("Music"))
+            if (sPath.equals("Music"))
                 path = OpenExplorer.getMusicParent();
-            if (path.getPath().equals("Downloads"))
+            if (sPath.equals("Downloads"))
                 path = OpenExplorer.getDownloadParent();
         }
 
         if (path instanceof OpenFile
                 && (((path.getName().equalsIgnoreCase("data")
-                            || path.getPath().indexOf("/data") > -1)
-                        && !path.getPath().startsWith(
+                            || sPath.indexOf("/data") > -1)
+                        && !sPath.startsWith(
                                 OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
-                        || path.getPath().startsWith("/mnt/shell")
-                        || path.getPath().startsWith("/system")))
+                        || sPath.startsWith("/mnt/shell")
+                        || (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") == -1)
+                        || sPath.startsWith("/system")))
             path = new OpenFileRoot(path);
 
         mPath = path;
@@ -517,7 +520,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         mContentAdapter.setSorting(sort);
 
-        // Logger.LogVerbose("View options for " + path.getPath() + " : " +
+        // Logger.LogVerbose("View options for " + sPath + " : " +
         // (mShowHiddenFiles ? "show" : "hide") + " + " + (mShowThumbnails ?
         // "thumbs" : "icons") + " + " + mSorting.toString());
 

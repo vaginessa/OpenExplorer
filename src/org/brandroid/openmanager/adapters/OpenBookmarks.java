@@ -340,7 +340,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public String getPathTitle(OpenPath path) {
         String ret = getPathTitleDefault(path);
         if (mPrefs.contains("title_" + path.getPath()))
-            ret = getSetting("title_" + path.getPath(), getPathTitleDefault(path));
+            ret = getSetting("title_" + path.getPath(), ret);
         else if (path.getPath().startsWith("/") && mBlkids != null && mProcMounts != null) {
             Logger.LogDebug("Looking for " + path + " in procmounts");
             for (Mount m : mProcMounts) {
@@ -361,6 +361,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                             return lbl;
                         }
                 }
+                setPathTitle(path, ret);
             }
         }
         return ret;
@@ -382,6 +383,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             return "/";
         else if (name.indexOf("ext") > -1 || name.equals("sdcard1"))
             return mApp.getResources().getString(R.string.s_external);
+        else if (Build.VERSION.SDK_INT > 16 && path.equals("/storage/emulated/0")) // 4.2
+            return mApp.getResources().getString(R.string.s_internal);
         else if (name.indexOf("download") > -1)
             return mApp.getResources().getString(R.string.s_downloads);
         else if (name.indexOf("sdcard") > -1)
