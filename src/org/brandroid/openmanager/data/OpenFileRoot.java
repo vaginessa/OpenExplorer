@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,6 +29,7 @@ import android.os.PatternMatcher;
 public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateListener,
         OpenPath.NeedsTempFile, OpenPath.OpenPathCopyable, OpenPathByteIO {
 
+    private static final long serialVersionUID = -1540464774342269126L;
     private String mPath;
     private String mName;
     private String mPerms;
@@ -50,11 +51,6 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
     }
 
     public OpenFileRoot(String parent, String listing) {
-        // 10 20 30 40 50
-        // 01234567890123456789012345678901234567890123456789012345678901234567890
-        // drwxrwx--x 1 system system 2048 Fri May 11 09:40:44 2012 dalvik-cach
-        // -rw-r--r-- system system 48238558 2012-04-27 21:56
-        // com.twodboy.worldofgoofull-1.apk
         mPath = parent;
         if (!mPath.endsWith("/"))
             mPath += "/";
@@ -64,50 +60,53 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
         Pattern p = Pattern.compile("[0-9][0-9]\\:[0-9][0-9] "
                 + (bLong ? "[1-2][0-9][0-9][0-9] " : ""));
         Matcher m = p.matcher(listing);
+        boolean success = false;
         if (m.matches()) {
             mName = listing.substring(m.end());
             try {
-                mDate = Date.parse(listing.substring(m.start(), m.end() - 1).trim());
+                String sDate = listing.substring(m.start(), m.end() - 1).trim();
+                mDate = Date.parse(sDate);
                 mSize = Long.parseLong(listing.substring(listing.lastIndexOf(" ", m.start()),
                         m.start() - 1).trim());
+                success = true;
             } catch (Exception e) {
+                Logger.LogError("Couldn't parse date.", e);
             }
             mPerms = listing.split(" ")[0];
-        } else {
-            String sPatFull = "([0-9]+) (Sun|Mon|Tue|Wed|Thu|Fri|Sat) "
-                    + "(Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec) *([0-9][0-9]?) "
-                    + "([0-9][0-9]\\:[0-9][0-9]\\:[0-9][0-9]) ([0-9]+) (.+)";
-            m = Pattern.compile(sPatFull).matcher(listing);
-            if (m.matches()) {
-                mDate = Date.parse(m.group(3) + " " + m.group(4) + " " + m.group());
-                mSize = Long.parseLong(m.group(1));
-                mPerms = listing.split(" ")[0];
-                mName = m.group(m.groupCount() - 1);
-            } else {
-                String[] parts = listing.split(" +");
-                if (parts.length > 5) {
-                    mPerms = parts[0];
-                    int i = 3;
-                    try {
-                        if (parts.length >= 7)
-                            mSize = Long.parseLong(parts[i++]);
-                    } catch (NumberFormatException e) {
-                    }
-                    try {
-                        mDate = Date.parse(parts[i + 1] + " " + parts[i + 2]
-                                + (parts.length > i + 3 ? " " + parts[i + 4] : ""));
-                    } catch (Exception e) {
-                    }
-                }
-                mName = parts[parts.length - 1];
-            }
-            if (mName.indexOf(" -> ") > -1) {
-                mSym = mName.substring(mName.indexOf(" -> ") + 4);
-                mName = mName.substring(0, mName.indexOf(" -> ") - 1).trim();
-            }
         }
-        if (mPerms != null && mPerms.startsWith("d") && !mName.endsWith("/"))
-            mName += "/";
+        if (!success) {
+            String[] parts = listing.split(" +");
+            if (parts.length > 5) {
+                mPerms = parts[0];
+                int i = 4;
+                try {
+                    if (parts.length >= 7)
+                        mSize = Long.parseLong(parts[i++]);
+                } catch (NumberFormatException e) {
+                }
+                try {
+                    if (parts[i + 1].matches("(Sun|Mon|Tue|Wed|Thu|Fri|Sat)"))
+                        i++;
+                    String sDate = parts[i + 1] + " " + parts[i + 2];
+                    if (parts.length > i + 3 && parts[i + 4].length() <= 4)
+                        sDate += " " + parts[i + 4];
+                    else {
+                        sDate += " " + (Calendar.getInstance().get(Calendar.YEAR) + 1900);
+                        i--;
+                    }
+                    if (parts.length > i + 2 && parts[i + 3].indexOf(":") > -1)
+                        sDate += " " + parts[i + 3]; // Add Time
+                    mDate = DateFormatInstance.parse(sDate).getTime();
+                    success = true;
+                } catch (Exception e) {
+                }
+            }
+            mName = parts[parts.length - 1];
+        }
+        if (mName.indexOf(" -> ") > -1) {
+            mSym = mName.substring(mName.indexOf(" -> ") + 4);
+            mName = mName.substring(0, mName.indexOf(" -> ") - 1).trim();
+        }
     }
 
     @Override
@@ -132,14 +131,13 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 
     @Override
     public Boolean canRead() {
-        if (mPerms != null)
-            return mPerms.indexOf("r") > -1;
-        return new File(getPath()).canRead();
+        // assume we can read if we've gotten to this point
+        return true;
     }
 
     @Override
     public String getName() {
-        return mName;
+        return mName + (isDirectory() && !mName.endsWith("/") ? "/" : "");
     }
 
     @Override
@@ -359,7 +357,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
 
     @Override
     public Boolean delete() {
-        execute("rm -f " + getPath(), false);
+        execute("rm -rf " + getPath(), false);
         return true;
     }
 

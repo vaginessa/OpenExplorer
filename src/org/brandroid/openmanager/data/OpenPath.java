@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -45,6 +46,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     private OpenPathThreadUpdater mUpdater;
     protected static OpenPathDbAdapter mDb = null;
     public static Boolean AllowDBCache = true;
+    
+    public static java.text.DateFormat DateFormatInstance = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.ENGLISH);
 
     public abstract String getName();
 
