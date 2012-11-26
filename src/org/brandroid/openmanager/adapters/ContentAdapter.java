@@ -491,6 +491,12 @@ public class ContentAdapter extends BaseAdapter {
             mSelectedSet.add(rememberedPath);
         }
     }
+    
+    public void addSelection(OpenPath path)
+    {
+        if(!mSelectedSet.contains(path))
+            mSelectedSet.add(path);
+    }
 
     /**
      * Clear the selection. It's preferable to calling {@link Set#clear()} on

@@ -1993,9 +1993,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             switch (item.getItemId()) {
                 case R.id.menu_context_selectall:
                     for (OpenPath path : mContentAdapter.getAll())
-                        if (!selections.contains(path))
-                            selections.add(path);
-                    mContentAdapter.setSelectedSet(selections);
+                        mContentAdapter.addSelection(path);
                     mContentAdapter.notifyDataSetChanged();
                     mode.invalidate();
                     break;
