@@ -43,6 +43,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
@@ -62,6 +63,7 @@ import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.stericson.RootTools.RootTools;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -220,6 +222,10 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
         PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE,
                 R.xml.preferences, false);
+        
+        CheckBoxPreference pSystem = (CheckBoxPreference)findPreference("pref_system_mount");
+        if(pSystem != null)
+            pSystem.setChecked(RootManager.isSystemMounted());
 
         // getPreferences(MODE_PRIVATE);
         prefs = new Preferences(getApplicationContext());
@@ -530,6 +536,25 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
         } else if (key.equals("pref_thumbs_cache_clear")) {
             Toast.makeText(this, "Cache cleared!", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (key.equals("pref_system_mount")) {
+            final CheckBoxPreference pSystem = (CheckBoxPreference)preference;
+            final boolean checked = pSystem.isChecked();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String mode;
+                    try {
+                        mode = !checked ? "ro" : "rw";
+                        RootTools.remount("/system", mode);
+                        Logger.LogDebug("New /system: " + RootTools.getMountedAs("/system"));
+                        //pSystem.setChecked(RootTools.getMountedAs("/system").equalsIgnoreCase("rw"));
+                    } catch (Exception e) {
+                        Logger.LogError("Unable to remount system", e);
+                    }
+                }
+            }).start();
+
             return true;
         } else if (key.equals("server_add")) {
             DialogHandler

@@ -853,8 +853,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (Logger.checkWTF()) {
             OpenFile crashFile = Logger.getCrashFile();
             if (crashFile.exists()) {
-                Logger.LogWTF(crashFile.readAscii(), new Exception());
-                crashFile.delete();
+                try {
+                    Logger.LogWTF(crashFile.readAscii(), new Exception());
+                    crashFile.delete();
+                } catch(Exception e) { }
             }
             // if(!getSetting(null, "pref_autowtf", false))
             // showWTFIntent();

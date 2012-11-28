@@ -347,6 +347,9 @@
     <string name="s_msg_folder_none">Folder unable to be created</string>
     <string name="msg_nook_donate">Hello Nook user! I hope you enjoy Open Explorer for Nook. I have tried my hardest to ensure high compatability with Nook devices. However, it appears there are some differences that are difficult to handle without an actual Nook device. For this reason, I am trying to collect enough donations in order to buy a Nook device in order to improve compatability for nook devices. If you find this app useful, please consider making a donation, by either selecting the button below, or by activating the "donate" menu option. Thank you, and happy exploring!</string>
     <string name="s_menu_donate">Donate</string>
+    <string name="s_menu_system_mount">Make /system Writable (Dangerous!)</string>
+    <string name="s_menu_system_mount_on">System is WRITABLE!</string>
+    <string name="s_menu_system_mount_off">System is Read-Only.</string>
 
     <plurals name="num_selected">
         <item quantity="one">One file selected</item>

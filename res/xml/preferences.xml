@@ -197,6 +197,13 @@
             android:key="pref_root"
             android:title="@string/s_menu_root" />
         <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_system_mount"
+            android:title="@string/s_menu_system_mount"
+            android:summaryOn="@string/s_menu_system_mount_on"
+            android:summaryOff="@string/s_menu_system_mount_off"
+            />
+        <CheckBoxPreference
             android:defaultValue="true"
             android:key="pref_intent_internal"
             android:summaryOff="@string/s_pref_intent_internal_off"

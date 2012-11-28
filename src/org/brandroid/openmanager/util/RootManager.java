@@ -24,9 +24,14 @@ import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.concurrent.TimeoutException;
 
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.ByteQueue;
 import org.brandroid.utils.Logger;
+
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.RootToolsException;
 
 import android.os.Handler;
 import android.os.Message;
@@ -156,21 +161,43 @@ public class RootManager {
      * @return True if operation appears to be successful, False if an error is
      *         returned.
      */
-    public boolean mountSystem(boolean rw) {
+    public static boolean mountSystem(boolean rw) {
         if (!rootEnabled)
             return false;
-        HashSet<String> procmounts = execute("cat /proc/mounts");
         String sysDev = "/dev/block/mmcblk1p23";
-        for (String s : procmounts) {
-            if (s.startsWith("/dev/") && s.indexOf(" /system ") > -1) {
+        OpenFile f = new OpenFile("/proc/mounts");
+        if(f == null) return false;
+        String data = f.readAscii();
+        if(data == null) return false;
+        for (String s : data.split("\n")) {
+            if (s.indexOf("/system") > -1) {
                 sysDev = s.substring(0, s.indexOf(" "));
                 break;
             }
         }
-        if (execute("mount -o " + (rw ? "rw" : "ro") + ",remount -t yaffs2 " + sysDev + " /system")
-                .size() > 0)
+
+        try {
+            if (RootTools.sendShell(
+                    "mount -o " + (rw ? "rw" : "ro") + ",remount -t yaffs2 " + sysDev + " /system",
+                    1000).size() > 0)
+                return false;
+        } catch (Exception e) {
+            Logger.LogError("Unable to mount system", e);
             return false;
+        }
         return true;
+    }
+
+    public static boolean isSystemMounted() {
+        OpenFile f = new OpenFile("/proc/mounts");
+        if(f == null) return false;
+        String data = f.readAscii();
+        if(data == null) return false;
+        for (String s : data.split("\n")) {
+            if (s.indexOf("/system") > -1)
+                return s.indexOf("rw,") > -1;
+        }
+        return false;
     }
 
     public String getDriveLabel(String path, String sDefault) {
