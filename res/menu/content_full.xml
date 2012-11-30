@@ -5,6 +5,7 @@
         android:id="@+id/menu_search"
         android:icon="?attr/actionIconSearch"
         android:showAsAction="ifRoom|collapseActionView"
+        android:actionViewClass="com.actionbarsherlock.widget.SearchView"
         android:title="@android:string/search_go"/>
     <item
         android:id="@+id/menu_context_share"

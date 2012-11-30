@@ -64,6 +64,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.support.v4.widget.SearchViewCompat;
+import android.support.v4.widget.SearchViewCompat.OnQueryTextListenerCompat;
 import android.text.InputType;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -104,7 +105,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
@@ -187,6 +187,8 @@ import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.*;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
+import com.actionbarsherlock.widget.SearchView;
+import com.actionbarsherlock.widget.SearchView.OnQueryTextListener;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -856,7 +858,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 try {
                     Logger.LogWTF(crashFile.readAscii(), new Exception());
                     crashFile.delete();
-                } catch(Exception e) { }
+                } catch (Exception e) {
+                }
             }
             // if(!getSetting(null, "pref_autowtf", false))
             // showWTFIntent();
@@ -2320,14 +2323,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // super.onCreateOptionsMenu(menu);
         // getSupportMenuInflater().inflate(R.menu.global, menu);
         // return true;
-
         MenuInflater menuInflater = getSupportMenuInflater();
+
         // menuInflater.inflate(R.menu.menu_main, menu);
         // menuInflater.inflate(R.menu.global_top, menu);
         OpenFragment f = getSelectedFragment();
         if (f != null)
             f.onCreateOptionsMenu(menu, menuInflater);
         menuInflater.inflate(R.menu.global, menu);
+
+        handleSearchMenu(menu);
 
         mMenuPaste = menu.findItem(R.id.menu_context_paste);
 
@@ -2336,37 +2341,46 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (IS_KEYBOARD_AVAILABLE)
             MenuUtils.setMneumonics(menu);
 
-        mMenuSearch = menu.findItem(R.id.menu_search);
-        if (mMenuSearch != null && mSearchView == null) {
-            mSearchView = SearchViewCompat.newSearchView(this);
-            SearchViewCompat.setOnQueryTextListener(mSearchView,
-                    new SearchViewCompat.OnQueryTextListenerCompat() {
-                        public boolean onQueryTextSubmit(String query) {
-                            mSearchView.clearFocus();
-                            Intent intent = new Intent();
-                            intent.setAction(Intent.ACTION_SEARCH);
-                            Bundle appData = new Bundle();
-                            appData.putString("path", getDirContentFragment(false).getPath()
-                                    .getPath());
-                            intent.putExtra(SearchManager.APP_DATA, appData);
-                            intent.putExtra(SearchManager.QUERY, query);
-                            handleIntent(intent);
-                            mMenuSearch.collapseActionView();
-                            return true;
-                        }
-
-                        public boolean onQueryTextChange(String newText) {
-                            return false;
-                        }
-                    });
-        }
-        if (mMenuSearch != null) {
-            mMenuSearch.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS
-                    | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-            mMenuSearch.setActionView(mSearchView);
-        }
-
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void handleSearchMenu(Menu menu) {
+        final MenuItem mSearch = menu.findItem(R.id.menu_search) != null ? menu
+                .findItem(R.id.menu_search) : menu.add(0, R.id.menu_search, Menu.NONE,
+                R.string.s_search).setIcon(
+                getContext().getResources().getDrawable(
+                        getThemedResourceId(R.styleable.AppTheme_actionIconSearch,
+                                R.drawable.ic_action_search)));
+
+        final SearchView searchView = new SearchView(getSupportActionBar().getThemedContext());
+        searchView.setQueryHint(getString(R.string.s_search_files));
+        searchView.setIconifiedByDefault(true);
+        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Logger.LogVerbose("QUERY: " + query);
+                searchView.clearFocus();
+                mSearch.collapseActionView();
+                searchView.setIconified(true);
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SEARCH);
+                Bundle appData = new Bundle();
+                appData.putString("path", getDirContentFragment(false).getPath().getPath());
+                intent.putExtra(SearchManager.APP_DATA, appData);
+                intent.putExtra(SearchManager.QUERY, query);
+                handleIntent(intent);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+        });
+        mSearch.setActionView(searchView).setShowAsAction(
+                MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
     }
 
     public boolean onPrepareOptionsMenu(Menu menu) {
@@ -2483,8 +2497,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 return true;
 
             case R.id.menu_search:
-                if (BEFORE_HONEYCOMB)
-                    onSearchRequested();
+                // if (BEFORE_HONEYCOMB)
+                // onSearchRequested();
                 return true;
 
             case R.id.menu_multi_all_delete:
