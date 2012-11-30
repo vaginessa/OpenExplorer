@@ -526,9 +526,7 @@ public class DialogHandler {
         } else
             onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
 	}
-		
-		ViewUtils.setViewsVisible(layout, false, R.id.confirm_remember);
-
+	
     public static void showMultiButtonDialog(Context context, String message, String title,
             final DialogInterface.OnClickListener listener, int... buttonStringIds) {
         final View layout = ((LayoutInflater)context

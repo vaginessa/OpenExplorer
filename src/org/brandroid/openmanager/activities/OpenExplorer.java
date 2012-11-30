@@ -649,52 +649,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         }
     }
-
-	public static boolean isNook()
-	{
-		if(Build.DISPLAY.toLowerCase().contains("acclaim"))	
-			return true;
-		if(Build.BRAND.toLowerCase().contains("nook"))
-			return true;
-		return false;
-	}
-
-	private void checkNook()
-	{
-		if(isNook())
-		{
-			if(!getPreferences().getBoolean("warn", "nook_donate", false))
-			{
-				DialogHandler.showMultiButtonDialog(
-					getContext(),
-					getString(R.string.msg_nook_donate),
-					"Hello Nook user!",
-					new OnClickListener() {	
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							switch(which)
-							{
-								case R.string.s_no:
-									getPreferences().setSetting("warn", "nook_donate", true);
-									break;
-								case R.string.s_cancel:
-									break;
-								default:
-									getPreferences().setSetting("warn", "nook_donate", true);
-									launchDonation(OpenExplorer.this);
-									break;
-							}
-							if(dialog != null)
-								dialog.dismiss();
-						}
-					},
-					R.string.s_menu_donate,
-					R.string.s_no,
-					R.string.s_cancel
-					);
-			}
-		}
-	}
 	private void checkRIM()
 	{
 		if(isBlackBerry())
@@ -1374,6 +1328,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // Intent intent = new Intent(a, WebViewActivity.class);
         // intent.setData();
         // a.startActivity(intent);
+        WebViewFragment web = new WebViewFragment().setUri(uri);
+        web.setShowsDialog(true);
         if (Build.VERSION.SDK_INT < 100) {
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 			a.startActivity(intent);
@@ -1385,8 +1341,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 			lp.width = a.getResources().getDimensionPixelSize(R.dimen.bookmarks_width) * 2;
 			a.findViewById(R.id.frag_log).setLayoutParams(lp);
 		} else {
-			WebViewFragment web = new WebViewFragment().setUri(uri);
-			web.setShowsDialog(true);
 			web.show(((FragmentActivity)a).getSupportFragmentManager(), "trans");
             if (web.getDialog() != null)
 				web.getDialog().setTitle(R.string.button_translate);
