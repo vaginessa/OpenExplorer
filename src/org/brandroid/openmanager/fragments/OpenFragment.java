@@ -122,17 +122,46 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
         MenuItem mShare = menu.findItem(R.id.menu_context_share);
         if (mShare == null)
             mShare = menu
-                    .add(0, R.id.menu_context_share, 0, R.string.s_menu_share)
+                    .add(Menu.NONE, R.id.menu_context_share, Menu.FIRST, R.string.s_menu_share)
                     .setIcon(
                             getThemedResourceId(R.styleable.AppTheme_actionIconShare,
                                     R.drawable.ic_menu_share))
                     .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS);
 
         Intent intent = IntentManager.getIntent(mPath, getExplorer());
+        menu.removeGroup(10);
         if (intent == null) {
             mShare.setVisible(false);
             return;
         }
+
+        if (mPath != null)
+        {
+            if(mPath.getMimeType() != null)
+                intent.setDataAndType(mPath.getUri(), mPath.getMimeType());
+            else
+                intent.setData(mPath.getUri());
+        }
+        
+        List<ResolveInfo> resolves = IntentManager.getResolvesAvailable(intent, getExplorer());
+        if(resolves.size() == 0)
+        {
+            intent.setAction(Intent.ACTION_SEND);
+            resolves = IntentManager.getResolvesAvailable(intent, getExplorer());
+        }
+        
+        if(resolves.size() == 1)
+        {
+            mShare.setVisible(false);
+            ResolveInfo app = resolves.get(0);
+            CharSequence ttl = app.loadLabel(getContext().getPackageManager());
+            intent.setPackage(app.activityInfo.packageName);
+            menu.add(10, Menu.NONE, Menu.FIRST, ttl)
+                .setIcon(getResolveIcon(getContext().getPackageManager(), resolves.get(0)))
+                .setIntent(intent)
+                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            return;
+        } else if (resolves.size() == 0) return;
 
         mShare.setVisible(true);
 
@@ -140,9 +169,6 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
         if (mShareProvider == null)
             mShareProvider = new ShareActionProvider(getContext());
-
-        if (mPath != null && mPath.getMimeType() != null)
-            intent.setType(mPath.getMimeType());
 
         mShareProvider.setShareIntent(intent);
         mShare.setActionProvider(mShareProvider);

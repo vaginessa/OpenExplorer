@@ -2346,7 +2346,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private void handleSearchMenu(Menu menu) {
         final MenuItem mSearch = menu.findItem(R.id.menu_search) != null ? menu
-                .findItem(R.id.menu_search) : menu.add(0, R.id.menu_search, Menu.NONE,
+                .findItem(R.id.menu_search) : menu.add(Menu.FIRST, R.id.menu_search, Menu.NONE,
                 R.string.s_search).setIcon(
                 getContext().getResources().getDrawable(
                         getThemedResourceId(R.styleable.AppTheme_actionIconSearch,

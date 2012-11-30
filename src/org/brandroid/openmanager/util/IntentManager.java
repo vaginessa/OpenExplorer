@@ -231,7 +231,13 @@ public class IntentManager {
     public static List<ResolveInfo> getResolvesAvailable(Intent toCheck, OpenExplorer app) {
         if (toCheck == null)
             return new ArrayList<ResolveInfo>();
-        return app.getPackageManager().queryIntentActivities(toCheck, 0);
+        List<ResolveInfo> ret = app.getPackageManager().queryIntentActivities(toCheck, 0);
+        for(int i = ret.size() - 1; i >= 0; i--)
+        {
+            if(ret.get(i).activityInfo.packageName.startsWith("org.brandroid.openmanager"))
+                ret.remove(i);
+        }
+        return ret;
     }
 
     public static ResolveInfo getResolveInfo(final OpenPath file, final OpenExplorer app) {

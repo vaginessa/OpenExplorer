@@ -81,6 +81,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -465,7 +466,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         mRefreshReady = false;
 
         mContentAdapter = null;
-        
+
         final String sPath = path.getPath();
 
         if (path instanceof OpenFile && !sPath.startsWith("/")) {
@@ -480,13 +481,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         if (path instanceof OpenFile
-                && (((path.getName().equalsIgnoreCase("data")
-                            || sPath.indexOf("/data") > -1)
-                        && !sPath.startsWith(
-                                OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
+                && (((path.getName().equalsIgnoreCase("data") || sPath.indexOf("/data") > -1) && !sPath
+                        .startsWith(OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
                         || sPath.startsWith("/mnt/shell")
-                        || (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") == -1)
-                        || sPath.startsWith("/system")))
+                        || (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") == -1) || sPath
+                            .startsWith("/system")))
             path = new OpenFileRoot(path);
 
         mPath = path;
@@ -1906,7 +1905,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     int cnt = getSelectedCount();
                     OpenPath first = mContentAdapter.getSelectedSet().get(0);
                     Intent shareIntent = null;
-                    shareIntent = new Intent(cnt > 1 ? Intent.ACTION_SEND : Intent.ACTION_VIEW);
+                    shareIntent = new Intent(cnt > 1 ? Intent.ACTION_SEND_MULTIPLE
+                            : Intent.ACTION_VIEW);
                     if (first != null) {
                         shareIntent.setType(first.getMimeType());
                         shareIntent.putExtra(Intent.EXTRA_STREAM, first.getUri());
@@ -1930,6 +1930,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             if (mShareActionProvider != null) {
                 Intent shareIntent = null;
                 int cnt = getSelectedCount();
+                menu.removeGroup(10);
                 OpenPath first = mContentAdapter.getSelectedSet().get(0);
                 if (cnt > 1) {
                     shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
@@ -1946,11 +1947,29 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     shareIntent = new Intent(Intent.ACTION_VIEW);
                     shareIntent.setDataAndType(first.getUri(), first.getMimeType());
                 }
-                boolean hasIntents = IntentManager.getResolvesAvailable(shareIntent, getExplorer())
-                        .size() > 0;
+                List<ResolveInfo> resolves = IntentManager.getResolvesAvailable(shareIntent,
+                        getExplorer());
+                int numIntents = resolves.size();
+                boolean hasIntents = numIntents > 1;
                 MenuUtils.setMenuVisible(menu, hasIntents, R.id.menu_context_share);
                 if (hasIntents)
                     mShareActionProvider.setShareIntent(shareIntent);
+                else if (numIntents == 1) {
+                    ResolveInfo app = resolves.get(0);
+                    shareIntent.setPackage(app.activityInfo.packageName);
+                    final Intent theIntent = shareIntent;
+                    menu.add(10, Menu.NONE, Menu.FIRST,
+                            app.loadLabel(getContext().getPackageManager()))
+                            .setIcon(app.loadIcon(getContext().getPackageManager()))
+                            .setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                                @Override
+                                public boolean onMenuItemClick(MenuItem item) {
+                                    getActivity().startActivity(theIntent);
+                                    return true;
+                                }
+                            })
+                            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+                }
             }
 
             boolean writable = true, readable = true;
