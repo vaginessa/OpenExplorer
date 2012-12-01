@@ -732,6 +732,9 @@ public class DialogHandler {
                 tab3.setVisibility(View.VISIBLE);
             }
         });
+        
+        tab2.setVisibility(View.VISIBLE);
+        tab3.setVisibility(View.GONE);
 
         AlertDialog mDlgAbout = new AlertDialog.Builder(mContext).setTitle(R.string.app_name)
                 .setView(view).create();
@@ -859,6 +862,7 @@ public class DialogHandler {
         if (OpenExplorer.SCREEN_DPI > -1)
             ret += "DPI: " + OpenExplorer.SCREEN_DPI + sep;
         ret += "Lang: " + getLangCode() + sep;
+        ret += "Runs: " + Preferences.Run_Count + sep;
         ret += "Fingerprint: " + Build.FINGERPRINT + sep;
         ret += "Manufacturer: " + Build.MANUFACTURER + sep;
         ret += "Model: " + Build.MODEL + sep;

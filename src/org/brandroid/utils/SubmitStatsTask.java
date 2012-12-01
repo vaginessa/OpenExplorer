@@ -85,6 +85,7 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
     private static JSONObject getDeviceInfo() {
         JSONObject ret = new JSONObject();
         try {
+            ret.put("Runs", Preferences.Run_Count);
             ret.put("SDK", Build.VERSION.SDK_INT);
             ret.put("Language", Locale.getDefault().getDisplayLanguage());
             ret.put("Country", Locale.getDefault().getDisplayCountry());
@@ -98,8 +99,6 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             ret.put("Bootloader", Build.BOOTLOADER);
             ret.put("Hardware", Build.HARDWARE);
             ret.put("User", Build.USER);
-            if (Build.UNKNOWN != null)
-                ret.put("Unknown", Build.UNKNOWN);
             ret.put("Display", Build.DISPLAY);
             ret.put("Fingerprint", Build.FINGERPRINT);
             ret.put("ID", Build.ID);
