@@ -329,6 +329,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Pref_Root = prefs.getBoolean("global", "pref_root", Preferences.Pref_Root);
         ThumbnailCreator.showCenteredCroppedPreviews = prefs.getBoolean("global",
                 "prefs_thumbs_crop", true);
+        Preferences.Run_Count = prefs.getInt("stats", "runs", 0) + 1;
+        prefs.setSetting("stats", "runs", Preferences.Run_Count);
 
 		PackageInfo pi = null;
 		try {
@@ -494,7 +496,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (IS_DEBUG_BUILD)
                 IS_DEBUG_BUILD = (getPackageManager().getActivityInfo(getComponentName(),
                         PackageManager.GET_META_DATA).applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == ApplicationInfo.FLAG_DEBUGGABLE;
-            if (isBlackBerry())
+            if (isBlackBerry() || isNook())
 				IS_DEBUG_BUILD = false;
         } catch (NameNotFoundException e1) {
         }
@@ -2364,6 +2366,17 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         handleSearchMenu(menu);
 
+        if (DEBUG)
+            menu.add(Menu.NONE, Menu.NONE, Menu.FIRST, "Debug Test").setOnMenuItemClickListener(
+                    new OnMenuItemClickListener() {
+
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            debugTest();
+                            return true;
+                        }
+                    });
+
 		mMenuPaste = menu.findItem(R.id.menu_context_paste);
 
 		mMainOptionsMenu = menu;
@@ -2465,9 +2478,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (DEBUG)
 			Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + ")");
         switch (id) {
-			case R.id.menu_debug:
-				debugTest();
-				break;
 			case R.id.menu_donate:
 				launchDonation(this);
 				break;
