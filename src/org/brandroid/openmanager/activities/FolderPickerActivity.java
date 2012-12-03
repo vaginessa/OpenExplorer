@@ -36,6 +36,8 @@ public class FolderPickerActivity extends FragmentActivity implements OnItemClic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setTheme(R.style.AppTheme_Dark);
+
         setContentView(R.layout.picker_widget);
         mSelection = (TextView)findViewById(R.id.pick_path);
         mPickName = (EditText)findViewById(R.id.pick_filename);
