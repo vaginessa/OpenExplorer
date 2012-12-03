@@ -233,7 +233,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static boolean IS_FULL_SCREEN = false;
     public static boolean IS_KEYBOARD_AVAILABLE = false;
 
-    //private final static boolean DEBUG = IS_DEBUG_BUILD && true;
+    // private final static boolean DEBUG = IS_DEBUG_BUILD && true;
 
     public static int SCREEN_WIDTH = -1;
     public static int SCREEN_HEIGHT = -1;
@@ -2372,6 +2372,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             return true;
                         }
                     });
+
+        MenuUtils.setMenuVisible(menu, Preferences.Run_Count > 5, R.id.menu_donate);
 
         mMenuPaste = menu.findItem(R.id.menu_context_paste);
 
