@@ -24,8 +24,7 @@ public class Logger {
             0, 0, 0, 0, 0
     };
     private final static Boolean DO_LOG = true; // global static
-    private final static Boolean DEBUG = true; // &&
-                                               // OpenExplorer.IS_DEBUG_BUILD;
+    private final static Boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD;
     private static Boolean bLoggingEnabled = true; // this can be set view
                                                    // preferences
     public final static Integer MIN_DB_LEVEL = Log.INFO;

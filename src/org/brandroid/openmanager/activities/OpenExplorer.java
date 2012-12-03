@@ -233,7 +233,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static boolean IS_FULL_SCREEN = false;
     public static boolean IS_KEYBOARD_AVAILABLE = false;
 
-    private final static boolean DEBUG = IS_DEBUG_BUILD && true;
+    //private final static boolean DEBUG = IS_DEBUG_BUILD && true;
 
     public static int SCREEN_WIDTH = -1;
     public static int SCREEN_HEIGHT = -1;
@@ -382,13 +382,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @Override
     protected void onResume() {
         super.onResume();
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onResume");
         onClipboardUpdate();
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onCreate");
 
         Thread.setDefaultUncaughtExceptionHandler(new CustomExceptionHandler());
@@ -683,6 +683,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             checkNook();
             checkRIM();
         }
+        checkGTV();
     }
 
     private void checkGTV() {
@@ -1233,7 +1234,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
 
         if (mViewPager != null && mViewPagerEnabled) {
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogDebug("Setting up ViewPager");
             mViewPagerAdapter = // new PagerTabsAdapter(this, mViewPager,
                                 // indicator);
@@ -1461,7 +1462,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onAttachedToWindow");
         handleNetworking();
         handleMediaReceiver();
@@ -1485,7 +1486,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @Override
     protected void onStart() {
         super.onStart();
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onStart");
         if (findViewById(R.id.frag_log) != null) {
             fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
@@ -1707,7 +1708,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("OpenExplorer.onPostCreate");
         // mActionBarHelper.onPostCreate(savedInstanceState);
         ensureCursorCache();
@@ -1796,7 +1797,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else {
             if (bRetrieveExtraVideoDetails)
                 bRetrieveExtraVideoDetails = !getSetting(null, "tag_novidinfo", false);
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogVerbose("Finding videos");
             // if(!IS_DEBUG_BUILD)
             try {
@@ -1845,7 +1846,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (!mPhotoParent.isLoaded()) {
             if (bRetrieveDimensionsForPhotos)
                 bRetrieveDimensionsForPhotos = !getSetting(null, "tag_nodims", false);
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogVerbose("Finding Photos");
             try {
                 mPhotosMerged.addParent(mPhotoParent);
@@ -1894,7 +1895,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         }
         if (!mMusicParent.isLoaded()) {
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogVerbose("Finding Music");
             try {
                 getSupportLoaderManager().initLoader(2, null, this);
@@ -1904,7 +1905,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         }
         if (!mApkParent.isLoaded()) {
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogVerbose("Finding APKs");
             try {
                 getSupportLoaderManager().initLoader(3, null, this);
@@ -1935,7 +1936,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 }
             }).start();
         }
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("Done finding cursors");
         return true;
     }
@@ -1955,10 +1956,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // || new Date().getTime() - mLastCursorEnsure < 10000 // at least 10
         // seconds
         ) {
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogVerbose("Skipping ensureCursorCache");
             return;
-        } else if (DEBUG && IS_DEBUG_BUILD)
+        } else if (IS_DEBUG_BUILD)
             Logger.LogVerbose("Running ensureCursorCache");
         mRunningCursorEnsure = true;
 
@@ -2019,7 +2020,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         }
 
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("Done with ensureCursorCache");
 
         // mLastCursorEnsure = new Date().getTime();
@@ -2079,7 +2080,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
      * Refresh list of bookmarks.
      */
     public void refreshBookmarks() {
-        if (DEBUG && IS_DEBUG_BUILD)
+        if (IS_DEBUG_BUILD)
             Logger.LogVerbose("refreshBookmarks()");
         refreshCursors();
         if (mBookmarks != null) {
@@ -2184,7 +2185,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     editing.append(path + ",");
             }
         }
-        if (DEBUG && !editing.equals(","))
+        if (IS_DEBUG_BUILD && !editing.equals(","))
             Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
         setSetting("editing", editing.toString());
     }
@@ -2361,7 +2362,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         handleSearchMenu(menu);
 
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             menu.add(Menu.NONE, Menu.NONE, Menu.FIRST, "Debug Test").setOnMenuItemClickListener(
                     new OnMenuItemClickListener() {
 
@@ -2470,7 +2471,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // toggleBookmarks(false);
         OpenFragment f = getSelectedFragment();
 
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + ")");
         switch (id) {
             case R.id.menu_donate:
@@ -2517,7 +2518,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             case R.id.menu_refresh:
                 ContentFragment content = getDirContentFragment(true);
                 if (content != null) {
-                    if (DEBUG && IS_DEBUG_BUILD)
+                    if (IS_DEBUG_BUILD)
                         Logger.LogDebug("Refreshing " + content.getPath().getPath());
                     FileManager.removeOpenCache(content.getPath().getPath());
                     content.getPath().deleteFolderFromDb();
@@ -2587,7 +2588,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         // return super.onOptionsItemSelected(item);
 
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
 
         if (item.getSubMenu() != null) {
@@ -2619,7 +2620,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (f != null && f.onOptionsItemSelected(item))
             return true;
 
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x"
                     + Integer.toHexString(item.getItemId()) + ")");
 
@@ -2826,7 +2827,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                                                                               // transition
                                                                                               // from
                                                                                               // carousel
-            if (DEBUG && IS_DEBUG_BUILD)
+            if (IS_DEBUG_BUILD)
                 Logger.LogDebug("Switching from carousel!");
             if (mViewPagerEnabled) {
                 setViewVisibility(true, false, R.id.content_frag);
@@ -2862,7 +2863,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("OpenExplorer.onKeyUp(" + keyCode + "," + event + ")");
         if (event.getAction() != KeyEvent.ACTION_UP)
             return super.onKeyUp(keyCode, event);
@@ -3300,7 +3301,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 sPath2 = sPath2.toUpperCase();
                 return sPath2;
             }
-            if (DEBUG)
+            if (IS_DEBUG_BUILD)
                 Logger.LogDebug("OpenExplorer.getVolumeName(" + sPath2 + ") = " + last);
             sPath2 = last;
         } catch (IOException e) {
@@ -3418,7 +3419,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public void onClipboardUpdate() {
         if (getClipboard().size() == mLastClipSize)
             return;
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("onClipboardUpdate(" + getClipboard().size() + ")");
         View pb = null;
         if (mStaticButtons != null)
@@ -3822,7 +3823,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         if (v == null)
             return false;
-        if (DEBUG)
+        if (IS_DEBUG_BUILD)
             Logger.LogDebug("OpenExplorer.onKey(" + v + "," + keyCode + "," + event + ")");
         if (event.getAction() != KeyEvent.ACTION_UP)
             return false;
