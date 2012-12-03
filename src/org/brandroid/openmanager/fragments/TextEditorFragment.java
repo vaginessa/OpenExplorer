@@ -191,15 +191,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
             if (mViewList != null)
                 mViewList.setOnTouchListener(this);
         mViewListAdapter = new LinesAdapter(activity, new String[] {});
-        mFontSizeBar = new SeekBarActionView(activity);
-        mFontSizeBar.setProgress((int)mTextSize);
-        mFontSizeBar.setOnCloseClickListener(new SeekBarActionView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                mViewListAdapter.notifySizeChanged();
-                return false;
-            }
-        });
+        createFontSizeBar(activity);
         if (!Preferences.Warn_TextEditor && !getSetting("warn", "text_editor", false)) {
             Preferences.Warn_TextEditor = true;
             DialogHandler.showWarning(getActivity(), R.string.warn_text_editor, 10,
@@ -212,6 +204,18 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         }
         mFontSizeBar.setOnSeekBarChangeListener(this);
         showFilename();
+    }
+
+    private void createFontSizeBar(Context context) {
+        mFontSizeBar = new SeekBarActionView(context);
+        mFontSizeBar.setProgress((int)mTextSize);
+        mFontSizeBar.setOnCloseClickListener(new SeekBarActionView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                mViewListAdapter.notifySizeChanged();
+                return false;
+            }
+        });
     }
 
     private void setPath(String path) {
@@ -289,10 +293,9 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         if (getActivity() != null && getResources() != null
                 && !getResources().getBoolean(R.bool.allow_split_actionbar))
             isTop = true;
-        if (mFontSize != null && USE_SEEK_ACTIONVIEW) // (Build.VERSION.SDK_INT
-                                                      // < 14 ||
-                                                      // OpenExplorer.USE_PRETTY_MENUS))
-        {
+        if (mFontSizeBar == null)
+            createFontSizeBar(getContext());
+        if (mFontSize != null && mFontSizeBar != null && USE_SEEK_ACTIONVIEW) {
             mFontSize.setActionView(mFontSizeBar);
             mFontSize.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS
                     | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -666,23 +669,30 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
 
         @Override
         protected Integer doInBackground(String... datas) {
-            String data = datas[0];
+            final String data = datas[0];
             OutputStream fos = null;
             try {
                 byte[] bytes = data.getBytes();
-                fos = new BufferedOutputStream(mPath.getOutputStream());
-                fos.write(bytes);
-                fos.close();
                 // if(mPath instanceof OpenPath.OpenPathByteIO)
                 // ((OpenPath.OpenPathByteIO)mPath).writeBytes(data.getBytes());
                 if (mPath instanceof NeedsTempFile)
+                {
+                    ((NeedsTempFile)mPath).getTempFile().write(data);
                     ((NeedsTempFile)mPath).tempUpload(this);
+                } else {
+                    fos = new BufferedOutputStream(mPath.getOutputStream());
+                    fos.write(bytes);
+                    fos.close();
+                }
                 if (mPath instanceof OpenNetworkPath)
                     ((OpenNetworkPath)mPath).disconnect();
                 mData = data;
                 return bytes.length;
             } catch (Exception e) {
-                Logger.LogError("Couldn't save file.", e);
+                if(mPath instanceof NeedsTempFile)
+                    Logger.LogError("Couldn't save temp file (" + ((NeedsTempFile)mPath).getTempFile() + ").", e);
+                else
+                    Logger.LogError("Couldn't save file (" + mPath + ").", e);
             }
             return -1;
         }
@@ -698,9 +708,14 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
             setProgressVisibility(false);
+            Context c = TextEditorFragment.this.getActivity();
+            if(result < 0)
+            {
+                Toast.makeText(c, R.string.httpErrorIO, Toast.LENGTH_LONG).show();
+                return;
+            }
             mDirty = false;
             showFilename();
-            Context c = TextEditorFragment.this.getActivity();
             String msg = mPath + " " + c.getResources().getString(R.string.s_msg_saved) + " ("
                     + result + " b)";
             Logger.LogDebug(msg);
