@@ -328,8 +328,6 @@ public class OpenFTP extends OpenNetworkPath {
 
     @Override
     public Boolean canWrite() {
-        if (!super.canWrite())
-            return false;
         return mFile.hasPermission(FTPFile.USER_ACCESS, FTPFile.WRITE_PERMISSION);
     }
 

@@ -17,6 +17,7 @@ import org.brandroid.utils.Utils;
 
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.widget.Toast;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -150,6 +151,7 @@ public abstract class OpenNetworkPath extends OpenPath implements OpenPath.Needs
             return syncUpload(f, OpenNetworkPath.NetworkListener.DefaultListener);
         return syncUpload(f, new NetworkListener() {
             public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {
+                Logger.LogError("copyFrom: Network failure for " + np, e);
             }
 
             public void OnNetworkCopyUpdate(Integer... progress) {
@@ -171,6 +173,7 @@ public abstract class OpenNetworkPath extends OpenPath implements OpenPath.Needs
     public boolean copyTo(OpenFile f, final AsyncTask task) {
         return syncDownload(f, new NetworkListener() {
             public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {
+                Logger.LogError("copyTo: Network failure for " + np, e);
             }
 
             public void OnNetworkCopyUpdate(Integer... progress) {

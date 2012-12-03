@@ -809,6 +809,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * OpenPath object.
          */
         public void tempUpload(AsyncTask<?, ?, ?> task) throws IOException;
+        
+        public String getTempFileName();
+        public OpenFile getTempFile();
     }
 
     /**
