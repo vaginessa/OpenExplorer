@@ -311,6 +311,23 @@ public class Utils {
         }
     }
 
+    public static long parseFileSize(String friendly) {
+        long ret = -1;
+        try {
+            ret = Long.parseLong(friendly.replaceAll("[^0-9]", ""));
+            String unit = friendly.replaceAll("[0-9]", "");
+            if(unit.equalsIgnoreCase("k") || unit.equalsIgnoreCase("kb"))
+                ret *= 1024;
+            else if(unit.equalsIgnoreCase("m") || unit.equalsIgnoreCase("mb"))
+                ret *= 1024 ^ 2;
+            else if(unit.equalsIgnoreCase("g") || unit.equalsIgnoreCase("gb"))
+                ret *= 1024 ^ 3;
+            else if(unit.equalsIgnoreCase("t") || unit.equalsIgnoreCase("tb"))
+                ret *= 1024 ^ 4;
+        } catch(Exception e) { }
+        return ret;
+    }
+
     public static boolean isNullOrEmpty(String exifMake) {
         return TextUtils.isEmpty(exifMake);
     }

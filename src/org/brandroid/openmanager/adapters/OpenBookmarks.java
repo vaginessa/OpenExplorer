@@ -4,13 +4,10 @@ package org.brandroid.openmanager.adapters;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
-
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
 
@@ -18,7 +15,6 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCommand;
@@ -47,12 +43,11 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.RootToolsException;
-
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -61,7 +56,6 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -75,8 +69,6 @@ import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
@@ -210,39 +202,42 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getUsbDrive());
 
                 Set<String> dfs = null;
-                if (RootTools.isAccessGiven()) {
+                if (Build.VERSION.SDK_INT > 15 && RootTools.isAccessGiven()) {
                     try {
-                        RootTools.sendShell(
-                                RootTools.isBusyboxAvailable() ? "busybox df -h" : "df",
-                                new RootTools.Result() {
-                                    public void processError(String line) throws Exception {
-                                        Logger.LogError("Unable to get DF via RootTools: " + line);
-                                    }
+                        RootTools.sendShell((RootTools.isBusyboxAvailable() ? "busybox " : "")
+                                + "df", new RootTools.Result() {
+                            public void processError(String line) throws Exception {
+                                Logger.LogError("Unable to get DF via RootTools: " + line);
+                            }
 
-                                    public void process(String sItem) throws Exception {
-                                        if (sItem.toLowerCase().startsWith("/dev"))
-                                            return;
-                                        if (sItem.toLowerCase().indexOf("/system") > -1)
-                                            return;
-                                        if (sItem.toLowerCase().indexOf("vendor") > -1)
-                                            return;
-                                        OpenFile file = new OpenFile(sItem);
-                                        if (file.isHidden())
-                                            return;
-                                        if (file.getTotalSpace() > 0) {
-                                            mAllDataSize += file.getTotalSpace();
-                                            mLargestDataSize = Math.max(mLargestDataSize,
-                                                    file.getTotalSpace());
-                                        }
-                                        checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
+                            public void process(String sItem) throws Exception {
+                                String sl = sItem.toLowerCase();
+                                if (sl.startsWith("/dev"))
+                                    return;
+                                if (sl.indexOf("/system") > -1)
+                                    return;
+                                if (sl.indexOf("vendor") > -1)
+                                    return;
+                                OpenFile file = new OpenFile(sItem);
+                                if (file.isHidden())
+                                    return;
+                                String[] parts = sItem.split("  *");
+                                if (parts.length > 1 && parts[1].matches("^[0-9].*")) {
+                                    long tot = Utils.parseFileSize(parts[1]);
+                                    if (tot > 0) {
+                                        mAllDataSize += tot;
+                                        mLargestDataSize = Math.max(mLargestDataSize, tot);
                                     }
+                                }
+                                checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file);
+                            }
 
-                                    public void onFailure(Exception ex) {
-                                    }
+                            public void onFailure(Exception ex) {
+                            }
 
-                                    public void onComplete(int diag) {
-                                    }
-                                }, 500);
+                            public void onComplete(int diag) {
+                            }
+                        }, 500);
                         return;
                     } catch (Exception e) {
                         Logger.LogError("Unable to get DF via Root Tools Exception", e);
