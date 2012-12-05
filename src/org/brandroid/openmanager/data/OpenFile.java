@@ -279,10 +279,10 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
                             mInternalDrive = kid;
                             return kid;
                         }
-        } else if (ret.getName().endsWith("1"))
-        {
-            OpenFile sdcard0 = new OpenFile(ret.getPath().substring(0, ret.getPath().length() - 1) + "0");
-            if(sdcard0 != null && sdcard0.exists())
+        } else if (ret.getName().endsWith("1")) {
+            OpenFile sdcard0 = new OpenFile(ret.getPath().substring(0, ret.getPath().length() - 1)
+                    + "0");
+            if (sdcard0 != null && sdcard0.exists())
                 ret = sdcard0;
         }
         mInternalDrive = ret;
@@ -297,16 +297,29 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
         if (mUsbDrive != null && mUsbDrive.exists())
             return mUsbDrive;
         OpenFile parent = getExternalMemoryDrive(true).getParent();
+        if (Build.VERSION.SDK_INT > 15) {
+            parent = new OpenFile("/mnt/sdcard/usbStorage/");
+            if (parent.exists())
+                if (parent.list().length == 1 && parent.getChild(0).exists())
+                    return (mUsbDrive = (OpenFile)parent.getChild(0));
+            parent = new OpenFile("/mnt/sdcard/usb_storage/");
+            if (parent.exists())
+                if (parent.list().length == 1 && parent.getChild(0).exists())
+                    return (mUsbDrive = (OpenFile)parent.getChild(0));
+            parent = getExternalMemoryDrive(true).getParent();
+        }
         if (parent == null)
             return null;
         if (!parent.exists())
             return null;
         for (OpenFile kid : parent.listFiles())
             if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
-                    && kid.list().length > 0) {
-                mUsbDrive = kid;
-                return kid;
-            }
+                    && kid.list().length > 0)
+                return (mUsbDrive = kid);
+        for (OpenFile kid : getInternalMemoryDrive().listFiles())
+            if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
+                    && kid.list().length > 0)
+                return (mUsbDrive = kid);
         return null;
     }
 

@@ -12,6 +12,7 @@ import java.util.Hashtable;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
+import android.os.Build;
 import android.os.StatFs;
 
 public class DFInfo {
@@ -114,7 +115,10 @@ public class DFInfo {
                     Logger.LogDebug("DF: " + sl);
                 if (!sl.startsWith("/"))
                     continue;
-                if (!((sl.indexOf("/mnt") > -1 || sl.toLowerCase().startsWith("/remov") || sl
+                if (sl.contains("/usb")) {
+                    if (Build.VERSION.SDK_INT > 15)
+                        sl = sl.replace("/data/media/0/", "/storage/sdcard0/");
+                } else if (!((sl.indexOf("/mnt") > -1 || sl.toLowerCase().startsWith("/remov") || sl
                         .toLowerCase().startsWith("/media")) && (sl.indexOf("/", 1) > -1)))
                     continue;
                 if (sl.indexOf("/asec") > -1)

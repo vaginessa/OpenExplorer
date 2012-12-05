@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -60,6 +61,7 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -93,7 +95,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     private Long mLargestDataSize = 0l;
     private SharedPreferences mPrefs;
     private static List<String> mBlkids = null;
-    private static List<Mount> mProcMounts = null;
+    private static List<String> mProcMounts = null;
+    private static List<String> mDFs = null;
     private final OpenApp mApp;
     public static final int BOOKMARK_DRIVE = 0;
     public static final int BOOKMARK_SMART_FOLDER = 1;
@@ -118,15 +121,20 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public void scanRoot() {
         Logger.LogDebug("Trying to get roots");
         if (mBlkids == null && mProcMounts == null) {
-            mProcMounts = new ArrayList<Mount>();
+            mProcMounts = new ArrayList<String>();
             mBlkids = new ArrayList<String>();
+            mDFs = new ArrayList<String>();
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        mProcMounts = RootTools.getMounts();
                         if (Preferences.Pref_Root && RootTools.isAccessRequested()
-                                && RootTools.isAccessGiven())
+                                && RootTools.isAccessGiven()) {
                             mBlkids = RootTools.sendShell("blkid", 0);
+                            mProcMounts = RootTools.sendShell("df", 0);
+                            mDFs = RootTools.sendShell("df", 0);
+                        } else
+                            for (Mount m : RootTools.getMounts())
+                                mProcMounts.add(m.toString());
                         Logger.LogVerbose("Successfully got " + mProcMounts.size()
                                 + " procmounts and " + mBlkids.size() + " blkids!");
                     } catch (Exception e) {
@@ -175,7 +183,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 	 */
     private void scanBookmarksInner() {
         Logger.LogDebug("Scanning bookmarks...");
-        OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
+        final OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
         // mBookmarksArray.clear();
         clearBookmarks();
 
@@ -183,41 +191,88 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             mHasInternal = true;
         if (checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getInternalMemoryDrive()))
             mHasExternal = true;
-        checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getUsbDrive());
 
         checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getVideoParent());
         checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getPhotoParent());
         checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getMusicParent());
+
         if (mApp.getPreferences().getSetting(null, "pref_show_downloads", true))
             checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER, OpenExplorer.getDownloadParent());
 
         checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
-
         checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
 
         // checkAndAdd(BookmarkType.BOOKMARK_SMART_FOLDER,
         // storage.getChild("Download"));
-        Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
-        mAllDataSize = 0l;
-        for (String sItem : df.keySet()) {
-            if (sItem.toLowerCase().startsWith("/dev"))
-                continue;
-            if (sItem.toLowerCase().indexOf("/system") > -1)
-                continue;
-            if (sItem.toLowerCase().indexOf("vendor") > -1)
-                continue;
-            OpenFile file = new OpenFile(sItem);
-            if (file.isHidden())
-                continue;
-            // Logger.LogInfo("DF: " + )
-            if (file.getTotalSpace() > 0) {
-                mAllDataSize += file.getTotalSpace();
-                mLargestDataSize = Math.max(mLargestDataSize, file.getTotalSpace());
+        new Thread(new Runnable() {
+            public void run() {
+
+                checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getUsbDrive());
+
+                Set<String> dfs = null;
+                if (RootTools.isAccessGiven()) {
+                    try {
+                        RootTools.sendShell(
+                                RootTools.isBusyboxAvailable() ? "busybox df -h" : "df",
+                                new RootTools.Result() {
+                                    public void processError(String line) throws Exception {
+                                        Logger.LogError("Unable to get DF via RootTools: " + line);
+                                    }
+
+                                    public void process(String sItem) throws Exception {
+                                        if (sItem.toLowerCase().startsWith("/dev"))
+                                            return;
+                                        if (sItem.toLowerCase().indexOf("/system") > -1)
+                                            return;
+                                        if (sItem.toLowerCase().indexOf("vendor") > -1)
+                                            return;
+                                        OpenFile file = new OpenFile(sItem);
+                                        if (file.isHidden())
+                                            return;
+                                        if (file.getTotalSpace() > 0) {
+                                            mAllDataSize += file.getTotalSpace();
+                                            mLargestDataSize = Math.max(mLargestDataSize,
+                                                    file.getTotalSpace());
+                                        }
+                                        checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
+                                    }
+
+                                    public void onFailure(Exception ex) {
+                                    }
+
+                                    public void onComplete(int diag) {
+                                    }
+                                }, 500);
+                        return;
+                    } catch (Exception e) {
+                        Logger.LogError("Unable to get DF via Root Tools Exception", e);
+                    }
+                }
+                Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
+                dfs = df.keySet();
+                mAllDataSize = 0l;
+                for (String sItem : dfs) {
+                    if (sItem.toLowerCase().startsWith("/dev"))
+                        continue;
+                    if (sItem.toLowerCase().indexOf("/system") > -1)
+                        continue;
+                    if (sItem.toLowerCase().indexOf("vendor") > -1)
+                        continue;
+                    OpenFile file = new OpenFile(sItem);
+                    if (file.isHidden())
+                        continue;
+                    // Logger.LogInfo("DF: " + )
+                    if (file.getTotalSpace() > 0) {
+                        mAllDataSize += file.getTotalSpace();
+                        mLargestDataSize = Math.max(mLargestDataSize, file.getTotalSpace());
+                    }
+                    // if(!file.getFile().canWrite()) continue;
+                    // if(sItem.toLowerCase().indexOf("asec") > -1) continue;
+                    checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
+                }
             }
-            // if(!file.getFile().canWrite()) continue;
-            // if(sItem.toLowerCase().indexOf("asec") > -1) continue;
-            checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
-        }
+        }).start();
+
         if (mBookmarkString.length() > 0) {
             String[] l = mBookmarkString.split(";");
 
@@ -343,9 +398,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             ret = getSetting("title_" + path.getPath(), ret);
         else if (path.getPath().startsWith("/") && mBlkids != null && mProcMounts != null) {
             Logger.LogDebug("Looking for " + path + " in procmounts");
-            for (Mount m : mProcMounts) {
-                if (path.getPath().startsWith(m.getMountPoint().toString())) {
-                    String dev = m.getDevice().getPath();
+            for (String m : mProcMounts) {
+                String[] parts = m.split("  *");
+                if (path.getPath().startsWith(parts[1].toString())) {
+                    String dev = parts[0];
                     for (String blk : mBlkids)
                         if (blk.indexOf(dev) > -1 && blk.toLowerCase().indexOf("label=") > -1) {
                             String lbl = blk.substring(blk.toLowerCase().indexOf("label=") + 6);
@@ -363,6 +419,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 }
                 setPathTitle(path, ret);
             }
+        }
+        if (path.toString().toLowerCase().indexOf("/usb") > -1) {
+            ret = getContext().getString(R.string.storage_usb);
+            setPathTitle(path, ret);
+            return ret;
         }
         return ret;
     }
