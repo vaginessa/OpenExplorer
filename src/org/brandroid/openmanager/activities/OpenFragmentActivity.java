@@ -214,6 +214,23 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
         getPreferences().setSetting(file, key, value);
     }
 
+    public static boolean isNook() {
+        if (Preferences.Is_Nook != null)
+            return Preferences.Is_Nook;
+        if (Preferences.getPreferences("warn").contains("isNook"))
+            return (Preferences.Is_Nook = Preferences.getPreferences("warn").getBoolean("isNook",
+                    false));
+        if (Build.DISPLAY.toLowerCase().contains("acclaim")
+                || Build.BRAND.toLowerCase().contains("nook")
+                || Build.PRODUCT.toLowerCase().contains("nook"))
+            Preferences.Is_Nook = true;
+        else
+            Preferences.Is_Nook = false;
+        Preferences.getPreferences("warn").edit().putBoolean("isNook", Preferences.Is_Nook)
+                .commit();
+        return Preferences.Is_Nook;
+    }
+
     public static boolean isBlackBerry() {
         return Build.MANUFACTURER.trim().equalsIgnoreCase("rim")
                 || Build.MODEL.toLowerCase().indexOf("blackberry") > -1;

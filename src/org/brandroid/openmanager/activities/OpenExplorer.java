@@ -609,81 +609,40 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             super.setTitle(title);
     }
 
-    public static boolean isNook() {
-        if (Preferences.Is_Nook != null)
-            return Preferences.Is_Nook;
-        if (Preferences.getPreferences("warn").contains("isNook"))
-            return (Preferences.Is_Nook = Preferences.getPreferences("warn").getBoolean("isNook",
-                    false));
-        if (Build.DISPLAY.toLowerCase().contains("acclaim")
-                || Build.BRAND.toLowerCase().contains("nook")
-                || Build.PRODUCT.toLowerCase().contains("nook"))
-            Preferences.Is_Nook = true;
-        else
-            Preferences.Is_Nook = false;
-        Preferences.getPreferences("warn").edit().putBoolean("isNook", Preferences.Is_Nook)
-                .commit();
-        return Preferences.Is_Nook;
-    }
-
-    private void checkNook() {
-        if (isNook()) {
-            if (!getPreferences().getBoolean("warn", "nook_donate", false)) {
-                DialogHandler.showMultiButtonDialog(this, getString(R.string.msg_nook_donate),
-                        "Hello Nook user!", new OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case R.string.s_no:
-                                        getPreferences().setSetting("warn", "nook_donate", true);
-                                        break;
-                                    case R.string.s_cancel:
-                                        break;
-                                    default:
-                                        getPreferences().setSetting("warn", "nook_donate", true);
-                                        launchDonation(OpenExplorer.this);
-                                        break;
-                                }
-                                if (dialog != null)
-                                    dialog.dismiss();
-                            }
-                        }, R.string.s_menu_donate, R.string.s_no, R.string.s_cancel);
-            }
-        }
-    }
-
-    private void checkRIM() {
-        if (isBlackBerry()) {
-            if (!getPreferences().getBoolean("warn", "rim_donate", false)) {
-                DialogHandler.showMultiButtonDialog(getContext(),
-                        getString(R.string.msg_bb_donate), Build.BRAND, new OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case R.string.s_no:
-                                        getPreferences().setSetting("warn", "rim_donate", true);
-                                        break;
-                                    case R.string.s_cancel:
-                                        break;
-                                    default:
-                                        getPreferences().setSetting("warn", "rim_donate", true);
-                                        launchDonation(OpenExplorer.this);
-                                        break;
-                                }
-                                if (dialog != null)
-                                    dialog.dismiss();
-                            }
-                        }, R.string.s_menu_donate, R.string.s_no, R.string.s_cancel);
-            }
-        }
+    private void showDonateDialog(int resMessage, String sTitle, final String pref) {
+        if (getPreferences().getBoolean("warn", pref, false))
+            return;
+        DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
+                new OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case R.string.s_no:
+                                getPreferences().setSetting("warn", pref, true);
+                                break;
+                            case R.string.s_cancel:
+                                break;
+                            default:
+                                getPreferences().setSetting("warn", pref, true);
+                                launchDonation(OpenExplorer.this);
+                                break;
+                        }
+                        if (dialog != null)
+                            dialog.dismiss();
+                    }
+                }, R.string.s_menu_donate, R.string.s_no, R.string.s_cancel);
     }
 
     private void checkWelcome() {
         if (Preferences.Run_Count > 5) {
-            checkNook();
-            checkRIM();
-        }
-        checkGTV();
+            if (isNook())
+                showDonateDialog(R.string.msg_nook_donate, "Hello Nook User!", "nook_donate");
+            else if (isBlackBerry())
+                showDonateDialog(R.string.msg_bb_donate, "Hello Blackberry User!", "rim_donate");
+            else
+                showDonateDialog(R.string.msg_donate, null, "donate");
+        } else if (Preferences.Run_Count < 5)
+            checkGTV();
     }
 
     private void checkGTV() {
@@ -2361,17 +2320,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         menuInflater.inflate(R.menu.global, menu);
 
         handleSearchMenu(menu);
-
-        if (IS_DEBUG_BUILD)
-            menu.add(Menu.NONE, Menu.NONE, Menu.FIRST, "Debug Test").setOnMenuItemClickListener(
-                    new OnMenuItemClickListener() {
-
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            debugTest();
-                            return true;
-                        }
-                    });
 
         MenuUtils.setMenuVisible(menu, Preferences.Run_Count > 5, R.id.menu_donate);
 
