@@ -62,7 +62,7 @@
             android:ems="10"
             android:focusable="false"
             android:inputType="textMultiLine"
-            android:textAppearance="@style/Small" />
+            android:textAppearance="@style/Text.Small" />
 
         <TextView
             android:id="@+id/wtf_ps"

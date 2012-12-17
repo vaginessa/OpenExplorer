@@ -6,13 +6,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
@@ -28,9 +26,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.text.Html;
-import android.text.SpannableString;
-import android.text.style.UnderlineSpan;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -235,6 +230,7 @@ public class ContentAdapter extends BaseAdapter {
     }
 
     // //@Override
+    @Override
     public View getView(int position, View view, ViewGroup parent) {
         int mode = getViewMode();
         final int layout = getViewMode() == OpenExplorer.VIEW_GRID ? (!OpenExplorer.DEBUG_TOGGLE ? R.layout.file_grid_item
@@ -354,50 +350,53 @@ public class ContentAdapter extends BaseAdapter {
             else if (!mShowThumbnails || !file.hasThumbnail()) {
                 mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
             } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-                     // {
+                // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());
                 // if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
                 ThumbnailCreator.setThumbnail(mApp, mIcon, file, mWidth, mHeight,
                         new OnUpdateImageListener() {
-                            public void updateImage(final Bitmap b) {
-                                if (mIcon.getTag() == null
-                                        || (mIcon.getTag() instanceof OpenPath && ((OpenPath)mIcon
-                                                .getTag()).equals(file)))
-                                // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-                                {
-                                    Runnable doit = new Runnable() {
-                                        public void run() {
-                                            if (!OpenExplorer.BEFORE_HONEYCOMB) {
-                                                BitmapDrawable d = new BitmapDrawable(
-                                                        getResources(), b);
-                                                d.setGravity(Gravity.CENTER);
-                                                ImageUtils.fadeToDrawable(mIcon, d);
-                                            } else {
-                                                mIcon.setImageBitmap(b);
-                                                // mIcon.setAlpha(255);
-                                            }
-                                            mIcon.setTag(file);
-                                        }
-                                    };
-                                    if (!Thread.currentThread().equals(OpenExplorer.UiThread))
-                                        mIcon.post(doit);
-                                    else
-                                        doit.run();
+                    @Override
+                    public void updateImage(final Bitmap b) {
+                        if (mIcon.getTag() == null
+                                || (mIcon.getTag() instanceof OpenPath && ((OpenPath)mIcon
+                                        .getTag()).equals(file)))
+                            // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
+                        {
+                            Runnable doit = new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (!OpenExplorer.BEFORE_HONEYCOMB) {
+                                        BitmapDrawable d = new BitmapDrawable(
+                                                getResources(), b);
+                                        d.setGravity(Gravity.CENTER);
+                                        ImageUtils.fadeToDrawable(mIcon, d);
+                                    } else {
+                                        mIcon.setImageBitmap(b);
+                                        // mIcon.setAlpha(255);
+                                    }
+                                    mIcon.setTag(file);
                                 }
-                            }
-                        });
+                            };
+                            if (!Thread.currentThread().equals(OpenExplorer.UiThread))
+                                mIcon.post(doit);
+                            else
+                                doit.run();
+                        }
+                    }
+                });
             }
         }
 
         // row.setTag(file);
         boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
         boolean mShowCheck = true; // mChecked || (mSelectedSet != null &&
-                                   // mSelectedSet.size() > 0);
+        // mSelectedSet.size() > 0);
         boolean mShowClip = mApp.getClipboard().contains(file);
 
         if (mShowClip) {
             ViewUtils.setViewsVisible(row, true, R.id.content_clipboard);
             ViewUtils.setOnClicks(row, new View.OnClickListener() {
+                @Override
                 public void onClick(View v) {
                     mApp.getClipboard().remove(file);
                     v.setVisibility(View.GONE);
@@ -420,26 +419,26 @@ public class ContentAdapter extends BaseAdapter {
         switch (OpenPath.Sorting.getType()) {
             case DATE:
             case DATE_DESC:
-                mDate.setTextAppearance(getContext(), R.style.Small_Hilite);
-                mInfo.setTextAppearance(getContext(), R.style.Small);
-                mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
+                mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case SIZE:
             case SIZE_DESC:
-                mInfo.setTextAppearance(getContext(), R.style.Small_Hilite);
-                mDate.setTextAppearance(getContext(), R.style.Small);
-                mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
+                mInfo.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case ALPHA:
             case ALPHA_DESC:
-                mNameView.setTextAppearance(getContext(), R.style.Large);
-                mInfo.setTextAppearance(getContext(), R.style.Small);
-                mDate.setTextAppearance(getContext(), R.style.Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large);
+                mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
             default:
-                mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
-                mInfo.setTextAppearance(getContext(), R.style.Small);
-                mDate.setTextAppearance(getContext(), R.style.Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
+                mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
         }
 
@@ -491,7 +490,7 @@ public class ContentAdapter extends BaseAdapter {
             mSelectedSet.add(rememberedPath);
         }
     }
-    
+
     public void addSelection(OpenPath path)
     {
         if(!mSelectedSet.contains(path))

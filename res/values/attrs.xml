@@ -56,7 +56,7 @@
         <attr name="listBackground" format="reference" />
         <attr name="listColumnBackground" format="reference" />
 
-        <!-- Colors -->
+        <!-- Style Colors -->
         <attr name="actionBarTextColorPrimary" format="color" />
         <attr name="actionBarTextColorSecondary" format="color" />
         <attr name="actionBarTextColorHighlight" format="color" />
@@ -73,12 +73,15 @@
         <attr name="dialogTextColorInverse" format="color" />
         <attr name="dialogAccentColorPrimary" format="color" />
         <attr name="dialogBackgroundColorPrimary" format="color" />
-        <attr name="colorWhite" format="color" />
-        <attr name="colorOffWhite" format="color" />
-        <attr name="colorDarkGray" format="color" />
-        <attr name="colorBlack" format="color" />
-        <attr name="colorHilite" format="color" />
-        <attr name="colorWhiteDim" format="color" />
+        
+        <!-- Sliding Drawer -->
+        <attr name="drawerTextColorPrimary" format="color" />
+        <attr name="drawerTextColorSecondary" format="color" />
+        
+        <attr name="drawerListSelector" format="reference" />
+        <attr name="drawerListCategorySelector" format="reference" />
+        <attr name="drawerBackgroundColor" format="color" />
+        
     </declare-styleable>
     <declare-styleable name="BezelImageView">
         <attr name="maskDrawable" format="reference" />
