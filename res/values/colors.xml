@@ -39,6 +39,6 @@
     <color name="actionbarstripedbackground">#0f0f0f</color>
     <color name="icsblue">#33B5E5</color>
     <color name="sd__transparent">#00000000</color>
-    <color name="sd__defaultBackground">#FF555555</color>
+    <color name="sd__defaultBackground">#2F2F2F</color>
 
 </resources>
