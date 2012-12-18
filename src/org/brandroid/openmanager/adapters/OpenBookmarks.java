@@ -121,9 +121,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     try {
                         if (Preferences.Pref_Root && RootTools.isAccessRequested()
                                 && RootTools.isAccessGiven()) {
-                            mBlkids = RootTools.sendShell("blkid", 0);
-                            mProcMounts = RootTools.sendShell("df", 0);
-                            mDFs = RootTools.sendShell("df", 0);
+                            mBlkids = RootTools.sendShell("blkid", 1000);
+                            mProcMounts = RootTools.sendShell("cat /proc/mounts", 1000);
+                            mDFs = RootTools.sendShell("df", 1000);
                         } else
                             for (Mount m : RootTools.getMounts())
                                 mProcMounts.add(m.toString());
@@ -201,11 +201,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
                 checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getUsbDrive());
 
-                Set<String> dfs = null;
+                /*
                 if (Build.VERSION.SDK_INT > 15 && RootTools.isAccessGiven()) {
                     try {
-                        RootTools.sendShell((RootTools.isBusyboxAvailable() ? "busybox " : "")
-                                + "df", new RootTools.Result() {
+                        RootTools.sendShell("df", new RootTools.Result() {
                             public void processError(String line) throws Exception {
                                 Logger.LogError("Unable to get DF via RootTools: " + line);
                             }
@@ -218,10 +217,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                                     return;
                                 if (sl.indexOf("vendor") > -1)
                                     return;
-                                OpenFile file = new OpenFile(sItem);
+                                String[] parts = sItem.split("  *");
+                                OpenFile file = new OpenFile(parts[0]);
                                 if (file.isHidden())
                                     return;
-                                String[] parts = sItem.split("  *");
                                 if (parts.length > 1 && parts[1].matches("^[0-9].*")) {
                                     long tot = Utils.parseFileSize(parts[1]);
                                     if (tot > 0) {
@@ -237,34 +236,35 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
                             public void onComplete(int diag) {
                             }
-                        }, 500);
+                        }, -1);
                         return;
                     } catch (Exception e) {
                         Logger.LogError("Unable to get DF via Root Tools Exception", e);
                     }
-                }
-                Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
-                dfs = df.keySet();
-                mAllDataSize = 0l;
-                for (String sItem : dfs) {
-                    if (sItem.toLowerCase().startsWith("/dev"))
-                        continue;
-                    if (sItem.toLowerCase().indexOf("/system") > -1)
-                        continue;
-                    if (sItem.toLowerCase().indexOf("vendor") > -1)
-                        continue;
-                    OpenFile file = new OpenFile(sItem);
-                    if (file.isHidden())
-                        continue;
-                    // Logger.LogInfo("DF: " + )
-                    if (file.getTotalSpace() > 0) {
-                        mAllDataSize += file.getTotalSpace();
-                        mLargestDataSize = Math.max(mLargestDataSize, file.getTotalSpace());
+                } else { */
+                    Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
+                    mAllDataSize = 0l;
+                    for (String sItem : df.keySet()) {
+                        if (sItem.toLowerCase().startsWith("/dev"))
+                            continue;
+                        if (sItem.toLowerCase().indexOf("/system") > -1)
+                            continue;
+                        if (sItem.toLowerCase().indexOf("vendor") > -1)
+                            continue;
+                        OpenFile file = new OpenFile(sItem);
+                        if (file.isHidden())
+                            continue;
+                        // Logger.LogInfo("DF: " + )
+                        if (file.getTotalSpace() > 0) {
+                            mAllDataSize += file.getTotalSpace();
+                            mLargestDataSize = Math.max(mLargestDataSize, file.getTotalSpace());
+                        }
+                        // if(!file.getFile().canWrite()) continue;
+                        // if(sItem.toLowerCase().indexOf("asec") > -1)
+                        // continue;
+                        checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
                     }
-                    // if(!file.getFile().canWrite()) continue;
-                    // if(sItem.toLowerCase().indexOf("asec") > -1) continue;
-                    checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
-                }
+                //}
             }
         }).start();
 
