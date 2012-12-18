@@ -36,7 +36,7 @@
 
     <TextView
         android:id="@+id/title_text"
-        style="@style/Large"
+        style="@style/Text.Large"
         android:layout_alignParentTop="true"
         android:layout_marginTop="1dp"
         android:layout_toLeftOf="@+id/title_buttons"
@@ -57,7 +57,7 @@
 
     <TextView
         android:id="@+id/title_path"
-        style="@style/Small"
+        style="@style/Text.Small"
         android:layout_alignTop="@id/title_text"
         android:layout_marginTop="@dimen/large_text_height"
         android:layout_toLeftOf="@+id/title_buttons"

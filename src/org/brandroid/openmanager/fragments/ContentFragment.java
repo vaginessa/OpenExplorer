@@ -18,27 +18,34 @@
 
 package org.brandroid.openmanager.fragments;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenPathArray;
-import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
+import org.brandroid.openmanager.data.OpenPathArray;
+import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.NetworkIOTask;
-import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
+import org.brandroid.openmanager.util.EventHandler.EventType;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
-import org.brandroid.openmanager.util.EventHandler.EventType;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
+import org.brandroid.openmanager.util.NetworkIOTask;
+import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.views.SpriteAnimatorSurfaceView;
@@ -47,6 +54,48 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
+
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.AsyncTask.Status;
+import android.os.Build;
+import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnCreateContextMenuListener;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.ActionMode;
@@ -57,63 +106,10 @@ import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
-import android.net.Uri;
-import android.os.AsyncTask.Status;
-import android.os.Build;
-import android.os.Bundle;
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.ClipData;
-import android.content.ClipData.Item;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.DialogInterface.OnCancelListener;
-import android.content.DialogInterface.OnClickListener;
-import android.content.pm.ResolveInfo;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.support.v4.app.FragmentManager;
-import android.view.ContextMenu;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnCreateContextMenuListener;
-import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.PopupMenu;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.GridView;
-import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.PopupMenu.OnMenuItemClickListener;
-
 @SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment implements OnItemLongClickListener,
-        OnItemClickListener, OnWorkerUpdateListener, OpenPathFragmentInterface,
-        OnTaskUpdateListener, ContentAdapter.Callback {
+OnItemClickListener, OnWorkerUpdateListener, OpenPathFragmentInterface,
+OnTaskUpdateListener, ContentAdapter.Callback {
 
     // private static MultiSelectHandler mMultiSelect;
     // private LinearLayout mPathView;
@@ -137,14 +133,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     protected int mMenuContextItemIndex = -1;
     private boolean mRefreshReady = true;
     public static final SortType.Type[] sortTypes = new SortType.Type[] {
-            SortType.Type.ALPHA, SortType.Type.ALPHA_DESC, SortType.Type.SIZE,
-            SortType.Type.SIZE_DESC, SortType.Type.DATE, SortType.Type.DATE_DESC,
-            SortType.Type.TYPE
+        SortType.Type.ALPHA, SortType.Type.ALPHA_DESC, SortType.Type.SIZE,
+        SortType.Type.SIZE_DESC, SortType.Type.DATE, SortType.Type.DATE_DESC,
+        SortType.Type.TYPE
     };
     public static final int[] sortMenuOpts = new int[] {
-            R.id.menu_sort_name_asc, R.id.menu_sort_name_desc, R.id.menu_sort_size_asc,
-            R.id.menu_sort_size_desc, R.id.menu_sort_date_asc, R.id.menu_sort_date_desc,
-            R.id.menu_sort_type
+        R.id.menu_sort_name_asc, R.id.menu_sort_name_desc, R.id.menu_sort_size_asc,
+        R.id.menu_sort_size_desc, R.id.menu_sort_date_asc, R.id.menu_sort_date_desc,
+        R.id.menu_sort_type
     };
 
     private Bundle mBundle;
@@ -298,7 +294,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         getView(),
                         getResources().getString(
                                 !mPath.isLoaded() ? R.string.s_status_loading : R.string.no_items),
-                        android.R.id.empty);
+                                android.R.id.empty);
                 ViewUtils.setViewsVisible(getView(), true, android.R.id.empty);
             } else
                 ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
@@ -329,6 +325,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     }
 
     // @Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -359,6 +356,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     @Override
     public void onAttach(Activity activity) {
         queueToTracker(new Runnable() {
+            @Override
             public void run() {
                 GoogleAnalyticsTracker tracker = getAnalyticsTracker();
                 if (tracker != null) {
@@ -485,7 +483,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         .startsWith(OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
                         || sPath.startsWith("/mnt/shell")
                         || (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") == -1) || sPath
-                            .startsWith("/system")))
+                        .startsWith("/system")))
             path = new OpenFileRoot(path);
 
         mPath = path;
@@ -529,11 +527,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         if (getActivity() != null && getActivity().getWindow() != null)
             mShowLongDate = getResources().getBoolean(R.bool.show_long_date) // getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation()
-                                                                             // %
-                                                                             // 180
-                                                                             // !=
-                                                                             // 0
-                    && mPath != null;
+            // %
+            // 180
+            // !=
+            // 0
+            && mPath != null;
 
         if (path instanceof OpenFileRoot) {
             runUpdateTask();
@@ -589,6 +587,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 mContentAdapter.clearData();
 
                 ((OpenPathUpdateListener)mPath).list(new OpenContentUpdater() {
+                    @Override
                     public void addContentPath(OpenPath file) {
                         if (!mContentAdapter.contains(file))
                             mContentAdapter.add(file);
@@ -731,7 +730,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
                 addToMultiSelect(file);
                 ((TextView)view.findViewById(R.id.content_text)).setTextAppearance(
-                        list.getContext(), R.style.Large_Hilite);
+                        list.getContext(), R.style.Text_Large_Highlight);
             }
             return;
         }
@@ -843,6 +842,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             if (Build.VERSION.SDK_INT > 10) {
                 final PopupMenu pop = new PopupMenu(view.getContext(), view);
                 pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                    @Override
                     public boolean onMenuItemClick(android.view.MenuItem item) {
                         if (onOptionsItemSelected(item)) {
                             pop.dismiss();
@@ -867,16 +867,19 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (!file.isDirectory() && getActionMode() == null) {
             getSherlockActivity().startActionMode(new Callback() {
                 // @Override
+                @Override
                 public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
                     return false;
                 }
 
                 // @Override
+                @Override
                 public void onDestroyActionMode(ActionMode mode) {
                     setActionMode(null);
                 }
 
                 // @Override
+                @Override
                 public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                     setActionMode(mode);
                     mode.getMenuInflater().inflate(R.menu.context_file, menu);
@@ -884,6 +887,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 }
 
                 // @Override
+                @Override
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                     // ArrayList<OpenPath> files = new ArrayList<OpenPath>();
 
@@ -906,16 +910,19 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (file.isDirectory() && getActionMode() == null) {
             getSherlockActivity().startActionMode(new Callback() {
                 // @Override
+                @Override
                 public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
                     return false;
                 }
 
                 // @Override
+                @Override
                 public void onDestroyActionMode(ActionMode mode) {
                     setActionMode(null);
                 }
 
                 // @Override
+                @Override
                 public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                     mode.getMenuInflater().inflate(R.menu.context_file, menu);
                     menu.findItem(R.id.menu_context_paste).setEnabled(getClipboard().size() > 0);
@@ -927,6 +934,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 }
 
                 // @Override
+                @Override
                 public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                     return executeMenu(item.getItemId(), mode, file);
                 }
@@ -955,7 +963,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (view == null)
             view = getActivity().findViewById(id);
         if (view != null && view.getTag() != null && view.getTag() instanceof Menu) {
-            Logger.LogDebug("Showing Tagged Menu! " + (Menu)view.getTag());
+            Logger.LogDebug("Showing Tagged Menu! " + view.getTag());
             if (showMenu((Menu)view.getTag(), view, ViewUtils.getText(view)))
                 return true;
         }
@@ -1217,17 +1225,20 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         .setDefaultTop(intoPath.getPath()).setMessage(R.string.s_prompt_zip)
                         .setCancelable(true)
                         .setNegativeButton(android.R.string.no, new OnClickListener() {
+                            @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (!fromPasteMenu && getClipboard().size() <= 1)
                                     getClipboard().clear();
                             }
                         });
                 dZip.setOnCancelListener(new OnCancelListener() {
+                    @Override
                     public void onCancel(DialogInterface dialog) {
                         if (fromPasteMenu && getClipboard().size() <= 1)
                             getClipboard().clear();
                     }
                 }).setPositiveButton(android.R.string.ok, new OnClickListener() {
+                    @Override
                     public void onClick(DialogInterface dialog, int which) {
                         OpenPath zFolder = new OpenFile(dZip.getInputTopText());
                         if (zFolder == null || !zFolder.exists())
@@ -1330,7 +1341,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         super.onPrepareOptionsMenu(menu);
 
         MenuUtils
-                .setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
+        .setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
         MenuUtils.setMenuVisible(menu, !(mPath instanceof OpenNetworkPath), R.id.menu_context_edit,
                 R.id.menu_context_view);
 
@@ -1504,6 +1515,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         mGrid.setColumnWidth(getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.COLUMN_WIDTH_GRID
                 : OpenExplorer.COLUMN_WIDTH_LIST);
         mGrid.setOnScrollListener(new OnScrollListener() {
+            @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 mListScrollingState = scrollState;
                 if (view != null)
@@ -1512,6 +1524,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 // onScrollStopped(view);
             }
 
+            @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
                     int totalItemCount) {
                 if (firstVisibleItem != mListVisibleStartIndex)
@@ -1613,7 +1626,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return;
         mTopIndex = mGrid.getFirstVisiblePosition();
         if (mContentAdapter != null && mTopIndex > -1 && mTopIndex < mContentAdapter.getCount()) {
-            mTopPath = (OpenPath)mContentAdapter.getItem(mTopIndex);
+            mTopPath = mContentAdapter.getItem(mTopIndex);
             Logger.LogInfo("Top Path saved to " + mTopIndex
                     + (mTopPath != null ? " :: " + mTopPath.getName() : ""));
         }
@@ -1623,7 +1636,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (mTopPath != null) {
             Logger.LogDebug("Looking for top path (" + mTopPath.getName() + ")");
             for (int i = 0; i < mContentAdapter.getCount(); i++)
-                if (((OpenPath)mContentAdapter.getItem(i)).getName().equals(mTopPath.getName()))
+                if (mContentAdapter.getItem(i).getName().equals(mTopPath.getName()))
                     return restoreTopPath(i);
         }
         if (mTopIndex > 0) {
@@ -1725,6 +1738,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         // refreshData(null);
     }
 
+    @Override
     public void setProgressVisibility(boolean visible) {
         // if(mProgressBarLoading == null && mGrid != null && mGrid.getParent()
         // != null) mProgressBarLoading =
@@ -1790,6 +1804,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             notifyDataSetChanged();
         } else {
             mGrid.post(new Runnable() {
+                @Override
                 public void run() {
                     mContentAdapter.updateData(result);
                 }
@@ -1913,7 +1928,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                     mShareActionProvider.setShareIntent(shareIntent);
                     mShareActionProvider
-                            .setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+                    .setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
                 }
             }
 
@@ -2025,8 +2040,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     boolean doAnimation = false;
 
                     if (clipboard != null && doAnimation) // &&
-                                                          // Build.VERSION.SDK_INT
-                                                          // > 11)
+                        // Build.VERSION.SDK_INT
+                        // > 11)
                     {
                         Rect rect = new Rect();
                         clipboard.getGlobalVisibleRect(rect);
@@ -2055,6 +2070,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                                     Paint.ANTI_ALIAS_FLAG));
                             sv.start();
                             getView().postDelayed(new Runnable() {
+                                @Override
                                 public void run() {
                                     if (sv != null) {
                                         // sv.stop();
@@ -2093,11 +2109,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     final String def = zname;
 
                     final InputDialog dZip = new InputDialog(getExplorer())
-                            .setIcon(R.drawable.sm_zip).setTitle(R.string.s_menu_zip)
-                            .setMessageTop(R.string.s_prompt_path)
-                            .setDefaultTop(intoPath.getPath()).setMessage(R.string.s_prompt_zip)
-                            .setCancelable(true);
+                    .setIcon(R.drawable.sm_zip).setTitle(R.string.s_menu_zip)
+                    .setMessageTop(R.string.s_prompt_path)
+                    .setDefaultTop(intoPath.getPath()).setMessage(R.string.s_prompt_zip)
+                    .setCancelable(true);
                     dZip.setPositiveButton(android.R.string.ok, new OnClickListener() {
+                        @Override
                         public void onClick(DialogInterface dialog, int which) {
                             OpenPath zFolder = new OpenFile(dZip.getInputTopText());
                             if (zFolder == null || !zFolder.exists())
@@ -2167,6 +2184,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (!Thread.currentThread().equals(OpenExplorer.UiThread)) {
             if (getView() != null)
                 getView().post(new Runnable() {
+                    @Override
                     public void run() {
                         notifyDataSetChanged();
                     }
@@ -2187,10 +2205,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         boolean empty = mContentAdapter == null || mContentAdapter.getCount() == 0;
         if (empty)
             ViewUtils
-                    .setText(
-                            getView(),
-                            getString(!mPath.isLoaded() ? R.string.s_status_loading
-                                    : R.string.no_items, ""), android.R.id.empty);
+            .setText(
+                    getView(),
+                    getString(!mPath.isLoaded() ? R.string.s_status_loading
+                            : R.string.no_items, ""), android.R.id.empty);
         ViewUtils.setViewsVisibleNow(getView(), empty, android.R.id.empty);
 
         // TODO check to see if this is the source of inefficiency

@@ -6,9 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -23,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class OpenPathAdapter extends BaseAdapter {
@@ -80,10 +77,10 @@ public class OpenPathAdapter extends BaseAdapter {
                 : R.layout.list_content_layout;
 
         if (view == null
-        // || view.getTag() == null
-        // || !BookmarkHolder.class.equals(view.getTag())
-        // || ((BookmarkHolder)view.getTag()).getMode() != mode
-        ) {
+                // || view.getTag() == null
+                // || !BookmarkHolder.class.equals(view.getTag())
+                // || ((BookmarkHolder)view.getTag()).getMode() != mode
+                ) {
             LayoutInflater in = (LayoutInflater)mApp.getContext().getSystemService(
                     Context.LAYOUT_INFLATER_SERVICE);
 
@@ -124,9 +121,9 @@ public class OpenPathAdapter extends BaseAdapter {
         final Context mContext = mApp.getContext();
 
         if (mApp.getClipboard().contains(file))
-            mNameView.setTextAppearance(mContext, R.style.Large_Hilite);
+            mNameView.setTextAppearance(mContext, R.style.Text_Large_Highlight);
         else
-            mNameView.setTextAppearance(mContext, R.style.Large);
+            mNameView.setTextAppearance(mContext, R.style.Text_Large);
 
         if (file.isHidden())
             ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);

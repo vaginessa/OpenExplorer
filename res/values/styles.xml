@@ -8,22 +8,30 @@
         <item name="android:backgroundSplit">@drawable/actionbar_striped_bg_split</item>
         <!--
         <item name="backgroundSplit">@drawable/bg_striped_split</item>
-        <item name="android:backgroundSplit">@drawable/bg_striped_split</item>
+        <item name="android:backgroundSplit">@drawable/bg_striped_split</item>
         -->
     </style>
 
-    <style name="Small" parent="@android:style/TextAppearance.Small">
+    <style name="Text.Small" parent="@android:style/TextAppearance.Small">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">?attr/appTextColorPrimary</item>
         <item name="android:textSize">10dp</item>
     </style>
-    
-    <style name="Small.Dialog" parent="@style/Small">
+
+    <style name="Text.Small.Dialog" parent="@style/Text.Small">
         <item name="android:textColor">?attr/dialogTextColorSecondary</item>
     </style>
 
-    <style name="Mid" parent="@android:style/TextAppearance.Medium">
+    <style name="Text.Small.Highlight" parent="@style/Text.Small">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Text.Small.Dim" parent="@style/Text.Small">
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
+    </style>
+
+    <style name="Text.Mid" parent="@android:style/TextAppearance.Medium">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center|top</item>
@@ -32,12 +40,20 @@
         <item name="android:ellipsize">marquee</item>
         <item name="android:textSize">14dp</item>
     </style>
-    
-    <style name="Mid.Dialog" parent="@style/Mid">
+
+    <style name="Text.Mid.Dialog" parent="@style/Text.Mid">
         <item name="android:textColor">?attr/dialogTextColorPrimary</item>
     </style>
 
-    <style name="Large" parent="@android:style/TextAppearance.Large">
+    <style name="Text.Mid.Highlight" parent="@style/Text.Mid">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Text.Mid.Dim" parent="@style/Text.Mid">
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
+    </style>
+
+    <style name="Text.Large" parent="@android:style/TextAppearance.Large">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/large_text_height</item>
         <item name="android:textColor">?attr/appTextColorPrimary</item>
@@ -46,33 +62,50 @@
         <item name="android:ellipsize">marquee</item>
         <item name="android:textSize">@dimen/large_text_size</item>
     </style>
-    
-    <style name="Large.Dialog" parent="@style/Large">
+
+    <style name="Text.Large.Dialog" parent="@style/Text.Large">
         <item name="android:textColor">?attr/dialogTextColorPrimary</item>
     </style>
 
-    <style name="Small.Hilite" parent="@style/Small">
+    <style name="Text.Large.Drawer" parent="@style/Text.Large">
+        <item name="android:textColor">?attr/dialogTextColorPrimary</item>
+    </style>
+
+    <style name="Text.Large.Highlight" parent="@style/Text.Large">
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="Mid.Hilite" parent="@style/Mid">
+    <style name="Text.Large.Dim" parent="@style/Text.Large">
+        <item name="android:textColor">?attr/appTextColorPrimary</item>
+    </style>
+
+    <!-- Styles for the sliding menu drawer -->
+    <style name="MenuDrawer" />
+
+    <style name="MenuDrawer.Widget" />
+
+    <style name="MenuDrawer.Widget.Category">
         <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/drawerTextColorPrimary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:background">@drawable/sd__category_background</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
     </style>
 
-    <style name="Large.Hilite" parent="@style/Large">
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <style name="Small.Dim" parent="@style/Small">
-        <item name="android:textColor">?attr/appTextColorPrimary</item>
-    </style>
-
-    <style name="Mid.Dim" parent="@style/Mid">
-        <item name="android:textColor">?attr/appTextColorPrimary</item>
-    </style>
-
-    <style name="Large.Dim" parent="@style/Large">
-        <item name="android:textColor">?attr/appTextColorPrimary</item>
+    <style name="MenuDrawer.Widget.Label">
+        <item name="android:textAppearance">?android:attr/textAppearance</item>
+        <item name="android:textColor">?attr/drawerTextColorPrimary</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:drawablePadding">16dp</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="icon"></style>
@@ -119,16 +152,14 @@
         <item name="android:textColor">@color/actionbar_title_color</item>
     </style>
 
-    <style name="TextAppearance.MyTabPageIndicator" parent="Mid"></style>
+    <style name="TextAppearance.MyTabPageIndicator" parent="Text.Mid"></style>
 
     <style name="ActionBarCompat">
         <item name="android:background">#eee</item>
     </style>
 
     <style name="ActionBarCompatItemBase">
-
-        <!-- layout_width/height must be set in code -->
-        <item name="android:scaleType">center</item>
+        <!-- layout_width/height must be set in code -->        <item name="android:scaleType">center</item>
         <item name="android:background">@drawable/list_selector_background</item>
     </style>
 
@@ -138,8 +169,7 @@
 
     <style name="ActionBarCompatTitleBase">
         <item name="android:id">@id/actionbar_compat_title</item>
-        <!-- layout_width/height/weight must be set in code -->
-        <item name="android:gravity">center_vertical</item>
+        <!-- layout_width/height/weight must be set in code -->        <item name="android:gravity">center_vertical</item>
         <item name="android:textSize">18sp</item>
         <item name="android:paddingLeft">6dp</item>
         <item name="android:paddingRight">6dp</item>

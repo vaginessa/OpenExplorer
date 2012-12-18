@@ -44,7 +44,7 @@
 
         <Button
             android:id="@+id/chooser_system"
-            style="@style/Small"
+            style="@style/Text.Small"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/use_system" />

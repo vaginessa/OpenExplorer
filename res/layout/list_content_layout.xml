@@ -14,7 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -37,7 +38,7 @@
 
     <TextView
         android:id="@+id/content_text"
-        style="@style/Large"
+        style="@style/Text.Large"
         android:layout_alignWithParentIfMissing="true"
         android:layout_toLeftOf="@+id/checkmark_area"
         android:layout_toRightOf="@+id/content_icon"
@@ -46,7 +47,7 @@
 
     <TextView
         android:id="@+id/content_fullpath"
-        style="@style/Small"
+        style="@style/Text.Small"
         android:layout_width="wrap_content"
         android:layout_alignLeft="@+id/content_text"
         android:layout_alignWithParentIfMissing="true"
@@ -61,7 +62,7 @@
 
     <TextView
         android:id="@+id/content_info"
-        style="@style/Small"
+        style="@style/Text.Small"
         android:layout_width="wrap_content"
         android:layout_alignWithParentIfMissing="true"
         android:layout_below="@+id/content_text"
@@ -76,7 +77,7 @@
 
     <TextView
         android:id="@+id/content_date"
-        style="@style/Small"
+        style="@style/Text.Small"
         android:layout_width="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignWithParentIfMissing="true"
