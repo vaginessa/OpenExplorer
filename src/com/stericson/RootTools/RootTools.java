@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.utils.Logger;
 
 import android.app.Activity;
 import android.content.Context;
@@ -870,15 +871,23 @@ public class RootTools {
      * 			  The exception that was thrown (Needed for errors)
      */
     public static void log(String msg) {
-        log(null, msg, 3, null);
+    	Logger.LogDebug("Root Tools: " + msg);
+        //log(null, msg, 3, null);
     }
     
     public static void log(String TAG, String msg) {
-        log(TAG, msg, 3, null);
+    	Logger.LogDebug("RootTools: " + TAG + ": " + msg);
+        //log(TAG, msg, 3, null);
     }
 
     public static void log(String msg, int type, Exception e) {
-        log(null, msg, type, e);
+    	if(type == 1)
+    		Logger.LogVerbose("Root Tools: " + msg, e);
+    	else if(type == 2)
+    		Logger.LogError("Root Tools: " + msg, e);
+    	else
+    		Logger.LogDebug("Root Tools: " + msg, e);
+        //log(null, msg, type, e);
     }
 
     public static void log(String TAG, String msg, int type, Exception e) {
@@ -891,13 +900,16 @@ public class RootTools {
             	switch (type)
             	{
             	case 1:
-                    Log.v(TAG, msg);
+            		Logger.LogVerbose("Root Tools: (" + TAG + ") " + msg, e);
+                    //Log.v(TAG, msg);
                     break;
             	case 2:
-                    Log.e(TAG, msg, e);
+            		Logger.LogError("Root Tools: (" + TAG + ") " + msg, e);
+                    //Log.e(TAG, msg, e);
                     break;
             	case 3:
-                    Log.d(TAG, msg);
+            		Logger.LogDebug("Root Tools: (" + TAG + ") " + msg, e);
+            		//Log.d(TAG, msg);
                     break;
             	}
             }

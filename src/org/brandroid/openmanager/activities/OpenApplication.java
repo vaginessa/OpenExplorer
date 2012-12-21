@@ -1,3 +1,4 @@
+
 package org.brandroid.openmanager.activities;
 
 import java.io.File;
@@ -74,23 +75,17 @@ public class OpenApplication extends Application implements OpenApp {
 
 	public void loadThemedAssets(Context c) {
 		mThemedAssets.clear();
-		TypedArray ta = c.getTheme().obtainStyledAttributes(
-				R.styleable.AppTheme);
-		mThemedAssets.put(R.styleable.AppTheme_checkboxButtonOff,
-				ta.getResourceId(R.styleable.AppTheme_checkboxButtonOff,
-						R.drawable.btn_check_off_holo_dark));
-		mThemedAssets.put(R.styleable.AppTheme_checkboxButtonOn,
-				ta.getResourceId(R.styleable.AppTheme_checkboxButtonOn,
-						R.drawable.btn_check_on_holo_dark));
-		mThemedAssets.put(R.styleable.AppTheme_actionIconClipboard,
-				ta.getResourceId(R.styleable.AppTheme_actionIconClipboard,
-						R.drawable.ic_menu_clipboard));
-		mThemedAssets.put(R.styleable.AppTheme_colorBlack,
-				ta.getResourceId(R.styleable.AppTheme_colorBlack,
-						R.color.black));
-		mThemedAssets.put(R.styleable.AppTheme_actionIconShare,
-				ta.getResourceId(R.styleable.AppTheme_actionIconShare,
-						R.drawable.ic_action_share_holo_dark));
+        TypedArray ta = c.getTheme().obtainStyledAttributes(R.styleable.AppTheme);
+        mThemedAssets.put(R.styleable.AppTheme_checkboxButtonOff, ta.getResourceId(
+                R.styleable.AppTheme_checkboxButtonOff, R.drawable.btn_check_off_holo_dark));
+        mThemedAssets.put(R.styleable.AppTheme_checkboxButtonOn, ta.getResourceId(
+                R.styleable.AppTheme_checkboxButtonOn, R.drawable.btn_check_on_holo_dark));
+        mThemedAssets.put(R.styleable.AppTheme_actionIconClipboard, ta.getResourceId(
+                R.styleable.AppTheme_actionIconClipboard, R.drawable.ic_menu_clipboard));
+        mThemedAssets.put(R.styleable.AppTheme_dialogBackgroundColorPrimary,
+                ta.getResourceId(R.styleable.AppTheme_dialogBackgroundColorPrimary, R.color.black));
+        mThemedAssets.put(R.styleable.AppTheme_actionIconShare, ta.getResourceId(
+                R.styleable.AppTheme_actionIconShare, R.drawable.ic_action_share_holo_dark));
 		ta.recycle();
 	}
 
@@ -152,11 +147,9 @@ public class OpenApplication extends Application implements OpenApp {
 				cacheDir.mkdirs();
 
 			if (!cacheDir.isDirectory()) {
-				throw new RuntimeException("fail to create: "
-						+ cacheDir.getAbsolutePath());
+                throw new RuntimeException("fail to create: " + cacheDir.getAbsolutePath());
 			}
-			mDownloadCache = new DownloadCache(this, cacheDir,
-					DOWNLOAD_CAPACITY);
+            mDownloadCache = new DownloadCache(this, cacheDir, DOWNLOAD_CAPACITY);
 		}
 		return mDownloadCache;
 	}
@@ -165,8 +158,7 @@ public class OpenApplication extends Application implements OpenApp {
 	public synchronized LruCache<String, Bitmap> getMemoryCache() {
 		if (mBitmapCache == null)
 			mBitmapCache = new LruCache<String, Bitmap>(
-					((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE))
-							.getMemoryClass() * 10);
+                    ((ActivityManager)getSystemService(Context.ACTIVITY_SERVICE)).getMemoryClass() * 10);
 		return mBitmapCache;
 	}
 
