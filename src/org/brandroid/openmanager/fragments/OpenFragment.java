@@ -342,16 +342,16 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 		}
         if (from == null)
             return false;
-		from.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+        from.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
             public void onCreateContextMenu(ContextMenu cmenu, View v, ContextMenuInfo menuInfo) {
-				new android.view.MenuInflater(v.getContext()).inflate(menuId, cmenu);
-				onPrepareOptionsMenu(cmenu);
+                new android.view.MenuInflater(v.getContext()).inflate(menuId, cmenu);
+                onPrepareOptionsMenu(cmenu);
 
-			}
-		});
-		boolean ret = from.showContextMenu();
-		from.setOnCreateContextMenuListener(null);
-		return ret;
+            }
+        });
+        boolean ret = from.showContextMenu();
+        from.setOnCreateContextMenuListener(null);
+        return ret;
 	}
 
     public boolean inflateMenu(Menu menu, int menuItemId, MenuInflater inflater) {
@@ -548,8 +548,6 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                 .getPath() : null;
         if (DEBUG)
 			Logger.LogDebug("}-- onAttach :: " + getClassName() + " @ " + path);
-	}
-        });
     }
 
 	@Override
@@ -680,8 +678,6 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
 	public void onClick(final View v) {
 		Logger.LogInfo(getClassName() + ".onClick(" + v + ")");
-	}
-        });
     }
 
 	public boolean onClick(final int id, final View from) {

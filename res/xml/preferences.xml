@@ -223,12 +223,7 @@
             android:defaultValue="true"
             android:key="pref_stats"
             android:summary="@string/s_pref_stats_summary"
-<<<<<<< HEAD
-            android:defaultValue="false"
-            />
-=======
             android:title="@string/s_pref_stats_title" />
->>>>>>> dev
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="pref_autowtf"
