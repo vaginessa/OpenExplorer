@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="AppTheme.Dark" parent="@style/Theme.Sherlock">
-		
-        <item name="absForceOverflow">true</item>
 
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
@@ -62,8 +60,6 @@
     </style>
     
     <style name="AppTheme.Light" parent="@style/Theme.Sherlock.Light">
-		
-        <item name="absForceOverflow">true</item>
 
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
