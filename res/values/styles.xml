@@ -234,15 +234,9 @@
         <item name="@android:windowEnterAnimation">@anim/slide_in_right</item>
         <item name="@android:windowExitAnimation">@anim/slide_out_left</item>
     </style>
-<<<<<<< HEAD
-    
-    <style name="Dialog" parent="@style/Theme.Sherlock" />
-    
-=======
 
     <style name="Dialog" parent="Theme.Sherlock" />
 
->>>>>>> dev
     <style name="Widget.ProgressBar.Horizontal" parent="@android:style/Widget.ProgressBar.Horizontal">
         <item name="android:minHeight">16dip</item>
     </style>

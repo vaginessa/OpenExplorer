@@ -14,6 +14,10 @@
         <ignore path="res\layout\title_bar.xml" />
     </issue>
     <issue id="MissingTranslation" severity="ignore" />
+    <issue id="NewApi">
+        <ignore path="src\com\actionbarsherlock\internal\view\menu\ActionMenuItemView.java" />
+        <ignore path="src\com\actionbarsherlock\widget\SearchView.java" />
+    </issue>
     <issue id="UseCompoundDrawables">
         <ignore path="res\layout\grid_content_layout.xml" />
         <ignore path="res\layout\multiselect_layout.xml" />

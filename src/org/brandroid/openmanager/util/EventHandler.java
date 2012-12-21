@@ -34,17 +34,10 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.Context;
-<<<<<<< HEAD
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-=======
 import android.graphics.BitmapFactory;
-import android.widget.ProgressBar;
-import android.widget.RemoteViews;
-import android.widget.Toast;
-import android.widget.RemoteViews.RemoteView;
->>>>>>> dev
 import android.net.Uri;
 
 import java.util.ArrayList;

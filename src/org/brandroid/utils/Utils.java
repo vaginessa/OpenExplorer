@@ -471,78 +471,6 @@ public class Utils {
         return IS_DEBUG_BUILD ? s : MASK_STRING.substring(0, length);
     }
 
-<<<<<<< HEAD
-    public static String joinArray(int[] array)
-    {
-    	String ret = "[";
-    	for(int item : array)
-    		ret += Integer.toHexString(item) + ",";
-    	ret += "]";
-    	return ret;
-    }
-    public static String joinArray(CharSequence[] array, String separator)
-    {
-    	StringBuilder ret = new StringBuilder();
-    	for(CharSequence item : array)
-    		ret.append(item + separator);
-    	return ret.toString();
-    }
-
-	public static int getArrayIndex(int[] search, int value)
-	{
-		for(int i = 0; i < search.length; i++)
-			if(search[i] == value)
-				return i;
-		return -1;
-	}
-	public static int getArrayIndex(String[] search, int value)
-	{
-		for(int i = 0; i < search.length; i++)
-			if(search[i].equals("" + value))
-				return i;
-		return -1;
-	}
-	public static int getArrayIndex(String[] search, String value)
-	{
-		for(int i = 0; i < search.length; i++)
-			if(search[i].equals(value))
-				return i;
-		return -1;
-	}
-	public static int getArrayIndex(SortType.Type[] search, SortType.Type value)
-	{
-		for(int i = 0; i < search.length; i++)
-			if(value.equals(search[i]))
-				return i;
-		return -1;
-	}
-	
-	public static String md5(String s) {
-	    try {
-	        // Create MD5 Hash
-	        MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
-	        digest.update(s.getBytes());
-	        byte messageDigest[] = digest.digest();
-	        
-	        // Create Hex String
-	        StringBuffer hexString = new StringBuffer();
-	        for (int i=0; i<messageDigest.length; i++)
-	            hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
-	        return hexString.toString();
-	        
-	    } catch (NoSuchAlgorithmException e) {
-	        e.printStackTrace();
-	    }
-	    return "";
-	}
-
-	public static boolean inArray(String key, String... array) {
-		for(String item : array)
-			if(item.equals(key))
-				return true;
-		return false;
-	}
-=======
     public static String joinArray(int[] array) {
         String ret = "[";
         for (int item : array)
@@ -604,5 +532,4 @@ public class Utils {
                 return true;
         return false;
     }
->>>>>>> dev
 }
