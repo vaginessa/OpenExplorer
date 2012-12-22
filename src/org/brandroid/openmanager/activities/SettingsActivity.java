@@ -76,6 +76,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -532,6 +533,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             return true;
         } else if (key.equals("pref_translate")) {
             OpenExplorer.launchTranslator(SettingsActivity.this);
+        } else if (key.equals("pref_privacy")) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://brandroid.org/privacy.php"));
+            startActivity(intent);
         } else if (key.equals("pref_language")) {
 
         } else if (key.equals("pref_thumbs_cache_clear")) {

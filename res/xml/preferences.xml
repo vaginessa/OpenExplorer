@@ -219,6 +219,10 @@
             android:defaultValue="true"
             android:key="pref_text_internal"
             android:title="@string/s_pref_text_internal" />
+        <PreferenceScreen
+            android:key="pref_privacy"
+            android:title="@string/s_privacy"
+            />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="pref_stats"
