@@ -316,6 +316,7 @@ public class Utils {
         try {
             ret = Long.parseLong(friendly.replaceAll("[^0-9]", ""));
             String unit = friendly.replaceAll("[0-9]", "");
+            if(unit == null) return ret;
             if(unit.equalsIgnoreCase("k") || unit.equalsIgnoreCase("kb"))
                 ret *= 1024;
             else if(unit.equalsIgnoreCase("m") || unit.equalsIgnoreCase("mb"))
