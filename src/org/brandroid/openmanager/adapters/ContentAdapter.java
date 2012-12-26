@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -61,7 +62,7 @@ public class ContentAdapter extends BaseAdapter {
     /**
      * Set of seleced message IDs.
      */
-    private final ArrayList<OpenPath> mSelectedSet = new ArrayList<OpenPath>();
+    private final CopyOnWriteArrayList<OpenPath> mSelectedSet = new CopyOnWriteArrayList<OpenPath>();
 
     /**
      * Callback from MessageListAdapter. All methods are called on the UI
@@ -481,7 +482,7 @@ public class ContentAdapter extends BaseAdapter {
         return mData2;
     }
 
-    public ArrayList<OpenPath> getSelectedSet() {
+    public CopyOnWriteArrayList<OpenPath> getSelectedSet() {
         return mSelectedSet;
     }
 

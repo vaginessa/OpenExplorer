@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -1060,7 +1061,7 @@ OnTaskUpdateListener, ContentAdapter.Callback {
             parent = OpenFile.getExternalMemoryDrive(true);
         final OpenPath folder = parent;
         String name = file != null ? file.getName() : null;
-        ArrayList<OpenPath> selection = mContentAdapter.getSelectedSet();
+        CopyOnWriteArrayList<OpenPath> selection = mContentAdapter.getSelectedSet();
 
         final boolean fromPasteMenu = file.equals(mPath);
 
@@ -2022,7 +2023,7 @@ OnTaskUpdateListener, ContentAdapter.Callback {
         @SuppressLint("NewApi")
         @Override
         public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
-            final ArrayList<OpenPath> selections = mContentAdapter.getSelectedSet();
+            final CopyOnWriteArrayList<OpenPath> selections = mContentAdapter.getSelectedSet();
             final OpenPath last = selections.get(selections.size() - 1);
             switch (item.getItemId()) {
                 case R.id.menu_context_selectall:
