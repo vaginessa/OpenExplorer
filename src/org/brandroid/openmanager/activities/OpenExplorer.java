@@ -296,9 +296,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public FragmentManager fragmentManager;
 
     private final static OpenCursor mPhotoParent = new OpenCursor("Photos",
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI), mVideoParent = new OpenCursor("Videos",
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI), mMusicParent = new OpenCursor("Music",
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI), mApkParent = new OpenCursor("Apps",
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+    private final static OpenCursor mVideoParent = new OpenCursor("Videos",
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+    private final static OpenCursor mMusicParent = new OpenCursor("Music",
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+    private final static OpenCursor mApkParent = new OpenCursor("Apps",
             BEFORE_HONEYCOMB ? Uri.fromFile(OpenFile.getExternalMemoryDrive(true).getFile())
                     : MediaStore.Files.getContentUri("/mnt"));
     private final static OpenSmartFolder mVideoSearchParent = new OpenSmartFolder("Videos"),
@@ -1817,6 +1820,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             for (OpenPath kid : extDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("photo") > -1
                                         || kid.getName().toLowerCase().indexOf("picture") > -1
+                                        || kid.getName().toLowerCase().indexOf("dcim") > -1
                                         || kid.getName().toLowerCase().indexOf("camera") > -1)
                                     mPhotoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
@@ -1825,6 +1829,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("photo") > -1
                                         || kid.getName().toLowerCase().indexOf("picture") > -1
+                                        || kid.getName().toLowerCase().indexOf("dcim") > -1
                                         || kid.getName().toLowerCase().indexOf("camera") > -1)
                                     mPhotoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
@@ -3596,12 +3601,20 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mParent = mMusicParent;
         else if (l.getId() == 3)
             mParent = mApkParent;
+
         mParent.setCursor(c);
+
         if (l.getId() == 0)
             try {
                 mVideosMerged.refreshKids();
             } catch (IOException e) {
                 Logger.LogError("Unable to merge videos after Cursor", e);
+            }
+        else if (l.getId() == 1)
+            try {
+                mPhotosMerged.refreshKids();
+            } catch (IOException e) {
+                Logger.LogError("Unable to merge photos after Cursor", e);
             }
         /*
          * mBookmarks.refresh(); OpenFragment f = getSelectedFragment(); if(f
