@@ -80,7 +80,7 @@ public class ThumbnailCreator {
 
     public static boolean useCache = true;
     public static boolean showThumbPreviews = true;
-    public static boolean showCenteredCroppedPreviews = true;
+    public static boolean showCenteredCroppedPreviews = false;
 
     private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
 
@@ -152,8 +152,8 @@ public class ThumbnailCreator {
         if (file.hasThumbnail()) {
             if (showThumbPreviews && !file.requiresThread()) {
                 Bitmap thumb = // !mCacheMap.containsKey(file.getPath()) ? null
-                        // :
-                        getThumbnailCache(app, file.getPath(), mWidth, mHeight);
+                // :
+                getThumbnailCache(app, file.getPath(), mWidth, mHeight);
 
                 if (thumb == null) {
                     mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
@@ -313,8 +313,8 @@ public class ThumbnailCreator {
         try {
             if (!file.requiresThread() && file.isDirectory())
                 hasKids = file.getChildCount(false) > 0;
-                else if (file instanceof OpenCursor)
-                    hasKids = true;
+            else if (file instanceof OpenCursor)
+                hasKids = true;
         } catch (IOException e) {
             //TODO Catch exception properly
         }
@@ -419,8 +419,8 @@ public class ThumbnailCreator {
         try {
             if (!file.requiresThread() && file.isDirectory())
                 hasKids = file.getChildCount(false) > 0;
-                else if (file instanceof OpenCursor)
-                    hasKids = true;
+            else if (file instanceof OpenCursor)
+                hasKids = true;
         } catch (IOException e) {
         }
 
@@ -569,7 +569,7 @@ public class ThumbnailCreator {
                 opts.inPurgeable = true;
                 opts.outHeight = mHeight;
                 // if(!showCenteredCroppedPreviews)
-                // opts.outWidth = mWidth;
+                //    opts.outWidth = mWidth;
                 int kind = mWidth > 96 ? MediaStore.Video.Thumbnails.MINI_KIND
                         : MediaStore.Video.Thumbnails.MICRO_KIND;
                 try {
@@ -577,9 +577,9 @@ public class ThumbnailCreator {
                         bmp = MediaStore.Images.Thumbnails.getThumbnail(
                                 mContext.getContentResolver(), om.getMediaID(), kind, opts);
                     else // if(om.getParent().getName().equals("Videos"))
-                        if (iVideoThumbErrors < 5)
-                            bmp = MediaStore.Video.Thumbnails.getThumbnail(
-                                    mContext.getContentResolver(), om.getMediaID(), kind, opts);
+                    if (iVideoThumbErrors < 5)
+                        bmp = MediaStore.Video.Thumbnails.getThumbnail(
+                                mContext.getContentResolver(), om.getMediaID(), kind, opts);
                 } catch (Exception e) {
                     iVideoThumbErrors++;
                     Logger.LogWarning("Couldn't get MediaStore thumbnail for " + file.getName(), e);
@@ -688,8 +688,16 @@ public class ThumbnailCreator {
         if (bmp != null && (mWidth < bmp.getWidth() || mHeight < bmp.getHeight())) {
             if (file.isImageFile() && showCenteredCroppedPreviews)
                 bmp = cropBitmap(bmp, mWidth, mHeight);
-            else
-                bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false);
+            else {
+                int bw = bmp.getWidth();
+                int bh = bmp.getHeight();
+
+                if (bh > bw)
+                    mWidth *= (float)bw / (float)bh;
+                else
+                    mHeight *= (float)bh / (float)bw;
+                bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, true);
+            }
         }
 
         if (bmp != null) {
@@ -741,7 +749,7 @@ public class ThumbnailCreator {
         }
         // Logger.LogDebug("cropBitmap:(" + sw + "x" + sh + "):(" + ox + "," +
         // oy + ":" + dw + "x" + dh + ") @ " + scale);
-        m.postScale(scale, scale);
+        m.preScale(scale, scale);
         return Bitmap.createBitmap(src, Math.max(0, ox), Math.max(0, oy), Math.min(sw, dw),
                 Math.min(sh, dh), m, scale != 1.0);
     }
