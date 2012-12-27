@@ -75,7 +75,7 @@
                 android:summary="@string/s_pref_thumbs_summary"
                 android:title="@string/s_pref_thumbs" />
             <CheckBoxPreference
-                android:defaultValue="true"
+                android:defaultValue="false"
                 android:dependency="pref_thumbs"
                 android:key="pref_thumbs_crop"
                 android:title="@string/s_pref_thumbs_crop" />

@@ -331,7 +331,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
         Preferences.Pref_Root = prefs.getBoolean("global", "pref_root", Preferences.Pref_Root);
         ThumbnailCreator.showCenteredCroppedPreviews = prefs.getBoolean("global",
-                "prefs_thumbs_crop", true);
+                "prefs_thumbs_crop", false);
         Preferences.Run_Count = prefs.getInt("stats", "runs", 0) + 1;
         prefs.setSetting("stats", "runs", Preferences.Run_Count);
 
