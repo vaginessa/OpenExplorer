@@ -123,8 +123,10 @@
     </style>
 
     <style name="icon.small">
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">@dimen/list_icon_size</item>
-        <item name="android:layout_height">@dimen/list_icon_size</item>
+        <item name="android:maxWidth">@dimen/list_icon_size</item>
+        <item name="android:maxHeight">@dimen/list_icon_size</item>
     </style>
 
     <style name="MyTabPageIndicator" parent="Widget">

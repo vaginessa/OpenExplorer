@@ -46,6 +46,7 @@
         <item name="listDivider">@drawable/divider_horizontal_dark</item>
         <item name="listBackground">@drawable/list_background_dark</item>
         <item name="listColumnBackground">@drawable/list_column_background_dark</item>
+        <item name="listIconBackground">@color/transparent</item>
 
         <!-- Colors -->
         <item name="actionBarTextColorPrimary">@color/white</item>
@@ -118,6 +119,7 @@
         <item name="listDivider">@drawable/divider_horizontal_bright</item>
         <item name="listBackground">@drawable/list_background_light</item>
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
+        <item name="listIconBackground">@color/transparent</item>
 
         <!-- Colors -->
         <item name="actionBarTextColorPrimary">@color/black</item>
@@ -190,6 +192,7 @@
         <item name="listDivider">@drawable/divider_horizontal_bright</item>
         <item name="listBackground">@drawable/list_background_light</item>
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
+        <item name="listIconBackground">@color/translucent_darkGray</item>
 
         <!-- Colors -->
         <item name="actionBarTextColorPrimary">@color/white</item>
@@ -264,6 +267,7 @@
         <item name="listDivider">@drawable/divider_horizontal_bright</item>
         <item name="listBackground">@drawable/list_background_light</item>
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
+        <item name="listIconBackground">@color/translucent_gray</item>
 
         <!-- Colors -->
         <item name="actionBarTextColorPrimary">@color/white</item>
