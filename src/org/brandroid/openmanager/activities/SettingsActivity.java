@@ -737,26 +737,38 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 preference.getTitle().toString(), listener);
     }
 
-    public static File GetDefaultServerFile(Context context) {
-        File f = new File(context.getFilesDir().getPath(), "servers.json");
-        if (f.exists() && OpenExplorer.isBlackBerry()) {
-            if (OpenFile.getExternalMemoryDrive(true).getChild(".servers.json")
-                    .copyFrom(new OpenFile(f)))
-                ;
-            f.delete();
+    public static OpenFile GetDefaultServerFile(Context context) {
+        OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
+                .getChild("org.brandroid.openmanager").getChild("files").getChild("servers.json");
+        OpenFile f2 = new OpenFile(context.getFilesDir().getPath(), "servers.json");
+        if(f2.exists())
+        {
+            if(!f.exists())
+                f.copyFrom(f2);
+            f2.delete();
         }
-        if (OpenExplorer.isBlackBerry())
-            f = new File(OpenFile.getExternalMemoryDrive(true).getFile(), ".servers.json");
+        if(OpenExplorer.isBlackBerry())
+        {
+            f2 = OpenFile.getExternalMemoryDrive(true).getChild(".servers.json");
+            if(f2.exists())
+            {
+                if(!f.exists())
+                    f.copyFrom(f2);
+                f2.delete();
+            }
+        }
+        if(!f.exists())
+            f.touch();
         return f;
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
         Writer w = null;
-        File f = GetDefaultServerFile(context);
+        OpenFile f = GetDefaultServerFile(context);
         try {
             f.delete();
-            f.createNewFile();
-            w = new BufferedWriter(new FileWriter(f));
+            f.create();
+            w = new BufferedWriter(new FileWriter(f.getFile()));
             String data = servers.getJSONArray(true, context).toString();
             Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
             // data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
@@ -787,24 +799,15 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     public static OpenServers LoadDefaultServers(Context context) {
         if (OpenServers.DefaultServers != null)
             return OpenServers.DefaultServers;
-        File f = GetDefaultServerFile(context);
-        Reader r = null;
+        OpenFile f = GetDefaultServerFile(context);
         try {
-            if (!f.exists() && !f.createNewFile()) {
+            if (!f.exists() && !f.create()) {
                 Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
                 return new OpenServers();
             } else {
                 // Logger.LogDebug("Created default servers file (" +
                 // f.getPath() + ")");
-                r = new BufferedReader(new FileReader(f));
-                char[] chars = new char[256];
-                StringBuilder sb = new StringBuilder();
-                while (r.read(chars) > 0)
-                    sb.append(chars);
-                r.close();
-                if (sb.length() == 0)
-                    return new OpenServers();
-                String data = sb.toString();
+                String data = f.readAscii();
                 OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
                         GetSignatureKey(context));
                 Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
@@ -817,15 +820,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         } catch (JSONException e) {
             Logger.LogError("Error decoding JSON for default server list.", e);
             return new OpenServers();
-        } finally {
-            if (r != null)
-                try {
-                    r.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
         }
-
     }
 
     public static String GetSignatureKey(Context context) {
