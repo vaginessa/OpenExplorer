@@ -18,12 +18,14 @@ import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
 
+@SuppressLint("NewApi")
 public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.OpenPathByteIO {
     private static final long serialVersionUID = 6436156952322586833L;
     private File mFile;
@@ -316,10 +318,11 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
                     && kid.list().length > 0)
                 return (mUsbDrive = kid);
-        for (OpenFile kid : getInternalMemoryDrive().listFiles())
-            if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
-                    && kid.list().length > 0)
-                return (mUsbDrive = kid);
+        if (Build.VERSION.SDK_INT > 15)
+            for (OpenFile kid : getInternalMemoryDrive().listFiles())
+                if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
+                        && kid.list().length > 0)
+                    return (mUsbDrive = kid);
         return null;
     }
 
