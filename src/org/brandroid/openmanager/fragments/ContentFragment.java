@@ -38,6 +38,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.data.OpenPathArray;
+import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
@@ -238,7 +239,7 @@ OnTaskUpdateListener, ContentAdapter.Callback {
 
     protected ContentAdapter getContentAdapter() {
         if (mContentAdapter == null) {
-            mContentAdapter = new ContentAdapter(getExplorer(), this, mViewMode, mPath);
+            mContentAdapter = new ContentAdapter(getExplorer(), this, getViewMode(), mPath);
             mContentAdapter.setShowHiddenFiles(getViewSetting(getPath(), "show",
                     getViewSetting(null, "pref_show", false)));
             SortType sort = new SortType(getViewSetting(getPath(), "sort",
@@ -259,6 +260,8 @@ OnTaskUpdateListener, ContentAdapter.Callback {
     }
 
     public int getGlobalViewMode() {
+        if (mPath instanceof OpenPathMerged)
+            return OpenExplorer.VIEW_GRID;
         String pref = getSetting(null, "pref_view", "list");
         if (pref.equals("list"))
             return OpenExplorer.VIEW_LIST;
