@@ -548,13 +548,17 @@ public class ThumbnailCreator {
                 && (bmp = getThumbnailCache(app, path, mWidth, mHeight)) != null)
             return new SoftReference<Bitmap>(bmp);
 
-        String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
+        final String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
 
         // we already loaded this thumbnail, just return it.
         if (app.getMemoryCache().get(mCacheFilename) != null)
             return new SoftReference<Bitmap>(app.getMemoryCache().get(mCacheFilename));
         if (readCache && bmp == null)
             bmp = loadThumbnail(mContext, mCacheFilename);
+
+        float density = mContext.getResources().getDisplayMetrics().density;
+        mWidth *= density;
+        mHeight *= density;
 
         if (bmp == null && !useGeneric && !OpenExplorer.LOW_MEMORY) {
             Boolean valid = false;
