@@ -334,6 +334,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 "prefs_thumbs_crop", false);
         Preferences.Run_Count = prefs.getInt("stats", "runs", 0) + 1;
         prefs.setSetting("stats", "runs", Preferences.Run_Count);
+        lastSubmit = new Date().getTime();
 
         PackageInfo pi = null;
         try {
