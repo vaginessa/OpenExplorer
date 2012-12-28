@@ -223,9 +223,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
         PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE,
                 R.xml.preferences, false);
-        
+
         CheckBoxPreference pSystem = (CheckBoxPreference)findPreference("pref_system_mount");
-        if(pSystem != null)
+        if (pSystem != null)
             pSystem.setChecked(RootManager.isSystemMounted());
 
         // getPreferences(MODE_PRIVATE);
@@ -534,7 +534,8 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         } else if (key.equals("pref_translate")) {
             OpenExplorer.launchTranslator(SettingsActivity.this);
         } else if (key.equals("pref_privacy")) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://brandroid.org/privacy.php"));
+            Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://brandroid.org/privacy.php"));
             startActivity(intent);
         } else if (key.equals("pref_language")) {
 
@@ -741,23 +742,23 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
                 .getChild("org.brandroid.openmanager").getChild("files").getChild("servers.json");
         OpenFile f2 = new OpenFile(context.getFilesDir().getPath(), "servers.json");
-        if(f2.exists())
-        {
-            if(!f.exists())
+        if (f2.exists()) {
+            if (OpenExplorer.IS_DEBUG_BUILD)
+                Logger.LogVerbose("Old servers.json(" + f2.length()
+                        + ") found. Overwriting new servers.json(" + f.length() + ")!");
+            if (!f.exists() || f2.length() > f.length())
                 f.copyFrom(f2);
             f2.delete();
         }
-        if(OpenExplorer.isBlackBerry())
-        {
+        if (OpenExplorer.isBlackBerry()) {
             f2 = OpenFile.getExternalMemoryDrive(true).getChild(".servers.json");
-            if(f2.exists())
-            {
-                if(!f.exists())
+            if (f2.exists()) {
+                if (!f.exists() || f2.length() > f.length())
                     f.copyFrom(f2);
                 f2.delete();
             }
         }
-        if(!f.exists())
+        if (!f.exists())
             f.touch();
         return f;
     }
@@ -808,6 +809,8 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 // Logger.LogDebug("Created default servers file (" +
                 // f.getPath() + ")");
                 String data = f.readAscii();
+                if (OpenExplorer.IS_DEBUG_BUILD)
+                    Logger.LogDebug("Server JSON: " + data);
                 OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
                         GetSignatureKey(context));
                 Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
