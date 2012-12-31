@@ -662,6 +662,23 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         if (Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar",
                 "pref_themes", "pref_stats", "pref_root", "pref_language"))
             getPreferences().setSetting("global", "restart", true);
+        if (key.equals("servers_private"))
+        {
+            OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
+                    .getChild("org.brandroid.openmanager").getChild("files").getChild("servers.json");
+            OpenFile f2 = new OpenFile(getContext().getFilesDir().getPath(), "servers.json");
+            Boolean doPrivate = (Boolean)newValue;
+            if(doPrivate)
+            {
+                if(f.exists() && f.length() > f2.length())
+                    f2.copyFrom(f);
+                f.delete();
+            } else {
+                if(f2.exists() && f2.length() > f.length())
+                    f.copyFrom(f2);
+                f2.delete();
+            }
+        }
         if (key.equals("pref_language"))
             preference.setSummary(getDisplayLanguage((String)newValue));
         else if (preference instanceof ListPreference && newValue instanceof String)
@@ -742,24 +759,50 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
                 .getChild("org.brandroid.openmanager").getChild("files").getChild("servers.json");
         OpenFile f2 = new OpenFile(context.getFilesDir().getPath(), "servers.json");
-        if (f2.exists()) {
-            if (OpenExplorer.IS_DEBUG_BUILD)
-                Logger.LogVerbose("Old servers.json(" + f2.length()
-                        + ") found. Overwriting new servers.json(" + f.length() + ")!");
-            if (!f.exists() || f2.length() > f.length())
-                f.copyFrom(f2);
-            f2.delete();
-        }
-        if (OpenExplorer.isBlackBerry()) {
-            f2 = OpenFile.getExternalMemoryDrive(true).getChild(".servers.json");
-            if (f2.exists()) {
+        Preferences prefs = new Preferences(context);
+        try {
+            if(prefs.getSetting("global", "servers_private", false))
+            {
+               if(f.exists())
+               {
+                   if(f.length() > f2.length())
+                       f2.copyFrom(f);
+                   f.delete();
+               }
+               return f2;
+            }
+            if(!f.exists())
+                f.touch();
+            if(!f.exists() || !f.canWrite())
+            {
+                prefs.setSetting("global", "servers_private", true);
+                return f2;
+            }
+            else if (f2.exists()) {
+                if (OpenExplorer.IS_DEBUG_BUILD)
+                    Logger.LogVerbose("Old servers.json(" + f2.length()
+                            + ") found. Overwriting new servers.json(" + f.length() + ")!");
                 if (!f.exists() || f2.length() > f.length())
                     f.copyFrom(f2);
                 f2.delete();
             }
+            if (OpenExplorer.isBlackBerry() && f.exists() && f.canWrite()) {
+                f2 = OpenFile.getExternalMemoryDrive(true).getChild(".servers.json");
+                if (f2.exists()) {
+                    if (!f.exists() || f2.length() > f.length())
+                        f.copyFrom(f2);
+                    f2.delete();
+                }
+            }
+            if (!f.exists() && !f.touch())
+            {
+                prefs.setSetting("global", "servers_private", true);
+                return f2;
+            }
+        } catch(Exception e) {
+            prefs.setSetting("global", "servers_private", true);
+            return f2;
         }
-        if (!f.exists())
-            f.touch();
         return f;
     }
 

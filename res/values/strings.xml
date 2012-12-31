@@ -354,6 +354,9 @@
     <string name="s_menu_system_mount">Make /system Writable (Dangerous!)</string>
     <string name="s_menu_system_mount_on">System is WRITABLE!</string>
     <string name="s_menu_system_mount_off">System is Read-Only.</string>
+    
+    <string name="s_pref_servers_private">Keep Servers Private</string>
+    <string name="s_pref_servers_private_summary">Store server settings in private storage area. This will cause server settings to be removed if the application is uninstalled. If you re-install in the future, leaving this unchecked will prevent that.</string>
 
     <plurals name="num_selected">
         <item quantity="one">One file selected</item>
