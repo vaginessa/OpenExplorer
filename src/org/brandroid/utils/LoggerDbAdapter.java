@@ -127,11 +127,15 @@ public class LoggerDbAdapter {
     }
 
     public Cursor fetchAllItems() {
+        return fetchAllItems(true);
+    }
+
+    public Cursor fetchAllItems(boolean unsentOnly) {
         open();
         try {
             return mDb.query(DATABASE_TABLE, new String[] {
                     KEY_ID, KEY_MESSAGE, KEY_LEVEL, KEY_STACK, KEY_STAMP
-            }, "sent = 0", null, null, null, null);
+            }, unsentOnly ? "sent = 0" : "", null, null, null, null);
         } catch (Exception e) {
             return null;
         }
@@ -199,15 +203,14 @@ public class LoggerDbAdapter {
     public String getAllItems() {
         return getAllItemsJSON().toString();
     }
-    
+
     public String getLogText() {
-        Cursor c = fetchAllItems();
-        if(c == null)
+        Cursor c = fetchAllItems(false);
+        if (c == null)
             return "";
         StringBuilder sb = new StringBuilder();
         c.moveToFirst();
-        while(!c.isAfterLast())
-        {
+        while (!c.isAfterLast()) {
             int id = c.getInt(0);
             String msg = c.getString(1).replace("\n", "\\n").replace("\t", "    ");
             int lvl = c.getInt(2);
