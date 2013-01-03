@@ -63,7 +63,6 @@ public class WTFSenderActivity extends Activity implements OnClickListener {
 
     public static void sendEmail(Activity activity, String subj, String msg, OpenFile attachment) {
         Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
-        intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_EMAIL, new String[] {
             "brandroid64@gmail.com"
         });

@@ -13,7 +13,9 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.json.JSONArray;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 public class Logger {
@@ -135,6 +137,11 @@ public class Logger {
             dbLog.clear();
         return ret;
     }
+    
+    public static String getLogText() {
+        if(dbLog == null) return "";
+        return dbLog.getLogText();
+    }
 
     public static int countLevel(int level) {
         if (dbLog == null)
@@ -189,16 +196,17 @@ public class Logger {
         return countLevel(Log.ASSERT) > 0;
     }
 
+    @SuppressLint("NewApi")
     public static OpenFile getCrashFile() {
         OpenFile ext = OpenFile.getExternalMemoryDrive(true);
         if (ext != null) {
             ext = (OpenFile)ext.getChild(".oe_crash.txt");
-            if (ext.exists() && !ext.canWrite())
+            if (ext.exists() && !ext.canWrite() && Build.VERSION.SDK_INT > 8)
                 ext.getFile().setWritable(true);
             return ext;
         }
         ext = new OpenFile("/mnt/sdcard/.oe_crash.txt");
-        if (ext.exists() && !ext.canWrite())
+        if (ext.exists() && !ext.canWrite() && Build.VERSION.SDK_INT > 8)
             ext.getFile().setWritable(true);
         if (ext.canWrite())
             return ext;

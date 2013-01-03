@@ -69,6 +69,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -105,6 +106,7 @@ import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.view.MenuItem;
@@ -659,7 +661,7 @@ public class DialogHandler {
         final String sSubject = "Feedback for OpenExplorer " + sVersionInfo;
         OnClickListener email = new OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_SEND);
+                Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
                 intent.setType("text/plain");
                 // intent.addCategory(Intent.CATEGORY_APP_EMAIL);
                 intent.putExtra(android.content.Intent.EXTRA_TEXT, "\n" + getDeviceInfo());
@@ -667,6 +669,16 @@ public class DialogHandler {
                     "brandroid64@gmail.com"
                 });
                 intent.putExtra(android.content.Intent.EXTRA_SUBJECT, sSubject);
+                try {
+                    OpenFile fAttach = SettingsActivity.GetDefaultServerFile(mContext).getParent()
+                            .getChild("oe_logs.txt");
+                    ArrayList<Uri> uris = new ArrayList<Uri>();
+                    uris.add(fAttach.getUri());
+                    fAttach.write(Logger.getLogText());
+                    intent.putExtra(android.content.Intent.EXTRA_STREAM, uris);
+                } catch (Exception e) {
+                    Logger.LogWarning("Unable to attach logs to contact email.", e);
+                }
                 mContext.startActivity(Intent.createChooser(intent,
                         mContext.getString(R.string.s_chooser_email)));
             }

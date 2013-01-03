@@ -199,4 +199,24 @@ public class LoggerDbAdapter {
     public String getAllItems() {
         return getAllItemsJSON().toString();
     }
+    
+    public String getLogText() {
+        Cursor c = fetchAllItems();
+        if(c == null)
+            return "";
+        StringBuilder sb = new StringBuilder();
+        c.moveToFirst();
+        while(!c.isAfterLast())
+        {
+            int id = c.getInt(0);
+            String msg = c.getString(1).replace("\n", "\\n").replace("\t", "    ");
+            int lvl = c.getInt(2);
+            String stack = c.getString(3).replace("\n", "\\n").replace("\t", "    ");
+            int stamp = c.getInt(4);
+            sb.append(id + "\t" + lvl + "\t" + msg + "\t" + stamp + "\t" + stack + "\n");
+            c.moveToNext();
+        }
+        c.close();
+        return sb.toString();
+    }
 }
