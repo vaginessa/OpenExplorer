@@ -951,7 +951,8 @@ public class DialogHandler {
         LayoutInflater inflater = (LayoutInflater)context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final View v = inflater.inflate(R.layout.server, null);
-        OpenServer.setupServerDialog(server, iServersIndex, v);
+        if(!OpenServer.setupServerDialog(server, iServersIndex, v))
+            return false;
         int addStrId = iServersIndex >= 0 ? R.string.s_update : R.string.s_add;
         final AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(v)
