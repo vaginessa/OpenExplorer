@@ -756,11 +756,11 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public static OpenFile GetDefaultServerFile(Context context) {
-        OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
-                .getChild("org.brandroid.openmanager").getChild("files").getChild("servers.json");
         OpenFile f2 = new OpenFile(context.getFilesDir().getPath(), "servers.json");
         Preferences prefs = new Preferences(context);
         try {
+            OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
+                    .getChild("org.brandroid.openmanager").getChild("files").getChild("servers.json");
             if(prefs.getSetting("global", "servers_private", false))
             {
                if(f.exists())
@@ -799,11 +799,11 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 prefs.setSetting("global", "servers_private", true);
                 return f2;
             }
+            return f;
         } catch(Exception e) {
             prefs.setSetting("global", "servers_private", true);
             return f2;
         }
-        return f;
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
@@ -848,7 +848,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             if (!f.exists() && !f.create()) {
                 Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
                 return new OpenServers();
-            } else {
+            } else if(f.length() <= 1)
+                return new OpenServers(); // Empty file
+            else {
                 // Logger.LogDebug("Created default servers file (" +
                 // f.getPath() + ")");
                 String data = f.readAscii();
