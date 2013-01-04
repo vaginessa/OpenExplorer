@@ -170,13 +170,18 @@ public class ThumbnailCreator {
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        SoftReference<Bitmap> gen = generateThumb(app, file,
-                                                mWidth, mHeight, mContext);
-                                        if (gen != null && gen.get() != null)
-                                            mListener.updateImage(gen.get());
-                                        else
-                                            Logger.LogWarning("Couldn't generate thumb for "
-                                                    + file.getPath());
+                                        try {
+                                            SoftReference<Bitmap> gen = generateThumb(app, file,
+                                                    mWidth, mHeight, mContext);
+                                            if (gen != null && gen.get() != null)
+                                                mListener.updateImage(gen.get());
+                                            else
+                                                Logger.LogWarning("Couldn't generate thumb for "
+                                                        + file.getPath());
+                                        } catch (OutOfMemoryError e) {
+                                            showThumbPreviews = false;
+                                            Logger.LogWarning("No more memory for thumbs!");
+                                        }
                                     }
                                 }).start();
                             else
