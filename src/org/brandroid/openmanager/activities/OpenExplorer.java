@@ -1558,11 +1558,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         submitStats();
         if (Logger.isLoggingEnabled() && Logger.hasDb())
             Logger.closeDb();
-        try {
-            OpenPathDbAdapter db = OpenPath.getDb();
-            if(db != null)
-                db.close();
-        } catch(Exception e) { }
+        OpenPath.closeDb();
     }
 
     public boolean isNetworkConnected() {
