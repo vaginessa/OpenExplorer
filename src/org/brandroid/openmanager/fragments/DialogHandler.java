@@ -36,7 +36,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable.Orientation;
+import android.text.Html;
+import android.text.util.Linkify;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
@@ -57,7 +58,6 @@ import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -67,12 +67,13 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -98,9 +99,7 @@ import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.interfaces.OpenContextProvider;
-import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.HelpStringHelper;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -112,6 +111,7 @@ import org.brandroid.utils.ViewUtils;
 import com.actionbarsherlock.view.MenuItem;
 
 public class DialogHandler {
+
     public static View createFileInfoDialog(OpenApp app, LayoutInflater inflater, OpenPath mPath) {
         View v = inflater.inflate(R.layout.info_layout, null);
         /*
@@ -529,11 +529,54 @@ public class DialogHandler {
             onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
     }
 
+    public static View inflate(Context context, int layoutId) {
+        return ((LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
+                layoutId, null);
+    }
+
+    public static boolean showHelpDialog(Context context, String msgCode) {
+        int msg = -1, title = -1;
+        msg = Utils.getResId("help_" + msgCode, context, R.string.class);
+        if (msg <= 0)
+            return false;
+        title = Utils.getResId("help_" + msgCode + "_title", context, R.id.class);
+        return showHelpDialog(context, msg, title);
+    }
+
+    public static boolean showHelpDialog(final Context context, int msg, int title) {
+        try {
+            final View layout = inflate(context, R.layout.alert_help_view);
+            final AlertDialog dialog = new AlertDialog.Builder(context).setView(layout).create();
+            TextView tvMessage = (TextView)layout.findViewById(R.id.help_message);
+            if (tvMessage != null) {
+                ViewUtils.setText(layout, msg, R.id.help_message);
+                String allHelps = Arrays.toString(HelpStringHelper.getHelpSuffs().toArray())
+                        .replace(", ", "|");
+                allHelps = "(" + allHelps.substring(1, allHelps.length() - 2) + ")";
+                Pattern p = Pattern.compile(allHelps);
+                Linkify.addLinks(tvMessage, p, "content://org.brandroid.openmanager/help/");
+            }
+            if (title > 0)
+                dialog.setTitle(context.getText(title));
+            ViewUtils.setOnClicks(layout, new OnClickListener() {
+                public void onClick(View v) {
+                    if (v.getId() == R.id.help_skip) {
+                        boolean skip = ((CheckBox)v).isChecked();
+                        new Preferences(context).setSetting("warn", "help_skip", skip);
+                    }
+                }
+            }, R.id.help_skip);
+            dialog.show();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static void showMultiButtonDialog(Context context, String message, String title,
             final DialogInterface.OnClickListener listener, int... buttonStringIds) {
-        final View layout = ((LayoutInflater)context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
-                R.layout.alert_multibutton_view, null);
+        final View layout = inflate(context, R.layout.alert_multibutton_view);
 
         ViewUtils.setViewsVisible(layout, false, R.id.confirm_remember);
 
@@ -758,9 +801,12 @@ public class DialogHandler {
         mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
 
         if (OpenExplorer.isNook())
-            mDlgAbout.getWindow().getDecorView().setBackgroundResource(
-                    mApp.getThemedResourceId(R.styleable.AppTheme_appBackgroundColorPrimary,
-                            R.color.gray));
+            mDlgAbout
+                    .getWindow()
+                    .getDecorView()
+                    .setBackgroundResource(
+                            mApp.getThemedResourceId(
+                                    R.styleable.AppTheme_appBackgroundColorPrimary, R.color.gray));
 
         mDlgAbout.show();
     }
