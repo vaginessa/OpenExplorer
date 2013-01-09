@@ -1339,6 +1339,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         }
                     }).create().show();
             // }});
+        } else {
+            if (!getPreferences().getBoolean("warn", "skip_help", false)) {
+                //getPreferences().setSetting("warn", "help_pager", true);
+                DialogHandler.showHelpDialog(this, "operations");
+            }
         }
     }
 

@@ -21,6 +21,7 @@
 
     <style name="Text.Small.Dialog" parent="@style/Text.Small">
         <item name="android:textColor">?attr/dialogTextColorSecondary</item>
+        <item name="android:textSize">14dp</item>
     </style>
 
     <style name="Text.Small.Highlight" parent="@style/Text.Small">
@@ -43,6 +44,7 @@
 
     <style name="Text.Mid.Dialog" parent="@style/Text.Mid">
         <item name="android:textColor">?attr/dialogTextColorPrimary</item>
+        <item name="android:textSize">18dp</item>
     </style>
 
     <style name="Text.Mid.Highlight" parent="@style/Text.Mid">
@@ -65,6 +67,7 @@
 
     <style name="Text.Large.Dialog" parent="@style/Text.Large">
         <item name="android:textColor">?attr/dialogTextColorPrimary</item>
+        <item name="android:textSize">20dp</item>
     </style>
 
     <style name="Text.Large.Drawer" parent="@style/Text.Large">

@@ -543,14 +543,13 @@ public class DialogHandler {
         return showHelpDialog(context, msg, title);
     }
 
-    public static boolean showHelpDialog(Context context, int msg, int title) {
+    public static boolean showHelpDialog(final Context context, int msg, int title) {
         try {
-            final View layout = inflate(context, R.layout.alert_multibutton_view);
+            final View layout = inflate(context, R.layout.alert_help_view);
             final AlertDialog dialog = new AlertDialog.Builder(context).setView(layout).create();
-            CharSequence msgText = parseHelpMarkup(context.getString(msg));
-            TextView tvMessage = (TextView)layout.findViewById(R.id.confirm_message);
+            TextView tvMessage = (TextView)layout.findViewById(R.id.help_message);
             if (tvMessage != null) {
-                ViewUtils.setText(layout, msg, R.id.confirm_message);
+                ViewUtils.setText(layout, msg, R.id.help_message);
                 String allHelps = Arrays.toString(HelpStringHelper.getHelpSuffs().toArray())
                         .replace(", ", "|");
                 allHelps = "(" + allHelps.substring(1, allHelps.length() - 2) + ")";
@@ -558,17 +557,21 @@ public class DialogHandler {
                 Linkify.addLinks(tvMessage, p, "content://org.brandroid.openmanager/help/");
             }
             if (title > 0)
-                dialog.setTitle(title);
+                dialog.setTitle(context.getText(title));
+            ViewUtils.setOnClicks(layout, new OnClickListener() {
+                public void onClick(View v) {
+                    if (v.getId() == R.id.help_skip) {
+                        boolean skip = ((CheckBox)v).isChecked();
+                        new Preferences(context).setSetting("warn", "help_skip", skip);
+                    }
+                }
+            }, R.id.help_skip);
             dialog.show();
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-    }
-
-    private static CharSequence parseHelpMarkup(String string) {
-        return Html.fromHtml(string);
     }
 
     public static void showMultiButtonDialog(Context context, String message, String title,

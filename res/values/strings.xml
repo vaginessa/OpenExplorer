@@ -363,6 +363,7 @@
         <item quantity="other"><xliff:g id="count">%d</xliff:g> files selected</item>
     </plurals>
     
+    <string name="s_skip_help">Do not show help dialogs</string>
     <string name="help_pager">Open Explorer\'s UI is built upon a "page-based" interface. This allows you to keep a set of tabs open representing different locations.</string>
     <string name="help_bookmark">One of the main functions you will probably use in Open Explorer is the Bookmarks menu. To activate, simply tap the contextual folder icon, in the upper-left corner, from any folder. This will slide out the menu of drives, smart folders, favorites, and networking servers.</string>
     <string name="help_drives">Open Explorer lists all drives attached to your system. This includes your internal memory, external memory (if applicable), and any USB drives (if available). You can also enable showing the root folder (/) via the Global Preferences menu.</string>
