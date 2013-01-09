@@ -212,7 +212,7 @@ public class ContentAdapter extends BaseAdapter {
 
     private OpenPath[] getList() {
         try {
-            if (!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener)
+            if (mParent == null || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener))
                 return new OpenPath[0];
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
