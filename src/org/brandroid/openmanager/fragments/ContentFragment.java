@@ -1631,7 +1631,7 @@ OnTaskUpdateListener, ContentAdapter.Callback {
         mTopIndex = mGrid.getFirstVisiblePosition();
         if (mContentAdapter != null && mTopIndex > -1 && mTopIndex < mContentAdapter.getCount()) {
             mTopPath = mContentAdapter.getItem(mTopIndex);
-            Logger.LogInfo("Top Path saved to " + mTopIndex
+            Logger.LogVerbose("Top Path saved to " + mTopIndex
                     + (mTopPath != null ? " :: " + mTopPath.getName() : ""));
         }
     }
@@ -1651,7 +1651,7 @@ OnTaskUpdateListener, ContentAdapter.Callback {
     }
 
     private Boolean restoreTopPath(int index) {
-        Logger.LogInfo("Top Path restored to " + index);
+        Logger.LogVerbose("Top Path restored to " + index);
         mGrid.setSelection(index);
         mTopIndex = 0;
         mTopPath = null;

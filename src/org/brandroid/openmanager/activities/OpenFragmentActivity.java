@@ -253,7 +253,7 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
     }
 
     public void showToast(final CharSequence message, final int toastLength) {
-        Logger.LogInfo("Made toast: " + message);
+        Logger.LogVerbose("Made toast: " + message);
         runOnUiThread(new Runnable() {
             public void run() {
                 Toast.makeText(getBaseContext(), message, toastLength).show();

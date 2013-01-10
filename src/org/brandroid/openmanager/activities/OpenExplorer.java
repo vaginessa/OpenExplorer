@@ -870,8 +870,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public boolean showMenu(int menuId, final View from, final boolean fromTouch) {
         if (!BEFORE_HONEYCOMB && MenuUtils.getMenuLookupSub(menuId) > -1)
             return false;
-        Logger.LogInfo("showMenu(0x" + Integer.toHexString(menuId) + ","
-                + (from != null ? from.toString() : "NULL") + ")");
         // if(mMenuPopup == null)
 
         if (from != null
