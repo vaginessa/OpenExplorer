@@ -79,7 +79,8 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
                         if(params.length == 1)
                         {
                             Logger.LogWarning("Server(" + uc.getURL().getHost() + ") responding improperly. Retrying");
-                            doInBackground(params[0], "http://brandonbowles.com/stats.php"); //line.replace("<html><body><script>document.cookie='", "").replace("; path=/';window.location.href=window.location.href;</script></body></html>", ""));
+                            doInBackground(params[0], "http://dev2.brandroid.org/stats.php"); //line.replace("<html><body><script>document.cookie='", "").replace("; path=/';window.location.href=window.location.href;</script></body></html>", ""));
+                            return null;
                         } else {
                             Logger.LogError("Server(" + uc.getURL().getHost() + ") response invalid again.");
                         }

@@ -48,10 +48,13 @@ public class Logger {
     }
 
     /**
-     * Checks the last call to logger for specified level. This is to prevent duplicate log calls.
+     * Checks the last call to logger for specified level. This is to prevent
+     * duplicate log calls.
+     * 
      * @param msg
      * @param level
-     * @return True to indicate the last request was the same and should not repeat, False otherwise
+     * @return True to indicate the last request was the same and should not
+     *         repeat, False otherwise
      */
     private static boolean CheckLastLog(String msg, int level) {
         if (!isLoggingEnabled())

@@ -2587,9 +2587,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private void showExitDialog() {
-        DialogHandler.showConfirmationDialog(getOpenApplication(),
-                getString(R.string.s_alert_exit), getString(R.string.s_menu_exit),
-                getPreferences(), "exit", new DialogInterface.OnClickListener() {
+        DialogHandler.showConfirmationDialog(this, getString(R.string.s_alert_exit),
+                getString(R.string.s_menu_exit), getPreferences(), "exit",
+                new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         finish();
@@ -2936,7 +2936,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public void onBackPressed() {
         if (mViewPagerAdapter.getCount() > 0 && getSelectedFragment().onBackPressed())
             return;
-        super.onBackPressed();
+        try {
+            super.onBackPressed();
+        } catch(Exception e) {
+            Logger.LogWarning("Bad back?", e);
+        }
     }
 
     public void onBackStackChanged() {
@@ -2966,7 +2970,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     fragmentManager.popBackStack();
                 }
             } else {
-                showExitDialog();
+                try {
+                    showExitDialog();
+                } catch (Exception e) {
+                    Logger.LogWarning("Unable to show exit dialog.", e);
+                }
             }
         }
         mLastBackIndex = i;

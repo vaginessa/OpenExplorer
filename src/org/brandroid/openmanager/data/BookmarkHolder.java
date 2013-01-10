@@ -62,7 +62,7 @@ public class BookmarkHolder {
     private void ensureViews() {
         if (mIcon == null)
             mIcon = (RemoteImageView)mParentView.findViewById(R.id.content_icon);
-        if (mMainText == null)
+        if (mMainText == null && mParentView.findViewById(R.id.content_text) != null && mParentView.findViewById(R.id.content_text) instanceof TextView)
             mMainText = (TextView)mParentView.findViewById(R.id.content_text);
         if (mEject == null)
             mEject = (ImageView)mParentView.findViewById(R.id.eject);
