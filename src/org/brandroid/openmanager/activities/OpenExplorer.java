@@ -18,99 +18,7 @@
 
 package org.brandroid.openmanager.activities;
 
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.net.NetworkInfo.State;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.StatFs;
-import android.provider.MediaStore;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.SearchManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.DialogInterface.OnClickListener;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Configuration;
-import android.content.res.Resources;
-import android.content.res.XmlResourceParser;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteException;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentManager.BackStackEntry;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.support.v4.widget.SearchViewCompat;
-import android.support.v4.widget.SearchViewCompat.OnQueryTextListenerCompat;
-import android.text.InputType;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.method.PasswordTransformationMethod;
-import android.text.method.SingleLineTransformationMethod;
-import android.text.style.ForegroundColorSpan;
-import android.util.DisplayMetrics;
-import android.util.SparseArray;
-import android.view.ContextMenu;
-import android.view.Display;
-import android.view.Gravity;
-import android.view.InflateException;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.View.OnFocusChangeListener;
-import android.view.View.OnKeyListener;
-import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.ViewGroup.LayoutParams;
-import android.view.ViewStub;
-import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.BaseAdapter;
-import android.widget.CheckBox;
-import android.widget.CheckedTextView;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ExpandableListView;
-import android.widget.GridView;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.PopupMenu;
-import android.widget.PopupWindow.OnDismissListener;
-import android.widget.TextView;
-import android.widget.TextView.BufferType;
-import android.widget.Toast;
-
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -123,14 +31,14 @@ import java.util.concurrent.RejectedExecutionException;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
 import org.brandroid.openmanager.adapters.OpenClipboard;
-import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListener;
-import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -141,15 +49,15 @@ import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
-import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.LogViewerFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
-import org.brandroid.openmanager.fragments.OperationsFragment;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentDPADListener;
 import org.brandroid.openmanager.fragments.OpenFragment.OnFragmentTitleLongClickListener;
 import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
+import org.brandroid.openmanager.fragments.OperationsFragment;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.interfaces.OpenApp;
@@ -157,12 +65,11 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
-import org.brandroid.openmanager.util.MimeTypes;
-import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
-import org.brandroid.openmanager.util.MimeTypeParser;
-import org.brandroid.openmanager.util.OpenInterfaces;
-import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.MimeTypeParser;
+import org.brandroid.openmanager.util.MimeTypes;
+import org.brandroid.openmanager.util.OpenInterfaces;
+import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
@@ -182,11 +89,106 @@ import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SubmitStatsTask;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
+import org.xmlpull.v1.XmlPullParserException;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.SearchManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.content.res.XmlResourceParser;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.State;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.StatFs;
+import android.provider.MediaStore;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentManager.BackStackEntry;
+import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.InputType;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.method.PasswordTransformationMethod;
+import android.text.method.SingleLineTransformationMethod;
+import android.text.style.ForegroundColorSpan;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.SparseArray;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Display;
+import android.view.Gravity;
+import android.view.InflateException;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnFocusChangeListener;
+import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewStub;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.CheckedTextView;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.PopupMenu;
+import android.widget.PopupWindow.OnDismissListener;
+import android.widget.TextView;
+import android.widget.TextView.BufferType;
+import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
-import com.actionbarsherlock.view.*;
+import com.actionbarsherlock.view.ActionMode;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
+import com.actionbarsherlock.view.SubMenu;
 import com.actionbarsherlock.widget.SearchView;
 import com.actionbarsherlock.widget.SearchView.OnQueryTextListener;
 import com.android.gallery3d.data.DataManager;
@@ -197,18 +199,18 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.jcraft.jsch.JSchException;
 import com.stericson.RootTools.RootTools;
 import com.viewpagerindicator.TabPageIndicator;
-import org.xmlpull.v1.XmlPullParserException;
 
 @SuppressLint("NewApi")
 public class OpenExplorer extends OpenFragmentActivity implements OnBackStackChangedListener,
         OnClipboardUpdateListener, OnWorkerUpdateListener, OnPageTitleClickListener,
         LoaderCallbacks<Cursor>, OnPageChangeListener, OpenApp, IconContextItemSelectedListener,
         OnKeyListener, OnFragmentDPADListener, OnFocusChangeListener {
-
+    private final static String TAG = "OpenExplorer";
+    
     // Action Bar Menu Variables
-    private Menu mMainOptionsMenu;
+    //private Menu mMainOptionsMenu;
     private MenuItem mMenuPaste;
-    private MenuItem mMenuSearch;
+    //private MenuItem mMenuSearch;
 
     public static final int REQ_PREFERENCES = 6;
     public static final int REQ_SPLASH = 7;
@@ -261,8 +263,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private Boolean mSinglePane = false;
     private Boolean mStateReady = true;
     private Boolean mTwoRowTitle = false;
-    private String mLastMenuClass = "";
-    private long lastInvalidate = 0l;
+    //private String mLastMenuClass = "";
+    //private long lastInvalidate = 0l;
     private int mLastClipSize = -1;
     private boolean mLastClipState = false;
     public static boolean DEBUG_TOGGLE = false;
@@ -281,8 +283,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static OnBookMarkChangeListener mBookmarkListener;
     private ViewGroup mToolbarButtons = null;
     private ViewGroup mStaticButtons = null;
-    private View mSearchView = null;
-    private int mTitleButtons = 0;
+    //private View mSearchView = null;
+    //private int mTitleButtons = 0;
     private static ActionBar mBar = null;
     private OpenClipboard mClipboard;
 
@@ -295,98 +297,23 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public FragmentManager fragmentManager;
 
-    private final static OpenCursor mPhotoParent = new OpenCursor("Photos",
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI), mVideoParent = new OpenCursor("Videos",
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI), mMusicParent = new OpenCursor("Music",
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI), mApkParent = new OpenCursor("Apps",
-            BEFORE_HONEYCOMB ? Uri.fromFile(OpenFile.getExternalMemoryDrive(true).getFile())
+    private final static OpenCursor mPhotoParent = new OpenCursor("Photos",MediaStore.Images.Media.EXTERNAL_CONTENT_URI); 
+    private final static OpenCursor mVideoParent = new OpenCursor("Videos", MediaStore.Video.Media.EXTERNAL_CONTENT_URI); 
+    private final static OpenCursor mMusicParent = new OpenCursor("Music", MediaStore.Audio.Media.EXTERNAL_CONTENT_URI); 
+    private final static OpenCursor mApkParent = new OpenCursor("Apps", BEFORE_HONEYCOMB ? Uri.fromFile(OpenFile.getExternalMemoryDrive(true).getFile())
                     : MediaStore.Files.getContentUri("/mnt"));
-    private final static OpenSmartFolder mVideoSearchParent = new OpenSmartFolder("Videos"),
-            mPhotoSearchParent = new OpenSmartFolder("Photos"),
-            mDownloadParent = new OpenSmartFolder("Downloads");
-    private final static OpenPathMerged mVideosMerged = new OpenPathMerged("Videos"),
-            mPhotosMerged = new OpenPathMerged("Photos");
+
+    private final static OpenSmartFolder mVideoSearchParent = new OpenSmartFolder("Videos");
+    private final static OpenSmartFolder mPhotoSearchParent = new OpenSmartFolder("Photos");
+    private final static OpenSmartFolder mDownloadParent = new OpenSmartFolder("Downloads");
+    
+    private final static OpenPathMerged mVideosMerged = new OpenPathMerged("Videos");
+    private final static OpenPathMerged mPhotosMerged = new OpenPathMerged("Photos");
 
     public boolean isViewPagerEnabled() {
         return mViewPagerEnabled;
     }
-
-    private void loadPreferences() {
-        Preferences prefs = getPreferences();
-
-        // mViewPagerEnabled = prefs.getBoolean("global", "pref_pagers", true);
-        // USE_ACTIONMODE = getPreferences().getBoolean("global",
-        // "pref_actionmode", false);
-
-        Preferences.Pref_Intents_Internal = prefs
-                .getBoolean("global", "pref_intent_internal", true);
-        Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
-        Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
-        Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
-        Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
-        Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
-        Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
-        Preferences.Pref_Root = prefs.getBoolean("global", "pref_root", Preferences.Pref_Root);
-        ThumbnailCreator.showCenteredCroppedPreviews = prefs.getBoolean("global",
-                "prefs_thumbs_crop", true);
-        Preferences.Run_Count = prefs.getInt("stats", "runs", 0) + 1;
-        prefs.setSetting("stats", "runs", Preferences.Run_Count);
-
-        PackageInfo pi = null;
-        try {
-            pi = getPackageManager().getPackageInfo(getPackageName(), 0);
-        } catch (NameNotFoundException e) {
-        }
-
-        VERSION = pi.versionCode;
-
-        if (Preferences.Pref_Analytics) {
-            String gaCode = "UA-20719255-4";
-            if (pi != null && pi.applicationInfo != null && pi.applicationInfo.metaData != null
-                    && pi.applicationInfo.metaData.containsKey("ga_code"))
-                gaCode = pi.applicationInfo.metaData.getString("ga_code");
-
-            final String ga = gaCode;
-            final PackageInfo pi2 = pi;
-            final Context atc = getApplicationContext();
-
-            queueToTracker(new Runnable() {
-                public void run() {
-                    getAnalyticsTracker().startNewSession(ga, atc);
-                }
-            });
-        }
-
-        if (!Preferences.Pref_Language.equals(""))
-            setLanguage(getContext(), Preferences.Pref_Language);
-
-        // USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus",
-        // Build.VERSION.SDK_INT < 14);
-        USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", true);
-
-        String s = prefs.getString("global", "pref_location_ext", null);
-        if (s != null && new OpenFile(s).exists())
-            OpenFile.setExternalMemoryDrive(new OpenFile(s));
-        else
-            prefs.setSetting("global", "pref_location_ext", OpenFile.getExternalMemoryDrive(true)
-                    .getPath());
-
-        s = prefs.getString("global", "pref_location_int", null);
-        if (s != null && new OpenFile(s).exists())
-            OpenFile.setInternalMemoryDrive(new OpenFile(s));
-        else
-            prefs.setSetting("global", "pref_location_int", OpenFile.getInternalMemoryDrive()
-                    .getPath());
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (IS_DEBUG_BUILD)
-            Logger.LogVerbose("OpenExplorer.onResume");
-        onClipboardUpdate();
-    }
-
+    
     public void onCreate(Bundle savedInstanceState) {
         if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onCreate");
@@ -410,7 +337,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         int theme = getThemeId();
         boolean themeDark = R.style.AppTheme_Dark == theme;
-
+        
+        /*设应用主题*/
         getApplicationContext().setTheme(theme);
         setTheme(theme);
         getOpenApplication().loadThemedAssets(this);
@@ -501,10 +429,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } catch (NameNotFoundException e1) {
         }
 
+        Log.i(TAG, "is nook: " + isNook());
         // handleNetworking();
         refreshCursors();
 
-        checkWelcome();
+        //checkWelcome();  cancel donate pop dialog.
 
         setViewVisibility(false, false, R.id.title_paste, R.id.title_ops, R.id.title_log);
         setOnClicks(R.id.title_ops, // R.id.menu_global_ops_icon,
@@ -589,6 +518,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // "pref_start", "Internal"));
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (IS_DEBUG_BUILD)
+            Logger.LogVerbose("OpenExplorer.onResume");
+        onClipboardUpdate();
+    }
+    
     @Override
     public void setTitle(int titleId) {
         setTitle(getText(titleId));
@@ -609,189 +547,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             super.setTitle(title);
     }
 
-    private void showDonateDialog(int resMessage, String sTitle, final String pref) {
-        if (getPreferences().getBoolean("warn", pref, false))
-            return;
-        DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
-                new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case R.string.s_no:
-                                getPreferences().setSetting("warn", pref, true);
-                                break;
-                            case R.string.s_cancel:
-                                break;
-                            default:
-                                getPreferences().setSetting("warn", pref, true);
-                                launchDonation(OpenExplorer.this);
-                                break;
-                        }
-                        if (dialog != null)
-                            dialog.dismiss();
-                    }
-                }, R.string.s_menu_donate, R.string.s_no, R.string.s_cancel);
-    }
-
-    private void checkWelcome() {
-        if (Preferences.Run_Count > 5) {
-            if (isNook())
-                showDonateDialog(R.string.msg_nook_donate, "Hello Nook User!", "nook_donate");
-            else if (isBlackBerry())
-                showDonateDialog(R.string.msg_bb_donate, "Hello Blackberry User!", "rim_donate");
-            else
-                showDonateDialog(R.string.msg_donate, null, "donate");
-        } else if (Preferences.Run_Count < 5)
-            checkGTV();
-    }
-
-    private void checkGTV() {
-        try {
-            if (isGTV()) {
-                // IS_DEBUG_BUILD = false;
-                // CAN_DO_CAROUSEL = true;
-                if (!getPreferences().getBoolean("global", "welcome", false)) {
-                    showToast("Welcome, GoogleTV user!");
-                    getPreferences().setSetting("global", "welcome", true);
-                }
-            }
-        } catch (Exception e) {
-            Logger.LogWarning("Couldn't check for GTV", e);
-        }
-    }
-
-    private void checkRoot() {
-        try {
-            if (Preferences.Pref_Root) {
-                showToast("Root preference selected, requesting now.");
-                // && (RootManager.Default == null ||
-                // !RootManager.Default.isRoot()))
-                requestRoot();
-            } else { // if(RootManager.Default != null)
-                exitRoot();
-            }
-        } catch (Exception e) {
-            Logger.LogWarning("Couldn't get root.", e);
-        }
-    }
-
-    private void requestRoot() {
-        new Thread(new Runnable() {
-            public void run() {
-                if (RootTools.isAccessGiven())
-                    try {
-                        RootTools.getShell(true);
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-            }
-        }).start();
-    }
-
-    private void exitRoot() {
-        new Thread(new Runnable() {
-            public void run() {
-                try {
-                    RootTools.closeAllShells();
-                } catch (IOException e) {
-                    Logger.LogWarning("An exception occurred while closing root shells.", e);
-                }
-            }
-        }).start();
-    }
-
-    private void handleNetworking() {
-        FileManager.DefaultUserInfo = new SimpleUserInfo();
-        final Context c = this;
-        Preferences.Warn_Networking = getPreferences().getSetting("warn", "networking", false);
-        SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
-
-            public boolean promptPassword(String message) {
-                String mPassword = null;
-                View view = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-                        .inflate(R.layout.prompt_password, null);
-                TextView tv = (TextView)view.findViewById(android.R.id.message);
-                tv.setText(message);
-                final EditText text1 = ((EditText)view.findViewById(android.R.id.text1));
-                final CheckBox checkpw = (CheckBox)view.findViewById(android.R.id.checkbox);
-                checkpw.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked) {
-                            text1.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                            text1.setTransformationMethod(new SingleLineTransformationMethod());
-                        } else {
-                            text1.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                            text1.setTransformationMethod(new PasswordTransformationMethod());
-                        }
-                    }
-                });
-
-                AlertDialog dlg = new AlertDialog.Builder(c)
-                        .setTitle(R.string.s_prompt_password)
-                        .setView(view)
-                        .setPositiveButton(android.R.string.yes,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        String mPassword = text1.getText().toString();
-                                        onPasswordEntered(mPassword);
-                                        onYesNoAnswered(true);
-                                    }
-                                }).setNegativeButton(android.R.string.no, new OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                onYesNoAnswered(false);
-                            }
-                        }).create();
-                dlg.show();
-                return true;
-            }
-
-            @Override
-            public void onYesNoAnswered(boolean yes) {
-            }
-
-            @Override
-            public void onPasswordEntered(String password) {
-            }
-
-            @Override
-            public boolean promptYesNo(final String message) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        AlertDialog dlg = new AlertDialog.Builder(c).setMessage(message)
-                                .setPositiveButton(android.R.string.yes, new OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        onYesNoAnswered(true);
-                                    }
-                                }).setNegativeButton(android.R.string.no, new OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        onYesNoAnswered(false);
-                                    }
-                                }).create();
-                        dlg.show();
-                    }
-                });
-                return true;
-            }
-        });
-        try {
-            OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
-                    FileManager.DefaultUserInfo, Preferences.getPreferences(
-                            getApplicationContext(), "hosts")));
-            OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
-        } catch (JSchException e) {
-            Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
-        }
-    }
-
-    private MimeTypes getMimeTypes() {
-        return getMimeTypes(this);
-    }
 
     public static MimeTypes getMimeTypes(Context c) {
         if (mMimeTypes != null)
@@ -820,42 +575,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return mMimeTypes;
     }
 
-    private void setCurrentItem(final int page, final boolean smooth) {
-        try {
-            // if(!Thread.currentThread().equals(UiThread))
-            mViewPager.post(new Runnable() {
-                public void run() {
-                    if (mViewPager.getCurrentItem() != page)
-                        mViewPager.setCurrentItem(page, smooth);
-                    else
-                        Logger.LogDebug("Current page already set to " + page);
-                }
-            });
-            // else if(mViewPager.getCurrentItem() != page)
-            // mViewPager.setCurrentItem(page, smooth);
-        } catch (Exception e) {
-            Logger.LogError("Couldn't set ViewPager page to " + page, e);
-        }
-    }
-
-    private void handleExceptionHandler() {
-        if (Logger.checkWTF()) {
-            OpenFile crashFile = Logger.getCrashFile();
-            if (crashFile.exists()) {
-                try {
-                    Logger.LogWTF(crashFile.readAscii(), new Exception());
-                    crashFile.delete();
-                } catch (Exception e) {
-                }
-            }
-            // if(!getSetting(null, "pref_autowtf", false))
-            // showWTFIntent();
-            // else if(isNetworkConnected())
-            // new SubmitStatsTask(this).execute(
-            // Logger.getCrashReport(true));
-        }
-    }
-
     @Override
     protected void onNewIntent(Intent intent) {
         Logger.LogDebug("New Intent! " + intent.toString());
@@ -875,7 +594,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 && showIContextMenu(menuId, from instanceof CheckedTextView ? null : from,
                         fromTouch) != null)
             return true;
-        if (from.showContextMenu())
+        if (from != null && from.showContextMenu())
             return true;
         // if(IS_DEBUG_BUILD && BEFORE_HONEYCOMB)
         // showToast("Invalid option (0x" + Integer.toHexString(menuId) + ")" +
@@ -1104,107 +823,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return true;
     }
 
-    private void upgradeViewSettings() {
-        if (getSetting(null, "pref_up_views", false))
-            return;
-        setSetting("pref_up_views", true);
-        getPreferences().upgradeViewSettings();
-    }
-
-    private void initBookmarkDropdown() {
-        if (mBookmarksList == null)
-            mBookmarksList = new ExpandableListView(this);
-        if (findViewById(R.id.list_frag) != null) {
-            ViewGroup leftNav = ((ViewGroup)findViewById(R.id.list_frag));
-            leftNav.removeAllViews();
-            leftNav.addView(mBookmarksList);
-        } else {
-            View anchor = null;
-            if (anchor == null)
-                anchor = findViewById(R.id.title_icon_holder);
-            if (anchor == null)
-                anchor = findViewById(android.R.id.home);
-            if (anchor == null && USE_ACTION_BAR && mBar != null && mBar.getCustomView() != null)
-                anchor = mBar.getCustomView();
-            if (anchor == null)
-                anchor = findViewById(R.id.title_bar);
-            mBookmarksPopup = new BetterPopupWindow(this, anchor);
-            mBookmarksPopup.setLayout(R.layout.contextmenu_simple);
-            mBookmarksPopup.setAnimation(R.style.Animations_SlideFromLeft);
-            mBookmarksPopup.setPopupHeight(LayoutParams.MATCH_PARENT);
-            mBookmarksPopup.setContentView(mBookmarksList);
-        }
-        mBookmarks = new OpenBookmarks(this, mBookmarksList);
-        for (int i = 0; i < mBookmarksList.getCount(); i++)
-            mBookmarksList.expandGroup(i);
-    }
-
-    private void initLogPopup() {
-        if (mLogFragment == null)
-            mLogFragment = new LogViewerFragment();
-        /*
-         * if(findViewById(R.id.frag_log) != null) return;
-         */
-        View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar);
-        mLogFragment.setupPopup(this, anchor);
-    }
-
-    private void initOpsPopup() {
-        if (mOpsFragment == null) {
-            mOpsFragment = new OperationsFragment();
-            View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar);
-            mOpsFragment.setupPopup(this, anchor);
-        }
-    }
-
-    private void initPager() {
-        mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
-        TabPageIndicator indicator = null;
-        if (mViewPagerEnabled && mViewPager != null) {
-            setViewVisibility(false, false, R.id.content_frag, R.id.title_path);
-            setViewVisibility(mTwoRowTitle, false, R.id.title_text);
-            setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
-            mViewPager.setOnPageChangeListener(this);
-            // mViewPager.setOnPageIndicatorChangeListener(this);
-            View indicator_frame = findViewById(R.id.content_pager_indicator);
-            try {
-                // LayoutAnimationController lac = new
-                // LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(),
-                // false));
-                if (indicator_frame != null)
-                    indicator_frame.setAnimation(AnimationUtils.makeInAnimation(
-                            getApplicationContext(), false));
-            } catch (Resources.NotFoundException e) {
-                Logger.LogError("Couldn't load pager animation.", e);
-            }
-            indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
-            if (indicator != null)
-                mViewPager.setIndicator(indicator);
-            else
-                Logger.LogError("Couldn't find indicator!");
-            // mViewPager = new ViewPager(getApplicationContext());
-            // ((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
-            // findViewById(R.id.content_frag).setId(R.id.fake_content_id);
-        } else {
-            // mViewPagerEnabled = false;
-            mViewPager = null; // (ViewPager)findViewById(R.id.content_pager);
-            setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
-            setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path);
-        }
-
-        if (mViewPager != null && mViewPagerEnabled) {
-            if (IS_DEBUG_BUILD)
-                Logger.LogDebug("Setting up ViewPager");
-            mViewPagerAdapter = // new PagerTabsAdapter(this, mViewPager,
-                                // indicator);
-            new ArrayPagerAdapter(this, mViewPager);
-
-            mViewPagerAdapter.setOnPageTitleClickListener(this);
-            setViewPageAdapter(mViewPagerAdapter, true);
-        }
-
-    }
-
     public void setViewVisibility(final boolean visible, final boolean allowAnimation, int... ids) {
         for (int id : ids) {
             final View v = findViewById(id);
@@ -1239,34 +857,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     v.setVisibility(visible ? View.VISIBLE : View.GONE);
             }
         }
-    }
-
-    private boolean setViewPageAdapter(PagerAdapter adapter) {
-        return setViewPageAdapter(adapter, true);
-    }
-
-    private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload) {
-        if (adapter == null)
-            adapter = mViewPager.getAdapter();
-        if (mViewPager != null && getResources() != null) {
-            try {
-                if (!adapter.equals(mViewPager.getAdapter()) || reload)
-                    mViewPager.setAdapter(adapter);
-                else
-                    mViewPager.notifyDataSetChanged();
-                return true;
-            } catch (IndexOutOfBoundsException e) {
-                Logger.LogError("Why is this happening?", e);
-                return false;
-            } catch (IllegalStateException e) {
-                Logger.LogError("Error trying to set ViewPageAdapter", e);
-                return false;
-            } catch (Exception e) {
-                Logger.LogError("Please stop!", e);
-                return false;
-            }
-        }
-        return false;
     }
 
     public static void launchDonation(Activity a) {
@@ -1305,46 +895,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
     }
 
-    private void showWarnings() {
-        // Non-viewpager disabled
-
-        if (checkLanguage() > 0 && !getPreferences().getBoolean("warn", "translate", false)) {
-            // runOnUiThread(new Runnable(){public void run() {
-            int msg = checkLanguage() == 1 ? R.string.alert_translate_google
-                    : R.string.alert_translate_none;
-            new AlertDialog.Builder(OpenExplorer.this)
-                    .setCancelable(true)
-                    .setMessage(getString(msg, Locale.getDefault().getDisplayLanguage()))
-                    .setNeutralButton("Use English", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            setLanguage(getContext(), "en");
-                            goHome();
-                        }
-                    })
-                    .setPositiveButton(R.string.button_translate,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    launchTranslator(OpenExplorer.this);
-                                }
-                            })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            getPreferences().setSetting("warn", "translate", true);
-                        }
-                    }).create().show();
-            // }});
-        }
-    }
-
-    private int checkLanguage() {
-        String lang = DialogHandler.getLangCode();
-        if (lang.equals("EN"))
-            return 0;
-        return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf("," + DialogHandler.getLangCode() + ",") == -1 ? 2
-                : 1;
-    }
 
     public static void showSplashIntent(Context context, String start) {
         Intent intent = new Intent(context, SplashActivity.class);
@@ -1430,14 +980,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (d != null) {
                 DisplayMetrics dm = new DisplayMetrics();
                 d.getMetrics(dm);
-                if (dm != null) {
-                    SCREEN_DPI = dm.densityDpi;
-                    SCREEN_WIDTH = dm.widthPixels;
-                    SCREEN_HEIGHT = dm.heightPixels;
-                } else {
-                    SCREEN_WIDTH = d.getWidth();
-                    SCREEN_HEIGHT = d.getHeight();
-                }
+                SCREEN_DPI = dm.densityDpi;
+                SCREEN_WIDTH = dm.widthPixels;
+                SCREEN_HEIGHT = dm.heightPixels;
             }
         }
     }
@@ -1459,55 +1004,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // refreshCursors();
         // mBookmarks.scanBookmarks();
         mStateReady = true;
-    }
-
-    /*
-     * @Override protected void onSaveInstanceState(Bundle outState) { try {
-     * super.onSaveInstanceState(outState); List<Fragment> frags =
-     * mViewPagerAdapter.getFragments(); String[] paths = new
-     * String[frags.size()]; for(int i = 0; i < frags.size(); i++) { Fragment f
-     * = frags.get(i); if(f instanceof OpenPathFragmentInterface) paths[i] =
-     * ((OpenPathFragmentInterface)f).getPath().toString(); }
-     * outState.putStringArray("paths", paths);
-     * Logger.LogDebug("-->Saving fragments: " + paths.length); }
-     * catch(Exception e) { Logger.LogError("Couldn't save main state", e); } }
-     * @Override protected void onRestoreInstanceState(Bundle
-     * savedInstanceState) { super.onRestoreInstanceState(savedInstanceState);
-     * if(savedInstanceState != null && savedInstanceState.containsKey("paths"))
-     * { String[] paths = savedInstanceState.getStringArray("paths");
-     * Logger.LogDebug("<--Restoring fragments: " + paths.length); for(int i =
-     * 0; i < paths.length; i++) { String path = paths[i]; if(path == null)
-     * continue; try { OpenPath file = FileManager.getOpenCache(path, false,
-     * null); if(file == null) file = new OpenFile(path); if(file.isTextFile())
-     * mViewPagerAdapter.add(new TextEditorFragment(file)); } catch (IOException
-     * e) { Logger.LogError("Couldn't get Path while restoring state", e); } }
-     * mViewPagerAdapter.notifyDataSetChanged(); } }
-     */
-
-    private void checkTitleSeparator() {
-        if (mStaticButtons == null) {
-            View tsb = findViewById(R.id.title_static_buttons);
-            if (tsb != null && tsb instanceof ViewGroup)
-                mStaticButtons = (ViewGroup)tsb;
-        }
-        if (mStaticButtons == null && USE_ACTION_BAR && mBar != null
-                && mBar.getCustomView() != null)
-            mStaticButtons = (ViewGroup)mBar.getCustomView()
-                    .findViewById(R.id.title_static_buttons);
-        if (mStaticButtons == null) {
-            Logger.LogWarning("Unable to find Title Separator");
-            return;
-        }
-
-        boolean visible = false;
-        for (int id : new int[] {
-                R.id.title_paste, R.id.title_log, R.id.title_ops
-        })
-            if (mStaticButtons.findViewById(id) != null
-                    && mStaticButtons.findViewById(id).getVisibility() == View.VISIBLE)
-                visible = true;
-
-        ViewUtils.setViewsVisible(mStaticButtons, visible, R.id.title_divider);
     }
 
     public void sendToLogView(final String txt, final int color) {
@@ -1542,20 +1038,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             Logger.LogError("Couldn't send to Log Viewer", e);
         }
     }
-
-    private void setupFilesDb() {
-        OpenPath.setDb(new OpenPathDbAdapter(getApplicationContext()));
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        saveOpenedEditors();
-        submitStats();
-        if (Logger.isLoggingEnabled() && Logger.hasDb())
-            Logger.closeDb();
-    }
-
     public boolean isNetworkConnected() {
         ConnectivityManager conman = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         if (!conman.getBackgroundDataSetting())
@@ -1570,64 +1052,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return true;
     }
 
-    @SuppressWarnings("deprecation")
-    private void submitStats() {
-        if (!Logger.isLoggingEnabled())
-            return;
-        setupLoggingDb();
-        if (IS_DEBUG_BUILD)
-            return;
-        if (new Date().getTime() - lastSubmit < 6000)
-            return;
-        lastSubmit = new Date().getTime();
-        if (!isNetworkConnected())
-            return;
-
-        String logs = Logger.getDbLogs(false);
-        if (logs == null || logs == "")
-            logs = "[]";
-        // if(logs != null && logs != "") {
-        Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
-        EventHandler.execute(new SubmitStatsTask(this), logs);
-        // } else Logger.LogWarning("Logs not found.");
-        queueToTracker(new Runnable() {
-            public void run() {
-                getAnalyticsTracker().dispatch();
-            }
-        });
+    @Override
+    protected void onStop() {
+        super.onStop();
+        saveOpenedEditors();
+        submitStats();
+        if (Logger.isLoggingEnabled() && Logger.hasDb())
+            Logger.closeDb();
     }
 
-    public void handleRefreshMedia(final String path, boolean keepChecking, final int retries) {
-        if (!keepChecking || retries <= 0) {
-            refreshBookmarks();
-            return;
-        }
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                Logger.LogDebug("Check " + retries + " for " + path);
-                try {
-                    StatFs sf = new StatFs(path);
-                    if (sf.getBlockCount() == 0)
-                        throw new Exception("No blocks");
-                    showToast(getResources().getString(R.string.s_alert_new_media)
-                            + " "
-                            + getVolumeName(path)
-                            + " @ "
-                            + DialogHandler.formatSize((long)sf.getBlockSize()
-                                    * (long)sf.getAvailableBlocks()));
-                    refreshBookmarks();
-                    if (mLastPath.getPath().equals(path))
-                        goHome();
-                } catch (Throwable e) {
-                    Logger.LogWarning("Couldn't read " + path);
-                    handleRefreshMedia(path, true, retries - 1); // retry again
-                                                                 // in 1/2
-                                                                 // second
-                }
-            }
-        }, 1000);
-    }
 
     public void handleMediaReceiver() {
         storageReceiver = new BroadcastReceiver() {
@@ -1738,174 +1171,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public static final OpenSmartFolder getDownloadParent() {
         return mDownloadParent;
-    }
-
-    private boolean findCursors() {
-        mVideosMerged.setName(getString(R.string.s_videos));
-        mPhotosMerged.setName(getString(R.string.s_photos));
-        mMusicParent.setName(getString(R.string.s_music));
-        mDownloadParent.setName(getString(R.string.s_downloads));
-
-        final OpenFile extDrive = OpenFile.getExternalMemoryDrive(false);
-        final OpenFile intDrive = OpenFile.getInternalMemoryDrive();
-        final boolean mHasExternal = extDrive != null && extDrive.exists();
-        final boolean mHasInternal = intDrive != null && intDrive.exists();
-
-        if (mVideoParent.isLoaded()) {
-            // Logger.LogDebug("Videos should be found");
-        } else {
-            if (bRetrieveExtraVideoDetails)
-                bRetrieveExtraVideoDetails = !getSetting(null, "tag_novidinfo", false);
-            if (IS_DEBUG_BUILD)
-                Logger.LogVerbose("Finding videos");
-            // if(!IS_DEBUG_BUILD)
-            try {
-                mVideosMerged.addParent(mVideoParent);
-                mVideosMerged.addParent(mVideoSearchParent);
-                getSupportLoaderManager().initLoader(0, null, this);
-                new Thread(new Runnable() {
-                    public void run() {
-                        if (mHasExternal)
-                            for (OpenPath kid : extDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("movies") > -1
-                                        || kid.getName().toLowerCase().indexOf("video") > -1)
-                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
-                                            "mkv", "mp4"));
-                        if (mHasInternal)
-                            for (OpenPath kid : intDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("movies") > -1
-                                        || kid.getName().toLowerCase().indexOf("video") > -1)
-                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
-                                            "mkv", "mp4"));
-                        if (isNook()) {
-                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
-                            files = files.getChild("My Files");
-                            if (files != null && files.exists()) {
-                                files = files.getChild("Videos");
-                                if (files != null && files.exists())
-                                    mVideoSearchParent.addSearch(new SmartSearch(files,
-                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
-                                            "mkv", "mp4"));
-                            }
-                        }
-                        try {
-                            mVideosMerged.refreshKids();
-                        } catch (IOException e) {
-                            Logger.LogError("Couldn't refresh merged Videos");
-                        }
-                    }
-                }).start();
-            } catch (Exception e) {
-                Logger.LogError("Couldn't query videos.", e);
-            }
-            Logger.LogDebug("Done looking for videos");
-        }
-        if (!mPhotoParent.isLoaded()) {
-            if (bRetrieveDimensionsForPhotos)
-                bRetrieveDimensionsForPhotos = !getSetting(null, "tag_nodims", false);
-            if (IS_DEBUG_BUILD)
-                Logger.LogVerbose("Finding Photos");
-            try {
-                mPhotosMerged.addParent(mPhotoParent);
-                mPhotosMerged.addParent(mPhotoSearchParent);
-                getSupportLoaderManager().initLoader(1, null, this);
-                new Thread(new Runnable() {
-                    public void run() {
-                        if (mHasExternal)
-                            for (OpenPath kid : extDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("photo") > -1
-                                        || kid.getName().toLowerCase().indexOf("picture") > -1
-                                        || kid.getName().toLowerCase().indexOf("camera") > -1)
-                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
-                                            "gif", "jpeg"));
-                        if (mHasInternal)
-                            for (OpenPath kid : intDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("photo") > -1
-                                        || kid.getName().toLowerCase().indexOf("picture") > -1
-                                        || kid.getName().toLowerCase().indexOf("camera") > -1)
-                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
-                                            "gif", "jpeg"));
-                        if (isNook()) {
-                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
-                            files = files.getChild("My Files");
-                            if (files != null && files.exists()) {
-                                files = files.getChild("Pictures");
-                                if (files != null && files.exists())
-                                    mPhotoSearchParent.addSearch(new SmartSearch(files,
-                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
-                                            "gif", "jpeg"));
-                            }
-                        }
-                        try {
-                            mPhotosMerged.refreshKids();
-                        } catch (IOException e) {
-                            Logger.LogError("Couldn't refresh merged Videos");
-                        }
-                    }
-                }).start();
-                Logger.LogDebug("Done looking for photos");
-
-            } catch (IllegalStateException e) {
-                Logger.LogError("Couldn't query photos.", e);
-            }
-        }
-        if (!mMusicParent.isLoaded()) {
-            if (IS_DEBUG_BUILD)
-                Logger.LogVerbose("Finding Music");
-            try {
-                getSupportLoaderManager().initLoader(2, null, this);
-                Logger.LogDebug("Done looking for music");
-            } catch (IllegalStateException e) {
-                Logger.LogError("Couldn't query music.", e);
-            }
-        }
-        if (!mApkParent.isLoaded()) {
-            if (IS_DEBUG_BUILD)
-                Logger.LogVerbose("Finding APKs");
-            try {
-                getSupportLoaderManager().initLoader(3, null, this);
-            } catch (IllegalStateException e) {
-                Logger.LogError("Couldn't get Apks.", e);
-            }
-        }
-        if (!mDownloadParent.isLoaded()) {
-            new Thread(new Runnable() {
-                public void run() {
-                    if (mHasExternal)
-                        for (OpenPath kid : extDrive.list())
-                            if (kid.getName().toLowerCase().indexOf("download") > -1)
-                                mDownloadParent.addSearch(new SmartSearch(kid));
-                    if (mHasInternal)
-                        for (OpenPath kid : intDrive.list())
-                            if (kid.getName().toLowerCase().indexOf("download") > -1)
-                                mDownloadParent.addSearch(new SmartSearch(kid));
-                    if (isNook()) {
-                        OpenFile files = OpenFile.getExternalMemoryDrive(true);
-                        files = files.getChild("My Files");
-                        if (files != null && files.exists()) {
-                            for (OpenPath kid : intDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("download") > -1)
-                                    mDownloadParent.addSearch(new SmartSearch(kid));
-                        }
-                    }
-                }
-            }).start();
-        }
-        if (IS_DEBUG_BUILD)
-            Logger.LogVerbose("Done finding cursors");
-        return true;
-    }
-
-    private void refreshCursors() {
-        if (findCursors())
-            return;
-        // new Thread(new Runnable(){public void run() {
-        // ensureCursorCache();
-        // }}).start();
     }
 
     public void ensureCursorCache() {
@@ -2131,38 +1396,40 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
     }
 
-    private void saveOpenedEditors() {
-        StringBuilder editing = new StringBuilder(",");
-        for (int i = 0; i < mViewPagerAdapter.getCount(); i++) {
-            OpenFragment f = mViewPagerAdapter.getItem(i);
-            if (f instanceof TextEditorFragment) {
-                TextEditorFragment tf = (TextEditorFragment)f;
-                if (!tf.isSalvagable())
-                    continue;
-                OpenPath path = tf.getPath();
-                if (editing.indexOf("," + path.getPath() + ",") == -1)
-                    editing.append(path + ",");
-            }
+    public void handleRefreshMedia(final String path, boolean keepChecking, final int retries) {
+        if (!keepChecking || retries <= 0) {
+            refreshBookmarks();
+            return;
         }
-        if (IS_DEBUG_BUILD && !editing.equals(","))
-            Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
-        setSetting("editing", editing.toString());
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                Logger.LogDebug("Check " + retries + " for " + path);
+                try {
+                    StatFs sf = new StatFs(path);
+                    if (sf.getBlockCount() == 0)
+                        throw new Exception("No blocks");
+                    showToast(getResources().getString(R.string.s_alert_new_media)
+                            + " "
+                            + getVolumeName(path)
+                            + " @ "
+                            + DialogHandler.formatSize((long)sf.getBlockSize()
+                                    * (long)sf.getAvailableBlocks()));
+                    refreshBookmarks();
+                    if (mLastPath.getPath().equals(path))
+                        goHome();
+                } catch (Throwable e) {
+                    Logger.LogWarning("Couldn't read " + path);
+                    handleRefreshMedia(path, true, retries - 1); // retry again
+                                                                 // in 1/2
+                                                                 // second
+                }
+            }
+        }, 1000);
     }
 
-    private void restoreOpenedEditors() {
-        String editing = getSetting(null, "editing", (String)null);
-        Logger.LogDebug("Restoring [" + editing + "] to TextEditorFragments");
-        if (editing == null)
-            return;
-        for (String s : editing.split(",")) {
-            if (s == null || s == "")
-                continue;
-            OpenPath path = FileManager.getOpenCache(s, this);
-            if (path == null)
-                continue;
-            editFile(path, true);
-        }
-        setViewPageAdapter(mViewPagerAdapter, true);
+    public boolean isSinglePane() {
+        return mSinglePane;
     }
 
     public void closeFragment(final OpenFragment frag) {
@@ -2286,17 +1553,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return ret;
     }
 
-    private boolean shouldFlushMenu(Menu menu) {
-        if (menu == null)
-            return true;
-        if (!menu.hasVisibleItems())
-            return true;
-        OpenFragment f = getSelectedFragment();
-        if (f == null)
-            return false;
-        return !f.getClassName().equals(mLastMenuClass);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         return onCreateOptionsMenu(menu, true);
@@ -2325,51 +1581,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         mMenuPaste = menu.findItem(R.id.menu_context_paste);
 
-        mMainOptionsMenu = menu;
+        //mMainOptionsMenu = menu;
 
         if (IS_KEYBOARD_AVAILABLE)
             MenuUtils.setMneumonics(menu);
 
         return super.onCreateOptionsMenu(menu);
-    }
-
-    private void handleSearchMenu(Menu menu) {
-        final MenuItem mSearch = menu.findItem(R.id.menu_search) != null ? menu
-                .findItem(R.id.menu_search) : menu.add(Menu.FIRST, R.id.menu_search, Menu.NONE,
-                R.string.s_search).setIcon(
-                getContext().getResources().getDrawable(
-                        getThemedResourceId(R.styleable.AppTheme_actionIconSearch,
-                                R.drawable.ic_action_search)));
-
-        final SearchView searchView = new SearchView(getSupportActionBar().getThemedContext());
-        searchView.setQueryHint(getString(R.string.s_search_files));
-        searchView.setIconifiedByDefault(true);
-        searchView.setOnQueryTextListener(new OnQueryTextListener() {
-
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                Logger.LogVerbose("QUERY: " + query);
-                searchView.clearFocus();
-                mSearch.collapseActionView();
-                searchView.setIconified(true);
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_SEARCH);
-                Bundle appData = new Bundle();
-                appData.putString("path", getDirContentFragment(false).getPath().getPath());
-                intent.putExtra(SearchManager.APP_DATA, appData);
-                intent.putExtra(SearchManager.QUERY, query);
-                handleIntent(intent);
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-        });
-        mSearch.setActionView(searchView).setShowAsAction(
-                MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
     }
 
     public boolean onPrepareOptionsMenu(Menu menu) {
@@ -2577,17 +1794,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return onClick(item.getItemId(), item, null);
     }
 
-    private void showExitDialog() {
-        DialogHandler.showConfirmationDialog(this, getString(R.string.s_alert_exit),
-                getString(R.string.s_menu_exit), getPreferences(), "exit",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-    }
-
     @Override
     public void onClick(View v) {
         super.onClick(v);
@@ -2640,110 +1846,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // return super.onOptionsItemSelected(item);
     }
 
-    private void showLogFrag(OpenFragment frag, boolean toggle) {
-        View frag_log = findViewById(R.id.frag_log);
-        ViewUtils.setViewsVisible(this, true, R.id.title_log);
-        if (frag_log == null) {
-            BetterPopupWindow pw = ((Poppable)frag).getPopup();
-            if (!pw.hasShown() || toggle)
-                pw.showLikePopDownMenu();
-        } else {
-            boolean isVis = frag_log.getVisibility() == View.VISIBLE;
-            boolean isFragged = false;
-            Fragment fl = fragmentManager.findFragmentById(R.id.frag_log);
-            if (isVis && (fl != null && fl.equals(frag)))
-                isFragged = true;
-            if (isFragged) {
-                if (toggle) {
-                    Logger.LogDebug("OpenExplorer.showLogFrag : Toggling " + frag.getTitle());
-                    ViewUtils.setViewsVisible(frag_log, !isVis);
-                } else
-                    Logger.LogDebug("OpenExplorer.showLogFrag : Doing nothing for "
-                            + frag.getTitle());
-            } else if (isVis) {
-                Logger.LogDebug("OpenExplorer.showLogFrag : Adding " + frag.getTitle());
-                fragmentManager.beginTransaction().replace(R.id.frag_log, frag)
-                        .disallowAddToBackStack().commitAllowingStateLoss();
-                ViewUtils.setViewsVisible(frag_log, true);
-            } else {
-                Logger.LogDebug("OpenExplorer.showLogFrag : Showing " + frag.getTitle());
-                ViewUtils.setViewsVisible(frag_log, true);
-            }
-        }
-    }
-
-    private void debugTest() {
-        // startActivity(new Intent(this, Authenticator.class));
-        int divide0 = 10 / (5 - 5);
-        Logger.LogVerbose("I did it! 10 / 0 = " + divide0 + "!!!");
-    }
-
-    public boolean isSinglePane() {
-        return mSinglePane;
-    }
-
-    private void onClipboardDropdown(View anchor) {
-        ViewUtils.setViewsVisible(mStaticButtons, true, R.id.title_paste);
-        if (anchor == null)
-            anchor = ViewUtils.getFirstView(this, R.id.title_paste, R.id.title_icon_holder,
-                    R.id.frag_holder);
-
-        final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
-        View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
-                R.layout.clipboard_layout, null);
-        GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
-        final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
-        mListClipboard.setAdapter(getClipboard());
-        mListClipboard.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> list, View view, final int pos, long id) {
-                // OpenPath file = mClipboard.get(pos);
-                // if(file.getParent().equals(mLastPath))
-                int animTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-                Animation anim = AnimationUtils.loadAnimation(OpenExplorer.this,
-                        R.anim.slide_out_left);
-                anim.setDuration(animTime);
-                // anim.setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
-                view.startAnimation(anim);
-                new Handler().postDelayed(new Runnable() {
-                    public void run() {
-                        getClipboard().remove(pos);
-                        getClipboard().notifyDataSetChanged();
-                        if (getClipboard().getCount() == 0)
-                            clipdrop.dismiss();
-                    }
-                }, animTime);
-            }
-        });
-        final Menu menu = IconContextMenu.newMenu(this, R.menu.multiselect);
-        MenuUtils.setMenuChecked(menu, mActionMode != null, R.id.menu_multi);
-        MenuUtils.setMenuVisible(menu, getClipboard().hasPastable(), R.id.menu_multi_all_copy,
-                R.id.menu_multi_all_copy, R.id.menu_multi_all_move);
-        final IconContextMenuAdapter cmdAdapter = new IconContextMenuAdapter(this, menu);
-        cmdAdapter.setTextLayout(R.layout.context_item);
-        mGridCommands.setAdapter(cmdAdapter);
-        mGridCommands.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
-                MenuItem item = menu.getItem(pos);
-                if (!onOptionsItemSelected(item))
-                    onClick(item.getItemId(), item, view);
-                clipdrop.dismiss();
-            }
-        });
-
-        float w = getResources().getDimension(R.dimen.popup_width) * (3 / 2);
-        if (w > getWindowWidth())
-            w = getWindowWidth() - 20;
-        clipdrop.setPopupWidth((int)w);
-        clipdrop.setContentView(root);
-
-        clipdrop.showLikePopDownMenu();
-        // dropdown.setAdapter(this, new IconContextMenuAdapter(context, menu))
-        // BetterPopupWindow win = new BetterPopupWindow(this, anchor);
-        // ListView list =
-        // ((LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.multiselect,
-        // null);
-        // win.setContentView(root)
-    }
 
     public OpenPath getCurrentPath() {
         OpenFragment f = getSelectedFragment();
@@ -2963,200 +2065,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         mLastBackIndex = i;
     }
 
-    private void changePath(OpenPath path, Boolean addToStack) {
-        changePath(path, addToStack, false);
-    }
-
-    private void changePath(OpenPath path, Boolean addToStack, Boolean force) {
-        try {
-            // if(mLastPath != null && !mLastPath.equals(path) && mLastPath
-            // instanceof OpenNetworkPath)
-            // ((OpenNetworkPath)mLastPath).disconnect();
-        } catch (Exception e) {
-            Logger.LogError("Couldn't disconnect while changing paths.", e);
-        }
-        toggleBookmarks(false);
-        if (path == null)
-            path = mLastPath;
-        if (path == null)
-            return;
-        if (mLastPath == null && getDirContentFragment(false) != null)
-            mLastPath = getDirContentFragment(false).getPath();
-        if (!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
-            force = true;
-
-        onClipboardUpdate();
-
-        // if(!BEFORE_HONEYCOMB) force = true;
-        // if(!force)
-        // if(!addToStack && path.getPath().equals("/")) return;
-        // if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
-        int newView = getSetting(path, "view", 0);
-        if (!CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) {
-            setSetting(path, "view", VIEW_LIST);
-            newView = VIEW_LIST;
-        }
-        // boolean isNew = !mLastPath.equals(path);
-        int oldView = getSetting(mLastPath, "view", 0);
-
-        if (path instanceof OpenNetworkPath) {
-            if (mLogFragment != null && mLogFragment.getPopup() == null)
-                initLogPopup();
-            if (mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())
-                showLogFrag(mLogFragment, false);
-        } else
-            setViewVisibility(false, false, R.id.frag_log);
-
-        /*
-         * final ImageView icon = (ImageView)findViewById(R.id.title_icon);
-         * if(icon != null) ThumbnailCreator.setThumbnail(this, icon, path, 96,
-         * 96, new OnUpdateImageListener() { public void updateImage(Bitmap b) {
-         * BitmapDrawable d = new BitmapDrawable(getResources(), b);
-         * d.setGravity(Gravity.CENTER); icon.setImageDrawable(d); } });
-         */
-
-        // mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
-        // setViewMode(newView);
-        // if(!BEFORE_HONEYCOMB && Build.VERSION.SDK_INT < 14 && newView ==
-        // VIEW_CAROUSEL) {
-
-        // setViewVisibility(true, false, R.id.content_pager_frame);
-        // setViewVisibility(false, false, R.id.content_frag);
-
-        List<OpenPath> familyTree = path.getAncestors(true);
-
-        if (addToStack) {
-            int bsCount = fragmentManager.getBackStackEntryCount();
-            String last = null;
-            if (bsCount > 0) {
-                BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
-                last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString()
-                        : "";
-                Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? "
-                        + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
-            } else
-                Logger.LogVerbose("First changePath to " + path.getPath());
-            if (mStateReady && (last == null || !last.equalsIgnoreCase(path.getPath()))) {
-                fragmentManager.beginTransaction().setBreadCrumbTitle(path.getPath())
-                        .addToBackStack("path").commitAllowingStateLoss();
-            }
-        }
-        final OpenFragment cf = ContentFragment.getInstance(path, newView,
-                getSupportFragmentManager());
-
-        if (force || addToStack || path.requiresThread()) {
-            int common = 0;
-
-            for (int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--) {
-                OpenFragment f = mViewPagerAdapter.getItem(i);
-                if (f == null || !(f instanceof ContentFragment))
-                    continue;
-                OpenPath tp = ((ContentFragment)f).getPath();
-                if (tp instanceof OpenSmartFolder || !familyTree.contains(tp)) {
-                    Logger.LogDebug("Removing from View Pager Adapter: " + tp);
-                    mViewPagerAdapter.remove(i);
-                    // removed = true;
-                } else
-                    common++;
-            }
-
-            // mViewPagerAdapter.notifyDataSetChanged();
-            // mViewPagerAdapter.removeOfType(ContentFragment.class);
-            // mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-            int iNonContentPages = mViewPagerAdapter.getCount() - common;
-            if (common < 0)
-                mViewPagerAdapter.add(cf);
-            else
-                mViewPagerAdapter.add(common, cf);
-
-            ArrayList<OpenPath> vpaPaths = new ArrayList<OpenPath>();
-            for (OpenFragment frag : mViewPagerAdapter.getFragments())
-                if (frag instanceof OpenPathFragmentInterface)
-                    vpaPaths.add(((OpenPathFragmentInterface)frag).getPath());
-
-            OpenPath tmp = path.getParent();
-            while (tmp != null) {
-                ContentFragment cft = ContentFragment.getInstance(tmp);
-                if (!vpaPaths.contains(tmp)) {
-                    Logger.LogDebug("Adding Parent: " + tmp);
-                    mViewPagerAdapter.add(common, cft);
-                    vpaPaths.add(common, tmp);
-                }
-                tmp = tmp.getParent();
-            }
-
-            setViewPageAdapter(mViewPagerAdapter, false); // DONE: Sped up app
-                                                          // considerably!
-
-            int index = vpaPaths.indexOf(path);
-            if (index >= 0)
-                setCurrentItem(index, addToStack);
-            else
-                Logger.LogDebug("No need to set index to 0");
-        } else {
-            OpenPath commonBase = null;
-            for (int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--) {
-                if (!(mViewPagerAdapter.getItem(i) instanceof ContentFragment))
-                    continue;
-                ContentFragment c = (ContentFragment)mViewPagerAdapter.getItem(i);
-                if (path.getPath().startsWith(c.getPath().getPath()))
-                    continue;
-                commonBase = ((ContentFragment)mViewPagerAdapter.remove(i)).getPath();
-            }
-            int depth = 0;
-            if (commonBase != null)
-                depth = commonBase.getDepth() - 1;
-            OpenPath tmp = path;
-            while (tmp != null && (commonBase == null || !tmp.equals(commonBase))) {
-                mViewPagerAdapter.add(depth, cf);
-                tmp = tmp.getParent();
-                if (tmp == null)
-                    break;
-            }
-            setViewPageAdapter(mViewPagerAdapter, false);
-            // mViewPager.setAdapter(mViewPagerAdapter);
-            setCurrentItem(path.getDepth() - 1, false);
-            // getDirContentFragment(false).refreshData(null, false);
-        }
-        // }
-        // refreshContent();
-        // invalidateOptionsMenu();
-        /*
-         * if(content instanceof ContentFragment)
-         * ((ContentFragment)content).setSettings( SortType.DATE_DESC,
-         * getSetting(path, "thumbs", true), getSetting(path, "hide", true) );
-         */
-        if (path instanceof OpenFile && !path.requiresThread())
-            EventHandler.execute(new PeekAtGrandKidsTask(), path);
-        // ft.replace(R.id.content_frag, content);
-        // ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-        Logger.LogDebug("Setting path to " + path.getPath());
-        mLastPath = path;
-    }
-
-    private String getFragmentPaths(List<OpenFragment> frags) {
-        String ret = "";
-        for (int i = 0; i < frags.size(); i++) {
-            OpenFragment f = frags.get(i);
-            if (f instanceof OpenPathFragmentInterface)
-                ret += ((OpenPathFragmentInterface)f).getPath().getPath();
-            else
-                ret += f.getClass().toString();
-            if (i < frags.size() - 1)
-                ret += ",";
-        }
-        return ret;
-    }
-
-    private String getPagerTitles() {
-        String ret = "";
-        for (int i = 0; i < mViewPagerAdapter.getCount(); i++) {
-            ret += mViewPagerAdapter.getPageTitle(i);
-            if (i < mViewPagerAdapter.getCount() - 1)
-                ret += ",";
-        }
-        return ret;
-    }
 
     @SuppressWarnings("deprecation")
     public void setLights(Boolean on) {
@@ -3261,7 +2169,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 sPath2 = sPath2.substring(0, sPath2.indexOf("_"));
             else if (sPath2.indexOf("_") > -1 && sPath2.indexOf("USB") > sPath2.indexOf("_"))
                 sPath2 = sPath2.substring(sPath2.indexOf("_") + 1);
-            sPath2 = sPath2.toUpperCase();
+            sPath2 = sPath2.toUpperCase(Locale.ENGLISH);
         } finally {
             if (reader != null)
                 try {
@@ -3336,7 +2244,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         mBookmarkListener = bookmarkListener;
     }
 
-    public class PeekAtGrandKidsTask extends AsyncTask<OpenPath, Integer, Integer> {
+    public static class PeekAtGrandKidsTask extends AsyncTask<OpenPath, Integer, Integer> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -3845,6 +2753,988 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         else if (themeName.equals("custom"))
             return R.style.AppTheme_Custom;
         return 0;
+    }
+    /**
+     * 导入软件配置信息
+     */
+    private void loadPreferences() {
+        Preferences prefs = getPreferences();
+
+        // mViewPagerEnabled = prefs.getBoolean("global", "pref_pagers", true);
+        // USE_ACTIONMODE = getPreferences().getBoolean("global",
+        // "pref_actionmode", false);
+
+        Preferences.Pref_Intents_Internal = prefs
+                .getBoolean("global", "pref_intent_internal", true);
+        Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
+        Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
+        Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
+        Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
+        Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
+        Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
+        Preferences.Pref_Root = prefs.getBoolean("global", "pref_root", Preferences.Pref_Root);
+        ThumbnailCreator.showCenteredCroppedPreviews = prefs.getBoolean("global",
+                "prefs_thumbs_crop", true);
+        Preferences.Run_Count = prefs.getInt("stats", "runs", 0) + 1;
+        prefs.setSetting("stats", "runs", Preferences.Run_Count);
+
+        PackageInfo pi = null;
+        try {
+            pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+        } catch (NameNotFoundException e) {
+        }
+
+        VERSION = pi.versionCode;
+
+        if (Preferences.Pref_Analytics) {
+            String gaCode = "UA-20719255-4";
+            if (pi != null && pi.applicationInfo != null && pi.applicationInfo.metaData != null
+                    && pi.applicationInfo.metaData.containsKey("ga_code"))
+                gaCode = pi.applicationInfo.metaData.getString("ga_code");
+
+            final String ga = gaCode;
+            //final PackageInfo pi2 = pi;
+            final Context atc = getApplicationContext();
+
+            queueToTracker(new Runnable() {
+                public void run() {
+                    getAnalyticsTracker().startNewSession(ga, atc);
+                }
+            });
+        }
+
+        if (!Preferences.Pref_Language.equals(""))
+            setLanguage(getContext(), Preferences.Pref_Language);
+
+        // USE_PRETTY_MENUS = prefs.getBoolean("global", "pref_fancy_menus",
+        // Build.VERSION.SDK_INT < 14);
+        USE_PRETTY_CONTEXT_MENUS = prefs.getBoolean("global", "pref_fancy_context", true);
+
+        String s = prefs.getString("global", "pref_location_ext", null);
+        if (s != null && new OpenFile(s).exists())
+            OpenFile.setExternalMemoryDrive(new OpenFile(s));
+        else
+            prefs.setSetting("global", "pref_location_ext", OpenFile.getExternalMemoryDrive(true)
+                    .getPath());
+
+        s = prefs.getString("global", "pref_location_int", null);
+        if (s != null && new OpenFile(s).exists())
+            OpenFile.setInternalMemoryDrive(new OpenFile(s));
+        else
+            prefs.setSetting("global", "pref_location_int", OpenFile.getInternalMemoryDrive()
+                    .getPath());
+    }
+    
+    /**root权限*/
+    private void checkRoot() {
+        try {
+            if (Preferences.Pref_Root) {
+                showToast("Root preference selected, requesting now.");
+                // && (RootManager.Default == null ||
+                // !RootManager.Default.isRoot()))
+                requestRoot();
+            } else { // if(RootManager.Default != null)
+                exitRoot();
+            }
+        } catch (Exception e) {
+            Logger.LogWarning("Couldn't get root.", e);
+        }
+    }
+
+    private void requestRoot() {
+        new Thread(new Runnable() {
+            public void run() {
+                if (RootTools.isAccessGiven())
+                    try {
+                        RootTools.getShell(true);
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+            }
+        }).start();
+    }
+
+    private void exitRoot() {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    RootTools.closeAllShells();
+                } catch (IOException e) {
+                    Logger.LogWarning("An exception occurred while closing root shells.", e);
+                }
+            }
+        }).start();
+    }
+
+    private void handleNetworking() {
+        FileManager.DefaultUserInfo = new SimpleUserInfo();
+        final Context c = this;
+        Preferences.Warn_Networking = getPreferences().getSetting("warn", "networking", false);
+        SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
+
+            public boolean promptPassword(String message) {
+                //String mPassword = null;
+                View view = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+                        .inflate(R.layout.prompt_password, null);
+                TextView tv = (TextView)view.findViewById(android.R.id.message);
+                tv.setText(message);
+                final EditText text1 = ((EditText)view.findViewById(android.R.id.text1));
+                final CheckBox checkpw = (CheckBox)view.findViewById(android.R.id.checkbox);
+                checkpw.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            text1.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                            text1.setTransformationMethod(new SingleLineTransformationMethod());
+                        } else {
+                            text1.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                            text1.setTransformationMethod(new PasswordTransformationMethod());
+                        }
+                    }
+                });
+
+                AlertDialog dlg = new AlertDialog.Builder(c)
+                        .setTitle(R.string.s_prompt_password)
+                        .setView(view)
+                        .setPositiveButton(android.R.string.yes,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        String mPassword = text1.getText().toString();
+                                        onPasswordEntered(mPassword);
+                                        onYesNoAnswered(true);
+                                    }
+                                }).setNegativeButton(android.R.string.no, new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                onYesNoAnswered(false);
+                            }
+                        }).create();
+                dlg.show();
+                return true;
+            }
+
+            @Override
+            public void onYesNoAnswered(boolean yes) {
+            }
+
+            @Override
+            public void onPasswordEntered(String password) {
+            }
+
+            @Override
+            public boolean promptYesNo(final String message) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        AlertDialog dlg = new AlertDialog.Builder(c).setMessage(message)
+                                .setPositiveButton(android.R.string.yes, new OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        onYesNoAnswered(true);
+                                    }
+                                }).setNegativeButton(android.R.string.no, new OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        onYesNoAnswered(false);
+                                    }
+                                }).create();
+                        dlg.show();
+                    }
+                });
+                return true;
+            }
+        });
+        try {
+            OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
+                    FileManager.DefaultUserInfo, Preferences.getPreferences(
+                            getApplicationContext(), "hosts")));
+            OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
+        } catch (JSchException e) {
+            Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
+        }
+    }
+
+    private MimeTypes getMimeTypes() {
+        return getMimeTypes(this);
+    }
+
+    private void setCurrentItem(final int page, final boolean smooth) {
+        try {
+            // if(!Thread.currentThread().equals(UiThread))
+            mViewPager.post(new Runnable() {
+                public void run() {
+                    if (mViewPager.getCurrentItem() != page)
+                        mViewPager.setCurrentItem(page, smooth);
+                    else
+                        Logger.LogDebug("Current page already set to " + page);
+                }
+            });
+            // else if(mViewPager.getCurrentItem() != page)
+            // mViewPager.setCurrentItem(page, smooth);
+        } catch (Exception e) {
+            Logger.LogError("Couldn't set ViewPager page to " + page, e);
+        }
+    }
+
+    private void handleExceptionHandler() {
+        if (Logger.checkWTF()) {
+            OpenFile crashFile = Logger.getCrashFile();
+            if (crashFile.exists()) {
+                try {
+                    Logger.LogWTF(crashFile.readAscii(), new Exception());
+                    crashFile.delete();
+                } catch (Exception e) {
+                    Log.i(TAG, e.getMessage(), e);
+                }
+            }
+            // if(!getSetting(null, "pref_autowtf", false))
+            // showWTFIntent();
+            // else if(isNetworkConnected())
+            // new SubmitStatsTask(this).execute(
+            // Logger.getCrashReport(true));
+        }
+    }
+
+    private void upgradeViewSettings() {
+        if (getSetting(null, "pref_up_views", false))
+            return;
+        setSetting("pref_up_views", true);
+        getPreferences().upgradeViewSettings();
+    }
+
+    private void initBookmarkDropdown() {
+        if (mBookmarksList == null)
+            mBookmarksList = new ExpandableListView(this);
+        if (findViewById(R.id.list_frag) != null) {
+            ViewGroup leftNav = ((ViewGroup)findViewById(R.id.list_frag));
+            leftNav.removeAllViews();
+            leftNav.addView(mBookmarksList);
+        } else {
+            View anchor = null;
+            if (anchor == null)
+                anchor = findViewById(R.id.title_icon_holder);
+            if (anchor == null)
+                anchor = findViewById(android.R.id.home);
+            if (anchor == null && USE_ACTION_BAR && mBar != null && mBar.getCustomView() != null)
+                anchor = mBar.getCustomView();
+            if (anchor == null)
+                anchor = findViewById(R.id.title_bar);
+            mBookmarksPopup = new BetterPopupWindow(this, anchor);
+            mBookmarksPopup.setLayout(R.layout.contextmenu_simple);
+            mBookmarksPopup.setAnimation(R.style.Animations_SlideFromLeft);
+            mBookmarksPopup.setPopupHeight(LayoutParams.MATCH_PARENT);
+            mBookmarksPopup.setContentView(mBookmarksList);
+        }
+        mBookmarks = new OpenBookmarks(this, mBookmarksList);
+        for (int i = 0; i < mBookmarksList.getCount(); i++)
+            mBookmarksList.expandGroup(i);
+    }
+
+    private void initLogPopup() {
+        if (mLogFragment == null)
+            mLogFragment = new LogViewerFragment();
+        /*
+         * if(findViewById(R.id.frag_log) != null) return;
+         */
+        View anchor = ViewUtils.getFirstView(this, R.id.title_log, R.id.title_bar);
+        mLogFragment.setupPopup(this, anchor);
+    }
+
+    private void initOpsPopup() {
+        if (mOpsFragment == null) {
+            mOpsFragment = new OperationsFragment();
+            View anchor = ViewUtils.getFirstView(this, R.id.title_ops, R.id.title_bar);
+            mOpsFragment.setupPopup(this, anchor);
+        }
+    }
+
+    private void initPager() {
+        mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
+        TabPageIndicator indicator = null;
+        if (mViewPagerEnabled && mViewPager != null) {
+            setViewVisibility(false, false, R.id.content_frag, R.id.title_path);
+            setViewVisibility(mTwoRowTitle, false, R.id.title_text);
+            setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
+            mViewPager.setOnPageChangeListener(this);
+            // mViewPager.setOnPageIndicatorChangeListener(this);
+            View indicator_frame = findViewById(R.id.content_pager_indicator);
+            try {
+                // LayoutAnimationController lac = new
+                // LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(),
+                // false));
+                if (indicator_frame != null)
+                    indicator_frame.setAnimation(AnimationUtils.makeInAnimation(
+                            getApplicationContext(), false));
+            } catch (Resources.NotFoundException e) {
+                Logger.LogError("Couldn't load pager animation.", e);
+            }
+            indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
+            if (indicator != null)
+                mViewPager.setIndicator(indicator);
+            else
+                Logger.LogError("Couldn't find indicator!");
+            // mViewPager = new ViewPager(getApplicationContext());
+            // ((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
+            // findViewById(R.id.content_frag).setId(R.id.fake_content_id);
+        } else {
+            // mViewPagerEnabled = false;
+            mViewPager = null; // (ViewPager)findViewById(R.id.content_pager);
+            setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
+            setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path);
+        }
+
+        if (mViewPager != null && mViewPagerEnabled) {
+            if (IS_DEBUG_BUILD)
+                Logger.LogDebug("Setting up ViewPager");
+            mViewPagerAdapter = // new PagerTabsAdapter(this, mViewPager,
+                                // indicator);
+            new ArrayPagerAdapter(this, mViewPager);
+
+            mViewPagerAdapter.setOnPageTitleClickListener(this);
+            setViewPageAdapter(mViewPagerAdapter, true);
+        }
+
+    }
+
+    private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload) {
+        if (adapter == null)
+            adapter = mViewPager.getAdapter();
+        if (mViewPager != null && getResources() != null) {
+            try {
+                if (!adapter.equals(mViewPager.getAdapter()) || reload)
+                    mViewPager.setAdapter(adapter);
+                else
+                    mViewPager.notifyDataSetChanged();
+                return true;
+            } catch (IndexOutOfBoundsException e) {
+                Logger.LogError("Why is this happening?", e);
+                return false;
+            } catch (IllegalStateException e) {
+                Logger.LogError("Error trying to set ViewPageAdapter", e);
+                return false;
+            } catch (Exception e) {
+                Logger.LogError("Please stop!", e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private void showWarnings() {
+        // Non-viewpager disabled
+
+        if (checkLanguage() > 0 && !getPreferences().getBoolean("warn", "translate", false)) {
+            // runOnUiThread(new Runnable(){public void run() {
+            int msg = checkLanguage() == 1 ? R.string.alert_translate_google
+                    : R.string.alert_translate_none;
+            new AlertDialog.Builder(OpenExplorer.this)
+                    .setCancelable(true)
+                    .setMessage(getString(msg, Locale.getDefault().getDisplayLanguage()))
+                    .setNeutralButton("Use English", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            setLanguage(getContext(), "en");
+                            goHome();
+                        }
+                    })
+                    .setPositiveButton(R.string.button_translate,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    launchTranslator(OpenExplorer.this);
+                                }
+                            })
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            getPreferences().setSetting("warn", "translate", true);
+                        }
+                    }).create().show();
+            // }});
+        }
+    }
+
+    private int checkLanguage() {
+        String lang = DialogHandler.getLangCode();
+        if (lang.equals("EN"))
+            return 0;
+        return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf("," + DialogHandler.getLangCode() + ",") == -1 ? 2
+                : 1;
+    }
+
+    private void submitStats() {
+        if (!Logger.isLoggingEnabled())
+            return;
+        setupLoggingDb();
+        if (IS_DEBUG_BUILD)
+            return;
+        if (new Date().getTime() - lastSubmit < 6000)
+            return;
+        lastSubmit = new Date().getTime();
+        if (!isNetworkConnected())
+            return;
+
+        String logs = Logger.getDbLogs(false);
+        if (logs == null || logs == "")
+            logs = "[]";
+        // if(logs != null && logs != "") {
+        Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
+        EventHandler.execute(new SubmitStatsTask(this), logs);
+        // } else Logger.LogWarning("Logs not found.");
+        queueToTracker(new Runnable() {
+            public void run() {
+                getAnalyticsTracker().dispatch();
+            }
+        });
+    }
+
+    private void checkTitleSeparator() {
+        if (mStaticButtons == null) {
+            View tsb = findViewById(R.id.title_static_buttons);
+            if (tsb != null && tsb instanceof ViewGroup)
+                mStaticButtons = (ViewGroup)tsb;
+        }
+        if (mStaticButtons == null && USE_ACTION_BAR && mBar != null
+                && mBar.getCustomView() != null)
+            mStaticButtons = (ViewGroup)mBar.getCustomView()
+                    .findViewById(R.id.title_static_buttons);
+        if (mStaticButtons == null) {
+            Logger.LogWarning("Unable to find Title Separator");
+            return;
+        }
+
+        boolean visible = false;
+        for (int id : new int[] {
+                R.id.title_paste, R.id.title_log, R.id.title_ops
+        })
+            if (mStaticButtons.findViewById(id) != null
+                    && mStaticButtons.findViewById(id).getVisibility() == View.VISIBLE)
+                visible = true;
+
+        ViewUtils.setViewsVisible(mStaticButtons, visible, R.id.title_divider);
+    }
+
+    private void setupFilesDb() {
+        OpenPath.setDb(new OpenPathDbAdapter(getApplicationContext()));
+    }
+
+    
+    private boolean findCursors() {
+        mVideosMerged.setName(getString(R.string.s_videos));
+        mPhotosMerged.setName(getString(R.string.s_photos));
+        mMusicParent.setName(getString(R.string.s_music));
+        mDownloadParent.setName(getString(R.string.s_downloads));
+
+        final OpenFile extDrive = OpenFile.getExternalMemoryDrive(false);
+        final OpenFile intDrive = OpenFile.getInternalMemoryDrive();
+        final boolean mHasExternal = extDrive != null && extDrive.exists();
+        final boolean mHasInternal = intDrive != null && intDrive.exists();
+
+        if (mVideoParent.isLoaded()) {
+            // Logger.LogDebug("Videos should be found");
+        } else {
+            if (bRetrieveExtraVideoDetails)
+                bRetrieveExtraVideoDetails = !getSetting(null, "tag_novidinfo", false);
+            if (IS_DEBUG_BUILD)
+                Logger.LogVerbose("Finding videos");
+            // if(!IS_DEBUG_BUILD)
+            try {
+                mVideosMerged.addParent(mVideoParent);
+                mVideosMerged.addParent(mVideoSearchParent);
+                getSupportLoaderManager().initLoader(0, null, this);
+                new Thread(new Runnable() {
+                    public void run() {
+                        if (mHasExternal)
+                            for (OpenPath kid : extDrive.list())
+                                if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("movies") > -1
+                                        || kid.getName().toLowerCase(Locale.ENGLISH).indexOf("video") > -1)
+                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                            "mkv", "mp4"));
+                        if (mHasInternal)
+                            for (OpenPath kid : intDrive.list())
+                                if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("movies") > -1
+                                        || kid.getName().toLowerCase(Locale.ENGLISH).indexOf("video") > -1)
+                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                            "mkv", "mp4"));
+                        if (isNook()) {
+                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                            files = files.getChild("My Files");
+                            if (files != null && files.exists()) {
+                                files = files.getChild("Videos");
+                                if (files != null && files.exists())
+                                    mVideoSearchParent.addSearch(new SmartSearch(files,
+                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                            "mkv", "mp4"));
+                            }
+                        }
+                        try {
+                            mVideosMerged.refreshKids();
+                        } catch (IOException e) {
+                            Logger.LogError("Couldn't refresh merged Videos");
+                        }
+                    }
+                }).start();
+            } catch (Exception e) {
+                Logger.LogError("Couldn't query videos.", e);
+            }
+            Logger.LogDebug("Done looking for videos");
+        }
+        if (!mPhotoParent.isLoaded()) {
+            if (bRetrieveDimensionsForPhotos)
+                bRetrieveDimensionsForPhotos = !getSetting(null, "tag_nodims", false);
+            if (IS_DEBUG_BUILD)
+                Logger.LogVerbose("Finding Photos");
+            try {
+                mPhotosMerged.addParent(mPhotoParent);
+                mPhotosMerged.addParent(mPhotoSearchParent);
+                getSupportLoaderManager().initLoader(1, null, this);
+                new Thread(new Runnable() {
+                    public void run() {
+                        if (mHasExternal)
+                            for (OpenPath kid : extDrive.list())
+                                if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("photo") > -1
+                                        || kid.getName().toLowerCase(Locale.ENGLISH).indexOf("picture") > -1
+                                        || kid.getName().toLowerCase(Locale.ENGLISH).indexOf("camera") > -1)
+                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
+                        if (mHasInternal)
+                            for (OpenPath kid : intDrive.list())
+                                if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("photo") > -1
+                                        || kid.getName().toLowerCase(Locale.ENGLISH).indexOf("picture") > -1
+                                        || kid.getName().toLowerCase(Locale.ENGLISH).indexOf("camera") > -1)
+                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
+                        if (isNook()) {
+                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                            files = files.getChild("My Files");
+                            if (files != null && files.exists()) {
+                                files = files.getChild("Pictures");
+                                if (files != null && files.exists())
+                                    mPhotoSearchParent.addSearch(new SmartSearch(files,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
+                            }
+                        }
+                        try {
+                            mPhotosMerged.refreshKids();
+                        } catch (IOException e) {
+                            Logger.LogError("Couldn't refresh merged Videos");
+                        }
+                    }
+                }).start();
+                Logger.LogDebug("Done looking for photos");
+
+            } catch (IllegalStateException e) {
+                Logger.LogError("Couldn't query photos.", e);
+            }
+        }
+        if (!mMusicParent.isLoaded()) {
+            if (IS_DEBUG_BUILD)
+                Logger.LogVerbose("Finding Music");
+            try {
+                getSupportLoaderManager().initLoader(2, null, this);
+                Logger.LogDebug("Done looking for music");
+            } catch (IllegalStateException e) {
+                Logger.LogError("Couldn't query music.", e);
+            }
+        }
+        if (!mApkParent.isLoaded()) {
+            if (IS_DEBUG_BUILD)
+                Logger.LogVerbose("Finding APKs");
+            try {
+                getSupportLoaderManager().initLoader(3, null, this);
+            } catch (IllegalStateException e) {
+                Logger.LogError("Couldn't get Apks.", e);
+            }
+        }
+        if (!mDownloadParent.isLoaded()) {
+            new Thread(new Runnable() {
+                public void run() {
+                    if (mHasExternal)
+                        for (OpenPath kid : extDrive.list())
+                            if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("download") > -1)
+                                mDownloadParent.addSearch(new SmartSearch(kid));
+                    if (mHasInternal)
+                        for (OpenPath kid : intDrive.list())
+                            if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("download") > -1)
+                                mDownloadParent.addSearch(new SmartSearch(kid));
+                    if (isNook()) {
+                        OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                        files = files.getChild("My Files");
+                        if (files != null && files.exists()) {
+                            for (OpenPath kid : intDrive.list())
+                                if (kid.getName().toLowerCase(Locale.ENGLISH).indexOf("download") > -1)
+                                    mDownloadParent.addSearch(new SmartSearch(kid));
+                        }
+                    }
+                }
+            }).start();
+        }
+        if (IS_DEBUG_BUILD)
+            Logger.LogVerbose("Done finding cursors");
+        return true;
+    }
+
+    private void refreshCursors() {
+        if (findCursors())
+            return;
+        // new Thread(new Runnable(){public void run() {
+        // ensureCursorCache();
+        // }}).start();
+    }
+
+    private void saveOpenedEditors() {
+        StringBuilder editing = new StringBuilder(",");
+        for (int i = 0; i < mViewPagerAdapter.getCount(); i++) {
+            OpenFragment f = mViewPagerAdapter.getItem(i);
+            if (f instanceof TextEditorFragment) {
+                TextEditorFragment tf = (TextEditorFragment)f;
+                if (!tf.isSalvagable())
+                    continue;
+                OpenPath path = tf.getPath();
+                if (editing.indexOf("," + path.getPath() + ",") == -1)
+                    editing.append(path + ",");
+            }
+        }
+        if (IS_DEBUG_BUILD && !editing.equals(","))
+            Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
+        setSetting("editing", editing.toString());
+    }
+
+    private void restoreOpenedEditors() {
+        String editing = getSetting(null, "editing", (String)null);
+        Logger.LogDebug("Restoring [" + editing + "] to TextEditorFragments");
+        if (editing == null)
+            return;
+        for (String s : editing.split(",")) {
+            if (s == null || s == "")
+                continue;
+            OpenPath path = FileManager.getOpenCache(s, this);
+            if (path == null)
+                continue;
+            editFile(path, true);
+        }
+        setViewPageAdapter(mViewPagerAdapter, true);
+    }
+
+    private void handleSearchMenu(Menu menu) {
+        final MenuItem mSearch = menu.findItem(R.id.menu_search) != null ? menu
+                .findItem(R.id.menu_search) : menu.add(Menu.FIRST, R.id.menu_search, Menu.NONE,
+                R.string.s_search).setIcon(
+                getContext().getResources().getDrawable(
+                        getThemedResourceId(R.styleable.AppTheme_actionIconSearch,
+                                R.drawable.ic_action_search)));
+
+        final SearchView searchView = new SearchView(getSupportActionBar().getThemedContext());
+        searchView.setQueryHint(getString(R.string.s_search_files));
+        searchView.setIconifiedByDefault(true);
+        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Logger.LogVerbose("QUERY: " + query);
+                searchView.clearFocus();
+                mSearch.collapseActionView();
+                searchView.setIconified(true);
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SEARCH);
+                Bundle appData = new Bundle();
+                appData.putString("path", getDirContentFragment(false).getPath().getPath());
+                intent.putExtra(SearchManager.APP_DATA, appData);
+                intent.putExtra(SearchManager.QUERY, query);
+                handleIntent(intent);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+        });
+        mSearch.setActionView(searchView).setShowAsAction(
+                MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+    }
+
+    private void showExitDialog() {
+        DialogHandler.showConfirmationDialog(this, getString(R.string.s_alert_exit),
+                getString(R.string.s_menu_exit), getPreferences(), "exit",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+    }
+
+    private void showLogFrag(OpenFragment frag, boolean toggle) {
+        View frag_log = findViewById(R.id.frag_log);
+        ViewUtils.setViewsVisible(this, true, R.id.title_log);
+        if (frag_log == null) {
+            BetterPopupWindow pw = ((Poppable)frag).getPopup();
+            if (!pw.hasShown() || toggle)
+                pw.showLikePopDownMenu();
+        } else {
+            boolean isVis = frag_log.getVisibility() == View.VISIBLE;
+            boolean isFragged = false;
+            Fragment fl = fragmentManager.findFragmentById(R.id.frag_log);
+            if (isVis && (fl != null && fl.equals(frag)))
+                isFragged = true;
+            if (isFragged) {
+                if (toggle) {
+                    Logger.LogDebug("OpenExplorer.showLogFrag : Toggling " + frag.getTitle());
+                    ViewUtils.setViewsVisible(frag_log, !isVis);
+                } else
+                    Logger.LogDebug("OpenExplorer.showLogFrag : Doing nothing for "
+                            + frag.getTitle());
+            } else if (isVis) {
+                Logger.LogDebug("OpenExplorer.showLogFrag : Adding " + frag.getTitle());
+                fragmentManager.beginTransaction().replace(R.id.frag_log, frag)
+                        .disallowAddToBackStack().commitAllowingStateLoss();
+                ViewUtils.setViewsVisible(frag_log, true);
+            } else {
+                Logger.LogDebug("OpenExplorer.showLogFrag : Showing " + frag.getTitle());
+                ViewUtils.setViewsVisible(frag_log, true);
+            }
+        }
+    }
+
+    private void onClipboardDropdown(View anchor) {
+        ViewUtils.setViewsVisible(mStaticButtons, true, R.id.title_paste);
+        if (anchor == null)
+            anchor = ViewUtils.getFirstView(this, R.id.title_paste, R.id.title_icon_holder,
+                    R.id.frag_holder);
+
+        final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
+        View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
+                R.layout.clipboard_layout, null);
+        GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
+        final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
+        mListClipboard.setAdapter(getClipboard());
+        mListClipboard.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> list, View view, final int pos, long id) {
+                // OpenPath file = mClipboard.get(pos);
+                // if(file.getParent().equals(mLastPath))
+                int animTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+                Animation anim = AnimationUtils.loadAnimation(OpenExplorer.this,
+                        R.anim.slide_out_left);
+                anim.setDuration(animTime);
+                // anim.setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
+                view.startAnimation(anim);
+                new Handler().postDelayed(new Runnable() {
+                    public void run() {
+                        getClipboard().remove(pos);
+                        getClipboard().notifyDataSetChanged();
+                        if (getClipboard().getCount() == 0)
+                            clipdrop.dismiss();
+                    }
+                }, animTime);
+            }
+        });
+        final Menu menu = IconContextMenu.newMenu(this, R.menu.multiselect);
+        MenuUtils.setMenuChecked(menu, mActionMode != null, R.id.menu_multi);
+        MenuUtils.setMenuVisible(menu, getClipboard().hasPastable(), R.id.menu_multi_all_copy,
+                R.id.menu_multi_all_copy, R.id.menu_multi_all_move);
+        final IconContextMenuAdapter cmdAdapter = new IconContextMenuAdapter(this, menu);
+        cmdAdapter.setTextLayout(R.layout.context_item);
+        mGridCommands.setAdapter(cmdAdapter);
+        mGridCommands.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
+                MenuItem item = menu.getItem(pos);
+                if (!onOptionsItemSelected(item))
+                    onClick(item.getItemId(), item, view);
+                clipdrop.dismiss();
+            }
+        });
+
+        float w = getResources().getDimension(R.dimen.popup_width) * (3 / 2);
+        if (w > getWindowWidth())
+            w = getWindowWidth() - 20;
+        clipdrop.setPopupWidth((int)w);
+        clipdrop.setContentView(root);
+
+        clipdrop.showLikePopDownMenu();
+        // dropdown.setAdapter(this, new IconContextMenuAdapter(context, menu))
+        // BetterPopupWindow win = new BetterPopupWindow(this, anchor);
+        // ListView list =
+        // ((LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.multiselect,
+        // null);
+        // win.setContentView(root)
+    }
+    
+    private void changePath(OpenPath path, Boolean addToStack) {
+        changePath(path, addToStack, false);
+    }
+
+    private void changePath(OpenPath path, Boolean addToStack, Boolean force) {
+        try {
+            // if(mLastPath != null && !mLastPath.equals(path) && mLastPath
+            // instanceof OpenNetworkPath)
+            // ((OpenNetworkPath)mLastPath).disconnect();
+        } catch (Exception e) {
+            Logger.LogError("Couldn't disconnect while changing paths.", e);
+        }
+        toggleBookmarks(false);
+        if (path == null)
+            path = mLastPath;
+        if (path == null)
+            return;
+        if (mLastPath == null && getDirContentFragment(false) != null)
+            mLastPath = getDirContentFragment(false).getPath();
+        if (!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
+            force = true;
+
+        onClipboardUpdate();
+
+        // if(!BEFORE_HONEYCOMB) force = true;
+        // if(!force)
+        // if(!addToStack && path.getPath().equals("/")) return;
+        // if(mLastPath.getPath().equalsIgnoreCase(path.getPath())) return;
+        int newView = getSetting(path, "view", 0);
+        if (!CAN_DO_CAROUSEL && newView == VIEW_CAROUSEL) {
+            setSetting(path, "view", VIEW_LIST);
+            newView = VIEW_LIST;
+        }
+        // boolean isNew = !mLastPath.equals(path);
+        //int oldView = getSetting(mLastPath, "view", 0);
+
+        if (path instanceof OpenNetworkPath) {
+            if (mLogFragment != null && mLogFragment.getPopup() == null)
+                initLogPopup();
+            if (mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())
+                showLogFrag(mLogFragment, false);
+        } else
+            setViewVisibility(false, false, R.id.frag_log);
+
+        /*
+         * final ImageView icon = (ImageView)findViewById(R.id.title_icon);
+         * if(icon != null) ThumbnailCreator.setThumbnail(this, icon, path, 96,
+         * 96, new OnUpdateImageListener() { public void updateImage(Bitmap b) {
+         * BitmapDrawable d = new BitmapDrawable(getResources(), b);
+         * d.setGravity(Gravity.CENTER); icon.setImageDrawable(d); } });
+         */
+
+        // mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
+        // setViewMode(newView);
+        // if(!BEFORE_HONEYCOMB && Build.VERSION.SDK_INT < 14 && newView ==
+        // VIEW_CAROUSEL) {
+
+        // setViewVisibility(true, false, R.id.content_pager_frame);
+        // setViewVisibility(false, false, R.id.content_frag);
+
+        List<OpenPath> familyTree = path.getAncestors(true);
+
+        if (addToStack) {
+            int bsCount = fragmentManager.getBackStackEntryCount();
+            String last = null;
+            if (bsCount > 0) {
+                BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
+                last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString()
+                        : "";
+                Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? "
+                        + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
+            } else
+                Logger.LogVerbose("First changePath to " + path.getPath());
+            if (mStateReady && (last == null || !last.equalsIgnoreCase(path.getPath()))) {
+                fragmentManager.beginTransaction().setBreadCrumbTitle(path.getPath())
+                        .addToBackStack("path").commitAllowingStateLoss();
+            }
+        }
+        final OpenFragment cf = ContentFragment.getInstance(path, newView,
+                getSupportFragmentManager());
+
+        if (force || addToStack || path.requiresThread()) {
+            int common = 0;
+
+            for (int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--) {
+                OpenFragment f = mViewPagerAdapter.getItem(i);
+                if (f == null || !(f instanceof ContentFragment))
+                    continue;
+                OpenPath tp = ((ContentFragment)f).getPath();
+                if (tp instanceof OpenSmartFolder || !familyTree.contains(tp)) {
+                    Logger.LogDebug("Removing from View Pager Adapter: " + tp);
+                    mViewPagerAdapter.remove(i);
+                    // removed = true;
+                } else
+                    common++;
+            }
+
+            // mViewPagerAdapter.notifyDataSetChanged();
+            // mViewPagerAdapter.removeOfType(ContentFragment.class);
+            // mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
+            //int iNonContentPages = mViewPagerAdapter.getCount() - common;
+            if (common < 0)
+                mViewPagerAdapter.add(cf);
+            else
+                mViewPagerAdapter.add(common, cf);
+
+            ArrayList<OpenPath> vpaPaths = new ArrayList<OpenPath>();
+            for (OpenFragment frag : mViewPagerAdapter.getFragments())
+                if (frag instanceof OpenPathFragmentInterface)
+                    vpaPaths.add(((OpenPathFragmentInterface)frag).getPath());
+
+            OpenPath tmp = path.getParent();
+            while (tmp != null) {
+                ContentFragment cft = ContentFragment.getInstance(tmp);
+                if (!vpaPaths.contains(tmp)) {
+                    Logger.LogDebug("Adding Parent: " + tmp);
+                    mViewPagerAdapter.add(common, cft);
+                    vpaPaths.add(common, tmp);
+                }
+                tmp = tmp.getParent();
+            }
+
+            setViewPageAdapter(mViewPagerAdapter, false); // DONE: Sped up app
+                                                          // considerably!
+
+            int index = vpaPaths.indexOf(path);
+            if (index >= 0)
+                setCurrentItem(index, addToStack);
+            else
+                Logger.LogDebug("No need to set index to 0");
+        } else {
+            OpenPath commonBase = null;
+            for (int i = mViewPagerAdapter.getCount() - 1; i >= 0; i--) {
+                if (!(mViewPagerAdapter.getItem(i) instanceof ContentFragment))
+                    continue;
+                ContentFragment c = (ContentFragment)mViewPagerAdapter.getItem(i);
+                if (path.getPath().startsWith(c.getPath().getPath()))
+                    continue;
+                commonBase = ((ContentFragment)mViewPagerAdapter.remove(i)).getPath();
+            }
+            int depth = 0;
+            if (commonBase != null)
+                depth = commonBase.getDepth() - 1;
+            OpenPath tmp = path;
+            while (tmp != null && (commonBase == null || !tmp.equals(commonBase))) {
+                mViewPagerAdapter.add(depth, cf);
+                tmp = tmp.getParent();
+                if (tmp == null)
+                    break;
+            }
+            setViewPageAdapter(mViewPagerAdapter, false);
+            // mViewPager.setAdapter(mViewPagerAdapter);
+            setCurrentItem(path.getDepth() - 1, false);
+            // getDirContentFragment(false).refreshData(null, false);
+        }
+        // }
+        // refreshContent();
+        // invalidateOptionsMenu();
+        /*
+         * if(content instanceof ContentFragment)
+         * ((ContentFragment)content).setSettings( SortType.DATE_DESC,
+         * getSetting(path, "thumbs", true), getSetting(path, "hide", true) );
+         */
+        if (path instanceof OpenFile && !path.requiresThread())
+            EventHandler.execute(new PeekAtGrandKidsTask(), path);
+        // ft.replace(R.id.content_frag, content);
+        // ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        Logger.LogDebug("Setting path to " + path.getPath());
+        mLastPath = path;
     }
 
 }

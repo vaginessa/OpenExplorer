@@ -1,15 +1,11 @@
 
 package org.brandroid.utils;
 
-import java.io.File;
-import java.io.StringReader;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.xml;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,8 +14,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.util.JsonReader;
 
+/**
+ * 配置、操作配置文件
+ *
+ */
 public class Preferences {
     private static Preferences preferences;
     private static Context mContext;
@@ -223,7 +222,13 @@ public class Preferences {
         else
             return getSetting(file, key, defValue);
     }
-
+    
+    /**
+     * @param file
+     * @param key
+     * @param defValue
+     * @return
+     */
     public Boolean getBoolean(String file, String key, Boolean defValue) {
         if (!hasSetting(file, key) && !file.equals("global"))
             return getSetting("global", key, defValue);

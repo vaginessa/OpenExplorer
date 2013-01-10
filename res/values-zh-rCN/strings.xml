@@ -57,7 +57,7 @@
     <string name="s_pref_sort">排序</string>
     <string name="s_pref_sort_summary">选择如何排序文件及文件夹</string>
     <string name="s_pref_advanced">进阶</string>
-    <string name="s_pref_server_name">服务器名称</string>
+    <string name="s_pref_server_name">自定义显示名称</string>
     <string name="s_pref_server_name_summary">输入服务器名称</string>
     <string name="s_pref_server_url">服务器 URL</string>
     <string name="s_pref_server_url_summary">输入服务器完整 URL</string>
