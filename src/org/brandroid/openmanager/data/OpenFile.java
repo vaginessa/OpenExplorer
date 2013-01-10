@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.Date;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.util.DFInfo;
@@ -270,17 +272,21 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
     {
         if (mInternalDrive != null)
             return mInternalDrive;
-        OpenFile ret = new OpenFile(Environment.getExternalStorageDirectory());
+        OpenFile ret = null;
+        if (OpenExplorer.isNook()) {
+            ret = new OpenFile("/mnt/media");
+            if (ret != null && ret.canWrite())
+                return mInternalDrive = ret;
+        } else
+            ret = new OpenFile(Environment.getExternalStorageDirectory());
         Logger.LogVerbose("Internal Storage: " + ret);
         if (ret == null || !ret.exists()) {
             OpenFile mnt = new OpenFile("/mnt");
             if (mnt != null && mnt.exists())
                 for (OpenFile kid : mnt.listFiles())
                     if (kid.getName().toLowerCase().indexOf("sd") > -1)
-                        if (kid.canWrite()) {
-                            mInternalDrive = kid;
-                            return kid;
-                        }
+                        if (kid.canWrite())
+                            return mInternalDrive = kid;
         } else if (ret.getName().endsWith("1")) {
             OpenFile sdcard0 = new OpenFile(ret.getPath().substring(0, ret.getPath().length() - 1)
                     + "0");
