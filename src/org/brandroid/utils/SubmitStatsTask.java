@@ -40,27 +40,33 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
               //  uc.addRequestProperty("Set-Cookie", params[1]);
             PackageManager pm = mContext.getPackageManager();
             PackageInfo pi = pm.getPackageInfo(mContext.getPackageName(), 0);
-            String data = "{\"Version\":" + pi.versionCode;
-            data += ",\"Runs\":" + Preferences.Run_Count;
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\"Version\":" + pi.versionCode);
+            sb.append(",\"UID\":\"" + Preferences.UID + "\"");
+            sb.append(",\"Runs\":" + Preferences.Run_Count);
             JSONObject device = getDeviceInfo();
             if(device != null)
-                data += ",\"DeviceInfo\":" + device.toString();
+                sb.append(",\"DeviceInfo\":" + device.toString());
             for(String pref : new String[]{"global","views","bookmarks"})
             {
                 SharedPreferences sp = Preferences.getPreferences(pref);
                 if(sp == null || sp.getAll() == null) continue;
                 JSONObject j = new JSONObject(sp.getAll());
                 if(j == null) continue;
-                data += ",\"" + pref + "\":" + j.toString();
+                sb.append(",\"" + pref + "\":" + j.toString());
             }
-            data += ",\"Logs\":" + params[0] + ",\"App\":\"" + mContext.getPackageName() + "\"}";
+            sb.append(",\"Logs\":");
+            sb.append(params[0]);
+            sb.append(",\"App\":\"");
+            sb.append(mContext.getPackageName());
+            sb.append("\"}");
             // uc.addRequestProperty("Accept-Encoding", "gzip, deflate");
             uc.addRequestProperty("App", mContext.getPackageName());
             uc.addRequestProperty("Version", "" + pi.versionCode);
             uc.setDoOutput(true);
             //Logger.LogVerbose("Sending logs: " + data + "...");
             GZIPOutputStream out = new GZIPOutputStream(uc.getOutputStream());
-            out.write(data.getBytes());
+            out.write(sb.toString().getBytes());
             out.flush();
             out.close();
             uc.connect();
