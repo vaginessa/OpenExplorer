@@ -137,9 +137,10 @@ public class Logger {
             dbLog.clear();
         return ret;
     }
-    
+
     public static String getLogText() {
-        if(dbLog == null) return "";
+        if (dbLog == null)
+            return "";
         return dbLog.getLogText();
     }
 

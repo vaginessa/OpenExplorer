@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class LoggerDbAdapter {
     public static final String KEY_ID = "_id";
@@ -175,19 +176,21 @@ public class LoggerDbAdapter {
         c.moveToFirst();
         // sb.append("{errors:[");
         while (!c.isAfterLast()) {
-            int id = c.getInt(0);
-            String msg = c.getString(1);
             int lvl = c.getInt(2);
-            String stack = c.getString(3);
-            int stamp = c.getInt(4);
-            // if(!c.isFirst()) sb.append(",");
-            JSONArray row = new JSONArray();
-            row.put(id);
-            row.put(stamp);
-            row.put(lvl);
-            row.put(msg);
-            row.put(stack);
-            items.put(row);
+            if (lvl == Log.INFO || lvl == Log.ERROR || lvl == Log.ASSERT) {
+                int id = c.getInt(0);
+                String msg = c.getString(1);
+                String stack = c.getString(3);
+                int stamp = c.getInt(4);
+                // if(!c.isFirst()) sb.append(",");
+                JSONArray row = new JSONArray();
+                row.put(id);
+                row.put(stamp);
+                row.put(lvl);
+                row.put(msg);
+                row.put(stack);
+                items.put(row);
+            }
             // sb.append("[" + id + "," + stamp + "," + lvl + ",\"" +
             // msg.replace("\"", "\\\"") + "\"," + ",\"" + stack.replace("\"",
             // "\\\""));
