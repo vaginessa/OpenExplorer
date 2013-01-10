@@ -800,14 +800,6 @@ public class DialogHandler {
         mDlgAbout.getWindow().getAttributes().windowAnimations = R.style.SlideDialogAnimation;
         mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
 
-        if (OpenExplorer.isNook())
-            mDlgAbout
-                    .getWindow()
-                    .getDecorView()
-                    .setBackgroundResource(
-                            mApp.getThemedResourceId(
-                                    R.styleable.AppTheme_appBackgroundColorPrimary, R.color.gray));
-
         mDlgAbout.show();
     }
 
