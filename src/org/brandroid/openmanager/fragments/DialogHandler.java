@@ -524,7 +524,8 @@ public class DialogHandler {
                 }
             }, R.id.confirm_remember, R.id.confirm_yes, R.id.confirm_no);
 
-            dialog.show();
+            if(context != null)
+                dialog.show();
         } else
             onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
     }
@@ -760,7 +761,7 @@ public class DialogHandler {
         else
             ((TableRow)view.findViewById(R.id.row_buildtime)).setVisibility(View.GONE);
 
-        fillShortcutsTable((TableLayout)view.findViewById(R.id.shortcuts_table));
+        //fillShortcutsTable((TableLayout)view.findViewById(R.id.shortcuts_table));
 
         final View tab1 = view.findViewById(R.id.tab1);
         final View tab2 = view.findViewById(R.id.tab2);

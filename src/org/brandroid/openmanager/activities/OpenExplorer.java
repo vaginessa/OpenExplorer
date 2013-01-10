@@ -1339,11 +1339,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             // }});
         } else {
             /*
-            if (!getPreferences().getBoolean("warn", "skip_help", false)) {
-                //getPreferences().setSetting("warn", "help_pager", true);
-                DialogHandler.showHelpDialog(this, "operations");
-            }
-            */
+             * if (!getPreferences().getBoolean("warn", "skip_help", false)) {
+             * //getPreferences().setSetting("warn", "help_pager", true);
+             * DialogHandler.showHelpDialog(this, "operations"); }
+             */
         }
     }
 
@@ -2588,9 +2587,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private void showExitDialog() {
-        DialogHandler.showConfirmationDialog(this, getString(R.string.s_alert_exit),
-                getString(R.string.s_menu_exit), getPreferences(), "exit",
-                new DialogInterface.OnClickListener() {
+        DialogHandler.showConfirmationDialog(getOpenApplication(),
+                getString(R.string.s_alert_exit), getString(R.string.s_menu_exit),
+                getPreferences(), "exit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         finish();

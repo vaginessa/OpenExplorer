@@ -26,7 +26,6 @@ public class Logger {
             0, 0, 0, 0, 0
     };
     private final static Boolean DO_LOG = true; // global static
-    private final static Boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD;
     private static Boolean bLoggingEnabled = true; // this can be set view
                                                    // preferences
     public final static Integer MIN_DB_LEVEL = Log.INFO;
@@ -48,9 +47,13 @@ public class Logger {
         bLoggingEnabled = enable;
     }
 
+    /**
+     * Checks the last call to logger for specified level. This is to prevent duplicate log calls.
+     * @param msg
+     * @param level
+     * @return True to indicate the last request was the same and should not repeat, False otherwise
+     */
     private static boolean CheckLastLog(String msg, int level) {
-        if (DEBUG)
-            return false;
         if (!isLoggingEnabled())
             return true;
         level -= 2;
