@@ -192,7 +192,7 @@ public class OpenClipboard extends BaseAdapter implements Set<OpenPath> {
         if (ret == null) {
             ret = LayoutInflater.from(mContext).inflate(R.layout.list_content_layout, null);
         }
-        int w = mContext.getResources().getDimensionPixelSize(R.dimen.list_icon_size);
+        int w = 32;
         // ret.setLayoutParams(new Gallery.LayoutParams(w, w));
         // double sz = (double)w * 0.7;
 
