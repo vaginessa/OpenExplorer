@@ -1338,10 +1338,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     }).create().show();
             // }});
         } else {
+            /*
             if (!getPreferences().getBoolean("warn", "skip_help", false)) {
                 //getPreferences().setSetting("warn", "help_pager", true);
                 DialogHandler.showHelpDialog(this, "operations");
             }
+            */
         }
     }
 
@@ -1583,8 +1585,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (!Logger.isLoggingEnabled())
             return;
         setupLoggingDb();
-        if (IS_DEBUG_BUILD)
-            return;
         if (new Date().getTime() - lastSubmit < 6000)
             return;
         lastSubmit = new Date().getTime();

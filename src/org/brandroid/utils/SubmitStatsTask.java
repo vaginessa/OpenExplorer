@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import org.brandroid.openmanager.R;
@@ -18,6 +19,7 @@ import org.json.JSONObject;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -41,15 +43,22 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             PackageManager pm = mContext.getPackageManager();
             PackageInfo pi = pm.getPackageInfo(mContext.getPackageName(), 0);
             JSONObject device = getDeviceInfo();
-            if (device == null)
-                device = new JSONObject();
-            String data = "{\"Version\":" + pi.versionCode + ",\"DeviceInfo\":" + device.toString()
-                    + ",\"Logs\":" + params[0] + ",\"App\":\"" + mContext.getPackageName() + "\"}";
+            String data = "{\"Version\":" + pi.versionCode;
+            data += ",\"Runs\":" + Preferences.Run_Count;
+            if(device != null)
+                data += ",\"DeviceInfo\":" + device.toString();
+            for(String pref : new String[]{"global","views","bookmarks"})
+            {
+                SharedPreferences sp = Preferences.getPreferences(pref);
+                if(sp != null)
+                    data += ",\"" + pref + "\":" + new JSONObject(sp.getAll()).toString();
+            }
+            data += ",\"Logs\":" + params[0] + ",\"App\":\"" + mContext.getPackageName() + "\"}";
             // uc.addRequestProperty("Accept-Encoding", "gzip, deflate");
             uc.addRequestProperty("App", mContext.getPackageName());
             uc.addRequestProperty("Version", "" + pi.versionCode);
             uc.setDoOutput(true);
-            Logger.LogDebug("Sending logs...");
+            //Logger.LogVerbose("Sending logs: " + data + "...");
             GZIPOutputStream out = new GZIPOutputStream(uc.getOutputStream());
             out.write(data.getBytes());
             out.flush();
@@ -85,7 +94,6 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
     private static JSONObject getDeviceInfo() {
         JSONObject ret = new JSONObject();
         try {
-            ret.put("Runs", Preferences.Run_Count);
             ret.put("SDK", Build.VERSION.SDK_INT);
             ret.put("Language", Locale.getDefault().getDisplayLanguage());
             ret.put("Country", Locale.getDefault().getDisplayCountry());
