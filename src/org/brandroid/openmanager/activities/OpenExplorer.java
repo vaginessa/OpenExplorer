@@ -1584,7 +1584,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (!Logger.isLoggingEnabled())
             return;
         setupLoggingDb();
-        if (new Date().getTime() - lastSubmit < 6000)
+        if (new Date().getTime() - lastSubmit < 60000)
             return;
         lastSubmit = new Date().getTime();
         if (!isNetworkConnected())
