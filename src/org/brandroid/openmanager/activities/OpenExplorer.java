@@ -870,8 +870,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public boolean showMenu(int menuId, final View from, final boolean fromTouch) {
         if (!BEFORE_HONEYCOMB && MenuUtils.getMenuLookupSub(menuId) > -1)
             return false;
-        Logger.LogInfo("showMenu(0x" + Integer.toHexString(menuId) + ","
-                + (from != null ? from.toString() : "NULL") + ")");
         // if(mMenuPopup == null)
 
         if (from != null
@@ -1341,11 +1339,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             // }});
         } else {
             /*
-            if (!getPreferences().getBoolean("warn", "skip_help", false)) {
-                //getPreferences().setSetting("warn", "help_pager", true);
-                DialogHandler.showHelpDialog(this, "operations");
-            }
-            */
+             * if (!getPreferences().getBoolean("warn", "skip_help", false)) {
+             * //getPreferences().setSetting("warn", "help_pager", true);
+             * DialogHandler.showHelpDialog(this, "operations"); }
+             */
         }
     }
 
@@ -2939,7 +2936,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public void onBackPressed() {
         if (mViewPagerAdapter.getCount() > 0 && getSelectedFragment().onBackPressed())
             return;
-        super.onBackPressed();
+        try {
+            super.onBackPressed();
+        } catch(Exception e) {
+            Logger.LogWarning("Bad back?", e);
+        }
     }
 
     public void onBackStackChanged() {
@@ -2969,7 +2970,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     fragmentManager.popBackStack();
                 }
             } else {
-                showExitDialog();
+                try {
+                    showExitDialog();
+                } catch (Exception e) {
+                    Logger.LogWarning("Unable to show exit dialog.", e);
+                }
             }
         }
         mLastBackIndex = i;

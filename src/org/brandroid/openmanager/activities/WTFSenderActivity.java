@@ -85,7 +85,7 @@ public class WTFSenderActivity extends Activity implements OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Logger.LogInfo("Activity Result for " + requestCode + " = " + resultCode);
+        Logger.LogVerbose("Activity Result for " + requestCode + " = " + resultCode);
         if (requestCode == REQ_CODE_WTF_SEND) {
             Toast.makeText(this, getString(R.string.thanks), Toast.LENGTH_SHORT).show();
         }

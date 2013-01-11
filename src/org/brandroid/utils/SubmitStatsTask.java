@@ -10,22 +10,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.fragments.DialogHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.widget.Toast;
 
 public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
     private final Context mContext;
@@ -38,20 +31,27 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
     protected Void doInBackground(String... params) {
         HttpURLConnection uc = null;
         try {
-            uc = (HttpURLConnection)new URL("http://brandroid.org/stats.php").openConnection();
+            String url = "http://brandroid.org/stats.php";
+            if(params.length > 1 && params[1].startsWith("http"))
+                url = params[1];
+            uc = (HttpURLConnection)new URL(url).openConnection();
             uc.setReadTimeout(2000);
+            //if(params.length > 1)
+              //  uc.addRequestProperty("Set-Cookie", params[1]);
             PackageManager pm = mContext.getPackageManager();
             PackageInfo pi = pm.getPackageInfo(mContext.getPackageName(), 0);
-            JSONObject device = getDeviceInfo();
             String data = "{\"Version\":" + pi.versionCode;
             data += ",\"Runs\":" + Preferences.Run_Count;
+            JSONObject device = getDeviceInfo();
             if(device != null)
                 data += ",\"DeviceInfo\":" + device.toString();
             for(String pref : new String[]{"global","views","bookmarks"})
             {
                 SharedPreferences sp = Preferences.getPreferences(pref);
-                if(sp != null)
-                    data += ",\"" + pref + "\":" + new JSONObject(sp.getAll()).toString();
+                if(sp == null || sp.getAll() == null) continue;
+                JSONObject j = new JSONObject(sp.getAll());
+                if(j == null) continue;
+                data += ",\"" + pref + "\":" + j.toString();
             }
             data += ",\"Logs\":" + params[0] + ",\"App\":\"" + mContext.getPackageName() + "\"}";
             // uc.addRequestProperty("Accept-Encoding", "gzip, deflate");
@@ -65,12 +65,26 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             out.close();
             uc.connect();
             if (uc.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                Map m = uc.getHeaderFields();
+                if(m != null)
+                    Logger.LogVerbose("Stats Response Headers: " + m.toString());
                 BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
                 String line = br.readLine();
                 if (line == null) {
                     Logger.LogWarning("No response on stat submit.");
                 } else {
                     Logger.LogDebug("Response: " + line);
+                    if (line.indexOf("document.cookie=") > -1)
+                    {
+                        if(params.length == 1)
+                        {
+                            Logger.LogWarning("Server(" + uc.getURL().getHost() + ") responding improperly. Retrying");
+                            doInBackground(params[0], "http://dev2.brandroid.org/stats.php"); //line.replace("<html><body><script>document.cookie='", "").replace("; path=/';window.location.href=window.location.href;</script></body></html>", ""));
+                            return null;
+                        } else {
+                            Logger.LogError("Server(" + uc.getURL().getHost() + ") response invalid again.");
+                        }
+                    }
                     if (line.indexOf("Thanks") > -1) {
                         while ((line = br.readLine()) != null)
                             Logger.LogDebug("Response: " + line);

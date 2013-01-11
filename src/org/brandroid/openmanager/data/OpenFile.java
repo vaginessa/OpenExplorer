@@ -218,7 +218,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             mChildren[c.getPosition()] = new OpenFile(folder + "/" + name);
             c.moveToNext();
         }
-        Logger.LogInfo("listFromDb found " + mChildren.length + " children");
+        Logger.LogVerbose("listFromDb found " + mChildren.length + " children");
         c.close();
         return true;
     }

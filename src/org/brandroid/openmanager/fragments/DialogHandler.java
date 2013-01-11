@@ -498,14 +498,13 @@ public class DialogHandler {
     public static void showConfirmationDialog(Context context, String text, String title,
             final Preferences preferences, final String pref_key,
             final DialogInterface.OnClickListener onYes) {
-        final View layout = ((LayoutInflater)context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.confirm_view,
-                null);
-
-        final AlertDialog dialog = new AlertDialog.Builder(context).setTitle(title).setView(layout)
-                .create();
 
         if (!preferences.getBoolean("warn", pref_key, false)) {
+            final View layout = inflate(context, R.layout.confirm_view);
+
+            final AlertDialog dialog = new AlertDialog.Builder(context).setTitle(title)
+                    .setView(layout).create();
+
             ViewUtils.setText(layout, text, R.id.confirm_message);
 
             ViewUtils.setOnClicks(layout, new OnClickListener() {
@@ -524,9 +523,10 @@ public class DialogHandler {
                 }
             }, R.id.confirm_remember, R.id.confirm_yes, R.id.confirm_no);
 
-            dialog.show();
+            if (context != null)
+                dialog.show();
         } else
-            onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
+            onYes.onClick(null, DialogInterface.BUTTON_POSITIVE);
     }
 
     public static View inflate(Context context, int layoutId) {
@@ -760,7 +760,7 @@ public class DialogHandler {
         else
             ((TableRow)view.findViewById(R.id.row_buildtime)).setVisibility(View.GONE);
 
-        fillShortcutsTable((TableLayout)view.findViewById(R.id.shortcuts_table));
+        // fillShortcutsTable((TableLayout)view.findViewById(R.id.shortcuts_table));
 
         final View tab1 = view.findViewById(R.id.tab1);
         final View tab2 = view.findViewById(R.id.tab2);
