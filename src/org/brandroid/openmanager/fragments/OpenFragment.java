@@ -133,33 +133,30 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 			return;
 		}
 
-        if (mPath != null)
-        {
-            if(mPath.getMimeType() != null)
+        if (mPath != null) {
+            if (mPath.getMimeType() != null)
                 intent.setDataAndType(mPath.getUri(), mPath.getMimeType());
             else
                 intent.setData(mPath.getUri());
         }
-		
+
         List<ResolveInfo> resolves = IntentManager.getResolvesAvailable(intent, getExplorer());
-        if(resolves.size() == 0)
-        {
+        if (resolves.size() == 0) {
             intent.setAction(Intent.ACTION_SEND);
             resolves = IntentManager.getResolvesAvailable(intent, getExplorer());
         }
-        
-        if(resolves.size() == 1)
-        {
+
+        if (resolves.size() == 1) {
             mShare.setVisible(false);
             ResolveInfo app = resolves.get(0);
             CharSequence ttl = app.loadLabel(getContext().getPackageManager());
             intent.setPackage(app.activityInfo.packageName);
             menu.add(10, Menu.NONE, Menu.FIRST, ttl)
                 .setIcon(getResolveIcon(getContext().getPackageManager(), resolves.get(0)))
-                .setIntent(intent)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+                    .setIntent(intent).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
             return;
-        } else if (resolves.size() == 0) return;
+        } else if (resolves.size() == 0)
+            return;
 
 		mShare.setVisible(true);
 
@@ -706,8 +703,12 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     public void invalidateOptionsMenu() {
         if (getExplorer() == null)
             return;
-		getExplorer().invalidateOptionsMenu();
-	}
+        try {
+            getExplorer().invalidateOptionsMenu();
+        } catch (Exception e) {
+            Logger.LogError("Unable to invalidate fragment options menu.", e);
+        }
+    }
 
 	public abstract Drawable getIcon();
 

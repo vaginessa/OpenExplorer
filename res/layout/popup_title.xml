@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@android:id/title"
-        style="@style/Large"
+        style="@style/Text.Large"
         android:layout_gravity="center"
         android:layout_marginBottom="2dp" />
 

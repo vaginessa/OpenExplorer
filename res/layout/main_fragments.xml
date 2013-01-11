@@ -32,7 +32,8 @@
             android:id="@+id/list_frag"
             android:layout_alignWithParentIfMissing="true"
             android:layout_width="@dimen/bookmarks_width"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="?attr/drawerBackgroundColor"/>
 
         <RelativeLayout
             android:layout_toRightOf="@+id/list_frag"

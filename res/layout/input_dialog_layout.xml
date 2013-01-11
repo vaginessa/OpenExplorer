@@ -13,7 +13,7 @@
 
         <TextView
             android:id="@+id/dialog_message_top"
-            style="@style/Large"
+            style="@style/Text.Large"
             android:visibility="gone" />
 
         <EditText
@@ -28,7 +28,7 @@
 
     <TextView
         android:id="@+id/dialog_message"
-        style="@style/Large" />
+        style="@style/Text.Large" />
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -7,4 +7,4 @@
     android:gravity="center_vertical"
     android:padding="4dip"
     android:text="test"
-    android:textAppearance="@style/Large" />
+    android:textAppearance="@style/Text.Large" />

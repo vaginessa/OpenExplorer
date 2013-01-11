@@ -70,7 +70,7 @@
                     android:layout_marginTop="1dp"
                     android:checked="true"
                     android:text="@string/s_default"
-                    android:textAppearance="@style/Small" />
+                    android:textAppearance="@style/Text.Small" />
             </RelativeLayout>
 
             <TextView
@@ -142,7 +142,7 @@
                     android:layout_alignParentRight="true"
                     android:lines="1"
                     android:text="@string/s_show_password"
-                    android:textAppearance="@style/Small" />
+                    android:textAppearance="@style/Text.Small" />
             </RelativeLayout>
 
             <TextView

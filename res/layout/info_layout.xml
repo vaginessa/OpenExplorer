@@ -14,7 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -56,7 +57,7 @@
 
                     <TextView
                         android:id="@+id/info_path_label"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:ellipsize="none"
@@ -74,7 +75,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -82,7 +83,7 @@
 
                     <TextView
                         android:id="@+id/info_dirs_label"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -91,7 +92,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -99,7 +100,7 @@
 
                     <TextView
                         android:id="@+id/info_files_label"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -108,7 +109,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -116,7 +117,7 @@
 
                     <TextView
                         android:id="@+id/info_size"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -130,7 +131,7 @@
                         android:layout_span="2" >
 
                         <TextView
-                            style="@style/Mid"
+                            style="@style/Text.Mid"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentLeft="true"
@@ -140,7 +141,7 @@
 
                         <TextView
                             android:id="@+id/info_time_stamp"
-                            style="@style/Mid"
+                            style="@style/Text.Mid"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentRight="true"
@@ -151,7 +152,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -163,7 +164,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -172,7 +173,7 @@
 
                     <TextView
                         android:id="@+id/info_read_perm"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -181,7 +182,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -190,7 +191,7 @@
 
                     <TextView
                         android:id="@+id/info_write_perm"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -199,7 +200,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -208,7 +209,7 @@
 
                     <TextView
                         android:id="@+id/info_execute_perm"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -225,7 +226,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -233,7 +234,7 @@
 
                     <TextView
                         android:id="@+id/info_total_size"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />
@@ -242,7 +243,7 @@
                 <TableRow>
 
                     <TextView
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="left"
@@ -250,7 +251,7 @@
 
                     <TextView
                         android:id="@+id/info_free_size"
-                        style="@style/Mid"
+                        style="@style/Text.Mid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right" />

@@ -25,9 +25,9 @@ import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.LayoutInflater;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 
@@ -35,6 +35,7 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
 
     private static OpenBookmarks mBookmarks;
 
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -64,11 +65,13 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
         getListView().setAdapter(adapter);
     }
 
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
 
         // Logger.LogDebug("Bookmark Fragment Created");
 
         final ExpandableListView lv = getListView();
+        lv.setDividerHeight(0);
         if (mBookmarks == null)
             mBookmarks = new OpenBookmarks(getExplorer(), lv);
         // mBookmarks.setupListView(lv); //redundant?
@@ -87,11 +90,13 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
             lv.expandGroup(i);
     }
 
+    @Override
     public void onBookMarkAdd(OpenPath path) {
         if (mBookmarks != null)
             mBookmarks.onBookMarkAdd(path);
     }
 
+    @Override
     public void scanBookmarks() {
         if (mBookmarks != null)
             mBookmarks.scanBookmarks();

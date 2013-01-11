@@ -54,7 +54,7 @@
 
         <TextView
             android:id="@+id/content_text"
-            style="@style/Large.Dim"
+            style="@style/Text.Large.Dim"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/content_icon_frame"
@@ -64,7 +64,7 @@
 
         <TextView
             android:id="@+id/content_info"
-            style="@style/Small.Dim"
+            style="@style/Text.Small.Dim"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignBottom="@+id/content_icon_frame"
@@ -81,7 +81,7 @@
 
         <TextView
             android:id="@+id/content_date"
-            style="@style/Small.Dim"
+            style="@style/Text.Small.Dim"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignBottom="@+id/content_icon_frame"
