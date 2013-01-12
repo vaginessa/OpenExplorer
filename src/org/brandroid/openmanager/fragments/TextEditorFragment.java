@@ -486,7 +486,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         if (!isAdded())
             try {
                 super.setInitialSavedState(state);
-                Logger.LogInfo("setInitialSavedState @ TextEditor (" + mPath + ")");
+                Logger.LogVerbose("setInitialSavedState @ TextEditor (" + mPath + ")");
             } catch (Exception e) {
                 Logger.LogWarning("Unable to set Initial State for text editor (" + mPath + ")", e);
             }
@@ -499,7 +499,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
             return;
         if (mPath == null)
             return;
-        Logger.LogInfo("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
+        Logger.LogVerbose("saveInstanceState @ TextEditor (" + mPath.getPath() + ")");
         outState.putParcelable("edit_path", mPath);
         if (mData != null && mData.length() < Preferences.Pref_Text_Max_Size)
             outState.putString("edit_data", mData);
