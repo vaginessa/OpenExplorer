@@ -63,8 +63,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.support.v4.widget.SearchViewCompat;
-import android.support.v4.widget.SearchViewCompat.OnQueryTextListenerCompat;
 import android.text.InputType;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -110,7 +108,6 @@ import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -161,7 +158,6 @@ import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.OpenInterfaces;
-import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
@@ -199,17 +195,15 @@ import com.stericson.RootTools.RootTools;
 import com.viewpagerindicator.TabPageIndicator;
 import org.xmlpull.v1.XmlPullParserException;
 
-@SuppressLint("NewApi")
+@SuppressLint({
+        "NewApi", "DefaultLocale"
+})
 public class OpenExplorer extends OpenFragmentActivity implements OnBackStackChangedListener,
         OnClipboardUpdateListener, OnWorkerUpdateListener, OnPageTitleClickListener,
         LoaderCallbacks<Cursor>, OnPageChangeListener, OpenApp, IconContextItemSelectedListener,
         OnKeyListener, OnFragmentDPADListener, OnFocusChangeListener {
 
-    // Action Bar Menu Variables
-    private Menu mMainOptionsMenu;
     private MenuItem mMenuPaste;
-    private MenuItem mMenuSearch;
-
     public static final int REQ_PREFERENCES = 6;
     public static final int REQ_SPLASH = 7;
     public static final int REQ_INTENT = 8;
@@ -262,7 +256,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private Boolean mStateReady = true;
     private Boolean mTwoRowTitle = false;
     private String mLastMenuClass = "";
-    private long lastInvalidate = 0l;
     private int mLastClipSize = -1;
     private boolean mLastClipState = false;
     public static boolean DEBUG_TOGGLE = false;
@@ -281,8 +274,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static OnBookMarkChangeListener mBookmarkListener;
     private ViewGroup mToolbarButtons = null;
     private ViewGroup mStaticButtons = null;
-    private View mSearchView = null;
-    private int mTitleButtons = 0;
     private static ActionBar mBar = null;
     private OpenClipboard mClipboard;
 
@@ -351,7 +342,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 gaCode = pi.applicationInfo.metaData.getString("ga_code");
 
             final String ga = gaCode;
-            final PackageInfo pi2 = pi;
             final Context atc = getApplicationContext();
 
             queueToTracker(new Runnable() {
@@ -712,7 +702,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         SimpleUserInfo.setInteractionCallback(new UserInfoInteractionCallback() {
 
             public boolean promptPassword(String message) {
-                String mPassword = null;
                 View view = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE))
                         .inflate(R.layout.prompt_password, null);
                 TextView tv = (TextView)view.findViewById(android.R.id.message);
@@ -1243,10 +1232,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
     }
 
-    private boolean setViewPageAdapter(PagerAdapter adapter) {
-        return setViewPageAdapter(adapter, true);
-    }
-
     private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload) {
         if (adapter == null)
             adapter = mViewPager.getAdapter();
@@ -1426,6 +1411,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         mBookmarksList.setAdapter(adapter);
     }
 
+    @SuppressWarnings("unused")
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -1565,6 +1551,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         OpenPath.closeDb();
     }
 
+    @SuppressWarnings("deprecation")
     public boolean isNetworkConnected() {
         ConnectivityManager conman = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         if (!conman.getBackgroundDataSetting())
@@ -1579,7 +1566,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return true;
     }
 
-    @SuppressWarnings("deprecation")
     private void submitStats() {
         if (!Logger.isLoggingEnabled())
             return;
@@ -2334,8 +2320,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         mMenuPaste = menu.findItem(R.id.menu_context_paste);
 
-        mMainOptionsMenu = menu;
-
         if (IS_KEYBOARD_AVAILABLE)
             MenuUtils.setMneumonics(menu);
 
@@ -2938,7 +2922,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return;
         try {
             super.onBackPressed();
-        } catch(Exception e) {
+        } catch (Exception e) {
             Logger.LogWarning("Bad back?", e);
         }
     }
@@ -3013,8 +2997,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             setSetting(path, "view", VIEW_LIST);
             newView = VIEW_LIST;
         }
-        // boolean isNew = !mLastPath.equals(path);
-        int oldView = getSetting(mLastPath, "view", 0);
+        getSetting(mLastPath, "view", 0);
 
         if (path instanceof OpenNetworkPath) {
             if (mLogFragment != null && mLogFragment.getPopup() == null)
@@ -3077,10 +3060,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     common++;
             }
 
-            // mViewPagerAdapter.notifyDataSetChanged();
-            // mViewPagerAdapter.removeOfType(ContentFragment.class);
-            // mViewPagerAdapter = new ArrayPagerAdapter(fragmentManager);
-            int iNonContentPages = mViewPagerAdapter.getCount() - common;
             if (common < 0)
                 mViewPagerAdapter.add(cf);
             else
