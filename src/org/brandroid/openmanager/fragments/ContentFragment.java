@@ -59,7 +59,6 @@ import org.brandroid.utils.ViewUtils;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -106,7 +105,6 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 @SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment implements OnItemLongClickListener,
@@ -356,24 +354,6 @@ OnTaskUpdateListener, ContentAdapter.Callback {
         // OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 
 	}
-
-    @Override
-    public void onAttach(Activity activity) {
-        queueToTracker(new Runnable() {
-            @Override
-            public void run() {
-                GoogleAnalyticsTracker tracker = getAnalyticsTracker();
-                if (tracker != null) {
-                    if (mViewMode != null)
-                        tracker.setCustomVar(3, "View", mViewMode.toString(), 3);
-                    if (getSorting() != null)
-                        tracker.setCustomVar(3, "Sort", getSorting().toString(), 3);
-                }
-            }
-        });
-        super.onAttach(activity);
-    }
-
 	/**
 	 * The Fragment's UI is just a list fragment
 	 */

@@ -3,9 +3,6 @@ package org.brandroid.openmanager.activities;
 
 import java.net.URL;
 import java.util.Locale;
-import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbComReadAndX;
 import jcifs.smb.SmbFile;
@@ -18,7 +15,6 @@ import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.Preferences;
-import com.actionbarsherlock.ActionBarSherlock;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuInflater;
@@ -31,11 +27,11 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+@SuppressLint("DefaultLocale")
 public abstract class OpenFragmentActivity extends SherlockFragmentActivity implements
         View.OnClickListener, View.OnLongClickListener, OpenContextProvider {
     // public static boolean CONTENT_FRAGMENT_FREE = true;

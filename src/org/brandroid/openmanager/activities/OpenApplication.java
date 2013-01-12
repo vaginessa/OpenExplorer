@@ -3,8 +3,6 @@ package org.brandroid.openmanager.activities;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.interfaces.OpenApp;
@@ -23,12 +21,9 @@ import com.android.gallery3d.util.ThreadPool;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.os.Build;
-import android.util.SparseArray;
+import android.util.SparseIntArray;
 
 public class OpenApplication extends Application implements OpenApp {
 	private static final String DOWNLOAD_FOLDER = "download";
@@ -42,7 +37,7 @@ public class OpenApplication extends Application implements OpenApp {
 	private DiskLruCache mBitmapDiskCache;
 	private ShellSession mShell;
 	private ActionMode mActionMode;
-	private SparseArray<Integer> mThemedAssets = new SparseArray<Integer>();
+	private SparseIntArray mThemedAssets = new SparseIntArray();
 
 	@Override
 	public void onCreate() {
