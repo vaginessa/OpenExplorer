@@ -155,6 +155,7 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
@@ -181,6 +182,7 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.internal.view.menu.ActionMenuPresenter;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.*;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
@@ -327,8 +329,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Run_Count = prefs.getInt("stats", "runs", Preferences.Run_Count) + 1;
         prefs.setSetting("stats", "runs", Preferences.Run_Count);
         Preferences.UID = prefs.getString("stats", "uid", Preferences.UID);
-        if(Preferences.UID == null)
-        {
+        if (Preferences.UID == null) {
             Preferences.UID = UUID.randomUUID().toString();
             prefs.setSetting("stats", "uid", Preferences.UID);
         }
@@ -623,15 +624,32 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 break;
                             case R.string.s_cancel:
                                 break;
+                            case R.string.s_menu_rate:
+                                getPreferences().setSetting("warn", pref, true);
+                                launchReviews();
+                                break;
                             default:
                                 getPreferences().setSetting("warn", pref, true);
-                                launchDonation(OpenExplorer.this);
+                                launchUri(OpenExplorer.this,
+                                        Uri.parse("http://brandroid.org/donate.php?ref=app"));
                                 break;
                         }
                         if (dialog != null)
                             dialog.dismiss();
                     }
-                }, R.string.s_menu_donate, R.string.s_no, R.string.s_cancel);
+                }, R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate, R.string.s_cancel);
+    }
+
+    public void launchReviews() {
+        if (isNook()) {
+            Intent iRate = new Intent("com.bn.sdk.shop.details");
+            iRate.putExtra("product_details_ean", "2940043894236");
+            startActivity(iRate);
+        } else if (isBlackBerry())
+            launchUri(this,
+                    Uri.parse("http://appworld.blackberry.com/webstore/content/reviews/85146/"));
+        else
+            launchUri(this, Uri.parse("market://details?id=org.brandroid.openmanager&reviewId=0"));
     }
 
     private void checkWelcome() {
@@ -1263,8 +1281,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         return false;
     }
 
-    public static void launchDonation(Activity a) {
-        Uri uri = Uri.parse("http://brandroid.org/donate.php?ref=app");
+    public static void launchUri(Activity a, Uri uri) {
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         a.startActivity(intent);
     }
@@ -1838,9 +1855,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         if (isNook()) {
                             OpenFile files = intDrive.getChild("My Files");
                             for (int i = 0; i < 2; i++) {
-                                if (i == 1)
-                                {
-                                    if(extDrive != null)
+                                if (i == 1) {
+                                    if (extDrive != null)
                                         files = extDrive.getChild("My Files");
                                     continue;
                                 }
@@ -2344,7 +2360,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         handleSearchMenu(menu);
 
-        MenuUtils.setMenuVisible(menu, Preferences.Run_Count > 5, R.id.menu_donate);
+        MenuUtils.setMenuVisible(menu, Preferences.Run_Count > 5, R.id.menu_donate, R.id.menu_rate);
 
         mMenuPaste = menu.findItem(R.id.menu_context_paste);
 
@@ -2446,7 +2462,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + ")");
         switch (id) {
             case R.id.menu_donate:
-                launchDonation(this);
+                launchUri(this, Uri.parse("http://brandroid.org/donate.php?ref=app_menu"));
+                break;
+            case R.id.menu_rate:
+                launchReviews();
                 break;
             case R.id.title_icon_holder:
             case android.R.id.home:
@@ -2604,6 +2623,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        if (dialog != null)
+                            dialog.dismiss();
                         finish();
                     }
                 });
@@ -2835,7 +2856,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (IS_DEBUG_BUILD)
-            Logger.LogDebug("OpenExplorer.onKeyUp(" + keyCode + "," + event + ")");
+            Logger.LogInfo("OpenExplorer.onKeyUp(" + keyCode + "," + event + ")");
         if (event.getAction() != KeyEvent.ACTION_UP)
             return super.onKeyUp(keyCode, event);
         if (MenuUtils.getMenuShortcut(event) != null) {
@@ -2866,6 +2887,20 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 return false;
             }
         }
+        if (keyCode == KeyEvent.KEYCODE_MENU && (isNook() || isBlackBerry())) {
+            try {
+                @SuppressWarnings("rawtypes")
+                Class cbar = ActionBar.class;
+                @SuppressWarnings("unchecked")
+                java.lang.reflect.Method m = cbar.getDeclaredMethod("showOverflowMenu",
+                        (Class[])null);
+                if (m != null)
+                    m.invoke(getSupportActionBar());
+            } catch (Exception e) {
+                Logger.LogError("Unable to show Overflow");
+            }
+        }
+
         /*
          * if (keyCode == KeyEvent.KEYCODE_BACK) { if (mBackQuit) { return
          * super.onKeyUp(keyCode, event); } else { Toast.makeText(this,
