@@ -13,6 +13,8 @@ import java.util.zip.GZIPOutputStream;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.jcraft.jsch.jce.MD5;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -31,13 +33,13 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
     protected Void doInBackground(String... params) {
         HttpURLConnection uc = null;
         try {
-            String url = "http://brandroid.org/stats.php";
-            if(params.length > 1 && params[1].startsWith("http"))
+            String url = "http://stats.brandroid.org/stats.php";
+            if (params.length > 1 && params[1].startsWith("http"))
                 url = params[1];
             uc = (HttpURLConnection)new URL(url).openConnection();
             uc.setReadTimeout(2000);
-            //if(params.length > 1)
-              //  uc.addRequestProperty("Set-Cookie", params[1]);
+            // if(params.length > 1)
+            // uc.addRequestProperty("Set-Cookie", params[1]);
             PackageManager pm = mContext.getPackageManager();
             PackageInfo pi = pm.getPackageInfo(mContext.getPackageName(), 0);
             StringBuilder sb = new StringBuilder();
@@ -45,18 +47,38 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             sb.append(",\"UID\":\"" + Preferences.UID + "\"");
             sb.append(",\"Runs\":" + Preferences.Run_Count);
             JSONObject device = getDeviceInfo();
-            if(device != null)
+            if (device != null)
                 sb.append(",\"DeviceInfo\":" + device.toString());
-            for(String pref : new String[]{"global","views","bookmarks"})
-            {
+            String pref_json = "";
+            Boolean stats_changed = false;
+            for (String pref : "global,views,bookmarks".split(",")) {
                 SharedPreferences sp = Preferences.getPreferences(pref);
-                if(sp == null || sp.getAll() == null) continue;
+                if (sp == null || sp.getAll() == null)
+                    continue;
                 JSONObject j = new JSONObject(sp.getAll());
-                if(j == null) continue;
-                sb.append(",\"" + pref + "\":" + j.toString());
+                if (j != null)
+                    pref_json += ",\"" + pref + "\":" + j.toString();
             }
-            sb.append(",\"Logs\":");
-            sb.append(params[0]);
+            String pjmd5 = Utils.md5(pref_json);
+            if (pref_json != "") {
+                if (!Preferences.getPreferences("stats").getString("pref_json", "")
+                        .equalsIgnoreCase(pjmd5)) {
+                    sb.append(pref_json);
+                    stats_changed = true;
+                    Logger.LogVerbose("Prefs unchanged. Not sending.");
+                }
+            } else
+                Logger.LogVerbose("Prefs updated. Sending.");
+            if (params[0].length() > 2) {
+                sb.append(",\"Logs\":");
+                sb.append(params[0]);
+                stats_changed = true;
+            } else
+                Logger.LogVerbose("Logs empty. Not sending.");
+            if (!stats_changed) {
+                Logger.LogVerbose("Stats unchanged. Not sending.");
+                return null;
+            }
             sb.append(",\"App\":\"");
             sb.append(mContext.getPackageName());
             sb.append("\"}");
@@ -64,7 +86,7 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             uc.addRequestProperty("App", mContext.getPackageName());
             uc.addRequestProperty("Version", "" + pi.versionCode);
             uc.setDoOutput(true);
-            //Logger.LogVerbose("Sending logs: " + data + "...");
+            // Logger.LogVerbose("Sending logs: " + data + "...");
             GZIPOutputStream out = new GZIPOutputStream(uc.getOutputStream());
             out.write(sb.toString().getBytes());
             out.flush();
@@ -72,7 +94,7 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             uc.connect();
             if (uc.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 Map m = uc.getHeaderFields();
-                if(m != null)
+                if (m != null)
                     Logger.LogVerbose("Stats Response Headers: " + m.toString());
                 BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
                 String line = br.readLine();
@@ -80,26 +102,24 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
                     Logger.LogWarning("No response on stat submit.");
                 } else {
                     Logger.LogDebug("Response: " + line);
-                    if (line.indexOf("document.cookie=") > -1)
-                    {
-                        if(params.length == 1)
-                        {
-                            Logger.LogWarning("Server(" + uc.getURL().getHost() + ") responding improperly. Retrying");
-                            doInBackground(params[0], "http://dev2.brandroid.org/stats.php"); //line.replace("<html><body><script>document.cookie='", "").replace("; path=/';window.location.href=window.location.href;</script></body></html>", ""));
-                            return null;
-                        } else {
-                            Logger.LogError("Server(" + uc.getURL().getHost() + ") response invalid again.");
-                        }
-                    }
                     if (line.indexOf("Thanks") > -1) {
                         while ((line = br.readLine()) != null)
                             Logger.LogDebug("Response: " + line);
                         Logger.LogDebug("Sent logs successfully.");
-                        new Preferences(mContext).setSetting("flags", "last_stat_submit",
-                                new Date().getTime());
+                        Preferences.getPreferences("stats").edit()
+                                .putLong("last_stat_submit", new Date().getTime())
+                                .putString("pref_json", pjmd5).commit();
                         Logger.clearDb();
                     } else {
-                        Logger.LogWarning("Logs not thanked");
+                        if (params.length == 1) {
+                            Logger.LogWarning("Server(" + uc.getURL().getHost()
+                                    + ") responding improperly. Retrying");
+                            doInBackground(params[0], "http://dev2.brandroid.org/stats.php");
+                            return null;
+                        } else {
+                            Logger.LogError("Server(" + uc.getURL().getHost()
+                                    + ") response invalid again.");
+                        }
                     }
                 }
             } else {
