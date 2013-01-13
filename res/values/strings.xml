@@ -346,15 +346,13 @@
     <string name="s_pref_thumbs_cache_clear">Clear Thumbnail Cache</string>
     <string name="s_msg_folder_none">Folder unable to be created</string>
     <string name="s_menu_donate">Donate</string>
-    <string name="msg_nook_donate">Hello Nook user! I hope you enjoy Open Explorer for Nook. I have tried my hardest to ensure high compatibility with Nook devices. However, it appears there are some differences that are difficult to handle without an actual Nook device. For this reason, I am trying to collect enough donations in order to buy a Nook device in order to improve compatibility for nook devices. If you find this app useful, please consider making a donation, by either selecting the button below, or by activating the "donate" menu option. Thank you, and happy exploring!</string>
+    <string name="msg_nook_donate2">Hello Nook user! I hope you enjoy Open Explorer for Nook. I have tried my hardest to ensure high compatibility with Nook devices. Thanks to recent donations, I was able to purchase a Nook Color! Thank you to all who have donated!\n\n Next, I would like to be able to purchase a newer generation Nook HD device.\n\n If you find this app useful, please consider making a donation, by either selecting the button below, or by activating the "donate" menu option. Thank you, and happy exploring!</string>
     <string name="msg_bb_donate">Hello BlackBerry user! I hope you enjoy Open Explorer. I have tried my hardest to ensure high compatibility with BlackBerry devices. However, it appears there are some differences that are difficult to handle without an actual BlackBerry device. For this reason, I am trying to collect enough donations in order to buy a BlackBerry 10 device in order to improve compatibility. If you find this app useful, please consider making a donation, by either selecting the button below, or by activating the "donate" menu option. Thank you, and happy exploring!</string>
     <string name="msg_donate">Hello Android user! We hope you enjoy Open Explorer. We have tried our hardest to ensure high compatibility with all Android devices. However, given the bug reports received, we can only assume there are differences between different types causing specific issues. For this reason, We are trying to collect enough donations in order to buy some Nexus devices in order to improve compatibility. If you find this app useful, please consider making a donation, by either selecting the button below, or by activating the "donate" menu option. Thank you, and happy exploring!</string>
     <string name="s_privacy">Privacy Policy</string>
-    
     <string name="s_menu_system_mount">Make /system Writable (Dangerous!)</string>
     <string name="s_menu_system_mount_on">System is WRITABLE!</string>
     <string name="s_menu_system_mount_off">System is Read-Only.</string>
-    
     <string name="s_pref_servers_private">Keep Servers Private</string>
     <string name="s_pref_servers_private_summary">Store server settings in private storage area. This will cause server settings to be removed if the application is uninstalled. If you re-install in the future, leaving this unchecked will prevent that.</string>
 
@@ -362,7 +360,7 @@
         <item quantity="one">One file selected</item>
         <item quantity="other"><xliff:g id="count">%d</xliff:g> files selected</item>
     </plurals>
-    
+
     <string name="s_skip_help">Do not show help dialogs</string>
     <string name="help_pager">Open Explorer\'s UI is built upon a "page-based" interface. This allows you to keep a set of tabs open representing different locations.</string>
     <string name="help_bookmark">One of the main functions you will probably use in Open Explorer is the Bookmarks menu. To activate, simply tap the contextual folder icon, in the upper-left corner, from any folder. This will slide out the menu of drives, smart folders, favorites, and networking servers.</string>
