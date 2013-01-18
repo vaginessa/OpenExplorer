@@ -93,9 +93,6 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             out.close();
             uc.connect();
             if (uc.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                Map m = uc.getHeaderFields();
-                if (m != null)
-                    Logger.LogVerbose("Stats Response Headers: " + m.toString());
                 BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
                 String line = br.readLine();
                 if (line == null) {

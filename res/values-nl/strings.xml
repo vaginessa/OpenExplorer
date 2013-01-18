@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 <resources>
     <string name="app_name">Open Explorer</string>
     <string name="s_photos">Foto\'s</string>
@@ -31,7 +31,7 @@
     <string name="s_menu_prefs_folder">Map voorkeuren</string>
     <string name="s_menu_prefs_global">Algemene Instellingen</string>
     <string name="s_menu_info">Info</string>
-    <string name="s_menu_copy">Kopieëren</string>
+    <string name="s_menu_copy">KopieÃ«ren</string>
     <string name="s_menu_cut">Knippen</string>
     <string name="s_menu_paste">Plakken</string>
     <string name="s_menu_delete">Verwijderen</string>
@@ -82,7 +82,7 @@
     <string name="s_title_deleting">Verwijderend</string>
     <string name="s_title_searching">Zoekend</string>
     <string name="s_title_moving">Verplaatsend</string>
-    <string name="s_title_copying">Kopiëren</string>
+    <string name="s_title_copying">KopiÃ«ren</string>
     <string name="s_title_zipping">Zippen</string>
     <string name="s_title_unzipping">Uitpakkend</string>
     <string name="s_title_wait">Even geduld...</string>
@@ -97,7 +97,7 @@
     <string name="s_msg_all">Bestand(en) succesvol</string>
     <string name="s_msg_deleted">verwijderd</string>
     <string name="s_msg_moved">verplaatst</string>
-    <string name="s_msg_copied">gekopiëerd</string>
+    <string name="s_msg_copied">gekopiÃ«erd</string>
     <string name="s_remove">Verwijderd</string>
     <string name="s_eject">Uitgewerpen</string>
     <string name="s_update">Bijwerken</string>
@@ -211,8 +211,8 @@
     <string name="s_pref_fancy_menus">Uitgebreide menu\'s</string>
     <string name="s_pref_fancy_context">Grappige Context Menu\'s</string>
     <string name="s_search_files">Bestanden doorzoeken</string>
-    <string name="search_summary" formatted="false">Zoekend naar \" %s \" in \" %s \" (%d)...</string>
-    <string name="search_results" formatted="false">%d resultaten gevonden voor \" %s \" in \" %s \"</string>
+    <string name="search_summary" formatted="false">Zoekend naar "%s" in "%s" (%d)...</string>
+    <string name="search_results" formatted="false">%d resultaten gevonden voor "%s" in "%s"</string>
     <string name="s_menu_exit">Afsluiten</string>
     <string name="s_warn_wtf_message">Oeps! Er is een onbekende fout opgetreden! Dit een voorkomend probleem bij beta versies van apps. Onze werkwijze om dit op te lossen is door foutrapporten van meerdere apparaten te ontvangen, zodat wij de problemen kunnen onderzoeken en verhelpen. Wil je het foutrapport anoniem opsturen naar de onwikkelaar?</string>
     <string name="s_warn_wtf_ps">*** Opmerking: deze app is nog in ontwikkeling (beta). Geef deze app geen slechte waardering vanwege crashes. Verwijder de app als hij hinderlijk functioneert. Dank je wel! </string>
@@ -287,7 +287,7 @@
     <string name="filename">Bestandsnaam</string>
     <string name="s_msg_saved">opgeslagen</string>
     <string name="s_menu_view_line_numbers">Regelnummers</string>
-    <string name="warn_text_editor">Welkom in de tekst-editor. Druk lang om de tekst-editmode te activeren.\n\n\n\n</string>
+    <string name="warn_text_editor">Welkom in de tekst-editor. Druk lang om de tekst-editmode te activeren.</string>
     <string name="warn_networking">Welkom bij de netwerk functies. Let wel, deze functie is nog in ontwikkeling en kan fouten bevatten. Geef aub daarom geen slechte waardering indien je een fout vindt.</string>
     <string name="s_menu_new_file">Nieuw Tekstbestand</string>
     <string name="s_msg_created">Gemaakt</string>

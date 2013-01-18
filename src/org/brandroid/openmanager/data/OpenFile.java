@@ -247,13 +247,16 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
         for (OpenFile kid : getInternalMemoryDrive().getParent().listFiles())
             if ((kid.getName().toLowerCase().indexOf("ext") > -1 || kid.getName().toLowerCase()
                     .indexOf("sdcard1") > -1)
-                    && kid.canRead() && kid.canWrite()) {
+                    && !kid.getPath().equals(getInternalMemoryDrive().getPath())
+                    && kid.canRead()
+                    && kid.canWrite()) {
                 mExternalDrive = kid;
                 return kid;
             }
         if (new File("/Removable").exists())
             for (File kid : new File("/Removable").listFiles())
                 if (kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead()
+                        && !kid.getPath().equals(getInternalMemoryDrive().getPath())
                         && kid.list().length > 0) {
                     mExternalDrive = new OpenFile(kid);
                     return mExternalDrive;
@@ -270,15 +273,15 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
 
     public static OpenFile getInternalMemoryDrive() // internal
     {
-        if (mInternalDrive != null)
-            return mInternalDrive;
         OpenFile ret = null;
         if (OpenExplorer.isNook()) {
             ret = new OpenFile("/mnt/media");
             if (ret != null && ret.canWrite())
                 return mInternalDrive = ret;
-        } else
-            ret = new OpenFile(Environment.getExternalStorageDirectory());
+        }
+        if (mInternalDrive != null)
+            return mInternalDrive;
+        ret = new OpenFile(Environment.getExternalStorageDirectory());
         Logger.LogVerbose("Internal Storage: " + ret);
         if (ret == null || !ret.exists()) {
             OpenFile mnt = new OpenFile("/mnt");
