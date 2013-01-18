@@ -25,9 +25,9 @@
             android:layout_height="1dp"
             android:background="@color/darkGray" />
 
-        <LinearLayout
+        <GridLayout
             android:id="@+id/buttons"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/s_no" />
-        </LinearLayout>
+        </GridLayout>
 
         <CheckBox
             android:id="@+id/confirm_remember"

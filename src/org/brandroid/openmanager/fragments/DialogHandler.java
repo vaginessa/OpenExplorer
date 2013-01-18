@@ -45,6 +45,9 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewParent;
 import android.view.WindowManager;
 import android.view.WindowManager.BadTokenException;
 import android.webkit.WebView;
@@ -587,15 +590,21 @@ public class DialogHandler {
         if (title != null)
             dialog.setTitle(title);
 
-        final LinearLayout buttons = (LinearLayout)layout.findViewById(R.id.buttons);
+        final ViewGroup buttons = (ViewGroup)layout.findViewById(R.id.buttons);
+        buttons.removeAllViews();
 
         for (final int id : buttonStringIds) {
             Button btn = new Button(context);
             btn.setText(id);
             btn.setId(id);
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)btn.getLayoutParams();
-            if (lp != null)
+            if (lp == null)
+                lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                        LayoutParams.WRAP_CONTENT);
+            if (lp != null) {
                 lp.weight = 1;
+                btn.setLayoutParams(lp);
+            }
             btn.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -799,14 +808,6 @@ public class DialogHandler {
 
         mDlgAbout.getWindow().getAttributes().windowAnimations = R.style.SlideDialogAnimation;
         mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
-
-        if (OpenExplorer.isNook())
-            mDlgAbout
-                    .getWindow()
-                    .getDecorView()
-                    .setBackgroundResource(
-                            mApp.getThemedResourceId(
-                                    R.styleable.AppTheme_appBackgroundColorPrimary, R.color.gray));
 
         mDlgAbout.show();
     }
