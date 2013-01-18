@@ -1913,23 +1913,17 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             if (kid.getName().toLowerCase().indexOf("download") > -1)
                                 mDownloadParent.addSearch(new SmartSearch(kid));
                     if (isNook()) {
-                        OpenFile files = OpenFile.getExternalMemoryDrive(true);
-                        for (int i = 0; i < 4; i++) {
-                            if (i == 1 || i == 3)
-                                files = files.getChild("My Files"); // find
-                                                                    // under
-                                                                    // /mnt/sdcard
-                                                                    // &
-                                                                    // /mnt/media
-                                                                    // (Internal)
-                            else if (i == 2)
-                                files = new OpenFile("/mnt/media");
-                            if (files != null && files.exists()) {
-                                for (OpenPath kid : intDrive.list())
-                                    if (kid.getName().toLowerCase().indexOf("download") > -1)
+                        String[] bnRoots = new String[]{"/data/media/","/mnt/media/","/mnt/sdcard/"};
+                        String[] bnDownloads = new String[]{"/","B&N Downloads/","My Files/","My Files/B&N Downloads/"};
+                        String[] bnSubs = new String[]{"Magazines/","Books/","Newspapers/","Extras/"};
+                        for(String root : bnRoots)
+                            for(String dl : bnDownloads)
+                                for(String folder : bnSubs)
+                                {
+                                    OpenFile kid = new OpenFile(root + dl + folder);
+                                    if(kid.exists() && kid.isDirectory())
                                         mDownloadParent.addSearch(new SmartSearch(kid));
-                            }
-                        }
+                                }
                     }
                 }
             }).start();
