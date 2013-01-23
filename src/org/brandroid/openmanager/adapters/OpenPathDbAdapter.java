@@ -184,8 +184,7 @@ public class OpenPathDbAdapter {
     }
 
     public long createItem(OpenPath path, boolean removeOld) {
-        if (mDb == null || !mDb.isOpen())
-            open();
+        open();
         if (mDb == null)
             return -1;
         ContentValues initialValues = new ContentValues();
@@ -220,7 +219,7 @@ public class OpenPathDbAdapter {
 
     public int deleteFolder(OpenPath parent) {
         try {
-            if (mDb != null && parent != null) {
+            if (mDb != null && mDb.isOpen() && parent != null) {
                 String sParent = parent.getPath();
                 int ret = mDb.delete(DATABASE_TABLE,
                         KEY_FOLDER + " = '" + sParent.replaceAll("'", "''") + "'", null);
