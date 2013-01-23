@@ -305,7 +305,8 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
     }
 
     public static OpenFile getUsbDrive() {
-        if (mUsbDrive != null && mUsbDrive.exists())
+        if (mUsbDrive != null && mUsbDrive.exists()
+                && mUsbDrive.getTotalSpace() != getInternalMemoryDrive().getTotalSpace())
             return mUsbDrive;
         OpenFile parent = getExternalMemoryDrive(true).getParent();
         if (Build.VERSION.SDK_INT > 15) {
@@ -325,13 +326,16 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             return null;
         for (OpenFile kid : parent.listFiles())
             if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
-                    && kid.list().length > 0)
+                    && kid.list().length > 0 && kid.getTotalSpace() != parent.getTotalSpace())
                 return (mUsbDrive = kid);
         if (Build.VERSION.SDK_INT > 15)
-            for (OpenFile kid : getInternalMemoryDrive().listFiles())
+        {
+            parent = getInternalMemoryDrive();
+            for (OpenFile kid : parent.listFiles())
                 if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
-                        && kid.list().length > 0)
+                        && kid.list().length > 0 && kid.getTotalSpace() != parent.getTotalSpace())
                     return (mUsbDrive = kid);
+        }
         return null;
     }
 

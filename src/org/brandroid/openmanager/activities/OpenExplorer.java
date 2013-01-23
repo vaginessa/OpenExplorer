@@ -1,6 +1,6 @@
 /*
 	Open Explorer, an open source file explorer & text editor
-	Copyright (C) 2011 Brandon Bowles <brandroid64@gmail.com>
+	Copyright (C) 2013 Brandon Bowles <brandroid64@gmail.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -2902,6 +2902,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
          * true; return true; } }
          */
         return super.onKeyUp(keyCode, event);
+    }
+    
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if(hasFocus)
+            refreshBookmarks();
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
