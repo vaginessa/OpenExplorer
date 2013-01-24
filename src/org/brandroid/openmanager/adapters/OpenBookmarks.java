@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
@@ -79,7 +80,7 @@ import android.widget.Toast;
 
 public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickListener,
         OnChildClickListener, OnItemLongClickListener {
-    private ConcurrentMap<Integer, ArrayList<OpenPath>> mBookmarksArray;
+    private ConcurrentMap<Integer, CopyOnWriteArrayList<OpenPath>> mBookmarksArray;
     // private ImageView mLastIndicater = null;
     private BookmarkAdapter mBookmarkAdapter;
     private String mBookmarkString;
@@ -104,7 +105,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     public OpenBookmarks(OpenApp app, ExpandableListView newList) {
         mApp = app;
-        mBookmarksArray = new ConcurrentHashMap<Integer, ArrayList<OpenPath>>();
+        mBookmarksArray = new ConcurrentHashMap<Integer, CopyOnWriteArrayList<OpenPath>>();
         // for(BookmarkType type : BookmarkType.values())
         // mBookmarksArray.put(getTypeInteger(type), new ArrayList<OpenPath>());
         mPrefs = new Preferences(getContext()).getPreferences("bookmarks");
@@ -314,7 +315,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             return true;
         if (path.getPath() == null)
             return false;
-        for (ArrayList<OpenPath> arr : mBookmarksArray.values())
+        for (CopyOnWriteArrayList<OpenPath> arr : mBookmarksArray.values())
             for (OpenPath p : arr)
                 if (p.getPath() != null
                         && p.getPath().replaceAll("/", "")
@@ -334,7 +335,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     public void addBookmark(BookmarkType type, OpenPath path, NotifyAdapterCallback callback) {
         int iType = getTypeInteger(type);
-        ArrayList<OpenPath> paths = new ArrayList<OpenPath>();
+        CopyOnWriteArrayList<OpenPath> paths = new CopyOnWriteArrayList<OpenPath>();
         if (mBookmarksArray.containsKey(iType))
             paths = mBookmarksArray.get(iType);
         if (!paths.contains(paths)) {
@@ -348,7 +349,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public void addBookmark(BookmarkType type, OpenPath path, int index,
             NotifyAdapterCallback callback) {
         int iType = getTypeInteger(type);
-        ArrayList<OpenPath> paths = new ArrayList<OpenPath>();
+        CopyOnWriteArrayList<OpenPath> paths = new CopyOnWriteArrayList<OpenPath>();
         if (mBookmarksArray.containsKey(iType))
             paths = mBookmarksArray.get(iType);
         if (!paths.contains(path)) {
@@ -366,7 +367,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     private void clearBookmarks() {
         for (int i = 0; i < BookmarkType.values().length; i++)
-            mBookmarksArray.put(i, new ArrayList<OpenPath>());
+            mBookmarksArray.put(i, new CopyOnWriteArrayList<OpenPath>());
     }
 
     public String getPathTitle(OpenPath path) {
@@ -588,9 +589,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public void onBookMarkAdd(OpenPath path) {
         int type = getTypeInteger(BookmarkType.BOOKMARK_FAVORITE);
         if (mBookmarksArray == null)
-            mBookmarksArray = new ConcurrentHashMap<Integer, ArrayList<OpenPath>>();
+            mBookmarksArray = new ConcurrentHashMap<Integer, CopyOnWriteArrayList<OpenPath>>();
         if (mBookmarksArray.get(type) == null)
-            mBookmarksArray.put(type, new ArrayList<OpenPath>());
+            mBookmarksArray.put(type, new CopyOnWriteArrayList<OpenPath>());
         mBookmarksArray.get(type).add(path);
         mBookmarkString = (mBookmarkString != null && mBookmarkString != "" ? mBookmarkString + ";"
                 : "") + path.getPath();
@@ -901,7 +902,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         }
 
         @Override
-        public ArrayList<OpenPath> getGroup(int group) {
+        public CopyOnWriteArrayList<OpenPath> getGroup(int group) {
             return mBookmarksArray.get(group);
         }
 
