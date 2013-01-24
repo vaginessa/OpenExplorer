@@ -2736,9 +2736,18 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         final BetterPopupWindow clipdrop = new BetterPopupWindow(this, anchor);
         View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
                 R.layout.clipboard_layout, null);
+        final TextView tvStatus = (TextView)root.findViewById(R.id.multiselect_status);
+        tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: " + DialogHandler.formatSize(getClipboard().getTotalSize()));
         GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
         final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
         mListClipboard.setAdapter(getClipboard());
+        mClipboard.setClipboardUpdateListener(new OnClipboardUpdateListener() {
+            @Override
+            public void onClipboardUpdate() {
+                tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: " + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                OpenExplorer.this.onClipboardUpdate();
+            }
+        });
         mListClipboard.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> list, View view, final int pos, long id) {
                 // OpenPath file = mClipboard.get(pos);
