@@ -843,10 +843,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             // if(!Thread.currentThread().equals(UiThread))
             mViewPager.post(new Runnable() {
                 public void run() {
-                    if (mViewPager.getCurrentItem() != page)
-                        mViewPager.setCurrentItem(page, smooth);
-                    else
-                        Logger.LogDebug("Current page already set to " + page);
+                    try {
+                        if (mViewPager.getCurrentItem() != page)
+                            mViewPager.setCurrentItem(page, smooth);
+                        else
+                            Logger.LogDebug("Current page already set to " + page);
+                    } catch (Exception e) {
+                        Logger.LogError("Unable to set page to " + page, e);
+                    }
                 }
             });
             // else if(mViewPager.getCurrentItem() != page)
@@ -1913,15 +1917,20 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             if (kid.getName().toLowerCase().indexOf("download") > -1)
                                 mDownloadParent.addSearch(new SmartSearch(kid));
                     if (isNook()) {
-                        String[] bnRoots = new String[]{"/data/media/","/mnt/media/","/mnt/sdcard/"};
-                        String[] bnDownloads = new String[]{"/","B&N Downloads/","My Files/","My Files/B&N Downloads/"};
-                        String[] bnSubs = new String[]{"Magazines/","Books/","Newspapers/","Extras/"};
-                        for(String root : bnRoots)
-                            for(String dl : bnDownloads)
-                                for(String folder : bnSubs)
-                                {
+                        String[] bnRoots = new String[] {
+                                "/data/media/", "/mnt/media/", "/mnt/sdcard/"
+                        };
+                        String[] bnDownloads = new String[] {
+                                "/", "B&N Downloads/", "My Files/", "My Files/B&N Downloads/"
+                        };
+                        String[] bnSubs = new String[] {
+                                "Magazines/", "Books/", "Newspapers/", "Extras/"
+                        };
+                        for (String root : bnRoots)
+                            for (String dl : bnDownloads)
+                                for (String folder : bnSubs) {
                                     OpenFile kid = new OpenFile(root + dl + folder);
-                                    if(kid.exists() && kid.isDirectory())
+                                    if (kid.exists() && kid.isDirectory())
                                         mDownloadParent.addSearch(new SmartSearch(kid));
                                 }
                     }
@@ -2903,11 +2912,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
          */
         return super.onKeyUp(keyCode, event);
     }
-    
+
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if(hasFocus)
+        if (hasFocus)
             refreshBookmarks();
     }
 
