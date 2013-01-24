@@ -1,6 +1,7 @@
 
 package org.brandroid.openmanager.adapters;
 
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
@@ -272,6 +273,22 @@ public class OpenPathDbAdapter {
         } catch (Exception e) {
             Logger.LogError(
                     "Couldn't fetch from folder " + folder + ". " + e.getLocalizedMessage(), e);
+            return null;
+        }
+    }
+
+    public Cursor fetchSearch(String query, String folder) {
+        open();
+        if (mDb == null)
+            return null;
+        try {
+            String where = KEY_NAME + " LIKE '%" + query.replaceAll("'", "''") + "%'";
+            if (folder != null && folder.length() > 0)
+                where += " AND " + KEY_FOLDER + " LIKE '" + folder.replace("'", "''") + "%'";
+            return mDb.query(true, DATABASE_TABLE, KEYS, where, null, null, null,
+                    getSortString(OpenPath.Sorting), null);
+        } catch (Exception e) {
+            Logger.LogError("Couldn't search for \"" + query + "\"", e);
             return null;
         }
     }
