@@ -209,7 +209,8 @@ public class ContentAdapter extends BaseAdapter {
 
     public void sort(SortType sort) {
         OpenPath.Sorting = sort;
-        Collections.sort(mData2);
+        if (mData2 != null && mData2.size() > 1)
+            Collections.sort(mData2);
     }
 
     private OpenPath[] getList() {
