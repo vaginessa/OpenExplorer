@@ -27,7 +27,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
@@ -36,6 +38,11 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
 import android.text.Html;
 import android.text.util.Linkify;
 import android.util.DisplayMetrics;
@@ -73,6 +80,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -88,6 +97,7 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.HeatmapAdapter;
@@ -707,6 +717,7 @@ public class DialogHandler {
         if (dm != null)
             sHardwareInfo += "Density: " + dm.density + "\n";
         sHardwareInfo += "Rotation: " + d.getRotation() + "\n\n";
+        sHardwareInfo += getUsbInfo(mContext);
         sHardwareInfo += getNetworkInfo(mContext);
         sHardwareInfo += getDeviceInfo();
         ((TextView)view.findViewById(R.id.about_hardware)).setText(sHardwareInfo);
@@ -769,7 +780,9 @@ public class DialogHandler {
         else
             ((TableRow)view.findViewById(R.id.row_buildtime)).setVisibility(View.GONE);
 
-        // fillShortcutsTable((TableLayout)view.findViewById(R.id.shortcuts_table));
+        // fillShortcutsTable();
+
+        final TableLayout short_table = (TableLayout)view.findViewById(R.id.shortcuts_table);
 
         final View tab1 = view.findViewById(R.id.tab1);
         final View tab2 = view.findViewById(R.id.tab2);
@@ -797,6 +810,8 @@ public class DialogHandler {
                 tab1.setVisibility(View.GONE);
                 tab2.setVisibility(View.GONE);
                 tab3.setVisibility(View.VISIBLE);
+                //fillLogTable(short_table);
+                // fillShortcutsTable(short_table);
             }
         });
 
@@ -810,6 +825,60 @@ public class DialogHandler {
         mDlgAbout.getWindow().getAttributes().alpha = 0.9f;
 
         mDlgAbout.show();
+    }
+
+    @SuppressLint("NewApi")
+    private static String getUsbInfo(Context mContext) {
+        if (Build.VERSION.SDK_INT <= 11)
+            return "";
+        String ret = "USB Devices: ";
+        PendingIntent perm = PendingIntent.getBroadcast(mContext, 0, new Intent(
+                OpenApplication.ACTION_USB_PERMISSION), 0);
+        UsbManager manager = (UsbManager)mContext.getSystemService(Context.USB_SERVICE);
+        HashMap<String, UsbDevice> devices = manager.getDeviceList();
+        ret += devices.size() + "\n";
+        Iterator<UsbDevice> dit = devices.values().iterator();
+        while (dit.hasNext()) {
+            UsbDevice device = dit.next();
+            UsbDeviceConnection conn = manager.openDevice(device);
+            ret += device.getDeviceName() + "\n";
+            ret += device.toString() + "\n";
+            for (int i = 0; i < device.getInterfaceCount(); i++)
+            {
+                UsbInterface iface = device.getInterface(i);
+                ret += "Interface " + i + ": " + iface.toString() + "\n";
+                for (int j = 0; j < iface.getEndpointCount(); j++)
+                {
+                    UsbEndpoint ep = iface.getEndpoint(j);
+                    ret += "Endpoint " + j + ": " + ep.toString() + "\n";
+                    conn.claimInterface(iface, true);
+                    byte[] buffer = new byte[256];
+                    conn.bulkTransfer(ep, buffer, buffer.length, 0);
+                    ret += "Bulk: " + new String(buffer);
+                }
+            }
+            manager.requestPermission(device, perm);
+        }
+        ret += "\n";
+        return ret;
+    }
+
+    private static void fillLogTable(TableLayout table) {
+        final Context context = table.getContext();
+        String[][] logs = Logger.getDbLogList();
+        if (logs == null)
+            return;
+        for (int i = 0; i < logs.length; i++) {
+            String[] row = logs[i];
+            TableRow tr = new TableRow(context);
+            for (int j = 0; j < row.length; j++) {
+                TextView tv = new TextView(context);
+                tv.setGravity(Gravity.CENTER);
+                tv.setText(row[j]);
+                tr.addView(tv);
+            }
+            table.addView(tr);
+        }
     }
 
     private static void fillShortcutsTable(TableLayout table) {

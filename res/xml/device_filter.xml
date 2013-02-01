@@ -21,5 +21,11 @@
         class="6"
         protocol="1"
         subclass="1" />
+    <usb-device
+        product-id="20992"
+        vendor-id="11586"
+        class="0"
+        subclass="0"
+        protocol="0" />
 
 </resources>

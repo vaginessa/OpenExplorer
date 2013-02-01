@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
@@ -133,6 +135,10 @@ public class Logger {
 
     public static JSONArray getDbLogArray() {
         return dbLog != null ? dbLog.getAllItemsJSON() : new JSONArray();
+    }
+    
+    public static String[][] getDbLogList() {
+        return dbLog != null ? dbLog.getAllItemsList() : null;
     }
 
     public static String getDbLogs(Boolean clear) {

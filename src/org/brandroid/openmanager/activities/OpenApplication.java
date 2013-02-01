@@ -34,6 +34,7 @@ import android.util.SparseArray;
 public class OpenApplication extends Application implements OpenApp {
     private static final String DOWNLOAD_FOLDER = "download";
     private static final long DOWNLOAD_CAPACITY = 64 * 1024 * 1024; // 64M
+    public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
     private DataManager mDataManager;
     private ImageCacheService mImageCacheService;

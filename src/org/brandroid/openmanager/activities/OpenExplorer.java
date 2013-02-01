@@ -31,6 +31,7 @@ import android.provider.MediaStore;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -52,6 +53,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -114,6 +117,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -416,6 +421,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         getApplicationContext().setTheme(theme);
         setTheme(theme);
         getOpenApplication().loadThemedAssets(this);
+
+        handleUsbReceiver();
 
         Resources res = getResources();
         if (res != null) {
@@ -1068,12 +1075,33 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 return true;
             else
                 changePath(path, true, true);
+        } else if (intent.hasExtra(OpenApplication.ACTION_USB_PERMISSION)) {
+            showToast("USB Intent!");
         } else if (intent.hasExtra("state")) {
             Bundle state = intent.getBundleExtra("state");
             onRestoreInstanceState(state);
         }
         return false;
     }
+
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (OpenApplication.ACTION_USB_PERMISSION.equals(action)) {
+                synchronized (this) {
+                    UsbDevice device = (UsbDevice)intent
+                            .getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                        showToast("USB Permission granted!");
+                    } else {
+                        showToast("USB Permission DENIED!");
+                    }
+                }
+            }
+        }
+    };
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -1648,6 +1676,21 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 }
             }
         }, 1000);
+    }
+
+    public void handleUsbReceiver() {
+        if (Build.VERSION.SDK_INT < 12) return;
+        registerReceiver(mUsbReceiver, new IntentFilter(OpenApplication.ACTION_USB_PERMISSION));
+        PendingIntent perm = PendingIntent.getBroadcast(this, 0, new Intent(OpenApplication.ACTION_USB_PERMISSION), 0);
+        UsbManager manager = (UsbManager)getSystemService(Context.USB_SERVICE);
+        HashMap<String, UsbDevice> devices = manager.getDeviceList();
+        Logger.LogDebug("USB Devices: " + devices.size());
+        Iterator<UsbDevice> dit = devices.values().iterator();
+        while(dit.hasNext())
+        {
+            UsbDevice device = dit.next();
+            manager.requestPermission(device, perm);
+        }
     }
 
     public void handleMediaReceiver() {
@@ -2737,14 +2780,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
                 R.layout.clipboard_layout, null);
         final TextView tvStatus = (TextView)root.findViewById(R.id.multiselect_status);
-        tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: " + DialogHandler.formatSize(getClipboard().getTotalSize()));
+        tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
+                + DialogHandler.formatSize(getClipboard().getTotalSize()));
         GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
         final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
         mListClipboard.setAdapter(getClipboard());
         mClipboard.setClipboardUpdateListener(new OnClipboardUpdateListener() {
             @Override
             public void onClipboardUpdate() {
-                tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: " + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
+                        + DialogHandler.formatSize(getClipboard().getTotalSize()));
                 OpenExplorer.this.onClipboardUpdate();
             }
         });

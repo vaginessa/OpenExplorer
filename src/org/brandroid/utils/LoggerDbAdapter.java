@@ -2,6 +2,7 @@
 package org.brandroid.utils;
 
 import java.sql.Date;
+import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -165,6 +166,26 @@ public class LoggerDbAdapter {
             return mDb.delete(DATABASE_TABLE, null, null);
         else
             return -1;
+    }
+
+    public String[][] getAllItemsList() {
+        ArrayList<String[]> ret = new ArrayList<String[]>();
+        Cursor c = fetchAllItems();
+        if (c == null)
+            return null;
+        while (!c.isAfterLast()) {
+            if (ret.size() == 0)
+                ret.add(c.getColumnNames());
+            String[] row = new String[c.getColumnCount()];
+            try {
+                for (int i = 0; i < row.length; i++)
+                    row[i] = c.getString(i);
+                ret.add(row);
+            } catch (Exception e) {
+                break;
+            }
+        }
+        return ret.toArray(new String[0][]);
     }
 
     public JSONArray getAllItemsJSON() {
