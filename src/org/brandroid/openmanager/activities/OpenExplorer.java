@@ -1086,6 +1086,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             onRestoreInstanceState(state);
         } else if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
             Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            Logger.LogInfo("BEAM Received: " + rawMsgs.length);
             for (Parcelable p : rawMsgs) {
                 NdefMessage msg = (NdefMessage)p;
                 NdefRecord[] recs = msg.getRecords();
@@ -1697,6 +1698,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             }
                         }
                         if (fileUri.size() > 0) {
+                            Logger.LogInfo("BEAM: " + fileUri.size() + " items");
                             return fileUri.toArray(new Uri[fileUri.size()]);
                         }
                     }
@@ -1720,8 +1722,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                     of.readBytes());
                             recs.add(rec);
                         }
-                        if (recs.size() > 0)
+                        if (recs.size() > 0) {
+                            Logger.LogInfo("BEAM: " + recs.size() + " items");
                             return new NdefMessage(recs.toArray(new NdefRecord[recs.size()]));
+                        }
                     }
                     return null;
                 }
@@ -2031,7 +2035,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public void ensureCursorCache() {
         // findCursors();
-        if(!Preferences.Pref_ShowThumbs) return;
+        if (!Preferences.Pref_ShowThumbs)
+            return;
         if (mRunningCursorEnsure
         // || mLastCursorEnsure == 0
         // || new Date().getTime() - mLastCursorEnsure < 10000 // at least 10
