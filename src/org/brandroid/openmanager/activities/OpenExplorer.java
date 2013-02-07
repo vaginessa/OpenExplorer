@@ -320,6 +320,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
         Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
         Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
+        Preferences.Pref_ShowThumbs = prefs.getBoolean("global", "pref_thumbs", true);
         Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
         Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
         Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
@@ -1952,6 +1953,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public void ensureCursorCache() {
         // findCursors();
+        if(!Preferences.Pref_ShowThumbs) return;
         if (mRunningCursorEnsure
         // || mLastCursorEnsure == 0
         // || new Date().getTime() - mLastCursorEnsure < 10000 // at least 10
