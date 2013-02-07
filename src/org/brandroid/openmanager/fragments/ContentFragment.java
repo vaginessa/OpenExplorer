@@ -461,6 +461,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             Logger.LogWarning("ContentFragment.refreshData warning: path is null!");
             return;
         }
+        
+        if(path instanceof OpenFile && !path.canRead())
+            path = new OpenFileRoot(path);
 
         if (DEBUG)
             Logger.LogDebug("refreshData running...");
@@ -482,6 +485,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 path = OpenExplorer.getDownloadParent();
         }
 
+        /*
         if (path instanceof OpenFile
                 && (((path.getName().equalsIgnoreCase("data") || sPath.indexOf("/data") > -1) && !sPath
                         .startsWith(OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
@@ -489,6 +493,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         || (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") == -1) || sPath
                             .startsWith("/system")))
             path = new OpenFileRoot(path);
+        */
 
         mPath = path;
 
