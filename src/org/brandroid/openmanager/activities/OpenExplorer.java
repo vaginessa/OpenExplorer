@@ -22,10 +22,17 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.NetworkInfo.State;
+import android.nfc.FormatException;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.NfcAdapter.CreateNdefMessageCallback;
+import android.nfc.NfcEvent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.os.StatFs;
 import android.provider.MediaStore;
 import android.annotation.SuppressLint;
@@ -67,6 +74,7 @@ import android.text.InputType;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.format.Time;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
@@ -108,6 +116,7 @@ import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -116,6 +125,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -387,6 +397,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         super.onResume();
         if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onResume");
+        handleIntent(getIntent());
         onClipboardUpdate();
     }
 
@@ -472,6 +483,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_fragments);
+        handleNfc();
         if (Build.VERSION.SDK_INT < 11)
             getWindow().setBackgroundDrawableResource(
                     themeDark ? R.drawable.background_holo_dark : R.drawable.background_holo_light);
@@ -883,7 +895,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     protected void onNewIntent(Intent intent) {
         Logger.LogDebug("New Intent! " + intent.toString());
         setIntent(intent);
-        handleIntent(intent);
+        // handleIntent(intent); //Unneeded, onResume will handle
     }
 
     public boolean showMenu(int menuId, final View from, final boolean fromTouch) {
@@ -1072,6 +1084,19 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else if (intent.hasExtra("state")) {
             Bundle state = intent.getBundleExtra("state");
             onRestoreInstanceState(state);
+        } else if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            for (Parcelable p : rawMsgs) {
+                NdefMessage msg = (NdefMessage)p;
+                NdefRecord[] recs = msg.getRecords();
+                OpenFile file = (OpenFile)getDownloadParent().getChild(
+                        "nfc_" + new Time().toString());
+                int dataPos = 1;
+                if (recs.length > 2)
+                    file = (OpenFile)getDownloadParent().getChild(
+                            new String(recs[dataPos++].getPayload()));
+                file.writeBytes(recs[dataPos].getPayload());
+            }
         }
         return false;
     }
@@ -1649,6 +1674,59 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 }
             }
         }, 1000);
+    }
+
+    private void handleNfc() {
+        if (Build.VERSION.SDK_INT < 14)
+            return;
+        // Initialize nfc adapter
+        NfcAdapter mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (mNfcAdapter == null)
+            return;
+        if (Build.VERSION.SDK_INT >= 16) {
+            mNfcAdapter.setBeamPushUrisCallback(new NfcAdapter.CreateBeamUrisCallback() {
+                @Override
+                public Uri[] createBeamUris(NfcEvent event) {
+                    Set<OpenPath> selectedFiles = getClipboard();
+                    if (selectedFiles.size() > 0) {
+                        List<Uri> fileUri = new ArrayList<Uri>();
+                        for (OpenPath f : selectedFiles) {
+                            // Beam ignores folders and system files
+                            if (!f.isDirectory() && f.canWrite()) {
+                                fileUri.add(f.getUri());
+                            }
+                        }
+                        if (fileUri.size() > 0) {
+                            return fileUri.toArray(new Uri[fileUri.size()]);
+                        }
+                    }
+                    return null;
+                }
+            }, this);
+        } else if (Build.VERSION.SDK_INT >= 14) {
+            mNfcAdapter.setNdefPushMessageCallback(new CreateNdefMessageCallback() {
+                public NdefMessage createNdefMessage(NfcEvent event) {
+                    Logger.LogVerbose("Beam me up, scotty!");
+                    Set<OpenPath> selectedFiles = getClipboard();
+                    if (selectedFiles.size() > 0) {
+                        List<NdefRecord> recs = new ArrayList<NdefRecord>();
+                        for (OpenPath f : selectedFiles) {
+                            if (!(f instanceof OpenFile) || f.isDirectory() || !f.canWrite())
+                                continue;
+                            OpenFile of = (OpenFile)f;
+                            NdefRecord rec = new NdefRecord(NdefRecord.TNF_MIME_MEDIA,
+                                    "application/vnd.org.brandroid.beam".getBytes(),
+                                    f.getName().getBytes(),
+                                    of.readBytes());
+                            recs.add(rec);
+                        }
+                        if (recs.size() > 0)
+                            return new NdefMessage(recs.toArray(new NdefRecord[recs.size()]));
+                    }
+                    return null;
+                }
+            }, this);
+        }
     }
 
     public void handleMediaReceiver() {
@@ -2264,7 +2342,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else
             fragmentManager.beginTransaction().replace(R.id.content_frag, editor)
 
-            // .addToBackStack(null)
+                    // .addToBackStack(null)
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE).commit();
         // addTab(editor, path.getName(), true);
         return true;
@@ -2739,14 +2817,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         View root = ((LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
                 R.layout.clipboard_layout, null);
         final TextView tvStatus = (TextView)root.findViewById(R.id.multiselect_status);
-        tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: " + DialogHandler.formatSize(getClipboard().getTotalSize()));
+        tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
+                + DialogHandler.formatSize(getClipboard().getTotalSize()));
         GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
         final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
         mListClipboard.setAdapter(getClipboard());
         mClipboard.setClipboardUpdateListener(new OnClipboardUpdateListener() {
             @Override
             public void onClipboardUpdate() {
-                tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: " + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
+                        + DialogHandler.formatSize(getClipboard().getTotalSize()));
                 OpenExplorer.this.onClipboardUpdate();
             }
         });
@@ -3496,7 +3576,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 });
             if (parent == null)
                 parent = new OpenPathArray(new OpenPath[] {
-                    path
+                        path
                 });
             ArrayList<OpenPath> arr = new ArrayList<OpenPath>();
             for (OpenPath kid : parent.list())
