@@ -242,7 +242,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
 
     public static OpenFile getExternalMemoryDrive(boolean fallbackToInternal) // sd
     {
-        if (mExternalDrive != null)
+        if (mExternalDrive != null && mExternalDrive.exists())
             return mExternalDrive;
         for (OpenFile kid : getInternalMemoryDrive().getParent().listFiles())
             if ((kid.getName().toLowerCase().indexOf("ext") > -1 || kid.getName().toLowerCase()
@@ -250,16 +250,14 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
                     && !kid.getPath().equals(getInternalMemoryDrive().getPath())
                     && kid.canRead()
                     && kid.canWrite()) {
-                mExternalDrive = kid;
-                return kid;
+                return mExternalDrive = kid;
             }
         if (new File("/Removable").exists())
-            for (File kid : new File("/Removable").listFiles())
+            for (OpenFile kid : new OpenFile("/Removable").listFiles())
                 if (kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead()
                         && !kid.getPath().equals(getInternalMemoryDrive().getPath())
                         && kid.list().length > 0) {
-                    mExternalDrive = new OpenFile(kid);
-                    return mExternalDrive;
+                    return mExternalDrive = kid;
                 }
         if (!fallbackToInternal)
             return null;
