@@ -480,9 +480,4 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
         String ret = execute("cat > " + getPath() + "\n" + new String(bytes), false);
         Logger.LogDebug("writeBytes response: " + ret);
     }
-    
-    @Override
-    public boolean showChildPath() {
-        return false;
-    }
 }

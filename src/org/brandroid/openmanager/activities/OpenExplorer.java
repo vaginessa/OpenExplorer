@@ -1868,16 +1868,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             for (OpenPath kid : extDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
-                                    if (!kid.getChild(".nomedia").exists())
-                                        mVideoSearchParent.addSearch(new SmartSearch(kid,
+                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                             "mkv", "mp4"));
                         if (mHasInternal)
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
-                                    if (!kid.getChild(".nomedia").exists())
-                                        mVideoSearchParent.addSearch(new SmartSearch(kid,
+                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                             "mkv", "mp4"));
                         if (isNook()) {
@@ -1889,8 +1887,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 if (files != null && files.exists()) {
                                     files = files.getChild("Videos");
                                     if (files != null && files.exists())
-                                        if (!files.getChild(".nomedia").exists())
-                                            mVideoSearchParent.addSearch(new SmartSearch(files,
+                                        mVideoSearchParent.addSearch(new SmartSearch(files,
                                                 SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                                 "mkv", "mp4"));
                                 }
@@ -1925,18 +1922,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                         || kid.getName().toLowerCase().indexOf("picture") > -1
                                         || kid.getName().toLowerCase().indexOf("dcim") > -1
                                         || kid.getName().toLowerCase().indexOf("camera") > -1)
-                                    if (!kid.getChild(".nomedia").exists())
-                                        mPhotoSearchParent.addSearch(new SmartSearch(kid,
-                                                SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
-                                                "gif", "jpeg"));
+                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                            "gif", "jpeg"));
                         if (mHasInternal)
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("photo") > -1
                                         || kid.getName().toLowerCase().indexOf("picture") > -1
                                         || kid.getName().toLowerCase().indexOf("dcim") > -1
                                         || kid.getName().toLowerCase().indexOf("camera") > -1)
-                                    if (!kid.getChild(".nomedia").exists())
-                                        mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
                                             "gif", "jpeg"));
                         if (isNook()) {
@@ -1950,8 +1945,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 if (files != null && files.exists()) {
                                     files = files.getChild("Pictures");
                                     if (files != null && files.exists())
-                                        if (!files.getChild(".nomedia").exists())
-                                            mPhotoSearchParent.addSearch(new SmartSearch(files,
+                                        mPhotoSearchParent.addSearch(new SmartSearch(files,
                                                 SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
                                                 "gif", "jpeg"));
                                 }
@@ -2036,8 +2030,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public void ensureCursorCache() {
         // findCursors();
-        if (!Preferences.Pref_ShowThumbs)
-            return;
+        if(!Preferences.Pref_ShowThumbs) return;
         if (mRunningCursorEnsure
         // || mLastCursorEnsure == 0
         // || new Date().getTime() - mLastCursorEnsure < 10000 // at least 10
@@ -2351,7 +2344,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else
             fragmentManager.beginTransaction().replace(R.id.content_frag, editor)
 
-            // .addToBackStack(null)
+                    // .addToBackStack(null)
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE).commit();
         // addTab(editor, path.getName(), true);
         return true;
@@ -3585,7 +3578,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 });
             if (parent == null)
                 parent = new OpenPathArray(new OpenPath[] {
-                    path
+                        path
                 });
             ArrayList<OpenPath> arr = new ArrayList<OpenPath>();
             for (OpenPath kid : parent.list())

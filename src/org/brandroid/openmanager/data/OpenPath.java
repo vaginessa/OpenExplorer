@@ -861,7 +861,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @return {@code true} if child path should be shown, {@code false} if not.
      */
     public boolean showChildPath() {
-        return true;
+        return false;
     }
 
     /**

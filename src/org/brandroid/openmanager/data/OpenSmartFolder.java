@@ -18,7 +18,6 @@ public class OpenSmartFolder extends OpenPath {
     private final ArrayList<SmartSearch> mSearches;
     private final ArrayList<OpenPath> mChildren;
     private boolean mLoaded = false;
-    private boolean mIsMedia = true;
 
     public OpenSmartFolder(String name) {
         mName = name;
@@ -30,7 +29,6 @@ public class OpenSmartFolder extends OpenPath {
         private final OpenPath mParent;
         private final SearchType mType;
         private final Object[] mParams;
-        private boolean mIsMedia = true;
 
         public enum SearchType {
             All, AllRecursive, NameEquals, NameNotEquals, SizeUnder, SizeAbove, DateBefore, DateAfter, TypeIn
@@ -40,10 +38,6 @@ public class OpenSmartFolder extends OpenPath {
             mParent = parent;
             mType = SearchType.All;
             mParams = null;
-        }
-
-        public boolean isMedia() {
-            return mIsMedia;
         }
 
         public SmartSearch(OpenPath parent, SearchType type, Object... params) {
@@ -83,14 +77,6 @@ public class OpenSmartFolder extends OpenPath {
             }
             mLoaded = true;
         }
-    }
-
-    public void setIsMedia(boolean isMedia) {
-        mIsMedia = isMedia;
-    }
-
-    public boolean isMedia() {
-        return mIsMedia;
     }
 
     @Override
@@ -169,10 +155,9 @@ public class OpenSmartFolder extends OpenPath {
                     if (o instanceof String && ((String)o).length() <= 8)
                         types.add(((String)o).toLowerCase());
                 for (OpenPath kid : search.mParent.listFiles())
-                    if (!kid.getChild(".nomedia").exists())
-                        if (types.contains(kid.getExtension().toLowerCase()))
-                            if (!mChildren.contains(kid))
-                                mChildren.add(kid);
+                    if (types.contains(kid.getExtension().toLowerCase()))
+                        if (!mChildren.contains(kid))
+                            mChildren.add(kid);
                 break;
             default:
                 throw new IOException("Type " + search.mType.toString() + " not yet implemented");
