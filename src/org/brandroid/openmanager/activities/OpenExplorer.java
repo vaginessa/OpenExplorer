@@ -1715,8 +1715,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 continue;
                             OpenFile of = (OpenFile)f;
                             NdefRecord rec = new NdefRecord(NdefRecord.TNF_MIME_MEDIA,
-                                    "application/vnd.org.brandroid.beam".getBytes(), f.getName()
-                                            .getBytes(), of.readBytes());
+                                    "application/vnd.org.brandroid.beam".getBytes(),
+                                    f.getName().getBytes(),
+                                    of.readBytes());
                             recs.add(rec);
                         }
                         if (recs.size() > 0)
@@ -2164,14 +2165,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             Logger.LogVerbose("refreshBookmarks()");
         refreshCursors();
         if (mBookmarks != null) {
-            //mBookmarks.scanBookmarks();
+            mBookmarks.scanBookmarks();
             mBookmarks.refresh();
         }
         if (mBookmarksList != null)
-        {
-            //Logger.LogDebug("Bookmarks List invalidating");
             mBookmarksList.invalidate();
-        }
     }
 
     public ContentFragment getDirContentFragment(Boolean activate) {
