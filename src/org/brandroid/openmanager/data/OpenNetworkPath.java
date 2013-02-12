@@ -270,4 +270,9 @@ public abstract class OpenNetworkPath extends OpenPath implements OpenPath.Needs
     public OutputStream getOutputStream() throws IOException {
         return tempDownload(null).getOutputStream();
     }
+    
+    @Override
+    public boolean showChildPath() {
+        return false;
+    }
 }

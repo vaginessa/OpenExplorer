@@ -225,4 +225,9 @@ public class OpenMediaStore extends OpenPath {
 
         return deets;
     }
+    
+    @Override
+    public boolean showChildPath() {
+        return true;
+    }
 }
