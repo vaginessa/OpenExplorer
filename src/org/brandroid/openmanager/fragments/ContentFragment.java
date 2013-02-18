@@ -1004,7 +1004,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 DialogHandler.showFileHeatmap(getExplorer(), getPath());
                 return true;
             case R.id.menu_new_file:
-                EventHandler.createNewFile(getPath(), getActivity());
+                EventHandler.createNewFile(getPath(), getActivity(), this);
                 return true;
             case R.id.menu_new_folder:
                 EventHandler.createNewFolder(getPath(), getActivity(), this);

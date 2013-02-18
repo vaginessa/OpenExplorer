@@ -270,7 +270,8 @@ public class EventHandler {
     /**
      * @param directory directory path to create the new folder in.
      */
-    public static void createNewFolder(final OpenPath folder, final Context context, final OnWorkerUpdateListener threadListener) {
+    public static void createNewFolder(final OpenPath folder, final Context context,
+            final OnWorkerUpdateListener threadListener) {
         final InputDialog dlg = new InputDialog(context).setTitle(R.string.s_title_newfolder)
                 .setIcon(R.drawable.ic_menu_folder_add_dark).setMessage(R.string.s_alert_newfolder)
                 .setMessageTop(R.string.s_alert_newfolder_folder)
@@ -287,12 +288,12 @@ public class EventHandler {
                             // can't be created for another reason
                             OpenPath path = folder.getChild(name);
                             Logger.LogError("Unable to create folder (" + path + ")");
-                            if(threadListener != null)
+                            if (threadListener != null)
                                 threadListener.onWorkerThreadFailure(MKDIR_TYPE);
                             Toast.makeText(context, R.string.s_msg_folder_none, Toast.LENGTH_LONG)
                                     .show();
                         } else {
-                            if(threadListener != null)
+                            if (threadListener != null)
                                 threadListener.onWorkerThreadComplete(MKDIR_TYPE);
                         }
                     } else {
@@ -313,7 +314,8 @@ public class EventHandler {
         return folder.getChild(folderName).mkdir();
     }
 
-    public static void createNewFile(final OpenPath folder, final Context context) {
+    public static void createNewFile(final OpenPath folder, final Context context,
+            final OnWorkerUpdateListener threadListener) {
         final InputDialog dlg = new InputDialog(context).setTitle(R.string.s_title_newfile)
                 .setIcon(R.drawable.ic_menu_new_file).setMessage(R.string.s_alert_newfile)
                 .setMessageTop(R.string.s_alert_newfile_folder).setDefaultTop(folder.getPath())
@@ -326,7 +328,7 @@ public class EventHandler {
             public void onClick(DialogInterface dialog, int which) {
                 String name = dlg.getInputText();
                 if (name.length() > 0) {
-                    createNewFile(folder, name, context);
+                    createNewFile(folder, name, threadListener);
                 } else {
                     dialog.dismiss();
                 }
@@ -335,10 +337,14 @@ public class EventHandler {
         dlg.create().show();
     }
 
-    public static void createNewFile(final OpenPath folder, final String filename, Context context) {
+    public static void createNewFile(final OpenPath folder, final String filename,
+            final OnWorkerUpdateListener threadListener) {
         new Thread(new Runnable() {
             public void run() {
-                folder.getChild(filename).touch();
+                if (folder.getChild(filename).touch())
+                    threadListener.onWorkerThreadComplete(TOUCH_TYPE);
+                else
+                    threadListener.onWorkerThreadFailure(TOUCH_TYPE);
             }
         }).start();
         // BackgroundWork bw = new BackgroundWork(TOUCH_TYPE, context, folder,
