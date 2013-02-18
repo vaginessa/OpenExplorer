@@ -85,7 +85,7 @@ public class EventHandler {
     public static final EventType TOUCH_TYPE = EventType.TOUCH;
     public static final EventType ERROR_TYPE = EventType.ERROR;
     public static final int BACKGROUND_NOTIFICATION_ID = 123;
-    private static final boolean ENABLE_MULTITHREADS = false; //!OpenExplorer.BEFORE_HONEYCOMB;
+    private static final boolean ENABLE_MULTITHREADS = false; // !OpenExplorer.BEFORE_HONEYCOMB;
 
     public enum EventType {
         SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, UNZIP, UNZIPTO, ZIP, ERROR
@@ -398,16 +398,79 @@ public class EventHandler {
     }
 
     public void copyFile(OpenPath source, OpenPath destPath, Context mContext) {
-        if (!destPath.isDirectory())
-            destPath = destPath.getParent();
-        execute(new BackgroundWork(COPY_TYPE, mContext, destPath, source.getName()), source);
+        Collection<OpenPath> files = new ArrayList<OpenPath>();
+        files.add(source);
+        copyFile(files, destPath, mContext);
     }
 
-    public void copyFile(Collection<OpenPath> files, OpenPath newPath, Context mContext) {
-        //for (OpenPath file : files)
-        //    copyFile(file, newPath.getChild(file.getName()), mContext);
-        execute(new BackgroundWork(COPY_TYPE, mContext, newPath, files.size() + " "
-                + mContext.getString(R.string.s_files)), files.toArray(new OpenPath[files.size()]));
+    public void copyFile(final Collection<OpenPath> files, final OpenPath newPath,
+            final Context mContext) {
+        // for (OpenPath file : files)
+        // copyFile(file, newPath.getChild(file.getName()), mContext);
+        for (final OpenPath file : files.toArray(new OpenPath[files.size()]))
+        {
+            final OpenPath newFile = newPath.getChild(file.getName());
+            if (newFile != null && newFile.exists())
+            {
+                files.remove(file);
+                DialogHandler.showMultiButtonDialog(mContext,
+                        getResourceString(mContext, R.string.s_alert_destination_exists),
+                        getResourceString(mContext, R.string.s_title_copying),
+                        new OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which)
+                                {
+                                    case R.string.s_menu_rename:
+                                        OpenPath destFile = newFile;
+                                        int i = 1;
+                                        while (destFile.exists())
+                                            destFile = newPath.getChild(
+                                                    file.getName() + " (" + i++ + ")");
+                                        showRenameOnCopyDialog(file, destFile, mContext);
+                                        break;
+                                    case R.string.s_overwrite:
+                                        execute(new BackgroundWork(COPY_TYPE, mContext, newPath,
+                                                file.getName()), file);
+                                        break;
+                                }
+                                try {
+                                    dialog.dismiss();
+                                } catch (Exception e) {
+                                    Logger.LogWarning(
+                                            "Unable to cancel copyFile dialog.", e);
+                                }
+                            }
+                        },
+                        R.string.s_overwrite, R.string.s_skip, R.string.s_menu_rename);
+            }
+        }
+        if (files.size() > 0)
+            execute(new BackgroundWork(COPY_TYPE, mContext, newPath, files.size() + " "
+                    + mContext.getString(R.string.s_files)),
+                    files.toArray(new OpenPath[files.size()]));
+    }
+
+    private void showRenameOnCopyDialog(final OpenPath sourceFile, final OpenPath destFile,
+            final Context mContext)
+    {
+        final InputDialog dlg = new InputDialog(mContext)
+                .setTitle(R.string.s_menu_rename)
+                .setDefaultText(destFile.getName());
+        dlg.setPositiveButton(android.R.string.ok, new OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                OpenPath newDest = destFile.getParent().getChild(dlg.getInputText());
+                newDest.touch();
+                execute(new BackgroundWork(COPY_TYPE, mContext, newDest, newDest.getPath()),
+                        sourceFile);
+
+                dialog.dismiss();
+            }
+        }).setNegativeButton(android.R.string.no, new OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        dlg.create().show();
     }
 
     public static AsyncTask execute(AsyncTask job) {
@@ -912,13 +975,14 @@ public class EventHandler {
          */
         private Boolean copyFileToDirectory(final OpenFile source, OpenFile into, final int total) {
             Logger.LogVerbose("Using Channel copy for " + source);
-            if (into.isDirectory() || !into.exists())
+            into.mkdir();
+            if (into.isDirectory())
                 into = into.getChild(source.getName());
             if (source.getPath().equals(into.getPath()))
                 return false;
             final OpenFile dest = (OpenFile)into;
             final boolean[] running = new boolean[] {
-                true
+                    true
             };
             final long size = source.length();
             if (size > 50000)
@@ -1248,6 +1312,16 @@ public class EventHandler {
             if (getRunningTasks().length == 0)
                 mNotifier.cancelAll();
 
+            try {
+                showToast(result);
+            } catch (Exception e) {
+                Logger.LogError("Unable to show EventHandle PostExecute Toast.", e);
+            }
+            OnWorkerThreadComplete(mType);
+        }
+
+        private void showToast(Integer result)
+        {
             switch (mType) {
 
                 case DELETE:
@@ -1318,7 +1392,6 @@ public class EventHandler {
                 case ZIP:
                     break;
             }
-            OnWorkerThreadComplete(mType);
         }
     }
 
