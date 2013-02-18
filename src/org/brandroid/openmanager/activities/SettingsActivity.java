@@ -186,8 +186,10 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTheme(R.style.AppTheme_Dark);
-
+//        int theme = getThemeId();
+//        getApplicationContext().setTheme(theme);
+//        setTheme(theme);
+    
         ActionBar bar = getSupportActionBar();
         if (bar != null)
             bar.setDisplayHomeAsUpEnabled(true);
@@ -976,6 +978,19 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 defaultResourceId);
     }
 
+    public int getThemeId() {
+        String themeName = getPreferences().getString("global", "pref_themes", "dark");
+        if (themeName.equals("dark"))
+            return R.style.AppTheme_Dark;
+        else if (themeName.equals("light"))
+            return R.style.AppTheme_Light;
+        else if (themeName.equals("lightdark"))
+            return R.style.AppTheme_LightAndDark;
+        else if (themeName.equals("custom"))
+            return R.style.AppTheme_Custom;
+        return 0;
+    }
+
     @TargetApi(11)
     public static class PreferenceFragmentV11 extends PreferenceFragment {
         @Override
@@ -1023,6 +1038,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             return false;
         }
 
+        @SuppressLint("ValidFragment")
         public class ServerSettings extends PreferenceFragment {
             @Override
             public void onCreate(Bundle savedInstanceState) {
