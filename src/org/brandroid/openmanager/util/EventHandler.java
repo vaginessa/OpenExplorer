@@ -412,50 +412,63 @@ public class EventHandler {
 
     public void copyFile(final Collection<OpenPath> files, final OpenPath newPath,
             final Context mContext) {
+        copyFile(files, newPath, mContext, true);
+    }
+
+    public void copyFile(final Collection<OpenPath> files, final OpenPath newPath,
+            final Context mContext, final boolean copyOnly) {
         // for (OpenPath file : files)
         // copyFile(file, newPath.getChild(file.getName()), mContext);
+        final EventType type = copyOnly ? COPY_TYPE : CUT_TYPE;
         for (final OpenPath file : files.toArray(new OpenPath[files.size()]))
         {
-            final OpenPath newFile = newPath.getChild(file.getName());
-            if (newFile != null && newFile.exists())
-            {
+            if (checkDestinationExists(file, newPath, mContext, type))
                 files.remove(file);
-                DialogHandler.showMultiButtonDialog(mContext,
-                        getResourceString(mContext, R.string.s_alert_destination_exists),
-                        getResourceString(mContext, R.string.s_title_copying)
-                                + " " + file.getName(),
-                        new OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which)
-                                {
-                                    case R.string.s_menu_rename:
-                                        OpenPath destFile = newFile;
-                                        int i = 1;
-                                        while (destFile.exists())
-                                            destFile = newPath.getChild(
-                                                    file.getName() + " (" + i++ + ")");
-                                        showRenameOnCopyDialog(file, destFile, mContext);
-                                        break;
-                                    case R.string.s_overwrite:
-                                        execute(new BackgroundWork(COPY_TYPE, mContext, newPath,
-                                                file.getName()), file);
-                                        break;
-                                }
-                                try {
-                                    dialog.dismiss();
-                                } catch (Exception e) {
-                                    Logger.LogWarning(
-                                            "Unable to cancel copyFile dialog.", e);
-                                }
-                            }
-                        },
-                        R.string.s_overwrite, R.string.s_skip, R.string.s_menu_rename);
-            }
+            else
+                execute(new BackgroundWork(type,
+                        mContext, newPath, file.getName()), file);
         }
-        if (files.size() > 0)
-            execute(new BackgroundWork(COPY_TYPE, mContext, newPath, files.size() + " "
-                    + mContext.getString(R.string.s_files)),
-                    files.toArray(new OpenPath[files.size()]));
+    }
+
+    private boolean checkDestinationExists(final OpenPath file, final OpenPath newPath,
+            final Context mContext, final EventType type)
+    {
+        final OpenPath newFile = newPath.getChild(file.getName());
+        if (newFile != null && newFile.exists())
+        {
+            DialogHandler.showMultiButtonDialog(mContext,
+                    getResourceString(mContext, R.string.s_alert_destination_exists),
+                    getResourceString(mContext, R.string.s_title_copying)
+                            + " " + file.getName(),
+                    new OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which)
+                            {
+                                case R.string.s_menu_rename:
+                                    OpenPath destFile = newFile;
+                                    int i = 1;
+                                    while (destFile.exists())
+                                        destFile = newPath.getChild(
+                                                file.getName() + " (" + i++ + ")");
+                                    showRenameOnCopyDialog(file, destFile, mContext);
+                                    break;
+                                case R.string.s_overwrite:
+                                    execute(new BackgroundWork(type, mContext, newPath,
+                                            file.getName()), file);
+                                    break;
+                            }
+                            try {
+                                dialog.dismiss();
+                            } catch (Exception e) {
+                                Logger.LogWarning(
+                                        "Unable to cancel copyFile dialog.", e);
+                            }
+                        }
+                    },
+                    R.string.s_overwrite, R.string.s_skip, R.string.s_menu_rename);
+            return true;
+        }
+        return false;
     }
 
     private void showRenameOnCopyDialog(final OpenPath sourceFile, final OpenPath destFile,
@@ -530,10 +543,9 @@ public class EventHandler {
     }
 
     public void cutFile(Collection<OpenPath> files, OpenPath newPath, Context mContext) {
-        OpenPath[] array = new OpenPath[files.size()];
-        files.toArray(array);
-
-        execute(new BackgroundWork(CUT_TYPE, mContext, newPath), array);
+        for(OpenPath file : files)
+            if(!checkDestinationExists(file, newPath, mContext, CUT_TYPE))
+                execute(new BackgroundWork(CUT_TYPE, mContext, newPath), file);
     }
 
     public void searchFile(OpenPath dir, String query, Context mContext) {
@@ -929,7 +941,6 @@ public class EventHandler {
                         ret += p.touch() ? 1 : 0;
                     break;
                 case COPY:
-                    // / TODO: Add existing file check
                     for (int i = 0; i < params.length; i++) {
                         mCurrentIndex = i;
                         mCurrentPath = params[i];
