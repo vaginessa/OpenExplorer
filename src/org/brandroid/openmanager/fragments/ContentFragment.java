@@ -177,14 +177,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
     }
 
-    private ContentFragment(OpenPath path) {
-        mPath = path;
-    }
-
-    private ContentFragment(OpenPath path, int view) {
-        mPath = path;
-        mViewMode = view;
-    }
+//    private ContentFragment(OpenPath path) {
+//        mPath = path;
+//    }
+//
+//    private ContentFragment(OpenPath path, int view) {
+//        mPath = path;
+//        mViewMode = view;
+//    }
 
     public static ContentFragment getInstance(OpenPath path, int mode) {
         return getInstance(path, mode, null);
@@ -198,7 +198,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             } catch (NullPointerException e) {
             }
         if (ret == null)
-            ret = new ContentFragment(path, mode);
+            ret = new ContentFragment();
         // if(path instanceof OpenFile) return ret;
         Bundle args = ret.getArguments();
         if (args == null)
@@ -219,7 +219,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     }
 
     public static ContentFragment getInstance(OpenPath path, Bundle args) {
-        ContentFragment ret = new ContentFragment(path);
+        ContentFragment ret = new ContentFragment();
+        if(args == null)
+            args = new Bundle();
         args.putParcelable("path", path);
         ret.setArguments(args);
         // Logger.LogVerbose("ContentFragment.getInstance(" + path.getPath() +
@@ -1789,6 +1791,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public OpenPath getPath() {
+        if(mPath == null && getArguments() != null && getArguments().containsKey("path"))
+            return mPath = (OpenPath)getArguments().getParcelable("path");
         return mPath;
     }
 
