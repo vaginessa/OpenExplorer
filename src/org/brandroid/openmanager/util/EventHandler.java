@@ -270,16 +270,12 @@ public class EventHandler {
     /**
      * @param directory directory path to create the new folder in.
      */
-    public static void createNewFolder(final OpenPath folder, final Context context) {
+    public static void createNewFolder(final OpenPath folder, final Context context, final OnWorkerUpdateListener threadListener) {
         final InputDialog dlg = new InputDialog(context).setTitle(R.string.s_title_newfolder)
                 .setIcon(R.drawable.ic_menu_folder_add_dark).setMessage(R.string.s_alert_newfolder)
                 .setMessageTop(R.string.s_alert_newfolder_folder)
                 .setDefaultTop(folder.getPath(), false).setCancelable(true)
-                .setNegativeButton(R.string.s_cancel, new OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+                .setNegativeButton(R.string.s_cancel, DialogHandler.OnClickDismiss);
         dlg.setPositiveButton(R.string.s_create, new OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 String name = dlg.getInputText();
@@ -291,8 +287,13 @@ public class EventHandler {
                             // can't be created for another reason
                             OpenPath path = folder.getChild(name);
                             Logger.LogError("Unable to create folder (" + path + ")");
+                            if(threadListener != null)
+                                threadListener.onWorkerThreadFailure(MKDIR_TYPE);
                             Toast.makeText(context, R.string.s_msg_folder_none, Toast.LENGTH_LONG)
                                     .show();
+                        } else {
+                            if(threadListener != null)
+                                threadListener.onWorkerThreadComplete(MKDIR_TYPE);
                         }
                     } else {
                         // folder exists, so let the user know
@@ -415,7 +416,8 @@ public class EventHandler {
                 files.remove(file);
                 DialogHandler.showMultiButtonDialog(mContext,
                         getResourceString(mContext, R.string.s_alert_destination_exists),
-                        getResourceString(mContext, R.string.s_title_copying),
+                        getResourceString(mContext, R.string.s_title_copying)
+                                + " " + file.getName(),
                         new OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 switch (which)

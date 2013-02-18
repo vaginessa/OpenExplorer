@@ -1007,7 +1007,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 EventHandler.createNewFile(getPath(), getActivity());
                 return true;
             case R.id.menu_new_folder:
-                EventHandler.createNewFolder(getPath(), getActivity());
+                EventHandler.createNewFolder(getPath(), getActivity(), this);
                 return true;
             case R.id.menu_sort_name_asc:
                 onSortingChanged(SortType.Type.ALPHA);
