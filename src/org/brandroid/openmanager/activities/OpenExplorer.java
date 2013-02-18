@@ -424,7 +424,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         checkRoot();
 
         int theme = getThemeId();
-        boolean themeDark = R.style.AppTheme_Dark == theme;
+        boolean themeDark = R.style.AppTheme_Dark == theme ||
+                R.style.AppTheme_LightAndDark == theme;
 
         getApplicationContext().setTheme(theme);
         setTheme(theme);
