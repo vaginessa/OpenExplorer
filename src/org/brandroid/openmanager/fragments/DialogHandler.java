@@ -60,6 +60,8 @@ import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Button;
+import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -622,12 +624,12 @@ public class DialogHandler {
                 Button btn = new Button(context);
                 btn.setText(id);
                 btn.setId(id);
-                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)btn.getLayoutParams();
-                if (lp == null)
+                ViewGroup.LayoutParams lp = btn.getLayoutParams();
+                if (lp == null || !(lp instanceof LinearLayout.LayoutParams))
                     lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                             LayoutParams.WRAP_CONTENT);
                 if (lp != null) {
-                    lp.weight = 1;
+                    ((LinearLayout.LayoutParams)lp).weight = 1;
                     btn.setLayoutParams(lp);
                 }
                 btn.setOnClickListener(new OnClickListener() {
@@ -704,8 +706,8 @@ public class DialogHandler {
 
         String sVersionInfo = "";
         try {
-            PackageInfo pi = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(),
-                    0);
+            PackageInfo pi = mContext.getPackageManager().getPackageInfo(
+                    mContext.getPackageName(), 0);
             sVersionInfo += pi.versionName;
             if (!pi.versionName.contains("" + pi.versionCode))
                 sVersionInfo += " (" + pi.versionCode + ")";
@@ -831,6 +833,7 @@ public class DialogHandler {
         tab3.setVisibility(View.GONE);
 
         AlertDialog mDlgAbout = new AlertDialog.Builder(mContext).setTitle(R.string.app_name)
+                .setPositiveButton(android.R.string.ok, OnClickDismiss)
                 .setView(view).create();
 
         mDlgAbout.getWindow().getAttributes().windowAnimations = R.style.SlideDialogAnimation;
@@ -838,6 +841,12 @@ public class DialogHandler {
 
         mDlgAbout.show();
     }
+
+    public static DialogInterface.OnClickListener OnClickDismiss = new DialogInterface.OnClickListener() {
+        public void onClick(DialogInterface dialog, int which) {
+            dialog.dismiss();
+        }
+    };
 
     private static void fillShortcutsTable(TableLayout table) {
         final Context context = table.getContext();
@@ -1039,12 +1048,7 @@ public class DialogHandler {
                 .setIcon(
                         mHolder != null && mHolder.getIcon(app) != null ? mHolder.getIcon(app)
                                 : context.getResources().getDrawable(R.drawable.sm_ftp))
-                .setNegativeButton(context.getString(R.string.s_cancel),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
+                .setNegativeButton(context.getString(R.string.s_cancel), OnClickDismiss)
                 .setNeutralButton(context.getString(R.string.s_remove),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
