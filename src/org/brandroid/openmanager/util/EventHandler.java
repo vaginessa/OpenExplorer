@@ -38,12 +38,12 @@ import android.graphics.BitmapFactory;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-import android.widget.RemoteViews.RemoteView;
 import android.net.Uri;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.Executor;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
@@ -68,6 +68,9 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
+@SuppressWarnings({
+        "unchecked", "rawtypes"
+})
 @SuppressLint("NewApi")
 public class EventHandler {
     public static final EventType SEARCH_TYPE = EventType.SEARCH;
@@ -82,7 +85,7 @@ public class EventHandler {
     public static final EventType TOUCH_TYPE = EventType.TOUCH;
     public static final EventType ERROR_TYPE = EventType.ERROR;
     public static final int BACKGROUND_NOTIFICATION_ID = 123;
-    private static boolean ENABLE_MULTITHREADS = !OpenExplorer.BEFORE_HONEYCOMB;
+    private static final boolean ENABLE_MULTITHREADS = false; // !OpenExplorer.BEFORE_HONEYCOMB;
 
     public enum EventType {
         SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, UNZIP, UNZIPTO, ZIP, ERROR
@@ -395,55 +398,126 @@ public class EventHandler {
     }
 
     public void copyFile(OpenPath source, OpenPath destPath, Context mContext) {
-        if (!destPath.isDirectory())
-            destPath = destPath.getParent();
-        execute(new BackgroundWork(COPY_TYPE, mContext, destPath, source.getName()), source);
+        Collection<OpenPath> files = new ArrayList<OpenPath>();
+        files.add(source);
+        copyFile(files, destPath, mContext);
     }
 
-    public void copyFile(Collection<OpenPath> files, OpenPath newPath, Context mContext) {
-        for (OpenPath file : files)
-            copyFile(file, newPath.getChild(file.getName()), mContext);
+    public void copyFile(final Collection<OpenPath> files, final OpenPath newPath,
+            final Context mContext) {
+        // for (OpenPath file : files)
+        // copyFile(file, newPath.getChild(file.getName()), mContext);
+        for (final OpenPath file : files.toArray(new OpenPath[files.size()]))
+        {
+            final OpenPath newFile = newPath.getChild(file.getName());
+            if (newFile != null && newFile.exists())
+            {
+                files.remove(file);
+                DialogHandler.showMultiButtonDialog(mContext,
+                        getResourceString(mContext, R.string.s_alert_destination_exists),
+                        getResourceString(mContext, R.string.s_title_copying),
+                        new OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which)
+                                {
+                                    case R.string.s_menu_rename:
+                                        OpenPath destFile = newFile;
+                                        int i = 1;
+                                        while (destFile.exists())
+                                            destFile = newPath.getChild(
+                                                    file.getName() + " (" + i++ + ")");
+                                        showRenameOnCopyDialog(file, destFile, mContext);
+                                        break;
+                                    case R.string.s_overwrite:
+                                        execute(new BackgroundWork(COPY_TYPE, mContext, newPath,
+                                                file.getName()), file);
+                                        break;
+                                }
+                                try {
+                                    dialog.dismiss();
+                                } catch (Exception e) {
+                                    Logger.LogWarning(
+                                            "Unable to cancel copyFile dialog.", e);
+                                }
+                            }
+                        },
+                        R.string.s_overwrite, R.string.s_skip, R.string.s_menu_rename);
+            }
+        }
+        if (files.size() > 0)
+            execute(new BackgroundWork(COPY_TYPE, mContext, newPath, files.size() + " "
+                    + mContext.getString(R.string.s_files)),
+                    files.toArray(new OpenPath[files.size()]));
     }
 
-    @SuppressWarnings("unchecked")
+    private void showRenameOnCopyDialog(final OpenPath sourceFile, final OpenPath destFile,
+            final Context mContext)
+    {
+        final InputDialog dlg = new InputDialog(mContext)
+                .setTitle(R.string.s_menu_rename)
+                .setDefaultText(destFile.getName());
+        dlg.setPositiveButton(android.R.string.ok, new OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                OpenPath newDest = destFile.getParent().getChild(dlg.getInputText());
+                newDest.touch();
+                execute(new BackgroundWork(COPY_TYPE, mContext, newDest, newDest.getPath()),
+                        sourceFile);
+
+                dialog.dismiss();
+            }
+        }).setNegativeButton(android.R.string.no, new OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        dlg.create().show();
+    }
+
     public static AsyncTask execute(AsyncTask job) {
-        if (OpenExplorer.BEFORE_HONEYCOMB || !ENABLE_MULTITHREADS)
+        if (OpenExplorer.BEFORE_HONEYCOMB)
             job.execute();
         else
-            job.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            job.executeOnExecutor(getExecutor());
         return job;
     }
 
+    private static Executor getExecutor() {
+        if (ENABLE_MULTITHREADS)
+            return AsyncTask.THREAD_POOL_EXECUTOR;
+        else
+            return AsyncTask.SERIAL_EXECUTOR;
+    }
+
     public static AsyncTask execute(AsyncTask job, OpenFile... params) {
-        if (OpenExplorer.BEFORE_HONEYCOMB || !ENABLE_MULTITHREADS)
+        if (OpenExplorer.BEFORE_HONEYCOMB)
             job.execute(params);
         else
-            job.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+            job.executeOnExecutor(getExecutor(), params);
         return job;
     }
 
     public static AsyncTask<OpenPath, Integer, Integer> execute(
             AsyncTask<OpenPath, Integer, Integer> job, OpenPath... params) {
-        if (OpenExplorer.BEFORE_HONEYCOMB || !ENABLE_MULTITHREADS)
+        if (OpenExplorer.BEFORE_HONEYCOMB)
             job.execute(params);
         else
-            job.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+            job.executeOnExecutor(getExecutor(), params);
         return job;
     }
 
     public static NetworkIOTask executeNetwork(NetworkIOTask job, OpenPath... params) {
-        if (OpenExplorer.BEFORE_HONEYCOMB || !ENABLE_MULTITHREADS)
+        if (OpenExplorer.BEFORE_HONEYCOMB)
             job.execute(params);
         else
-            job.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+            job.executeOnExecutor(getExecutor(), params);
         return job;
     }
 
     public static AsyncTask execute(AsyncTask job, String... params) {
-        if (OpenExplorer.BEFORE_HONEYCOMB || !ENABLE_MULTITHREADS)
+        if (OpenExplorer.BEFORE_HONEYCOMB)
             job.execute(params);
         else
-            job.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+            job.executeOnExecutor(getExecutor(), params);
         return job;
     }
 
@@ -901,13 +975,14 @@ public class EventHandler {
          */
         private Boolean copyFileToDirectory(final OpenFile source, OpenFile into, final int total) {
             Logger.LogVerbose("Using Channel copy for " + source);
-            if (into.isDirectory() || !into.exists())
+            into.mkdir();
+            if (into.isDirectory())
                 into = into.getChild(source.getName());
             if (source.getPath().equals(into.getPath()))
                 return false;
             final OpenFile dest = (OpenFile)into;
             final boolean[] running = new boolean[] {
-                true
+                    true
             };
             final long size = source.length();
             if (size > 50000)
@@ -1202,8 +1277,7 @@ public class EventHandler {
                             ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
                             if (getStatus() == Status.PENDING || mLastRate == 0)
                                 pb.setIndeterminate(true);
-                            else
-                            {
+                            else {
                                 pb.setIndeterminate(false);
                                 pb.setMax(1000);
                                 pb.setProgress(progA);
@@ -1238,6 +1312,16 @@ public class EventHandler {
             if (getRunningTasks().length == 0)
                 mNotifier.cancelAll();
 
+            try {
+                showToast(result);
+            } catch (Exception e) {
+                Logger.LogError("Unable to show EventHandle PostExecute Toast.", e);
+            }
+            OnWorkerThreadComplete(mType);
+        }
+
+        private void showToast(Integer result)
+        {
             switch (mType) {
 
                 case DELETE:
@@ -1308,7 +1392,6 @@ public class EventHandler {
                 case ZIP:
                     break;
             }
-            OnWorkerThreadComplete(mType);
         }
     }
 
