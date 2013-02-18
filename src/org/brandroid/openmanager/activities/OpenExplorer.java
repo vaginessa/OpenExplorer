@@ -677,7 +677,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         else
             launchUri(
                     this,
-                    Uri.parse("https://play.google.com/details?id=org.brandroid.openmanager&reviewId=0"));
+                    Uri.parse("https://play.google.com/store/apps/details?id=org.brandroid.openmanager&reviewId=0"));
     }
 
     private void checkWelcome() {
