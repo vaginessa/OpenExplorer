@@ -93,6 +93,9 @@
     <type
         extension=".gz"
         mimetype="application/gzip" /> <!-- NOT IN WEBKIT -->
+    <type
+        extension=".win"
+        mimetype="application/tar" /> <!-- TWRP backup archives -->
 
 
     <!-- Web browser types -->

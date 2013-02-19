@@ -39,6 +39,7 @@ import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
+import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
@@ -177,14 +178,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
     }
 
-//    private ContentFragment(OpenPath path) {
-//        mPath = path;
-//    }
-//
-//    private ContentFragment(OpenPath path, int view) {
-//        mPath = path;
-//        mViewMode = view;
-//    }
+    //    private ContentFragment(OpenPath path) {
+    //        mPath = path;
+    //    }
+    //
+    //    private ContentFragment(OpenPath path, int view) {
+    //        mPath = path;
+    //        mViewMode = view;
+    //    }
 
     public static ContentFragment getInstance(OpenPath path, int mode) {
         return getInstance(path, mode, null);
@@ -220,7 +221,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     public static ContentFragment getInstance(OpenPath path, Bundle args) {
         ContentFragment ret = new ContentFragment();
-        if(args == null)
+        if (args == null)
             args = new Bundle();
         args.putParcelable("path", path);
         ret.setArguments(args);
@@ -463,8 +464,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             Logger.LogWarning("ContentFragment.refreshData warning: path is null!");
             return;
         }
-        
-        if(path instanceof OpenFile && !path.canRead())
+
+        if (path instanceof OpenFile && !path.canRead())
             path = new OpenFileRoot(path);
 
         if (DEBUG)
@@ -717,6 +718,15 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         if (file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
             file = new OpenZip((OpenFile)file);
+        if (file instanceof OpenFile && file.getMimeType().contains("tar"))
+        {
+            file = new OpenTar((OpenFile)file);
+            try {
+                Logger.LogDebug("Children: " + ((OpenTar)file).getChildCount(true));
+            } catch (IOException e) {
+                Logger.LogError("Unable to get tar kids.", e);
+            }
+        }
 
         if (getActionMode() != null) {
             if (mLastSelectionModeCallback != null) {
@@ -756,7 +766,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             }
         }
 
-        if ((file.isDirectory() || (file.isArchive() && Preferences.Pref_Zip_Internal))
+        if ((file.isDirectory()
+                || (file.isArchive() && Preferences.Pref_Zip_Internal)
+                || file.getMimeType().contains("tar"))
                 && getActionMode() == null) {
             /*
              * if (mThumbnail != null) { mThumbnail.setCancelThumbnails(true);
@@ -1791,7 +1803,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public OpenPath getPath() {
-        if(mPath == null && getArguments() != null && getArguments().containsKey("path"))
+        if (mPath == null && getArguments() != null && getArguments().containsKey("path"))
             return mPath = (OpenPath)getArguments().getParcelable("path");
         return mPath;
     }
