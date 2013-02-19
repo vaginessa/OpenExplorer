@@ -75,7 +75,7 @@
                 android:summary="@string/s_pref_thumbs_summary"
                 android:title="@string/s_pref_thumbs" />
             <CheckBoxPreference
-                android:defaultValue="true"
+                android:defaultValue="false"
                 android:dependency="pref_thumbs"
                 android:key="pref_thumbs_crop"
                 android:title="@string/s_pref_thumbs_crop" />
@@ -219,6 +219,16 @@
             android:defaultValue="true"
             android:key="pref_text_internal"
             android:title="@string/s_pref_text_internal" />
+        <PreferenceScreen
+            android:key="pref_privacy"
+            android:title="@string/s_privacy"
+            />
+        <CheckBoxPreference
+            android:key="servers_private"
+            android:title="@string/s_pref_servers_private"
+            android:summary="@string/s_pref_servers_private_summary"
+            android:defaultValue="false" 
+            />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="pref_stats"
@@ -234,14 +244,6 @@
             android:enabled="@bool/honeycomb"
             android:key="pref_hardware_accel"
             android:title="@string/s_pref_hardware_accel" />
-    </PreferenceScreen>
-    <PreferenceScreen
-        android:icon="@drawable/ic_folder_pipe"
-        android:key="servers"
-        android:title="@string/s_pref_servers" >
-        <PreferenceScreen
-            android:key="server_add"
-            android:title="@string/s_pref_server_add" />
     </PreferenceScreen>
 
 </PreferenceScreen>

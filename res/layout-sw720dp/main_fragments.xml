@@ -14,7 +14,8 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/view_root"
@@ -36,7 +37,8 @@
             android:id="@+id/list_frag"
             android:layout_width="@dimen/bookmarks_width"
             android:layout_height="match_parent"
-            android:layout_alignWithParentIfMissing="true" />
+            android:layout_alignWithParentIfMissing="true"
+            android:background="?attr/drawerBackgroundColor"/>
 
         <RelativeLayout
             android:layout_width="match_parent"

@@ -18,38 +18,15 @@
 
 package org.brandroid.openmanager.util;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.Matrix;
-import android.graphics.Paint.Align;
-import android.graphics.BitmapFactory;
-import android.graphics.Paint;
-import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Message;
-import android.provider.MediaStore;
-import android.util.Base64;
-import android.view.Gravity;
-import android.widget.ImageView;
-
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.util.Hashtable;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -67,8 +44,29 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Utils;
+
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Paint.Align;
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
+import android.provider.MediaStore;
+import android.view.Gravity;
+import android.widget.ImageView;
 
 public class ThumbnailCreator {
     // private static HashMap<String, Bitmap> mCacheMap = new HashMap<String,
@@ -82,7 +80,7 @@ public class ThumbnailCreator {
 
     public static boolean useCache = true;
     public static boolean showThumbPreviews = true;
-    public static boolean showCenteredCroppedPreviews = true;
+    public static boolean showCenteredCroppedPreviews = false;
 
     private static Hashtable<String, Integer> fails = new Hashtable<String, Integer>();
 
@@ -98,6 +96,7 @@ public class ThumbnailCreator {
             image.setImageBitmap(bmp);
         else
             image.post(new Runnable() {
+                @Override
                 public void run() {
                     image.setImageBitmap(bmp);
                 }
@@ -109,6 +108,7 @@ public class ThumbnailCreator {
             image.setImageResource(resId);
         else
             image.post(new Runnable() {
+                @Override
                 public void run() {
                     image.setImageResource(resId);
                 }
@@ -118,6 +118,7 @@ public class ThumbnailCreator {
     public static void postImageFromPath(final ImageView mImage, final OpenPath file,
             final boolean useLarge) {
         mImage.post(new Runnable() {
+            @Override
             public void run() {
                 mImage.setImageBitmap(getFileExtIcon(file.getExtension(), mImage.getContext(),
                         useLarge));
@@ -151,7 +152,7 @@ public class ThumbnailCreator {
         if (file.hasThumbnail()) {
             if (showThumbPreviews && !file.requiresThread()) {
                 Bitmap thumb = // !mCacheMap.containsKey(file.getPath()) ? null
-                               // :
+                // :
                 getThumbnailCache(app, file.getPath(), mWidth, mHeight);
 
                 if (thumb == null) {
@@ -167,14 +168,20 @@ public class ThumbnailCreator {
                         if (!fails.containsKey(file.getPath())) {
                             if (!app.getMemoryCache().containsKey(file.getPath()))
                                 new Thread(new Runnable() {
+                                    @Override
                                     public void run() {
-                                        SoftReference<Bitmap> gen = generateThumb(app, file,
-                                                mWidth, mHeight, mContext);
-                                        if (gen != null && gen.get() != null)
-                                            mListener.updateImage(gen.get());
-                                        else
-                                            Logger.LogWarning("Couldn't generate thumb for "
-                                                    + file.getPath());
+                                        try {
+                                            SoftReference<Bitmap> gen = generateThumb(app, file,
+                                                    mWidth, mHeight, mContext);
+                                            if (gen != null && gen.get() != null)
+                                                mListener.updateImage(gen.get());
+                                            else
+                                                Logger.LogWarning("Couldn't generate thumb for "
+                                                        + file.getPath());
+                                        } catch (OutOfMemoryError e) {
+                                            showThumbPreviews = false;
+                                            Logger.LogWarning("No more memory for thumbs!");
+                                        }
                                     }
                                 }).start();
                             else
@@ -231,6 +238,7 @@ public class ThumbnailCreator {
 
         if (!file.isDirectory() && file.isTextFile()) {
             mImage.post(new Runnable() {
+                @Override
                 public void run() {
                     mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
                 }
@@ -286,7 +294,7 @@ public class ThumbnailCreator {
         p.setStyle(Paint.Style.FILL_AND_STROKE);
         p.setTextAlign(Align.CENTER);
         p.setTypeface(Typeface.MONOSPACE);
-        float th = (float)src.getHeight() * ((float)(3f / 16f));
+        float th = src.getHeight() * (3f / 16f);
         p.setTextSize(th);
         p.setShadowLayer(2.5f, 1, 1, Color.BLACK);
         c.drawText(ext, src.getWidth() / 2, (src.getHeight() / 2) + ((th / 3) * 2), p);
@@ -313,41 +321,51 @@ public class ThumbnailCreator {
             else if (file instanceof OpenCursor)
                 hasKids = true;
         } catch (IOException e) {
+            //TODO Catch exception properly
         }
 
         if (file.isDirectory()) {
-            if (file instanceof OpenSMB)
+            // Network Object Icons
+            if (file instanceof OpenSMB) {
                 return (useLarge ? R.drawable.lg_folder_pipe : R.drawable.sm_folder_pipe);
-            if (file instanceof OpenSFTP)
+            }
+            if (file instanceof OpenSFTP) {
                 return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
-            if (file instanceof OpenFTP)
+            }
+            if (file instanceof OpenFTP) {
                 return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
+            }
+
+            // Local Filesystem Icons
             if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")
-                    && mName.equals(""))
+                    && mName.equals("")) {
                 return useLarge ? R.drawable.lg_drive : R.drawable.sm_drive;
-            else if (file instanceof OpenSmartFolder || sPath2.indexOf("download") > -1)
+            } else if (file instanceof OpenSmartFolder || sPath2.indexOf("download") > -1) {
                 return (useLarge ? R.drawable.lg_download : R.drawable.sm_download);
-            else if ((mName.equalsIgnoreCase("Photos") || mName.equalsIgnoreCase("dcim")
-                    || mName.equalsIgnoreCase("pictures") || mName.equalsIgnoreCase("camera")))
+            } else if ((mName.equalsIgnoreCase("Photos") || mName.equalsIgnoreCase("dcim")
+                    || mName.equalsIgnoreCase("pictures") || mName.equalsIgnoreCase("camera"))) {
                 return (useLarge ? R.drawable.lg_photo : R.drawable.sm_photo);
-            else if (mName.equalsIgnoreCase("Videos") || mName.equalsIgnoreCase("Movies"))
+            } else if (mName.equalsIgnoreCase("Videos") || mName.equalsIgnoreCase("Movies")) {
                 return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
-            else if (hasKids && mName.equals("Music"))
+            } else if (hasKids && mName.equals("Music")) {
                 return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
-            else if (hasKids
+            } else if (hasKids
                     && (sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2
-                            .indexOf("microsd") > -1))
+                            .indexOf("microsd") > -1)) {
                 return (useLarge ? R.drawable.lg_sdcard : R.drawable.sm_sdcard);
-            else if (hasKids
+            } else if (hasKids
                     && (sPath2.indexOf("usb") > -1 || sPath2.indexOf("/mnt/media/") > -1 || sPath2
-                            .indexOf("removeable") > -1))
+                            .indexOf("removeable") > -1)) {
                 return (useLarge ? R.drawable.lg_usb : R.drawable.sm_usb);
-            else if (hasKids)
+            } else if (hasKids) {
                 return (useLarge ? R.drawable.lg_folder_full : R.drawable.sm_folder_full);
-            else
+            } else {
                 return (useLarge ? R.drawable.lg_folder : R.drawable.sm_folder);
+            }
+
         } else if (file instanceof OpenCommand) {
             return ((OpenCommand)file).getDrawableId();
+
         } else if (ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
             return (useLarge ? R.drawable.lg_doc : R.drawable.sm_doc);
 
@@ -362,8 +380,6 @@ public class ThumbnailCreator {
                 || ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("gz")
                 || ext.equalsIgnoreCase("7z")) {
             return (useLarge ? R.drawable.lg_zip : R.drawable.sm_zip);
-            // } else if(ext.equalsIgnoreCase("apk")) {
-            // return (R.drawable.apk);
 
         } else if (ext.equalsIgnoreCase("pdf")) {
             return (useLarge ? R.drawable.lg_pdf : R.drawable.sm_pdf);
@@ -375,20 +391,90 @@ public class ThumbnailCreator {
                 || ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p")
                 || ext.equalsIgnoreCase("m4a") || ext.equalsIgnoreCase("ogg")) {
             return (useLarge ? R.drawable.lg_music : R.drawable.sm_music);
-        } else if (file.isImageFile())
+
+        } else if (file.isImageFile()) {
             return (useLarge ? R.drawable.lg_photo_50 : R.drawable.sm_photo_50);
-        else if (file.isAPKFile())
+
+        } else if (file.isAPKFile()) {
             return (useLarge ? R.drawable.lg_apk : R.drawable.sm_apk);
-        else if (file.isVideoFile())
+
+        } else if (file.isVideoFile()) {
             return (useLarge ? R.drawable.lg_movie : R.drawable.sm_movie);
-        else if (file instanceof OpenFTP && file.isDirectory())
+
+        } else if (file instanceof OpenFTP && file.isDirectory()) {
             return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
-        else if (file instanceof OpenNetworkPath && file.isDirectory())
+
+        } else if (file instanceof OpenNetworkPath && file.isDirectory()) {
             return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
-        else if (file.isTextFile())
+
+        } else if (file.isTextFile()) {
             return (useLarge ? R.drawable.lg_file : R.drawable.sm_file);
-        else
+
+        } else {
             return (useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
+        }
+    }
+
+    public static int getDrawerResourceId(OpenPath file) {
+        final String mName = file.getName();
+        final String ext = mName.substring(mName.lastIndexOf(".") + 1);
+        final String sPath2 = mName.toLowerCase();
+        final boolean useLarge = true;
+        boolean hasKids = false;
+        try {
+            if (!file.requiresThread() && file.isDirectory())
+                hasKids = file.getChildCount(false) > 0;
+            else if (file instanceof OpenCursor)
+                hasKids = true;
+        } catch (IOException e) {
+        }
+
+        if (file.isDirectory()) {
+            // Network Object Icons
+            if (file instanceof OpenSMB) {
+                return R.drawable.lg_folder_pipe;
+            }
+            if (file instanceof OpenSFTP) {
+                return R.drawable.lg_folder_secure;
+            }
+            if (file instanceof OpenFTP) {
+                return R.drawable.lg_ftp;
+            }
+
+            // Local Filesystem Icons
+            if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")
+                    && mName.equals("")) {
+                return R.drawable.lg_drive;
+            } else if (file instanceof OpenSmartFolder || sPath2.indexOf("download") > -1) {
+                return R.drawable.ic_drawer_download_holo_dark;
+            } else if ((mName.equalsIgnoreCase("Photos") || mName.equalsIgnoreCase("dcim")
+                    || mName.equalsIgnoreCase("pictures") || mName.equalsIgnoreCase("camera"))) {
+                return R.drawable.ic_drawer_picture_holo_dark;
+            } else if (mName.equalsIgnoreCase("Videos") || mName.equalsIgnoreCase("Movies")) {
+                return R.drawable.ic_drawer_video_holo_dark;
+            } else if (hasKids && mName.equals("Music")) {
+                return R.drawable.ic_drawer_music_holo_dark;
+            } else if (hasKids
+                    && (sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2
+                            .indexOf("microsd") > -1)) {
+                return R.drawable.lg_sdcard;
+            } else if (hasKids
+                    && (sPath2.indexOf("usb") > -1 || sPath2.indexOf("/mnt/media/") > -1 || sPath2
+                            .indexOf("removeable") > -1)) {
+                return R.drawable.lg_usb;
+            } else {
+                return R.drawable.ic_drawer_folder_holo_dark;
+            }
+
+        } else if (file instanceof OpenFTP && file.isDirectory()) {
+            return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
+
+        } else if (file instanceof OpenNetworkPath && file.isDirectory()) {
+            return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
+
+        } else {
+            return (useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
+        }
     }
 
     public static boolean hasThumbnailCached(OpenApp app, OpenPath file, int w, int h) {
@@ -467,13 +553,17 @@ public class ThumbnailCreator {
                 && (bmp = getThumbnailCache(app, path, mWidth, mHeight)) != null)
             return new SoftReference<Bitmap>(bmp);
 
-        String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
+        final String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
 
         // we already loaded this thumbnail, just return it.
         if (app.getMemoryCache().get(mCacheFilename) != null)
             return new SoftReference<Bitmap>(app.getMemoryCache().get(mCacheFilename));
         if (readCache && bmp == null)
             bmp = loadThumbnail(mContext, mCacheFilename);
+
+        float density = mContext.getResources().getDisplayMetrics().density;
+        mWidth *= density;
+        mHeight *= density;
 
         if (bmp == null && !useGeneric && !OpenExplorer.LOW_MEMORY) {
             Boolean valid = false;
@@ -488,7 +578,7 @@ public class ThumbnailCreator {
                 opts.inPurgeable = true;
                 opts.outHeight = mHeight;
                 // if(!showCenteredCroppedPreviews)
-                // opts.outWidth = mWidth;
+                //    opts.outWidth = mWidth;
                 int kind = mWidth > 96 ? MediaStore.Video.Thumbnails.MINI_KIND
                         : MediaStore.Video.Thumbnails.MICRO_KIND;
                 try {
@@ -607,8 +697,16 @@ public class ThumbnailCreator {
         if (bmp != null && (mWidth < bmp.getWidth() || mHeight < bmp.getHeight())) {
             if (file.isImageFile() && showCenteredCroppedPreviews)
                 bmp = cropBitmap(bmp, mWidth, mHeight);
-            else
-                bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, false);
+            else {
+                int bw = bmp.getWidth();
+                int bh = bmp.getHeight();
+
+                if (bh > bw)
+                    mWidth *= (float)bw / (float)bh;
+                else
+                    mHeight *= (float)bh / (float)bw;
+                bmp = Bitmap.createScaledBitmap(bmp, mWidth, mHeight, true);
+            }
         }
 
         if (bmp != null) {
@@ -660,7 +758,7 @@ public class ThumbnailCreator {
         }
         // Logger.LogDebug("cropBitmap:(" + sw + "x" + sh + "):(" + ox + "," +
         // oy + ":" + dw + "x" + dh + ") @ " + scale);
-        m.postScale(scale, scale);
+        m.preScale(scale, scale);
         return Bitmap.createBitmap(src, Math.max(0, ox), Math.max(0, oy), Math.min(sw, dw),
                 Math.min(sh, dh), m, scale != 1.0);
     }
@@ -696,6 +794,7 @@ public class ThumbnailCreator {
 
         mHandler.post(new Runnable() {
 
+            @Override
             public void run() {
                 Message msg = mHandler.obtainMessage();
                 msg.obj = d;

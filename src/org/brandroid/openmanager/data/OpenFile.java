@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.Date;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.util.DFInfo;
@@ -18,12 +20,14 @@ import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
 
+@SuppressLint("NewApi")
 public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.OpenPathByteIO {
     private static final long serialVersionUID = 6436156952322586833L;
     private File mFile;
@@ -216,7 +220,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             mChildren[c.getPosition()] = new OpenFile(folder + "/" + name);
             c.moveToNext();
         }
-        Logger.LogInfo("listFromDb found " + mChildren.length + " children");
+        Logger.LogVerbose("listFromDb found " + mChildren.length + " children");
         c.close();
         return true;
     }
@@ -238,21 +242,22 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
 
     public static OpenFile getExternalMemoryDrive(boolean fallbackToInternal) // sd
     {
-        if (mExternalDrive != null)
+        if (mExternalDrive != null && mExternalDrive.exists())
             return mExternalDrive;
         for (OpenFile kid : getInternalMemoryDrive().getParent().listFiles())
             if ((kid.getName().toLowerCase().indexOf("ext") > -1 || kid.getName().toLowerCase()
                     .indexOf("sdcard1") > -1)
-                    && kid.canRead() && kid.canWrite()) {
-                mExternalDrive = kid;
-                return kid;
+                    && !kid.getPath().equals(getInternalMemoryDrive().getPath())
+                    && kid.canRead()
+                    && kid.canWrite()) {
+                return mExternalDrive = kid;
             }
         if (new File("/Removable").exists())
-            for (File kid : new File("/Removable").listFiles())
+            for (OpenFile kid : new OpenFile("/Removable").listFiles())
                 if (kid.getName().toLowerCase().indexOf("ext") > -1 && kid.canRead()
+                        && !kid.getPath().equals(getInternalMemoryDrive().getPath())
                         && kid.list().length > 0) {
-                    mExternalDrive = new OpenFile(kid);
-                    return mExternalDrive;
+                    return mExternalDrive = kid;
                 }
         if (!fallbackToInternal)
             return null;
@@ -266,19 +271,23 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
 
     public static OpenFile getInternalMemoryDrive() // internal
     {
+        OpenFile ret = null;
+        if (OpenExplorer.isNook()) {
+            ret = new OpenFile("/mnt/media");
+            if (ret != null && ret.canWrite())
+                return mInternalDrive = ret;
+        }
         if (mInternalDrive != null)
             return mInternalDrive;
-        OpenFile ret = new OpenFile(Environment.getExternalStorageDirectory());
+        ret = new OpenFile(Environment.getExternalStorageDirectory());
         Logger.LogVerbose("Internal Storage: " + ret);
         if (ret == null || !ret.exists()) {
             OpenFile mnt = new OpenFile("/mnt");
             if (mnt != null && mnt.exists())
                 for (OpenFile kid : mnt.listFiles())
                     if (kid.getName().toLowerCase().indexOf("sd") > -1)
-                        if (kid.canWrite()) {
-                            mInternalDrive = kid;
-                            return kid;
-                        }
+                        if (kid.canWrite())
+                            return mInternalDrive = kid;
         } else if (ret.getName().endsWith("1")) {
             OpenFile sdcard0 = new OpenFile(ret.getPath().substring(0, ret.getPath().length() - 1)
                     + "0");
@@ -294,10 +303,14 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
     }
 
     public static OpenFile getUsbDrive() {
-        if (mUsbDrive != null && mUsbDrive.exists())
+        if (mUsbDrive != null && mUsbDrive.exists()
+                && mUsbDrive.getTotalSpace() != getExternalMemoryDrive(true).getTotalSpace())
             return mUsbDrive;
         OpenFile parent = getExternalMemoryDrive(true).getParent();
         if (Build.VERSION.SDK_INT > 15) {
+            parent = new OpenFile("/storage/usbStorage/");
+            if(parent.exists() && parent.length() > 0)
+                return (mUsbDrive = parent);
             parent = new OpenFile("/mnt/sdcard/usbStorage/");
             if (parent.exists())
                 if (parent.list().length == 1 && parent.getChild(0).exists())
@@ -314,12 +327,20 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             return null;
         for (OpenFile kid : parent.listFiles())
             if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
-                    && kid.list().length > 0)
+                    && kid.list().length > 0 && kid.getTotalSpace() != parent.getTotalSpace())
                 return (mUsbDrive = kid);
-        for (OpenFile kid : getInternalMemoryDrive().listFiles())
-            if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
-                    && kid.list().length > 0)
-                return (mUsbDrive = kid);
+        if (Build.VERSION.SDK_INT > 15)
+        {
+            parent = getInternalMemoryDrive();
+            for (OpenFile kid : parent.listFiles())
+                if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
+                        && kid.list().length > 0 && kid.getTotalSpace() != parent.getTotalSpace())
+                {
+                    if(kid.length() == 1 && kid.getChild(0).getName().startsWith("sda"))
+                        kid = (OpenFile)kid.getChild(0);
+                    return (mUsbDrive = kid);
+                }
+        }
         return null;
     }
 
@@ -486,7 +507,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
         } catch (IOException e) {
             Logger.LogError(
                     "Couldn't CopyFrom (" + sourceFile.getPath() + " -> " + getPath() + ")", e);
-            ret = false;
+            ret = new OpenFileRoot(this).copyFrom(sourceFile);
         } finally {
             if (source != null)
                 try {
@@ -536,6 +557,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
                 sb.append(line + "\n");
         } catch (Exception e) {
             Logger.LogError("Couldn't read data from OpenFile(" + getPath() + ")", e);
+            return new String(readBytes());
         }
         return sb.toString();
     }
@@ -548,6 +570,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             is.read(ret);
         } catch (Exception e) {
             Logger.LogError("Unable to read byte[] data from OpenFile(" + getPath() + ")", e);
+            ret = new OpenFileRoot(this).readBytes();
         } finally {
             if (is != null)
                 try {
@@ -579,6 +602,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             s.close();
         } catch (Exception e) {
             Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
+            new OpenFileRoot(this).writeBytes(data.getBytes());
         }
     }
 
@@ -593,6 +617,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             os.close();
         } catch (IOException e) {
             Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
+            new OpenFileRoot(this).writeBytes(buffer);
         } finally {
             if (os != null)
                 try {
@@ -642,7 +667,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             else
                 return getFile().createNewFile();
         } catch (Exception e) {
-            return false;
+            return new OpenFileRoot(this).touch();
         }
     }
 
@@ -653,8 +678,13 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             return true;
         if (getPath().startsWith("/storage"))
             return true;
-        if (getPath().toLowerCase().indexOf("usb") > -1)
+        if (getPath().toLowerCase().startsWith("usb"))
             return true;
+        return false;
+    }
+    
+    @Override
+    public boolean showChildPath() {
         return false;
     }
 }

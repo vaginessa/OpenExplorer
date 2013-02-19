@@ -31,6 +31,7 @@ public class Preferences {
      */
     public static boolean Pref_Zip_Internal = true;
     public static boolean Pref_ShowUp = false;
+    public static boolean Pref_ShowThumbs = true;
     public static boolean Warn_TextEditor = false;
     public static boolean Warn_Networking = false;
     public static int Pref_Text_Max_Size = 500000;
@@ -39,6 +40,7 @@ public class Preferences {
     public static boolean Pref_Root = false;
     public static Boolean Is_Nook = null;
     public static int Run_Count = 0;
+    public static String UID = null;
 
     public interface OnPreferenceInteraction {
         public void setSetting(String key, String value);

@@ -30,7 +30,7 @@
             android:checked="false"
             android:paddingLeft="40dp"
             android:text="@string/chooser_remember"
-            android:textAppearance="@style/Large"
+            android:textAppearance="@style/Text.Large"
             android:textColor="?attr/dialogTextColorPrimary" />
 
         <Button

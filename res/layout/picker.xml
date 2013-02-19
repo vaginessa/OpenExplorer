@@ -6,7 +6,7 @@
 
     <TextView
         android:id="@android:id/title"
-        style="@style/Mid"
+        style="@style/Text.Mid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone" />
@@ -35,7 +35,7 @@
         android:padding="4dp" >
 
         <TextView
-            style="@style/Mid"
+            style="@style/Text.Mid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="left"
@@ -44,7 +44,7 @@
 
         <TextView
             android:id="@+id/pick_path"
-            style="@style/Mid"
+            style="@style/Text.Mid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="left" />

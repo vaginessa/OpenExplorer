@@ -6,9 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.OpenFragmentActivity;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -23,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class OpenPathAdapter extends BaseAdapter {
@@ -102,18 +99,11 @@ public class OpenPathAdapter extends BaseAdapter {
         // view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         // mHolder.setInfo(getFileDetails(file, false));
         TextView mInfo = (TextView)view.findViewById(R.id.content_info);
-        if (mInfo != null)
+        if (mInfo != null) {
             mInfo.setText(getFileDetails(file, false));
 
-        TextView mPathView = (TextView)view.findViewById(R.id.content_fullpath);
-        if (mPathView != null) {
-            if (file instanceof OpenMediaStore) {
-                mPathView.setText(file.getPath());
-                mPathView.setVisibility(View.VISIBLE);
-                // mHolder.setPath(file.getPath());
-                // mHolder.showPath(true);
-            } else
-                mPathView.setVisibility(View.GONE);
+            if (file.showChildPath())
+                mInfo.setText(mInfo.getText() + " : " + file.getPath());
             // mHolder.showPath(false);
         }
 
@@ -124,14 +114,14 @@ public class OpenPathAdapter extends BaseAdapter {
         final Context mContext = mApp.getContext();
 
         if (mApp.getClipboard().contains(file))
-            mNameView.setTextAppearance(mContext, R.style.Large_Hilite);
+            mNameView.setTextAppearance(mContext, R.style.Text_Large_Highlight);
         else
-            mNameView.setTextAppearance(mContext, R.style.Large);
+            mNameView.setTextAppearance(mContext, R.style.Text_Large);
 
         if (file.isHidden())
-            ViewUtils.setAlpha(0.5f, mNameView, mPathView, mInfo);
+            ViewUtils.setAlpha(0.5f, mNameView, mInfo);
         else
-            ViewUtils.setAlpha(1.0f, mNameView, mPathView, mInfo);
+            ViewUtils.setAlpha(1.0f, mNameView, mInfo);
 
         // if(!mHolder.getTitle().equals(mName))
         // mHolder.setTitle(mName);

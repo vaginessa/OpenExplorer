@@ -6,16 +6,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
+import org.brandroid.openmanager.util.SortType.Type;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathView;
@@ -29,8 +30,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.Html;
-import android.text.SpannableString;
-import android.text.style.UnderlineSpan;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,7 +65,7 @@ public class ContentAdapter extends BaseAdapter {
     /**
      * Set of seleced message IDs.
      */
-    private final ArrayList<OpenPath> mSelectedSet = new ArrayList<OpenPath>();
+    private final CopyOnWriteArrayList<OpenPath> mSelectedSet = new CopyOnWriteArrayList<OpenPath>();
 
     /**
      * Callback from MessageListAdapter. All methods are called on the UI
@@ -211,19 +210,23 @@ public class ContentAdapter extends BaseAdapter {
 
     public void sort(SortType sort) {
         OpenPath.Sorting = sort;
-        Collections.sort(mData2);
+        if (mData2 != null && mData2.size() > 1)
+            Collections.sort(mData2);
     }
 
     private OpenPath[] getList() {
         try {
-            if (!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener)
+            if (mParent == null
+                    || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener))
                 return new OpenPath[0];
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
+            else if(!mParent.canRead())
+                return new OpenFileRoot(mParent).listFiles();
             else
                 return mParent.listFiles();
-        } catch (IOException e) {
-            Logger.LogError("Couldn't getList in ContentAdapter");
+        } catch (Exception e) {
+            Logger.LogError("Couldn't getList in ContentAdapter", e);
             return new OpenPath[0];
         }
     }
@@ -235,6 +238,7 @@ public class ContentAdapter extends BaseAdapter {
     }
 
     // //@Override
+    @Override
     public View getView(int position, View view, ViewGroup parent) {
         int mode = getViewMode();
         final int layout = getViewMode() == OpenExplorer.VIEW_GRID ? (!OpenExplorer.DEBUG_TOGGLE ? R.layout.file_grid_item
@@ -271,7 +275,8 @@ public class ContentAdapter extends BaseAdapter {
 
         TextView mInfo = (TextView)row.findViewById(R.id.content_info);
         TextView mDate = (TextView)row.findViewById(R.id.content_date);
-        TextView mPathView = (TextView)row.findViewById(R.id.content_fullpath);
+        // TextView mPathView =
+        // (TextView)row.findViewById(R.id.content_fullpath);
         TextView mNameView = (TextView)row.findViewById(R.id.content_text);
         final ImageView mIcon = (ImageView)row.findViewById(R.id.content_icon);
         ImageView mCheck = (ImageView)row.findViewById(R.id.content_check);
@@ -283,8 +288,6 @@ public class ContentAdapter extends BaseAdapter {
                 mInfo.setText("");
             if (mDate != null)
                 mDate.setText("");
-            if (mPathView != null)
-                mPathView.setText("");
             return row;
         }
         final String mName = file.getName();
@@ -306,27 +309,24 @@ public class ContentAdapter extends BaseAdapter {
         // view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         // mHolder.setInfo(getFileDetails(file, false));
 
-        if (mPathView != null) {
-            if (mShowDetails && mParent.showChildPath()) {
-                String s = file.getPath().replace(file.getName(), "");
-                mPathView.setVisibility(View.VISIBLE);
-                mPathView.setText(s);
-                showLongDate = false;
-            } else if (mPathView.isShown())
-                mPathView.setVisibility(View.GONE);
-            // mHolder.showPath(false);
-        }
-
         if (mInfo != null) {
-            if (mShowDetails)
-                mInfo.setText(String.format(file.getDetails(getShowHiddenFiles()), getResources()
-                        .getString(R.string.s_files)));
-            else
-                mInfo.setText("");
+            String sInfo = String.format(file.getDetails(getShowHiddenFiles()), getResources()
+                    .getString(R.string.s_files));
+            if (OpenPath.Sorting.getType() == Type.SIZE
+                    || OpenPath.Sorting.getType() == Type.SIZE_DESC)
+                sInfo = "<b>" + sInfo + "</b>";
+            if (mShowDetails && mParent.showChildPath()) {
+                sInfo += " :: " + file.getPath().replace(file.getName(), "");
+                showLongDate = false;
+            } else if (!mShowDetails)
+                sInfo = "";
+
             if (mDate != null)
                 mDate.setText(file.getFormattedDate(showLongDate));
             else
-                mInfo.append(" | " + file.getFormattedDate(showLongDate));
+                sInfo += (sInfo.equals("") ? "" : " | ") + file.getFormattedDate(showLongDate);
+
+            mInfo.setText(Html.fromHtml(sInfo));
         }
 
         if (mNameView != null)
@@ -354,11 +354,12 @@ public class ContentAdapter extends BaseAdapter {
             else if (!mShowThumbnails || !file.hasThumbnail()) {
                 mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
             } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-                     // {
+                // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());
                 // if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
                 ThumbnailCreator.setThumbnail(mApp, mIcon, file, mWidth, mHeight,
                         new OnUpdateImageListener() {
+                            @Override
                             public void updateImage(final Bitmap b) {
                                 if (mIcon.getTag() == null
                                         || (mIcon.getTag() instanceof OpenPath && ((OpenPath)mIcon
@@ -366,6 +367,7 @@ public class ContentAdapter extends BaseAdapter {
                                 // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
                                 {
                                     Runnable doit = new Runnable() {
+                                        @Override
                                         public void run() {
                                             if (!OpenExplorer.BEFORE_HONEYCOMB) {
                                                 BitmapDrawable d = new BitmapDrawable(
@@ -392,12 +394,13 @@ public class ContentAdapter extends BaseAdapter {
         // row.setTag(file);
         boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
         boolean mShowCheck = true; // mChecked || (mSelectedSet != null &&
-                                   // mSelectedSet.size() > 0);
+        // mSelectedSet.size() > 0);
         boolean mShowClip = mApp.getClipboard().contains(file);
 
         if (mShowClip) {
             ViewUtils.setViewsVisible(row, true, R.id.content_clipboard);
             ViewUtils.setOnClicks(row, new View.OnClickListener() {
+                @Override
                 public void onClick(View v) {
                     mApp.getClipboard().remove(file);
                     v.setVisibility(View.GONE);
@@ -420,26 +423,26 @@ public class ContentAdapter extends BaseAdapter {
         switch (OpenPath.Sorting.getType()) {
             case DATE:
             case DATE_DESC:
-                mDate.setTextAppearance(getContext(), R.style.Small_Hilite);
-                mInfo.setTextAppearance(getContext(), R.style.Small);
-                mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
+                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case SIZE:
             case SIZE_DESC:
-                mInfo.setTextAppearance(getContext(), R.style.Small_Hilite);
-                mDate.setTextAppearance(getContext(), R.style.Small);
-                mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
+                //mInfo.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case ALPHA:
             case ALPHA_DESC:
-                mNameView.setTextAppearance(getContext(), R.style.Large);
-                mInfo.setTextAppearance(getContext(), R.style.Small);
-                mDate.setTextAppearance(getContext(), R.style.Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large);
+                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
             default:
-                mNameView.setTextAppearance(getContext(), R.style.Large_Dim);
-                mInfo.setTextAppearance(getContext(), R.style.Small);
-                mDate.setTextAppearance(getContext(), R.style.Small);
+                mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
+                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
         }
 
@@ -482,7 +485,7 @@ public class ContentAdapter extends BaseAdapter {
         return mData2;
     }
 
-    public ArrayList<OpenPath> getSelectedSet() {
+    public CopyOnWriteArrayList<OpenPath> getSelectedSet() {
         return mSelectedSet;
     }
 
@@ -491,10 +494,9 @@ public class ContentAdapter extends BaseAdapter {
             mSelectedSet.add(rememberedPath);
         }
     }
-    
-    public void addSelection(OpenPath path)
-    {
-        if(!mSelectedSet.contains(path))
+
+    public void addSelection(OpenPath path) {
+        if (!mSelectedSet.contains(path))
             mSelectedSet.add(path);
     }
 

@@ -18,18 +18,12 @@
 
 package org.brandroid.openmanager.activities;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,7 +32,6 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -50,7 +43,6 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
-import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -76,6 +68,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -90,9 +83,6 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.view.Menu;
-import android.view.View;
-import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
@@ -185,7 +175,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTheme(R.style.AppTheme_Dark);
+        //        int theme = getThemeId();
+        //        getApplicationContext().setTheme(theme);
+        //        setTheme(theme);
 
         ActionBar bar = getSupportActionBar();
         if (bar != null)
@@ -222,9 +214,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
         PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE,
                 R.xml.preferences, false);
-        
+
         CheckBoxPreference pSystem = (CheckBoxPreference)findPreference("pref_system_mount");
-        if(pSystem != null)
+        if (pSystem != null)
             pSystem.setChecked(RootManager.isSystemMounted());
 
         // getPreferences(MODE_PRIVATE);
@@ -532,6 +524,10 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             return true;
         } else if (key.equals("pref_translate")) {
             OpenExplorer.launchTranslator(SettingsActivity.this);
+        } else if (key.equals("pref_privacy")) {
+            Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://brandroid.org/privacy.php"));
+            startActivity(intent);
         } else if (key.equals("pref_language")) {
 
         } else if (key.equals("pref_thumbs_cache_clear")) {
@@ -657,6 +653,24 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         if (Utils.inArray(key, "pref_fullscreen", "pref_fancy_menus", "pref_basebar",
                 "pref_themes", "pref_stats", "pref_root", "pref_language"))
             getPreferences().setSetting("global", "restart", true);
+        if (key.equals("servers_private"))
+        {
+            OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
+                    .getChild("org.brandroid.openmanager").getChild("files")
+                    .getChild("servers.json");
+            OpenFile f2 = new OpenFile(getContext().getFilesDir().getPath(), "servers.json");
+            Boolean doPrivate = (Boolean)newValue;
+            if (doPrivate)
+            {
+                if (f.exists() && f.length() > f2.length())
+                    f2.copyFrom(f);
+                f.delete();
+            } else {
+                if (f2.exists() && f2.length() > f.length())
+                    f.copyFrom(f2);
+                f2.delete();
+            }
+        }
         if (key.equals("pref_language"))
             preference.setSummary(getDisplayLanguage((String)newValue));
         else if (preference instanceof ListPreference && newValue instanceof String)
@@ -733,26 +747,65 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 preference.getTitle().toString(), listener);
     }
 
-    public static File GetDefaultServerFile(Context context) {
-        File f = new File(context.getFilesDir().getPath(), "servers.json");
-        if (f.exists() && OpenExplorer.isBlackBerry()) {
-            if (OpenFile.getExternalMemoryDrive(true).getChild(".servers.json")
-                    .copyFrom(new OpenFile(f)))
-                ;
-            f.delete();
+    public static OpenFile GetDefaultServerFile(Context context) {
+        OpenFile f2 = new OpenFile(context.getFilesDir().getPath(), "servers.json");
+        Preferences prefs = new Preferences(context);
+        try {
+            OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
+                    .getChild("org.brandroid.openmanager").getChild("files")
+                    .getChild("servers.json");
+            if (prefs.getSetting("global", "servers_private", false))
+            {
+                if (f.exists())
+                {
+                    if (f.length() > f2.length())
+                        f2.copyFrom(f);
+                    f.delete();
+                }
+                return f2;
+            }
+            if (!f.exists())
+                f.touch();
+            if (!f.exists() || !f.canWrite())
+            {
+                prefs.setSetting("global", "servers_private", true);
+                return f2;
+            }
+            else if (f2.exists()) {
+                if (OpenExplorer.IS_DEBUG_BUILD)
+                    Logger.LogVerbose("Old servers.json(" + f2.length()
+                            + ") found. Overwriting new servers.json(" + f.length() + ")!");
+                if (!f.exists() || f2.length() > f.length())
+                    f.copyFrom(f2);
+                f2.delete();
+            }
+            if (OpenExplorer.isBlackBerry() && f.exists() && f.canWrite()) {
+                f2 = OpenFile.getExternalMemoryDrive(true).getChild(".servers.json");
+                if (f2.exists()) {
+                    if (!f.exists() || f2.length() > f.length())
+                        f.copyFrom(f2);
+                    f2.delete();
+                }
+            }
+            if (!f.exists() && !f.touch())
+            {
+                prefs.setSetting("global", "servers_private", true);
+                return f2;
+            }
+            return f;
+        } catch (Exception e) {
+            prefs.setSetting("global", "servers_private", true);
+            return f2;
         }
-        if (OpenExplorer.isBlackBerry())
-            f = new File(OpenFile.getExternalMemoryDrive(true).getFile(), ".servers.json");
-        return f;
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
         Writer w = null;
-        File f = GetDefaultServerFile(context);
+        OpenFile f = GetDefaultServerFile(context);
         try {
             f.delete();
-            f.createNewFile();
-            w = new BufferedWriter(new FileWriter(f));
+            f.create();
+            w = new BufferedWriter(new FileWriter(f.getFile()));
             String data = servers.getJSONArray(true, context).toString();
             Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
             // data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
@@ -783,24 +836,19 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     public static OpenServers LoadDefaultServers(Context context) {
         if (OpenServers.DefaultServers != null)
             return OpenServers.DefaultServers;
-        File f = GetDefaultServerFile(context);
-        Reader r = null;
+        OpenFile f = GetDefaultServerFile(context);
         try {
-            if (!f.exists() && !f.createNewFile()) {
+            if (!f.exists() && !f.create()) {
                 Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
                 return new OpenServers();
-            } else {
+            } else if (f.length() <= 1)
+                return new OpenServers(); // Empty file
+            else {
                 // Logger.LogDebug("Created default servers file (" +
                 // f.getPath() + ")");
-                r = new BufferedReader(new FileReader(f));
-                char[] chars = new char[256];
-                StringBuilder sb = new StringBuilder();
-                while (r.read(chars) > 0)
-                    sb.append(chars);
-                r.close();
-                if (sb.length() == 0)
-                    return new OpenServers();
-                String data = sb.toString();
+                String data = f.readAscii();
+                if (OpenExplorer.IS_DEBUG_BUILD)
+                    Logger.LogDebug("Server JSON: " + data);
                 OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
                         GetSignatureKey(context));
                 Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
@@ -813,15 +861,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         } catch (JSONException e) {
             Logger.LogError("Error decoding JSON for default server list.", e);
             return new OpenServers();
-        } finally {
-            if (r != null)
-                try {
-                    r.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
         }
-
     }
 
     public static String GetSignatureKey(Context context) {
@@ -929,6 +969,19 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 defaultResourceId);
     }
 
+    public int getThemeId() {
+        String themeName = getPreferences().getString("global", "pref_themes", "dark");
+        if (themeName.equals("dark"))
+            return R.style.AppTheme_Dark;
+        else if (themeName.equals("light"))
+            return R.style.AppTheme_Light;
+        else if (themeName.equals("lightdark"))
+            return R.style.AppTheme_LightAndDark;
+        else if (themeName.equals("custom"))
+            return R.style.AppTheme_Custom;
+        return 0;
+    }
+
     @TargetApi(11)
     public static class PreferenceFragmentV11 extends PreferenceFragment {
         @Override
@@ -976,6 +1029,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             return false;
         }
 
+        @SuppressLint("ValidFragment")
         public class ServerSettings extends PreferenceFragment {
             @Override
             public void onCreate(Bundle savedInstanceState) {

@@ -7,12 +7,12 @@
 
     <TextView
         android:id="@+id/text_intro_top"
-        style="@style/Large"
+        style="@style/Text.Large"
         android:text="@string/s_text_intro_top" />
 
     <TextView
         android:id="@+id/text_intro"
-        style="@style/Mid"
+        style="@style/Text.Mid"
         android:layout_below="@+id/text_intro_top"
         android:ellipsize="none"
         android:gravity="left"
