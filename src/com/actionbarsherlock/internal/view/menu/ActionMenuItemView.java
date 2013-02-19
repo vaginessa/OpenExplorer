@@ -18,6 +18,7 @@ package com.actionbarsherlock.internal.view.menu;
 
 import java.util.HashSet;
 import java.util.Set;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
@@ -43,6 +44,7 @@ import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoo
 /**
  * @hide
  */
+@SuppressLint("NewApi")
 public class ActionMenuItemView extends LinearLayout
         implements MenuView.ItemView, View.OnClickListener, View.OnLongClickListener,
         ActionMenuView.ActionMenuChildView, View_HasStateListenerSupport {

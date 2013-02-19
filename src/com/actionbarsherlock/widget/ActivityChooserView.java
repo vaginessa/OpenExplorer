@@ -22,6 +22,7 @@ import com.actionbarsherlock.internal.widget.IcsLinearLayout;
 import com.actionbarsherlock.internal.widget.IcsListPopupWindow;
 import com.actionbarsherlock.view.ActionProvider;
 import com.actionbarsherlock.widget.ActivityChooserModel.ActivityChooserModelClient;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -618,6 +619,7 @@ class ActivityChooserView extends ViewGroup implements ActivityChooserModelClien
     }
 
     private static class SetActivated {
+        @SuppressLint("NewApi")
         public static void invoke(View view, boolean activated) {
             view.setActivated(activated);
         }

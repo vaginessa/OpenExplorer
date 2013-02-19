@@ -889,6 +889,8 @@ public abstract class ActionBar {
          */
         public void onTabReselected(Tab tab, FragmentTransaction ft);
     }
+    
+    public abstract void showOverflowMenu();
 
     /**
      * Per-child layout information associated with action bar custom views.
