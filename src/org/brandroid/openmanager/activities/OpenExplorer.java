@@ -673,7 +673,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         else if (isBlackBerry())
             launchUri(this,
-                    Uri.parse("http://appworld.blackberry.com/webstore/content/reviews/85146/"));
+                    Uri.parse("http://appworld.blackberry.com/webstore/content/85146/"));
         else
             launchUri(
                     this,
