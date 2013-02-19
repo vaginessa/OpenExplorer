@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.Random;
 
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.SortType;
 
 public class Utils {
     private static final String TAG = Logger.LOG_KEY;
