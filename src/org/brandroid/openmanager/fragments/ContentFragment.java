@@ -538,11 +538,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         // mShowThumbnails = true;
 
         if (getActivity() != null && getActivity().getWindow() != null)
-            mShowLongDate = getResources().getBoolean(R.bool.show_long_date) // getActivity().getWindow().getWindowManager().getDefaultDisplay().getRotation()
-                    // %
-                    // 180
-                    // !=
-                    // 0
+            mShowLongDate = getResources().getBoolean(R.bool.show_long_date)
                     && mPath != null;
 
         if (path instanceof OpenFileRoot) {

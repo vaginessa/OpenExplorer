@@ -61,6 +61,8 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenPath.OpenPathByteIO;
+import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
@@ -543,8 +545,8 @@ public class EventHandler {
     }
 
     public void cutFile(Collection<OpenPath> files, OpenPath newPath, Context mContext) {
-        for(OpenPath file : files)
-            if(!checkDestinationExists(file, newPath, mContext, CUT_TYPE))
+        for (OpenPath file : files)
+            if (!checkDestinationExists(file, newPath, mContext, CUT_TYPE))
                 execute(new BackgroundWork(CUT_TYPE, mContext, newPath), file);
     }
 
@@ -1105,6 +1107,13 @@ public class EventHandler {
                     Logger.LogWarning("Couldn't create initial destination file.");
                     return false;
                 }
+                if(old instanceof OpenPathCopyable)
+                {
+                    try {
+                    if(((OpenPathCopyable)old).copyTo(newFile))
+                        return true;
+                    } catch(IOException e) { }
+                }
 
                 int size = (int)old.length();
                 int pos = 0;
@@ -1117,9 +1126,12 @@ public class EventHandler {
                     i_stream = new BufferedInputStream(old.getInputStream());
                     o_stream = new BufferedOutputStream(newFile.getOutputStream());
 
-                    while ((read = i_stream.read(data, 0, FileManager.BUFFER)) != -1) {
+                    while ((read = i_stream.read(data, 0,
+                            Math.min(size - pos, FileManager.BUFFER))) != -1) {
                         o_stream.write(data, 0, read);
-                        pos += FileManager.BUFFER;
+                        pos += read;
+                        if (pos >= size)
+                            break;
                         publishMyProgress(pos, size);
                     }
 

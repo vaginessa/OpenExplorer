@@ -12,14 +12,25 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.kamranzafar.jtar.*;
 
-import android.net.Uri;
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.RootTools.Result;
+import com.stericson.RootTools.RootToolsException;
+import com.stericson.RootTools.Shell;
 
-public class OpenTar extends OpenPath {
+import android.net.Uri;
+import android.os.Process;
+
+public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener {
     private final OpenFile mFile;
     private OpenPath[] mChildren = null;
     private ArrayList<OpenTarEntry> mEntries = null;
@@ -28,7 +39,7 @@ public class OpenTar extends OpenPath {
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
     public OpenTar(OpenFile file) {
-        if(OpenExplorer.IS_DEBUG_BUILD)
+        if (OpenExplorer.IS_DEBUG_BUILD)
             Logger.LogDebug("Creating OpenTar(" + file.getPath() + ")");
         mFile = file;
     }
@@ -75,15 +86,12 @@ public class OpenTar extends OpenPath {
     @Override
     public OpenPath getChild(String name) {
         try {
-            TarInputStream tis = getInputStream();
-            TarEntry entry;
-            while((entry = tis.getNextEntry()) != null)
-            {
+            for(OpenTarEntry entry : getAllEntries())
                 if(entry.getName().equalsIgnoreCase(name))
-                    return new OpenTarEntry(this, entry);
-            }
+                    return entry;
         } catch (IOException e) {
-            Logger.LogError("Unable to OpenTar.getChild()", e);
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
         return null;
     }
@@ -102,26 +110,33 @@ public class OpenTar extends OpenPath {
         }
         return -1;
     }
-
+    
     public List<OpenTarEntry> getAllEntries() throws IOException {
+        return getAllEntries(null);
+    }
+
+    public List<OpenTarEntry> getAllEntries(OpenContentUpdater updater) throws IOException {
         if (mEntries != null)
             return mEntries;
         mEntries = new ArrayList<OpenTarEntry>();
         TarInputStream tis = getInputStream();
         TarEntry te;
+        int pos = 0;
         while ((te = tis.getNextEntry()) != null)
         {
+            pos += te.getSize();
             if (te.isDirectory())
                 continue;
-            String name = te.getName();
-            if (name.indexOf("/") > 0 && name.indexOf("/") < name.length() - 1)
-                name = name.substring(0, name.lastIndexOf("/") + 1);
-            else
-                name = "";
-            OpenPath vp = findVirtualPath(name);
-            OpenTarEntry entry = new OpenTarEntry(vp, te);
+            String par = te.getHeader().namePrefix.toString();
+            if(!par.equals("") && !par.endsWith("/"))
+                par += "/";
+            if(te.getName().indexOf("/") > -1)
+                par += te.getName().substring(0, te.getName().lastIndexOf("/"));
+            Logger.LogVerbose("TAR: " + par);
+            OpenPath vp = findVirtualPath(par, updater);
+            OpenTarEntry entry = new OpenTarEntry(vp, te, (int)(pos - te.getSize()));
             mEntries.add(entry);
-            addFamilyEntry(name, entry);
+            addFamilyEntry(par, entry);
         }
         Set<String> keys = mFamily.keySet();
         for (String path : keys.toArray(new String[keys.size()])) {
@@ -132,7 +147,7 @@ public class OpenTar extends OpenPath {
         return mEntries;
     }
 
-    private OpenPath findVirtualPath(String name) {
+    private OpenPath findVirtualPath(String name, OpenContentUpdater updater) {
         if (mVirtualPaths.containsKey(name))
             return mVirtualPaths.get(name);
         OpenTarVirtualPath path = null;
@@ -146,7 +161,7 @@ public class OpenTar extends OpenPath {
                 par = par.substring(0, par.lastIndexOf("/") + 1);
             else
                 par = "";
-            path = new OpenTarVirtualPath(findVirtualPath(par), name);
+            path = new OpenTarVirtualPath(findVirtualPath(par, updater), name);
         }
         mVirtualPaths.put(name, path);
         return path;
@@ -164,7 +179,7 @@ public class OpenTar extends OpenPath {
         List<OpenPath> kids = mFamily.get(parent);
         if (kids == null)
             kids = new ArrayList<OpenPath>();
-        OpenPath vp = findVirtualPath(path);
+        OpenPath vp = findVirtualPath(path, null);
         if (!kids.contains(vp))
             kids.add(vp);
         mFamily.put(parent, kids);
@@ -183,6 +198,24 @@ public class OpenTar extends OpenPath {
     }
 
     @Override
+    public void list(final OpenContentUpdater callback) throws IOException {
+        final RootManager rm = new RootManager();
+        new Thread(new Runnable() {
+            public void run() {
+                Logger.LogVerbose("Running tar list");
+                try {
+                    getAllEntries(callback);
+                    for(OpenPath p : listFiles())
+                        callback.addContentPath(p);
+                    callback.doneUpdating();
+                } catch(Exception e2) {
+                    Logger.LogError("Error listing TAR #2.", e2);
+                }
+            }
+        }).start();
+    }
+
+    @Override
     public OpenPath[] list() throws IOException {
         if (mChildren == null)
             mChildren = listFiles();
@@ -193,7 +226,7 @@ public class OpenTar extends OpenPath {
     public OpenPath[] listFiles() throws IOException {
         if (DEBUG)
             Logger.LogVerbose("Listing OpenTar " + mFile);
-        
+
         if (mChildren != null)
             return mChildren;
 
@@ -264,7 +297,7 @@ public class OpenTar extends OpenPath {
 
     @Override
     public Boolean requiresThread() {
-        return false;
+        return true;
     }
 
     @Override
@@ -432,14 +465,16 @@ public class OpenTar extends OpenPath {
 
     }
 
-    public class OpenTarEntry extends OpenPath {
+    public class OpenTarEntry extends OpenPath implements OpenPath.OpenPathCopyable {
         private final OpenPath mParent;
         private final TarEntry te;
         private OpenPath[] mChildren = null;
+        private final int mOffset;
 
-        public OpenTarEntry(OpenPath parent, TarEntry entry) {
+        public OpenTarEntry(OpenPath parent, TarEntry entry, int offset) {
             mParent = parent;
             te = entry;
+            mOffset = offset;
             if (te.getName().endsWith("/") || te.isDirectory()) {
                 try {
                     mChildren = list();
@@ -475,6 +510,10 @@ public class OpenTar extends OpenPath {
         @Override
         public long length() {
             return te.getSize();
+        }
+        
+        public int getOffset() {
+            return mOffset;
         }
 
         @Override
@@ -581,12 +620,44 @@ public class OpenTar extends OpenPath {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            return null; //mZip.getInputStream(te);
+            FileInputStream fis = new FileInputStream(OpenTar.this.getPath());
+            fis.skip(getOffset());
+            return fis;
         }
 
         @Override
         public OutputStream getOutputStream() throws IOException {
             return null;
+        }
+
+        @Override
+        public boolean copyFrom(OpenPath file) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+        
+        @Override
+        public boolean copyTo(OpenPath dest) throws IOException {
+            final int bsize = FileManager.BUFFER;
+            byte[] ret = new byte[bsize];
+            TarInputStream s = null;
+            FileInputStream fis = null;
+            OutputStream os = new BufferedOutputStream(dest.getOutputStream());
+            fis = new FileInputStream(OpenTar.this.getPath());
+            fis.skip(getOffset());
+            s = new TarInputStream(new BufferedInputStream(fis));
+            int count = 0;
+            int size = ret.length;
+            int pos = 0;
+            while((count = s.read(ret, 0, Math.min(bsize, size - pos))) > 0)
+            {
+                os.write(ret, 0, Math.min(count, size - pos));
+                pos += count;
+                if(pos >= size) break;
+            }
+            os.flush();
+            os.close();
+            return true;
         }
 
     }
