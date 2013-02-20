@@ -645,11 +645,16 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
             s = new TarInputStream(new BufferedInputStream(fis));
             //s.skip(getOffset());
             TarEntry entry;
+            boolean valid = false;
             while((entry = s.getNextEntry()) != null)
             {
                 if(entry.getName().equals(getName()))
+                {
+                    valid = true;
                     break;
+                }
             }
+            if(!valid) return false;
             int count = 0;
             int size = (int)te.getSize();
             int pos = 0;
