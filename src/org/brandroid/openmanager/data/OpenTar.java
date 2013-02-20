@@ -124,7 +124,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         int pos = 0;
         while ((te = tis.getNextEntry()) != null)
         {
-            pos += te.getSize();
+            pos += te.getHeaderSize() + te.getSize();
             if (te.isDirectory())
                 continue;
             String par = te.getHeader().namePrefix.toString();
@@ -630,13 +630,11 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
             return null;
         }
 
-        @Override
         public boolean copyFrom(OpenPath file) {
             // TODO Auto-generated method stub
             return false;
         }
         
-        @Override
         public boolean copyTo(OpenPath dest) throws IOException {
             final int bsize = FileManager.BUFFER;
             byte[] ret = new byte[bsize];
@@ -644,18 +642,24 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
             FileInputStream fis = null;
             OutputStream os = new BufferedOutputStream(dest.getOutputStream());
             fis = new FileInputStream(OpenTar.this.getPath());
-            fis.skip(getOffset());
             s = new TarInputStream(new BufferedInputStream(fis));
+            //s.skip(getOffset());
+            TarEntry entry;
+            while((entry = s.getNextEntry()) != null)
+            {
+                if(entry.getName().equals(getName()))
+                    break;
+            }
             int count = 0;
-            int size = ret.length;
+            int size = (int)te.getSize();
             int pos = 0;
+            Logger.LogVerbose("TAR read from " + getOffset() + " for " + size + " bytes");
             while((count = s.read(ret, 0, Math.min(bsize, size - pos))) > 0)
             {
                 os.write(ret, 0, Math.min(count, size - pos));
                 pos += count;
                 if(pos >= size) break;
             }
-            os.flush();
             os.close();
             return true;
         }

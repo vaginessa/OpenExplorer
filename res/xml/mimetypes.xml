@@ -121,6 +121,9 @@
         extension=".txt"
         mimetype="text/plain" />
     <type
+        extension=".md5"
+        mimetype="text/plain" />
+    <type
         extension=".cs"
         mimetype="text/plain" />
     <type
