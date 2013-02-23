@@ -730,17 +730,35 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         OpenPath file = (OpenPath)list.getItemAtPosition(position);
         Logger.LogInfo("ContentFragment.onItemClick (" + file.getPath() + ")");
 
-        if (file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
+        if (getActionMode() == null && file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
             file = new OpenZip((OpenFile)file);
-        if (file instanceof OpenFile && file.getMimeType().contains("tar"))
+        else if (getActionMode() == null && file instanceof OpenFile && file.getMimeType().contains("tar"))
         {
-            //            final OpenPath tar = file;
-            //            final OpenPath dest = tar.getParent().getChild(
-            //                    tar.getName().replace("." + tar.getExtension(), ""));
-            //            untarAll(tar, dest);
-            //            return;
-
-            file = new OpenTar((OpenFile)file);
+            final OpenPath tar = file;
+            DialogHandler.showConfirmationDialog(getContext(),
+                    getString(R.string.s_msg_pref_archives),
+                    getString(R.string.s_untar),
+                    getPreferences(),
+                    "pref_tar",
+                    new OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch(which)
+                            {
+                                case R.string.s_archive_browse:
+                                    getExplorer().onChangeLocation(new OpenTar((OpenFile)tar));
+                                    break;
+                                case R.string.s_archive_extract:
+                                    untarAll(tar, tar.getParent().getChild(
+                                            tar.getName().replace("." + tar.getExtension(), "")));
+                                    break;
+                            }
+                        }
+                    },
+                    R.string.s_archive_browse,
+                    R.string.s_archive_extract,
+                    R.string.s_cancel
+                    );
+            return;
         }
 
         if (getActionMode() != null) {

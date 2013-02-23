@@ -395,5 +395,8 @@
     <string name="s_untarring">unTARing</string>
     <string name="s_msg_file_exists">Some destination files may already exist. Ok to overwrite?</string>
     <string name="s_title_file_exists">File already exists.</string>
+    <string name="s_msg_pref_archives">Would you like to browse or extract the archive?</string>
+    <string name="s_archive_browse">Browse</string>
+    <string name="s_archive_extract">Extract</string>
 
 </resources>
