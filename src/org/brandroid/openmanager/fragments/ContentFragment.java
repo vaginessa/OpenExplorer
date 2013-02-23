@@ -274,8 +274,6 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return OpenExplorer.VIEW_LIST;
         if (pref.equals("grid"))
             return OpenExplorer.VIEW_GRID;
-        if (pref.equals("carousel"))
-            return OpenExplorer.VIEW_CAROUSEL;
         return OpenExplorer.VIEW_LIST;
     }
 
