@@ -66,7 +66,7 @@ public class BookmarkHolder {
             mMainText = (TextView)mParentView.findViewById(R.id.content_text);
         if (mEject == null)
             mEject = (ImageView)mParentView.findViewById(R.id.eject);
-        if (mInfo == null)
+        if (mInfo == null && mParentView.findViewById(R.id.content_info) instanceof TextView)
             mInfo = (TextView)mParentView.findViewById(R.id.content_info);
         if (mSizeText == null)
             mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
