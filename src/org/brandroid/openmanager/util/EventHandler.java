@@ -602,9 +602,9 @@ public class EventHandler {
                 .create().show();
     }
 
-    public void untarFile(final OpenPath file, final OpenPath dest, final Context mContext)
+    public void untarFile(final OpenPath file, final OpenPath dest, final Context mContext, final String... includes)
     {
-        execute(new BackgroundWork(UNTAR_TYPE, mContext, dest), file);
+        execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
     }
 
     /*
@@ -1010,7 +1010,7 @@ public class EventHandler {
                     break;
 
                 case UNTAR:
-                    if (untarFile(mCurrentPath, mIntoPath))
+                    if (untarFile(mCurrentPath, mIntoPath, mInitParams))
                         ret++;
                     break;
 
@@ -1036,11 +1036,11 @@ public class EventHandler {
             return ret;
         }
 
-        private Boolean untarFile(OpenPath source, OpenPath into) {
+        private Boolean untarFile(OpenPath source, OpenPath into, String... includes) {
             if (!into.exists() && !into.mkdir())
                 return false;
             try {
-                TarUtils.untarTarFile(into.getPath(), source.getPath());
+                TarUtils.untarTarFile(into.getPath(), source.getPath(), includes);
                 return true;
             } catch (IOException e) {
                 Logger.LogError("Unable to untar!", e);

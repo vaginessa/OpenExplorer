@@ -20,6 +20,7 @@ package org.kamranzafar.jtar;
 import java.io.*;
 import java.util.zip.GZIPInputStream;
 
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.Logger;
 
 import junit.framework.Assert;
@@ -124,12 +125,13 @@ public class TarUtils {
      * 
      * @throws IOException
      */
-    public static void untarTarFile(String destFolder, String tar) throws IOException {
+    public static void untarTarFile(String destFolder, String tar, String... include)
+            throws IOException {
         File zf = new File(tar);
 
         TarInputStream tis = new TarInputStream(new BufferedInputStream(
                 new FileInputStream(zf)));
-        untar(tis, destFolder);
+        untar(tis, destFolder, include);
 
         tis.close();
     }
@@ -166,26 +168,36 @@ public class TarUtils {
         tis.close();
     }
 
-    private static void untar(TarInputStream tis, String destFolder) throws IOException {
-        BufferedOutputStream dest = null;
+    private static void untar(TarInputStream tis, String destFolder, String... includes)
+            throws IOException {
 
         TarEntry entry;
         while ((entry = tis.getNextEntry()) != null) {
-            System.out.println("Extracting: " + entry.getName());
-            int count;
             byte data[] = new byte[TAR_BUFFER];
+            boolean doWrite = checkIncludes(entry.getName(), includes);
+            if(!doWrite) continue;
+            BufferedOutputStream dest = null;
+
+            int count;
 
             if (entry.isDirectory()) {
                 new File(destFolder + "/" + entry.getName()).mkdirs();
                 continue;
-            } else {
-                int di = entry.getName().lastIndexOf('/');
-                if (di != -1) {
-                    new File(destFolder + "/" + entry.getName().substring(0, di)).mkdirs();
-                }
             }
 
-            FileOutputStream fos = new FileOutputStream(destFolder + "/" + entry.getName());
+            String name = entry.getName();
+            if (includes.length > 0)
+                name = name.substring(name.lastIndexOf("/") + 1); // if we are pasting into a directory, only use the actual filename
+            
+            String file = destFolder + "/" + name;
+            
+            Logger.LogVerbose("Extracting from tar: " + entry.getName() + " --> " + file);
+            
+            OpenFile of = new OpenFile(file);
+            if(includes.length > 0)
+                of.getParent().mkdir();
+
+            OutputStream fos = of.getOutputStream();
             dest = new BufferedOutputStream(fos);
 
             while ((count = tis.read(data)) != -1) {
@@ -194,10 +206,22 @@ public class TarUtils {
 
             dest.flush();
             dest.close();
+            if(!doWrite)
+                of.delete();
         }
     }
 
-    public static boolean checkUntar(String tar, String destFolder)
+    private static boolean checkIncludes(String path, String... includes)
+    {
+        if (includes.length == 0)
+            return true;
+        for (String s : includes)
+            if (s.equalsIgnoreCase(path))
+                return true;
+        return false;
+    }
+
+    public static boolean checkUntar(String tar, String destFolder, String... includes)
     {
         File zf = new File(tar);
 
@@ -205,7 +229,7 @@ public class TarUtils {
         boolean ret = false;
         try {
             tis = new TarInputStream(new BufferedInputStream(new FileInputStream(zf)));
-            ret = checkUntar(tis, destFolder);
+            ret = checkUntar(tis, destFolder, includes);
         } catch (IOException e) {
             Logger.LogError("Unable to check tar.", e);
         } finally {
@@ -220,11 +244,16 @@ public class TarUtils {
         return ret;
     }
 
-    private static boolean checkUntar(TarInputStream tis, String destFolder) throws IOException {
+    private static boolean checkUntar(TarInputStream tis, String destFolder, String... includes)
+            throws IOException {
         TarEntry entry;
         while ((entry = tis.getNextEntry()) != null) {
 
-            File f = new File(destFolder + "/" + entry.getName());
+            if (!checkIncludes(entry.getName(), includes))
+                continue;
+
+            File f = new File(destFolder + "/"
+                    + (includes.length > 0 ? entry.getHeader().name : entry.getName()));
             if (f.exists())
                 return true;
 

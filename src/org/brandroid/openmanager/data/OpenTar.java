@@ -122,22 +122,37 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         mEntries = new ArrayList<OpenTarEntry>();
         TarInputStream tis = getInputStream();
         TarEntry te;
-        /*
-         * try { RootTools.useRoot = false; //RootTools.closeAllShells();
-         * RootTools.sendShell("tar -tvf " + mFile.getPath(), new Result() {
-         * public void processError(String line) throws Exception {
-         * Logger.LogVerbose("TAR Error: " + line); } public void process(String
-         * line) throws Exception { // -rw-rw-r-- root/sdcard_rw 7 2013-02-22
-         * 13:42:02 123.txt String[] parts = line.split("  *", 6); String perms
-         * = parts[0]; String[] owner = parts[1].split("/"); long size =
-         * Long.parseLong(parts[2]); String date = parts[3]; String time =
-         * parts[4]; String filename = parts[parts.length - 1];
-         * Logger.LogVerbose("TAR Kid: " + filename); } public void
-         * onFailure(Exception ex) { } public void onComplete(int diag) { } },
-         * 10000); } catch (RootToolsException e) {
-         * Logger.LogError("Root exception getting tar!", e); } catch
-         * (TimeoutException e) { Logger.LogError("Timeout getting tar!", e); }
-         */
+//        try {
+//            RootTools.useRoot = false; //RootTools.closeAllShells();
+//            RootTools.sendShell("tar -tvf " + mFile.getPath(), new Result() {
+//                public void processError(String line) throws Exception {
+//                    Logger.LogVerbose("TAR Error: " + line);
+//                }
+//
+//                public void process(String
+//                        line) throws Exception { // -rw-rw-r-- root/sdcard_rw 7 2013-02-22 13:42:02 123.txt
+//                    String[] parts = line.split("  *", 6);
+//                    String perms = parts[0];
+//                    String[] owner = parts[1].split("/");
+//                    long size = Long.parseLong(parts[2]);
+//                    String date = parts[3];
+//                    String time = parts[4];
+//                    String filename = parts[parts.length - 1];
+//                    Logger.LogVerbose("TAR Kid: " + filename);
+//                }
+//
+//                public void onFailure(Exception ex) {
+//                }
+//
+//                public void onComplete(int diag) {
+//                }
+//            }, 10000);
+//        } catch (RootToolsException e) {
+//            Logger.LogError("Root exception getting tar!", e);
+//        } catch (TimeoutException e) {
+//            Logger.LogError("Timeout getting tar!", e);
+//        }
+
         int pos = 0;
         while ((te = tis.getNextEntry()) != null)
         {
@@ -639,7 +654,8 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
 
         @Override
         public InputStream getInputStream() throws IOException {
-            TarInputStream fis = new TarInputStream(new BufferedInputStream(new FileInputStream(OpenTar.this.getPath())));
+            TarInputStream fis = new TarInputStream(new BufferedInputStream(new FileInputStream(
+                    OpenTar.this.getPath())));
             fis.setDefaultSkip(true);
             fis.skip(getOffset());
             return fis;
@@ -680,7 +696,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
             int count = 0;
             int size = (int)te.getSize();
             int pos = 0;
-            while ((count = s.read(ret, 0, Math.min(bsize, size - pos))) > 0)
+            while ((count = s.read(ret, 0, Math.min(bsize, size - pos))) != -1)
             {
                 os.write(ret, 0, Math.min(count, size - pos));
                 pos += count;
@@ -691,6 +707,14 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
             os.close();
             s.close();
             return true;
+        }
+
+        public String getRelativePath() {
+            return te.getName();
+        }
+
+        public OpenTar getTar() {
+            return OpenTar.this;
         }
 
     }
