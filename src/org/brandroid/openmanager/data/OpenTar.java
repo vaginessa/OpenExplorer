@@ -23,6 +23,7 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.kamranzafar.jtar.*;
 
+import com.jcraft.jzlib.GZIPInputStream;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.RootTools.Result;
 import com.stericson.RootTools.RootToolsException;
@@ -122,36 +123,36 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         mEntries = new ArrayList<OpenTarEntry>();
         TarInputStream tis = getInputStream();
         TarEntry te;
-//        try {
-//            RootTools.useRoot = false; //RootTools.closeAllShells();
-//            RootTools.sendShell("tar -tvf " + mFile.getPath(), new Result() {
-//                public void processError(String line) throws Exception {
-//                    Logger.LogVerbose("TAR Error: " + line);
-//                }
-//
-//                public void process(String
-//                        line) throws Exception { // -rw-rw-r-- root/sdcard_rw 7 2013-02-22 13:42:02 123.txt
-//                    String[] parts = line.split("  *", 6);
-//                    String perms = parts[0];
-//                    String[] owner = parts[1].split("/");
-//                    long size = Long.parseLong(parts[2]);
-//                    String date = parts[3];
-//                    String time = parts[4];
-//                    String filename = parts[parts.length - 1];
-//                    Logger.LogVerbose("TAR Kid: " + filename);
-//                }
-//
-//                public void onFailure(Exception ex) {
-//                }
-//
-//                public void onComplete(int diag) {
-//                }
-//            }, 10000);
-//        } catch (RootToolsException e) {
-//            Logger.LogError("Root exception getting tar!", e);
-//        } catch (TimeoutException e) {
-//            Logger.LogError("Timeout getting tar!", e);
-//        }
+        //        try {
+        //            RootTools.useRoot = false; //RootTools.closeAllShells();
+        //            RootTools.sendShell("tar -tvf " + mFile.getPath(), new Result() {
+        //                public void processError(String line) throws Exception {
+        //                    Logger.LogVerbose("TAR Error: " + line);
+        //                }
+        //
+        //                public void process(String
+        //                        line) throws Exception { // -rw-rw-r-- root/sdcard_rw 7 2013-02-22 13:42:02 123.txt
+        //                    String[] parts = line.split("  *", 6);
+        //                    String perms = parts[0];
+        //                    String[] owner = parts[1].split("/");
+        //                    long size = Long.parseLong(parts[2]);
+        //                    String date = parts[3];
+        //                    String time = parts[4];
+        //                    String filename = parts[parts.length - 1];
+        //                    Logger.LogVerbose("TAR Kid: " + filename);
+        //                }
+        //
+        //                public void onFailure(Exception ex) {
+        //                }
+        //
+        //                public void onComplete(int diag) {
+        //                }
+        //            }, 10000);
+        //        } catch (RootToolsException e) {
+        //            Logger.LogError("Root exception getting tar!", e);
+        //        } catch (TimeoutException e) {
+        //            Logger.LogError("Timeout getting tar!", e);
+        //        }
 
         int pos = 0;
         while ((te = tis.getNextEntry()) != null)
@@ -346,7 +347,11 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
 
     @Override
     public TarInputStream getInputStream() throws IOException {
-        return new TarInputStream(new BufferedInputStream(new FileInputStream(mFile.getFile())));
+        if (getMimeType().contains("x-"))
+            return new TarInputStream(new BufferedInputStream(new GZIPInputStream(
+                    new FileInputStream(mFile.getFile()))));
+        else
+            return new TarInputStream(new BufferedInputStream(new FileInputStream(mFile.getFile())));
     }
 
     @Override
@@ -654,8 +659,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
 
         @Override
         public InputStream getInputStream() throws IOException {
-            TarInputStream fis = new TarInputStream(new BufferedInputStream(new FileInputStream(
-                    OpenTar.this.getPath())));
+            TarInputStream fis = OpenTar.this.getInputStream();
             fis.setDefaultSkip(true);
             fis.skip(getOffset());
             return fis;

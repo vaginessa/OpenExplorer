@@ -85,6 +85,12 @@
         extension=".tar"
         mimetype="application/tar" />
     <type
+        extension=".tgz"
+        mimetype="application/x-tar" />
+    <type
+        extension=".tar.gz"
+        mimetype="application/x-tar" />
+    <type
         extension=".zip"
         mimetype="application/zip" />
     <type
@@ -95,6 +101,15 @@
         mimetype="application/gzip" /> <!-- NOT IN WEBKIT -->
     <type
         extension=".win"
+        mimetype="application/tar" /> <!-- TWRP backup archives -->
+    <type
+        extension=".win001"
+        mimetype="application/tar" /> <!-- TWRP backup archives -->
+    <type
+        extension=".win002"
+        mimetype="application/tar" /> <!-- TWRP backup archives -->
+    <type
+        extension=".win003"
         mimetype="application/tar" /> <!-- TWRP backup archives -->
 
 

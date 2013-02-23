@@ -730,9 +730,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         OpenPath file = (OpenPath)list.getItemAtPosition(position);
         Logger.LogInfo("ContentFragment.onItemClick (" + file.getPath() + ")");
 
-        if (getActionMode() == null && file.isArchive() && file instanceof OpenFile && Preferences.Pref_Zip_Internal)
+        if (getActionMode() == null && file.isArchive() && file instanceof OpenFile
+                && Preferences.Pref_Zip_Internal)
             file = new OpenZip((OpenFile)file);
-        else if (getActionMode() == null && file instanceof OpenFile && file.getMimeType().contains("tar"))
+        else if (getActionMode() == null && file instanceof OpenFile
+                && file.getMimeType().contains("tar"))
         {
             final OpenPath tar = file;
             DialogHandler.showConfirmationDialog(getContext(),
@@ -742,7 +744,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     "pref_tar",
                     new OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            switch(which)
+                            switch (which)
                             {
                                 case R.string.s_archive_browse:
                                     getExplorer().onChangeLocation(new OpenTar((OpenFile)tar));

@@ -127,10 +127,13 @@ public class TarUtils {
      */
     public static void untarTarFile(String destFolder, String tar, String... include)
             throws IOException {
-        File zf = new File(tar);
-
-        TarInputStream tis = new TarInputStream(new BufferedInputStream(
-                new FileInputStream(zf)));
+        OpenFile zf = new OpenFile(tar);
+        TarInputStream tis = null;
+        if (zf.getMimeType().contains("x-"))
+            tis = new TarInputStream(new BufferedInputStream(new GZIPInputStream(
+                    zf.getInputStream())));
+        else
+            tis = new TarInputStream(new BufferedInputStream(zf.getInputStream()));
         untar(tis, destFolder, include);
 
         tis.close();
@@ -175,7 +178,8 @@ public class TarUtils {
         while ((entry = tis.getNextEntry()) != null) {
             byte data[] = new byte[TAR_BUFFER];
             boolean doWrite = checkIncludes(entry.getName(), includes);
-            if(!doWrite) continue;
+            if (!doWrite)
+                continue;
             BufferedOutputStream dest = null;
 
             int count;
@@ -188,13 +192,13 @@ public class TarUtils {
             String name = entry.getName();
             if (includes.length > 0)
                 name = name.substring(name.lastIndexOf("/") + 1); // if we are pasting into a directory, only use the actual filename
-            
+
             String file = destFolder + "/" + name;
-            
+
             Logger.LogVerbose("Extracting from tar: " + entry.getName() + " --> " + file);
-            
+
             OpenFile of = new OpenFile(file);
-            if(includes.length > 0)
+            if (includes.length > 0)
                 of.getParent().mkdir();
 
             OutputStream fos = of.getOutputStream();
@@ -206,7 +210,7 @@ public class TarUtils {
 
             dest.flush();
             dest.close();
-            if(!doWrite)
+            if (!doWrite)
                 of.delete();
         }
     }
