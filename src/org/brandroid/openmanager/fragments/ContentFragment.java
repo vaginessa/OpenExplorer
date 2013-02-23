@@ -57,6 +57,7 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
+import org.kamranzafar.jtar.TarUtils;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -178,14 +179,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
     }
 
-    //    private ContentFragment(OpenPath path) {
-    //        mPath = path;
-    //    }
+    // private ContentFragment(OpenPath path) {
+    // mPath = path;
+    // }
     //
-    //    private ContentFragment(OpenPath path, int view) {
-    //        mPath = path;
-    //        mViewMode = view;
-    //    }
+    // private ContentFragment(OpenPath path, int view) {
+    // mPath = path;
+    // mViewMode = view;
+    // }
 
     public static ContentFragment getInstance(OpenPath path, int mode) {
         return getInstance(path, mode, null);
@@ -489,14 +490,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         /*
-        if (path instanceof OpenFile
-                && (((path.getName().equalsIgnoreCase("data") || sPath.indexOf("/data") > -1) && !sPath
-                        .startsWith(OpenFile.getExternalMemoryDrive(true).getParent().getPath()))
-                        || sPath.startsWith("/mnt/shell")
-                        || (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") == -1) || sPath
-                            .startsWith("/system")))
-            path = new OpenFileRoot(path);
-        */
+         * if (path instanceof OpenFile &&
+         * (((path.getName().equalsIgnoreCase("data") || sPath.indexOf("/data")
+         * > -1) && !sPath
+         * .startsWith(OpenFile.getExternalMemoryDrive(true).getParent
+         * ().getPath())) || sPath.startsWith("/mnt/shell") ||
+         * (sPath.indexOf("/emulated/") > -1 && sPath.indexOf("/emulated/0") ==
+         * -1) || sPath .startsWith("/system"))) path = new OpenFileRoot(path);
+         */
 
         mPath = path;
 
@@ -716,12 +717,30 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             file = new OpenZip((OpenFile)file);
         if (file instanceof OpenFile && file.getMimeType().contains("tar"))
         {
-            file = new OpenTar((OpenFile)file);
-            try {
-                Logger.LogDebug("Children: " + ((OpenTar)file).getChildCount(true));
-            } catch (IOException e) {
-                Logger.LogError("Unable to get tar kids.", e);
-            }
+            final OpenPath tar = file;
+            final OpenPath dest = tar.getParent().getChild(
+                    tar.getName().replace("." + tar.getExtension(), ""));
+            if (TarUtils.checkUntar(tar.getPath(), dest.getPath()))
+                DialogHandler.showConfirmationDialog(getContext(),
+                        getResources().getString(R.string.s_msg_file_exists),
+                        getResources().getString(R.string.s_title_file_exists),
+                        new OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                getHandler().untarFile(tar, dest, getContext());
+                            }
+                        });
+            else
+                getHandler().untarFile(tar, dest, getContext());
+            return;
+
+            // file = new OpenTar((OpenFile)file);
+            // try {
+            // Logger.LogDebug("Children: " +
+            // ((OpenTar)file).getChildCount(true));
+            // } catch (IOException e) {
+            // Logger.LogError("Unable to get tar kids.", e);
+            // }
         }
 
         if (getActionMode() != null) {

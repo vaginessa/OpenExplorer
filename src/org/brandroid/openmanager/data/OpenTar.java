@@ -3,6 +3,7 @@ package org.brandroid.openmanager.data;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -86,8 +87,8 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
     @Override
     public OpenPath getChild(String name) {
         try {
-            for(OpenTarEntry entry : getAllEntries())
-                if(entry.getName().equalsIgnoreCase(name))
+            for (OpenTarEntry entry : getAllEntries())
+                if (entry.getName().equalsIgnoreCase(name))
                     return entry;
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -110,7 +111,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         }
         return -1;
     }
-    
+
     public List<OpenTarEntry> getAllEntries() throws IOException {
         return getAllEntries(null);
     }
@@ -121,16 +122,34 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         mEntries = new ArrayList<OpenTarEntry>();
         TarInputStream tis = getInputStream();
         TarEntry te;
+        /*
+         * try { RootTools.useRoot = false; //RootTools.closeAllShells();
+         * RootTools.sendShell("tar -tvf " + mFile.getPath(), new Result() {
+         * public void processError(String line) throws Exception {
+         * Logger.LogVerbose("TAR Error: " + line); } public void process(String
+         * line) throws Exception { // -rw-rw-r-- root/sdcard_rw 7 2013-02-22
+         * 13:42:02 123.txt String[] parts = line.split("  *", 6); String perms
+         * = parts[0]; String[] owner = parts[1].split("/"); long size =
+         * Long.parseLong(parts[2]); String date = parts[3]; String time =
+         * parts[4]; String filename = parts[parts.length - 1];
+         * Logger.LogVerbose("TAR Kid: " + filename); } public void
+         * onFailure(Exception ex) { } public void onComplete(int diag) { } },
+         * 10000); } catch (RootToolsException e) {
+         * Logger.LogError("Root exception getting tar!", e); } catch
+         * (TimeoutException e) { Logger.LogError("Timeout getting tar!", e); }
+         */
         int pos = 0;
         while ((te = tis.getNextEntry()) != null)
         {
             pos += te.getHeaderSize() + te.getSize();
             if (te.isDirectory())
                 continue;
+            if (te.getName().endsWith("/"))
+                continue;
             String par = te.getHeader().namePrefix.toString();
-            if(!par.equals("") && !par.endsWith("/"))
+            if (!par.equals("") && !par.endsWith("/"))
                 par += "/";
-            if(te.getName().indexOf("/") > -1)
+            if (te.getName().indexOf("/") > -1)
                 par += te.getName().substring(0, te.getName().lastIndexOf("/"));
             Logger.LogVerbose("TAR: " + par);
             OpenPath vp = findVirtualPath(par, updater);
@@ -205,10 +224,10 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
                 Logger.LogVerbose("Running tar list");
                 try {
                     getAllEntries(callback);
-                    for(OpenPath p : listFiles())
+                    for (OpenPath p : listFiles())
                         callback.addContentPath(p);
                     callback.doneUpdating();
-                } catch(Exception e2) {
+                } catch (Exception e2) {
                     Logger.LogError("Error listing TAR #2.", e2);
                 }
             }
@@ -511,7 +530,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         public long length() {
             return te.getSize();
         }
-        
+
         public int getOffset() {
             return mOffset;
         }
@@ -620,7 +639,8 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
 
         @Override
         public InputStream getInputStream() throws IOException {
-            FileInputStream fis = new FileInputStream(OpenTar.this.getPath());
+            TarInputStream fis = new TarInputStream(new BufferedInputStream(new FileInputStream(OpenTar.this.getPath())));
+            fis.setDefaultSkip(true);
             fis.skip(getOffset());
             return fis;
         }
@@ -631,41 +651,45 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         }
 
         public boolean copyFrom(OpenPath file) {
-            // TODO Auto-generated method stub
             return false;
         }
-        
+
         public boolean copyTo(OpenPath dest) throws IOException {
+            Logger.LogDebug("TAR copyTo " + dest);
             final int bsize = FileManager.BUFFER;
             byte[] ret = new byte[bsize];
             TarInputStream s = null;
             FileInputStream fis = null;
             OutputStream os = new BufferedOutputStream(dest.getOutputStream());
-            fis = new FileInputStream(OpenTar.this.getPath());
-            s = new TarInputStream(new BufferedInputStream(fis));
-            //s.skip(getOffset());
+            s = new TarInputStream(new BufferedInputStream(new FileInputStream(new File(
+                    OpenTar.this.getPath()))));
+            s.setDefaultSkip(false);
+            s.skip(getOffset());
             TarEntry entry;
             boolean valid = false;
-            while((entry = s.getNextEntry()) != null)
+            while ((entry = s.getNextEntry()) != null)
             {
-                if(entry.getName().equals(getName()))
+                if (entry.getHeader().name.equals(getName()))
                 {
                     valid = true;
                     break;
                 }
             }
-            if(!valid) return false;
+            if (!valid)
+                return false;
             int count = 0;
             int size = (int)te.getSize();
             int pos = 0;
-            Logger.LogVerbose("TAR read from " + getOffset() + " for " + size + " bytes");
-            while((count = s.read(ret, 0, Math.min(bsize, size - pos))) > 0)
+            while ((count = s.read(ret, 0, Math.min(bsize, size - pos))) > 0)
             {
                 os.write(ret, 0, Math.min(count, size - pos));
                 pos += count;
-                if(pos >= size) break;
+                if (pos >= size)
+                    break;
             }
+            os.flush();
             os.close();
+            s.close();
             return true;
         }
 

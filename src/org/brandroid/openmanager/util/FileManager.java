@@ -489,11 +489,11 @@ public class FileManager {
                 return ret;
             if (ret instanceof OpenFile && ret.isArchive() && Preferences.Pref_Zip_Internal)
                 ret = new OpenZip((OpenFile)ret);
-            if (ret instanceof OpenFile
-                    && (ret.getMimeType().contains("tar")
-                            || ret.getExtension().equalsIgnoreCase("tar")
-                            || ret.getExtension().equalsIgnoreCase("win")))
-                ret = new OpenTar((OpenFile)ret);
+//            if (ret instanceof OpenFile
+//                    && (ret.getMimeType().contains("tar")
+//                            || ret.getExtension().equalsIgnoreCase("tar")
+//                            || ret.getExtension().equalsIgnoreCase("win")))
+//                ret = new OpenTar((OpenFile)ret);
             if (ret.requiresThread() && bGetNetworkedFiles) {
                 if (ret.listFiles() != null)
                     setOpenCache(path, ret);
