@@ -759,9 +759,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                                 case R.string.s_browse:
                                     getExplorer().onChangeLocation(new OpenTar((OpenFile)tar));
                                     break;
-                                    untarAll(tar, tar.getParent().getChild(
-                                            tar.getName().replace("." + tar.getExtension(), "")));
                                 case R.string.s_extract:
+                                    untarAll(tar, tar.getParent());
                                     break;
                             }
                         }
