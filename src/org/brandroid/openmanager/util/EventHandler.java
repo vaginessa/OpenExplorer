@@ -48,8 +48,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -63,17 +61,13 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.data.OpenPath.OpenPathByteIO;
 import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
-import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
-import org.kamranzafar.jtar.TarEntry;
-import org.kamranzafar.jtar.TarInputStream;
 import org.kamranzafar.jtar.TarUtils;
 
 @SuppressWarnings({
@@ -93,16 +87,13 @@ public class EventHandler {
     public static final EventType TOUCH_TYPE = EventType.TOUCH;
     public static final EventType ERROR_TYPE = EventType.ERROR;
     public static final EventType UNTAR_TYPE = EventType.UNTAR;
-    public static final EventType TAR_TYPE = EventType.TAR;
-    public static final EventType GUNZIP_TYPE = EventType.UNTGZ;
-    public static final EventType GZIP_TYPE = EventType.UNTGZ;
     public static final int BACKGROUND_NOTIFICATION_ID = 123;
     private static final boolean ENABLE_MULTITHREADS = false; // !OpenExplorer.BEFORE_HONEYCOMB;
 
     static final int TAR_BUFFER = 2048;
 
     public enum EventType {
-        SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, UNZIP, UNZIPTO, ZIP, ERROR, UNTAR, UNTGZ, TAR, TGZ, GUNZIP, GZIP
+        SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, UNZIP, UNZIPTO, ZIP, ERROR, UNTAR
     }
 
     public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.isBlackBerry()
@@ -602,7 +593,8 @@ public class EventHandler {
                 .create().show();
     }
 
-    public void untarFile(final OpenPath file, final OpenPath dest, final Context mContext, final String... includes)
+    public void untarFile(final OpenPath file, final OpenPath dest, final Context mContext,
+            final String... includes)
     {
         execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
     }
@@ -809,7 +801,6 @@ public class EventHandler {
                     showDialog = false;
                     showNotification = true;
                     break;
-                case UNTGZ:
                 case UNTAR:
                     showDialog = true;
                     showNotification = false;
@@ -998,6 +989,7 @@ public class EventHandler {
                         }
                     }
                     break;
+                    
                 case UNZIPTO:
                 case UNZIP:
                     extractZipFiles(params[0], mIntoPath);
@@ -1014,23 +1006,6 @@ public class EventHandler {
                         ret++;
                     break;
 
-                case UNTGZ:
-                    try {
-                        TarUtils.untarTGzFile(mIntoPath.getPath(), mCurrentPath.getPath());
-                        ret++;
-                    } catch (IOException e) {
-                        Logger.LogError("Unable to untar file: " + mCurrentPath, e);
-                    }
-                    break;
-
-                case TAR:
-                    try {
-                        TarUtils.tar(new java.io.File(mIntoPath.getPath()), mCurrentPath.getPath());
-                        ret++;
-                    } catch (IOException e) {
-                        Logger.LogError("Unable to untar file: " + mCurrentPath, e);
-                    }
-                    break;
             }
 
             return ret;
@@ -1047,7 +1022,7 @@ public class EventHandler {
                 return false;
             }
         }
-        
+
         /*
          * More efficient Channel based copying
          */
@@ -1472,11 +1447,6 @@ public class EventHandler {
 
                     break;
 
-                case TAR:
-                case TGZ:
-                    break;
-
-                case UNTGZ:
                 case UNTAR:
                     if (result == null || result == 0)
                         Toast.makeText(

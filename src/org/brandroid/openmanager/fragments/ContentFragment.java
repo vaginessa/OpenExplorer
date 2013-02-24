@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -609,6 +610,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         notifyDataSetChanged();
                         ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
                     }
+
+                    @Override
+                    public void showError(String message) {
+                        try {
+                            Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                        }
+                    }
                 });
                 return;
             } catch (IOException e) {
@@ -717,7 +726,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     getResources().getString(R.string.s_title_file_exists),
                     new OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
+                            if(dialog != null)
+                                dialog.dismiss();
                             getHandler().untarFile(tar, dest, getContext(), includes);
                         }
                     });
@@ -1236,7 +1246,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 OpenClipboard cb = getClipboard();
                 if (cb != null) {
                     cb.setCurrentPath(into);
-                    checkClipboardForTar();
+                    checkClipboardForTar(cb, into);
                     if (cb.size() > 0) {
                         if (cb.DeleteSource)
                             getHandler().cutFile(cb, into, getActivity());
@@ -1358,9 +1368,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         return false;
     }
 
-    private boolean checkClipboardForTar() {
-        OpenClipboard cb = getClipboard();
-        Hashtable<OpenTar, Vector<OpenTarEntry>> tarKids = new Hashtable<OpenTar, Vector<OpenTar.OpenTarEntry>>();
+    private boolean checkClipboardForTar(final OpenClipboard cb, final OpenPath into) {
+        final Hashtable<OpenTar, Vector<OpenTarEntry>> tarKids = new Hashtable<OpenTar, Vector<OpenTar.OpenTarEntry>>();
         for (OpenPath p : cb)
             if (p instanceof OpenTarEntry)
             {
@@ -1374,18 +1383,24 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             }
         if (tarKids.size() == 0)
             return false;
-        for (OpenTar tar : tarKids.keySet())
-        {
-            Vector<OpenTarEntry> kids = tarKids.get(tar);
-            String[] includes = new String[kids.size()];
-            for (int i = 0; i < kids.size(); i++)
-            {
-                OpenTarEntry kid = kids.get(i);
+        for(Vector<OpenTarEntry> kids : tarKids.values())
+            for(OpenTarEntry kid : kids)
                 cb.remove(kid);
-                includes[i] = kid.getRelativePath();
+        new Thread(new Runnable() {
+            public void run() {
+                for (OpenTar tar : tarKids.keySet())
+                {
+                    Vector<OpenTarEntry> kids = tarKids.get(tar);
+                    String[] includes = new String[kids.size()];
+                    for (int i = 0; i < kids.size(); i++)
+                    {
+                        OpenTarEntry kid = kids.get(i);
+                        includes[i] = kid.getRelativePath();
+                    }
+                    untarAll(tar, into, includes);
+                }
             }
-            untarAll(tar, getPath(), includes);
-        }
+        }).start();
         return true;
     }
 

@@ -12,25 +12,18 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
+import java.util.zip.GZIPInputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
+import org.itadaki.bzip2.BZip2InputStream;
 import org.kamranzafar.jtar.*;
 
-import com.jcraft.jzlib.GZIPInputStream;
-import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.RootTools.Result;
-import com.stericson.RootTools.RootToolsException;
-import com.stericson.RootTools.Shell;
-
 import android.net.Uri;
-import android.os.Process;
 
 public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener {
     private final OpenFile mFile;
@@ -167,9 +160,9 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
                 par += "/";
             if (te.getName().indexOf("/") > -1)
                 par += te.getName().substring(0, te.getName().lastIndexOf("/"));
-            Logger.LogVerbose("TAR: " + par);
             OpenPath vp = findVirtualPath(par, updater);
             OpenTarEntry entry = new OpenTarEntry(vp, te, (int)(pos - te.getSize()));
+            if(updater == null) return null;
             mEntries.add(entry);
             addFamilyEntry(par, entry);
         }
@@ -244,6 +237,8 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
                         callback.addContentPath(p);
                     callback.doneUpdating();
                 } catch (Exception e2) {
+                    callback.showError("Unable to browse tar - " + e2.getMessage());
+                    callback.doneUpdating();
                     Logger.LogError("Error listing TAR #2.", e2);
                 }
             }
@@ -347,9 +342,12 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
 
     @Override
     public TarInputStream getInputStream() throws IOException {
-        if (getMimeType().contains("x-"))
+        if (getExtension().toLowerCase(Locale.US).endsWith("gz"))
             return new TarInputStream(new BufferedInputStream(new GZIPInputStream(
                     new FileInputStream(mFile.getFile()))));
+        else if (getExtension().toLowerCase(Locale.US).endsWith("bz2"))
+            return new TarInputStream(new BufferedInputStream(new BZip2InputStream(
+                    new FileInputStream(mFile.getFile()), false)));
         else
             return new TarInputStream(new BufferedInputStream(new FileInputStream(mFile.getFile())));
     }
