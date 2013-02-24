@@ -424,7 +424,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         checkRoot();
 
         int theme = getThemeId();
-        boolean themeDark = R.style.AppTheme_Dark == theme;
+        boolean themeDark = R.style.AppTheme_Dark == theme ||
+                R.style.AppTheme_LightAndDark == theme;
 
         getApplicationContext().setTheme(theme);
         setTheme(theme);
@@ -672,11 +673,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         else if (isBlackBerry())
             launchUri(this,
-                    Uri.parse("http://appworld.blackberry.com/webstore/content/reviews/85146/"));
+                    Uri.parse("http://appworld.blackberry.com/webstore/content/85146/"));
         else
             launchUri(
                     this,
-                    Uri.parse("https://play.google.com/details?id=org.brandroid.openmanager&reviewId=0"));
+                    Uri.parse("https://play.google.com/store/apps/details?id=org.brandroid.openmanager&reviewId=0"));
     }
 
     private void checkWelcome() {
@@ -3128,7 +3129,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     }
                     if (mLastPath != null) {
                         Logger.LogDebug("last path set to " + mLastPath.getPath());
-                        changePath(mLastPath, false);
+                        changePath(mLastPath, false, true);
                         // updateTitle(mLastPath.getPath());
                     } else
                         showExitDialog();

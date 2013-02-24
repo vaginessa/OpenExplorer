@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 	OpenExplorer, an open source file manager for the Android system
-    Copyright (C) 2011, 2012  Brandon Bowles <brandroid64@gmail.com>
+    Copyright (C) 2011-2013 Brandon Bowles <brandroid64@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,14 +14,13 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
--->
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.-->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="211"
-    android:versionName="2.11n" >
+    android:versionCode="215"
+    android:versionName="0.215" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -91,6 +90,13 @@
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/tar" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.ALTERNATIVE" />
 
                 <data android:mimeType="text/*" />
@@ -106,7 +112,9 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="application/vnd.org.brandroid.beam" />
             </intent-filter>
         </activity>
