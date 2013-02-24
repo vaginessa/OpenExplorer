@@ -55,8 +55,6 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
     public abstract String getAbsolutePath();
 
-    public abstract void setPath(String path);
-
     public abstract long length();
 
     public abstract OpenPath getParent();
@@ -278,22 +276,6 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see #mkdirs
      */
     public abstract Boolean mkdir();
-
-    /**
-     * Create (if necessary) and return InputStream for reading from.
-     * 
-     * @return InputStream that can be read from.
-     * @throws IOException
-     */
-    public abstract InputStream getInputStream() throws IOException;
-
-    /**
-     * Create (if necessary) and return OutputStream to write to.
-     * 
-     * @return OutputStream that can be written to.
-     * @throws IOException
-     */
-    public abstract OutputStream getOutputStream() throws IOException;
 
     /**
      * Returns a boolean indicating whether this file can be found on the
@@ -724,6 +706,17 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          */
         public void update(String status);
     }
+    
+    public interface OpenDynamicPath
+    {
+        public void setPath(String path);
+    }
+    
+    public interface OpenStream
+    {
+        public InputStream getInputStream() throws IOException;
+        public OutputStream getOutputStream() throws IOException;
+    }
 
     /**
      * Interface used to update the UI thread when child objects are found. This
@@ -772,9 +765,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * @return {@code true} if operation was successful, {@code false} if
          *         not.
          */
-        public boolean copyFrom(OpenPath file);
+        public boolean copyFrom(OpenStream file);
         
-        public boolean copyTo(OpenPath dest) throws IOException;
+        public boolean copyTo(OpenStream dest) throws IOException;
     }
 
     /**

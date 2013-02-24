@@ -59,6 +59,7 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
@@ -992,7 +993,9 @@ public class EventHandler {
                     
                 case UNZIPTO:
                 case UNZIP:
-                    extractZipFiles(params[0], mIntoPath);
+                    if(params[0] instanceof OpenStream)
+                        if(extractZipFiles((OpenStream)params[0], mIntoPath))
+                            ret++;
                     break;
 
                 case ZIP:
@@ -1139,54 +1142,58 @@ public class EventHandler {
                     Logger.LogWarning("Couldn't create initial destination file.");
                     return false;
                 }
-                if (old instanceof OpenPathCopyable)
+                if (old instanceof OpenPathCopyable && newFile instanceof OpenStream)
                 {
                     try {
-                        if (((OpenPathCopyable)old).copyTo(newFile))
+                        if (((OpenPathCopyable)old).copyTo((OpenStream)newFile))
                             return true;
                     } catch (IOException e) {
                     }
                 }
 
-                int size = (int)old.length();
-                int pos = 0;
-
-                BufferedInputStream i_stream = null;
-                BufferedOutputStream o_stream = null;
                 boolean success = false;
-                try {
-                    Logger.LogDebug("Writing " + newFile.getPath());
-                    i_stream = new BufferedInputStream(old.getInputStream());
-                    o_stream = new BufferedOutputStream(newFile.getOutputStream());
+                if(old instanceof OpenStream && newFile instanceof OpenStream)
+                {
 
-                    while ((read = i_stream.read(data, 0,
-                            Math.min(size - pos, FileManager.BUFFER))) != -1) {
-                        o_stream.write(data, 0, read);
-                        pos += read;
-                        if (pos >= size)
-                            break;
-                        publishMyProgress(pos, size);
-                    }
-
-                    o_stream.flush();
-                    i_stream.close();
-                    o_stream.close();
-
-                    success = true;
-
-                } catch (NullPointerException e) {
-                    Logger.LogError("Null pointer trying to copy file.", e);
-                } catch (FileNotFoundException e) {
-                    Logger.LogError("Couldn't find file to copy.", e);
-                } catch (IOException e) {
-                    Logger.LogError("IOException copying file.", e);
-                } catch (Exception e) {
-                    Logger.LogError("Unknown error copying file.", e);
-                } finally {
-                    if (o_stream != null)
-                        o_stream.close();
-                    if (i_stream != null)
+                    int size = (int)old.length();
+                    int pos = 0;
+    
+                    BufferedInputStream i_stream = null;
+                    BufferedOutputStream o_stream = null;
+                    try {
+                        Logger.LogDebug("Writing " + newFile.getPath());
+                        i_stream = new BufferedInputStream(((OpenStream)old).getInputStream());
+                        o_stream = new BufferedOutputStream(((OpenStream)newFile).getOutputStream());
+    
+                        while ((read = i_stream.read(data, 0,
+                                Math.min(size - pos, FileManager.BUFFER))) != -1) {
+                            o_stream.write(data, 0, read);
+                            pos += read;
+                            if (pos >= size)
+                                break;
+                            publishMyProgress(pos, size);
+                        }
+    
+                        o_stream.flush();
                         i_stream.close();
+                        o_stream.close();
+    
+                        success = true;
+    
+                    } catch (NullPointerException e) {
+                        Logger.LogError("Null pointer trying to copy file.", e);
+                    } catch (FileNotFoundException e) {
+                        Logger.LogError("Couldn't find file to copy.", e);
+                    } catch (IOException e) {
+                        Logger.LogError("IOException copying file.", e);
+                    } catch (Exception e) {
+                        Logger.LogError("Unknown error copying file.", e);
+                    } finally {
+                        if (o_stream != null)
+                            o_stream.close();
+                        if (i_stream != null)
+                            i_stream.close();
+                    }
                 }
                 return success;
 
@@ -1199,13 +1206,14 @@ public class EventHandler {
             return false;
         }
 
-        public void extractZipFiles(OpenPath zip, OpenPath directory) {
+        public boolean extractZipFiles(OpenStream zip, OpenPath directory) {
             byte[] data = new byte[FileManager.BUFFER];
             ZipEntry entry;
-            ZipInputStream zipstream;
+            ZipInputStream zipstream = null;
+            FileOutputStream out = null;
 
             if (!directory.mkdir())
-                return;
+                return false;
 
             try {
                 zipstream = new ZipInputStream(zip.getInputStream());
@@ -1214,9 +1222,10 @@ public class EventHandler {
                     OpenPath newFile = directory.getChild(entry.getName());
                     if (!newFile.mkdir())
                         continue;
+                    if(!(newFile instanceof OpenStream)) continue;
 
                     int read = 0;
-                    FileOutputStream out = (FileOutputStream)newFile.getOutputStream();
+                    out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
                     while ((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
                         out.write(data, 0, read);
 
@@ -1229,7 +1238,19 @@ public class EventHandler {
 
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                closeStream(out);
+                closeStream(zipstream);
             }
+            return false;
+        }
+        
+        private void closeStream(java.io.Closeable s)
+        {
+            try {
+                if(s != null)
+                    s.close();
+            } catch(Exception e) { }
         }
 
         public void publish(int current, int size, int total) {

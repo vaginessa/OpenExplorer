@@ -202,11 +202,6 @@ public class OpenSFTP extends OpenNetworkPath {
     }
 
     @Override
-    public void setPath(String path) {
-        // throw new T("Can't setPath on Networked Paths");
-    }
-
-    @Override
     public long length() {
         if (mSize != null)
             return mSize;

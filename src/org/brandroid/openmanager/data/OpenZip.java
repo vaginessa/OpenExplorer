@@ -16,12 +16,13 @@ import java.util.zip.ZipOutputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
 import android.net.Uri;
 
-public class OpenZip extends OpenPath {
+public class OpenZip extends OpenPath implements OpenStream {
     private final OpenFile mFile;
     private ZipFile mZip = null;
     private OpenPath[] mChildren = null;
@@ -67,11 +68,6 @@ public class OpenZip extends OpenPath {
     @Override
     public String getAbsolutePath() {
         return mFile.getAbsolutePath();
-    }
-
-    @Override
-    public void setPath(String path) {
-        // mZip = new OpenFile(path);
     }
 
     @Override
@@ -335,12 +331,6 @@ public class OpenZip extends OpenPath {
         }
 
         @Override
-        public void setPath(String path) {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
         public long length() {
             try {
                 return list().length;
@@ -437,18 +427,6 @@ public class OpenZip extends OpenPath {
             return false;
         }
 
-        @Override
-        public InputStream getInputStream() throws IOException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public OutputStream getOutputStream() throws IOException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
     }
 
     public class OpenZipEntry extends OpenPath {
@@ -484,11 +462,6 @@ public class OpenZip extends OpenPath {
         @Override
         public String getAbsolutePath() {
             return getPath();
-        }
-
-        @Override
-        public void setPath(String path) {
-
         }
 
         @Override
@@ -600,16 +573,5 @@ public class OpenZip extends OpenPath {
         public Boolean mkdir() {
             return false;
         }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return mZip.getInputStream(ze);
-        }
-
-        @Override
-        public OutputStream getOutputStream() throws IOException {
-            return null;
-        }
-
     }
 }

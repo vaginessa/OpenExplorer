@@ -22,6 +22,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.widget.Toast;
 
 public class IntentManager {
@@ -33,6 +34,8 @@ public class IntentManager {
             String... categories) {
         if (app == null)
             return null;
+        if(file == null)
+            return null;
         String name = file.getName();
 
         if (file.isDirectory() && !file.isArchive())
@@ -43,7 +46,8 @@ public class IntentManager {
         for (String category : categories)
             ret.addCategory(category);
         ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-        ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        if(Build.VERSION.SDK_INT > 10)
+            ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         ret.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         ret.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         // ret.putExtra(name, value)
