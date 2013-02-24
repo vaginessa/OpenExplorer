@@ -756,18 +756,18 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         public void onClick(DialogInterface dialog, int which) {
                             switch (which)
                             {
-                                case R.string.s_archive_browse:
+                                case R.string.s_browse:
                                     getExplorer().onChangeLocation(new OpenTar((OpenFile)tar));
                                     break;
-                                case R.string.s_archive_extract:
                                     untarAll(tar, tar.getParent().getChild(
                                             tar.getName().replace("." + tar.getExtension(), "")));
+                                case R.string.s_extract:
                                     break;
                             }
                         }
                     },
-                    R.string.s_archive_browse,
-                    R.string.s_archive_extract,
+                    R.string.s_browse,
+                    R.string.s_extract,
                     R.string.s_cancel
                     );
             return;
