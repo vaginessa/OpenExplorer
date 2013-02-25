@@ -1089,7 +1089,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (path == null)
                 return false;
             if (path.isArchive()) {
-                onChangeLocation(path);
+                changePath(path);
                 return true;
             }
             if (editFile(path))
@@ -3357,7 +3357,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
     }
 
-    public void onChangeLocation(OpenPath path) {
+    public void changePath(OpenPath path) {
         changePath(path, true, false);
     }
 

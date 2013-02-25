@@ -563,7 +563,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             if (path instanceof OpenCommand)
                 handleCommand(((OpenCommand)path).getCommand());
             else
-                ((OpenExplorer)mApp).onChangeLocation(path);
+                ((OpenExplorer)mApp).changePath(path);
             return true;
         }
         return false;
