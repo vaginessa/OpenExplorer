@@ -94,7 +94,8 @@ public class IntentManager {
                 cls = cls.substring(cls.indexOf("$") + 1);
                 intent.setClassName(pck, cls);
                 try {
-                    if (pck.equals("org.brandroid.openmanager"))
+                    if (pck.equals("org.brandroid.openmanager")
+                            && mime.indexOf("text") > -1)
                         app.editFile(file);
                     else
                         app.startActivity(intent);
