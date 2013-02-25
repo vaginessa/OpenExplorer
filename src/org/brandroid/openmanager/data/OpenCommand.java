@@ -48,10 +48,6 @@ public class OpenCommand extends OpenPath {
     }
 
     @Override
-    public void setPath(String path) {
-    }
-
-    @Override
     public long length() {
         return 0;
     }
@@ -134,16 +130,6 @@ public class OpenCommand extends OpenPath {
     @Override
     public Boolean mkdir() {
         return false;
-    }
-
-    @Override
-    public InputStream getInputStream() throws IOException {
-        return null;
-    }
-
-    @Override
-    public OutputStream getOutputStream() throws IOException {
-        return null;
     }
 
     public void setDrawableId(int id) {

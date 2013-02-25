@@ -255,8 +255,8 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 final Preference pSize = pm.findPreference("text_size") != null ? pm
                         .findPreference("text_size") : findPreference("text_size");
                 if (pSize != null) {
-                    float sz = new Preferences(getApplication()).getSetting("global", "text_size",
-                            10f);
+                    float sz = new Preferences(getApplication())
+                            .getSetting("global", "text_size", 10f);
                     pSize.setSummary(sz + "");
                     pSize.setOnPreferenceClickListener(new OnPreferenceClickListener() {
                         @Override
@@ -443,7 +443,8 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                     p.setDefaultValue(txt);
                 }
             } else if (p instanceof ListPreference) {
-                ((ListPreference)p).setSummary(((ListPreference)p).getValue());
+                ListPreference lp = (ListPreference)p;
+                lp.setSummary(lp.getEntry());
             }
 
     }
@@ -674,7 +675,19 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         if (key.equals("pref_language"))
             preference.setSummary(getDisplayLanguage((String)newValue));
         else if (preference instanceof ListPreference && newValue instanceof String)
+        {
             preference.setSummary((String)newValue);
+            CharSequence[] opts = ((ListPreference)preference).getEntries();
+            CharSequence[] vals = ((ListPreference)preference).getEntryValues();
+            for(int i = 0; i < opts.length; i++)
+            {
+                if(vals[i].equals(newValue))
+                {
+                    preference.setSummary(opts[i]);
+                    break;
+                }
+            }
+        }
         else if (EditTextPreference.class.equals(preference.getClass())
                 && ((EditTextPreference)preference).getEditText() != null
                 && ((EditTextPreference)preference).getEditText().getTransformationMethod() != null)

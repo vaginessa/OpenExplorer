@@ -448,13 +448,6 @@ public class OpenFTP extends OpenNetworkPath {
      */
 
     @Override
-    public void setPath(String path) {
-        mManager.setBasePath(path);
-        mFile = new FTPFile();
-        mFile.setName(path);
-    }
-
-    @Override
     public OpenFTP[] getChildren() {
         return mChildren.toArray(new OpenFTP[mChildren.size()]);
     }

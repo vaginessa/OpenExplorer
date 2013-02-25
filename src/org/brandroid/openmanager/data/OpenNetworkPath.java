@@ -4,26 +4,17 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
-import org.brandroid.openmanager.fragments.TextEditorFragment.FileLoadTask;
+import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
 import android.os.AsyncTask;
-import android.os.Environment;
-import android.widget.Toast;
-
 import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
-public abstract class OpenNetworkPath extends OpenPath implements OpenPath.NeedsTempFile {
+public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
     /**
 	 * 
 	 */
@@ -261,12 +252,10 @@ public abstract class OpenNetworkPath extends OpenPath implements OpenPath.Needs
         return deets;
     }
 
-    @Override
     public InputStream getInputStream() throws IOException {
         return tempDownload(null).getInputStream();
     }
 
-    @Override
     public OutputStream getOutputStream() throws IOException {
         return tempDownload(null).getOutputStream();
     }

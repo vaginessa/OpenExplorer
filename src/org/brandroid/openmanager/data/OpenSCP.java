@@ -71,10 +71,6 @@ public class OpenSCP extends OpenNetworkPath {
     }
 
     @Override
-    public void setPath(String path) {
-    }
-
-    @Override
     public long length() {
         return 0;
     }

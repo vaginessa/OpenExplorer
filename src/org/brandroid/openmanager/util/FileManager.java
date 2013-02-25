@@ -49,6 +49,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.data.OpenZip;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
@@ -88,87 +89,6 @@ public class FileManager {
      * this class uses a stack to handle the navigation of directories.
      */
     public FileManager() {
-    }
-
-    /**
-     * @param old the file to be copied
-     * @param newDir the directory to move the file to
-     * @return
-     */
-    /*
-     * public int copyToDirectory(String old, String newDir) { final File
-     * old_file = new File(old); final File temp_dir = new File(newDir); final
-     * byte[] data = new byte[BUFFER]; int read = 0; if(old_file.isFile() &&
-     * temp_dir.isDirectory() && temp_dir.canWrite()){ String file_name =
-     * old.substring(old.lastIndexOf("/"), old.length()); File cp_file = new
-     * File(newDir + file_name); if(cp_file.equals(old_file)) return 0; try {
-     * BufferedInputStream i_stream = new BufferedInputStream( new
-     * FileInputStream(old_file)); BufferedOutputStream o_stream = new
-     * BufferedOutputStream( new FileOutputStream(cp_file)); while((read =
-     * i_stream.read(data, 0, BUFFER)) != -1) o_stream.write(data, 0, read);
-     * o_stream.flush(); i_stream.close(); o_stream.close(); } catch
-     * (FileNotFoundException e) { Log.e("FileNotFoundException",
-     * e.getMessage()); return -1; } catch (IOException e) {
-     * Log.e("IOException", e.getMessage()); return -1; } }else
-     * if(old_file.isDirectory() && temp_dir.isDirectory() &&
-     * temp_dir.canWrite()) { String files[] = old_file.list(); String dir =
-     * newDir + old.substring(old.lastIndexOf("/"), old.length()); int len =
-     * files.length; if(!new File(dir).mkdir()) return -1; for(int i = 0; i <
-     * len; i++) copyToDirectory(old + "/" + files[i], dir); } else
-     * if(!temp_dir.canWrite()) return -1; return 0; }
-     */
-
-    /**
-     * @param zipName
-     * @param toDir
-     * @param fromDir
-     */
-    public void extractZipFilesFromDir(OpenPath zip, OpenPath directory) {
-        if (!directory.mkdir() && directory.isDirectory())
-            return;
-        extractZipFiles(zip, directory);
-    }
-
-    /**
-     * @param zip_file
-     * @param directory
-     */
-    public void extractZipFiles(OpenPath zip, OpenPath directory) {
-        byte[] data = new byte[BUFFER];
-        ZipEntry entry;
-        ZipInputStream zipstream;
-
-        directory.mkdir();
-
-        try {
-            zipstream = new ZipInputStream(zip.getInputStream());
-
-            while ((entry = zipstream.getNextEntry()) != null) {
-                OpenPath newFile = directory.getChild(entry.getName());
-                if (!newFile.mkdir())
-                    continue;
-
-                int read = 0;
-                FileOutputStream out = null;
-                try {
-                    out = (FileOutputStream)newFile.getOutputStream();
-                    while ((read = zipstream.read(data, 0, BUFFER)) != -1)
-                        out.write(data, 0, read);
-                } catch (Exception e) {
-                    Logger.LogError("Error unzipping " + zip.getAbsolutePath(), e);
-                } finally {
-                    zipstream.closeEntry();
-                    if (out != null)
-                        out.close();
-                }
-            }
-
-        } catch (FileNotFoundException e) {
-            Logger.LogError("Couldn't find file.", e);
-
-        } catch (IOException e) {
-            Logger.LogError("Couldn't extract zip.", e);
-        }
     }
 
     /**
@@ -221,13 +141,14 @@ public class FileManager {
         byte[] data = new byte[BUFFER];
         int read;
 
-        if (file.isFile()) {
+        if (file.isFile() && file instanceof OpenStream) {
             String name = file.getPath();
             if (relativePath != null && name.startsWith(relativePath))
                 name = name.substring(relativePath.length());
             ZipEntry entry = new ZipEntry(name);
             zout.putNextEntry(entry);
-            BufferedInputStream instream = new BufferedInputStream(file.getInputStream());
+            BufferedInputStream instream = new BufferedInputStream(
+                    ((OpenStream)file).getInputStream());
             // Logger.LogVerbose("zip_folder file name = " + entry.getName());
             int size = (int)file.length();
             int pos = 0;
@@ -489,11 +410,11 @@ public class FileManager {
                 return ret;
             if (ret instanceof OpenFile && ret.isArchive() && Preferences.Pref_Zip_Internal)
                 ret = new OpenZip((OpenFile)ret);
-//            if (ret instanceof OpenFile
-//                    && (ret.getMimeType().contains("tar")
-//                            || ret.getExtension().equalsIgnoreCase("tar")
-//                            || ret.getExtension().equalsIgnoreCase("win")))
-//                ret = new OpenTar((OpenFile)ret);
+            //            if (ret instanceof OpenFile
+            //                    && (ret.getMimeType().contains("tar")
+            //                            || ret.getExtension().equalsIgnoreCase("tar")
+            //                            || ret.getExtension().equalsIgnoreCase("win")))
+            //                ret = new OpenTar((OpenFile)ret);
             if (ret.requiresThread() && bGetNetworkedFiles) {
                 if (ret.listFiles() != null)
                     setOpenCache(path, ret);

@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.zip.GZIPInputStream;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -54,8 +55,6 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public abstract String getPath();
 
     public abstract String getAbsolutePath();
-
-    public abstract void setPath(String path);
 
     public abstract long length();
 
@@ -278,22 +277,6 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see #mkdirs
      */
     public abstract Boolean mkdir();
-
-    /**
-     * Create (if necessary) and return InputStream for reading from.
-     * 
-     * @return InputStream that can be read from.
-     * @throws IOException
-     */
-    public abstract InputStream getInputStream() throws IOException;
-
-    /**
-     * Create (if necessary) and return OutputStream to write to.
-     * 
-     * @return OutputStream that can be written to.
-     * @throws IOException
-     */
-    public abstract OutputStream getOutputStream() throws IOException;
 
     /**
      * Returns a boolean indicating whether this file can be found on the
@@ -724,6 +707,17 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          */
         public void update(String status);
     }
+    
+    public interface OpenDynamicPath
+    {
+        public void setPath(String path);
+    }
+    
+    public interface OpenStream
+    {
+        public InputStream getInputStream() throws IOException;
+        public OutputStream getOutputStream() throws IOException;
+    }
 
     /**
      * Interface used to update the UI thread when child objects are found. This
@@ -741,6 +735,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * Callback used to designate when updates have completed
          */
         public void doneUpdating();
+        
+        public void showError(String message);
     }
 
     /**
@@ -770,9 +766,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * @return {@code true} if operation was successful, {@code false} if
          *         not.
          */
-        public boolean copyFrom(OpenPath file);
+        public boolean copyFrom(OpenStream file);
         
-        public boolean copyTo(OpenPath dest) throws IOException;
+        public boolean copyTo(OpenStream dest) throws IOException;
     }
 
     /**
@@ -1076,6 +1072,15 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      */
     public boolean canHandleInternally() {
         return false;
+    }
+
+    public static void copyStreams(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[2048];
+        int count = 0;
+        while((count = in.read(buffer)) != -1)
+        {
+            out.write(buffer, 0, count);
+        }
     }
 
 }
