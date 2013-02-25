@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.zip.GZIPInputStream;
 
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -1071,6 +1072,15 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      */
     public boolean canHandleInternally() {
         return false;
+    }
+
+    public static void copyStreams(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[2048];
+        int count = 0;
+        while((count = in.read(buffer)) != -1)
+        {
+            out.write(buffer, 0, count);
+        }
     }
 
 }
