@@ -43,7 +43,9 @@ import android.net.Uri;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.Executor;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
@@ -51,6 +53,8 @@ import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.BluetoothActivity;
@@ -69,6 +73,7 @@ import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
+import org.itadaki.bzip2.BZip2InputStream;
 import org.kamranzafar.jtar.TarUtils;
 
 @SuppressWarnings({
@@ -600,6 +605,11 @@ public class EventHandler {
         execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
     }
 
+    public void extractFile(final OpenPath file, final OpenPath dest, final Context mContext)
+    {
+        execute(new BackgroundWork(UNZIP_TYPE, mContext, dest), file);
+    }
+
     /*
      * public void unZipFileTo(OpenPath zipFile, OpenPath toDir, Context
      * mContext) { new BackgroundWork(UNZIPTO_TYPE, mContext,
@@ -676,7 +686,7 @@ public class EventHandler {
                     return getResourceString(mContext, R.string.s_title_moving).toString();
                 case UNZIP:
                 case UNZIPTO:
-                    return getResourceString(mContext, R.string.s_title_unzipping).toString();
+                    return getResourceString(mContext, R.string.s_extracting).toString();
                 case ZIP:
                     return getResourceString(mContext, R.string.s_title_zipping).toString();
                 case MKDIR:
@@ -990,12 +1000,14 @@ public class EventHandler {
                         }
                     }
                     break;
-                    
+
                 case UNZIPTO:
                 case UNZIP:
-                    if(params[0] instanceof OpenStream)
-                        if(extractZipFiles((OpenStream)params[0], mIntoPath))
+                    if (params[0] instanceof OpenStream)
+                    {
+                        if (extractFiles(params[0], mIntoPath))
                             ret++;
+                    }
                     break;
 
                 case ZIP:
@@ -1012,6 +1024,33 @@ public class EventHandler {
             }
 
             return ret;
+        }
+
+        private boolean extractFiles(OpenPath file, OpenPath into) {
+            try {
+                extractZipFiles((OpenStream)file, into);
+                return true;
+            } catch(Exception e) {
+            }
+            try {
+                InputStream input = new BufferedInputStream(new GZIPInputStream(((OpenStream)file).getInputStream()));
+                if(into.isDirectory())
+                    into = into.getChild(file.getName().replace("." + file.getExtension(), ""));
+                OpenPath.copyStreams(input, ((OpenStream)into).getOutputStream());
+                input.close();
+                return true;
+            } catch(Exception e) {
+            }
+            try {
+                InputStream input = new BufferedInputStream(new BZip2InputStream(((OpenStream)file).getInputStream(), false));
+                if(into.isDirectory())
+                    into = into.getChild(file.getName().replace("." + file.getExtension(), ""));
+                OpenPath.copyStreams(input, ((OpenStream)into).getOutputStream());
+                input.close();
+                return true;
+            } catch(Exception e) {   
+            }
+            return false;
         }
 
         private Boolean untarFile(OpenPath source, OpenPath into, String... includes) {
@@ -1152,19 +1191,19 @@ public class EventHandler {
                 }
 
                 boolean success = false;
-                if(old instanceof OpenStream && newFile instanceof OpenStream)
+                if (old instanceof OpenStream && newFile instanceof OpenStream)
                 {
 
                     int size = (int)old.length();
                     int pos = 0;
-    
+
                     BufferedInputStream i_stream = null;
                     BufferedOutputStream o_stream = null;
                     try {
                         Logger.LogDebug("Writing " + newFile.getPath());
                         i_stream = new BufferedInputStream(((OpenStream)old).getInputStream());
                         o_stream = new BufferedOutputStream(((OpenStream)newFile).getOutputStream());
-    
+
                         while ((read = i_stream.read(data, 0,
                                 Math.min(size - pos, FileManager.BUFFER))) != -1) {
                             o_stream.write(data, 0, read);
@@ -1173,13 +1212,13 @@ public class EventHandler {
                                 break;
                             publishMyProgress(pos, size);
                         }
-    
+
                         o_stream.flush();
                         i_stream.close();
                         o_stream.close();
-    
+
                         success = true;
-    
+
                     } catch (NullPointerException e) {
                         Logger.LogError("Null pointer trying to copy file.", e);
                     } catch (FileNotFoundException e) {
@@ -1222,7 +1261,8 @@ public class EventHandler {
                     OpenPath newFile = directory.getChild(entry.getName());
                     if (!newFile.mkdir())
                         continue;
-                    if(!(newFile instanceof OpenStream)) continue;
+                    if (!(newFile instanceof OpenStream))
+                        continue;
 
                     int read = 0;
                     out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
@@ -1244,13 +1284,14 @@ public class EventHandler {
             }
             return false;
         }
-        
+
         private void closeStream(java.io.Closeable s)
         {
             try {
-                if(s != null)
+                if (s != null)
                     s.close();
-            } catch(Exception e) { }
+            } catch (Exception e) {
+            }
         }
 
         public void publish(int current, int size, int total) {

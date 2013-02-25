@@ -140,5 +140,17 @@
         <item>20000000</item>
         <item>2000000000</item>
     </string-array>
+    <string-array name="archive_handler_options">
+        <item>@string/s_browse</item>
+        <item>@string/s_extract</item>
+        <item>@string/s_external</item>
+        <item>@string/s_ask_again</item>
+    </string-array>
+    <string-array name="archive_handler_values">
+        <item>browse</item>
+        <item>extract</item>
+        <item>external</item>
+        <item>ask</item>
+    </string-array>
 
 </resources>
