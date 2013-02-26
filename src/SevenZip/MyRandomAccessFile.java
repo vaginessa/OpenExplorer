@@ -4,7 +4,7 @@ public  class MyRandomAccessFile extends SevenZip.IInStream  {
     
     java.io.RandomAccessFile _file;
     
-    MyRandomAccessFile(String filename,String mode)  throws java.io.IOException {
+    public MyRandomAccessFile(String filename,String mode)  throws java.io.IOException {
         _file  = new java.io.RandomAccessFile(filename,mode);
     }
     

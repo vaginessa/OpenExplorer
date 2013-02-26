@@ -36,6 +36,7 @@ import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
+import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
@@ -737,18 +738,20 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     private void browseArchive(OpenPath archive)
     {
-        if (archive.getExtension().toLowerCase().equalsIgnoreCase("zip"))
+        if (archive.getExtension().equalsIgnoreCase("zip"))
             getExplorer().changePath(new OpenZip((OpenFile)archive));
+        else if(archive.getExtension().equalsIgnoreCase("7z"))
+            getExplorer().changePath(new OpenLZMA((OpenFile)archive));
         else
             getExplorer().changePath(new OpenTar((OpenFile)archive));
     }
 
     private void extractArchive(OpenPath archive)
     {
-        if (archive.getExtension().equalsIgnoreCase("zip"))
-            getHandler().extractFile(archive, archive.getParent(), getContext());
-        else
+        if (archive.getMimeType().contains("tar"))
             untarAll(archive, archive.getParent());
+        else
+            getHandler().extractFile(archive, archive.getParent(), getContext());
     }
 
     @Override
@@ -760,10 +763,14 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         {
             if (file instanceof OpenFile
                     && (file.getMimeType().contains("tar")
+                    || file.getExtension().equalsIgnoreCase("7z")
                     || file.getExtension().equalsIgnoreCase("zip")))
             {
                 final OpenPath archive = file;
-                final String prefType = file.getMimeType().replace("application/", "").replace("x-", "");
+                final String prefType = file.getMimeType()
+                        .replace("application/", "")
+                        .replace("x-", "")
+                        .replace("-compressed", "");
                 DialogHandler.showOptionsDialog(
                         getContext(),
                         getString(R.string.s_extract) + " " + prefType,

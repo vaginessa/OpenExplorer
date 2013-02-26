@@ -123,11 +123,12 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
 
     public long getUsableSpace() {
         try {
+            if(!canRead()) return 0;
             StatFs stat = new StatFs(getPath());
             if (stat.getAvailableBlocks() > 0)
                 return (long)stat.getAvailableBlocks() * (long)stat.getBlockSize();
         } catch (Exception e) {
-            Logger.LogWarning("Couldn't get Total Space.", e);
+            //Logger.LogWarning("Couldn't get Total Space.", e);
         }
         if (DFInfo.LoadDF().containsKey(getPath()))
             return (long)(DFInfo.LoadDF().get(getPath()).getSize() - DFInfo.LoadDF().get(getPath())

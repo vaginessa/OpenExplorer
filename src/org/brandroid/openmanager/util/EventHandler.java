@@ -18,6 +18,12 @@
 
 package org.brandroid.openmanager.util;
 
+import SevenZip.ArchiveExtractCallback;
+import SevenZip.HRESULT;
+import SevenZip.MyRandomAccessFile;
+import SevenZip.Archive.IArchiveExtractCallback;
+import SevenZip.Archive.IInArchive;
+import SevenZip.Archive.SevenZip.Handler;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
@@ -43,6 +49,7 @@ import android.net.Uri;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.zip.GZIPInputStream;
@@ -56,10 +63,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import net.contrapunctus.lzma.LzmaInputStream;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenLZMA;
+import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -1027,28 +1038,41 @@ public class EventHandler {
         }
 
         private boolean extractFiles(OpenPath file, OpenPath into) {
+            if (file.getMimeType().contains("7z"))
+                try {
+                    extractLZMAFiles((OpenStream)file, into);
+                    return true;
+                } catch (Exception e) {
+                }
             try {
                 extractZipFiles((OpenStream)file, into);
                 return true;
-            } catch(Exception e) {
+            } catch (Exception e) {
             }
             try {
-                InputStream input = new BufferedInputStream(new GZIPInputStream(((OpenStream)file).getInputStream()));
-                if(into.isDirectory())
+                InputStream input = new BufferedInputStream(new GZIPInputStream(
+                        ((OpenStream)file).getInputStream()));
+                if (into.isDirectory())
                     into = into.getChild(file.getName().replace("." + file.getExtension(), ""));
                 OpenPath.copyStreams(input, ((OpenStream)into).getOutputStream());
                 input.close();
                 return true;
-            } catch(Exception e) {
+            } catch (Exception e) {
             }
             try {
-                InputStream input = new BufferedInputStream(new BZip2InputStream(((OpenStream)file).getInputStream(), false));
-                if(into.isDirectory())
+                InputStream input = new BufferedInputStream(new BZip2InputStream(
+                        ((OpenStream)file).getInputStream(), false));
+                if (into.isDirectory())
                     into = into.getChild(file.getName().replace("." + file.getExtension(), ""));
                 OpenPath.copyStreams(input, ((OpenStream)into).getOutputStream());
                 input.close();
                 return true;
-            } catch(Exception e) {   
+            } catch (Exception e) {
+            }
+            try {
+                extractLZMAFiles((OpenStream)file, into);
+                return true;
+            } catch (Exception e) {
             }
             return false;
         }
@@ -1245,7 +1269,7 @@ public class EventHandler {
             return false;
         }
 
-        public boolean extractZipFiles(OpenStream zip, OpenPath directory) {
+        private boolean extractZipFiles(OpenStream zip, OpenPath directory) {
             byte[] data = new byte[FileManager.BUFFER];
             ZipEntry entry;
             ZipInputStream zipstream = null;
@@ -1272,6 +1296,7 @@ public class EventHandler {
                     zipstream.closeEntry();
                     out.close();
                 }
+                return true;
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -1281,6 +1306,44 @@ public class EventHandler {
             } finally {
                 closeStream(out);
                 closeStream(zipstream);
+            }
+            return false;
+        }
+
+        private boolean extractLZMAFiles(OpenStream s7, final OpenPath directory) {
+            Logger.LogVerbose("LZMA Trying to extract 7zip");
+            OpenLZMA f7 = null;
+
+            try {
+                OpenFile f = (OpenFile)s7;
+                f7 = new OpenLZMA(f);
+
+                ArchiveExtractCallback extractCallbackSpec = new ArchiveExtractCallback();
+                extractCallbackSpec.setBasePath(directory.getPath());
+                IArchiveExtractCallback extractCallback = extractCallbackSpec;
+                IInArchive arch = f7.getLZMA();
+
+                extractCallbackSpec.Init(arch);
+                int res = arch.Extract(null, -1, IInArchive.NExtract_NAskMode_kExtract,
+                        extractCallback);
+
+                if (res == HRESULT.S_OK) {
+                    if (extractCallbackSpec.NumErrors == 0)
+                    {
+                        Logger.LogDebug("LZMA complete?");
+                        return true;
+                    } else {
+                        Logger.LogError("LZMA errors: " + extractCallbackSpec.NumErrors);
+                    }
+                } else {
+                    Logger.LogError("Error while extracting LZMA!");
+                }
+
+                return false;
+
+            } catch (Exception e) {
+                Logger.LogError("Unable to extract LZMA.", e);
+            } finally {
             }
             return false;
         }
