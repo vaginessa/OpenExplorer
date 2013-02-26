@@ -629,6 +629,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void showDonateDialog(int resMessage, String sTitle, final String pref) {
         if (getPreferences().getBoolean("warn", pref, false))
             return;
+        int[] opts = new int[] {R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate};
+        if(Build.VERSION.SDK_INT > 13)
+            opts = new int[] {R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate};
         DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
                 new OnClickListener() {
                     @Override
@@ -652,7 +655,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         if (dialog != null)
                             dialog.dismiss();
                     }
-                }, R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate, R.string.s_cancel);
+                }, opts);
     }
 
     public void launchReviews() {
