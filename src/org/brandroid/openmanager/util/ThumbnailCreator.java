@@ -377,7 +377,7 @@ public class ThumbnailCreator {
         } else if (ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
             return (useLarge ? R.drawable.lg_powerpoint : R.drawable.sm_powerpoint);
 
-        } else if (mime.contains("zip") || mime.contains("tar")) {
+        } else if (mime.contains("zip") || mime.contains("tar") || mime.contains("rar")) {
             return (useLarge ? R.drawable.lg_zip : R.drawable.sm_zip);
 
         } else if (ext.equalsIgnoreCase("pdf")) {

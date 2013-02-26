@@ -42,6 +42,7 @@ import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
+import org.brandroid.openmanager.data.OpenRAR;
 import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenZip;
@@ -728,31 +729,38 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         public void onClick(DialogInterface dialog, int which) {
                             if (dialog != null)
                                 dialog.dismiss();
-                            getHandler().untarFile(tar, dest, getContext(), includes);
+                            getHandler().extractTar(tar, dest, getContext(), includes);
                         }
                     });
         else
-            getHandler().untarFile(tar, dest, getContext(), includes);
+            getHandler().extractTar(tar, dest, getContext(), includes);
     }
 
     private void browseArchive(OpenPath archive)
     {
-        if (archive.getExtension().toLowerCase().equalsIgnoreCase("zip"))
+        if (archive.getExtension().equalsIgnoreCase("zip"))
             getExplorer().changePath(new OpenZip((OpenFile)archive));
+        else if (archive.getMimeType().endsWith("rar"))
+            getExplorer().changePath(new OpenRAR((OpenFile)archive));
         else
             getExplorer().changePath(new OpenTar((OpenFile)archive));
     }
 
     private void extractArchive(OpenPath archive)
     {
-        if (archive.getExtension().equalsIgnoreCase("zip"))
-            getHandler().extractFile(archive, archive.getParent(), getContext());
-        else
+        if (archive.getMimeType().contains("tar"))
             untarAll(archive, archive.getParent());
+        else
+            getHandler().extractFile(
+                    archive,
+                    archive.getParent().getChild(
+                            archive.getName().replace("." + archive.getExtension(), "")),
+                    getContext());
     }
 
     @Override
-    public void onItemClick(final AdapterView<?> list, final View view, final int position, final long id) {
+    public void onItemClick(final AdapterView<?> list, final View view, final int position,
+            final long id) {
         OpenPath file = (OpenPath)list.getItemAtPosition(position);
         Logger.LogInfo("ContentFragment.onItemClick (" + file.getPath() + ")");
 
@@ -760,10 +768,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         {
             if (file instanceof OpenFile
                     && (file.getMimeType().contains("tar")
-                    || file.getExtension().equalsIgnoreCase("zip")))
+                            || file.getMimeType().endsWith("rar")
+                            || file.getExtension().equalsIgnoreCase("zip")))
             {
                 final OpenPath archive = file;
-                final String prefType = file.getMimeType().replace("application/", "").replace("x-", "");
+                final String prefType = file.getMimeType().replace("application/", "")
+                        .replace("x-", "");
                 DialogHandler.showOptionsDialog(
                         getContext(),
                         getString(R.string.s_extract) + " " + prefType,
@@ -784,10 +794,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                                         break;
                                     case 2:
                                     case R.string.s_external:
-                                        if(!IntentManager.startIntent(archive, getExplorer()))
+                                        if (!IntentManager.startIntent(archive, getExplorer()))
                                         {
                                             getExplorer().showToast(R.string.activity_list_empty);
-                                            getPreferences().setSetting("global", "pref_archives_" + prefType, "ask");
+                                            getPreferences().setSetting("global",
+                                                    "pref_archives_" + prefType, "ask");
                                             onItemClick(list, view, position, id);
                                         }
                                         break;
@@ -1708,47 +1719,45 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     @Override
     public void onWorkerThreadComplete(EventType type, String... results) {
         Logger.LogVerbose("Need to refresh!");
-        if (type == EventType.SEARCH) {
-            if (results == null || results.length < 1) {
-                Toast.makeText(getApplicationContext(), "Sorry, zero items found",
-                        Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-            for (String s : results)
-                files.add(new OpenFile(s));
-
-            Toast.makeText(getActivity(), "Unimplemented", Toast.LENGTH_LONG).show();
-
-        } else if (type == EventHandler.UNZIPTO_TYPE && results != null) {
-            String name = new OpenFile(results[0]).getName();
-
-            getClipboard().add(new OpenFile(results[0]));
-            getExplorer().updateTitle("Holding " + name);
-
-        } else {
-            Logger.LogDebug("Worker thread complete (" + type + ")?");
-            if (!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
-                try {
-                    if (mPath.requiresThread())
-                        mPath = FileManager.getOpenCache(mPath.getPath());
-                    if (mPath != null)
-                        updateData(mPath.list());
-                } catch (IOException e) {
-                    Logger.LogWarning("Couldn't update data after thread completion", e);
+        switch (type)
+        {
+            case SEARCH:
+                if (results == null || results.length < 1) {
+                    Toast.makeText(getApplicationContext(), "Sorry, zero items found",
+                            Toast.LENGTH_LONG).show();
+                    return;
                 }
-            else {
-                // if(mProgressBarLoading == null) mProgressBarLoading =
-                // getView().findViewById(R.id.content_progress);
-                EventHandler.executeNetwork(new NetworkIOTask(this), mPath);
-            }
 
-            // changePath(mPath, false);
-            notifyDataSetChanged();
+                ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+                for (String s : results)
+                    files.add(new OpenFile(s));
 
-            refreshData(new Bundle(), false);
-            // changePath(getManager().peekStack(), false);
+                Toast.makeText(getActivity(), "Unimplemented", Toast.LENGTH_LONG).show();
+                break;
+            default:
+                if (results.length == 1)
+                    Toast.makeText(getContext(), results[0], Toast.LENGTH_LONG).show();
+                Logger.LogDebug("Worker thread complete (" + type + ")?");
+                if (!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
+                    try {
+                        if (mPath.requiresThread())
+                            mPath = FileManager.getOpenCache(mPath.getPath());
+                        if (mPath != null)
+                            updateData(mPath.list());
+                    } catch (IOException e) {
+                        Logger.LogWarning("Couldn't update data after thread completion", e);
+                    }
+                else {
+                    // if(mProgressBarLoading == null) mProgressBarLoading =
+                    // getView().findViewById(R.id.content_progress);
+                    EventHandler.executeNetwork(new NetworkIOTask(this), mPath);
+                }
+
+                // changePath(mPath, false);
+                notifyDataSetChanged();
+
+                refreshData(new Bundle(), false);
+                // changePath(getManager().peekStack(), false);
         }
         setProgressVisibility(false);
     }
@@ -2007,9 +2016,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
      * @return the number of messages that are currently selected.
      */
     private int getSelectedCount() {
-        if(mContentAdapter != null && mContentAdapter.getSelectedSet() != null)
+        if (mContentAdapter != null && mContentAdapter.getSelectedSet() != null)
             return mContentAdapter.getSelectedSet().size();
-        else return 0;
+        else
+            return 0;
     }
 
     /**
