@@ -135,15 +135,22 @@ public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
         for (FileHeader ze : mRar.getFileHeaders()) {
             if (ze.isDirectory())
                 continue;
-            String name = ze.getFileNameString();
-            if (name.indexOf("/") > 0 && name.indexOf("/") < name.length() - 1)
-                name = name.substring(0, name.lastIndexOf("/") + 1);
+            String parent = "";
+            if (ze.isFileHeader() && ze.isUnicode())
+                parent = ze.getFileNameW();
             else
-                name = "";
-            OpenPath vp = findVirtualPath(name);
+                parent = ze.getFileNameString();
+            parent = parent.replace("\\", "/");
+            if(parent.endsWith("/"))
+                continue;
+            if (parent.indexOf("/") > 0 && parent.indexOf("/") < parent.length() - 1)
+                parent = parent.substring(0, parent.lastIndexOf("/") + 1);
+            else
+                parent = "";
+            OpenPath vp = findVirtualPath(parent);
             OpenRAREntry entry = new OpenRAREntry(vp, ze);
             mEntries.add(entry);
-            addFamilyEntry(name, entry);
+            addFamilyEntry(parent, entry);
         }
         Set<String> keys = mFamily.keySet();
         for (String path : keys.toArray(new String[keys.size()])) {
@@ -438,7 +445,6 @@ public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
     public class OpenRAREntry extends OpenPath implements OpenStream {
         private final OpenPath mParent;
         private final FileHeader ze;
-        private OpenPath[] mChildren = null;
 
         public OpenRAREntry(OpenPath parent, FileHeader entry) {
             mParent = parent;
@@ -454,15 +460,28 @@ public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
         @Override
         public String getName() {
             String name = ze.getFileNameString();
+            if (ze.isFileHeader() && ze.isUnicode())
+                name = ze.getFileNameW();
+            name = name.replace("\\", "/");
             if (name.endsWith("/"))
                 name = name.substring(0, name.length() - 1);
             name = name.substring(name.lastIndexOf("/") + 1);
             return name;
         }
+        
+        public String getRelativePath()
+        {
+            String ret = "";
+            if (ze.isFileHeader() && ze.isUnicode())
+                ret = ze.getFileNameW();
+            else
+                ret = ze.getFileNameString();
+            return ret;
+        }
 
         @Override
         public String getPath() {
-            return OpenRAR.this.getPath() + "/" + ze.getFileNameString();
+            return OpenRAR.this.getPath() + "/" + getRelativePath();
         }
 
         @Override
@@ -493,23 +512,17 @@ public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
 
         @Override
         public OpenPath[] list() throws IOException {
-            if (mChildren != null)
-                return mChildren;
-            return listFiles();
+            return null;
         }
 
         @Override
         public OpenPath[] listFiles() throws IOException {
-            return OpenRAR.this.listFiles(ze.getFileNameString());
+            return null;
         }
 
         @Override
         public int getListLength() {
-            try {
-                return list().length;
-            } catch (IOException e) {
-                return 0;
-            }
+            return 0;
         }
 
         @Override
@@ -517,12 +530,14 @@ public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
             String ret = super.getDetails(countHiddenChildren);
             if (!isDirectory())
                 ret += " (" + DialogHandler.formatSize(ze.getFullPackSize()) + ")";
+            if(ze.isEncrypted())
+                ret += "*";
             return ret;
         }
 
         @Override
         public Boolean isDirectory() {
-            return ze.isDirectory() || ze.getFileNameString().endsWith("/");
+            return ze.isDirectory();
         }
 
         @Override
