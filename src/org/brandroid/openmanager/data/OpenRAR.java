@@ -5,50 +5,55 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
+import com.github.junrar.Archive;
+import com.github.junrar.exception.RarException;
+import com.github.junrar.rarfile.FileHeader;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
+import android.os.Build;
 
-public class OpenZip extends OpenPath implements OpenStream {
+public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
     private final OpenFile mFile;
-    private ZipFile mZip = null;
+    private Archive mRar = null;
     private OpenPath[] mChildren = null;
-    private ArrayList<OpenZipEntry> mEntries = null;
+    private ArrayList<OpenRAREntry> mEntries = null;
+    private boolean mValid = false;
     private final Hashtable<String, List<OpenPath>> mFamily = new Hashtable<String, List<OpenPath>>();
-    private final Hashtable<String, OpenZipVirtualPath> mVirtualPaths = new Hashtable<String, OpenZip.OpenZipVirtualPath>();
+    private final Hashtable<String, OpenRARVirtualPath> mVirtualPaths = new Hashtable<String, OpenRAR.OpenRARVirtualPath>();
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
-    public OpenZip(OpenFile zipFile) {
-        mFile = zipFile;
+    public OpenRAR(OpenFile file) {
+        mFile = file;
         try {
-            mZip = new ZipFile(mFile.getPath());
+            mRar = new Archive(mFile.getFile());
+            mValid = true;
             // Logger.LogInfo("Zip file " + zipFile + " has " + length() +
             // " entries");
-        } catch (IOException e) {
-            Logger.LogError("Couldn't open zip file (" + zipFile + ")");
+        } catch (Exception e) {
+            Logger.LogError("Couldn't open RAR file (" + file + ")");
         }
+    }
+
+    public boolean isValid() {
+        return mValid;
     }
 
     @Override
     public boolean canHandleInternally() {
-        return Preferences.Pref_Zip_Internal;
+        return true;
     }
 
-    public ZipFile getZip() {
-        return mZip;
+    public Archive getArchive() {
+        return mRar;
     }
 
     @Override
@@ -82,7 +87,10 @@ public class OpenZip extends OpenPath implements OpenStream {
 
     @Override
     public OpenPath getChild(String name) {
-        return new OpenZipEntry(this, mZip.getEntry(name));
+        for (FileHeader hdr : mRar.getFileHeaders())
+            if (hdr.getFileNameString().endsWith(name))
+                return new OpenRAREntry(this, hdr);
+        return null;
     }
 
     @Override
@@ -120,22 +128,27 @@ public class OpenZip extends OpenPath implements OpenStream {
         }
     }
 
-    public List<OpenZipEntry> getAllEntries() throws IOException {
+    public List<OpenRAREntry> getAllEntries() throws IOException {
         if (mEntries != null)
             return mEntries;
-        mEntries = new ArrayList<OpenZipEntry>();
-        Enumeration<? extends ZipEntry> entries = mZip.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry ze = entries.nextElement();
+        mEntries = new ArrayList<OpenRAREntry>();
+        for (FileHeader ze : mRar.getFileHeaders()) {
             if (ze.isDirectory())
                 continue;
-            String parent = ze.getName();
+            String parent = "";
+            if (ze.isFileHeader() && ze.isUnicode())
+                parent = ze.getFileNameW();
+            else
+                parent = ze.getFileNameString();
+            parent = parent.replace("\\", "/");
+            if(parent.endsWith("/"))
+                continue;
             if (parent.indexOf("/") > 0 && parent.indexOf("/") < parent.length() - 1)
                 parent = parent.substring(0, parent.lastIndexOf("/") + 1);
             else
                 parent = "";
             OpenPath vp = findVirtualPath(parent);
-            OpenZipEntry entry = new OpenZipEntry(vp, ze);
+            OpenRAREntry entry = new OpenRAREntry(vp, ze);
             mEntries.add(entry);
             addFamilyEntry(parent, entry);
         }
@@ -151,9 +164,9 @@ public class OpenZip extends OpenPath implements OpenStream {
     private OpenPath findVirtualPath(String name) {
         if (mVirtualPaths.containsKey(name))
             return mVirtualPaths.get(name);
-        OpenZipVirtualPath path = null;
+        OpenRAR.OpenRARVirtualPath path = null;
         if (name.equals(""))
-            return OpenZip.this;
+            return OpenRAR.this;
         else {
             String par = name;
             if (par.endsWith("/"))
@@ -162,7 +175,7 @@ public class OpenZip extends OpenPath implements OpenStream {
                 par = par.substring(0, par.lastIndexOf("/") + 1);
             else
                 par = "";
-            path = new OpenZipVirtualPath(findVirtualPath(par), name);
+            path = new OpenRARVirtualPath(findVirtualPath(par), name);
         }
         mVirtualPaths.put(name, path);
         return path;
@@ -188,7 +201,7 @@ public class OpenZip extends OpenPath implements OpenStream {
             addFamilyPath(parent);
     }
 
-    private void addFamilyEntry(String path, OpenZipEntry entry) {
+    private void addFamilyEntry(String path, OpenRAREntry entry) {
         List<OpenPath> list = mFamily.get(path);
         if (list == null)
             list = new ArrayList<OpenPath>();
@@ -209,7 +222,7 @@ public class OpenZip extends OpenPath implements OpenStream {
     public OpenPath[] listFiles() throws IOException {
         if (DEBUG)
             Logger.LogVerbose("Listing OpenZip " + mFile);
-        if (mZip == null)
+        if (mRar == null)
             return mChildren;
 
         getAllEntries();
@@ -294,19 +307,19 @@ public class OpenZip extends OpenPath implements OpenStream {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return new ZipInputStream(mFile.getInputStream());
+        return mFile.getInputStream();
     }
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        return new ZipOutputStream(mFile.getOutputStream());
+        return mFile.getOutputStream();
     }
 
-    public class OpenZipVirtualPath extends OpenPath {
+    public class OpenRARVirtualPath extends OpenPath {
         private final String path;
         private final OpenPath mParent;
 
-        public OpenZipVirtualPath(OpenPath parent, String path) {
+        public OpenRARVirtualPath(OpenPath parent, String path) {
             mParent = parent;
             this.path = path;
         }
@@ -322,7 +335,7 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public String getPath() {
-            return OpenZip.this.getPath() + "/" + path;
+            return OpenRAR.this.getPath() + "/" + path;
         }
 
         @Override
@@ -359,7 +372,7 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public OpenPath[] list() throws IOException {
-            return OpenZip.this.listFiles(path);
+            return OpenRAR.this.listFiles(path);
         }
 
         @Override
@@ -389,7 +402,7 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public Long lastModified() {
-            return OpenZip.this.lastModified();
+            return OpenRAR.this.lastModified();
         }
 
         @Override
@@ -429,15 +442,14 @@ public class OpenZip extends OpenPath implements OpenStream {
 
     }
 
-    public class OpenZipEntry extends OpenPath {
+    public class OpenRAREntry extends OpenPath implements OpenStream {
         private final OpenPath mParent;
-        private final ZipEntry ze;
-        private OpenPath[] mChildren = null;
+        private final FileHeader ze;
 
-        public OpenZipEntry(OpenPath parent, ZipEntry entry) {
+        public OpenRAREntry(OpenPath parent, FileHeader entry) {
             mParent = parent;
             ze = entry;
-            if (ze.getName().endsWith("/") || ze.isDirectory()) {
+            if (ze.getFileNameString().endsWith("/") || ze.isDirectory()) {
                 try {
                     mChildren = list();
                 } catch (IOException e) {
@@ -447,16 +459,29 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public String getName() {
-            String name = ze.getName();
+            String name = ze.getFileNameString();
+            if (ze.isFileHeader() && ze.isUnicode())
+                name = ze.getFileNameW();
+            name = name.replace("\\", "/");
             if (name.endsWith("/"))
                 name = name.substring(0, name.length() - 1);
             name = name.substring(name.lastIndexOf("/") + 1);
             return name;
         }
+        
+        public String getRelativePath()
+        {
+            String ret = "";
+            if (ze.isFileHeader() && ze.isUnicode())
+                ret = ze.getFileNameW();
+            else
+                ret = ze.getFileNameString();
+            return ret;
+        }
 
         @Override
         public String getPath() {
-            return OpenZip.this.getPath() + "/" + ze.getName();
+            return OpenRAR.this.getPath() + "/" + getRelativePath();
         }
 
         @Override
@@ -466,7 +491,7 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public long length() {
-            return ze.getSize();
+            return ze.getFullUnpackSize();
         }
 
         @Override
@@ -487,36 +512,32 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public OpenPath[] list() throws IOException {
-            if (mChildren != null)
-                return mChildren;
-            return listFiles();
+            return null;
         }
 
         @Override
         public OpenPath[] listFiles() throws IOException {
-            return OpenZip.this.listFiles(ze.getName());
+            return null;
         }
 
         @Override
         public int getListLength() {
-            try {
-                return list().length;
-            } catch (IOException e) {
-                return 0;
-            }
+            return 0;
         }
 
         @Override
         public String getDetails(boolean countHiddenChildren) {
             String ret = super.getDetails(countHiddenChildren);
             if (!isDirectory())
-                ret += " (" + DialogHandler.formatSize(ze.getCompressedSize()) + ")";
+                ret += " (" + DialogHandler.formatSize(ze.getFullPackSize()) + ")";
+            if(ze.isEncrypted())
+                ret += "*";
             return ret;
         }
 
         @Override
         public Boolean isDirectory() {
-            return ze.isDirectory() || ze.getName().endsWith("/");
+            return ze.isDirectory();
         }
 
         @Override
@@ -536,7 +557,7 @@ public class OpenZip extends OpenPath implements OpenStream {
 
         @Override
         public Long lastModified() {
-            return ze.getTime();
+            return ze.getMTime().getTime();
         }
 
         @Override
@@ -572,6 +593,25 @@ public class OpenZip extends OpenPath implements OpenStream {
         @Override
         public Boolean mkdir() {
             return false;
+        }
+
+        @SuppressLint("NewApi")
+        @Override
+        public InputStream getInputStream() throws IOException {
+            try {
+                return mRar.getInputStream(ze);
+            } catch (RarException e) {
+                if (Build.VERSION.SDK_INT > 8)
+                    throw new IOException("RarException while getting InputStream", e);
+                else
+                    throw new IOException("RarException while getting InputStream: "
+                            + e.getMessage());
+            }
+        }
+
+        @Override
+        public OutputStream getOutputStream() throws IOException {
+            return null;
         }
     }
 }
