@@ -403,5 +403,8 @@
     <string name="s_extract_with">Extract with…</string>
     <string name="s_title_archive_handler">Archive Handler</string>
     <string name="s_ask_again">Ask each time</string>
+    <string name="s_archives">Archives</string>
+    <string name="s_compress">Compress</string>
+    <string name="s_compress_type">Compression Type</string>
 
 </resources>
