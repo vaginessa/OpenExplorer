@@ -19,8 +19,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="216"
-    android:versionName="0.216" >
+    android:versionCode="217"
+    android:versionName="0.217" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -150,9 +150,6 @@
             android:name="android.app.default_searchable"
             android:value=".activities.OpenExplorer" />
 
-        <activity
-            android:name=".activities.Authenticator"
-            android:label="Authenticator" />
         <activity
             android:name=".activities.SearchableActivity"
             android:launchMode="singleTop" >

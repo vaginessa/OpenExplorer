@@ -30,6 +30,7 @@ import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
@@ -121,6 +122,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.stericson.RootTools.RootTools;
 
 @SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment implements OnItemLongClickListener,
@@ -187,7 +189,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public ContentFragment() {
         if (getArguments() != null && getArguments().containsKey("path")) {
             mPath = (OpenPath)getArguments().getParcelable("path");
-            Logger.LogDebug("ContentFragment Restoring to " + mPath);
+            //            Logger.LogDebug("ContentFragment Restoring to " + mPath);
         }
     }
 
@@ -218,7 +220,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (args == null)
             args = new Bundle();
         if (path != null) {
-            Logger.LogDebug("ContentFragment.getInstance(" + path + ", mode, " + fm + ")");
+            //Logger.LogDebug("ContentFragment.getInstance(" + path + ", mode, " + fm + ")");
             args.putParcelable("path", path);
             ret.setArguments(args);
         } else
@@ -305,7 +307,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         mGrid.setColumnWidth(getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.COLUMN_WIDTH_GRID
                 : OpenExplorer.COLUMN_WIDTH_LIST);
         if (adapter != null && adapter.equals(mContentAdapter)) {
-            Logger.LogDebug("ContentFragment.setListAdapter updateData()");
+            //Logger.LogDebug("ContentFragment.setListAdapter updateData()");
             mContentAdapter.updateData();
             if (mContentAdapter.getCount() == 0 && !isDetached()) {
                 ViewUtils.setText(
@@ -361,11 +363,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         else
             mViewMode = getSetting(mPath, "view", getGlobalViewMode());
 
-        if (mPath == null)
-            Logger.LogDebug("Creating empty ContentFragment", new Exception(
-                    "Creating empty ContentFragment"));
-        else
-            Logger.LogDebug("Creating ContentFragment @ " + mPath);
+        //        if (mPath == null)
+        //            Logger.LogDebug("Creating empty ContentFragment", new Exception(
+        //                    "Creating empty ContentFragment"));
+        //        else
+        //            Logger.LogDebug("Creating ContentFragment @ " + mPath);
 
         // OpenExplorer.getEventHandler().setOnWorkerThreadFinishedListener(this);
 
@@ -450,11 +452,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return;
         }
         if (!isVisible()) {
-            Logger.LogDebug("I'm invisible! " + mPath);
+            //Logger.LogDebug("I'm invisible! " + mPath);
             // return;
         }
         if (isDetached()) {
-            Logger.LogDebug("I'm detached! " + mPath);
+            //Logger.LogDebug("I'm detached! " + mPath);
             return;
         }
 
@@ -477,10 +479,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         if (path instanceof OpenFile && !path.canRead())
-            path = new OpenFileRoot(path);
+            if (OpenApplication.hasRootAccess(true))
+                path = new OpenFileRoot(path);
 
-        if (DEBUG)
-            Logger.LogDebug("refreshData running...");
+        //        if (DEBUG)
+        //            Logger.LogDebug("refreshData running...");
 
         mRefreshReady = false;
 
@@ -513,8 +516,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         getContentAdapter();
 
-        if (DEBUG)
-            Logger.LogDebug("Refreshing Data for " + mPath);
+        //        if (DEBUG)
+        //            Logger.LogDebug("Refreshing Data for " + mPath);
 
         SortType sort = SortType.ALPHA;
         if (getExplorer() != null) {
@@ -1570,8 +1573,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if (DEBUG)
-            Logger.LogDebug(getClassName() + ".onCreateOptionsMenu (" + getPath() + ")");
+        //        if (DEBUG)
+        //            Logger.LogDebug(getClassName() + ".onCreateOptionsMenu (" + getPath() + ")");
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.content_full, menu);
         MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);
@@ -1581,7 +1584,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
+        //        Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
         if (getActivity() == null)
             return;
         if (menu == null)
@@ -1704,12 +1707,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         if (mGrid != null) {
             if (mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0) {
-                Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
+                //Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
                 mGrid.scrollTo(0, mBundle.getInt("scroll"));
             } else if (mBundle.containsKey("grid"))
                 mGrid.onRestoreInstanceState(mBundle.getParcelable("grid"));
             if (mBundle.containsKey("first")) {
-                Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
+                //Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
                 mGrid.setSelection(mBundle.getInt("first"));
             }
         }
@@ -1724,7 +1727,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @TargetApi(11)
     public void updateGridView() {
-        Logger.LogDebug("updateGridView() @ " + mPath);
+        //        Logger.LogDebug("updateGridView() @ " + mPath);
         if (mGrid == null)
             mGrid = (GridView)getView().findViewById(R.id.content_grid);
         if (mGrid == null) {
@@ -1839,7 +1842,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             default:
                 if (results.length == 1)
                     Toast.makeText(getContext(), results[0], Toast.LENGTH_LONG).show();
-                Logger.LogDebug("Worker thread complete (" + type + ")?");
+                //Logger.LogDebug("Worker thread complete (" + type + ")?");
                 if (!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
                     try {
                         if (mPath.requiresThread())
@@ -1882,13 +1885,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     private Boolean restoreTopPath() {
         if (mTopPath != null) {
-            Logger.LogDebug("Looking for top path (" + mTopPath.getName() + ")");
+            //Logger.LogDebug("Looking for top path (" + mTopPath.getName() + ")");
             for (int i = 0; i < mContentAdapter.getCount(); i++)
                 if (mContentAdapter.getItem(i).getName().equals(mTopPath.getName()))
                     return restoreTopPath(i);
         }
         if (mTopIndex > 0) {
-            Logger.LogDebug("Falling back to top index (" + mTopIndex + ")");
+            //Logger.LogDebug("Falling back to top index (" + mTopIndex + ")");
             return restoreTopPath(mTopIndex);
         } else
             return true;

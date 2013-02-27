@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFileRoot;
@@ -24,6 +25,8 @@ import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
+
+import com.stericson.RootTools.RootTools;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -222,8 +225,11 @@ public class ContentAdapter extends BaseAdapter {
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
             else if(!mParent.canRead())
-                return new OpenFileRoot(mParent).listFiles();
-            else
+            {
+                if(OpenApplication.hasRootAccess(true))
+                    return new OpenFileRoot(mParent).listFiles();
+                else return new OpenPath[0];
+            } else
                 return mParent.listFiles();
         } catch (Exception e) {
             Logger.LogError("Couldn't getList in ContentAdapter", e);
