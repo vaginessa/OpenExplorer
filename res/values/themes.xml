@@ -230,7 +230,6 @@
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
         <item name="vpiTabTextStyle">@style/MyTabPageIndicator.Text</item>
         <item name="vpiTabTextColor">@color/vpi__dark_theme</item>
-        <item name="android:actionBarStyle">@style/Widget.Styled.ActionBar</item>
         <item name="actionBarStyle">@style/Widget.Styled.ActionBar</item>
 
         <!-- for programmatic instantiation -->
