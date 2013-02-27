@@ -566,7 +566,7 @@ public class DialogHandler {
         });
         builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
             public void onCancel(DialogInterface dialog) {
-                if(dialog != null)
+                if (dialog != null)
                     dialog.dismiss();
             }
         });
@@ -711,14 +711,14 @@ public class DialogHandler {
 
     public static AlertDialog showPickerDialog(final Context context, String title, OpenPath path,
             final PickerFragment.OnOpenPathPickedListener onPickListener) {
-        final PickerFragment picker = new PickerFragment(context,
-                OpenFile.getExternalMemoryDrive(true));
+        final PickerFragment picker =
+                PickerFragment.getInstance(OpenFile.getExternalMemoryDrive(true));
         picker.setOnOpenPathPickedListener(onPickListener);
         Bundle args = new Bundle();
         args.putParcelable("start", OpenFile.getExternalMemoryDrive(true));
         View view = picker.onCreateView(
-                (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE), null,
-                args);
+                (LayoutInflater)context
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE), null, args);
         picker.setDefaultName(path.getName());
         picker.onViewCreated(view, args);
         return new AlertDialog.Builder(context).setTitle(title).setView(view)
