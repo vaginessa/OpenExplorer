@@ -396,7 +396,15 @@
     <string name="s_msg_file_exists">Some destination files may already exist. Ok to overwrite?</string>
     <string name="s_title_file_exists">File already exists.</string>
     <string name="s_msg_pref_archives">Would you like to browse or extract the archive?</string>
-    <string name="s_archive_browse">Browse</string>
-    <string name="s_archive_extract">Extract</string>
+    <string name="s_browse">Browse</string>
+    <string name="s_extract">Extract</string>
+    <string name="s_extracted">extracted</string>
+    <string name="s_extracting">Extracting</string>
+    <string name="s_extract_with">Extract with…</string>
+    <string name="s_title_archive_handler">Archive Handler</string>
+    <string name="s_ask_again">Ask each time</string>
+    <string name="s_archives">Archives</string>
+    <string name="s_compress">Compress</string>
+    <string name="s_compress_type">Compression Type</string>
 
 </resources>

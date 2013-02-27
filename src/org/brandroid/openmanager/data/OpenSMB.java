@@ -179,11 +179,6 @@ public class OpenSMB extends OpenNetworkPath {
     }
 
     @Override
-    public void setPath(String path) {
-
-    }
-
-    @Override
     public void setName(String name) {
         mName = name;
     }

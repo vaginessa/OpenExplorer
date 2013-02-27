@@ -215,7 +215,7 @@ public class OpenPathDbAdapter {
             else
                 return 0;
         } catch (Exception e) {
-            Logger.LogError("Couldn't write to Files DB.", e);
+            //Logger.LogError("Couldn't write to Files DB.", e);
             return 0;
         }
     }

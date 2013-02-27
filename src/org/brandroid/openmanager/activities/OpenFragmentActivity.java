@@ -265,7 +265,7 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
     }
 
     @Override
-    public abstract void onChangeLocation(OpenPath path);
+    public abstract void changePath(OpenPath path);
 
     protected abstract void sendToLogView(String str, int color);
 

@@ -25,7 +25,7 @@ import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
+import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.util.BetterPopupWindow;
@@ -115,21 +115,6 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
     private boolean mEditMode = false;
 
     public TextEditorFragment() {
-        if (getArguments() != null && getArguments().containsKey("edit_path")) {
-            OpenPath path = (OpenPath)getArguments().getParcelable("edit_path");
-            Logger.LogDebug("Creating TextEditorFragment @ " + path + " from scratch");
-            setPath(path);
-        } else
-            Logger.LogWarning("Creating orphan TextEditorFragment");
-    }
-
-    public TextEditorFragment(OpenPath path) {
-        mPath = path;
-        Logger.LogDebug("Creating TextEditorFragment @ " + mPath + " from path");
-        Bundle b = new Bundle();
-        if (path != null && path.getPath() != null)
-            b.putParcelable("edit_path", path);
-        // setArguments(b);
         setHasOptionsMenu(true);
     }
 
@@ -137,19 +122,13 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         if (args == null)
             args = new Bundle();
         args.putParcelable("edit_path", path);
-        TextEditorFragment ret = getInstance(args);
-        ret.setPath(path);
+        TextEditorFragment ret = new TextEditorFragment();
+        ret.setArguments(args);
         return ret;
     }
 
-    public static TextEditorFragment getInstance(Bundle args) {
-        OpenPath path = null;
-        if (args != null && args.containsKey("edit_path"))
-            path = (OpenPath)args.getParcelable("edit_path");
-        TextEditorFragment ret = path != null ? new TextEditorFragment(path)
-                : new TextEditorFragment();
-        ret.setArguments(args);
-        return ret;
+    public static TextEditorFragment getInstance(OpenPath path) {
+        return getInstance(path, null);
     }
 
     public void setSalvagable(boolean doSave) {
@@ -262,10 +241,11 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         super.onCreate(savedInstanceState);
         // setHasOptionsMenu(true);
         Bundle bundle = savedInstanceState;
-        if (getArguments() != null)
+        if (getArguments() != null
+                && (savedInstanceState == null || !savedInstanceState.containsKey("edit_path")))
             bundle = getArguments();
         if (mPath == null && bundle != null && bundle.containsKey("edit_path")) {
-            OpenPath mPath = (OpenPath)bundle.getParcelable("edit_path");
+            mPath = (OpenPath)bundle.getParcelable("edit_path");
             mData = null;
             Logger.LogDebug("load text editor (" + mPath + ")");
             if (mData == null && bundle.containsKey("edit_data"))
@@ -700,10 +680,12 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                 if (mPath instanceof NeedsTempFile) {
                     ((NeedsTempFile)mPath).getTempFile().write(data);
                     ((NeedsTempFile)mPath).tempUpload(this);
-                } else {
-                    fos = new BufferedOutputStream(mPath.getOutputStream());
+                } else if (mPath instanceof OpenStream) {
+                    fos = new BufferedOutputStream(((OpenStream)mPath).getOutputStream());
                     fos.write(bytes);
                     fos.close();
+                } else {
+                    throw new IOException("Invalid output stream.");
                 }
                 if (mPath instanceof OpenNetworkPath)
                     ((OpenNetworkPath)mPath).disconnect();
@@ -767,11 +749,14 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                 else {
                     InputStream is = null;
                     try {
-                        is = mPath.getInputStream();
-                        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                        String line;
-                        while ((line = br.readLine()) != null)
-                            sb.append(line + "\n");
+                        if (mPath instanceof OpenStream)
+                        {
+                            is = ((OpenStream)mPath).getInputStream();
+                            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                            String line;
+                            while ((line = br.readLine()) != null)
+                                sb.append(line + "\n");
+                        }
                     } catch (SecurityException s) {
                         Logger.LogError("Couldn't open file due to security. " + path, s);
                         doClose();
@@ -827,14 +812,17 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
             } else if (path.indexOf("sftp:/") > -1) {
                 BufferedInputStream in = null;
                 try {
-                    in = new BufferedInputStream(mPath.getInputStream());
-                    byte[] buffer = new byte[4096];
-                    StringBuilder sb = new StringBuilder();
-                    while (in.read(buffer) > 0) {
-                        for (byte b : buffer)
-                            sb.append((char)b);
+                    if (mPath instanceof OpenStream)
+                    {
+                        in = new BufferedInputStream(((OpenStream)mPath).getInputStream());
+                        byte[] buffer = new byte[4096];
+                        StringBuilder sb = new StringBuilder();
+                        while (in.read(buffer) > 0) {
+                            for (byte b : buffer)
+                                sb.append((char)b);
+                        }
+                        return sb.toString();
                     }
-                    return sb.toString();
                 } catch (IOException e) {
                     Logger.LogError("Couldn't read from SFTP - " + path, e);
                 } finally {
@@ -875,6 +863,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
     }
 
     public OpenPath getPath() {
+        if (mPath == null && getArguments() != null && getArguments().containsKey("edit_path"))
+            mPath = (OpenPath)getArguments().getParcelable("edit_path");
         return mPath;
     }
 
@@ -882,12 +872,16 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
     public Drawable getIcon() {
         if (getActivity() == null)
             return null;
-        return new BitmapDrawable(getResources(), ThumbnailCreator.getFileExtIcon(getPath()
-                .getExtension(), getActivity(), true));
+        String ext = "";
+        if (getPath() != null && getPath().getExtension() != null)
+            ext = getPath().getExtension();
+        return new BitmapDrawable(getResources(),
+                ThumbnailCreator.getFileExtIcon(ext, getActivity(), true));
     }
 
     @Override
     public CharSequence getTitle() {
+        if(getPath() == null) return null;
         SpannableString ret = new SpannableString(getPath().getName());
         if (mDirty)
             ret.setSpan(new StyleSpan(Typeface.ITALIC), 0, ret.length(), 0);

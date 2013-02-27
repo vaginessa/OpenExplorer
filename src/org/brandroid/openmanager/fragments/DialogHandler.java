@@ -535,62 +535,49 @@ public class DialogHandler {
             onYes.onClick(null, DialogInterface.BUTTON_POSITIVE);
     }
 
-    public static void showConfirmationDialog(Context context, String text, String title,
+    public static void showOptionsDialog(Context context, String title,
             final Preferences preferences, final String pref_key,
-            final DialogInterface.OnClickListener onClick,
-            final Integer resYesId,
-            final Integer resNoId,
-            final Integer resCancelId) {
+            final int resArrayEntries, final int resArrayValues,
+            final DialogInterface.OnClickListener onClick) {
 
-        int ret = preferences.getInt("warn", pref_key, -1);
-        if(ret > -1)
-        {
-            onClick.onClick(null, ret);
-            return;
-        }
-        if (ret == -1) {
-            final View layout = inflate(context, R.layout.confirm_view);
-            final CheckBox cb = (CheckBox)layout.findViewById(R.id.confirm_remember);
-            
-            final Builder builder = new AlertDialog.Builder(context).setTitle(title)
-                    .setView(layout);
-            builder.setPositiveButton(context.getResources().getString(resYesId),
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if(cb != null && cb.isChecked())
-                                preferences.setSetting("warn", pref_key, resYesId);
-                            onClick.onClick(dialog, resYesId);
-                        }
-                    });
-            if (resNoId != null)
-                builder.setNegativeButton(context.getResources().getString(resNoId),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if(cb != null && cb.isChecked())
-                                    preferences.setSetting("warn", pref_key, resNoId);
-                                onClick.onClick(dialog, resNoId);
-                            }
-                        });
-            if (resCancelId != null)
-                builder.setNeutralButton(context.getResources().getString(resCancelId),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if(cb != null && cb.isChecked())
-                                    preferences.setSetting("warn", pref_key, resCancelId);
-                                onClick.onClick(dialog, resCancelId);
-                            }
-                        });
-            final AlertDialog dialog = builder.create();
+        final String[] opts = context.getResources().getStringArray(resArrayEntries);
+        final String[] vals = context.getResources().getStringArray(resArrayValues);
+        String mDefault = preferences.getString("global", pref_key, (String)null);
+        if (mDefault != null)
+            for (int i = 0; i < opts.length; i++)
+                if (opts[i].equalsIgnoreCase(mDefault) && !vals[i].equalsIgnoreCase("ask"))
+                {
+                    onClick.onClick(null, i);
+                    return;
+                }
+        final CheckBox cb = new CheckBox(context);
+        cb.setId(R.id.confirm_remember);
+        cb.setText(R.string.s_wtf_remember);
 
-            ViewUtils.setText(layout, text, R.id.confirm_message);
-            ViewUtils.setViewsVisible(layout, false, R.id.confirm_buttons);
-            
-            if (context != null)
-                dialog.show();
-        }
+        final Builder builder = new AlertDialog.Builder(context).setTitle(title)
+                .setView(cb);
+        builder.setItems(opts, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (cb != null && cb.isChecked())
+                    preferences.setSetting("global", pref_key, vals[which]);
+                onClick.onClick(dialog, which);
+            }
+        });
+        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            public void onCancel(DialogInterface dialog) {
+                if(dialog != null)
+                    dialog.dismiss();
+            }
+        });
+
+        final AlertDialog dialog = builder.create();
+
+        //ViewUtils.setText(layout, text, R.id.confirm_message);
+        //ViewUtils.setViewsVisible(layout, false, R.id.confirm_buttons);
+
+        if (context != null)
+            dialog.show();
     }
 
     public static View inflate(Context context, int layoutId) {

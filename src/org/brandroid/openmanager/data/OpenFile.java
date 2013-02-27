@@ -14,7 +14,7 @@ import java.util.Date;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
+import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
@@ -28,7 +28,7 @@ import android.os.Environment;
 import android.os.StatFs;
 
 @SuppressLint("NewApi")
-public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.OpenPathByteIO {
+public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream {
     private static final long serialVersionUID = 6436156952322586833L;
     private File mFile;
     private OpenFile[] mChildren = null;
@@ -123,11 +123,12 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
 
     public long getUsableSpace() {
         try {
+            if(!canRead()) return 0;
             StatFs stat = new StatFs(getPath());
             if (stat.getAvailableBlocks() > 0)
                 return (long)stat.getAvailableBlocks() * (long)stat.getBlockSize();
         } catch (Exception e) {
-            Logger.LogWarning("Couldn't get Total Space.", e);
+            //Logger.LogWarning("Couldn't get Total Space.", e);
         }
         if (DFInfo.LoadDF().containsKey(getPath()))
             return (long)(DFInfo.LoadDF().get(getPath()).getSize() - DFInfo.LoadDF().get(getPath())
@@ -309,7 +310,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
         OpenFile parent = getExternalMemoryDrive(true).getParent();
         if (Build.VERSION.SDK_INT > 15) {
             parent = new OpenFile("/storage/usbStorage/");
-            if(parent.exists() && parent.length() > 0)
+            if (parent.exists() && parent.length() > 0)
                 return (mUsbDrive = parent);
             parent = new OpenFile("/mnt/sdcard/usbStorage/");
             if (parent.exists())
@@ -336,7 +337,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
                 if (kid.getName().toLowerCase().contains("usb") && kid.exists() && kid.canRead()
                         && kid.list().length > 0 && kid.getTotalSpace() != parent.getTotalSpace())
                 {
-                    if(kid.length() == 1 && kid.getChild(0).getName().startsWith("sda"))
+                    if (kid.length() == 1 && kid.getChild(0).getName().startsWith("sda"))
                         kid = (OpenFile)kid.getChild(0);
                     return (mUsbDrive = kid);
                 }
@@ -533,11 +534,6 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
     }
 
     @Override
-    public void setPath(String path) {
-        mFile = new File(path);
-    }
-
-    @Override
     public void clearChildren() {
         mChildren = null;
     }
@@ -636,7 +632,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
     }
 
     @Override
-    public boolean copyFrom(OpenPath file) {
+    public boolean copyFrom(OpenStream file) {
         if (file instanceof OpenFile)
             return copyFrom((OpenFile)file);
         return false;
@@ -682,15 +678,15 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPath.Ope
             return true;
         return false;
     }
-    
+
     @Override
     public boolean showChildPath() {
         return false;
     }
 
     @Override
-    public boolean copyTo(OpenPath dest) throws IOException {
-        if(dest instanceof OpenFile)
+    public boolean copyTo(OpenStream dest) throws IOException {
+        if (dest instanceof OpenFile)
             return ((OpenFile)dest).copyFrom(this);
         return false;
     }

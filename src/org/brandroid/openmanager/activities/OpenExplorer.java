@@ -629,6 +629,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void showDonateDialog(int resMessage, String sTitle, final String pref) {
         if (getPreferences().getBoolean("warn", pref, false))
             return;
+        int[] opts = new int[] {R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate};
+        if(Build.VERSION.SDK_INT > 13)
+            opts = new int[] {R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate};
         DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
                 new OnClickListener() {
                     @Override
@@ -652,7 +655,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         if (dialog != null)
                             dialog.dismiss();
                     }
-                }, R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate, R.string.s_cancel);
+                }, opts);
     }
 
     public void launchReviews() {
@@ -1089,7 +1092,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (path == null)
                 return false;
             if (path.isArchive()) {
-                onChangeLocation(path);
+                changePath(path);
                 return true;
             }
             if (editFile(path))
@@ -1122,6 +1125,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (outState == null)
             return;
         super.onSaveInstanceState(outState);
+        if (mViewPagerAdapter != null)
+        {
+            Parcelable p = mViewPagerAdapter.saveState();
+            outState.putParcelable("oe_fragments", p);
+            outState.putInt("oe_frag_index", mViewPager.getCurrentItem());
+        }
         /*
          * mStateReady = false; if(mLogFragment != null) try {
          * //fragmentManager.
@@ -1145,13 +1154,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             Logger.LogDebug("Restoring State: " + state);
             super.onRestoreInstanceState(state);
         }
-        /*
-         * mStateReady = true; if(state != null &&
-         * state.containsKey("oe_fragments")) {
-         * mViewPagerAdapter.restoreState(state, getClassLoader());
-         * setViewPageAdapter(mViewPagerAdapter);
-         * setCurrentItem(state.getInt("oe_frag_index"), false); }
-         */
+        mStateReady = true;
+        if (state != null &&
+                state.containsKey("oe_fragments")) {
+            mViewPagerAdapter.restoreState(state, getClassLoader());
+            setViewPageAdapter(mViewPagerAdapter, true);
+            if(state.containsKey("oe_frag_index"))
+                setCurrentItem(state.getInt("oe_frag_index"), false);
+        }
+
     }
 
     @Override
@@ -1703,7 +1714,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setBeamPushUrisCallback(new NfcAdapter.CreateBeamUrisCallback() {
                 @Override
                 public Uri[] createBeamUris(NfcEvent event) {
-                    Set<OpenPath> selectedFiles = getClipboard();
+                    List<OpenPath> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<Uri> fileUri = new ArrayList<Uri>();
                         for (OpenPath f : selectedFiles) {
@@ -1724,7 +1735,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setNdefPushMessageCallback(new CreateNdefMessageCallback() {
                 public NdefMessage createNdefMessage(NfcEvent event) {
                     Logger.LogVerbose("Beam me up, scotty!");
-                    Set<OpenPath> selectedFiles = getClipboard();
+                    List<OpenPath> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<NdefRecord> recs = new ArrayList<NdefRecord>();
                         for (OpenPath f : selectedFiles) {
@@ -2282,7 +2293,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 if (!tf.isSalvagable())
                     continue;
                 OpenPath path = tf.getPath();
-                if (editing.indexOf("," + path.getPath() + ",") == -1)
+                if (path != null && editing.indexOf("," + path.getPath() + ",") == -1)
                     editing.append(path + ",");
             }
         }
@@ -2342,7 +2353,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return false;
         if (path.length() > Preferences.Pref_Text_Max_Size)
             return false;
-        TextEditorFragment editor = new TextEditorFragment(path);
+        TextEditorFragment editor = TextEditorFragment.getInstance(path);
         if (mViewPagerAdapter != null) {
             int pos = mViewPagerAdapter.getItemPosition(editor);
 
@@ -3349,7 +3360,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
     }
 
-    public void onChangeLocation(OpenPath path) {
+    public void changePath(OpenPath path) {
         changePath(path, true, false);
     }
 
