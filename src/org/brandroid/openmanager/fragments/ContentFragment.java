@@ -49,6 +49,7 @@ import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.EventHandler.CompressionType;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
@@ -731,11 +732,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         public void onClick(DialogInterface dialog, int which) {
                             if (dialog != null)
                                 dialog.dismiss();
-                            getHandler().extractTar(tar, dest, getContext(), includes);
+                            getHandler().extractSet(tar, dest, getContext(), includes);
                         }
                     });
         else
-            getHandler().extractTar(tar, dest, getContext(), includes);
+            getHandler().extractSet(tar, dest, getContext(), includes);
     }
 
     private void extractSet(final OpenPath archive, final OpenPath dest, final String... includes)
@@ -760,7 +761,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (archive.getMimeType().contains("tar"))
             untarAll(archive, archive.getParent());
         else
-            getHandler().extractFile(
+            getHandler().extractSet(
                     archive,
                     archive.getParent().getChild(
                             archive.getName().replace("." + archive.getExtension(), "")),
@@ -820,11 +821,6 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                             }
                         });
                 return;
-            } else if (file.getMimeType().contains("zip"))
-            {
-                getHandler().extractFile(file,
-                        getPath().isDirectory() ? getPath() : getPath().getParent(),
-                        getContext());
             }
         }
 
@@ -2321,7 +2317,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                             OpenPath zipFile = zFolder.getChild(dZip.getInputText());
                             Logger.LogVerbose("Zipping " + getClipboard().size() + " items to "
                                     + zipFile.getPath());
-                            getHandler().zipFile(zipFile, toZip, getExplorer());
+                            getHandler().zipFile(zipFile, toZip, getExplorer(), CompressionType.ZIP);
                             refreshOperations();
                             deselectAll();
                         }

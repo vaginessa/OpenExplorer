@@ -101,8 +101,6 @@ import com.github.junrar.rarfile.FileHeader;
 public class EventHandler {
     public static final EventType SEARCH_TYPE = EventType.SEARCH;
     public static final EventType COPY_TYPE = EventType.COPY;
-    public static final EventType UNZIP_TYPE = EventType.UNZIP;
-    public static final EventType UNZIPTO_TYPE = EventType.UNZIPTO;
     public static final EventType ZIP_TYPE = EventType.ZIP;
     public static final EventType DELETE_TYPE = EventType.DELETE;
     public static final EventType RENAME_TYPE = EventType.RENAME;
@@ -110,14 +108,18 @@ public class EventHandler {
     public static final EventType CUT_TYPE = EventType.CUT;
     public static final EventType TOUCH_TYPE = EventType.TOUCH;
     public static final EventType ERROR_TYPE = EventType.ERROR;
-    public static final EventType UNTAR_TYPE = EventType.UNTAR;
+    public static final EventType EXTRACT_TYPE = EventType.EXTRACT;
     public static final int BACKGROUND_NOTIFICATION_ID = 123;
     private static final boolean ENABLE_MULTITHREADS = false; // !OpenExplorer.BEFORE_HONEYCOMB;
 
     static final int TAR_BUFFER = 2048;
 
     public enum EventType {
-        SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, UNZIP, UNZIPTO, ZIP, ERROR, UNTAR
+        SEARCH, COPY, CUT, DELETE, RENAME, MKDIR, TOUCH, EXTRACT, ZIP, ERROR
+    }
+
+    public enum CompressionType {
+        ZIP, TGZ, TBZ2, LZMA, RAR, GZ, BZ2
     }
 
     public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.isBlackBerry()
@@ -125,6 +127,7 @@ public class EventHandler {
 
     private static NotificationManager mNotifier = null;
     private static int EventCount = 0;
+    public CompressionType DefaultCompressionType = CompressionType.ZIP;
 
     private OnWorkerUpdateListener mThreadListener;
     private TaskChangeListener mTaskListener;
@@ -590,56 +593,25 @@ public class EventHandler {
     }
 
     public BackgroundWork zipFile(OpenPath into, Collection<OpenPath> files, Context mContext) {
-        return zipFile(into, files.toArray(new OpenPath[0]), mContext);
+        return zipFile(into, files, mContext, DefaultCompressionType);
     }
 
-    public BackgroundWork zipFile(OpenPath into, OpenPath[] files, Context mContext) {
-        return (BackgroundWork)execute(new BackgroundWork(ZIP_TYPE, mContext, into), files);
+    public BackgroundWork zipFile(OpenPath into, Collection<OpenPath> files, Context mContext,
+            CompressionType type) {
+        return zipFile(into, files.toArray(new OpenPath[files.size()]), mContext, type);
     }
 
-    public void extractFile(final OpenPath file, final Context mContext) {
-        final OpenPath into = file.getParent().getChild(
-                file.getName().replace("." + file.getExtension(), ""));
-        // AlertDialog.Builder b = new AlertDialog.Builder(mContext);
-        final InputDialog dUnz = new InputDialog(mContext);
-        dUnz.setTitle(
-                getResourceString(mContext, R.string.s_title_unzip).toString().replace("xxx",
-                        file.getName()))
-                .setMessage(
-                        getResourceString(mContext, R.string.s_prompt_unzip).toString().replace(
-                                "xxx", file.getName()))
-                .setIcon(R.drawable.lg_zip)
-                .setPositiveButton(android.R.string.ok, new OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        OpenPath path = new OpenFile(dUnz.getInputText());
-                        if (!path.exists() && !path.mkdir()) {
-                            Logger.LogError("Couldn't locate output path for unzip! "
-                                    + path.getPath());
-                            OnWorkerThreadFailure(UNZIPTO_TYPE);
-                            return;
-                        }
-                        Logger.LogVerbose("Unzipping " + file.getPath() + " into " + path);
-                        execute(new BackgroundWork(UNZIP_TYPE, mContext, path), file);
-                    }
-                }).setNegativeButton(android.R.string.cancel, null).setDefaultText(into.getPath())
-                .create().show();
-    }
-
-    public void extractTar(final OpenPath file, final OpenPath dest, final Context mContext,
-            final String... includes)
-    {
-        execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
+    public BackgroundWork zipFile(OpenPath into, OpenPath[] files, Context mContext,
+            CompressionType type) {
+        BackgroundWork bw = new BackgroundWork(ZIP_TYPE, mContext, into);
+        bw.setCompressionType(type);
+        return (BackgroundWork)execute(bw, files);
     }
 
     public void extractSet(final OpenPath file, final OpenPath dest, final Context mContext,
             final String... includes)
     {
-        execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
-    }
-
-    public void extractFile(final OpenPath file, final OpenPath dest, final Context mContext)
-    {
-        execute(new BackgroundWork(UNZIP_TYPE, mContext, dest), file);
+        execute(new BackgroundWork(EXTRACT_TYPE, mContext, dest, includes), file);
     }
 
     /*
@@ -671,6 +643,7 @@ public class EventHandler {
         private boolean notifReady = false;
         private final int[] mLastProgress = new int[3];
         private int notifIcon;
+        private CompressionType mCompressType = CompressionType.ZIP;
 
         private OnWorkerUpdateListener mListener;
 
@@ -706,6 +679,11 @@ public class EventHandler {
                 mTaskListener.OnTasksChanged(getRunningTasks().length);
         }
 
+        public void setCompressionType(CompressionType type)
+        {
+            mCompressType = type;
+        }
+
         public String getOperation() {
             switch (mType) {
                 case DELETE:
@@ -716,8 +694,7 @@ public class EventHandler {
                     return getResourceString(mContext, R.string.s_title_copying).toString();
                 case CUT:
                     return getResourceString(mContext, R.string.s_title_moving).toString();
-                case UNZIP:
-                case UNZIPTO:
+                case EXTRACT:
                     return getResourceString(mContext, R.string.s_extracting).toString();
                 case ZIP:
                     return getResourceString(mContext, R.string.s_title_zipping).toString();
@@ -725,8 +702,6 @@ public class EventHandler {
                     return getResourceString(mContext, R.string.s_menu_rename).toString();
                 case TOUCH:
                     return getResourceString(mContext, R.string.s_create).toString();
-                case UNTAR:
-                    return getResourceString(mContext, R.string.s_untarring).toString();
             }
             return getResourceString(mContext, R.string.s_title_executing);
         }
@@ -835,17 +810,11 @@ public class EventHandler {
                     showDialog = false;
                     showNotification = true;
                     break;
-                case UNZIP:
-                case UNZIPTO:
-                    showDialog = true;
-                    showNotification = false;
-                    mTotalCount = getArchiveChildren(mCurrentPath);
-                    break;
                 case ZIP:
                     showDialog = false;
                     showNotification = true;
                     break;
-                case UNTAR:
+                case EXTRACT:
                     showDialog = true;
                     showNotification = false;
                     isCancellable = false;
@@ -1034,23 +1003,13 @@ public class EventHandler {
                     }
                     break;
 
-                case UNZIPTO:
-                case UNZIP:
+                case EXTRACT:
                     if (params[0] instanceof OpenStream)
-                    {
-                        ret += extractFiles(params[0], mIntoPath);
-                    }
+                        ret += extractFiles(params[0], mIntoPath, mInitParams);
                     break;
 
                 case ZIP:
-                    mFileMang.setProgressListener(this);
-                    publishProgress();
-                    mFileMang.createZipFile(mIntoPath, params);
-                    break;
-
-                case UNTAR:
-                    if (extractTar(mCurrentPath, mIntoPath, mInitParams))
-                        ret++;
+                    ret += compressFiles(mIntoPath, params);
                     break;
 
             }
@@ -1058,43 +1017,21 @@ public class EventHandler {
             return ret;
         }
 
-        private int getArchiveChildren(OpenPath file) {
-            if (file == null)
-                return 0;
-            String type = file.getMimeType();
-            if (type == null)
-                type = file.getExtension();
-            if (file.getMimeType().contains("zip"))
-                if (file.getMimeType().contains("7z"))
-                    try {
-                        return new OpenZip((OpenFile)file).getAllEntries().size();
-                    } catch (IOException e) {
-
-                    }
-            if (file.getMimeType().contains("rar"))
-                try {
-                    return new OpenRAR((OpenFile)file).getAllEntries().size();
-                } catch (IOException e) {
-
-                }
-            if (file.getMimeType().contains("gz"))
-                try {
-                    new GZIPInputStream(((OpenStream)file).getInputStream()).close();
-                    return 1;
-                } catch (IOException e) {
-
-                }
-            if (file.getMimeType().contains("bz"))
-                try {
-                    new BZip2InputStream(((OpenStream)file).getInputStream(), false).close();
-                    return 1;
-                } catch (IOException e) {
-
-                }
-            return 0;
+        protected int compressFiles(OpenPath mArchive, OpenPath... files)
+        {
+            switch (mCompressType)
+            {
+                case ZIP:
+                default:
+                    mFileMang.setProgressListener(this);
+                    publishProgress();
+                    mFileMang.createZipFile(mIntoPath, files);
+                    return mTotalCount;
+            }
+            return -1;
         }
 
-        protected int extractFiles(OpenPath file, OpenPath into) {
+        protected int extractFiles(OpenPath file, OpenPath into, String... includes) {
             int ret = 0;
             if (file.getMimeType().contains("zip") &&
                     (ret = extractZipFiles((OpenStream)file, into)) > 0)
@@ -1103,7 +1040,7 @@ public class EventHandler {
                     (ret = extractRarFiles(new OpenRAR((OpenFile)file), into)) > 0)
                 return ret;
             if ((file.getMimeType().contains("7z") || file.getMimeType().contains("lzma")) &&
-                    (ret = extractLZMAFiles((OpenStream)file, into)) > 0)
+                    (ret = extractLZMAFiles((OpenStream)file, into, includes)) > 0)
                 return ret;
             if (file.getMimeType().contains("gz") &&
                     (ret = extractGZip(file, into)) > 0)
@@ -1472,7 +1409,7 @@ public class EventHandler {
             int ret = 0;
 
             try {
-                if(s7 instanceof OpenLZMA)
+                if (s7 instanceof OpenLZMA)
                     f7 = (OpenLZMA)s7;
                 else
                     f7 = new OpenLZMA((OpenFile)s7);
@@ -1498,7 +1435,7 @@ public class EventHandler {
 
                 ArchiveExtractCallback extractCallbackSpec = new ArchiveExtractCallback();
                 String base = directory.getPath();
-                if(!base.endsWith("/"))
+                if (!base.endsWith("/"))
                     base += "/";
                 extractCallbackSpec.setBasePath(base);
                 // Logger.LogVerbose("LZMA Base: " + base);
@@ -1761,9 +1698,7 @@ public class EventHandler {
 
                     break;
 
-                case UNZIPTO:
-                case UNZIP:
-                case UNTAR:
+                case EXTRACT:
                     int typeRes = R.string.s_extracted;
                     if (result == null || result == 0)
                         Toast.makeText(
