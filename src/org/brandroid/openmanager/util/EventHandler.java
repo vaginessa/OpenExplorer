@@ -623,6 +623,12 @@ public class EventHandler {
         execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
     }
 
+    public void extractSet(final OpenPath file, final OpenPath dest, final Context mContext,
+            final String... includes)
+    {
+        execute(new BackgroundWork(UNTAR_TYPE, mContext, dest, includes), file);
+    }
+
     public void extractFile(final OpenPath file, final OpenPath dest, final Context mContext)
     {
         execute(new BackgroundWork(UNZIP_TYPE, mContext, dest), file);
@@ -1051,14 +1057,14 @@ public class EventHandler {
             if (type == null)
                 type = file.getExtension();
             if (file.getMimeType().contains("zip"))
-            if (file.getMimeType().contains("7z"))
-                try {
-                    return new OpenZip((OpenFile)file).getAllEntries().size();
-                } catch (IOException e) {
+                if (file.getMimeType().contains("7z"))
+                    try {
+                        return new OpenZip((OpenFile)file).getAllEntries().size();
+                    } catch (IOException e) {
 
-            }
+                    }
             if (file.getMimeType().contains("rar"))
-            try {
+                try {
                     return new OpenRAR((OpenFile)file).getAllEntries().size();
                 } catch (IOException e) {
 
@@ -1087,6 +1093,9 @@ public class EventHandler {
                 return ret;
             if (file.getMimeType().contains("rar") &&
                     (ret = extractRarFiles(new OpenRAR((OpenFile)file), into)) > 0)
+                return ret;
+            if ((file.getMimeType().contains("7z") || file.getMimeType().contains("lzma")) &&
+                    (ret = extractLZMAFiles((OpenStream)file, into)) > 0)
                 return ret;
             if (file.getMimeType().contains("gz") &&
                     (ret = extractGZip(file, into)) > 0)
@@ -1120,9 +1129,9 @@ public class EventHandler {
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-            }
+                    }
                 if (out != null)
-            try {
+                    try {
                         out.close();
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
@@ -1154,22 +1163,42 @@ public class EventHandler {
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-            }
+                    }
                 if (out != null)
                     try {
                         out.close();
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-        }
+                    }
             }
         }
 
         private Boolean extractTar(OpenPath source, OpenPath into, String... includes) {
             if (!into.exists() && !into.mkdir())
                 return false;
+            if ((source.getMimeType().contains("7z") || source.getMimeType().contains("lzma")) &&
+                    extractSet(source, into, includes))
+                return true;
             try {
                 TarUtils.untarTarFile(into.getPath(), source.getPath(), includes);
+                return true;
+            } catch (IOException e) {
+                Logger.LogError("Unable to untar!", e);
+                return false;
+            }
+        }
+
+        private Boolean extractSet(OpenPath source, OpenPath into, String... includes) {
+            OpenLZMA lz = null;
+            if (source instanceof OpenLZMA)
+                lz = (OpenLZMA)source;
+            else if (source instanceof OpenFile)
+                lz = new OpenLZMA((OpenFile)source);
+            if (!into.exists() && !into.mkdir())
+                return false;
+            try {
+                lz.extract(into, includes);
                 return true;
             } catch (IOException e) {
                 Logger.LogError("Unable to untar!", e);
@@ -1420,16 +1449,16 @@ public class EventHandler {
 
                     int read = 0;
                     try {
-                    out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
-                    while ((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
-                        out.write(data, 0, read);
+                        out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
+                        while ((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
+                            out.write(data, 0, read);
                         publishMyProgress(ret);
                     } catch (Exception e) {
 
                     } finally {
-                    zipstream.closeEntry();
+                        zipstream.closeEntry();
                         closeStream(out);
-                }
+                    }
                     ret++;
                 }
 
@@ -1446,16 +1475,23 @@ public class EventHandler {
             return ret;
         }
 
-        private boolean extractLZMAFiles(OpenStream s7, final OpenPath directory) {
-            Logger.LogVerbose("LZMA Trying to extract 7zip");
+        private int extractLZMAFiles(OpenStream s7, final OpenPath directory) {
+            // Logger.LogVerbose("LZMA Trying to extract 7zip");
             OpenLZMA f7 = null;
+            int ret = 0;
 
             try {
                 OpenFile f = (OpenFile)s7;
                 f7 = new OpenLZMA(f);
 
+                mTotalCount = f7.getListLength();
+
                 ArchiveExtractCallback extractCallbackSpec = new ArchiveExtractCallback();
-                extractCallbackSpec.setBasePath(directory.getPath());
+                String base = directory.getPath();
+                if (!base.endsWith("/"))
+                    base = base.substring(0, base.lastIndexOf("/") + 1);
+                extractCallbackSpec.setBasePath(base);
+                // Logger.LogVerbose("LZMA Base: " + base);
                 IArchiveExtractCallback extractCallback = extractCallbackSpec;
                 IInArchive arch = f7.getLZMA();
 
@@ -1467,7 +1503,8 @@ public class EventHandler {
                     if (extractCallbackSpec.NumErrors == 0)
                     {
                         Logger.LogDebug("LZMA complete?");
-                        return true;
+                        ret = mTotalCount;
+                        return ret;
                     } else {
                         Logger.LogError("LZMA errors: " + extractCallbackSpec.NumErrors);
                     }
@@ -1475,13 +1512,13 @@ public class EventHandler {
                     Logger.LogError("Error while extracting LZMA!");
                 }
 
-                return false;
+                return ret;
 
             } catch (Exception e) {
                 Logger.LogError("Unable to extract LZMA.", e);
             } finally {
             }
-            return false;
+            return ret;
         }
 
         private void closeStream(java.io.Closeable s)

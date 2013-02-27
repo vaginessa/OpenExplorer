@@ -37,6 +37,7 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenLZMA;
+import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
@@ -737,13 +738,18 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             getHandler().extractTar(tar, dest, getContext(), includes);
     }
 
+    private void extractSet(final OpenPath archive, final OpenPath dest, final String... includes)
+    {
+        getHandler().extractSet(archive, dest, getContext(), includes);
+    }
+
     private void browseArchive(OpenPath archive)
     {
         if (archive.getExtension().equalsIgnoreCase("zip"))
             getExplorer().changePath(new OpenZip((OpenFile)archive));
         else if (archive.getMimeType().endsWith("rar"))
             getExplorer().changePath(new OpenRAR((OpenFile)archive));
-        else if(archive.getExtension().equalsIgnoreCase("7z"))
+        else if (archive.getMimeType().contains("7z") || archive.getMimeType().contains("lzma"))
             getExplorer().changePath(new OpenLZMA((OpenFile)archive));
         else
             getExplorer().changePath(new OpenTar((OpenFile)archive));
@@ -772,7 +778,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             if (file instanceof OpenFile
                     && (file.getMimeType().contains("tar")
                             || file.getMimeType().endsWith("rar")
-                    || file.getExtension().equalsIgnoreCase("zip")))
+                            || file.getMimeType().endsWith("compressed")
+                            || file.getMimeType().endsWith("zip")))
             {
                 final OpenPath archive = file;
                 final String prefType = file.getMimeType()
@@ -1295,6 +1302,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 if (cb != null) {
                     cb.setCurrentPath(into);
                     checkClipboardForTar(cb, into);
+                    checkClipboardForLZMA(cb, into);
                     if (cb.size() > 0) {
                         if (cb.DeleteSource)
                             getHandler().cutFile(cb, into, getActivity());
@@ -1446,6 +1454,42 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         includes[i] = kid.getRelativePath();
                     }
                     untarAll(tar, into, includes);
+                }
+            }
+        }).start();
+        return true;
+    }
+
+    private boolean checkClipboardForLZMA(final OpenClipboard cb, final OpenPath into) {
+        final Hashtable<OpenLZMA, Vector<OpenLZMAEntry>> lzKids = new Hashtable<OpenLZMA, Vector<OpenLZMA.OpenLZMAEntry>>();
+        for (OpenPath p : cb)
+            if (p instanceof OpenLZMAEntry)
+            {
+                OpenLZMAEntry kid = (OpenLZMAEntry)p;
+                OpenLZMA lz = kid.getLZMA();
+                if (!lzKids.containsKey(lz))
+                    lzKids.put(lz, new Vector<OpenLZMA.OpenLZMAEntry>());
+                Vector<OpenLZMAEntry> kids = lzKids.get(lz);
+                kids.add(kid);
+                lzKids.put(lz, kids);
+            }
+        if (lzKids.size() == 0)
+            return false;
+        for (Vector<OpenLZMAEntry> kids : lzKids.values())
+            for (OpenLZMAEntry kid : kids)
+                cb.remove(kid);
+        new Thread(new Runnable() {
+            public void run() {
+                for (OpenLZMA tar : lzKids.keySet())
+                {
+                    Vector<OpenLZMAEntry> kids = lzKids.get(tar);
+                    String[] includes = new String[kids.size()];
+                    for (int i = 0; i < kids.size(); i++)
+                    {
+                        OpenLZMAEntry kid = kids.get(i);
+                        includes[i] = kid.getRelativePath();
+                    }
+                    extractSet(tar, into, includes);
                 }
             }
         }).start();
@@ -1727,42 +1771,42 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         switch (type)
         {
             case SEARCH:
-            if (results == null || results.length < 1) {
-                Toast.makeText(getApplicationContext(), "Sorry, zero items found",
-                        Toast.LENGTH_LONG).show();
-                return;
-            }
+                if (results == null || results.length < 1) {
+                    Toast.makeText(getApplicationContext(), "Sorry, zero items found",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
 
-            ArrayList<OpenPath> files = new ArrayList<OpenPath>();
-            for (String s : results)
-                files.add(new OpenFile(s));
+                ArrayList<OpenPath> files = new ArrayList<OpenPath>();
+                for (String s : results)
+                    files.add(new OpenFile(s));
 
-            Toast.makeText(getActivity(), "Unimplemented", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "Unimplemented", Toast.LENGTH_LONG).show();
                 break;
             default:
                 if (results.length == 1)
                     Toast.makeText(getContext(), results[0], Toast.LENGTH_LONG).show();
-            Logger.LogDebug("Worker thread complete (" + type + ")?");
-            if (!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
-                try {
-                    if (mPath.requiresThread())
-                        mPath = FileManager.getOpenCache(mPath.getPath());
-                    if (mPath != null)
-                        updateData(mPath.list());
-                } catch (IOException e) {
-                    Logger.LogWarning("Couldn't update data after thread completion", e);
+                Logger.LogDebug("Worker thread complete (" + type + ")?");
+                if (!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
+                    try {
+                        if (mPath.requiresThread())
+                            mPath = FileManager.getOpenCache(mPath.getPath());
+                        if (mPath != null)
+                            updateData(mPath.list());
+                    } catch (IOException e) {
+                        Logger.LogWarning("Couldn't update data after thread completion", e);
+                    }
+                else {
+                    // if(mProgressBarLoading == null) mProgressBarLoading =
+                    // getView().findViewById(R.id.content_progress);
+                    EventHandler.executeNetwork(new NetworkIOTask(this), mPath);
                 }
-            else {
-                // if(mProgressBarLoading == null) mProgressBarLoading =
-                // getView().findViewById(R.id.content_progress);
-                EventHandler.executeNetwork(new NetworkIOTask(this), mPath);
-            }
 
-            // changePath(mPath, false);
-            notifyDataSetChanged();
+                // changePath(mPath, false);
+                notifyDataSetChanged();
 
-            refreshData(new Bundle(), false);
-            // changePath(getManager().peekStack(), false);
+                refreshData(new Bundle(), false);
+                // changePath(getManager().peekStack(), false);
         }
         setProgressVisibility(false);
     }

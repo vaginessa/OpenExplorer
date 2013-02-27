@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +17,11 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.utils.Logger;
+
+import SevenZip.ArchiveExtractCallback;
+import SevenZip.HRESULT;
 import SevenZip.MyRandomAccessFile;
+import SevenZip.Archive.IArchiveExtractCallback;
 import SevenZip.Archive.IInArchive;
 import SevenZip.Archive.SevenZipEntry;
 import SevenZip.Archive.SevenZip.Handler;
@@ -44,13 +49,13 @@ public class OpenLZMA extends OpenPath implements OpenStream {
             Logger.LogError("Couldn't open LZMA file (" + file + ")");
         }
     }
-    
+
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        if(mLZMA != null)
+        if (mLZMA != null)
             mLZMA.close();
-        if(mRAF != null)
+        if (mRAF != null)
             mRAF.close();
     }
 
@@ -94,9 +99,14 @@ public class OpenLZMA extends OpenPath implements OpenStream {
 
     @Override
     public OpenPath getChild(String name) {
-        int i = -1;
-        
-        return new OpenLZMAEntry(this, mLZMA.getEntry(i));
+        try {
+            OpenPath[] kids = list();
+            for (OpenPath kid : kids)
+                if (kid.getName().equals(name))
+                    return kid;
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     @Override
@@ -134,24 +144,72 @@ public class OpenLZMA extends OpenPath implements OpenStream {
         }
     }
 
+    private static int binarySearch(String[] array, String key)
+    {
+        for (int i = 0; i < array.length; i++)
+            if (array[i].equals(key))
+                return i;
+        return -1;
+    }
+
+    public int extract(OpenPath into, String[] includes) throws IOException {
+        int[] indices = new int[includes.length];
+        int i = 0;
+        for (OpenLZMAEntry ze : getAllEntries())
+        {
+            int pos = binarySearch(includes, ze.getRelativePath());
+            if (pos > -1)
+                indices[i++] = pos;
+            if (i >= indices.length)
+                break;
+        }
+
+        ArchiveExtractCallback extractCallbackSpec = new ArchiveExtractCallback();
+        String base = into.getPath();
+        if (!base.endsWith("/"))
+            base = base.substring(0, base.lastIndexOf("/") + 1);
+        extractCallbackSpec.setBasePath(base);
+
+        IArchiveExtractCallback extractCallback = extractCallbackSpec;
+        IInArchive arch = getLZMA();
+
+        extractCallbackSpec.Init(arch);
+        int res = arch.Extract(indices, indices.length, IInArchive.NExtract_NAskMode_kExtract,
+                extractCallback);
+
+        if (res == HRESULT.S_OK) {
+            if (extractCallbackSpec.NumErrors == 0)
+            {
+                Logger.LogDebug("LZMA complete?");
+                return indices.length;
+            } else {
+                Logger.LogError("LZMA errors: " + extractCallbackSpec.NumErrors);
+                return (int)(indices.length - extractCallbackSpec.NumErrors);
+            }
+        } else {
+            Logger.LogError("Error while extracting LZMA!");
+            return -1;
+        }
+    }
+
     public List<OpenLZMAEntry> getAllEntries() throws IOException {
         if (mEntries != null)
             return mEntries;
         mEntries = new ArrayList<OpenLZMAEntry>();
-        for(int i = 0; i < mLZMA.size(); i++)
+        for (int i = 0; i < mLZMA.size(); i++)
         {
             SevenZipEntry ze = mLZMA.getEntry(i);
             if (ze.isDirectory())
                 continue;
-            String name = ze.getName();
-            if (name.indexOf("/") > 0 && name.indexOf("/") < name.length() - 1)
-                name = name.substring(0, name.lastIndexOf("/") + 1);
+            String parent = ze.getName();
+            if (parent.indexOf("/") > 0 && parent.indexOf("/") < parent.length() - 1)
+                parent = parent.substring(0, parent.lastIndexOf("/") + 1);
             else
-                name = "";
-            OpenPath vp = findVirtualPath(name);
+                parent = "";
+            OpenPath vp = findVirtualPath(parent);
             OpenLZMAEntry entry = new OpenLZMAEntry(vp, ze);
             mEntries.add(entry);
-            addFamilyEntry(name, entry);
+            addFamilyEntry(parent, entry);
         }
         Set<String> keys = mFamily.keySet();
         for (String path : keys.toArray(new String[keys.size()])) {
@@ -468,9 +526,13 @@ public class OpenLZMA extends OpenPath implements OpenStream {
             return name;
         }
 
+        public String getRelativePath() {
+            return ze.getName();
+        }
+
         @Override
         public String getPath() {
-            return OpenLZMA.this.getPath() + "/" + ze.getName();
+            return OpenLZMA.this.getPath() + "/" + getRelativePath();
         }
 
         @Override
@@ -481,6 +543,10 @@ public class OpenLZMA extends OpenPath implements OpenStream {
         @Override
         public long length() {
             return ze.getSize();
+        }
+
+        public OpenLZMA getLZMA() {
+            return OpenLZMA.this;
         }
 
         @Override
