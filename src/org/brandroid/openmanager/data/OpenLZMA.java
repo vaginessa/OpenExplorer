@@ -55,9 +55,15 @@ public class OpenLZMA extends OpenPath implements OpenStream {
     protected void finalize() throws Throwable {
         super.finalize();
         if (mLZMA != null)
-            mLZMA.close();
+            try {
+                mLZMA.close();
+            } catch(Exception e) {
+            }
         if (mRAF != null)
-            mRAF.close();
+            try {
+                mRAF.close();
+            } catch(Exception e) {
+            }
     }
 
     @Override
