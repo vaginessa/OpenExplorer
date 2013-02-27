@@ -1714,7 +1714,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setBeamPushUrisCallback(new NfcAdapter.CreateBeamUrisCallback() {
                 @Override
                 public Uri[] createBeamUris(NfcEvent event) {
-                    Set<OpenPath> selectedFiles = getClipboard();
+                    List<OpenPath> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<Uri> fileUri = new ArrayList<Uri>();
                         for (OpenPath f : selectedFiles) {
@@ -1735,7 +1735,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setNdefPushMessageCallback(new CreateNdefMessageCallback() {
                 public NdefMessage createNdefMessage(NfcEvent event) {
                     Logger.LogVerbose("Beam me up, scotty!");
-                    Set<OpenPath> selectedFiles = getClipboard();
+                    List<OpenPath> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<NdefRecord> recs = new ArrayList<NdefRecord>();
                         for (OpenPath f : selectedFiles) {

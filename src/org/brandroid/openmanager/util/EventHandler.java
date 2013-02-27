@@ -132,7 +132,7 @@ public class EventHandler {
 
     private static NotificationManager mNotifier = null;
     private static int EventCount = 0;
-    public CompressionType DefaultCompressionType = CompressionType.ZIP;
+    public static CompressionType DefaultCompressionType = CompressionType.ZIP;
 
     private OnWorkerUpdateListener mThreadListener;
     private TaskChangeListener mTaskListener;

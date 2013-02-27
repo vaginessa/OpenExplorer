@@ -49,6 +49,7 @@ import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.EventHandler.CompressionType;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
@@ -95,17 +96,20 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -1340,39 +1344,27 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                 }
                 final String def = zname;
-
-                final InputDialog dZip = new InputDialog(getExplorer()).setIcon(R.drawable.sm_zip)
-                        .setTitle(R.string.s_menu_zip).setMessageTop(R.string.s_prompt_path)
-                        .setDefaultTop(intoPath.getPath()).setMessage(R.string.s_prompt_zip)
-                        .setCancelable(true)
-                        .setNegativeButton(android.R.string.no, new OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                showZipDialog(intoPath, def, folder, getClipboard(), new OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (dialog != null)
+                            dialog.dismiss();
+                        switch (which)
+                        {
+                            case DialogInterface.BUTTON_NEGATIVE:
                                 if (!fromPasteMenu && getClipboard().size() <= 1)
                                     getClipboard().clear();
-                            }
-                        });
-                dZip.setOnCancelListener(new OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        if (fromPasteMenu && getClipboard().size() <= 1)
-                            getClipboard().clear();
+                                break;
+                            case DialogInterface.BUTTON_NEUTRAL:
+                                if (fromPasteMenu && getClipboard().size() <= 1)
+                                    getClipboard().clear();
+                                break;
+                            case DialogInterface.BUTTON_POSITIVE:
+                                finishMode(mode);
+                                break;
+                        }
                     }
-                }).setPositiveButton(android.R.string.ok, new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        OpenPath zFolder = new OpenFile(dZip.getInputTopText());
-                        if (zFolder == null || !zFolder.exists())
-                            zFolder = folder;
-                        OpenPath zipFile = zFolder.getChild(dZip.getInputText());
-                        Logger.LogVerbose("Zipping " + getClipboard().size() + " items to "
-                                + zipFile.getPath());
-                        getHandler().zipFile(zipFile, getClipboard(), getExplorer());
-                        refreshOperations();
-                        finishMode(mode);
-                    }
-                }).setDefaultText(def);
-                dZip.create().show();
+                });
+
                 return true;
 
                 // case R.id.menu_context_unzip:
@@ -1418,6 +1410,71 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 // return true;
         }
         return false;
+    }
+
+    private void showZipDialog(OpenPath intoPath, String defaultName, final OpenPath folder,
+            final List<OpenPath> files, final DialogInterface.OnClickListener onClick)
+    {
+        final InputDialog dZip = new InputDialog(getExplorer()).setIcon(R.drawable.sm_zip)
+                .setTitle(R.string.s_menu_zip).setMessageTop(R.string.s_prompt_path)
+                .setDefaultTop(intoPath.getPath()).setMessage(R.string.s_prompt_zip)
+                .setCancelable(true)
+                .setNegativeButton(android.R.string.no, new OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        onClick.onClick(dialog, which);
+                    }
+                });
+        ViewGroup mCompressLayout = (ViewGroup)LayoutInflater.from(getContext())
+                .inflate(R.layout.compression_spinner, null);
+        Spinner mCompressType = (Spinner)mCompressLayout
+                .findViewById(R.id.compression_type);
+        mCompressType.setSelection(EventHandler.DefaultCompressionType.ordinal());
+        mCompressType.setOnItemSelectedListener(new OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position,
+                    long id) {
+                switch (position)
+                {
+                    case 0:
+                        EventHandler.DefaultCompressionType = CompressionType.ZIP;
+                        break;
+                    case 1:
+                        EventHandler.DefaultCompressionType = CompressionType.TAR;
+                        break;
+                    case 2:
+                        EventHandler.DefaultCompressionType = CompressionType.GZ;
+                        break;
+                    case 3:
+                        EventHandler.DefaultCompressionType = CompressionType.BZ2;
+                        break;
+                }
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        View view = dZip.getView();
+        ((ViewGroup)view).addView(mCompressLayout);
+        dZip.setOnCancelListener(new OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                onClick.onClick(dialog, DialogInterface.BUTTON_NEUTRAL);
+            }
+        }).setPositiveButton(android.R.string.ok, new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                OpenPath zFolder = new OpenFile(dZip.getInputTopText());
+                if (zFolder == null || !zFolder.exists())
+                    zFolder = folder;
+                OpenPath zipFile = zFolder.getChild(dZip.getInputText());
+                Logger.LogVerbose("Zipping " + files.size() + " items to "
+                        + zipFile.getPath());
+                getHandler().zipFile(zipFile, files, getExplorer());
+                refreshOperations();
+                onClick.onClick(dialog, which);
+            }
+        }).setDefaultText(defaultName);
+        dZip.create().show();
     }
 
     private boolean checkClipboardForTar(final OpenClipboard cb, final OpenPath into) {
@@ -2303,26 +2360,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                     final String def = zname;
 
-                    final InputDialog dZip = new InputDialog(getExplorer())
-                            .setIcon(R.drawable.sm_zip).setTitle(R.string.s_menu_zip)
-                            .setMessageTop(R.string.s_prompt_path)
-                            .setDefaultTop(intoPath.getPath()).setMessage(R.string.s_prompt_zip)
-                            .setCancelable(true);
-                    dZip.setPositiveButton(android.R.string.ok, new OnClickListener() {
-                        @Override
+                    showZipDialog(intoPath, def, folder, selections, new OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            OpenPath zFolder = new OpenFile(dZip.getInputTopText());
-                            if (zFolder == null || !zFolder.exists())
-                                zFolder = folder;
-                            OpenPath zipFile = zFolder.getChild(dZip.getInputText());
-                            Logger.LogVerbose("Zipping " + getClipboard().size() + " items to "
-                                    + zipFile.getPath());
-                            getHandler().zipFile(zipFile, toZip, getExplorer(), CompressionType.ZIP);
-                            refreshOperations();
-                            deselectAll();
+                            if (which != DialogInterface.BUTTON_NEUTRAL)
+                                deselectAll();
                         }
-                    }).setDefaultText(def);
-                    dZip.create().show();
+                    });
                     break;
                 case R.id.menu_context_rename:
                     getHandler().renameFile(last, last.isDirectory(), getActivity());
