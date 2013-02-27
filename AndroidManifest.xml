@@ -151,9 +151,6 @@
             android:value=".activities.OpenExplorer" />
 
         <activity
-            android:name=".activities.Authenticator"
-            android:label="Authenticator" />
-        <activity
             android:name=".activities.SearchableActivity"
             android:launchMode="singleTop" >
         </activity>
