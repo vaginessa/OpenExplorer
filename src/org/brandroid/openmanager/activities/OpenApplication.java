@@ -272,7 +272,8 @@ public class OpenApplication extends Application implements OpenApp {
 
     public static boolean hasRootAccess(boolean doAsk)
     {
-        Logger.LogDebug("hasRootAccess(" + doAsk + ")? " + mRootAccess);
+        if(OpenExplorer.IS_DEBUG_BUILD)
+            Logger.LogDebug("hasRootAccess(" + doAsk + ")? " + mRootAccess);
         if (mRootAccess != null)
             return mRootAccess;
         try {
