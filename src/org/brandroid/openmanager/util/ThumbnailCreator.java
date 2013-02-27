@@ -621,7 +621,7 @@ public class ThumbnailCreator {
                             if (Build.VERSION.SDK_INT >= 8)
                                 ainfo.publicSourceDir = ainfo.sourceDir = file.getPath();
                             Drawable mIcon = ainfo.loadIcon(man);
-                            if (mIcon != null)
+                            if (mIcon != null && mIcon instanceof BitmapDrawable)
                                 bmp = ((BitmapDrawable)mIcon).getBitmap();
                         }
                     }

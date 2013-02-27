@@ -30,6 +30,7 @@ import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
@@ -116,6 +117,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.stericson.RootTools.RootTools;
 
 @SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment implements OnItemLongClickListener,
@@ -472,7 +474,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         if (path instanceof OpenFile && !path.canRead())
-            path = new OpenFileRoot(path);
+            if (OpenApplication.hasRootAccess(true))
+                path = new OpenFileRoot(path);
 
         if (DEBUG)
             Logger.LogDebug("refreshData running...");
@@ -1517,8 +1520,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if (DEBUG)
-            Logger.LogDebug(getClassName() + ".onCreateOptionsMenu (" + getPath() + ")");
+        //        if (DEBUG)
+        //            Logger.LogDebug(getClassName() + ".onCreateOptionsMenu (" + getPath() + ")");
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.content_full, menu);
         MenuUtils.setMenuEnabled(menu, true, R.id.menu_view);
@@ -1528,7 +1531,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
+        //        Logger.LogVerbose("ContentFragment.onPrepareOptionsMenu");
         if (getActivity() == null)
             return;
         if (menu == null)
@@ -1651,12 +1654,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         if (mGrid != null) {
             if (mBundle.containsKey("scroll") && mBundle.getInt("scroll") > 0) {
-                Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
+                //Logger.LogDebug("Returning Scroll to " + mBundle.getInt("scroll"));
                 mGrid.scrollTo(0, mBundle.getInt("scroll"));
             } else if (mBundle.containsKey("grid"))
                 mGrid.onRestoreInstanceState(mBundle.getParcelable("grid"));
             if (mBundle.containsKey("first")) {
-                Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
+                //Logger.LogDebug("Returning first item #" + mBundle.getInt("first"));
                 mGrid.setSelection(mBundle.getInt("first"));
             }
         }

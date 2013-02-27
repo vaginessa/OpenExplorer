@@ -281,17 +281,17 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     @Override
     public void startActivityForResult(Intent intent, int requestCode) {
         super.startActivityForResult(intent, requestCode);
-        if (DEBUG)
-            Logger.LogDebug(getClassName() + ".startActivityForResult(" + requestCode + ","
-                    + (intent != null ? intent.toString() : "null") + ")");
+        //        if (DEBUG)
+        //            Logger.LogDebug(getClassName() + ".startActivityForResult(" + requestCode + ","
+        //                    + (intent != null ? intent.toString() : "null") + ")");
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (DEBUG)
-            Logger.LogDebug(getClassName() + ".onActivityResult(" + requestCode + "," + resultCode
-                    + "," + (data != null ? data.toString() : "null") + ")");
+//        if (DEBUG)
+//            Logger.LogDebug(getClassName() + ".onActivityResult(" + requestCode + "," + resultCode
+//                    + "," + (data != null ? data.toString() : "null") + ")");
     }
 
     public boolean showMenu(final Menu menu, View anchor, CharSequence title) {
@@ -335,7 +335,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                 }
             });
             pop.getMenuInflater().inflate(menuId, pop.getMenu());
-            Logger.LogDebug("PopupMenu.show()");
+//            Logger.LogDebug("PopupMenu.show()");
             pop.show();
             return true;
         }
@@ -545,29 +545,29 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
             setOnFragmentDPADListener((OpenExplorer)activity);
         final OpenPath path = (this instanceof OpenPathFragmentInterface) ? ((OpenPathFragmentInterface)this)
                 .getPath() : null;
-        if (DEBUG)
-            Logger.LogDebug("}-- onAttach :: " + getClassName() + " @ " + path);
+//        if (DEBUG)
+//            Logger.LogDebug("}-- onAttach :: " + getClassName() + " @ " + path);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        if (DEBUG)
-            Logger.LogDebug("{-- onDetach :: "
-                    + getClassName()
-                    + (this instanceof OpenPathFragmentInterface
-                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
-                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+//        if (DEBUG)
+//            Logger.LogDebug("{-- onDetach :: "
+//                    + getClassName()
+//                    + (this instanceof OpenPathFragmentInterface
+//                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
+//                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
     }
 
     @Override
     public void onDestroy() {
-        if (DEBUG)
-            Logger.LogDebug("[-- onDestroy :: "
-                    + getClassName()
-                    + (this instanceof OpenPathFragmentInterface
-                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
-                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+        //        if (DEBUG)
+        //            Logger.LogDebug("[-- onDestroy :: "
+        //                    + getClassName()
+        //                    + (this instanceof OpenPathFragmentInterface
+        //                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
+        //                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
         super.onDestroy();
     }
 
@@ -726,12 +726,12 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if (DEBUG)
-            Logger.LogDebug("]-- onCreate - "
-                    + getClassName()
-                    + (this instanceof OpenPathFragmentInterface
-                            && ((OpenPathFragmentInterface)this).getPath() != null ? "#"
-                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+        //        if (DEBUG)
+        //            Logger.LogDebug("]-- onCreate - "
+        //                    + getClassName()
+        //                    + (this instanceof OpenPathFragmentInterface
+        //                            && ((OpenPathFragmentInterface)this).getPath() != null ? "#"
+        //                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
         // CONTENT_FRAGMENT_FREE = false;
         setRetainInstance(false);
         super.onCreate(savedInstanceState);
