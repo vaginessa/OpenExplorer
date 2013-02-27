@@ -218,6 +218,14 @@ public class EventHandler {
         return ret;
     }
 
+    private static int binarySearch(String[] array, String key)
+    {
+        for (int i = 0; i < array.length; i++)
+            if (array[i].equals(key))
+                return i;
+        return -1;
+    }
+
     public void deleteFile(final OpenPath file, final OpenApp mApp, boolean showConfirmation) {
         Collection<OpenPath> files = new ArrayList<OpenPath>();
         files.add(file);
@@ -1178,27 +1186,10 @@ public class EventHandler {
             if (!into.exists() && !into.mkdir())
                 return false;
             if ((source.getMimeType().contains("7z") || source.getMimeType().contains("lzma")) &&
-                    extractSet(source, into, includes))
+                    extractLZMAFiles((OpenStream)source, into, includes) > -1)
                 return true;
             try {
                 TarUtils.untarTarFile(into.getPath(), source.getPath(), includes);
-                return true;
-            } catch (IOException e) {
-                Logger.LogError("Unable to untar!", e);
-                return false;
-            }
-        }
-
-        private Boolean extractSet(OpenPath source, OpenPath into, String... includes) {
-            OpenLZMA lz = null;
-            if (source instanceof OpenLZMA)
-                lz = (OpenLZMA)source;
-            else if (source instanceof OpenFile)
-                lz = new OpenLZMA((OpenFile)source);
-            if (!into.exists() && !into.mkdir())
-                return false;
-            try {
-                lz.extract(into, includes);
                 return true;
             } catch (IOException e) {
                 Logger.LogError("Unable to untar!", e);
@@ -1475,29 +1466,53 @@ public class EventHandler {
             return ret;
         }
 
-        private int extractLZMAFiles(OpenStream s7, final OpenPath directory) {
+        private int extractLZMAFiles(OpenStream s7, final OpenPath directory, String... includes) {
             // Logger.LogVerbose("LZMA Trying to extract 7zip");
             OpenLZMA f7 = null;
             int ret = 0;
 
             try {
-                OpenFile f = (OpenFile)s7;
-                f7 = new OpenLZMA(f);
+                if(s7 instanceof OpenLZMA)
+                    f7 = (OpenLZMA)s7;
+                else
+                    f7 = new OpenLZMA((OpenFile)s7);
 
                 mTotalCount = f7.getListLength();
 
+                int[] indices = null;
+                int i = 0;
+                if (includes.length > 0)
+                {
+                    mTotalCount = includes.length;
+                    indices = new int[includes.length];
+                    for (OpenLZMAEntry ze : f7.getAllEntries())
+                    {
+                        int pos = binarySearch(includes, ze.getRelativePath());
+                        Logger.LogVerbose("LZMA " + ze.getRelativePath());
+                        if (pos > -1)
+                            indices[i++] = pos;
+                        if (i >= indices.length)
+                            break;
+                    }
+                }
+
                 ArchiveExtractCallback extractCallbackSpec = new ArchiveExtractCallback();
                 String base = directory.getPath();
-                if (!base.endsWith("/"))
-                    base = base.substring(0, base.lastIndexOf("/") + 1);
+                if(!base.endsWith("/"))
+                    base += "/";
                 extractCallbackSpec.setBasePath(base);
                 // Logger.LogVerbose("LZMA Base: " + base);
                 IArchiveExtractCallback extractCallback = extractCallbackSpec;
                 IInArchive arch = f7.getLZMA();
 
                 extractCallbackSpec.Init(arch);
-                int res = arch.Extract(null, -1, IInArchive.NExtract_NAskMode_kExtract,
-                        extractCallback);
+                int res = 0;
+                if (indices == null)
+                    res = arch.Extract(null, -1, IInArchive.NExtract_NAskMode_kExtract,
+                            extractCallback);
+                else
+                    res = arch.Extract(indices, indices.length,
+                            IInArchive.NExtract_NAskMode_kExtract, extractCallback);
 
                 if (res == HRESULT.S_OK) {
                     if (extractCallbackSpec.NumErrors == 0)
@@ -1516,6 +1531,7 @@ public class EventHandler {
 
             } catch (Exception e) {
                 Logger.LogError("Unable to extract LZMA.", e);
+                ret = -1;
             } finally {
             }
             return ret;
@@ -1748,8 +1764,7 @@ public class EventHandler {
                 case UNZIPTO:
                 case UNZIP:
                 case UNTAR:
-                    int typeRes = mType == EventType.UNTAR ? R.string.s_untar
-                            : R.string.s_extracted;
+                    int typeRes = R.string.s_extracted;
                     if (result == null || result == 0)
                         Toast.makeText(
                                 mContext,

@@ -15,6 +15,7 @@ import net.contrapunctus.lzma.LzmaOutputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.utils.Logger;
 
@@ -150,46 +151,6 @@ public class OpenLZMA extends OpenPath implements OpenStream {
             if (array[i].equals(key))
                 return i;
         return -1;
-    }
-
-    public int extract(OpenPath into, String[] includes) throws IOException {
-        int[] indices = new int[includes.length];
-        int i = 0;
-        for (OpenLZMAEntry ze : getAllEntries())
-        {
-            int pos = binarySearch(includes, ze.getRelativePath());
-            if (pos > -1)
-                indices[i++] = pos;
-            if (i >= indices.length)
-                break;
-        }
-
-        ArchiveExtractCallback extractCallbackSpec = new ArchiveExtractCallback();
-        String base = into.getPath();
-        if (!base.endsWith("/"))
-            base = base.substring(0, base.lastIndexOf("/") + 1);
-        extractCallbackSpec.setBasePath(base);
-
-        IArchiveExtractCallback extractCallback = extractCallbackSpec;
-        IInArchive arch = getLZMA();
-
-        extractCallbackSpec.Init(arch);
-        int res = arch.Extract(indices, indices.length, IInArchive.NExtract_NAskMode_kExtract,
-                extractCallback);
-
-        if (res == HRESULT.S_OK) {
-            if (extractCallbackSpec.NumErrors == 0)
-            {
-                Logger.LogDebug("LZMA complete?");
-                return indices.length;
-            } else {
-                Logger.LogError("LZMA errors: " + extractCallbackSpec.NumErrors);
-                return (int)(indices.length - extractCallbackSpec.NumErrors);
-            }
-        } else {
-            Logger.LogError("Error while extracting LZMA!");
-            return -1;
-        }
     }
 
     public List<OpenLZMAEntry> getAllEntries() throws IOException {
