@@ -152,5 +152,11 @@
         <item>external</item>
         <item>ask</item>
     </string-array>
+    <string-array name="compression_types">
+        <item>Zip</item>
+        <item>Tar</item>
+        <item>GZip</item>
+        <item>BZip2</item>
+    </string-array>
 
 </resources>

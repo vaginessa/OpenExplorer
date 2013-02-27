@@ -78,6 +78,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenRAR;
 import org.brandroid.openmanager.data.OpenRAR.OpenRAREntry;
+import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
@@ -89,10 +90,14 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.itadaki.bzip2.BZip2InputStream;
+import org.itadaki.bzip2.BZip2OutputStream;
+import org.kamranzafar.jtar.TarEntry;
+import org.kamranzafar.jtar.TarOutputStream;
 import org.kamranzafar.jtar.TarUtils;
 
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
+import com.jcraft.jzlib.GZIPOutputStream;
 
 @SuppressWarnings({
         "unchecked", "rawtypes"
@@ -119,7 +124,7 @@ public class EventHandler {
     }
 
     public enum CompressionType {
-        ZIP, TGZ, TBZ2, LZMA, RAR, GZ, BZ2
+        ZIP, TAR, GZ, BZ2, LZMA, RAR
     }
 
     public static boolean SHOW_NOTIFICATION_STATUS = !OpenExplorer.isBlackBerry()
@@ -1021,6 +1026,41 @@ public class EventHandler {
         {
             switch (mCompressType)
             {
+                case GZ:
+                case BZ2:
+                case TAR:
+                    OpenStream fs = (OpenStream)mArchive;
+                    OutputStream os = null;
+                    OutputStream tos = null;
+                    int ret = 0;
+                    try {
+                        mTotalCount = files.length;
+                        if (files.length > 1)
+                            tos = new TarOutputStream(fs.getOutputStream());
+                        else
+                            tos = fs.getOutputStream();
+                        if (mCompressType == CompressionType.GZ)
+                            os = new GZIPOutputStream(tos);
+                        else if (mCompressType == CompressionType.BZ2)
+                            os = new BZip2OutputStream(tos);
+                        else
+                            os = tos;
+                        if (files.length == 1)
+                            tos.write(((OpenFile)files[0]).readBytes());
+                        else
+                            for (OpenPath file : files)
+                            {
+                                TarEntry te = new TarEntry(((OpenFile)file).getFile(), file.getName());
+                                ((TarOutputStream)tos).putNextEntry(te);
+                            }
+                    } catch (IOException e) {
+                        Logger.LogError("Unable to compress files!", e);
+                        return -1;
+                    } finally {
+                        closeStream(tos);
+                        closeStream(os);
+                    }
+                    return 1;
                 case ZIP:
                 default:
                     mFileMang.setProgressListener(this);
@@ -1028,7 +1068,6 @@ public class EventHandler {
                     mFileMang.createZipFile(mIntoPath, files);
                     return mTotalCount;
             }
-            return -1;
         }
 
         protected int extractFiles(OpenPath file, OpenPath into, String... includes) {
