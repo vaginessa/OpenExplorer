@@ -411,5 +411,6 @@
     <string name="s_archives">Archives</string>
     <string name="s_compress">Compress</string>
     <string name="s_compress_type">Compression Type</string>
+    <string name="s_compressed">compressed</string>
 
 </resources>

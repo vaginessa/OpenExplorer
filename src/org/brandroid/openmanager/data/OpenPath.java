@@ -1073,14 +1073,28 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public boolean canHandleInternally() {
         return false;
     }
-
+    
     public static void copyStreams(InputStream in, OutputStream out) throws IOException {
+        copyStreams(in, out, false, false);
+    }
+
+    public static void copyStreams(InputStream in, OutputStream out, boolean doCloseInput, boolean doCloseOutput) throws IOException {
         byte[] buffer = new byte[2048];
         int count = 0;
         while((count = in.read(buffer)) != -1)
         {
             out.write(buffer, 0, count);
         }
+        if(doCloseInput)
+            try {
+                if(in != null)
+                    in.close();
+            } catch(Exception e) { }
+        if(doCloseOutput)
+            try {
+                if(out != null)
+                    out.close();
+            } catch(Exception e) { }
     }
 
 }

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -787,6 +788,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     && (file.getMimeType().contains("tar")
                             || file.getMimeType().endsWith("rar")
                             || file.getMimeType().endsWith("compressed")
+                            || file.getMimeType().endsWith("bz")
+                            || file.getMimeType().endsWith("gz")
                             || file.getMimeType().endsWith("zip")))
             {
                 final OpenPath archive = file;
@@ -1336,14 +1339,18 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
                 getClipboard().ClearAfter = true;
                 String zname = getClipboard().get(0).getName()
-                        .replace("." + file.getExtension(), "")
-                        + ".zip";
+                        + "." + EventHandler.DefaultCompressionType
+                                .toString().toLowerCase(Locale.US);
                 if (getClipboard().size() > 1) {
                     OpenPath last = getClipboard().get(getClipboard().getCount() - 1);
                     if (last != null && last.getParent() != null) {
                         if (last.getParent() instanceof OpenCursor)
                             zname = folder.getPath();
-                        zname = last.getParent().getName() + ".zip";
+                        zname = last.getParent().getName() + ".";
+                        if (EventHandler.DefaultCompressionType == CompressionType.BZ2
+                                || EventHandler.DefaultCompressionType == CompressionType.GZ)
+                            zname += "t";
+                        zname += EventHandler.DefaultCompressionType.toString().toLowerCase();
                     }
                 }
                 final String def = zname;
@@ -1415,7 +1422,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         return false;
     }
 
-    private void showZipDialog(OpenPath intoPath, String defaultName, final OpenPath folder,
+    private void showZipDialog(OpenPath intoPath, final String defaultName, final OpenPath folder,
             final List<OpenPath> files, final DialogInterface.OnClickListener onClick)
     {
         final InputDialog dZip = new InputDialog(getExplorer()).setIcon(R.drawable.sm_zip)
@@ -1432,22 +1439,35 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 .inflate(R.layout.compression_spinner, null);
         Spinner mCompressType = (Spinner)mCompressLayout
                 .findViewById(R.id.compression_type);
+        View view = dZip.getView();
         mCompressType.setSelection(EventHandler.DefaultCompressionType.ordinal());
         mCompressType.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position,
                     long id) {
+                String name = dZip.getInputText()
+                        .replace(".zip", "").replace(".tar", "")
+                        .replace(".tgz", "").replace(".tbz2", "")
+                        .replace(".gz", "").replace(".bz2", "");
                 switch (position)
                 {
                     case 0:
+                        name += ".zip";
+                        dZip.setDefaultText(name);
                         EventHandler.DefaultCompressionType = CompressionType.ZIP;
                         break;
                     case 1:
+                        name += ".tar";
+                        dZip.setDefaultText(name);
                         EventHandler.DefaultCompressionType = CompressionType.TAR;
                         break;
                     case 2:
+                        name += "." + (files.size() > 1 ? "t" : "") + "gz";
+                        dZip.setDefaultText(name);
                         EventHandler.DefaultCompressionType = CompressionType.GZ;
                         break;
                     case 3:
+                        name += "." + (files.size() > 1 ? "t" : "") + "bz2";
+                        dZip.setDefaultText(name);
                         EventHandler.DefaultCompressionType = CompressionType.BZ2;
                         break;
                 }
@@ -1456,11 +1476,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-        View view = dZip.getView();
         ((ViewGroup)view).addView(mCompressLayout);
-        dZip.setOnCancelListener(new OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
+        dZip.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 onClick.onClick(dialog, DialogInterface.BUTTON_NEUTRAL);
             }
         }).setPositiveButton(android.R.string.ok, new OnClickListener() {
@@ -2263,9 +2281,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                             R.id.menu_context_bookmark);
                 if (last.isFile())
                     mRename.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS);
-            } else
+            } else {
                 mRename.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM
                         | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+                MenuUtils.setMenuVisible(menu, false, R.id.menu_context_heatmap);
+            }
 
             mRename.setVisible(num == 1);
             mInfo.setVisible(num == 1);
@@ -2353,14 +2373,16 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     final OpenPath[] toZip = selections.toArray(new OpenPath[selections.size()]);
                     if (toZip.length == 0)
                         return false;
-                    String zname = toZip[0].getName().replace("." + toZip[0].getExtension(), "")
-                            + ".zip";
+                    String zname = toZip[0].getName();
+                    String type = EventHandler.DefaultCompressionType.toString().toLowerCase();
                     if (toZip.length > 1) {
                         if (last != null && last.getParent() != null)
                             zname = last.getParent().getName() + "-"
-                                    + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
-                                    + ".zip";
+                                    + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date());
+                        if(type.equals("gz") || type.equals("bz2"))
+                            type = "t" + type;
                     }
+                    zname += "." + type;
                     final String def = zname;
 
                     showZipDialog(intoPath, def, folder, selections, new OnClickListener() {
