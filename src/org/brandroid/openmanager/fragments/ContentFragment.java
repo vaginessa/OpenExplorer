@@ -526,16 +526,16 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         SortType sort = SortType.ALPHA;
         if (getExplorer() != null) {
             String ds = getExplorer().getSetting(null, "pref_sorting", SortType.ALPHA.toString());
-            Logger.LogVerbose("Default Sort String: " + ds);
+            //Logger.LogVerbose("Default Sort String: " + ds);
 
             SortType defSort = new SortType(ds);
             defSort.setFoldersFirst(getExplorer().getSetting(null, "pref_sorting_folders", true));
 
-            Logger.LogVerbose("Default Sort: " + defSort.toString());
+            //Logger.LogVerbose("Default Sort: " + defSort.toString());
 
             sort = new SortType(getViewSetting(path, "sort", defSort.toString()));
 
-            Logger.LogVerbose("Path Sort: " + sort.toString());
+            //Logger.LogVerbose("Path Sort: " + sort.toString());
         }
         try {
             mContentAdapter.mShowThumbnails = getViewSetting(path, "thumbs",

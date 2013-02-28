@@ -20,10 +20,10 @@ package org.brandroid.openmanager.util;
 
 import SevenZip.ArchiveExtractCallback;
 import SevenZip.HRESULT;
+import SevenZip.Handler;
+import SevenZip.IArchiveExtractCallback;
+import SevenZip.IInArchive;
 import SevenZip.MyRandomAccessFile;
-import SevenZip.Archive.IArchiveExtractCallback;
-import SevenZip.Archive.IInArchive;
-import SevenZip.Archive.SevenZip.Handler;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;

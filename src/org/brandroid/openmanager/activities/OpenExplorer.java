@@ -1232,32 +1232,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private void initPager() {
         mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
-        TabPageIndicator indicator = null;
         if (mViewPagerEnabled && mViewPager != null) {
             setViewVisibility(false, false, R.id.content_frag, R.id.title_path);
             setViewVisibility(mTwoRowTitle, false, R.id.title_text);
             setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
             mViewPager.setOnPageChangeListener(this);
-            // mViewPager.setOnPageIndicatorChangeListener(this);
-            View indicator_frame = findViewById(R.id.content_pager_indicator);
-            try {
-                // LayoutAnimationController lac = new
-                // LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(),
-                // false));
-                if (indicator_frame != null)
-                    indicator_frame.setAnimation(AnimationUtils.makeInAnimation(
-                            getApplicationContext(), false));
-            } catch (Resources.NotFoundException e) {
-                Logger.LogError("Couldn't load pager animation.", e);
-            }
-            indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
+            TabPageIndicator indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
             if (indicator != null)
                 mViewPager.setIndicator(indicator);
             else
                 Logger.LogError("Couldn't find indicator!");
-            // mViewPager = new ViewPager(getApplicationContext());
-            // ((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
-            // findViewById(R.id.content_frag).setId(R.id.fake_content_id);
         } else {
             // mViewPagerEnabled = false;
             mViewPager = null; // (ViewPager)findViewById(R.id.content_pager);

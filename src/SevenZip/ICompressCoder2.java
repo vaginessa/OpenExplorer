@@ -1,6 +1,5 @@
 package SevenZip;
 
-import Common.RecordVector;
 
 public interface ICompressCoder2 {
     public int Code(

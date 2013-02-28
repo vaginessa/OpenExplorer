@@ -13,7 +13,8 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import SevenZip.Compression.LZMA.Encoder;
+import SevenZip.LZMAEncoder;
+
 import java.io.ByteArrayInputStream;
 
 public class LzmaOutputStream extends FilterOutputStream

@@ -1,10 +1,6 @@
 
 package SevenZip;
 
-import SevenZip.Archive.IArchiveExtractCallback;
-import SevenZip.Archive.IInArchive;
-import SevenZip.Archive.SevenZip.Handler;
-import SevenZip.Archive.SevenZipEntry;
 
 import java.io.File;
 
@@ -190,7 +186,7 @@ public class ArchiveExtractCallback implements IArchiveExtractCallback // , ICry
 
     }
 
-    SevenZip.Archive.IInArchive _archiveHandler; // IInArchive
+    SevenZip.IInArchive _archiveHandler; // IInArchive
     String _filePath; // name inside arcvhive
     String _diskFilePath; // full path to file on disk
 
@@ -205,7 +201,7 @@ public class ArchiveExtractCallback implements IArchiveExtractCallback // , ICry
         PasswordIsDefined = false;
     }
 
-    public void Init(SevenZip.Archive.IInArchive archiveHandler) {
+    public void Init(SevenZip.IInArchive archiveHandler) {
         NumErrors = 0;
         _archiveHandler = archiveHandler;
     }

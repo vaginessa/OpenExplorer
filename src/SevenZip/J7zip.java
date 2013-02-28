@@ -1,9 +1,5 @@
 package SevenZip;
 
-import SevenZip.Archive.SevenZip.Handler;
-import SevenZip.Archive.SevenZipEntry;
-import SevenZip.Archive.IArchiveExtractCallback;
-import SevenZip.Archive.IInArchive;
 
 import java.text.DateFormat;
 

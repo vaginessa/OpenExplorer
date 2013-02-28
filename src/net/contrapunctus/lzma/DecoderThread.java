@@ -7,7 +7,8 @@
 package net.contrapunctus.lzma;
 
 import SevenZip.ICompressProgressInfo;
-import SevenZip.Compression.LZMA.Decoder;
+import SevenZip.LZMADecoder;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,7 +20,7 @@ class DecoderThread extends Thread
     protected ArrayBlockingQueue<byte[]> q;
     protected InputStream in;
     protected OutputStream out;
-    protected Decoder dec;
+    protected LZMADecoder dec;
     protected IOException exn;
 
     private static final PrintStream dbg = System.err;
@@ -37,7 +38,7 @@ class DecoderThread extends Thread
         q = ConcurrentBufferOutputStream.newQueue( );
         in = _in;
         out = ConcurrentBufferOutputStream.create( q );
-        dec = new Decoder();
+        dec = new LZMADecoder();
         exn = null;
         if(DEBUG) dbg.printf("%s >> %s (%s)%n", this, out, q);
     }
