@@ -87,6 +87,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.itadaki.bzip2.BZip2InputStream;
@@ -1010,11 +1011,20 @@ public class EventHandler {
 
                 case EXTRACT:
                     if (params[0] instanceof OpenStream)
-                        ret += extractFiles(params[0], mIntoPath, mInitParams);
+                    {
+                        int x = extractFiles(params[0], mIntoPath, mInitParams);
+                        if(x > 0 && new Preferences(mContext).getBoolean("global", "pref_archive_postdelete", false))
+                            params[0].delete();
+                        ret += x;
+                    }
                     break;
 
                 case ZIP:
-                    ret += compressFiles(mIntoPath, params);
+                    int x = compressFiles(mIntoPath, params);
+                    if(x > 0 && new Preferences(mContext).getBoolean("global", "pref_archive_postdelete", false))
+                        for(OpenPath p : params)
+                            p.delete();
+                    ret += x;
                     break;
 
             }
@@ -1104,9 +1114,6 @@ public class EventHandler {
 
         protected int extractFiles(OpenPath file, OpenPath into, String... includes) {
             int ret = 0;
-            if (file.getMimeType().contains("zip") &&
-                    (ret = extractZipFiles((OpenStream)file, into)) > 0)
-                return ret;
             if (file.getMimeType().contains("rar") &&
                     (ret = extractRarFiles(new OpenRAR((OpenFile)file), into)) > 0)
                 return ret;
@@ -1118,6 +1125,9 @@ public class EventHandler {
                 return ret;
             if (file.getMimeType().contains("bz") &&
                     (ret = extractBZip2(file, into)) > 0)
+                return ret;
+            if (file.getMimeType().contains("zip") &&
+                    (ret = extractZipFiles((OpenStream)file, into)) > 0)
                 return ret;
             return 0;
         }
@@ -1423,13 +1433,12 @@ public class EventHandler {
         }
 
         private int extractZipFiles(OpenStream zip, OpenPath directory) {
+            if(OpenExplorer.IS_DEBUG_BUILD)
+                Logger.LogVerbose("Extracting ZIP: " + zip + " (into " + directory + ")");
             byte[] data = new byte[FileManager.BUFFER];
             ZipEntry entry;
             ZipInputStream zipstream = null;
-            FileOutputStream out = null;
-
-            if (!directory.mkdir())
-                return -1;
+            OutputStream out = null;
 
             int ret = -1;
 
@@ -1441,23 +1450,26 @@ public class EventHandler {
                 while ((entry = zipstream.getNextEntry()) != null) {
                     OpenPath newFile = directory.getChild(entry.getName());
                     if (!newFile.getParent().exists() && !newFile.getParent().mkdir())
+                    {
+                        Logger.LogWarning("Unable to create parent directory while unzipping");
                         continue;
+                    }
                     if (!(newFile instanceof OpenStream))
+                    {
+                        Logger.LogWarning("ZIP: New File isn't a stream? " + newFile);
                         continue;
+                    }
 
                     int read = 0;
                     try {
-                        out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
-                        while ((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
-                            out.write(data, 0, read);
-                        publishMyProgress(ret);
+                        out = new BufferedOutputStream(((OpenStream)newFile).getOutputStream());
+                        copyStreams(zipstream, out, false, true);
+                        ret++;
                     } catch (Exception e) {
-
+                        Logger.LogError("Unable to unzip file!", e);
                     } finally {
                         zipstream.closeEntry();
-                        closeStream(out);
                     }
-                    ret++;
                 }
 
             } catch (FileNotFoundException e) {

@@ -27,17 +27,36 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.R.anim;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Shader;
+import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ClipDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.ScaleDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
+import android.graphics.drawable.shapes.Shape;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.util.Linkify;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -58,10 +77,12 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -71,11 +92,17 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -106,6 +133,7 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.HelpStringHelper;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -535,33 +563,64 @@ public class DialogHandler {
             onYes.onClick(null, DialogInterface.BUTTON_POSITIVE);
     }
 
-    public static void showOptionsDialog(Context context, String title,
-            final Preferences preferences, final String pref_key,
-            final int resArrayEntries, final int resArrayValues,
-            final DialogInterface.OnClickListener onClick) {
+    public static void showExtractDialog(final OpenExplorer app, String title, final OpenPath file,
+            final String pref_key, final DialogInterface.OnClickListener onClick) {
 
-        final String[] opts = context.getResources().getStringArray(resArrayEntries);
-        final String[] vals = context.getResources().getStringArray(resArrayValues);
+        final Context context = app.getContext();
+        final Preferences preferences = new Preferences(context);
+        final LinearLayout view = new LinearLayout(context);
+        final LayoutInflater inflater = LayoutInflater.from(context);
+        view.setOrientation(LinearLayout.VERTICAL);
+
+        String[] keys2 = context.getResources()
+                .getStringArray(R.array.archive_handler_options);
+        String[] vals2 = context.getResources()
+                .getStringArray(R.array.archive_handler_values);
+        LinkedHashMap<String, CharSequence> opts = new LinkedHashMap<String, CharSequence>();
+        for (int i = 0; i < keys2.length; i++)
+            opts.put(vals2[i], keys2[i]);
+        opts.remove("ask");
+        boolean hasIntents = IntentManager.getIntentsAvailable(file, app) > 0;
+        if (!hasIntents)
+            opts.remove("external");
+
+        //if(file.getMimeType().contains("gz") || file.getMimeType().contains("bz"))
+        //    opts.remove("browse");
+
+        final String[] keys = opts.keySet().toArray(new String[opts.size()]);
+        final CharSequence[] csVals = opts.values().toArray(new CharSequence[opts.size()]);
+
         String mDefault = preferences.getString("global", pref_key, (String)null);
         if (mDefault != null)
-            for (int i = 0; i < opts.length; i++)
-                if (opts[i].equalsIgnoreCase(mDefault) && !vals[i].equalsIgnoreCase("ask"))
-                {
-                    onClick.onClick(null, i);
+        {
+            if (mDefault.equals("external"))
+                if (IntentManager.startIntent(file, app))
                     return;
-                }
-        final CheckBox cb = new CheckBox(context);
-        cb.setId(R.id.confirm_remember);
-        cb.setText(R.string.s_wtf_remember);
+            if (mDefault.equals("browse"))
+            {
+                onClick.onClick(null, R.string.s_browse);
+                return;
+            }
+            else if (mDefault.equals("extract"))
+            {
+                onClick.onClick(null, R.string.s_extract);
+                return;
+            }
+        }
 
+        final Preferences prefs = new Preferences(context);
+        final CheckBox cbRemember = new CheckBox(context);
         final Builder builder = new AlertDialog.Builder(context).setTitle(title)
-                .setView(cb);
-        builder.setItems(opts, new DialogInterface.OnClickListener() {
+                .setView(view);
+        builder.setItems(csVals, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (cb != null && cb.isChecked())
-                    preferences.setSetting("global", pref_key, vals[which]);
-                onClick.onClick(dialog, which);
+                if (cbRemember != null && cbRemember.isChecked())
+                    preferences.setSetting("global", pref_key, keys[which]);
+                if (keys[which].equals("external")) {
+                    IntentManager.startIntent(file, app);
+                } else
+                    onClick.onClick(dialog, getWhichArchiveHandler(keys[which]));
             }
         });
         builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -573,11 +632,114 @@ public class DialogHandler {
 
         final AlertDialog dialog = builder.create();
 
+        final LinearLayout btns = new LinearLayout(context);
+        if (hasIntents)
+        {
+            btns.setOrientation(LinearLayout.HORIZONTAL);
+            btns.setDividerPadding(8);
+            int i = 0;
+            for (ResolveInfo ri : IntentManager.getResolvesAvailable(file, app))
+            {
+                String pkg = ri.activityInfo.packageName;
+                if (pkg.contains("org.brandroid.openmanager"))
+                    continue;
+                final Intent intent = IntentManager.getIntent(file, app);
+                intent.setPackage(pkg);
+                Drawable icon = ri.loadIcon(app.getPackageManager());
+                final CharSequence lbl = ri.loadLabel(app.getPackageManager());
+                ImageButton btn = new ImageButton(context);
+                if (icon instanceof BitmapDrawable)
+                {
+                    Bitmap bmp = ((BitmapDrawable)icon).getBitmap();
+                    int h = context.getResources().getDimensionPixelSize(R.dimen.list_icon_size);
+                    if (bmp.getHeight() > h || bmp.getWidth() > h)
+                        bmp = Bitmap.createScaledBitmap(bmp, h, h, true);
+                    else {
+                        Bitmap cb = Bitmap.createBitmap(h, h, Config.ARGB_8888);
+                        Canvas c = new Canvas(cb);
+                        Paint p = new Paint();
+                        c.drawBitmap(bmp, (bmp.getWidth() - h) / 2, ((bmp.getHeight() - h) / 2), p);
+                        bmp = cb;
+                    }
+                    icon = new BitmapDrawable(context.getResources(), bmp);
+                }
+                //Button btn = new Button(context);
+                btn.setBackgroundResource(android.R.drawable.list_selector_background);
+                btn.setImageDrawable(icon);
+                btn.setPadding(8, 8, 8, 8);
+                btn.setOnLongClickListener(new View.OnLongClickListener() {
+                    public boolean onLongClick(View v) {
+                        Toast.makeText(v.getContext(), lbl, Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                });
+                //btn.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                //btn.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
+                btn.setOnClickListener(new OnClickListener() {
+                    public void onClick(View v) {
+                        try {
+                            app.startActivity(intent);
+                            dialog.dismiss();
+                        } catch (Exception e) {
+                        }
+                    }
+                });
+                //if(i++ > 0)
+                //    btns.addView(makeDivider(context, false));
+                btns.addView(btn);
+            }
+            view.addView(makeDivider(context, true));
+            view.addView(btns);
+        }
+
+        view.addView(makeDivider(context, true));
+
+        CheckBox mDeleteAfter = new CheckBox(context);
+        mDeleteAfter.setText(R.string.s_delete_after);
+        if (prefs.getBoolean("global", "pref_archive_postdelete", false))
+            mDeleteAfter.setChecked(true);
+        mDeleteAfter.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                prefs.setSetting("global", "pref_archive_postdelete", isChecked);
+                if(btns != null)
+                    ViewUtils.setEnabled(btns, !isChecked);
+            }
+        });
+        view.addView(mDeleteAfter);
+        cbRemember.setText(R.string.s_wtf_remember);
+        view.addView(cbRemember);
+
         //ViewUtils.setText(layout, text, R.id.confirm_message);
         //ViewUtils.setViewsVisible(layout, false, R.id.confirm_buttons);
 
         if (context != null)
             dialog.show();
+    }
+
+    private static View makeDivider(Context context, boolean horizontal)
+    {
+        View sep = new View(context);
+        LayoutParams lp = null;
+        if(horizontal)
+            lp = new LayoutParams(LayoutParams.MATCH_PARENT, 3);
+        else
+            lp = new LayoutParams(3, LayoutParams.MATCH_PARENT);
+        sep.setLayoutParams(lp);
+        sep.setBackgroundResource(android.R.drawable.divider_horizontal_bright);
+        return sep;
+    }
+
+    private static int getWhichArchiveHandler(String which)
+    {
+        if (which.equals("browse"))
+            return R.string.s_browse;
+        if (which.equals("extract"))
+            return R.string.s_extract;
+        if (which.equals("external"))
+            return R.string.s_external;
+        if (which.equals("ask"))
+            return R.string.s_ask_again;
+        return 0;
     }
 
     public static View inflate(Context context, int layoutId) {

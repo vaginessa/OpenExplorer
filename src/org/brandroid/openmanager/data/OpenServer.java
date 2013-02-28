@@ -396,8 +396,8 @@ public class OpenServer {
         ret += "://";
         if (!getUser().equals("")) {
             ret += getUser();
-            if (!getPassword().equals(""))
-                ret += ":" + getPassword();
+            //            if (!getPassword().equals(""))
+            //                ret += ":" + getPassword().replaceAll(".", "*");
             ret += "@";
         }
         ret += getHost();

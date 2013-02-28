@@ -97,6 +97,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
+import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.AbsListView;
@@ -105,6 +106,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
@@ -769,11 +772,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (archive.getMimeType().contains("tar"))
             untarAll(archive, archive.getParent());
         else
-            getHandler().extractSet(
-                    archive,
-                    archive.getParent().getChild(
-                            archive.getName().replace("." + archive.getExtension(), "")),
-                    getContext());
+        {
+            OpenPath into = archive.getParent();
+            if (archive.getMimeType().contains("tar"))
+                into = into.getChild(archive.getName().replace("." + archive.getExtension(), ""));
+            getHandler().extractSet(archive, into, getContext());
+        }
     }
 
     @Override
@@ -788,8 +792,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     && (file.getMimeType().contains("tar")
                             || file.getMimeType().endsWith("rar")
                             || file.getMimeType().endsWith("compressed")
-                            || file.getMimeType().endsWith("bz")
-                            || file.getMimeType().endsWith("gz")
+                            || file.getMimeType().contains("bz")
+                            || file.getMimeType().contains("gz")
                             || file.getMimeType().endsWith("zip")))
             {
                 final OpenPath archive = file;
@@ -797,33 +801,20 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         .replace("application/", "")
                         .replace("x-", "")
                         .replace("-compressed", "");
-                DialogHandler.showOptionsDialog(
-                        getContext(),
+                DialogHandler.showExtractDialog(
+                        getExplorer(),
                         getString(R.string.s_extract) + " " + prefType,
-                        getPreferences(),
+                        archive,
                         "pref_archives_" + prefType,
-                        R.array.archive_handler_options, R.array.archive_handler_values,
                         new OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 switch (which)
                                 {
-                                    case 0:
                                     case R.string.s_browse:
                                         browseArchive(archive);
                                         break;
-                                    case 1:
                                     case R.string.s_extract:
                                         extractArchive(archive);
-                                        break;
-                                    case 2:
-                                    case R.string.s_external:
-                                        if (!IntentManager.startIntent(archive, getExplorer()))
-                                        {
-                                            getExplorer().showToast(R.string.activity_list_empty);
-                                            getPreferences().setSetting("global",
-                                                    "pref_archives_" + prefType, "ask");
-                                            onItemClick(list, view, position, id);
-                                        }
                                         break;
                                 }
                                 if (dialog != null)
@@ -1435,11 +1426,19 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         onClick.onClick(dialog, which);
                     }
                 });
+        final Context context = getContext();
         ViewGroup mCompressLayout = (ViewGroup)LayoutInflater.from(getContext())
                 .inflate(R.layout.compression_spinner, null);
         Spinner mCompressType = (Spinner)mCompressLayout
                 .findViewById(R.id.compression_type);
-        View view = dZip.getView();
+        ViewGroup view = (ViewGroup)dZip.getView();
+
+        View v = new View(context);
+        LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, 2);
+        v.setLayoutParams(lp);
+        v.setBackgroundColor(context.getResources().getColor(R.color.blue));
+        view.addView(v);
+
         mCompressType.setSelection(EventHandler.DefaultCompressionType.ordinal());
         mCompressType.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position,
@@ -1476,7 +1475,17 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-        ((ViewGroup)view).addView(mCompressLayout);
+        view.addView(mCompressLayout);
+        CheckBox mDeleteAfter = new CheckBox(getContext());
+        mDeleteAfter.setText(R.string.s_delete_after);
+        if (getPreferences().getBoolean("global", "pref_archive_postdelete", false))
+            mDeleteAfter.setChecked(true);
+        mDeleteAfter.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                getPreferences().setSetting("global", "pref_archive_postdelete", isChecked);
+            }
+        });
+        view.addView(mDeleteAfter);
         dZip.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 onClick.onClick(dialog, DialogInterface.BUTTON_NEUTRAL);
@@ -2379,7 +2388,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         if (last != null && last.getParent() != null)
                             zname = last.getParent().getName() + "-"
                                     + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date());
-                        if(type.equals("gz") || type.equals("bz2"))
+                        if (type.equals("gz") || type.equals("bz2"))
                             type = "t" + type;
                     }
                     zname += "." + type;

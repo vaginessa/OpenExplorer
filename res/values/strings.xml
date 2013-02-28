@@ -412,5 +412,6 @@
     <string name="s_compress">Compress</string>
     <string name="s_compress_type">Compression Type</string>
     <string name="s_compressed">compressed</string>
+    <string name="s_delete_after">Delete source after completion</string>
 
 </resources>

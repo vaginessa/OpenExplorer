@@ -183,6 +183,11 @@
             android:key="pref_archive_type"
             android:title="@string/s_compress_type" />
 
+        <CheckBoxPreference
+            android:title="@string/s_delete_after"
+            android:defaultValue="false"
+            android:key="pref_archive_postdelete" />
+
         <PreferenceCategory android:title="@string/s_title_archive_handler" >
             <ListPreference
                 android:defaultValue="ask"

@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import org.brandroid.openmanager.activities.OpenExplorer;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.ViewStub;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
@@ -313,7 +315,7 @@ public class ViewUtils {
             Method m;
             try {
                 m = View.class.getMethod("setAlpha", new Class[] {
-                    Float.class
+                        Float.class
                 });
                 m.invoke(v, alpha);
                 return;
@@ -408,11 +410,24 @@ public class ViewUtils {
         for (View v : views)
             if (v != null)
                 v.setEnabled(enabled);
+        setAlpha(enabled ? 1.0f : 0.5f, views);
     }
 
     public static void setEnabled(View parent, boolean enabled, int... ids) {
-        for (int id : ids)
-            if (parent.findViewById(id) != null)
-                parent.findViewById(id).setEnabled(enabled);
+        if (ids.length > 0)
+        {
+            for (int id : ids)
+                if (parent.findViewById(id) != null)
+                    setEnabled(enabled, parent.findViewById(id));
+        } else if (parent instanceof ViewGroup) {
+            ViewGroup vp = (ViewGroup)parent;
+            for (int i = 0; i < vp.getChildCount(); i++)
+            {
+                View v = vp.getChildAt(i);
+                if (v.isClickable())
+                    setEnabled(enabled, v);
+            }
+        }
+
     }
 }
