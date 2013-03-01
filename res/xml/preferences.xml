@@ -27,6 +27,14 @@
                 android:key="pref_start"
                 android:summary="@string/s_pref_start_summary"
                 android:title="@string/s_pref_start" />
+            
+            <CheckBoxPreference
+                android:defaultValue="true"
+                android:key="pref_viewpager"
+                android:title="@string/s_pref_pagers"
+                android:summaryOff="@string/s_pref_pagers_summary_off"
+                android:summaryOn="@string/s_pref_pagers_summary_on"
+                />
 
             <CheckBoxPreference
                 android:defaultValue="false"

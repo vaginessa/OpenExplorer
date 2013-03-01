@@ -762,7 +762,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     public void doClose() {
-        if (getExplorer() != null && getExplorer().isViewPagerEnabled())
+        if (getExplorer() != null && Preferences.Pref_ViewPager)
             getExplorer().closeFragment(this);
         else if (getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
             getFragmentManager().popBackStack();

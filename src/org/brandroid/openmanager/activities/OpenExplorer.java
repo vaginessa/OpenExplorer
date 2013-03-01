@@ -281,7 +281,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private OpenViewPager mViewPager;
     private static ArrayPagerAdapter mViewPagerAdapter;
 
-    private static final boolean mViewPagerEnabled = true;
     private ExpandableListView mBookmarksList;
     private OpenBookmarks mBookmarks;
     private BetterPopupWindow mBookmarksPopup;
@@ -315,14 +314,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private final static OpenPathMerged mVideosMerged = new OpenPathMerged("Videos"),
             mPhotosMerged = new OpenPathMerged("Photos");
 
-    public boolean isViewPagerEnabled() {
-        return mViewPagerEnabled;
-    }
-
     private void loadPreferences() {
         Preferences prefs = getPreferences();
 
-        // mViewPagerEnabled = prefs.getBoolean("global", "pref_pagers", true);
+        // Preferences.Pref_ViewPager = prefs.getBoolean("global", "pref_pagers", true);
         // USE_ACTIONMODE = getPreferences().getBoolean("global",
         // "pref_actionmode", false);
 
@@ -330,6 +325,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 .getBoolean("global", "pref_intent_internal", true);
         Preferences.Pref_Text_Internal = prefs.getBoolean("global", "pref_text_internal", true);
         Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
+        Preferences.Pref_ViewPager = prefs.getBoolean("global", "pref_viewpager", true);
         Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
         Preferences.Pref_ShowThumbs = prefs.getBoolean("global", "pref_thumbs", true);
         Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
@@ -1084,7 +1080,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             String query = intent.getStringExtra(SearchManager.QUERY);
             Logger.LogDebug("ACTION_SEARCH for \"" + query + "\" in " + searchIn);
             SearchResultsFragment srf = SearchResultsFragment.getInstance(searchIn, query);
-            if (mViewPagerEnabled && mViewPagerAdapter != null) {
+            if (Preferences.Pref_ViewPager && mViewPagerAdapter != null) {
                 mViewPagerAdapter.add(srf);
                 setViewPageAdapter(mViewPagerAdapter, false);
                 setCurrentItem(mViewPagerAdapter.getCount() - 1, true);
@@ -1243,7 +1239,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @SuppressWarnings("unused")
     private void initPager() {
         mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
-        if (mViewPagerEnabled && mViewPager != null) {
+        if (Preferences.Pref_ViewPager && mViewPager != null) {
             setViewVisibility(false, false, R.id.content_frag, R.id.title_path);
             setViewVisibility(mTwoRowTitle, false, R.id.title_text);
             setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
@@ -1254,13 +1250,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             else
                 Logger.LogError("Couldn't find indicator!");
         } else {
-            // mViewPagerEnabled = false;
+            // Preferences.Pref_ViewPager = false;
             mViewPager = null; // (ViewPager)findViewById(R.id.content_pager);
             setViewVisibility(false, false, R.id.content_pager, R.id.content_pager_indicator);
             setViewVisibility(true, false, R.id.content_frag, R.id.title_text, R.id.title_path);
         }
 
-        if (mViewPager != null && mViewPagerEnabled) {
+        if (mViewPager != null && Preferences.Pref_ViewPager) {
             if (IS_DEBUG_BUILD)
                 Logger.LogDebug("Setting up ViewPager");
             mViewPagerAdapter = // new PagerTabsAdapter(this, mViewPager,
@@ -2937,16 +2933,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (cf != null)
                 cf.onViewChanged(newView);
             invalidateOptionsMenu();
-        } else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && CAN_DO_CAROUSEL) { // if
-                                                                                              // we
-                                                                                              // need
-                                                                                              // to
-                                                                                              // transition
-                                                                                              // from
-                                                                                              // carousel
+        } else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && CAN_DO_CAROUSEL) {
             if (IS_DEBUG_BUILD)
                 Logger.LogDebug("Switching from carousel!");
-            if (mViewPagerEnabled) {
+            if (Preferences.Pref_ViewPager) {
                 setViewVisibility(true, false, R.id.content_frag);
                 setViewVisibility(false, false, R.id.content_pager_frame_stub, R.id.content_pager,
                         R.id.content_pager_indicator);

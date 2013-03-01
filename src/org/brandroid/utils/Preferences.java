@@ -30,6 +30,7 @@ public class Preferences {
      * Handle Zip Files using OpenExplorer
      */
     public static boolean Pref_Zip_Internal = true;
+    public static boolean Pref_ViewPager = true;
     public static boolean Pref_ShowUp = false;
     public static boolean Pref_ShowThumbs = true;
     public static boolean Warn_TextEditor = false;
