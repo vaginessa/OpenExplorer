@@ -418,7 +418,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             IS_FULL_SCREEN = false;
         }
 
-        //IS_KEYBOARD_AVAILABLE = getContext().getResources().getConfiguration().keyboard == Configuration.KEYBOARD_QWERTY;
+        // IS_KEYBOARD_AVAILABLE =
+        // getContext().getResources().getConfiguration().keyboard ==
+        // Configuration.KEYBOARD_QWERTY;
 
         loadPreferences();
         checkRoot();
@@ -519,7 +521,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
 
         // handleNetworking();
-        refreshCursors();
+        // refreshCursors();
 
         checkWelcome();
 
@@ -564,7 +566,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (findViewById(R.id.content_pager_frame_stub) != null)
             ((ViewStub)findViewById(R.id.content_pager_frame_stub)).inflate();
 
-        Logger.LogDebug("Pager inflated");
+        //Logger.LogDebug("Pager inflated");
 
         if (fragmentManager == null) {
             fragmentManager = getSupportFragmentManager();
@@ -585,12 +587,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             bAddToStack = false;
         }
 
-        if (mViewPager != null && mViewPagerAdapter != null && path != null) {
+        if (path != null) {
             // mViewPagerAdapter.add(mContentFragment);
             mLastPath = null;
             changePath(path, bAddToStack, true);
-            setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
-            restoreOpenedEditors();
+            if(mViewPagerAdapter != null)
+            {
+                setCurrentItem(mViewPagerAdapter.getCount() - 1, false);
+                restoreOpenedEditors();
+            }
         } else
             Logger.LogWarning("Nothing to show?!");
 
@@ -629,9 +634,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void showDonateDialog(int resMessage, String sTitle, final String pref) {
         if (getPreferences().getBoolean("warn", pref, false))
             return;
-        int[] opts = new int[] {R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate};
-        if(Build.VERSION.SDK_INT > 13)
-            opts = new int[] {R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate};
+        int[] opts = new int[] {
+                R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate
+        };
+        if (Build.VERSION.SDK_INT > 13)
+            opts = new int[] {
+                    R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate
+            };
         DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
                 new OnClickListener() {
                     @Override
@@ -870,6 +879,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private void setCurrentItem(final int page, final boolean smooth) {
+        if(mViewPager == null) return;
         try {
             // if(!Thread.currentThread().equals(UiThread))
             mViewPager.post(new Runnable() {
@@ -1159,7 +1169,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 state.containsKey("oe_fragments")) {
             mViewPagerAdapter.restoreState(state, getClassLoader());
             setViewPageAdapter(mViewPagerAdapter, true);
-            if(state.containsKey("oe_frag_index"))
+            if (state.containsKey("oe_frag_index"))
                 setCurrentItem(state.getInt("oe_frag_index"), false);
         }
 
@@ -1230,6 +1240,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
     }
 
+    @SuppressWarnings("unused")
     private void initPager() {
         mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
         if (mViewPagerEnabled && mViewPager != null) {
@@ -1257,7 +1268,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             new ArrayPagerAdapter(this, mViewPager);
 
             mViewPagerAdapter.setOnPageTitleClickListener(this);
-            setViewPageAdapter(mViewPagerAdapter, true);
+            // setViewPageAdapter(mViewPagerAdapter, false);
         }
 
     }
@@ -1299,7 +1310,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private boolean setViewPageAdapter(PagerAdapter adapter, boolean reload) {
-        if (adapter == null)
+        if (adapter == null && mViewPager != null)
             adapter = mViewPager.getAdapter();
         if (mViewPager != null && getResources() != null) {
             try {
@@ -1816,7 +1827,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     public void setViewPagerLocked(boolean locked) {
-        mViewPager.setLocked(locked);
+        if(mViewPager != null)
+            mViewPager.setLocked(locked);
     }
 
     public OpenClipboard getClipboard() {
@@ -2193,17 +2205,20 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public ContentFragment getDirContentFragment(Boolean activate, OpenPath path) {
         // Logger.LogDebug("getDirContentFragment");
-        OpenFragment ret = null;
-        int i = mViewPagerAdapter.getCount();
-        if (mViewPagerAdapter != null && mViewPager != null) {
-            if (mViewPager.getCurrentItem() > -1) {
-                ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
-            } else {
-                Logger.LogWarning("Couldn't find current Page. Using last.");
-                ret = mViewPagerAdapter.getItem(i);
+        OpenFragment ret = getSelectedFragment();
+        if (mViewPagerAdapter != null)
+        {
+            int i = mViewPagerAdapter.getCount();
+            if (mViewPagerAdapter != null && mViewPager != null) {
+                if (mViewPager.getCurrentItem() > -1) {
+                    ret = mViewPagerAdapter.getItem(mViewPager.getCurrentItem());
+                } else {
+                    Logger.LogWarning("Couldn't find current Page. Using last.");
+                    ret = mViewPagerAdapter.getItem(i);
+                }
+                while (!(ret instanceof ContentFragment) && i >= 0)
+                    ret = mViewPagerAdapter.getItem(i--);
             }
-            while (!(ret instanceof ContentFragment) && i >= 0)
-                ret = mViewPagerAdapter.getItem(i--);
         }
         if (ret == null)
             ret = (OpenFragment)fragmentManager.findFragmentById(R.id.content_frag);
@@ -2270,17 +2285,18 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private void saveOpenedEditors() {
         StringBuilder editing = new StringBuilder(",");
-        for (int i = 0; i < mViewPagerAdapter.getCount(); i++) {
-            OpenFragment f = mViewPagerAdapter.getItem(i);
-            if (f instanceof TextEditorFragment) {
-                TextEditorFragment tf = (TextEditorFragment)f;
-                if (!tf.isSalvagable())
-                    continue;
-                OpenPath path = tf.getPath();
-                if (path != null && editing.indexOf("," + path.getPath() + ",") == -1)
-                    editing.append(path + ",");
+        if (mViewPagerAdapter != null)
+            for (int i = 0; i < mViewPagerAdapter.getCount(); i++) {
+                OpenFragment f = mViewPagerAdapter.getItem(i);
+                if (f instanceof TextEditorFragment) {
+                    TextEditorFragment tf = (TextEditorFragment)f;
+                    if (!tf.isSalvagable())
+                        continue;
+                    OpenPath path = tf.getPath();
+                    if (path != null && editing.indexOf("," + path.getPath() + ",") == -1)
+                        editing.append(path + ",");
+                }
             }
-        }
         if (IS_DEBUG_BUILD && !editing.equals(","))
             Logger.LogDebug("Saving [" + editing.toString() + "] as TextEditorFragments");
         setSetting("editing", editing.toString());
@@ -3097,7 +3113,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     @Override
     public void onBackPressed() {
-        if (mViewPagerAdapter.getCount() > 0 && getSelectedFragment().onBackPressed())
+        if (mViewPagerAdapter != null && mViewPagerAdapter.getCount() > 0
+                && getSelectedFragment().onBackPressed())
             return;
         try {
             super.onBackPressed();
@@ -3186,22 +3203,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else
             setViewVisibility(false, false, R.id.frag_log);
 
-        /*
-         * final ImageView icon = (ImageView)findViewById(R.id.title_icon);
-         * if(icon != null) ThumbnailCreator.setThumbnail(this, icon, path, 96,
-         * 96, new OnUpdateImageListener() { public void updateImage(Bitmap b) {
-         * BitmapDrawable d = new BitmapDrawable(getResources(), b);
-         * d.setGravity(Gravity.CENTER); icon.setImageDrawable(d); } });
-         */
-
-        // mFileManager.setShowHiddenFiles(getSetting(path, "hide", false));
-        // setViewMode(newView);
-        // if(!BEFORE_HONEYCOMB && Build.VERSION.SDK_INT < 14 && newView ==
-        // VIEW_CAROUSEL) {
-
-        // setViewVisibility(true, false, R.id.content_pager_frame);
-        // setViewVisibility(false, false, R.id.content_frag);
-
         List<OpenPath> familyTree = path.getAncestors(true);
 
         if (addToStack) {
@@ -3222,6 +3223,19 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         final OpenFragment cf = ContentFragment.getInstance(path, newView,
                 getSupportFragmentManager());
+        
+        if(mViewPagerAdapter == null)
+        {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            if(!addToStack)
+                ft.disallowAddToBackStack();
+            ft.replace(R.id.content_frag, cf);
+            ft.setBreadCrumbTitle(path.getPath());
+            ft.commit();
+            updateTitle(path.getPath());
+            return;
+        }
 
         if (force || addToStack || path.requiresThread()) {
             int common = 0;
@@ -3852,6 +3866,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     public void notifyPager() {
+        if(mViewPager == null) return;
         mViewPager.post(new Runnable() {
             public void run() {
                 mViewPager.notifyDataSetChanged();
