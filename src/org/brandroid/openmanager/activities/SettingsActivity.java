@@ -679,9 +679,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             preference.setSummary((String)newValue);
             CharSequence[] opts = ((ListPreference)preference).getEntries();
             CharSequence[] vals = ((ListPreference)preference).getEntryValues();
-            for(int i = 0; i < opts.length; i++)
+            for (int i = 0; i < opts.length; i++)
             {
-                if(vals[i].equals(newValue))
+                if (vals[i].equals(newValue))
                 {
                     preference.setSummary(opts[i]);
                     break;
@@ -860,12 +860,13 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 // Logger.LogDebug("Created default servers file (" +
                 // f.getPath() + ")");
                 String data = f.readAscii();
-                if (OpenExplorer.IS_DEBUG_BUILD)
+                if (RootTools.debugMode)
                     Logger.LogDebug("Server JSON: " + data);
                 OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
                         GetSignatureKey(context));
-                Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
-                        + data.length() + " bytes from " + f.getPath());
+                if (RootTools.debugMode)
+                    Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
+                            + data.length() + " bytes from " + f.getPath());
                 return OpenServers.DefaultServers;
             }
         } catch (IOException e) {

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
@@ -25,6 +26,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     public static int Timeout = 20000;
     protected String mName = null;
     protected int mPort = -1;
+    private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
     public interface NetworkListener {
         public static final NetworkListener DefaultListener = new NetworkListener() {
@@ -89,7 +91,8 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     }
 
     public OpenFile tempDownload(AsyncTask task) throws IOException {
-        Logger.LogDebug("tempDownload() on " + getPath());
+        if(DEBUG)
+            Logger.LogDebug("tempDownload() on " + getPath());
         OpenFile tmp = getTempFile();
         if (tmp == null)
             throw new IOException("Unable to download Temp file");
@@ -105,7 +108,8 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     }
 
     public void tempUpload(AsyncTask task) throws IOException {
-        Logger.LogDebug("tempUpload() on " + getPath());
+        if(DEBUG)
+            Logger.LogDebug("tempUpload() on " + getPath());
         OpenFile tmp = getTempFile();
         if (tmp == null)
             throw new IOException("Unable to download Temp file");
