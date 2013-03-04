@@ -18,6 +18,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 
@@ -25,7 +26,7 @@ import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Build;
 
-public class FTPManager {
+public class FTPManager implements OpenStream {
     public final static Hashtable<String, FTPManager> instances = new Hashtable<String, FTPManager>();
     private final static Hashtable<String, OpenFTP> fileCache = new Hashtable<String, OpenFTP>();
     private final static Hashtable<String, FTPClient> ftpClients = new Hashtable<String, FTPClient>();
@@ -116,9 +117,10 @@ public class FTPManager {
                         mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
                     client.cwd(mBasePath);
                 } catch (Throwable e) {
-                    if(Build.VERSION.SDK_INT > 8)
+                    if (Build.VERSION.SDK_INT > 8)
                         throw new IOException("Error connecting to FTP.", e);
-                    else throw new IOException("Error connecting to FTP.");
+                    else
+                        throw new IOException("Error connecting to FTP.");
                 }
             }
             ftpClients.put(mHost, client);
@@ -145,7 +147,7 @@ public class FTPManager {
 
     public Boolean connect() throws IOException {
         long now = new Date().getTime();
-        if (now - lastConnect < 500) {
+        if (now - lastConnect < 5) {
             // Prevent connect loop if something unexpected happens
             lastConnect = now;
             return false;
@@ -180,8 +182,14 @@ public class FTPManager {
     public static FTPManager getInstance(String instanceName) {
         if (instances.containsKey(instanceName))
             return instances.get(instanceName);
-        else
-            return null;
+        FTPManager ret = null;
+        try {
+            ret = new FTPManager(instanceName);
+        } catch (MalformedURLException e) {
+            Logger.LogError("Couldn't get FTP instance from " + instanceName, e);
+        }
+        instances.put(instanceName, ret);
+        return ret;
     }
 
     public static FTPManager getInstance(URL url) throws MalformedURLException {
@@ -211,16 +219,52 @@ public class FTPManager {
         mBasePath = path;
     }
 
-    @SuppressLint("NewApi")
-    public FTPFile[] listFiles() throws IOException {
+    public boolean cd(String path) throws IOException
+    {
         if (connect()) {
-            FTPFile[] ret = getClient(false).listFiles();
-            return ret;
-        } else if(Build.VERSION.SDK_INT > 8)
-            throw new IOException("Unable to list files due to invalid connection.",
-                    new Throwable());
-        else
-            throw new IOException("Unable to list files due to invalid connection.");
+            return getClient(false).changeWorkingDirectory(path);
+        }
+        return false;
+    }
+
+    public FTPFile[] listFiles() throws IOException {
+        connect();
+        return getClient(false).listFiles();
+    }
+
+    public FTPFile[] listFiles(String path) throws IOException {
+        connect();
+        return getClient(false).listFiles(path);
+    }
+
+    public FTPFile[] listFiles(String path, FTPFileFilter filter) throws IOException {
+        connect();
+        return getClient(false).listFiles(path, filter);
+    }
+    
+    public int mkdir(String name) throws IOException
+    {
+        connect();
+        return getClient(false).mkd(name);
+    }
+    
+    public boolean touch(String name) throws IOException
+    {
+        connect();
+        getClient(false).storeFileStream(name).close();
+        return exists(name);
+    }
+    
+    public boolean delete(String path) throws IOException
+    {
+        connect();
+        return getClient(false).deleteFile(path);
+    }
+    
+    public boolean exists(String path) throws IOException
+    {
+        connect();
+        return getClient().listFiles(path).length > 0;
     }
 
     public InputStream getInputStream() throws IOException {
