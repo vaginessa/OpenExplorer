@@ -725,9 +725,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             preference.setSummary((String)newValue);
             CharSequence[] opts = ((ListPreference)preference).getEntries();
             CharSequence[] vals = ((ListPreference)preference).getEntryValues();
-            for(int i = 0; i < opts.length; i++)
+            for (int i = 0; i < opts.length; i++)
             {
-                if(vals[i].equals(newValue))
+                if (vals[i].equals(newValue))
                 {
                     preference.setSummary(opts[i]);
                     break;
@@ -913,6 +913,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                 OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
                         GetMasterPassword(context));
                 if (DEBUG)
+                if (RootTools.debugMode)
                     Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
                             + data.length() + " bytes from " + f.getPath());
                 return OpenServers.DefaultServers;
