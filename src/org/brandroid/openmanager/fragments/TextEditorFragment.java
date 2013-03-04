@@ -875,8 +875,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         String ext = "";
         if (getPath() != null && getPath().getExtension() != null)
             ext = getPath().getExtension();
-        return new BitmapDrawable(getResources(),
-                ThumbnailCreator.getFileExtIcon(ext, getActivity(), true));
+        return ThumbnailCreator.getFileExtIcon(ext, getActivity(), true);
     }
 
     @Override
