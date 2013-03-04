@@ -38,6 +38,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFTP2;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenLZMA;
@@ -643,6 +644,15 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 public void onException(Exception e) {
                     Logger.LogWarning("Unable to list.", e);
                     Toast.makeText(getContext(), "Unable to list. " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    if(mPath instanceof OpenFTP2)
+                    {
+                        ((OpenFTP2)mPath).disconnect();
+                        try {
+                            ((OpenFTP2)mPath).connect();
+                        } catch (IOException e1) {
+                            Logger.LogError("OpenFTP2 2nd level connection error", e1);
+                        }
+                    }
                 }
                 public void onListReceived(OpenPath[] list) {
                     mContentAdapter.updateData(list);

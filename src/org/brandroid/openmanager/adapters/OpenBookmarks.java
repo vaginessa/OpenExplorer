@@ -26,6 +26,7 @@ import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFTP2;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -255,7 +256,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             info.setPassword(server.getPassword());
             OpenNetworkPath onp = null;
             if (server.getType().equalsIgnoreCase("ftp")) {
-                onp = new OpenFTP(null, new FTPFile(), new FTPManager(server.getHost(),
+                onp = new OpenFTP2(new FTPManager(server.getHost(),
                         server.getUser(), server.getPassword(), server.getPath()));
             } else if (server.getType().equalsIgnoreCase("scp")) {
                 onp = new OpenSCP(server.getHost(), server.getUser(), server.getPath(), info);

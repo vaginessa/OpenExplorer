@@ -37,6 +37,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFTP2;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -276,7 +277,11 @@ public class FileManager {
         if (path.startsWith("/"))
             ret = new OpenFile(path);
         else if (path.startsWith("ftp:/"))
-            ret = new OpenFTP(path, null, new FTPManager());
+            try {
+                ret = new OpenFTP2(new FTPManager(path));
+            } catch (MalformedURLException e1) {
+                Logger.LogError("Couldn't get FTP OpenCache", e1);
+            }
         else if (path.startsWith("sftp:/"))
             ret = new OpenSFTP(path);
         else if (path.startsWith("smb:/"))
@@ -351,7 +356,7 @@ public class FileManager {
                 OpenServer server = OpenServers.DefaultServers.findByHost("ftp", uri.getHost());
                 man.setUser(server.getUser());
                 man.setPassword(server.getPassword());
-                ret = new OpenFTP(null, file, man);
+                ret = new OpenFTP2(new OpenFTP2(man), file);
             } else if (path.startsWith("scp:/")) {
                 Uri uri = Uri.parse(path);
                 ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);

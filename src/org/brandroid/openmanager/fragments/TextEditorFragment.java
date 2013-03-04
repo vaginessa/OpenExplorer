@@ -22,6 +22,7 @@ import org.brandroid.openmanager.adapters.LinesAdapter;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFTP2;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -260,7 +261,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                         FTPManager man = new FTPManager(server.getHost(), server.getUser(),
                                 server.getPassword(), server.getPath());
                         Logger.LogDebug("Found server - " + server.getName());
-                        mPath = new OpenFTP(mPath.getPath(), null, man);
+                        mPath = new OpenFTP2(man);
                     }
                 }
             }

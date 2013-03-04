@@ -124,6 +124,7 @@ import org.brandroid.openmanager.adapters.HeatmapAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFTP2;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -1213,7 +1214,7 @@ public class DialogHandler {
         });
     }
 
-    public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath,
+    public static boolean showServerDialog(final OpenApp app, final OpenFTP2 mPath,
             final BookmarkHolder mHolder, final boolean allowShowPass) {
         return DialogHandler.showServerDialog(app, mPath.getServersIndex(), -1, mHolder,
                 allowShowPass);

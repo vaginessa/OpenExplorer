@@ -3,6 +3,8 @@ package org.brandroid.openmanager.adapters;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -14,7 +16,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
+import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.SortType.Type;
@@ -32,6 +34,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.text.Html;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -220,15 +224,16 @@ public class ContentAdapter extends BaseAdapter {
     private OpenPath[] getList() {
         try {
             if (mParent == null
-                    || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener))
+                    || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateHandler))
                 return new OpenPath[0];
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
-            else if(!mParent.canRead())
+            else if (!mParent.canRead())
             {
-                if(OpenApplication.hasRootAccess(true))
+                if (OpenApplication.hasRootAccess(true))
                     return new OpenFileRoot(mParent).listFiles();
-                else return new OpenPath[0];
+                else
+                    return new OpenPath[0];
             } else
                 return mParent.listFiles();
         } catch (Exception e) {
@@ -354,12 +359,11 @@ public class ContentAdapter extends BaseAdapter {
                 mIcon.setAlpha(100);
             else
                 mIcon.setAlpha(255);
+            Drawable d = ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight, getContext());
             if (file.isTextFile())
-                mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(),
-                        getContext(), mWidth > 72));
-            else if (!mShowThumbnails || !file.hasThumbnail()) {
-                mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-            } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
+                d = ThumbnailCreator.getFileExtIcon(file.getExtension(),
+                        getContext(), mWidth > 72);
+            else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
                 // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());
                 // if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
@@ -395,6 +399,12 @@ public class ContentAdapter extends BaseAdapter {
                             }
                         });
             }
+//            if (file instanceof OpenBox)
+//            {
+//                d = addLayerToDrawable(d,
+//                        getContext().getResources().getDrawable(R.drawable.box_logo_icon));
+//            }
+            mIcon.setImageDrawable(d);
         }
 
         // row.setTag(file);
@@ -455,6 +465,23 @@ public class ContentAdapter extends BaseAdapter {
         return row;
     }
 
+    public static Drawable addLayerToDrawable(Drawable a, Drawable b)
+    {
+        if (a instanceof LayerDrawable)
+        {
+            LayerDrawable ld = (LayerDrawable)a;
+            Drawable[] layer = new Drawable[ld.getNumberOfLayers() + 1];
+            for (int i = 0; i < layer.length - 1; i++)
+                layer[i] = ld.getDrawable(i);
+            layer[layer.length - 1] = b;
+            return new LayerDrawable(layer);
+        } else {
+            return new LayerDrawable(new Drawable[] {
+                    a, b
+            });
+        }
+    }
+
     @Override
     public int getCount() {
         return mData2.size() + (mPlusParent ? 1 : 0);
@@ -489,6 +516,15 @@ public class ContentAdapter extends BaseAdapter {
 
     public ArrayList<OpenPath> getAll() {
         return mData2;
+    }
+    
+    public void setAll(Collection<? extends OpenPath> paths)
+    {
+        for(OpenPath p : mSelectedSet)
+            if(!paths.contains(p))
+                mSelectedSet.remove(p);
+        mData2.clear();
+        mData2.addAll(paths);
     }
 
     public CopyOnWriteArrayList<OpenPath> getSelectedSet() {

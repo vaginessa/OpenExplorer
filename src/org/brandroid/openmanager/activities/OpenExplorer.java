@@ -22,7 +22,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.NetworkInfo.State;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -49,7 +48,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
@@ -105,7 +103,6 @@ import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
@@ -117,7 +114,6 @@ import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -126,7 +122,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -140,7 +135,9 @@ import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelecte
 import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListener;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
+import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFTP2;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -193,7 +190,6 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.internal.view.menu.ActionMenuPresenter;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.*;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
@@ -224,6 +220,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int REQ_SAVE_FILE = 9;
     public static final int REQ_PICK_FOLDER = 10;
     public static final int REQUEST_VIEW = 11;
+    public static final int REQ_BOX_AUTH = 13;
     public static final int RESULT_RESTART_NEEDED = 12;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
@@ -262,7 +259,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static long lastSubmit = 0l;
     private OpenPath mLastPath = null;
     private BroadcastReceiver storageReceiver = null;
-    private Handler mHandler = new Handler(); // handler for the main thread
+    private static final Handler mHandler = new Handler(); // handler for the main thread
     // private int mViewMode = VIEW_LIST;
     // private static long mLastCursorEnsure = 0;
     private static boolean mRunningCursorEnsure = false;
@@ -598,7 +595,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         // invalidateOptionsMenu();
         initBookmarkDropdown();
-
+        
         // handleMediaReceiver();
 
         // if(!getPreferences().getBoolean("global", "pref_splash", false))
@@ -1574,7 +1571,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
             if (txt == null)
                 return;
-            Logger.LogDebug("Log: " + txt);
+            //Logger.LogDebug("Log: " + txt);
             if (mLogFragment == null)
                 mLogFragment = new LogViewerFragment();
             mLogFragment.print(txt, color);
@@ -2457,6 +2454,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         menuInflater.inflate(R.menu.global, menu);
 
         handleSearchMenu(menu);
+        
+        if(IS_DEBUG_BUILD && !isNook() && !isBlackBerry())
+        {
+            menu.add("Debug Test").setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                public boolean onMenuItemClick(MenuItem item) {
+                    debugTest();
+                    return false;
+                }
+            });
+        }
 
         MenuUtils.setMenuVisible(menu, Preferences.Run_Count > 5, R.id.menu_donate, R.id.menu_rate);
 
@@ -2813,10 +2820,28 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private void debugTest() {
-        // startActivity(new Intent(this, Authenticator.class));
-        int divide0 = 10 / (5 - 5);
-        Logger.LogVerbose("I did it! 10 / 0 = " + divide0 + "!!!");
+        testFTP2();
     }
+    private void testFTP2() {
+        String s = "ftp://Brandon:79Studios@psusadev.celebros.com/wwwroot/";
+        FTPManager man = FTPManager.getInstance(s);
+        if(man == null)
+            man = new FTPManager("psusadev.celebros.com", "Brandon", "79Studios", "wwwroot/");
+        OpenFTP2 ftp = new OpenFTP2(man);
+        changePath(ftp);
+    }
+//    private void testBox() {
+//        String token = getPreferences().getSetting("box", "token", (String)null);
+//        if(token == null)
+//        {
+//            Intent intent = new Intent(this,com.box.androidlib.BoxAuthentication.class);
+//            intent.putExtra("API_KEY", PrivatePreferences.getBoxAPIKey());
+//            startActivityForResult(intent, REQ_BOX_AUTH);
+//            return;
+//        }
+//        OpenBox box = new OpenBox(token);
+//        changePath(box, true, true);
+//    }
 
     public boolean isSinglePane() {
         return mSinglePane;
@@ -3066,6 +3091,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         changePath(new OpenFile("/").setRoot(), true);
                 }
             }
+//        } else if (requestCode == REQ_BOX_AUTH) {
+//            if(resultCode == BoxAuthentication.AUTH_RESULT_SUCCESS)
+//            {
+//                String token = data.getStringExtra("AUTH_TOKEN");
+//                getPreferences().setSetting("box", "token", token);
+//            }
+//            testBox();
         } else if (requestCode == REQ_INTENT) {
 
         } else {
@@ -3858,6 +3890,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         });
     }
+    
+    public static Handler getHandler() { return mHandler; }
 
     public OpenApplication getOpenApplication() {
         return (OpenApplication)getApplication();

@@ -134,7 +134,7 @@ public class OpenServer {
     }
 
     public String getPath() {
-        String mPath = mData.optString("dir");
+        String mPath = mData.optString("path", mData.optString("dir"));
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
     }
 
@@ -158,6 +158,7 @@ public class OpenServer {
 
     public OpenServer setPath(String path) {
         setSetting("path", path);
+        setSetting("dir", path);
         return this;
     }
 

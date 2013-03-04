@@ -76,6 +76,7 @@ import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.openmanager.data.OpenPath.OpsHandler;
 import org.brandroid.openmanager.data.OpenRAR;
 import org.brandroid.openmanager.data.OpenRAR.OpenRAREntry;
 import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
@@ -468,7 +469,8 @@ public class EventHandler {
         final EventType type = copyOnly ? COPY_TYPE : CUT_TYPE;
         for (final OpenPath file : files.toArray(new OpenPath[files.size()]))
         {
-            if (checkDestinationExists(file, newPath, mContext, type))
+            if (!file.requiresThread() && !newPath.requiresThread() &&
+                    checkDestinationExists(file, newPath, mContext, type))
                 files.remove(file);
             else
                 execute(new BackgroundWork(type,
@@ -1013,7 +1015,9 @@ public class EventHandler {
                     if (params[0] instanceof OpenStream)
                     {
                         int x = extractFiles(params[0], mIntoPath, mInitParams);
-                        if(x > 0 && new Preferences(mContext).getBoolean("global", "pref_archive_postdelete", false))
+                        if (x > 0
+                                && new Preferences(mContext).getBoolean("global",
+                                        "pref_archive_postdelete", false))
                             params[0].delete();
                         ret += x;
                     }
@@ -1021,8 +1025,10 @@ public class EventHandler {
 
                 case ZIP:
                     int x = compressFiles(mIntoPath, params);
-                    if(x > 0 && new Preferences(mContext).getBoolean("global", "pref_archive_postdelete", false))
-                        for(OpenPath p : params)
+                    if (x > 0
+                            && new Preferences(mContext).getBoolean("global",
+                                    "pref_archive_postdelete", false))
+                        for (OpenPath p : params)
                             p.delete();
                     ret += x;
                     break;
@@ -1248,7 +1254,7 @@ public class EventHandler {
             return ret;
         }
 
-        private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total)
+        private Boolean copyToDirectory(final OpenPath old, OpenPath intoDir, int total)
                 throws IOException {
             if (old.equals(intoDir))
                 return false;
@@ -1433,7 +1439,7 @@ public class EventHandler {
         }
 
         private int extractZipFiles(OpenStream zip, OpenPath directory) {
-            if(OpenExplorer.IS_DEBUG_BUILD)
+            if (OpenExplorer.IS_DEBUG_BUILD)
                 Logger.LogVerbose("Extracting ZIP: " + zip + " (into " + directory + ")");
             byte[] data = new byte[FileManager.BUFFER];
             ZipEntry entry;

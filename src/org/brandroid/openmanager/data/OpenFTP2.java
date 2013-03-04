@@ -1,5 +1,5 @@
-
 package org.brandroid.openmanager.data;
+
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -10,11 +10,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.utils.Logger;
+
 import android.net.Uri;
 
-public class OpenFTP2 extends OpenPath implements OpenPath.ListHandler, OpenPath.OpsHandler,
+public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, OpenPath.OpsHandler,
         OpenPath.DownloadHandler, OpenPath.UploadHandler, OpenPath.OpenStream {
     private static final long serialVersionUID = -8062167915444507685L;
     private final FTPFile mFile;
@@ -81,12 +84,7 @@ public class OpenFTP2 extends OpenPath implements OpenPath.ListHandler, OpenPath
         });
         mThread.start();
     }
-
-    private void connect() throws IOException
-    {
-        mManager.connect();
-    }
-
+    
     @Override
     public void list(final OpenPath.ListListener callback) {
         if (mChildren != null)
@@ -175,7 +173,7 @@ public class OpenFTP2 extends OpenPath implements OpenPath.ListHandler, OpenPath
         List<OpenFTP2> kids = new Vector<OpenFTP2>();
         mManager.cd(mPath);
         mManager.setBasePath(mPath);
-        FTPFile[] arr = mManager.listFiles(mPath);
+        FTPFile[] arr = mManager.listFiles();
         for (FTPFile f : arr)
             kids.add(new OpenFTP2(OpenFTP2.this, f));
         Collections.sort(kids);
@@ -231,11 +229,6 @@ public class OpenFTP2 extends OpenPath implements OpenPath.ListHandler, OpenPath
 
     @Override
     public Boolean exists() {
-        return true;
-    }
-
-    @Override
-    public Boolean requiresThread() {
         return true;
     }
 
@@ -297,6 +290,72 @@ public class OpenFTP2 extends OpenPath implements OpenPath.ListHandler, OpenPath
             }
         });
         mThread.start();
+    }
+    
+    @Override
+    public boolean isConnected() throws IOException {
+        return mManager.isConnected();
+    }
+
+    @Override
+    public OpenNetworkPath[] getChildren() {
+        return mChildren;
+    }
+
+    @Override
+    public boolean syncUpload(OpenFile f, NetworkListener l) {
+        Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
+        InputStream is = null;
+        try {
+            connect();
+            is = f.getInputStream();
+            FTPClient client = mManager.getClient();
+            client.cwd(getParent().getUri().getPath());
+            boolean ret = client.storeFile(getName(), is);
+            if (!ret)
+                throw new IOException("Unable to upload to FTP.");
+            if (l != null)
+                l.OnNetworkCopyFinished(this, f);
+            return ret;
+        } catch (Exception e) {
+            if (l != null)
+                l.OnNetworkFailure(this, f, e);
+            return false;
+        } finally {
+            if (is != null)
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
+        }
+    }
+
+    @Override
+    public boolean syncDownload(OpenFile f, NetworkListener l) {
+        OutputStream os = null;
+        Logger.LogDebug("OpenFTP.copyTo(" + f + ")");
+        try {
+            connect();
+            os = f.getOutputStream();
+            FTPClient client = mManager.getClient();
+            client.cwd(getParent().getUri().getPath());
+            boolean ret = client.retrieveFile(getName(), os);
+            if (!ret)
+                throw new IOException("Unable to download from FTP.");
+            if (l != null)
+                l.OnNetworkCopyFinished(this, f);
+            return ret;
+        } catch (Exception e) {
+            if (l != null)
+                l.OnNetworkFailure(this, f, e);
+            return false;
+        } finally {
+            if (os != null)
+                try {
+                    os.close();
+                } catch (IOException e) {
+                }
+        }
     }
 
 }
