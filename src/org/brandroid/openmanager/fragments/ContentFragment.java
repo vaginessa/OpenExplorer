@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
@@ -42,8 +44,8 @@ import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenContentUpdater;
-import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
+import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
+import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenRAR;
@@ -608,11 +610,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             Logger.LogWarning("ContentFragment.runUpdateTask warning: mPath is null!");
             return;
         }
-        if (mPath instanceof OpenPathUpdateListener) {
+        if (mPath instanceof OpenPathUpdateHandler) {
             try {
                 mContentAdapter.clearData();
 
-                ((OpenPathUpdateListener)mPath).list(new OpenContentUpdater() {
+                ((OpenPathUpdateHandler)mPath).list(new OpenContentUpdateListener() {
                     @Override
                     public void addContentPath(OpenPath file) {
                         if (!mContentAdapter.contains(file))
@@ -627,17 +629,27 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
 
                     @Override
-                    public void showError(String message) {
-                        try {
-                            Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
-                        } catch (Exception e) {
-                        }
+                    public void onUpdateException(Exception e) {
+                        Logger.LogError("Unable to run Task!", e);
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
                 return;
             } catch (IOException e) {
                 Logger.LogError("Couldn't list with ContentUpdater");
             }
+        } else if (mPath instanceof OpenPath.ListHandler) {
+            ((OpenPath.ListHandler)mPath).list(new OpenPath.ListListener() {
+                public void onException(Exception e) {
+                    Logger.LogWarning("Unable to list.", e);
+                    Toast.makeText(getContext(), "Unable to list. " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+                public void onListReceived(OpenPath[] list) {
+                    mContentAdapter.updateData(list);
+                    ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
+                }
+            });
+            return;
         }
         final String sPath = mPath.getPath();
         // NetworkIOTask.cancelTask(sPath);
