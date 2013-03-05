@@ -60,8 +60,13 @@ public class InputDialog extends Builder {
     }
 
     public InputDialog setDefaultTop(CharSequence s) {
-        mEdit2.setVisibility(View.VISIBLE);
-        mEdit2.setText(s);
+        if(s == null)
+            mEdit2.setVisibility(View.GONE);
+        else
+        {
+            mEdit2.setVisibility(View.VISIBLE);
+            mEdit2.setText(s);
+        }
         return this;
     }
 

@@ -269,6 +269,7 @@ public class OpenPathDbAdapter {
             if (folder != null && folder.endsWith("//"))
                 folder = folder.substring(0, folder.length() - 1);
             Logger.LogDebug("Fetching from folder: " + folder + " (" + sort.toString() + ")");
+            open();
             return mDb.query(true, DATABASE_TABLE, KEYS,
                     KEY_FOLDER + " = '" + folder.replaceAll("'", "''") + "'", null, null, null,
                     getSortString(sort), null);

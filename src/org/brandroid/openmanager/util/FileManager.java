@@ -278,7 +278,7 @@ public class FileManager {
             ret = new OpenFile(path);
         else if (path.startsWith("ftp:/"))
             try {
-                ret = new OpenFTP2(new FTPManager(path));
+                ret = new OpenFTP(new FTPManager(path));
             } catch (MalformedURLException e1) {
                 Logger.LogError("Couldn't get FTP OpenCache", e1);
             }
@@ -353,10 +353,13 @@ public class FileManager {
                 FTPFile file = new FTPFile();
                 file.setName(path.substring(path.lastIndexOf("/") + 1));
                 Uri uri = Uri.parse(path);
-                OpenServer server = OpenServers.DefaultServers.findByHost("ftp", uri.getHost());
-                man.setUser(server.getUser());
-                man.setPassword(server.getPassword());
-                ret = new OpenFTP2(new OpenFTP2(man), file);
+                OpenServer server = OpenServers.DefaultServers.findByPath("ftp", man.getHost(), man.getUser(), man.getBasePath());
+                if(server != null)
+                {
+                    man.setUser(server.getUser());
+                    man.setPassword(server.getPassword());
+                }
+                ret = new OpenFTP(server.getPath(), new FTPFile[]{file}, man);
             } else if (path.startsWith("scp:/")) {
                 Uri uri = Uri.parse(path);
                 ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);

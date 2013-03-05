@@ -28,6 +28,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.R.anim;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -564,6 +565,7 @@ public class DialogHandler {
             onYes.onClick(null, DialogInterface.BUTTON_POSITIVE);
     }
 
+    @SuppressLint("NewApi")
     public static void showExtractDialog(final OpenExplorer app, String title, final OpenPath file,
             final String pref_key, final DialogInterface.OnClickListener onClick) {
 
@@ -637,7 +639,8 @@ public class DialogHandler {
         if (hasIntents)
         {
             btns.setOrientation(LinearLayout.HORIZONTAL);
-            btns.setDividerPadding(8);
+            if(Build.VERSION.SDK_INT > 13)
+                btns.setDividerPadding(8);
             int i = 0;
             for (ResolveInfo ri : IntentManager.getResolvesAvailable(file, app))
             {
@@ -1214,7 +1217,7 @@ public class DialogHandler {
         });
     }
 
-    public static boolean showServerDialog(final OpenApp app, final OpenFTP2 mPath,
+    public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath,
             final BookmarkHolder mHolder, final boolean allowShowPass) {
         return DialogHandler.showServerDialog(app, mPath.getServersIndex(), -1, mHolder,
                 allowShowPass);

@@ -4,6 +4,8 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.URL;
@@ -34,6 +36,8 @@ public class FTPManager implements OpenStream {
     private long lastConnect = 0;
     private int mPort = 21;
     private String mHost = "", mUser = "", mPassword = "", mBasePath = "";
+    
+    private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD;
 
     public FTPManager() {
     }
@@ -106,22 +110,21 @@ public class FTPManager implements OpenStream {
     @SuppressLint("NewApi")
     public static FTPClient getClient(String mHost, int mPort, String mUser, String mPassword,
             String mBasePath, boolean ensureConnect) throws IOException {
+        if(mBasePath.startsWith("/")) mBasePath = "/" + mBasePath;
         if (!ftpClients.containsKey(mHost)) {
             FTPClient client = new FTPClient();
-            if (ensureConnect) {
-                try {
-                    client.connect(mHost, mPort);
-                    if (!client.login(mUser, mPassword))
-                        throw new IOException("Unable to log in to FTP. Invalid credentials?");
-                    if (mBasePath.endsWith("/"))
-                        mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
-                    client.cwd(mBasePath);
-                } catch (Throwable e) {
-                    if (Build.VERSION.SDK_INT > 8)
-                        throw new IOException("Error connecting to FTP.", e);
-                    else
-                        throw new IOException("Error connecting to FTP.");
-                }
+            try {
+                client.connect(mHost, mPort);
+                if (!client.login(mUser, mPassword))
+                    throw new IOException("Unable to log in to FTP. Invalid credentials?");
+                if (mBasePath.endsWith("/"))
+                    mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
+                client.cwd(mBasePath);
+            } catch (Throwable e) {
+                if (Build.VERSION.SDK_INT > 8)
+                    throw new IOException("Error connecting to FTP.", e);
+                else
+                    throw new IOException("Error connecting to FTP.");
             }
             ftpClients.put(mHost, client);
             return client;
@@ -132,14 +135,23 @@ public class FTPManager implements OpenStream {
                 client = new FTPClient();
             if (!client.isConnected()) {
                 Logger.LogDebug("FTP Client " + mHost + " found (disconnected).");
+                client.logout();
+                client.disconnect();
+                client = new FTPClient();
                 client.connect(mHost, mPort);
+                if (mBasePath.endsWith("/") && mBasePath.length() > 1)
+                    mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
+                client.login(mUser, mPassword);
+                client.cwd(mBasePath);
+                ftpClients.put(mHost, client);
                 if (!client.login(mUser, mPassword))
                     throw new IOException("Unable to log in to FTP. Invalid credentials?");
-            } else
-                Logger.LogDebug("Client found " + mHost);
-            if (mBasePath.endsWith("/"))
-                mBasePath = mBasePath.substring(0, mBasePath.length() - 1);
-            client.cwd(mBasePath);
+            } else if(DEBUG) {
+                String s = client.printWorkingDirectory();
+                Logger.LogDebug("Client found " + mHost + " @ " + s);
+                if(s == null || !s.equals(mBasePath))
+                    client.cwd(mBasePath);
+            }
             return client;
         }
         return ftpClients.get(mHost);
@@ -327,5 +339,18 @@ public class FTPManager implements OpenStream {
 
     public boolean isConnected() throws IOException {
         return getClient().isConnected();
+    }
+
+    public void setPassive(boolean pasv) throws IOException {
+        connect();
+        if(pasv)
+        {
+            getClient().enterRemotePassiveMode();
+            getClient().enterLocalPassiveMode();
+        } else {
+            getClient().enterLocalActiveMode();
+            Inet4Address addy = (Inet4Address)Inet4Address.getByName(mHost);
+            getClient().enterRemoteActiveMode(addy, mPort);
+        }
     }
 }

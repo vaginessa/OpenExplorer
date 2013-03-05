@@ -12,6 +12,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.jcraft.jsch.jce.BlowfishCBC;
+
 import android.content.Context;
 import android.text.Editable;
 import android.text.InputType;
@@ -134,7 +136,7 @@ public class OpenServer {
     }
 
     public String getPath() {
-        String mPath = mData.optString("path", mData.optString("dir"));
+        String mPath = mData.optString("dir");
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
     }
 
@@ -157,7 +159,6 @@ public class OpenServer {
     }
 
     public OpenServer setPath(String path) {
-        setSetting("path", path);
         setSetting("dir", path);
         return this;
     }
@@ -201,8 +202,6 @@ public class OpenServer {
         if (key.equals("host"))
             return getHost();
         if (key.equals("dir"))
-            return getPath();
-        if (key.equals("path"))
             return getPath();
         if (key.equals("user"))
             return getUser();

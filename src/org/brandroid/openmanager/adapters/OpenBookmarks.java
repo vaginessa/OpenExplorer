@@ -99,6 +99,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public static final int BOOKMARK_FAVORITE = 2;
     public static final int BOOKMARK_SERVER = 3;
     public static final int BOOKMARK_OFFLINE = 4;
+    
+    public final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
     public interface NotifyAdapterCallback {
         public void notifyAdapter();
@@ -119,7 +121,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public void scanRoot() {
-        Logger.LogDebug("Trying to get roots");
+        if(DEBUG)
+            Logger.LogDebug("Trying to get roots");
         if (mBlkids == null && mProcMounts == null) {
             mProcMounts = new ArrayList<String>();
             mBlkids = new ArrayList<String>();
@@ -184,7 +187,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
      * 
      */
     private void scanBookmarksInner() {
-        Logger.LogDebug("Scanning bookmarks...");
+        if(DEBUG)
+            Logger.LogDebug("Scanning bookmarks...");
         final OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
         // mBookmarksArray.clear();
         clearBookmarks();
@@ -256,7 +260,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             info.setPassword(server.getPassword());
             OpenNetworkPath onp = null;
             if (server.getType().equalsIgnoreCase("ftp")) {
-                onp = new OpenFTP2(new FTPManager(server.getHost(),
+                onp = new OpenFTP(new FTPManager(server.getHost(),
                         server.getUser(), server.getPassword(), server.getPath()));
             } else if (server.getType().equalsIgnoreCase("scp")) {
                 onp = new OpenSCP(server.getHost(), server.getUser(), server.getPath(), info);
@@ -264,19 +268,24 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 onp = new OpenSFTP(server.getHost(), server.getUser(), server.getPath());
             } else if (server.getType().equalsIgnoreCase("smb")) {
                 try {
-                    onp = new OpenSMB(new SmbFile("smb://" + server.getHost() + "/"
-                            + server.getPath(), new NtlmPasswordAuthentication(server.getUser()
-                            .indexOf("/") > -1 ? server.getUser().substring(0,
-                            server.getUser().indexOf("/")) : "", server.getUser(),
-                            server.getPassword())));
+                    onp = new OpenSMB(
+                            new SmbFile("smb://" + server.getHost() + "/" + server.getPath(),
+                                    new NtlmPasswordAuthentication(
+                                            server.getUser().indexOf("/") > -1 ?
+                                                    server.getUser().substring(0,
+                                                            server.getUser().indexOf("/")) : "",
+                                            server.getUser(),
+                                            server.getPassword())));
                 } catch (MalformedURLException e) {
                     Logger.LogError("Couldn't add Samba share to bookmarks.", e);
                     continue;
                 }
-            } else
-                continue;
+            }
             if (onp == null)
+            {
+                Logger.LogWarning("Unable to convert server: " + server);
                 continue;
+            }
             onp.setServersIndex(i);
             onp.setName(server.getName());
             onp.setUserInfo(info);
@@ -335,11 +344,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public void addBookmark(BookmarkType type, OpenPath path, NotifyAdapterCallback callback) {
+        if(DEBUG)
+            Logger.LogDebug("Checking to add " + path + " to bookmarks.");
         int iType = getTypeInteger(type);
         CopyOnWriteArrayList<OpenPath> paths = new CopyOnWriteArrayList<OpenPath>();
         if (mBookmarksArray.containsKey(iType))
             paths = mBookmarksArray.get(iType);
-        if (!paths.contains(paths)) {
+        if (!paths.contains(path)) {
             paths.add(path);
             mBookmarksArray.put(iType, paths);
             if (callback != null)

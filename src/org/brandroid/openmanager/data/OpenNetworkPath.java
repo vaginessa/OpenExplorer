@@ -16,9 +16,6 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.UserInfo;
 
 public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
-    /**
-	 * 
-	 */
     private static final long serialVersionUID = -3829590216951441869L;
     protected UserInfo mUserInfo;
     private int mServersIndex = -1;

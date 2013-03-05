@@ -116,7 +116,19 @@ public class OpenFTP extends OpenNetworkPath {
         this(parent, file, man);
         setUserInfo(info);
     }
-
+    
+    public OpenFTP(FTPManager man)
+    {
+        this(man.getBasePath(), null, man);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if(!(o instanceof OpenFTP))
+            return false;
+        return super.equals(o) && ((OpenFTP)o).getName().equals(getName());
+    }
+    
     public FTPFile getFile() {
         return mFile;
     }

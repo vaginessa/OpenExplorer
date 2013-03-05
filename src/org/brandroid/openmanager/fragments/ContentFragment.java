@@ -583,7 +583,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             } else if (path instanceof OpenFile)
                 ((OpenFile)path).listFiles();
             else
-                runUpdateTask();
+                runUpdateTask(!allowSkips);
             // updateData(mData, allowSkips);
             // cancelAllTasks();
 

@@ -261,7 +261,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                         FTPManager man = new FTPManager(server.getHost(), server.getUser(),
                                 server.getPassword(), server.getPath());
                         Logger.LogDebug("Found server - " + server.getName());
-                        mPath = new OpenFTP2(man);
+                        mPath = new OpenFTP(man);
                     }
                 }
             }

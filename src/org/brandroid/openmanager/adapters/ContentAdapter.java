@@ -149,12 +149,22 @@ public class ContentAdapter extends BaseAdapter {
     public SortType getSorting() {
         return mSorting;
     }
-
+    
     public void updateData() {
-        OpenPath[] list = getList();
-        if (list == null)
-            list = new OpenPath[0];
-        updateData(list);
+//        new Thread(new Runnable() {
+//            public void run() {
+                final OpenPath[] list = getList();
+//                OpenExplorer.getHandler().post(new Runnable() {
+//                    public void run() {
+                        // TODO Auto-generated method stub
+                        if (list == null)
+                            updateData(new OpenPath[0]);
+                        else
+                            updateData(list);
+//                    }
+//                });
+//            }
+//        }).start();
     }
 
     public void updateData(final OpenPath[] items) {
@@ -223,8 +233,7 @@ public class ContentAdapter extends BaseAdapter {
 
     private OpenPath[] getList() {
         try {
-            if (mParent == null
-                    || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateHandler))
+            if (mParent == null)
                 return new OpenPath[0];
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
@@ -364,9 +373,9 @@ public class ContentAdapter extends BaseAdapter {
                 d = ThumbnailCreator.getFileExtIcon(file.getExtension(),
                         getContext(), mWidth > 72);
             else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-                // {
-                // Logger.LogDebug("Bitmapping " + file.getPath());
-                // if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
+                   // {
+                   // Logger.LogDebug("Bitmapping " + file.getPath());
+                   // if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
                 ThumbnailCreator.setThumbnail(mApp, mIcon, file, mWidth, mHeight,
                         new OnUpdateImageListener() {
                             @Override
@@ -399,11 +408,11 @@ public class ContentAdapter extends BaseAdapter {
                             }
                         });
             }
-//            if (file instanceof OpenBox)
-//            {
-//                d = addLayerToDrawable(d,
-//                        getContext().getResources().getDrawable(R.drawable.box_logo_icon));
-//            }
+            // if (file instanceof OpenBox)
+            // {
+            // d = addLayerToDrawable(d,
+            // getContext().getResources().getDrawable(R.drawable.box_logo_icon));
+            // }
             mIcon.setImageDrawable(d);
         }
 
@@ -440,24 +449,25 @@ public class ContentAdapter extends BaseAdapter {
             case DATE:
             case DATE_DESC:
                 mDate.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                // mInfo.setTextAppearance(getContext(), R.style.Text_Small);
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case SIZE:
             case SIZE_DESC:
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
+                // mInfo.setTextAppearance(getContext(),
+                // R.style.Text_Small_Highlight);
                 mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case ALPHA:
             case ALPHA_DESC:
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large);
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                // mInfo.setTextAppearance(getContext(), R.style.Text_Small);
                 mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
             default:
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                // mInfo.setTextAppearance(getContext(), R.style.Text_Small);
                 mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
         }
@@ -517,11 +527,11 @@ public class ContentAdapter extends BaseAdapter {
     public ArrayList<OpenPath> getAll() {
         return mData2;
     }
-    
+
     public void setAll(Collection<? extends OpenPath> paths)
     {
-        for(OpenPath p : mSelectedSet)
-            if(!paths.contains(p))
+        for (OpenPath p : mSelectedSet)
+            if (!paths.contains(p))
                 mSelectedSet.remove(p);
         mData2.clear();
         mData2.addAll(paths);

@@ -6,6 +6,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -13,8 +15,11 @@ import java.util.Vector;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 
+import android.database.Cursor;
 import android.net.Uri;
 
 public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, OpenPath.OpsHandler,
@@ -51,7 +56,7 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
                 try {
                     connect();
                     InputStream in = callback.getInputStream();
-                    OutputStream out = mManager.getOutputStream(mPath);
+                    OutputStream out = mManager.getOutputStream(getBasePath());
                     copyStreams(in, out, true, true, callback);
                 } catch (final Exception e) {
                     OpenExplorer.getHandler().post(new Runnable() {
@@ -70,7 +75,7 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
             public void run() {
                 try {
                     connect();
-                    InputStream in = mManager.getInputStream(mPath);
+                    InputStream in = mManager.getInputStream(getBasePath());
                     OutputStream out = callback.getOutputStream();
                     copyStreams(in, out, true, true, callback);
                 } catch (final Exception e) {
@@ -86,13 +91,18 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
     }
     
     @Override
+    public void connect() throws IOException {
+        mManager.connect();
+    }
+    
+    @Override
     public void list(final OpenPath.ListListener callback) {
-        if (mChildren != null)
-            callback.onListReceived(mChildren);
         mThread = new Thread(new Runnable() {
             public void run() {
                 try {
                     connect();
+                } catch(Exception e) { }
+                try {
                     listFiles();
                     OpenExplorer.getHandler().post(new Runnable() {
                         public void run() {
@@ -110,6 +120,53 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
         });
         mThread.start();
     }
+    
+    public FTPManager getManager() { return mManager; }
+
+    @Override
+    public boolean listFromDb(SortType sort) {
+        if (!OpenPath.AllowDBCache)
+            return false;
+        String folder = getPath(); // .replace("/" + getName(), "");
+        if (!isDirectory())
+            folder = folder.replace("/" + getName(), "");
+        if (!folder.endsWith("/"))
+            folder += "/";
+        if (folder.endsWith("//"))
+            folder = folder.substring(0, folder.length() - 1);
+        Cursor c = mDb.fetchItemsFromFolder(folder, sort);
+        if (c == null)
+            return false;
+        if (c.getCount() == 0) {
+            c.close();
+            c = mDb.fetchItemsFromFolder(folder.substring(0, folder.length() - 1), sort);
+        }
+        List<OpenFTP2> kids = new ArrayList<OpenFTP2>();
+        c.moveToFirst();
+        while (!c.isAfterLast()) {
+            // String folder =
+            // c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+            String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
+            int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
+            int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
+            String path = folder + name;
+            int atts = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_ATTRIBUTES));
+            if ((atts & 2) == 2 && !path.endsWith("/"))
+                path += "/";
+            if (path.endsWith("//"))
+                path = path.substring(0, path.length() - 1);
+            FTPFile file = new FTPFile();
+            file.setSize(size);
+            file.setTimestamp(Calendar.getInstance());
+            file.setName(path);
+            OpenFTP2 child = new OpenFTP2(this, file);
+            kids.add(child);
+            c.moveToNext();
+        }
+        mChildren = kids.toArray(new OpenFTP2[kids.size()]);
+        c.close();
+        return true;
+    }
 
     @Override
     public String getName() {
@@ -119,13 +176,13 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
     }
 
     public String getPath() {
-        return "ftp://" + mManager.getHost() + mPath;
+        return "ftp://" + mManager.getHost() + getBasePath();
     }
 
     @Override
     public String getAbsolutePath() {
         return "ftp://" + mManager.getUser() + ":" + mManager.getPassword() + "@"
-                + mManager.getHost() + mPath;
+                + mManager.getHost() + getBasePath();
     }
 
     @Override
@@ -170,15 +227,25 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
 
     @Override
     public OpenPath[] listFiles() throws IOException {
+        if(OpenExplorer.UiThread.equals(Thread.currentThread())) return mChildren;
         List<OpenFTP2> kids = new Vector<OpenFTP2>();
-        mManager.cd(mPath);
-        mManager.setBasePath(mPath);
-        FTPFile[] arr = mManager.listFiles();
+        String path = getBasePath();
+        mManager.cd(path);
+        mManager.setBasePath(path);
+        FTPFile[] arr = mManager.listFiles(path);
         for (FTPFile f : arr)
             kids.add(new OpenFTP2(OpenFTP2.this, f));
         Collections.sort(kids);
         mChildren = kids.toArray(new OpenFTP2[kids.size()]);
         return mChildren;
+    }
+    
+    private String getBasePath()
+    {
+        String path = mPath;
+        if(!path.startsWith("/"))
+            path = "/" + path;
+        return path;
     }
 
     @Override
@@ -244,12 +311,12 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return new BufferedInputStream(mManager.getInputStream(mPath));
+        return new BufferedInputStream(mManager.getInputStream(getBasePath()));
     }
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        return new BufferedOutputStream(mManager.getOutputStream(mPath));
+        return new BufferedOutputStream(mManager.getOutputStream(getBasePath()));
     }
 
     @Override
@@ -278,7 +345,7 @@ public class OpenFTP2 extends OpenNetworkPath implements OpenPath.ListHandler, O
         mThread = new Thread(new Runnable() {
             public void run() {
                 try {
-                    final boolean ret = mManager.delete(mPath);
+                    final boolean ret = mManager.delete(getBasePath());
                     OpenExplorer.getHandler().post(new Runnable() {
                         public void run() {
                             listener.onDeleteFinished(ret);
