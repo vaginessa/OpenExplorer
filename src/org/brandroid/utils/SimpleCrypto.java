@@ -41,17 +41,20 @@ public class SimpleCrypto {
         if (encrypted.indexOf("-") > -1) {
             seed2 = encrypted.substring(encrypted.indexOf("-") + 1);
             encrypted = encrypted.substring(0, encrypted.indexOf("-"));
-        }
+            //Logger.LogDebug("CRYPTO: seed2: " + seed2 + " :: encrypted: " + encrypted);
+        } else return encrypted;
 
         byte[] rawKey = getRawKey((seed + seed2).getBytes());
         byte[] enc = toByte(encrypted);
         byte[] result = decrypt(rawKey, enc);
-        return new String(result);
+        String ret = new String(result);
+        //Logger.LogDebug("CRYPTO: " + seed + " :: encrypted: " + encrypted + " :: decrypted: " + ret);
+        return ret;
     }
 
     private static byte[] getRawKey(byte[] seed) throws Exception {
         KeyGenerator kgen = KeyGenerator.getInstance("AES");
-        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", "Crypto");
         sr.setSeed(seed);
         kgen.init(128, sr); // 192 and 256 bits may not be available
         SecretKey skey = kgen.generateKey();
