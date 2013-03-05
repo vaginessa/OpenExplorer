@@ -30,6 +30,7 @@ import java.util.jar.JarFile;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -120,7 +121,7 @@ public class ThumbnailCreator {
         mImage.post(new Runnable() {
             @Override
             public void run() {
-                mImage.setImageBitmap(getFileExtIcon(file.getExtension(), mImage.getContext(),
+                mImage.setImageDrawable(getFileExtIcon(file.getExtension(), mImage.getContext(),
                         useLarge));
             }
         });
@@ -240,7 +241,7 @@ public class ThumbnailCreator {
             mImage.post(new Runnable() {
                 @Override
                 public void run() {
-                    mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
+                    mImage.setImageDrawable(getFileExtIcon(ext, mContext, useLarge));
                 }
             });
         } else if (mImage.getDrawable() == null)
@@ -283,7 +284,7 @@ public class ThumbnailCreator {
         return false;
     }
 
-    public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge) {
+    public static Drawable getFileExtIcon(String ext, Context mContext, Boolean useLarge) {
         Bitmap src = BitmapFactory.decodeResource(mContext.getResources(),
                 useLarge ? R.drawable.lg_file : R.drawable.sm_file);
         Bitmap b = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
@@ -299,7 +300,7 @@ public class ThumbnailCreator {
         p.setShadowLayer(2.5f, 1, 1, Color.BLACK);
         c.drawText(ext, src.getWidth() / 2, (src.getHeight() / 2) + ((th / 3) * 2), p);
         c.save();
-        return b;
+        return new BitmapDrawable(mContext.getResources(), b);
     }
 
     public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c) {
@@ -439,6 +440,8 @@ public class ThumbnailCreator {
             if (file instanceof OpenFTP) {
                 return R.drawable.lg_ftp;
             }
+            if (file instanceof OpenBox)
+                return R.drawable.icon_box;
 
             // Local Filesystem Icons
             if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")
@@ -535,10 +538,10 @@ public class ThumbnailCreator {
 
         if (mContext != null) {
             if (!file.isDirectory() && file.isTextFile())
-                return new SoftReference<Bitmap>(
+                return new SoftReference<Bitmap>(((BitmapDrawable)
                         getFileExtIcon(file.getName()
                                 .substring(file.getName().lastIndexOf(".") + 1).toUpperCase(),
-                                mContext, mWidth > 72));
+                                mContext, mWidth > 72)).getBitmap());
 
             bmp = BitmapFactory.decodeResource(mContext.getResources(),
                     getDefaultResourceId(file, mWidth, mHeight));

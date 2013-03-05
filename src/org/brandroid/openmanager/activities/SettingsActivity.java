@@ -55,6 +55,7 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
+import com.box.androidlib.BoxAuthentication;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.stericson.RootTools.RootTools;
 
@@ -510,6 +511,17 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             SaveToDefaultServers(servers, getApplicationContext());
             refreshServerList();
             // prefs.setSetting("global", "servers", servers.getJSONObject());
+        } else if (requestCode == OpenExplorer.REQ_AUTHENTICATE) {
+            if(resultCode == BoxAuthentication.AUTH_RESULT_SUCCESS && data != null && data.hasExtra("AUTH_TOKEN"))
+            {
+                String user = "";
+                if(data.hasExtra("AUTH_LOGIN"))
+                    user = data.getStringExtra("AUTH_LOGIN");
+                OpenServer server = new OpenServer("m.box.com", "0", user, data.getStringExtra("AUTH_TOKEN"));
+                OpenServers servers = LoadDefaultServers();
+                servers.add(server);
+                SaveToDefaultServers(servers, getContext());
+            }
         }
     }
 

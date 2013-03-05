@@ -14,6 +14,8 @@ import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
@@ -22,10 +24,12 @@ import com.actionbarsherlock.ActionBarSherlock;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuInflater;
+import com.box.androidlib.BoxAuthentication;
 import com.jcraft.jsch.JSch;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -85,6 +89,24 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
             Logger.LogDebug("Menu selected(0x" + Integer.toHexString(item.getItemId()) + ") - "
                     + item.toString());
         return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == OpenExplorer.REQ_AUTHENTICATE) {
+            if(resultCode == BoxAuthentication.AUTH_RESULT_SUCCESS && data != null && data.hasExtra("AUTH_TOKEN"))
+            {
+                String user = "";
+                if(data.hasExtra("AUTH_LOGIN"))
+                    user = data.getStringExtra("AUTH_LOGIN");
+                OpenServer server = new OpenServer("m.box.com", "0", user, data.getStringExtra("AUTH_TOKEN"));
+                OpenServers servers = SettingsActivity.LoadDefaultServers(this);
+                servers.add(server);
+                SettingsActivity.SaveToDefaultServers(servers, getContext());
+            }
+        }
     }
 
     public MenuInflater getSupportMenuInflater() {

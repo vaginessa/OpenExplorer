@@ -25,6 +25,7 @@ import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -51,6 +52,7 @@ import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
+import com.box.androidlib.User;
 import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
 import android.animation.Animator;
@@ -251,6 +253,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         OpenServers servers = SettingsActivity.LoadDefaultServers(getContext());
         for (int i = 0; i < servers.size(); i++) {
             OpenServer server = servers.get(i);
+            Logger.LogDebug("Checking server #" + i + ": " + server.toString());
             SimpleUserInfo info = new SimpleUserInfo();
             info.setPassword(server.getPassword());
             OpenNetworkPath onp = null;
@@ -272,8 +275,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     Logger.LogError("Couldn't add Samba share to bookmarks.", e);
                     continue;
                 }
-            } else
-                continue;
+            } else if (server.getType().equalsIgnoreCase("box"))
+            {
+                User user = new User();
+                user.setLogin(server.getUser());
+                user.setAuthToken(server.getPassword());
+                onp = new OpenBox(user);
+            }
             if (onp == null)
                 continue;
             onp.setServersIndex(i);
@@ -281,7 +289,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             onp.setUserInfo(info);
             if (server.getPort() > 0)
                 onp.setPort(server.getPort());
-            checkAndAdd(BookmarkType.BOOKMARK_SERVER, onp);
+            addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
         }
         addBookmark(BookmarkType.BOOKMARK_SERVER,
                 new OpenCommand(mApp.getResources().getString(R.string.s_pref_server_add),
@@ -313,6 +321,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public boolean hasBookmark(OpenPath path) {
         if (path == null)
             return true;
+        if (path instanceof OpenNetworkPath)
+            return false;
         if (path.getPath() == null)
             return false;
         for (CopyOnWriteArrayList<OpenPath> arr : mBookmarksArray.values())
@@ -414,6 +424,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         if (file.getDepth() > 4)
             return file.getName();
         if (file instanceof OpenCursor || file instanceof OpenMediaStore
+                || file instanceof OpenNetworkPath
                 || file instanceof OpenPathMerged)
             return file.getName();
         String path = file.getPath().toLowerCase();

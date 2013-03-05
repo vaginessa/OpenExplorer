@@ -64,6 +64,8 @@ public class OpenServer {
     }
 
     public boolean isValid() {
+        if(mData.optString("type","").equalsIgnoreCase("box"))
+            return true;
         return mData != null && mData.has("host");
     }
 

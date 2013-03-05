@@ -26,11 +26,15 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.R.anim;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
@@ -123,6 +127,7 @@ import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.adapters.HeatmapAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -135,6 +140,7 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.HelpStringHelper;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
+import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
@@ -143,6 +149,14 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.view.MenuItem;
+import com.box.androidlib.Box;
+import com.box.androidlib.BoxAuthentication;
+import com.box.androidlib.BoxConstants;
+import com.box.androidlib.GetAccountInfoListener;
+import com.box.androidlib.GetAuthTokenListener;
+import com.box.androidlib.GetTicketListener;
+import com.box.androidlib.LogoutListener;
+import com.box.androidlib.User;
 
 public class DialogHandler {
 
@@ -701,7 +715,7 @@ public class DialogHandler {
         mDeleteAfter.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 prefs.setSetting("global", "pref_archive_postdelete", isChecked);
-                if(btns != null)
+                if (btns != null)
                     ViewUtils.setEnabled(btns, !isChecked);
             }
         });
@@ -720,7 +734,7 @@ public class DialogHandler {
     {
         View sep = new View(context);
         LayoutParams lp = null;
-        if(horizontal)
+        if (horizontal)
             lp = new LayoutParams(LayoutParams.MATCH_PARENT, 3);
         else
             lp = new LayoutParams(3, LayoutParams.MATCH_PARENT);
@@ -1238,12 +1252,16 @@ public class DialogHandler {
                 server.setType("sftp");
             else if (serverType == 2)
                 server.setType("smb");
+            else if (serverType == 3)
+                server.setType("box");
         } else if (server.getType().equals("ftp"))
             serverType = 0;
         else if (server.getType().equals("sftp"))
             serverType = 1;
         else if (server.getType().equals("smb"))
             serverType = 2;
+        else if (server.getType().equals("box"))
+            serverType = 3;
         LayoutInflater inflater = (LayoutInflater)context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final View v = inflater.inflate(R.layout.server, null);
@@ -1279,17 +1297,7 @@ public class DialogHandler {
                         }).setTitle(server.getName()).create();
         if (iServersIndex == -1)
             dialog.setButton(AlertDialog.BUTTON_NEUTRAL, null, (Message)null);
-        /*
-         * context.getString(R.string.test), new
-         * DialogInterface.OnClickListener() {
-         * @Override public void onClick(DialogInterface dialog, int which) {
-         * OpenPath path = FileManager.getOpenCache(server.toString()); try {
-         * ((OpenNetworkPath)path).connect(); Toast.makeText(context,
-         * R.string.test_success, Toast.LENGTH_LONG); } catch(Exception e) {
-         * Toast.makeText(context, R.string.httpError, Toast.LENGTH_LONG); } }
-         * });
-         */
-
+        
         final AutoCompleteTextView mServerHost = (AutoCompleteTextView)v
                 .findViewById(R.id.text_server);
         final ArrayList<String> mHosts = new ArrayList<String>();
@@ -1313,6 +1321,11 @@ public class DialogHandler {
         final Spinner mServerType = (Spinner)v.findViewById(R.id.server_type);
         mServerType.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(position < 3)
+                {
+                    ViewUtils.setViewsVisible(v, false, R.id.server_webview, R.id.server_logout);
+                    ViewUtils.setViewsVisible(v, true, R.id.server_texts);
+                }
                 if (OnlyOnSMB.length > 0)
                     ViewUtils.setViewsVisible(v, position == 2, OnlyOnSMB);
                 if (NotOnSMB.length > 0)
@@ -1320,8 +1333,42 @@ public class DialogHandler {
                 server.setType("ftp");
                 if (position == 1)
                     server.setType("sftp");
-                if (position == 2)
+                else if (position == 2)
                     server.setType("smb");
+                else if (position == 3)
+                {
+                    server.setType("box");
+                    ViewUtils.setViewsVisible(v, false, R.id.server_texts);
+                    WebView web = (WebView)v.findViewById(R.id.server_webview);
+                    if(!server.getPassword().equals(""))
+                    {
+                        Button btn = (Button)v.findViewById(R.id.server_logout);
+                        ViewUtils.setOnClicks(v, new OnClickListener() {
+                                public void onClick(View view) {
+                                    Box.getInstance(PrivatePreferences.getBoxAPIKey())
+                                        .logout(server.getPassword(), new LogoutListener() {
+                                            
+                                            @Override
+                                            public void onIOException(IOException e) {
+                                                Logger.LogError("Couldn't log out of Box", e);
+                                            }
+                                            
+                                            @Override
+                                            public void onComplete(String status) {
+                                                Toast.makeText(v.getContext(), status, Toast.LENGTH_SHORT).show();
+                                                ViewUtils.setViewsVisible(v, true, R.id.server_webview);
+                                                ViewUtils.setViewsVisible(v, false, R.id.server_logout);
+                                            }
+                                        });
+                                }
+                            }, R.id.server_logout);
+                        ViewUtils.setViewsVisible(v, true, R.id.server_logout);
+                    } else {
+                        ViewUtils.setViewsChecked(v, false, R.id.server_logout);
+                        Intent intent = new Intent(app.getContext(), BoxAuthentication.class);
+                        ((Activity)app).startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE);
+                    }
+                }
             }
 
             public void onNothingSelected(AdapterView<?> parent) {
@@ -1338,5 +1385,4 @@ public class DialogHandler {
         }
         return true;
     }
-
 }

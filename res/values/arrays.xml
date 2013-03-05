@@ -45,11 +45,13 @@
         <item>@string/s_server_ftp</item>
         <item>@string/s_server_sftp</item>
         <item>@string/s_server_smb</item>
+        <item>Box</item>
     </string-array>
     <string-array name="server_types_values">
         <item>ftp</item>
         <item>sftp</item>
         <item>smb</item>
+        <item>box</item>
     </string-array>
     <string-array name="bookmark_groups">
         <item>@string/s_bookmark_drives</item>

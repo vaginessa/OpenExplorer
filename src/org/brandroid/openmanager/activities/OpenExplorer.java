@@ -225,6 +225,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int REQ_PICK_FOLDER = 10;
     public static final int REQUEST_VIEW = 11;
     public static final int RESULT_RESTART_NEEDED = 12;
+    public static final int REQ_AUTHENTICATE = 13;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
@@ -262,7 +263,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static long lastSubmit = 0l;
     private OpenPath mLastPath = null;
     private BroadcastReceiver storageReceiver = null;
-    private Handler mHandler = new Handler(); // handler for the main thread
+    private static final Handler mHandler = new Handler(); // handler for the main thread
     // private int mViewMode = VIEW_LIST;
     // private static long mLastCursorEnsure = 0;
     private static boolean mRunningCursorEnsure = false;
@@ -3069,6 +3070,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else if (requestCode == REQ_INTENT) {
 
         } else {
+            super.onActivityResult(requestCode, resultCode, data);
             if (getSelectedFragment() != null)
                 getSelectedFragment().onActivityResult(requestCode, resultCode, data);
         }
@@ -3857,6 +3859,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 mViewPager.notifyDataSetChanged();
             }
         });
+    }
+    
+    public static Handler getHandler() {
+        return mHandler;
     }
 
     public OpenApplication getOpenApplication() {

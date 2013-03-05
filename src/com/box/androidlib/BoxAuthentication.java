@@ -171,7 +171,7 @@ public class BoxAuthentication extends Activity {
             @Override
             public void onComplete(final User user, final String status) {
                 if (status.equals("get_auth_token_ok") && user != null) {
-                    onAuthTokenRetreived(user.getAuthToken());
+                    onAuthTokenRetreived(user);
                 }
                 else if (status.equals("error_unknown_http_response_code")) {
                     handler.postDelayed(new Runnable() {
@@ -196,13 +196,14 @@ public class BoxAuthentication extends Activity {
      * @param authToken
      *            Box auth token
      */
-    private void onAuthTokenRetreived(final String authToken) {
+    private void onAuthTokenRetreived(final User authToken) {
         if (mAuthTokenFound) {
             return;
         }
         mAuthTokenFound = true;
         Intent intent = new Intent();
-        intent.putExtra("AUTH_TOKEN", authToken);
+        intent.putExtra("AUTH_TOKEN", authToken.getAuthToken());
+        intent.putExtra("AUTH_LOGIN", authToken.getLogin());
         setResult(AUTH_RESULT_SUCCESS, intent);
         finish();
     }
