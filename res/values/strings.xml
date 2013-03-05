@@ -413,5 +413,9 @@
     <string name="s_compress_type">Compression Type</string>
     <string name="s_compressed">compressed</string>
     <string name="s_delete_after">Delete source after completion</string>
+    <string name="s_master_pass">Master Password</string>
+    <string name="s_master_pass_warning">You may enter a master password, used as the encryption key for any stored passwords. If you leave this blank, passwords will still be encrypted, and the default master password will be used.</string>
+    <string name="s_pass_old">Enter old password:</string>
+    <string name="s_pass_new">Enter new password:</string>
 
 </resources>
