@@ -229,6 +229,10 @@
             android:summaryOff="@string/s_menu_system_mount_off"
             android:summaryOn="@string/s_menu_system_mount_on"
             android:title="@string/s_menu_system_mount" />
+        <PreferenceScreen
+            android:key="pref_master_pass"
+            android:title="@string/s_master_pass" 
+            />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="pref_intent_internal"
