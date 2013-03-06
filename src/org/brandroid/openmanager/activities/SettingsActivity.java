@@ -506,17 +506,6 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             ServerSetupActivity.SaveToDefaultServers(servers, getApplicationContext());
             refreshServerList();
             // prefs.setSetting("global", "servers", servers.getJSONObject());
-        } else if (requestCode == OpenExplorer.REQ_AUTHENTICATE) {
-            if(resultCode == BoxAuthentication.AUTH_RESULT_SUCCESS && data != null && data.hasExtra("AUTH_TOKEN"))
-            {
-                String user = "";
-                if(data.hasExtra("AUTH_LOGIN"))
-                    user = data.getStringExtra("AUTH_LOGIN");
-                OpenServer server = new OpenServer("m.box.com", "0", user, data.getStringExtra("AUTH_TOKEN"));
-                OpenServers servers = prefs.LoadDefaultServers(this);
-                servers.add(server);
-                ServerSetupActivity.SaveToDefaultServers(servers, getContext());
-            }
         }
     }
 

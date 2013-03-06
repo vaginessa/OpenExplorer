@@ -292,8 +292,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     }
                 }
                 user.setAuthToken(server.getPassword());
-                if(server.getUser() != null)
-                    user.setAuthToken(server.getUser());
                 user.setLogin(server.getName());
                 onp = new OpenBox(user);
             }

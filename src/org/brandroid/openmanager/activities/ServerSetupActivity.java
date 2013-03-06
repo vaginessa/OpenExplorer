@@ -25,6 +25,7 @@ import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -104,6 +105,7 @@ public class ServerSetupActivity
             R.id.text_path, R.id.text_path_label, R.id.text_port, R.id.label_port,
             R.id.check_port
     };
+    private String[] mServerTypes;
     private OpenServers servers;
     private OpenServer server;
     private View mBaseView;
@@ -186,6 +188,39 @@ public class ServerSetupActivity
                 R.id.check_password, R.id.check_port);
         ViewUtils.setOnClicks(mBaseView, this, R.id.server_authenticate, R.id.server_logout);
 
+        for (int i = 0; i < mMapIDs.length; i++)
+        {
+            final int id = mMapIDs[i];
+            final String key = mMapKeys[i];
+            final View v = mBaseView.findViewById(id);
+            if (v instanceof TextView)
+            {
+                ((TextView)v).addTextChangedListener(new TextWatcher() {
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        v.setTag("dirty");
+                    }
+
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    public void afterTextChanged(Editable s) {
+                    }
+                });
+                v.setOnFocusChangeListener(new OnFocusChangeListener() {
+                    public void onFocusChange(View v, boolean hasFocus) {
+                        if (!hasFocus && v.getTag() != null
+                                && v.getTag() instanceof String
+                                && ((String)v.getTag()).equals("dirty"))
+                        {
+                            String val = ((TextView)v).getText().toString();
+                            server.setSetting(key, val);
+                            v.setTag(null);
+                        }
+                    }
+                });
+            }
+        }
+
         CheckBox mCheckPort = (CheckBox)mBaseView.findViewById(R.id.check_port);
         TextView mTextPort = (TextView)mBaseView.findViewById(R.id.text_port);
         if (server.getPort() > 0) {
@@ -197,11 +232,10 @@ public class ServerSetupActivity
             mCheckPort.setChecked(true);
 
         Spinner mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
-        String[] types = getResources()
-                .getStringArray(R.array.server_types_values);
+        mServerTypes = getResources().getStringArray(R.array.server_types_values);
         int pos = 0;
-        for (int i = 0; i < types.length; i++)
-            if (server.getType().toLowerCase(Locale.US).startsWith(types[i])) {
+        for (int i = 0; i < mServerTypes.length; i++)
+            if (server.getType().toLowerCase(Locale.US).startsWith(mServerTypes[i])) {
                 pos = i;
                 break;
             }
@@ -284,7 +318,35 @@ public class ServerSetupActivity
         switch (id)
         {
             case android.R.string.ok:
-                onSaveInstanceState(mArgs);
+                //onSaveInstanceState(mArgs);
+                for (int i = 0; i < mMapIDs.length; i++)
+                {
+                    int vid = mMapIDs[i];
+                    String key = mMapKeys[i];
+                    View v = mBaseView.findViewById(vid);
+                    if (v.getTag() != null && v.getTag() instanceof String
+                            && ((String)v.getTag()).equals("dirty"))
+                    {
+                        String val = null;
+                        if (v instanceof TextView)
+                            val = ((TextView)v).getText().toString();
+                        else if (v instanceof Spinner)
+                            val = ((Spinner)v).getSelectedItem().toString();
+                        else
+                            continue;
+                        mArgs.putString("server_" + key, val);
+                        if (id == R.id.text_password)
+                        {
+                            final String sig = SettingsActivity.GetSignatureKey(this);
+                            try {
+                                val = SimpleCrypto.encrypt(sig, val);
+                            } catch (Exception e) {
+                                Logger.LogError("Unable to encrypt password!", e);
+                            }
+                        }
+                        server.setSetting(key, val);
+                    }
+                }
                 if (iServersIndex > -1)
                     servers.set(iServersIndex, server);
                 else
@@ -457,10 +519,9 @@ public class ServerSetupActivity
 
     @Override
     public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
-        String[] types = arg0.getResources().getStringArray(R.array.server_types_values);
-        if (position >= types.length || position < 0)
+        if (position >= mServerTypes.length || position < 0)
             return;
-        String type = types[position];
+        String type = mServerTypes[position];
         server.setType(type);
         setIcon(getServerTypeDrawable(position));
         final View v = mBaseView;
@@ -649,32 +710,37 @@ public class ServerSetupActivity
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
-        Writer w = null;
-        OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
-        try {
-            f.delete();
-            f.create();
-            w = new BufferedWriter(new FileWriter(f.getFile()));
-            String data = servers.getJSONArray(true, context).toString();
-            if (SettingsActivity.DEBUG)
-                Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
-            // data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
-            w.write(data);
-            w.close();
-            if (SettingsActivity.DEBUG)
-                Logger.LogDebug("Wrote " + data.length() + " bytes to OpenServers (" + f.getPath()
-                        + ").");
-        } catch (IOException e) {
-            Logger.LogError("Couldn't save OpenServers.", e);
-        } catch (Exception e) {
-            Logger.LogError("Problem encrypting servers?", e);
-        } finally {
-            try {
-                if (w != null)
+        final OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
+        final String data = servers.getJSONArray(true, context).toString();
+        new Thread(new Runnable() {
+            public void run() {
+                Writer w = null;
+                try {
+                    f.delete();
+                    f.create();
+                    w = new BufferedWriter(new FileWriter(f.getFile()));
+                    if (SettingsActivity.DEBUG)
+                        Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
+                    // data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
+                    w.write(data);
                     w.close();
-            } catch (IOException e2) {
-                Logger.LogError("Couldn't close writer during error", e2);
+                    if (SettingsActivity.DEBUG)
+                        Logger.LogDebug("Wrote " + data.length() + " bytes to OpenServers ("
+                                + f.getPath()
+                                + ").");
+                } catch (IOException e) {
+                    Logger.LogError("Couldn't save OpenServers.", e);
+                } catch (Exception e) {
+                    Logger.LogError("Problem encrypting servers?", e);
+                } finally {
+                    try {
+                        if (w != null)
+                            w.close();
+                    } catch (IOException e2) {
+                        Logger.LogError("Couldn't close writer during error", e2);
+                    }
+                }
             }
-        }
+        }).start();
     }
 }

@@ -197,6 +197,8 @@ public class OpenFTP extends OpenNetworkPath {
 
     @Override
     public OpenFTP[] listFiles() throws IOException {
+        if (Thread.currentThread().equals(OpenExplorer.UiThread))
+            return getChildren();
         if (isListing)
             return getChildren();
         isListing = true;

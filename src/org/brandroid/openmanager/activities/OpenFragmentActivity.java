@@ -90,24 +90,6 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
                     + item.toString());
         return super.onOptionsItemSelected(item);
     }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == OpenExplorer.REQ_AUTHENTICATE) {
-            if(resultCode == BoxAuthentication.AUTH_RESULT_SUCCESS && data != null && data.hasExtra("AUTH_TOKEN"))
-            {
-                String user = "";
-                if(data.hasExtra("AUTH_LOGIN"))
-                    user = data.getStringExtra("AUTH_LOGIN");
-                OpenServer server = new OpenServer("m.box.com", "0", user, data.getStringExtra("AUTH_TOKEN"));
-                OpenServers servers = ServerSetupActivity.LoadDefaultServers(this);
-                servers.add(server);
-                ServerSetupActivity.SaveToDefaultServers(servers, getContext());
-            }
-        }
-    }
 
     public MenuInflater getSupportMenuInflater() {
         return getSherlock().getMenuInflater();

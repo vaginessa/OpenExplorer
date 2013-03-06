@@ -4,6 +4,7 @@ package org.brandroid.openmanager.data;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
@@ -15,15 +16,19 @@ import android.content.Context;
 
 public class OpenServer {
     private final JSONObject mData;
+    private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+    private String mDecryptKey;
 
     public OpenServer() {
         mData = new JSONObject();
+        mDecryptKey = OpenServers.DefaultServers.getDecryptKey();
         // mData = new Hashtable<String, String>();
     }
 
     public OpenServer(JSONObject obj, String key) {
         mData = obj;
-        //decryptPW(key);
+        mDecryptKey = key;
+        decryptPW();
         /*
          * mData = new Hashtable<String, String>(); if(obj != null) { Iterator
          * keys = obj.keys(); while(keys.hasNext()) { String key =
@@ -32,31 +37,42 @@ public class OpenServer {
          */
     }
 
-    public OpenServer(String host, String path, String user, String password) {
-        mData = new JSONObject();
-        // mData = new Hashtable<String, String>();
-        setHost(host);
-        setPath(path);
-        setUser(user);
-        setPassword(password);
-    }
-    
-    public void decryptPW(final String key)
+    private void decryptPW()
     {
+        final String mPassword = get("password");
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    String mPassword = mData.optString("password");
-                    mPassword = SimpleCrypto.decrypt(key, mPassword);
-                    mData.put("password", mPassword);
+                    final String pw = SimpleCrypto.decrypt(mDecryptKey, mPassword);
+                    mData.put("password", pw);
                 } catch (Exception e) {
                     Logger.LogError("Error decrypting password.", e);
                 }
-            }}).start();
+            }
+        }).start();
+    }
+    
+    public void encryptPW(boolean threaded)
+    {
+        final String mPassword = get("password");
+        Runnable encryptor = new Runnable() {
+            public void run() {
+                try {
+                    final String pw = SimpleCrypto.encrypt(mDecryptKey, mPassword);
+                    mData.put("password", pw);
+                } catch (Exception e) {
+                    Logger.LogError("Error decrypting password.", e);
+                }
+            }
+        };
+        if(threaded)
+            new Thread(encryptor).start();
+        else
+            encryptor.run();
     }
 
     public boolean isValid() {
-        if(mData.optString("type","").equalsIgnoreCase("box"))
+        if (getType().equalsIgnoreCase("box"))
             return true;
         return mData != null && mData.has("host");
     }
@@ -77,8 +93,10 @@ public class OpenServer {
             return null;
         }
         try {
+            if(encryptPW)
+                ret.put("password", SimpleCrypto.encrypt(mDecryptKey, getPassword()));
             ret.put("dir", getPath());
-        } catch (JSONException e) {
+        } catch (Exception e) {
         }
         /*
          * for(String s : mData.keySet()) try { ret.put(s, mData.get(s)); }
@@ -89,12 +107,21 @@ public class OpenServer {
     }
 
     public String getType() {
-        return mData.optString("type");
+        return get("type");
+    }
+    
+    public String get(String key) {
+        String ret = mData.optString(key);
+        if(DEBUG)
+            Logger.LogDebug("OpenServer.getSetting(" + key + ") = " + ret);
+        return ret;
     }
 
     public OpenServer setSetting(String key, String value) {
         try {
             mData.put(key, value);
+            if(DEBUG)
+                Logger.LogDebug("OpenServer.setSetting(" + key + ", " + value + ")");
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -116,24 +143,24 @@ public class OpenServer {
     }
 
     public String getHost() {
-        return mData.optString("host");
+        return get("host");
     }
 
     public String getPath() {
-        String mPath = mData.optString("dir");
+        String mPath = get("dir");
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
     }
 
     public String getUser() {
-        return mData.optString("user");
+        return get("user");
     }
 
     public String getPassword() {
-        return mData.optString("password");
+        return get("password");
     }
 
     public String getName() {
-        String mName = mData.optString("name");
+        String mName = get("name");
         return mName != null && !mName.equals("") ? mName : getHost();
     }
 
@@ -151,15 +178,9 @@ public class OpenServer {
         setSetting("user", user);
         return this;
     }
-
-    public OpenServer setPassword(String password) {
+    
+    public OpenServer setPassword(final String password) {
         setSetting("password", password);
-//        final String key = SettingsActivity.GetSignatureKey();
-//        new Thread(new Runnable() {
-//            public void run() {
-//                setSetting("password",
-//                        SimpleCrypto.encrypt(key, password));
-//            }}).start();
         return this;
     }
 
@@ -182,8 +203,11 @@ public class OpenServer {
         return mData.has(name);
     }
 
-    public String get(String name, String defValue) {
-        return mData.optString(name, defValue);
+    public String get(String key, String defValue) {
+        String ret = mData.optString(key, defValue);
+        if(DEBUG)
+            Logger.LogDebug("OpenServer.getSetting(" + key + ") = " + ret);
+        return ret;
     }
 
     public String getString(String key) {
@@ -203,12 +227,12 @@ public class OpenServer {
             return getType();
         if (key.equals("port"))
             return "" + getPort();
-        return mData.optString(key);
+        return get(key);
     }
 
     public int getPort() {
         try {
-            return Integer.parseInt(mData.optString("port"));
+            return Integer.parseInt(get("port"));
         } catch (NumberFormatException e) {
             return -1;
         }

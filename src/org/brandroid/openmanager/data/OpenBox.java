@@ -16,6 +16,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.box.androidlib.Box;
@@ -134,7 +135,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
             @Override
             public void onComplete(BoxFolder targetFolder, String status) {
                 if (status.equals("not_logged_in"))
-                    Preferences.getPreferences("box").edit().clear().commit();
+                    callback.onUpdateException(new Exception(status));
                 if (DEBUG)
                     Logger.LogDebug("Box.onComplete!: " + status + " " + targetFolder);
                 if (targetFolder != null)
@@ -175,18 +176,18 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public String getPath() {
-        if (getId() == 0)
-            return "/";
-        if (isDirectory())
-            return getFolder().getFolderPath();
-        if (getFile().getFolder() != null)
-            return getFile().getFolder().getFolderPath() + "/" + getName();
-        return getName();
+        String ret = "/";
+        if (getFolderId() != 0)
+            ret = getParent().getPath();
+        ret += getName();
+        if(isDirectory() && !ret.endsWith("/"))
+            ret += "/";
+        return ret;
     }
 
     @Override
     public String getAbsolutePath() {
-        return "box://" + mUser.getLogin() + ":" + getToken() + "@m.box.com/" + getPath();
+        return "box://" + Utils.urlencode(mUser.getLogin()) + ":" + Utils.urlencode(getToken()) + "@m.box.com" + getPath();
     }
 
     @Override
@@ -222,6 +223,8 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public OpenPath[] list() throws IOException {
+        if(mChildren != null)
+            return mChildren.toArray(new OpenBox[mChildren.size()]);
         return null;
     }
 
@@ -291,7 +294,8 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public boolean syncUpload(final OpenFile f, final NetworkListener l) {
-        Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
+        if(DEBUG)
+            Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
         try {
             connect();
             mBox.upload(getToken(), Box.UPLOAD_ACTION_UPLOAD, f.getFile(), f.getName(),
@@ -423,7 +427,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
             @Override
             public void onComplete(final User user, final String status) {
                 if (status.equals("get_auth_token_ok") && user != null) {
-                    server.setUser(user.getAuthToken());
+                    server.setUser(user.getLogin());
                     server.setName(user.getLogin());
                     server.setPassword(user.getAuthToken());
                     server.setSetting("dao", user.toString());
