@@ -3,19 +3,14 @@ package org.brandroid.openmanager.data;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Vector;
 
-import org.apache.commons.net.ftp.FTPClient;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
@@ -27,7 +22,6 @@ import com.box.androidlib.FileDownloadListener;
 import com.box.androidlib.FileUploadListener;
 import com.box.androidlib.GetAccountTreeListener;
 import com.box.androidlib.GetAuthTokenListener;
-import com.box.androidlib.GetFileInfoListener;
 import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.User;
 
@@ -35,7 +29,6 @@ import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.view.View;
 import android.webkit.WebView;
@@ -430,7 +423,11 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
                     server.setUser(user.getLogin());
                     server.setName(user.getLogin());
                     server.setPassword(user.getAuthToken());
-                    server.setSetting("dao", user.toString());
+                    String dao = DAO.toJSON(user);
+                    User u2 = DAO.fromJSON(dao, User.class);
+                    u2.setAuthToken("");
+                    dao = DAO.toJSON(u2);
+                    server.setSetting("dao", dao);
                     ViewUtils.setViewsEnabled(baseView, false, R.id.server_logout);
                     ViewUtils.setViewsEnabled(baseView, true, R.id.server_authenticate);
                 }
