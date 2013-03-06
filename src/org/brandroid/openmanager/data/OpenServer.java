@@ -21,7 +21,8 @@ public class OpenServer {
 
     public OpenServer() {
         mData = new JSONObject();
-        mDecryptKey = OpenServers.DefaultServers.getDecryptKey();
+        if(OpenServers.DefaultServers != null)
+            mDecryptKey = OpenServers.DefaultServers.getDecryptKey();
         // mData = new Hashtable<String, String>();
     }
 

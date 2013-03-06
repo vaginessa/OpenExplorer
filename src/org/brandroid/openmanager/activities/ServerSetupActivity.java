@@ -8,6 +8,7 @@ import java.io.Writer;
 import java.util.Locale;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -33,10 +34,16 @@ import com.box.androidlib.GetAuthTokenListener;
 import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.android.AuthActivity;
+import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session.AccessType;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -60,7 +67,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ServerSetupActivity
-        extends SherlockActivity
+        extends Activity
         implements OnCheckedChangeListener, OnClickListener, OnItemSelectedListener,
         OnMenuItemClickListener, LogoutListener {
 
@@ -223,13 +230,24 @@ public class ServerSetupActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == OpenExplorer.REQ_AUTHENTICATE && data != null
-                && data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
+        if (data != null)
+        {
+            handleIntent(data);
+        }
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        handleIntent(intent);
+    }
+    
+    private void handleIntent(Intent data) {
+        if(data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
         {
             String token = data.getStringExtra("AUTH_TOKEN");
             server.setPassword(token);
             server.setUser(token);
-            ViewUtils.setText(mBaseView, token, R.id.text_password, R.id.text_user);
+            ViewUtils.setText(mBaseView, token, R.id.text_password);
             if (data.getExtras().containsKey("AUTH_LOGIN"))
             {
                 String login = data.getStringExtra("AUTH_LOGIN");
@@ -239,6 +257,21 @@ public class ServerSetupActivity
             ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
             ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
             ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_logout);
+        } else {
+            String[] vals = new String[3];
+            if(OpenDropBox.handleIntent(data, vals))
+            {
+                server.setType("db");
+                server.setUser(vals[2]); // uid
+                AppKeyPair userKP = new AppKeyPair(
+                        vals[0],  // token
+                        vals[1]); // secret
+                server.setPassword(userKP.toString());
+                ViewUtils.setText(mBaseView, userKP.toString(), R.id.text_password);
+                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
+                ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
+                ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_logout);
+            }
         }
     }
 
@@ -254,12 +287,13 @@ public class ServerSetupActivity
 
     public void setIcon(int res)
     {
-        getSupportActionBar().setIcon(res);
+        //getSupportActionBar().setIcon(res);
     }
 
     @Override
     public void setTitle(int titleId) {
-        getSupportActionBar().setTitle(titleId);
+        super.setTitle(titleId);
+        //getSupportActionBar().setTitle(titleId);
     }
 
     // @Override
@@ -290,6 +324,7 @@ public class ServerSetupActivity
 
     public boolean onClick(int id)
     {
+        String t2 = server.getType().toLowerCase(Locale.US);
         switch (id)
         {
             case android.R.string.ok:
@@ -351,7 +386,7 @@ public class ServerSetupActivity
                 finish();
                 return true;
             case R.id.server_authenticate:
-                if (server.getType().equals("box"))
+                if (t2.startsWith("box"))
                 {
                     Box box = Box.getInstance(PrivatePreferences.getBoxAPIKey());
                     box.getTicket(new GetTicketListener() {
@@ -360,7 +395,7 @@ public class ServerSetupActivity
                         public void onComplete(final String ticket, final String status) {
                             if (status.equals("get_ticket_ok")) {
                                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_webview);
-                                loadLoginWebview(ticket);
+                                loadBoxLoginWebview(ticket);
                             }
                             else {
                                 // onGetTicketFail();
@@ -372,14 +407,43 @@ public class ServerSetupActivity
                             // onGetTicketFail();
                         }
                     });
+                } else if(t2.startsWith("db")) {
+                    //AppKeyPair kp = new AppKeyPair(PrivatePreferences.getKey("dropbox_key"), PrivatePreferences.getKey("dropbox_secret"));
+                    //AndroidAuthSession dbAuth = new AndroidAuthSession(kp, AccessType.DROPBOX);
+                    if(checkDropBoxAppKeySetup())
+                        OpenDropBox.startAuthentication(this);
                 }
                 return true;
             case R.id.server_logout:
-                Box.getInstance(PrivatePreferences.getBoxAPIKey())
+                if(t2.startsWith("box"))
+                    Box.getInstance(PrivatePreferences.getBoxAPIKey())
                         .logout(server.getPassword(), this);
+                else if(t2.startsWith("db"))
+                {
+                    // TODO: log out of DropBox
+                }
                 return true;
         }
         return false;
+    }
+    
+    private boolean checkDropBoxAppKeySetup() {
+        String APP_KEY = OpenDropBox.getAppKeyPair().key;
+
+        // Check if the app has set up its manifest properly.
+        Intent testIntent = new Intent(Intent.ACTION_VIEW);
+        String scheme = "db-" + APP_KEY;
+        String uri = scheme + "://" + AuthActivity.AUTH_VERSION + "/test";
+        testIntent.setData(Uri.parse(uri));
+        PackageManager pm = getPackageManager();
+        if (1 != pm.queryIntentActivities(testIntent, 0).size()) {
+            Toast.makeText(this, "URL scheme in your app's " +
+                    "manifest is not set up correctly. You should have a " +
+                    "com.dropbox.client2.android.AuthActivity with the " +
+                    "scheme: " + scheme, Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -387,7 +451,7 @@ public class ServerSetupActivity
      * 
      * @param ticket Ticket from Box API action get_ticket
      */
-    private void loadLoginWebview(final String ticket) {
+    private void loadBoxLoginWebview(final String ticket) {
         // Load the login webpage. Note how the ticket must be appended to the
         // login url.
         String loginUrl = "https://m.box.net/api/1.0/auth/" + ticket;
@@ -399,7 +463,7 @@ public class ServerSetupActivity
             public void onPageFinished(final WebView view, final String url) {
                 // Listen for page loads and execute Box.getAuthToken() after
                 // each one to see if the user has successfully logged in.
-                getAuthToken(ticket, 0);
+                getBoxAuthToken(ticket, 0);
             }
 
             @Override
@@ -431,7 +495,7 @@ public class ServerSetupActivity
      * @param ticket Box ticket
      * @param tries the number of attempts that have been made
      */
-    private void getAuthToken(final String ticket, final int tries) {
+    private void getBoxAuthToken(final String ticket, final int tries) {
         if (tries >= 5) {
             return;
         }
@@ -442,14 +506,14 @@ public class ServerSetupActivity
                     @Override
                     public void onComplete(final User user, final String status) {
                         if (status.equals("get_auth_token_ok") && user != null) {
-                            onAuthTokenRetreived(user);
+                            onBoxAuthTokenRetreived(user);
                         }
                         else if (status.equals("error_unknown_http_response_code")) {
                             handler.postDelayed(new Runnable() {
 
                                 @Override
                                 public void run() {
-                                    getAuthToken(ticket, tries + 1);
+                                    getBoxAuthToken(ticket, tries + 1);
                                 }
                             }, 500);
                         }
@@ -466,7 +530,7 @@ public class ServerSetupActivity
      * 
      * @param authToken Box auth token
      */
-    private void onAuthTokenRetreived(final User authToken) {
+    private void onBoxAuthTokenRetreived(final User authToken) {
         if (mAuthTokenFound) {
             return;
         }
@@ -476,18 +540,31 @@ public class ServerSetupActivity
         intent.putExtra("AUTH_LOGIN", authToken.getLogin());
         server.setSetting("dao", DAO.toJSON(authToken));
         setIntent(intent);
-        onActivityResult(OpenExplorer.REQ_AUTHENTICATE, RESULT_OK, intent);
+        onActivityResult(OpenExplorer.REQ_AUTHENTICATE_BOX, RESULT_OK, intent);
     }
 
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getSupportMenuInflater().inflate(R.menu.dialog_buttons, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        if (onClick(item.getItemId()))
+//            return true;
+//        return super.onOptionsItemSelected(item);
+//    }
+    
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getSupportMenuInflater().inflate(R.menu.dialog_buttons, menu);
-        return true;
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        getMenuInflater().inflate(R.menu.dialog_buttons, menu);
+        return super.onCreateOptionsMenu(menu);
     }
-
+    
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (onClick(item.getItemId()))
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        if(onClick(item.getItemId()))
             return true;
         return super.onOptionsItemSelected(item);
     }
@@ -514,9 +591,12 @@ public class ServerSetupActivity
             server.setType("sftp");
         else if (position == 2)
             server.setType("smb");
-        else if (position == 3)
+        else if (position >= 3)
         {
-            server.setType("box");
+            if(position == 3)
+                server.setType("box");
+            else if(position == 4)
+                server.setType("db");
             ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port);
             ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
             if (!server.getPassword().equals(""))
