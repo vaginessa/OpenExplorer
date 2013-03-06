@@ -69,11 +69,11 @@
                     android:textAppearance="@style/Text.Small" />
             </RelativeLayout>
 
-            <WebView
-                android:id="@+id/server_webview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
+            <include
+                layout="@layout/server_auth_stub"
+			    android:layout_width="match_parent"
+			    android:layout_height="wrap_content"
+                />
 
             <LinearLayout
                 android:id="@+id/server_texts"

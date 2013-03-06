@@ -9,6 +9,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import android.os.Build;
+
 /**
  * Usage:
  * 
@@ -21,12 +23,15 @@ import javax.crypto.spec.SecretKeySpec;
  * @author ferenc.hechler
  */
 public class SimpleCrypto {
+    
+    private final static byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     public static String encrypt(String seed, String cleartext) throws Exception {
         String seed2 = generateRandomString(2);
         byte[] rawKey = getRawKey((seed + seed2).getBytes());
         byte[] result = encrypt(rawKey, cleartext.getBytes());
-        return toHex(result) + "-" + seed2;
+        String hex = toHex(result) + "-" + seed2;
+        return hex; //Base64.encode(hex.getBytes());
     }
 
     public static String generateRandomString(int len) {
@@ -37,13 +42,26 @@ public class SimpleCrypto {
     }
 
     public static String decrypt(String seed, String encrypted) throws Exception {
-        String seed2 = "";
+        if(encrypted.endsWith("=") && !encrypted.contains("-"))
+        {
+            try {
+                encrypted = new String(Base64.decode(encrypted));
+            } catch (Base64DecoderException e) {
+            }
+        }
         if (encrypted.indexOf("-") > -1) {
-            seed2 = encrypted.substring(encrypted.indexOf("-") + 1);
+            seed += encrypted.substring(encrypted.indexOf("-") + 1);
             encrypted = encrypted.substring(0, encrypted.indexOf("-"));
         }
 
-        byte[] rawKey = getRawKey((seed + seed2).getBytes());
+        byte[] seedByte = seed.getBytes();
+        System.arraycopy(seedByte, 0, key, 0, ((seedByte.length < 16) ? seedByte.length : 16));
+        try {
+            encrypted = new String(Base64.decode(encrypted));
+        } catch(Base64DecoderException e) {
+        }
+        //encrypted = new String(Base64.decode(encrypted));
+        byte[] rawKey = getRawKey(seedByte);
         byte[] enc = toByte(encrypted);
         byte[] result = decrypt(rawKey, enc);
         return new String(result);
@@ -51,7 +69,11 @@ public class SimpleCrypto {
 
     private static byte[] getRawKey(byte[] seed) throws Exception {
         KeyGenerator kgen = KeyGenerator.getInstance("AES");
-        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+        SecureRandom sr = null;
+        if(Build.VERSION.SDK_INT > 16)
+            sr = SecureRandom.getInstance("SHA1PRNG", "Crypto");
+        else
+            sr = SecureRandom.getInstance("SHA1PRNG");
         sr.setSeed(seed);
         kgen.init(128, sr); // 192 and 256 bits may not be available
         SecretKey skey = kgen.generateKey();

@@ -27,10 +27,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.R.anim;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -73,13 +71,9 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewParent;
 import android.view.WindowManager;
-import android.view.WindowManager.BadTokenException;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
@@ -92,7 +86,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -123,24 +116,18 @@ import jcifs.smb.SmbFile;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.HeatmapAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenBox;
-import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenMediaStore;
-import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenSMB;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.HelpStringHelper;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
-import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
@@ -149,13 +136,10 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.view.MenuItem;
-import com.box.androidlib.Box;
-import com.box.androidlib.BoxAuthentication;
 import com.box.androidlib.BoxConstants;
 import com.box.androidlib.GetAccountInfoListener;
 import com.box.androidlib.GetAuthTokenListener;
 import com.box.androidlib.GetTicketListener;
-import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
 
 public class DialogHandler {
@@ -650,7 +634,6 @@ public class DialogHandler {
         if (hasIntents)
         {
             btns.setOrientation(LinearLayout.HORIZONTAL);
-            btns.setDividerPadding(8);
             int i = 0;
             for (ResolveInfo ri : IntentManager.getResolvesAvailable(file, app))
             {
@@ -973,7 +956,7 @@ public class DialogHandler {
                 });
                 intent.putExtra(android.content.Intent.EXTRA_SUBJECT, sSubject);
                 try {
-                    OpenFile fAttach = SettingsActivity.GetDefaultServerFile(mContext).getParent()
+                    OpenFile fAttach = ServerSetupActivity.GetDefaultServerFile(mContext).getParent()
                             .getChild("oe_logs.txt");
                     ArrayList<Uri> uris = new ArrayList<Uri>();
                     uris.add(fAttach.getUri());
@@ -1225,164 +1208,5 @@ public class DialogHandler {
                 new Preferences(context).setSetting("warn", "networking", true);
             }
         });
-    }
-
-    public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath,
-            final BookmarkHolder mHolder, final boolean allowShowPass) {
-        return DialogHandler.showServerDialog(app, mPath.getServersIndex(), -1, mHolder,
-                allowShowPass);
-    }
-
-    public static boolean showServerDialog(final OpenApp app, final OpenNetworkPath mPath,
-            final BookmarkHolder mHolder, final boolean allowShowPass) {
-        return DialogHandler.showServerDialog(app, mPath.getServersIndex(), -1, mHolder,
-                allowShowPass);
-    }
-
-    public static boolean showServerDialog(final OpenApp app, final int iServersIndex,
-            int serverType, final BookmarkHolder mHolder, final boolean allowShowPass) {
-        final Context context = app.getContext();
-        final OpenServers servers = SettingsActivity.LoadDefaultServers(context);
-        final OpenServer server = iServersIndex > -1 ? servers.get(iServersIndex)
-                : new OpenServer().setName("New Server");
-        if (serverType > -1) {
-            if (serverType == 0)
-                server.setType("ftp");
-            else if (serverType == 1)
-                server.setType("sftp");
-            else if (serverType == 2)
-                server.setType("smb");
-            else if (serverType == 3)
-                server.setType("box");
-        } else if (server.getType().equals("ftp"))
-            serverType = 0;
-        else if (server.getType().equals("sftp"))
-            serverType = 1;
-        else if (server.getType().equals("smb"))
-            serverType = 2;
-        else if (server.getType().equals("box"))
-            serverType = 3;
-        LayoutInflater inflater = (LayoutInflater)context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View v = inflater.inflate(R.layout.server, null);
-        if (!OpenServer.setupServerDialog(server, iServersIndex, v))
-            return false;
-        int addStrId = iServersIndex >= 0 ? R.string.s_update : R.string.s_add;
-        final AlertDialog dialog = new AlertDialog.Builder(context)
-                .setView(v)
-                .setIcon(
-                        mHolder != null && mHolder.getIcon(app) != null ? mHolder.getIcon(app)
-                                : context.getResources().getDrawable(R.drawable.sm_ftp))
-                .setNegativeButton(context.getString(R.string.s_cancel), OnClickDismiss)
-                .setNeutralButton(context.getString(R.string.s_remove),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (iServersIndex > -1)
-                                    servers.remove(iServersIndex);
-                                dialog.dismiss();
-                                app.refreshBookmarks();
-                            }
-                        })
-                .setPositiveButton(context.getString(addStrId),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (iServersIndex > -1)
-                                    servers.set(iServersIndex, server);
-                                else
-                                    servers.add(server);
-                                SettingsActivity.SaveToDefaultServers(servers, context);
-                                app.refreshBookmarks();
-                                dialog.dismiss();
-                            }
-                        }).setTitle(server.getName()).create();
-        if (iServersIndex == -1)
-            dialog.setButton(AlertDialog.BUTTON_NEUTRAL, null, (Message)null);
-        
-        final AutoCompleteTextView mServerHost = (AutoCompleteTextView)v
-                .findViewById(R.id.text_server);
-        final ArrayList<String> mHosts = new ArrayList<String>();
-        final ArrayAdapter<String> mHostAdapter = new ArrayAdapter<String>(context,
-                android.R.layout.simple_dropdown_item_1line, mHosts);
-        if (mServerHost != null)
-            mServerHost.setAdapter(mHostAdapter);
-
-        final int iServerType = serverType;
-        final int[] OnlyOnSMB = new int[] {}; // R.id.server_drop,
-                                              // R.id.server_scan};
-        final int[] NotOnSMB = new int[] {
-                R.id.text_path, R.id.text_path_label, R.id.text_port, R.id.label_port,
-                R.id.check_port
-        };
-        if (OnlyOnSMB.length > 0)
-            ViewUtils.setViewsVisible(v, serverType == 2, OnlyOnSMB);
-        if (NotOnSMB.length > 0)
-            ViewUtils.setViewsVisible(v, serverType != 2, NotOnSMB);
-
-        final Spinner mServerType = (Spinner)v.findViewById(R.id.server_type);
-        mServerType.setOnItemSelectedListener(new OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if(position < 3)
-                {
-                    ViewUtils.setViewsVisible(v, false, R.id.server_webview, R.id.server_logout);
-                    ViewUtils.setViewsVisible(v, true, R.id.server_texts);
-                }
-                if (OnlyOnSMB.length > 0)
-                    ViewUtils.setViewsVisible(v, position == 2, OnlyOnSMB);
-                if (NotOnSMB.length > 0)
-                    ViewUtils.setViewsVisible(v, position != 2, NotOnSMB);
-                server.setType("ftp");
-                if (position == 1)
-                    server.setType("sftp");
-                else if (position == 2)
-                    server.setType("smb");
-                else if (position == 3)
-                {
-                    server.setType("box");
-                    ViewUtils.setViewsVisible(v, false, R.id.server_texts);
-                    WebView web = (WebView)v.findViewById(R.id.server_webview);
-                    if(!server.getPassword().equals(""))
-                    {
-                        Button btn = (Button)v.findViewById(R.id.server_logout);
-                        ViewUtils.setOnClicks(v, new OnClickListener() {
-                                public void onClick(View view) {
-                                    Box.getInstance(PrivatePreferences.getBoxAPIKey())
-                                        .logout(server.getPassword(), new LogoutListener() {
-                                            
-                                            @Override
-                                            public void onIOException(IOException e) {
-                                                Logger.LogError("Couldn't log out of Box", e);
-                                            }
-                                            
-                                            @Override
-                                            public void onComplete(String status) {
-                                                Toast.makeText(v.getContext(), status, Toast.LENGTH_SHORT).show();
-                                                ViewUtils.setViewsVisible(v, true, R.id.server_webview);
-                                                ViewUtils.setViewsVisible(v, false, R.id.server_logout);
-                                            }
-                                        });
-                                }
-                            }, R.id.server_logout);
-                        ViewUtils.setViewsVisible(v, true, R.id.server_logout);
-                    } else {
-                        ViewUtils.setViewsChecked(v, false, R.id.server_logout);
-                        Intent intent = new Intent(app.getContext(), BoxAuthentication.class);
-                        ((Activity)app).startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE);
-                    }
-                }
-            }
-
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-        mServerType.setSelection(serverType);
-
-        try {
-            dialog.show();
-            showServerWarning(context);
-        } catch (BadTokenException e) {
-            Logger.LogError("Couldn't show dialog.", e);
-            return false;
-        }
-        return true;
     }
 }

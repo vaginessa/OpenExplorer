@@ -31,7 +31,7 @@ import android.os.Environment;
 import android.os.StatFs;
 
 @SuppressLint("NewApi")
-public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream {
+public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream, OpenPathSizable {
     private static final long serialVersionUID = 6436156952322586833L;
     private File mFile;
     private OpenFile[] mChildren = null;

@@ -41,7 +41,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateHandler {
+public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateHandler, OpenPath.OpenPathSizable {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final Box mBox;
@@ -61,7 +61,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
         ((BoxFolder)mFile).setId(0);
         mParent = null;
     }
-    
+
     public OpenBox(OpenBox parent, DAO child)
     {
         mParent = parent;
@@ -72,71 +72,72 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public OpenNetworkPath[] getChildren() {
-        if(mChildren != null)
+        if (mChildren != null)
             return mChildren.toArray(new OpenBox[mChildren.size()]);
         return null;
     }
 
-    
     public BoxFile getFile()
     {
-        if(mFile instanceof BoxFile)
+        if (mFile instanceof BoxFile)
             return ((BoxFile)mFile);
         return null;
     }
-    
+
     public BoxFolder getFolder()
     {
-        if(mFile instanceof BoxFolder)
+        if (mFile instanceof BoxFolder)
             return (BoxFolder)mFile;
-        if(mParent != null)
+        if (mParent != null)
             return mParent.getFolder();
         return null;
     }
-    
+
     public long getFolderId()
     {
         BoxFolder folder = getFolder();
-        if(folder != null)
+        if (folder != null)
             return folder.getId();
         return 0;
     }
-    
+
     public long getId()
     {
-        if(isDirectory())
+        if (isDirectory())
             return getFolder().getId();
         return getFile().getId();
     }
-    
-    public String getToken() { return mUser.getAuthToken(); }
-    
+
+    public String getToken() {
+        return mUser.getAuthToken();
+    }
+
     @Override
     public void list(final OpenContentUpdateListener callback) throws IOException {
-        if(mChildren != null)
+        if (mChildren != null)
         {
-            for(OpenPath kid : mChildren)
+            for (OpenPath kid : mChildren)
                 callback.addContentPath(kid);
             callback.doneUpdating();
             return;
         }
         mChildren = new Vector<OpenPath>();
-        if(DEBUG)
+        if (DEBUG)
             Logger.LogDebug("Box listing for " + getId() + "!");
         mBox.getAccountTree(getToken(), getId(), new String[0], new GetAccountTreeListener() {
-            
+
             @Override
             public void onIOException(IOException e) {
                 callback.onUpdateException(e);
             }
-            
+
             @Override
             public void onComplete(BoxFolder targetFolder, String status) {
-                if(status.equals("not_logged_in"))
+                if (status.equals("not_logged_in"))
                     Preferences.getPreferences("box").edit().clear().commit();
-                if(DEBUG)
-                    Logger.LogDebug("Box.onComplete!: " + status + " " + targetFolder.toString());
-                if(targetFolder != null)
+                if (DEBUG)
+                    Logger.LogDebug("Box.onComplete!: " + status + " " + targetFolder);
+                if (targetFolder != null)
                 {
                     for (BoxFolder f : targetFolder.getFoldersInFolder())
                     {
@@ -151,31 +152,36 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
                         callback.addContentPath(kid);
                     }
                 }
-                callback.doneUpdating();                
+                callback.doneUpdating();
             }
         });
     }
 
     @Override
     public String getName() {
-        if(isDirectory() && getFolder().getId() == 0)
+        if (isDirectory() && getFolder().getId() == 0)
             return mUser.getLogin();
-        if(isDirectory() && getFolder().getFolderName() != null)
-            return getFolder().getFolderName();
-        if(isFile() && getFile().getFileName() != null)
+        if (isDirectory() && getFolder().getFolderName() != null)
+        {
+            if (getFolder().getFolderName().equals(""))
+                return mUser.getLogin();
+            else
+                return getFolder().getFolderName();
+        }
+        if (isFile() && getFile().getFileName() != null)
             return getFile().getFileName();
         return "???";
     }
 
     @Override
     public String getPath() {
-        if(getId() == 0)
+        if (getId() == 0)
             return "/";
-        if(isDirectory())
+        if (isDirectory())
             return getFolder().getFolderPath();
-        if(getFile().getFolder() != null)
+        if (getFile().getFolder() != null)
             return getFile().getFolder().getFolderPath() + "/" + getName();
-       return getName();
+        return getName();
     }
 
     @Override
@@ -185,20 +191,20 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public long length() {
-        if(isFile())
+        if (isFile())
             return getFile().getSize();
         return getFolder().getFileCount();
     }
 
     @Override
     public OpenPath getParent() {
-        if(mParent != null)
+        if (mParent != null)
             return mParent;
-        if(getId() == 0)
+        if (getId() == 0)
             return null;
-        if(isDirectory() && getFolder().getParentFolder() != null)
+        if (isDirectory() && getFolder().getParentFolder() != null)
             return new OpenBox(this, getFolder().getParentFolder());
-        if(isFile() && getFile().getFolder() != null)
+        if (isFile() && getFile().getFolder() != null)
             return new OpenBox(this, getFile().getFolder());
         return null;
     }
@@ -206,10 +212,11 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
     @Override
     public OpenPath getChild(String name) {
         try {
-            for(OpenPath p : listFiles())
-                if(p.getName().equals(name))
+            for (OpenPath p : listFiles())
+                if (p.getName().equals(name))
                     return p;
-        } catch(Exception e) { }
+        } catch (Exception e) {
+        }
         return null;
     }
 
@@ -220,7 +227,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public OpenPath[] listFiles() throws IOException {
-        if(mChildren != null)
+        if (mChildren != null)
             return mChildren.toArray(new OpenPath[mChildren.size()]);
         return list();
     }
@@ -247,9 +254,9 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public Long lastModified() {
-        if(isDirectory())
-            return getFolder().getUpdated();
-        return getFile().getUpdated();
+        if (isDirectory())
+            return getFolder().getUpdated() * 1000;
+        return getFile().getUpdated() * 1000;
     }
 
     @Override
@@ -287,23 +294,28 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
         Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
         try {
             connect();
-            mBox.upload(getToken(), Box.UPLOAD_ACTION_UPLOAD, f.getFile(), f.getName(), getFolderId(), new FileUploadListener() {
-                public void onIOException(IOException e) {
-                    l.OnNetworkFailure(OpenBox.this, f, e);
-                }
-                public void onProgress(long bytesTransferredCumulative) {
-                    l.OnNetworkCopyUpdate((int)bytesTransferredCumulative);
-                }
-                public void onMalformedURLException(MalformedURLException e) {
-                    l.OnNetworkFailure(OpenBox.this, f, e);
-                }
-                public void onFileNotFoundException(FileNotFoundException e) {
-                    l.OnNetworkFailure(OpenBox.this, f, e);
-                }
-                public void onComplete(BoxFile boxFile, String status) {
-                    l.OnNetworkCopyFinished(OpenBox.this, f);
-                }
-            });
+            mBox.upload(getToken(), Box.UPLOAD_ACTION_UPLOAD, f.getFile(), f.getName(),
+                    getFolderId(), new FileUploadListener() {
+                        public void onIOException(IOException e) {
+                            l.OnNetworkFailure(OpenBox.this, f, e);
+                        }
+
+                        public void onProgress(long bytesTransferredCumulative) {
+                            l.OnNetworkCopyUpdate((int)bytesTransferredCumulative);
+                        }
+
+                        public void onMalformedURLException(MalformedURLException e) {
+                            l.OnNetworkFailure(OpenBox.this, f, e);
+                        }
+
+                        public void onFileNotFoundException(FileNotFoundException e) {
+                            l.OnNetworkFailure(OpenBox.this, f, e);
+                        }
+
+                        public void onComplete(BoxFile boxFile, String status) {
+                            l.OnNetworkCopyFinished(OpenBox.this, f);
+                        }
+                    });
             return true;
         } catch (Exception e) {
             if (l != null)
@@ -318,9 +330,11 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
             public void onIOException(IOException e) {
                 l.OnNetworkFailure(OpenBox.this, f, e);
             }
+
             public void onProgress(long bytesDownloaded) {
                 l.OnNetworkCopyUpdate((int)bytesDownloaded);
             }
+
             public void onComplete(String status) {
                 l.OnNetworkCopyFinished(OpenBox.this, f);
             }
@@ -332,8 +346,9 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
     public boolean isConnected() throws IOException {
         return false;
     }
-    
-    public static void handleBoxWebview(final View baseView, final OpenServer server, final WebView web)
+
+    public static void handleBoxWebview(final View baseView, final OpenServer server,
+            final WebView web)
     {
         final Box box = Box.getInstance(PrivatePreferences.getBoxAPIKey());
         box.getTicket(new GetTicketListener() {
@@ -344,25 +359,29 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
                     loadLoginWebview(baseView, server, box, ticket, web);
                 }
                 else {
-                    Toast.makeText(baseView.getContext(), "Unable to get Box ticket!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(baseView.getContext(), "Unable to get Box ticket!",
+                            Toast.LENGTH_LONG).show();
                     Logger.LogError("Unable to get Box ticket!");
                 }
             }
 
             @Override
             public void onIOException(final IOException e) {
-                Toast.makeText(baseView.getContext(), "Exception getting Box ticket! " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(baseView.getContext(),
+                        "Exception getting Box ticket! " + e.getMessage(), Toast.LENGTH_LONG)
+                        .show();
                 Logger.LogError("Exception getting Box ticket!", e);
             }
         });
-        
+
     }
-    
+
     @SuppressLint("SetJavaScriptEnabled")
-    private static void loadLoginWebview(final View baseView, final OpenServer server, final Box box, final String ticket, final WebView mLoginWebView)
+    private static void loadLoginWebview(final View baseView, final OpenServer server,
+            final Box box, final String ticket, final WebView mLoginWebView)
     {
         String loginUrl = "https://m.box.net/api/1.0/auth/" + ticket;
-        
+
         mLoginWebView.setVisibility(View.VISIBLE);
         mLoginWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         mLoginWebView.getSettings().setJavaScriptEnabled(true);
@@ -379,7 +398,8 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
             public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
                 if (url != null && url.startsWith("market://")) {
                     try {
-                        view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                        view.getContext().startActivity(
+                                new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                         return true;
                     }
                     catch (ActivityNotFoundException e) {
@@ -389,10 +409,11 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
                 return false;
             }
         });
-        mLoginWebView.loadUrl(loginUrl);   
+        mLoginWebView.loadUrl(loginUrl);
     }
-    
-    private static void getAuthToken(final View baseView, final OpenServer server, final Box box, final String ticket, final int tries) {
+
+    private static void getAuthToken(final View baseView, final OpenServer server, final Box box,
+            final String ticket, final int tries) {
         if (tries >= 5) {
             return;
         }
@@ -402,11 +423,12 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
             @Override
             public void onComplete(final User user, final String status) {
                 if (status.equals("get_auth_token_ok") && user != null) {
-                    server.setUser(user.getLogin());
+                    server.setUser(user.getAuthToken());
                     server.setName(user.getLogin());
                     server.setPassword(user.getAuthToken());
-                    ViewUtils.setViewsVisible(baseView, false, R.id.server_webview);
-                    ViewUtils.setViewsVisible(baseView, true, R.id.server_logout);
+                    server.setSetting("dao", user.toString());
+                    ViewUtils.setViewsEnabled(baseView, false, R.id.server_logout);
+                    ViewUtils.setViewsEnabled(baseView, true, R.id.server_authenticate);
                 }
                 else if (status.equals("error_unknown_http_response_code")) {
                     handler.postDelayed(new Runnable() {
@@ -421,5 +443,20 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
             public void onIOException(final IOException e) {
             }
         });
+    }
+
+    @Override
+    public long getTotalSpace() {
+        return mUser.getSpaceAmount();
+    }
+
+    @Override
+    public long getUsedSpace() {
+        return mUser.getSpaceUsed();
+    }
+    
+    @Override
+    public long getFreeSpace() {
+        return getTotalSpace() - getUsedSpace();
     }
 }

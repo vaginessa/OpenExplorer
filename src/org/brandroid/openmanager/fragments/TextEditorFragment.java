@@ -17,7 +17,7 @@ import java.util.Date;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.LinesAdapter;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenContent;
@@ -254,7 +254,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                 int serverIndex = bundle.getInt("edit_server");
                 Logger.LogDebug("Loading server #" + serverIndex);
                 if (serverIndex > -1) {
-                    OpenServers servers = SettingsActivity.LoadDefaultServers(getActivity());
+                    OpenServers servers = ServerSetupActivity.LoadDefaultServers(getActivity());
                     if (serverIndex < servers.size()) {
                         OpenServer server = servers.get(serverIndex);
                         FTPManager man = new FTPManager(server.getHost(), server.getUser(),

@@ -61,6 +61,7 @@
 
                 <CheckBox
                     android:id="@+id/check_port"
+                    style="@style/Text.Small.Checkbox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignBaseline="@+id/text_port"
@@ -69,8 +70,7 @@
                     android:layout_gravity="top"
                     android:layout_marginTop="1dp"
                     android:checked="true"
-                    android:text="@string/s_default"
-                    android:textAppearance="@style/Text.Small" />
+                    android:text="@string/s_default" />
             </RelativeLayout>
 
             <LinearLayout
@@ -142,28 +142,20 @@
 
                     <CheckBox
                         android:id="@+id/check_password"
+                        style="@style/Text.Small.Checkbox"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignBaseline="@+id/text_password"
                         android:layout_alignParentRight="true"
                         android:lines="1"
-                        android:text="@string/s_show_password"
-                        android:textAppearance="@style/Text.Small" />
+                        android:text="@string/s_show_password" />
                 </RelativeLayout>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/server_logout"
-                android:visibility="gone"
-                android:text="@string/s_logout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <WebView
-                android:id="@+id/server_webview"
+            <include
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone" />
+                layout="@layout/server_auth_stub" />
 
             <TextView
                 android:layout_width="wrap_content"

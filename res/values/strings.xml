@@ -418,5 +418,6 @@
     <string name="s_pass_old">Enter old password:</string>
     <string name="s_pass_new">Enter new password:</string>
     <string name="s_logout">Log out</string>
+    <string name="s_authenticate">Authenticate</string>
 
 </resources>

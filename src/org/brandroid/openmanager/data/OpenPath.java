@@ -788,6 +788,12 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         public void delete(OpsListener listener);
     }
     
+    public interface OpenPathSizable {
+        public long getTotalSpace();
+        public long getUsedSpace();
+        public long getFreeSpace();
+    }
+    
     public void postException(final Exception e, final ExceptionListener listener)
     {
         OpenExplorer.getHandler().post(new Runnable() {

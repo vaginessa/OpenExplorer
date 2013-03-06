@@ -102,9 +102,9 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
                 if(data.hasExtra("AUTH_LOGIN"))
                     user = data.getStringExtra("AUTH_LOGIN");
                 OpenServer server = new OpenServer("m.box.com", "0", user, data.getStringExtra("AUTH_TOKEN"));
-                OpenServers servers = SettingsActivity.LoadDefaultServers(this);
+                OpenServers servers = ServerSetupActivity.LoadDefaultServers(this);
                 servers.add(server);
-                SettingsActivity.SaveToDefaultServers(servers, getContext());
+                ServerSetupActivity.SaveToDefaultServers(servers, getContext());
             }
         }
     }
