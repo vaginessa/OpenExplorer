@@ -81,14 +81,6 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         return true;
     }
 
-    public void connect() throws IOException {
-        Logger.LogVerbose("Connecting OpenNetworkPath");
-    }
-
-    public void disconnect() {
-        Logger.LogVerbose("Disconnecting OpenNetworkPath");
-    }
-
     public String getTempFileName() {
         return getUri().getScheme() + "-" + getName() + "-"
                 + Utils.md5(getPath()).replaceAll("[^A-Za-z0-9\\.]", "-");
@@ -202,8 +194,12 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
             }
         });
     }
-
-    public abstract boolean isConnected() throws IOException;
+    
+    public interface PipeNeeded {
+        public boolean isConnected() throws IOException;
+        public void connect() throws IOException;
+        public void disconnect();
+    }
 
     /**
      * This does not change the actual path of the underlying object, just what

@@ -3181,7 +3181,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         getSetting(mLastPath, "view", 0);
 
-        if (path instanceof OpenNetworkPath) {
+        if (path instanceof OpenNetworkPath.PipeNeeded) {
             if (mLogFragment != null && mLogFragment.getPopup() == null)
                 initLogPopup();
             if (mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())

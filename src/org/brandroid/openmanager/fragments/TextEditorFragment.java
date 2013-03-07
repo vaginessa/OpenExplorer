@@ -687,8 +687,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                 } else {
                     throw new IOException("Invalid output stream.");
                 }
-                if (mPath instanceof OpenNetworkPath)
-                    ((OpenNetworkPath)mPath).disconnect();
+                if (mPath instanceof OpenNetworkPath.PipeNeeded)
+                    ((OpenNetworkPath.PipeNeeded)mPath).disconnect();
                 mData = data;
                 return bytes.length;
             } catch (Exception e) {
@@ -780,8 +780,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                         }
                     }
                 }
-                if (mPath instanceof OpenNetworkPath)
-                    ((OpenNetworkPath)mPath).disconnect();
+                if (mPath instanceof OpenNetworkPath.PipeNeeded)
+                    ((OpenNetworkPath.PipeNeeded)mPath).disconnect();
                 return sb.toString();
             } else if (path.indexOf("ftp:/") > -1) {
                 BufferedInputStream in = null;

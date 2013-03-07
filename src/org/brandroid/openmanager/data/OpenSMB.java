@@ -34,7 +34,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable {
+public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable, OpenNetworkPath.PipeNeeded {
     private SmbFile mFile;
     private OpenSMB mParent;
     private OpenSMB[] mChildren = null;
@@ -103,7 +103,6 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
 
     @Override
     public void disconnect() {
-        super.disconnect();
         mFile.disconnect();
     }
 
@@ -612,5 +611,10 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
     @Override
     public long getFreeSpace() {
         return getDiskFreeSpace();
+    }
+
+    @Override
+    public void connect() throws IOException {
+        mFile.connect();
     }
 }

@@ -19,7 +19,7 @@ import com.jcraft.jsch.UserInfo;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class OpenFTP extends OpenNetworkPath {
+public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private FTPFile mFile;
     private final FTPManager mManager;
     private final ArrayList<OpenFTP> mChildren = new ArrayList<OpenFTP>();
@@ -112,14 +112,12 @@ public class OpenFTP extends OpenNetworkPath {
                 return;
         } catch (IOException e) {
         }
-        super.disconnect();
         if (mManager != null)
             mManager.disconnect();
     }
 
     @Override
     public void connect() throws IOException {
-        super.connect();
         if (mManager != null)
             mManager.connect();
     }

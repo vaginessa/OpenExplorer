@@ -290,7 +290,6 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
         if(DEBUG)
             Logger.LogDebug("OpenFTP.copyFrom(" + f + ")");
         try {
-            connect();
             mBox.upload(getToken(), Box.UPLOAD_ACTION_UPLOAD, f.getFile(), f.getName(),
                     getFolderId(), new FileUploadListener() {
                         public void onIOException(IOException e) {
@@ -336,11 +335,6 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
                 l.OnNetworkCopyFinished(OpenBox.this, f);
             }
         });
-        return false;
-    }
-
-    @Override
-    public boolean isConnected() throws IOException {
         return false;
     }
 

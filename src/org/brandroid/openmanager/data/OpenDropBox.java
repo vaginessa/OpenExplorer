@@ -635,11 +635,6 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     }
 
     @Override
-    public boolean isConnected() throws IOException {
-        return false;
-    }
-
-    @Override
     public long getTotalSpace() {
         if (getServer() != null)
             return getServer().get("quota", 0l);
