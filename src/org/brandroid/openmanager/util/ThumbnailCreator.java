@@ -152,7 +152,7 @@ public class ThumbnailCreator {
             postImageResource(mImage, getDefaultResourceId(file, mWidth, mHeight));
 
         if (file.hasThumbnail()) {
-            if (showThumbPreviews && !file.requiresThread()) {
+            if (showThumbPreviews) {
                 Bitmap thumb = // !mCacheMap.containsKey(file.getPath()) ? null
                 // :
                 getThumbnailCache(app, file.getPath(), mWidth, mHeight);
@@ -169,6 +169,23 @@ public class ThumbnailCreator {
                     try {
                         if (!fails.containsKey(file.getPath())) {
                             if (!app.getMemoryCache().containsKey(file.getPath()))
+                            {
+                                if (file instanceof OpenPath.ThumbnailHandler && file.hasThumbnail()) {
+                                    ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth, new OpenPath.ThumbnailReturnCallback() {
+                                        public void onThumbReturned(Bitmap bmp) {
+                                            try {
+                                                String mCacheFilename = getCacheFilename(file.getAbsolutePath(), mWidth, mHeight);
+                                                saveThumbnail(app.getContext(), mCacheFilename, bmp);
+                                                app.getMemoryCache().put(mCacheFilename, bmp);
+                                                mListener.updateImage(bmp);
+                                            } catch(OutOfMemoryError e) {
+                                                showThumbPreviews = false;
+                                                Logger.LogWarning("No more memory for thumbs!");
+                                            }
+                                        }
+                                    });
+                                    return true;
+                                }
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -186,7 +203,7 @@ public class ThumbnailCreator {
                                         }
                                     }
                                 }).start();
-                            else
+                            } else
                                 // new Thread(new Runnable() {public void run()
                                 // {
                                 mListener.updateImage(getThumbnailCache(app, file.getPath(),

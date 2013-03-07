@@ -359,19 +359,6 @@ public class ContentAdapter extends BaseAdapter {
                         getContext(), mWidth > 72));
             else if (!mShowThumbnails || !file.hasThumbnail()) {
                 mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
-            } else if (file instanceof OpenPath.ThumbnailHandler) {
-                ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth, new OpenPath.ThumbnailReturnCallback() {
-                    public void onThumbReturned(Bitmap bmp) {
-                        if(!OpenExplorer.BEFORE_HONEYCOMB)
-                        {
-                            BitmapDrawable d = new BitmapDrawable(getResources(), bmp);
-                            d.setGravity(Gravity.CENTER);
-                            ImageUtils.fadeToDrawable(mIcon, d);
-                        } else
-                            mIcon.setImageBitmap(bmp);
-                        mIcon.setTag(file);
-                    }
-                });
             } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
                 // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());

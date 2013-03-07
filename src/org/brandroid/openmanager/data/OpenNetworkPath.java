@@ -133,6 +133,11 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         }
         copyFrom(tmp, task);
     }
+    
+    @Override
+    public boolean hasThumbnail() {
+        return false;
+    }
 
     /**
      * Upload file (used during tempUpload).

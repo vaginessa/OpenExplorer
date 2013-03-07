@@ -4,9 +4,7 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -15,13 +13,10 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -36,7 +31,6 @@ import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.RESTUtility.RequestMethod;
 import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
-import com.dropbox.client2.android.AuthActivity;
 import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
@@ -44,11 +38,8 @@ import com.dropbox.client2.session.Session.AccessType;
 import com.dropbox.client2.session.TokenPair;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -57,8 +48,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 
-public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateHandler,
+public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler,
         OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler {
 
     private static final long serialVersionUID = 5742031992345655964L;
@@ -168,8 +160,34 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
     public String getToken() {
         return mAPI.getSession().getAccessTokenPair().secret;
     }
-
+    
     @Override
+    public void list(final ListListener listener) {
+        if(mChildren != null)
+            listener.onListReceived(getChildren());
+
+        mChildren = new Vector<OpenPath>();
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Entry e = mAPI.metadata(getPath(), -1, null, true, null);
+                    for (Entry kid : e.contents)
+                    {
+                        OpenDropBox child = new OpenDropBox(OpenDropBox.this, kid);
+                        mChildren.add(child);
+                    }
+                    OpenExplorer.getHandler().post(new Runnable() {
+                        public void run() {
+                            listener.onListReceived(getChildren());
+                        }
+                    });
+                } catch (DropboxException e) {
+                    listener.onException(e);
+                }
+            }
+        }).start();
+    }
+
     public void list(final OpenContentUpdateListener callback) throws IOException {
         if (mChildren != null)
         {
@@ -413,9 +431,10 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
 
     @Override
     public String getPath() {
+        String ret = "/";
         if (mEntry != null)
-            return mEntry.path;
-        return "/";
+            ret = mEntry.path;
+        return "db-" + mAPI.getSession().getAppKeyPair().key + "://1" + ret;
     }
 
     @Override
