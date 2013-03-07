@@ -49,9 +49,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 
 public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler,
-        OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler {
+        OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler, OpenPath.OpenStream {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final OpenDropBox mParent;
@@ -434,7 +435,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         String ret = "/";
         if (mEntry != null)
             ret = mEntry.path;
-        return "db-" + mAPI.getSession().getAppKeyPair().key + "://1" + ret;
+        return ret;
+        //return "db-" + mAPI.getSession().getAppKeyPair().key + "://1" + ret;
     }
 
     @Override
@@ -555,6 +557,18 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     @Override
     public Boolean mkdir() {
         return false;
+    }
+    
+    @Override
+    public InputStream getInputStream() throws IOException {
+        try {
+            return mAPI.getFileStream(mEntry.path, mEntry.rev);
+        } catch (DropboxException e) {
+            if(Build.VERSION.SDK_INT > 8)
+                throw new IOException("DropboxException getting InputStream!", e);
+            else
+                throw new IOException("DropboxException getting InputStream: " + e.getMessage());
+        }
     }
 
     @Override
