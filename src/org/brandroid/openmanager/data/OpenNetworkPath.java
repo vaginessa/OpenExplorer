@@ -27,6 +27,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     protected String mName = null;
     protected int mPort = -1;
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+    private OpenServer mServer;
 
     public interface NetworkListener {
         public static final NetworkListener DefaultListener = new NetworkListener() {
@@ -58,6 +59,16 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         public void OnAuthenticate(String url);
 
         public void OnAuthenticated(OpenPath path);
+    }
+    
+    public final void setServer(OpenServer server)
+    {
+        mServer = server;
+    }
+    
+    public final OpenServer getServer()
+    {
+        return mServer;
     }
 
     @Override

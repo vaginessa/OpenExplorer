@@ -18,7 +18,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 
-public class OpenServers {
+public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;
     private CopyOnWriteArrayList<OpenServer> mData;
     public static OpenServers DefaultServers = null;
@@ -125,5 +125,10 @@ public class OpenServers {
         for (int i = 0; i < mData.size(); i++)
             ret.put(mData.get(i).getJSONObject(encryptPW, context));
         return ret;
+    }
+
+    @Override
+    public Iterator<OpenServer> iterator() {
+        return mData.iterator();
     }
 }

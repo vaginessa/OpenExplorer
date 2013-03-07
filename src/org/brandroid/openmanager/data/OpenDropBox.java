@@ -2,23 +2,45 @@
 package org.brandroid.openmanager.data;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.DropboxAPI.Account;
+import com.dropbox.client2.DropboxAPI.DropboxFileInfo;
+import com.dropbox.client2.DropboxAPI.DropboxInputStream;
 import com.dropbox.client2.DropboxAPI.Entry;
+import com.dropbox.client2.DropboxAPI.ThumbFormat;
+import com.dropbox.client2.DropboxAPI.ThumbSize;
+import com.dropbox.client2.ProgressListener;
+import com.dropbox.client2.RESTUtility.RequestMethod;
 import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
 import com.dropbox.client2.exception.DropboxException;
+import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session.AccessType;
 import com.dropbox.client2.session.TokenPair;
 
 import android.app.Activity;
@@ -32,63 +54,22 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 
 public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateHandler,
-        OpenPath.OpenPathSizable {
-
-    /**
-     * The extra that goes in an intent to provide your consumer key for Dropbox
-     * authentication. You won't ever have to use this.
-     */
-    public static final String EXTRA_CONSUMER_KEY = "CONSUMER_KEY";
-
-    /**
-     * The extra that goes in an intent when returning from Dropbox auth to
-     * provide the user's access token, if auth succeeded. You won't ever have
-     * to use this.
-     */
-    public static final String EXTRA_ACCESS_TOKEN = "ACCESS_TOKEN";
-
-    /**
-     * The extra that goes in an intent when returning from Dropbox auth to
-     * provide the user's access token secret, if auth succeeded. You won't ever
-     * have to use this.
-     */
-    public static final String EXTRA_ACCESS_SECRET = "ACCESS_SECRET";
-
-    /**
-     * The extra that goes in an intent when returning from Dropbox auth to
-     * provide the user's Dropbox UID, if auth succeeded. You won't ever have to
-     * use this.
-     */
-    public static final String EXTRA_UID = "UID";
-
-    /**
-     * Used for internal authentication. You won't ever have to use this.
-     */
-    public static final String EXTRA_CONSUMER_SIG = "CONSUMER_SIG";
-
-    /**
-     * Used for internal authentication. You won't ever have to use this.
-     */
-    public static final String EXTRA_CALLING_PACKAGE = "CALLING_PACKAGE";
-
-    public static final String ACTION_AUTHENTICATE_V1 = "com.dropbox.android.AUTHENTICATE_V1";
-
-    public static final int AUTH_VERSION = 1;
-
-    // For communication between AndroidAuthSesssion and this activity.
-    static final String EXTRA_INTERNAL_CONSUMER_KEY = "EXTRA_INTERNAL_CONSUMER_KEY";
-    static final String EXTRA_INTERNAL_CONSUMER_SECRET = "EXTRA_INTERNAL_CONSUMER_SECRET";
+        OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final OpenDropBox mParent;
     private final Entry mEntry;
     private final DropboxAPI<AndroidAuthSession> mAPI;
     private List<OpenPath> mChildren = null;
+    private String mName = null;
+    private Account mAccount;
 
-    private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
     public OpenDropBox(DropboxAPI<AndroidAuthSession> api)
     {
@@ -105,9 +86,82 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
     }
 
     @Override
+    public void setName(String name) {
+        mName = name;
+    }
+
+    public interface GetAccountInfoCallback extends OpenPath.ExceptionListener {
+        public void onGetAccountInfo(Account account);
+    }
+
+    public void getAccountInfo(final GetAccountInfoCallback callback)
+    {
+        Account account = getAccountInfo();
+        if (account != null)
+            callback.onGetAccountInfo(account);
+        else
+            new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        AndroidAuthSession session = getSession();
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> accountInfo =
+                                (Map<String, Object>)RESTUtility.request(RequestMethod.GET,
+                                        session.getAPIServer(), "/account/info", AUTH_VERSION,
+                                        new String[] {
+                                                "locale", session.getLocale().toString()
+                                        },
+                                        session);
+
+                        mAccount = new Account(accountInfo);
+
+                        OpenServer server = getServer();
+                        if (server != null)
+                        {
+                            server.setSetting("account",
+                                    new JSONObject(accountInfo).toString());
+                        }
+
+                        OpenExplorer.getHandler().post(new Runnable() {
+                            public void run() {
+                                callback.onGetAccountInfo(mAccount);
+                            }
+                        });
+                    } catch (DropboxException e) {
+                        callback.onException(e);
+                    }
+                }
+            }).start();
+    }
+
+    public Account getAccountInfo()
+    {
+        if (mAccount != null)
+            return mAccount;
+        if (mParent != null)
+            return mParent.getAccountInfo();
+        if (getServer() != null)
+        {
+            if (getServer().has("account"))
+            {
+                String sa = getServer().get("account");
+                JSONParser jp = new JSONParser();
+                try {
+                    Map<String, Object> map = (Map<String, Object>)jp.parse(sa);
+                    mAccount = new Account(map);
+                    return mAccount;
+                } catch (ParseException e) {
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public OpenNetworkPath[] getChildren() {
         if (mChildren != null)
-            return mChildren.toArray(new OpenBox[mChildren.size()]);
+            return mChildren.toArray(new OpenDropBox[mChildren.size()]);
         return null;
     }
 
@@ -143,10 +197,32 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
         }).start();
     }
 
+    public AndroidAuthSession getSession() {
+        return mAPI.getSession();
+    }
+
     public static AppKeyPair getAppKeyPair()
     {
         return new AppKeyPair(PrivatePreferences.getKey("DROPBOX_KEY"),
                 PrivatePreferences.getKey("DROPBOX_SECRET"));
+    }
+
+    public static AndroidAuthSession buildSession(OpenServer server) {
+        AppKeyPair appKeyPair = getAppKeyPair();
+        AndroidAuthSession session;
+
+        String[] stored = null;
+        String pw = server.getPassword();
+        if (pw != null && !pw.equals(""))
+            stored = pw.split(",");
+        if (stored != null) {
+            AccessTokenPair accessToken = new AccessTokenPair(stored[0], stored[1]);
+            session = new AndroidAuthSession(appKeyPair, AccessType.DROPBOX, accessToken);
+        } else {
+            session = new AndroidAuthSession(appKeyPair, AccessType.DROPBOX);
+        }
+
+        return session;
     }
 
     /**
@@ -166,12 +242,13 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
     public static void startAuthentication(Activity c) {
         AppKeyPair appKeyPair = getAppKeyPair();
 
-        //Intent intent = getOfficialIntent(c, appKeyPair.key, appKeyPair.secret);
-        //if (hasDropboxApp(c, intent)) {
-        //    c.startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE_DROPBOX);
-        //} else {
+        Intent intent = getOfficialIntent(c, appKeyPair.key, appKeyPair.secret);
+        if (hasDropboxApp(c, intent)) {
+            c.startActivity(intent); // ,
+                                     // OpenExplorer.REQ_AUTHENTICATE_DROPBOX);
+        } else {
             startWebAuth(c, appKeyPair);
-        //}
+        }
     }
 
     private static void startWebAuth(Context c, AppKeyPair kp) {
@@ -189,8 +266,12 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
         c.startActivity(intent);
     }
 
-    public static boolean handleIntent(Intent intent, String[] out)
+    public static boolean handleIntent(Intent intent, OpenServer out)
     {
+        if (intent == null || intent.getExtras() == null)
+            return false;
+        if (DEBUG)
+            Logger.LogDebug("OpenDropBox.handleIntent: " + intent.getExtras().toString());
         String token, secret, uid;
         if (intent.hasExtra(EXTRA_ACCESS_TOKEN)) {
             // Dropbox app auth.
@@ -217,9 +298,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
         }
         if (token != null && !token.equals(""))
         {
-            out[0] = token;
-            out[1] = secret;
-            out[2] = uid;
+            out.setPassword(token + "," + secret);
+            out.setUser(uid);
             return true;
         }
         return false;
@@ -324,7 +404,11 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
     public String getName() {
         if (mEntry != null)
             return mEntry.fileName();
-        return "???";
+        if (mName != null)
+            return mName;
+        if (getAccountInfo() != null)
+            return getAccountInfo().displayName;
+        return "??";
     }
 
     @Override
@@ -372,7 +456,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
     @Override
     public OpenPath[] list() throws IOException {
         if (mChildren != null)
-            return mChildren.toArray(new OpenBox[mChildren.size()]);
+            return mChildren.toArray(new OpenDropBox[mChildren.size()]);
         return null;
     }
 
@@ -385,7 +469,9 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
 
     @Override
     public Boolean isDirectory() {
-        return mChildren != null && mChildren.size() > 0;
+        if (mEntry == null)
+            return true;
+        return mEntry.isDir;
     }
 
     @Override
@@ -417,6 +503,13 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
     public Boolean canRead() {
         return true;
     }
+    
+    @Override
+    public String getMimeType() {
+        if(mEntry != null)
+            return mEntry.mimeType;
+        return super.getMimeType();
+    }
 
     @Override
     public Boolean canWrite() {
@@ -430,6 +523,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
 
     @Override
     public Boolean exists() {
+        if(mEntry != null)
+            return !mEntry.isDeleted;
         return true;
     }
 
@@ -445,11 +540,78 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
 
     @Override
     public boolean syncUpload(final OpenFile f, final NetworkListener l) {
+        InputStream is = null;
+        try {
+            is = f.getInputStream();
+            mAPI.putFile(getPath(), is, f.length(), null,
+                    new ProgressListener() {
+                        public void onProgress(long bytes, long total) {
+                            l.OnNetworkCopyUpdate((int)bytes, (int)total);
+                        }
+                    });
+        } catch (Exception e) {
+            l.OnNetworkFailure(this, f, e);
+        }
         return false;
     }
 
     @Override
     public boolean syncDownload(final OpenFile f, final NetworkListener l) {
+        OutputStream os = null;
+        try {
+            os = f.getOutputStream();
+            DropboxFileInfo fi = mAPI.getFile(getPath(), null, os,
+                    new ProgressListener() {
+                        public void onProgress(long bytes, long total) {
+                            l.OnNetworkCopyUpdate((int)bytes, (int)total);
+                        }
+                    });
+            return fi != null;
+        } catch (Exception e) {
+            l.OnNetworkFailure(this, f, e);
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean hasThumbnail() {
+        if(mEntry != null)
+            return mEntry.thumbExists;
+        return super.hasThumbnail();
+    }
+    
+    @Override
+    public boolean getThumbnail(final int w, final ThumbnailReturnCallback callback) {
+        if(!hasThumbnail()) return false;
+        new Thread(new Runnable() {
+            public void run() {
+                ThumbSize sz = ThumbSize.ICON_32x32;
+                if(w > 128)
+                    sz = ThumbSize.ICON_256x256;
+                else if(w > 64)
+                    sz = ThumbSize.ICON_128x128;
+                else if(w > 32)
+                    sz = ThumbSize.ICON_64x64;
+                try {
+                    DropboxInputStream input = mAPI.getThumbnailStream(mEntry.path, sz, ThumbFormat.PNG);
+                    final Bitmap bmp = BitmapFactory.decodeStream(input);
+                    OpenExplorer.getHandler().post(new Runnable() {
+                        public void run() {
+                            callback.onThumbReturned(bmp);
+                        }
+                    });
+                } catch(DropboxException e) {
+                    
+                }
+            }
+        }).start();
+        return false;
+    }
+    
+    @Override
+    public boolean isImageFile() {
+        if(mEntry != null)
+            return mEntry.thumbExists;
         return false;
     }
 
@@ -460,6 +622,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
 
     @Override
     public long getTotalSpace() {
+        if (getServer() != null)
+            return getServer().get("quota", 0l);
         return 0;
     }
 
@@ -470,6 +634,51 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.OpenPathUpd
 
     @Override
     public long getFreeSpace() {
-        return 0;
+        return getTotalSpace();
     }
+
+    /**
+     * The extra that goes in an intent to provide your consumer key for Dropbox
+     * authentication. You won't ever have to use this.
+     */
+    public static final String EXTRA_CONSUMER_KEY = "CONSUMER_KEY";
+
+    /**
+     * The extra that goes in an intent when returning from Dropbox auth to
+     * provide the user's access token, if auth succeeded. You won't ever have
+     * to use this.
+     */
+    public static final String EXTRA_ACCESS_TOKEN = "ACCESS_TOKEN";
+
+    /**
+     * The extra that goes in an intent when returning from Dropbox auth to
+     * provide the user's access token secret, if auth succeeded. You won't ever
+     * have to use this.
+     */
+    public static final String EXTRA_ACCESS_SECRET = "ACCESS_SECRET";
+
+    /**
+     * The extra that goes in an intent when returning from Dropbox auth to
+     * provide the user's Dropbox UID, if auth succeeded. You won't ever have to
+     * use this.
+     */
+    public static final String EXTRA_UID = "UID";
+
+    /**
+     * Used for internal authentication. You won't ever have to use this.
+     */
+    public static final String EXTRA_CONSUMER_SIG = "CONSUMER_SIG";
+
+    /**
+     * Used for internal authentication. You won't ever have to use this.
+     */
+    public static final String EXTRA_CALLING_PACKAGE = "CALLING_PACKAGE";
+
+    public static final String ACTION_AUTHENTICATE_V1 = "com.dropbox.android.AUTHENTICATE_V1";
+
+    public static final int AUTH_VERSION = 1;
+
+    // For communication between AndroidAuthSesssion and this activity.
+    static final String EXTRA_INTERNAL_CONSUMER_KEY = "EXTRA_INTERNAL_CONSUMER_KEY";
+    static final String EXTRA_INTERNAL_CONSUMER_SECRET = "EXTRA_INTERNAL_CONSUMER_SECRET";
 }

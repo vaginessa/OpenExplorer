@@ -33,6 +33,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -442,6 +443,8 @@ public class ThumbnailCreator {
             }
             if (file instanceof OpenBox)
                 return R.drawable.icon_box;
+            if (file instanceof OpenDropBox)
+                return R.drawable.icon_dropbox;
 
             // Local Filesystem Icons
             if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")

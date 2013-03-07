@@ -59,12 +59,13 @@
         android:icon="@drawable/icon_flat"
         android:label="@string/app_name"
         android:largeHeap="true"
-        android:uiOptions="splitActionBarWhenNarrow" >
+        android:theme="@style/AppTheme.Dark" >
         <activity
             android:name="org.brandroid.openmanager.activities.OpenExplorer"
             android:configChanges="screenSize|keyboard|keyboardHidden"
             android:label="@string/app_name"
             android:launchMode="singleTop"
+      		android:uiOptions="splitActionBarWhenNarrow"
             android:theme="@style/AppTheme.Dark" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -124,6 +125,7 @@
             android:launchMode="singleTop" />
         <activity
             android:name="org.brandroid.openmanager.activities.ServerSetupActivity"
+      		android:uiOptions="none"
             android:configChanges="screenSize|keyboard|keyboardHidden" >
         </activity>
         <activity
@@ -136,8 +138,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:scheme="db-vjbm22k8blhj61g" />
-            </intent-filter>
+                <data android:scheme="db-vajaedmhzkkp3sw" />
+			</intent-filter>
         </activity>
         <activity
             android:name="org.brandroid.openmanager.activities.FolderPickerActivity"

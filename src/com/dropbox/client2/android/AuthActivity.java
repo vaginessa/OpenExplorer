@@ -4,8 +4,12 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.brandroid.utils.Logger;
+
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -110,6 +114,9 @@ public class AuthActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        
+        Logger.LogDebug("DropBox Auth: Resume!");
+        onNewIntent(getIntent());
 
         if (consumerKey == null || consumerSecret == null) {
             finish();
@@ -148,6 +155,8 @@ public class AuthActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         String token = null, secret = null, uid = null;
+        
+        Logger.LogDebug("DropBox Auth: onNewIntent (" + intent.getExtras().toString() + ")!");
 
         if (intent.hasExtra(EXTRA_ACCESS_TOKEN)) {
             // Dropbox app auth.
@@ -168,6 +177,12 @@ public class AuthActivity extends Activity {
                 }
             }
         }
+        
+        SharedPreferences sp = (SharedPreferences)getSharedPreferences("dropbox", Context.MODE_PRIVATE);
+        sp.edit().putString("token", token).putString("secret", secret).putString("uid", uid).apply();
+        
+        setIntent(intent);
+        setResult(1, intent);
 
         // Pass along everything to the calling app.
         lastResult = new Intent();

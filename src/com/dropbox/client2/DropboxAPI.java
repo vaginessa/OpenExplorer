@@ -149,7 +149,7 @@ public class DropboxAPI<SESS_T extends Session> {
          *  "uid": "174"}
          * </pre>
          */
-        protected Account(Map<String, Object> map) {
+        public Account(Map<String, Object> map) {
             country = (String) map.get("country");
             displayName = (String) map.get("display_name");
             uid = getFromMapAsLong(map, "uid");

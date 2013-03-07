@@ -1,16 +1,28 @@
 
 package org.brandroid.openmanager.data;
 
+import java.net.MalformedURLException;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Locale;
 
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbFile;
+
+import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.box.androidlib.DAO;
+import com.box.androidlib.User;
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
 
 import android.content.Context;
 
@@ -18,10 +30,12 @@ public class OpenServer {
     private final JSONObject mData;
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
     private String mDecryptKey;
+    private OpenNetworkPath mPath;
+    private int mServerIndex = -1;
 
     public OpenServer() {
         mData = new JSONObject();
-        if(OpenServers.DefaultServers != null)
+        if (OpenServers.DefaultServers != null)
             mDecryptKey = OpenServers.DefaultServers.getDecryptKey();
         // mData = new Hashtable<String, String>();
     }
@@ -36,6 +50,14 @@ public class OpenServer {
          * (String)keys.next(); setSetting(key, obj.optString(key,
          * obj.opt(key).toString())); } }
          */
+    }
+    
+    public int getServerIndex() {
+        return mServerIndex;
+    }
+    
+    public void setServerIndex(int i) {
+        mServerIndex = i;
     }
 
     private void decryptPW()
@@ -52,7 +74,7 @@ public class OpenServer {
             }
         }).start();
     }
-    
+
     public void encryptPW(boolean threaded)
     {
         final String mPassword = get("password");
@@ -66,7 +88,7 @@ public class OpenServer {
                 }
             }
         };
-        if(threaded)
+        if (threaded)
             new Thread(encryptor).start();
         else
             encryptor.run();
@@ -74,6 +96,8 @@ public class OpenServer {
 
     public boolean isValid() {
         if (getType().equalsIgnoreCase("box"))
+            return true;
+        if (getType().equalsIgnoreCase("db"))
             return true;
         return mData != null && mData.has("host");
     }
@@ -94,7 +118,7 @@ public class OpenServer {
             return null;
         }
         try {
-            if(encryptPW)
+            if (encryptPW)
                 ret.put("password", SimpleCrypto.encrypt(mDecryptKey, getPassword()));
             ret.put("dir", getPath());
         } catch (Exception e) {
@@ -110,10 +134,10 @@ public class OpenServer {
     public String getType() {
         return get("type");
     }
-    
+
     public String get(String key) {
         String ret = mData.optString(key);
-        if(DEBUG)
+        if (DEBUG)
             Logger.LogDebug("OpenServer.getSetting(" + key + ") = " + ret);
         return ret;
     }
@@ -121,7 +145,7 @@ public class OpenServer {
     public OpenServer setSetting(String key, String value) {
         try {
             mData.put(key, value);
-            if(DEBUG)
+            if (DEBUG)
                 Logger.LogDebug("OpenServer.setSetting(" + key + ", " + value + ")");
         } catch (JSONException e) {
             // TODO Auto-generated catch block
@@ -143,6 +167,14 @@ public class OpenServer {
         return this;
     }
 
+    public OpenServer setSetting(String key, long value) {
+        try {
+            mData.put(key, value);
+        } catch(JSONException e) {
+        }
+        return this;
+    }
+
     public String getHost() {
         return get("host");
     }
@@ -150,6 +182,52 @@ public class OpenServer {
     public String getPath() {
         String mPath = get("dir");
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
+    }
+
+    public OpenNetworkPath getOpenPath()
+    {
+        if (mPath != null)
+            return mPath;
+        SimpleUserInfo info = new SimpleUserInfo();
+        info.setPassword(getPassword());
+        String t2 = getType().toLowerCase(Locale.US);
+        if (t2.startsWith("ftp")) {
+            mPath = new OpenFTP(null, new FTPFile(), new FTPManager(getHost(),
+                    getUser(), getPassword(), getPath()));
+        } else if (t2.startsWith("scp")) {
+            mPath = new OpenSCP(getHost(), getUser(), getPath(), info);
+        } else if (t2.startsWith("sftp")) {
+            mPath = new OpenSFTP(getHost(), getUser(), getPath());
+        } else if (t2.startsWith("smb")) {
+            try {
+                mPath = new OpenSMB(new SmbFile("smb://" + getHost() + "/" + getPath(),
+                        new NtlmPasswordAuthentication(getUser().indexOf("/") > -1 ? getUser()
+                                .substring(0, getUser().indexOf("/")) : "", getUser(),
+                                getPassword())));
+            } catch (MalformedURLException e) {
+                Logger.LogError("Couldn't add Samba share to bookmarks.", e);
+            }
+        } else if (t2.startsWith("box"))
+        {
+            User user = new User();
+            if (has("dao"))
+            {
+                try {
+                    user = (User)DAO.fromJSON(get("dao", "{}"), User.class);
+                } catch (Exception e) {
+                }
+            }
+            user.setAuthToken(getPassword());
+            user.setLogin(getName());
+            mPath = new OpenBox(user);
+        } else if (t2.startsWith("db"))
+        {
+            DropboxAPI<AndroidAuthSession> mApi = new DropboxAPI<AndroidAuthSession>(
+                    OpenDropBox.buildSession(this));
+            mPath = new OpenDropBox(mApi);
+        } else return null;
+        mPath.setServer(this);
+        return mPath;
     }
 
     public String getUser() {
@@ -179,7 +257,7 @@ public class OpenServer {
         setSetting("user", user);
         return this;
     }
-    
+
     public OpenServer setPassword(final String password) {
         setSetting("password", password);
         return this;
@@ -206,7 +284,7 @@ public class OpenServer {
 
     public String get(String key, String defValue) {
         String ret = mData.optString(key, defValue);
-        if(DEBUG)
+        if (DEBUG)
             Logger.LogDebug("OpenServer.getSetting(" + key + ") = " + ret);
         return ret;
     }
@@ -245,8 +323,8 @@ public class OpenServer {
         ret += "://";
         if (!getUser().equals("")) {
             ret += getUser();
-            //            if (!getPassword().equals(""))
-            //                ret += ":" + getPassword().replaceAll(".", "*");
+            // if (!getPassword().equals(""))
+            // ret += ":" + getPassword().replaceAll(".", "*");
             ret += "@";
         }
         ret += getHost();
@@ -254,5 +332,9 @@ public class OpenServer {
             ret += ":" + getPort();
         ret += getPath();
         return ret;
+    }
+
+    public long get(String key, long defValue) {
+        return mData.optLong(key, defValue);
     }
 }

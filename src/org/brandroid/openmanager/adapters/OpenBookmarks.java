@@ -28,6 +28,7 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
 import org.brandroid.openmanager.data.OpenBox;
+import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -56,6 +57,8 @@ import org.brandroid.utils.ViewUtils;
 
 import com.box.androidlib.DAO;
 import com.box.androidlib.User;
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
 import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
 import android.animation.Animator;
@@ -261,40 +264,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             Logger.LogDebug("Checking server #" + i + ": " + server.toString());
             SimpleUserInfo info = new SimpleUserInfo();
             info.setPassword(server.getPassword());
-            OpenNetworkPath onp = null;
-            String t2 = server.getType().toLowerCase(Locale.US);
-            if (t2.startsWith("ftp")) {
-                onp = new OpenFTP(null, new FTPFile(), new FTPManager(server.getHost(),
-                        server.getUser(), server.getPassword(), server.getPath()));
-            } else if (t2.startsWith("scp")) {
-                onp = new OpenSCP(server.getHost(), server.getUser(), server.getPath(), info);
-            } else if (t2.startsWith("sftp")) {
-                onp = new OpenSFTP(server.getHost(), server.getUser(), server.getPath());
-            } else if (t2.startsWith("smb")) {
-                try {
-                    onp = new OpenSMB(new SmbFile("smb://" + server.getHost() + "/"
-                            + server.getPath(), new NtlmPasswordAuthentication(server.getUser()
-                            .indexOf("/") > -1 ? server.getUser().substring(0,
-                            server.getUser().indexOf("/")) : "", server.getUser(),
-                            server.getPassword())));
-                } catch (MalformedURLException e) {
-                    Logger.LogError("Couldn't add Samba share to bookmarks.", e);
-                    continue;
-                }
-            } else if (t2.startsWith("box"))
-            {
-                User user = new User();
-                if(server.has("dao"))
-                {
-                    try {
-                        user = (User)DAO.fromJSON(server.get("dao","{}"), User.class);
-                    } catch(Exception e) {
-                    }
-                }
-                user.setAuthToken(server.getPassword());
-                user.setLogin(server.getName());
-                onp = new OpenBox(user);
-            }
+            OpenNetworkPath onp = server.getOpenPath();
             if (onp == null)
                 continue;
             onp.setServersIndex(i);
@@ -887,10 +857,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     mCountText.setVisibility(View.GONE);
             }
 
-            if (group == BOOKMARK_DRIVE || path instanceof OpenSMB) {
+            if (path instanceof OpenPath.OpenPathSizable) {
                 updateSizeIndicator(path, row);
             } else {
-                ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);
+                ViewUtils.setViewsVisibleNow(row, false, R.id.size_layout, R.id.size_bar);
             }
 
             boolean hasKids = true;

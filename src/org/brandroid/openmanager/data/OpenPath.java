@@ -351,8 +351,16 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public SoftReference<Bitmap> getThumbnail(OpenApp app, int w, int h) {
         return ThumbnailCreator.generateThumb(app, this, w, h, app.getContext());
     }
-
-    /**
+    
+    public interface ThumbnailReturnCallback {
+        public void onThumbReturned(Bitmap bmp);
+    }
+    
+    public interface ThumbnailHandler {
+        public boolean getThumbnail(int w, ThumbnailReturnCallback callback);
+    }
+    
+     /**
      * Get cached Thumbnail.
      * 
      * @param app OpenApp inhereted object that can provide Context to
