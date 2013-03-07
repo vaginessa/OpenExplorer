@@ -12,11 +12,14 @@ public class PrivatePreferences {
     }
 
     public static final String getBoxAPIKey() {
-        return getKey("box");
+        return getKey("box_api");
     }
 
     static {
         // All Private Keys should go here like this:
-        // privateKeys.put("box", "superSecretKeyGoesHere");
+        privateKeys.put("box_api", "zqjxn1m3i4eg4iud158e0nz7u9oi2cpu");
+        privateKeys.put("box_secret", "BcTh1GpJpma1cJc58sqcfZSjDZeuiYZ2");
+        privateKeys.put("dropbox_key", "vajaedmhzkkp3sw");
+        privateKeys.put("dropbox_secret", "plkrfrygu17glgn");
     }
 }
