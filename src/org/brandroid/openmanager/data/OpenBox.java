@@ -29,13 +29,15 @@ import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateHandler, OpenPath.OpenPathSizable {
+public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable,
+        OpenPath.ListHandler {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final Box mBox;
@@ -107,6 +109,39 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
     }
 
     @Override
+    public void list(final ListListener listener) {
+        if(mChildren != null)
+            listener.onListReceived(getChildren());
+        mChildren = new Vector<OpenPath>();
+        if (DEBUG)
+            Logger.LogDebug("Box listing for " + getId() + "!");
+        mBox.getAccountTree(getToken(), getId(), null, new GetAccountTreeListener() {
+            
+            @Override
+            public void onIOException(IOException e) {
+                listener.onException(e);
+            }
+            
+            @Override
+            public void onComplete(BoxFolder targetFolder, String status) {
+                if (targetFolder != null)
+                {
+                    for (BoxFolder f : targetFolder.getFoldersInFolder())
+                    {
+                        OpenBox kid = new OpenBox(OpenBox.this, f);
+                        mChildren.add(kid);
+                    }
+                    for (BoxFile f : targetFolder.getFilesInFolder())
+                    {
+                        OpenBox kid = new OpenBox(OpenBox.this, f);
+                        mChildren.add(kid);
+                    }
+                }
+                listener.onListReceived(getChildren());
+            }
+        });
+    }
+    
     public void list(final OpenContentUpdateListener callback) throws IOException {
         if (mChildren != null)
         {
@@ -180,7 +215,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public String getAbsolutePath() {
-        return "box://" + Utils.urlencode(mUser.getLogin()) + ":" + Utils.urlencode(getToken()) + "@m.box.com" + getPath();
+        return "box://" + Utils.urlencode(mUser.getLogin()) + ":" + Utils.urlencode(getToken()) + "@m.box.com" + "/" + getId();
     }
 
     @Override
