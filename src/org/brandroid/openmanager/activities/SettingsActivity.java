@@ -34,6 +34,7 @@ import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.InputDialog;
+import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
@@ -819,7 +820,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public static String GetSignatureKey(Context context) {
-        String ret = "";
+        String ret = PrivatePreferences.getKey("master_key", "");
+        if(!ret.equals(""))
+            return ret;
         try {
             Signature[] sigs = context.getPackageManager().getPackageInfo(
                     context.getPackageName(),
