@@ -144,10 +144,12 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenNetworkPath.PipeNeeded;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -264,7 +266,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static long lastSubmit = 0l;
     private OpenPath mLastPath = null;
     private BroadcastReceiver storageReceiver = null;
-    private static final Handler mHandler = new Handler(); // handler for the main thread
+    private static final Handler mHandler = new Handler(); // handler for the
+                                                           // main thread
     // private int mViewMode = VIEW_LIST;
     // private static long mLastCursorEnsure = 0;
     private static boolean mRunningCursorEnsure = false;
@@ -420,7 +423,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             IS_FULL_SCREEN = false;
         }
 
-        //IS_KEYBOARD_AVAILABLE = getContext().getResources().getConfiguration().keyboard == Configuration.KEYBOARD_QWERTY;
+        // IS_KEYBOARD_AVAILABLE =
+        // getContext().getResources().getConfiguration().keyboard ==
+        // Configuration.KEYBOARD_QWERTY;
 
         loadPreferences();
         checkRoot();
@@ -631,9 +636,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void showDonateDialog(int resMessage, String sTitle, final String pref) {
         if (getPreferences().getBoolean("warn", pref, false))
             return;
-        int[] opts = new int[] {R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate};
-        if(Build.VERSION.SDK_INT > 13)
-            opts = new int[] {R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate};
+        int[] opts = new int[] {
+                R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate
+        };
+        if (Build.VERSION.SDK_INT > 13)
+            opts = new int[] {
+                    R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate
+            };
         DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
                 new OnClickListener() {
                     @Override
@@ -778,7 +787,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     }
                 });
 
-                AlertDialog dlg = new AlertDialog.Builder(c)
+                final AlertDialog.Builder dlg = new AlertDialog.Builder(c)
                         .setTitle(R.string.s_prompt_password)
                         .setView(view)
                         .setPositiveButton(android.R.string.yes,
@@ -794,8 +803,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             public void onClick(DialogInterface dialog, int which) {
                                 onYesNoAnswered(false);
                             }
-                        }).create();
-                dlg.show();
+                        });
+
+                OpenExplorer.getHandler().post(new Runnable() {
+                    public void run() {
+                        dlg.create().show();
+                    }
+                });
                 return true;
             }
 
@@ -805,11 +819,21 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
             @Override
             public void onPasswordEntered(String password) {
+                try {
+                    OpenPath path = getDirContentFragment(false).getPath();
+                    if (path instanceof OpenNetworkPath)
+                    {
+                        ((OpenNetworkPath)path).getServer().setPassword(password);
+                        ServerSetupActivity.SaveToDefaultServers(OpenServers.DefaultServers, c);
+                    }
+                } catch (Exception e) {
+                }
+                getDirContentFragment(true).refreshData();
             }
 
             @Override
             public boolean promptYesNo(final String message) {
-                runOnUiThread(new Runnable() {
+                OpenExplorer.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
                         AlertDialog dlg = new AlertDialog.Builder(c).setMessage(message)
@@ -1161,7 +1185,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 state.containsKey("oe_fragments")) {
             mViewPagerAdapter.restoreState(state, getClassLoader());
             setViewPageAdapter(mViewPagerAdapter, true);
-            if(state.containsKey("oe_frag_index"))
+            if (state.containsKey("oe_frag_index"))
                 setCurrentItem(state.getInt("oe_frag_index"), false);
         }
 
@@ -3167,6 +3191,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mLastPath = getDirContentFragment(false).getPath();
         if (!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
             force = true;
+        
+        if(mLastPath instanceof OpenNetworkPath.PipeNeeded)
+            ((PipeNeeded)mLastPath).disconnect();
 
         onClipboardUpdate();
 
@@ -3861,7 +3888,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         });
     }
-    
+
     public static Handler getHandler() {
         return mHandler;
     }

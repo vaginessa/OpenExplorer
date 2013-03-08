@@ -30,19 +30,21 @@ public class OpenServers implements Iterable<OpenServer> {
         mDecryptKey = null;
     }
 
-    public OpenServers(JSONArray arr, String decryptPW) {
+    public OpenServers(JSONArray arr) {
         this();
-        mDecryptKey = decryptPW;
         if (arr == null)
             return;
         for (int i = 0; i < arr.length(); i++)
             try {
-                add(new OpenServer(arr.getJSONObject(i), decryptPW));
+                OpenServer server = new OpenServer(arr.getJSONObject(i));
+                add(server);
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
     }
+    
+    public static void setDecryptKey(String key) { mDecryptKey = key; }
     
     protected static String getDecryptKey() { return mDecryptKey; }
 

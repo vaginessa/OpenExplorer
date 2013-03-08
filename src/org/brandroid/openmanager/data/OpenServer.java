@@ -29,21 +29,18 @@ import android.content.Context;
 public class OpenServer {
     private final JSONObject mData;
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
-    private String mDecryptKey;
     private OpenNetworkPath mPath;
     private int mServerIndex = -1;
+    private boolean mPasswordDecrypted = false;
 
     public OpenServer() {
         mData = new JSONObject();
-        if (OpenServers.DefaultServers != null)
-            mDecryptKey = OpenServers.DefaultServers.getDecryptKey();
         // mData = new Hashtable<String, String>();
     }
 
-    public OpenServer(JSONObject obj, String key) {
+    public OpenServer(JSONObject obj) {
         mData = obj;
-        mDecryptKey = key;
-        decryptPW();
+        decryptPW(true);
         /*
          * mData = new Hashtable<String, String>(); if(obj != null) { Iterator
          * keys = obj.keys(); while(keys.hasNext()) { String key =
@@ -56,35 +53,53 @@ public class OpenServer {
         return mServerIndex;
     }
     
+    public boolean isPasswordDecrypted()
+    {
+        return mPasswordDecrypted;
+    }
+    
     public void setServerIndex(int i) {
         mServerIndex = i;
     }
-
-    private void decryptPW()
+    
+    private static String getDecryptKey()
     {
+        return OpenServers.getDecryptKey();
+    }
+
+    public void decryptPW(boolean threaded)
+    {
+        if(mPasswordDecrypted) return;
         final String mPassword = get("password");
-        new Thread(new Runnable() {
+        Runnable decryptor = new Runnable() {
             public void run() {
                 try {
-                    final String pw = SimpleCrypto.decrypt(mDecryptKey, mPassword);
+                    final String pw = SimpleCrypto.decrypt(getDecryptKey(), mPassword);
                     mData.put("password", pw);
+                    mPasswordDecrypted = true;
                 } catch (Exception e) {
-                    Logger.LogError("Error decrypting password.", e);
+                    //Logger.LogError("Error decrypting password.", e);
                 }
             }
-        }).start();
+        };
+        if(threaded)
+            new Thread(decryptor).start();
+        else
+            decryptor.run();
     }
 
     public void encryptPW(boolean threaded)
     {
+        if(!mPasswordDecrypted) return;
         final String mPassword = get("password");
         Runnable encryptor = new Runnable() {
             public void run() {
                 try {
-                    final String pw = SimpleCrypto.encrypt(mDecryptKey, mPassword);
+                    final String pw = SimpleCrypto.encrypt(getDecryptKey(), mPassword);
                     mData.put("password", pw);
+                    mPasswordDecrypted = false;
                 } catch (Exception e) {
-                    Logger.LogError("Error decrypting password.", e);
+                    //Logger.LogError("Error decrypting password.", e);
                 }
             }
         };
@@ -118,8 +133,8 @@ public class OpenServer {
             return null;
         }
         try {
-            if (encryptPW)
-                ret.put("password", SimpleCrypto.encrypt(mDecryptKey, getPassword()));
+            if (encryptPW && isPasswordDecrypted())
+                ret.put("password", SimpleCrypto.encrypt(getDecryptKey(), getPassword()));
             ret.put("dir", getPath());
         } catch (Exception e) {
         }

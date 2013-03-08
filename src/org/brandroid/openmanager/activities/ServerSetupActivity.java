@@ -23,6 +23,7 @@ import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
@@ -133,7 +134,7 @@ public class ServerSetupActivity
         servers = LoadDefaultServers(context);
         server = iServersIndex > -1 ? servers.get(iServersIndex)
                 : new OpenServer().setName("New Server");
-        
+
         server.setServerIndex(iServersIndex);
 
         String t2 = server.getType().toLowerCase(Locale.US);
@@ -228,14 +229,13 @@ public class ServerSetupActivity
             }
         mTypeSpinner.setOnItemSelectedListener(this);
         mTypeSpinner.setSelection(pos);
-
-        DialogHandler.showServerWarning(context);
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
         handleIntent(getIntent());
+        DialogHandler.showServerWarning(this);
     }
 
     @Override
@@ -246,16 +246,16 @@ public class ServerSetupActivity
             handleIntent(data);
         }
     }
-    
+
     @Override
     protected void onNewIntent(Intent intent) {
         handleIntent(intent);
     }
-    
+
     private void handleIntent(Intent data) {
-        if(DEBUG)
+        if (DEBUG)
             Logger.LogDebug("ServerSetupActivity.handleIntent(" + data.getExtras() + ")");
-        if(data != null && data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
+        if (data != null && data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
         {
             String token = data.getStringExtra("AUTH_TOKEN");
             server.setPassword(token);
@@ -267,33 +267,36 @@ public class ServerSetupActivity
                 server.setName(login);
                 ViewUtils.setText(mBaseView, login, R.id.text_name);
             }
-            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview, R.id.server_authenticate);
+            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
+                    R.id.server_authenticate);
             ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
         } else {
-            if(OpenDropBox.handleIntent(data, server))
+            if (OpenDropBox.handleIntent(data, server))
             {
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
-                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview, R.id.server_authenticate);
+                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
+                        R.id.server_authenticate);
                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
             }
         }
         SharedPreferences sp = getSharedPreferences("dropbox", Context.MODE_PRIVATE);
-        if(sp != null && sp.contains("token"))
+        if (sp != null && sp.contains("token"))
         {
             String pass = sp.getString("token", "") + "," + sp.getString("secret", "");
             String uid = sp.getString("uid", "dropbox");
             boolean found = false;
-            for(OpenServer s : servers)
-                if(s.getPassword().equals(pass) || s.getUser().equals(uid))
+            for (OpenServer s : servers)
+                if (s.getPassword().equals(pass) || s.getUser().equals(uid))
                     found = true;
-            if(!found)
+            if (!found)
             {
                 server.setType("db");
                 server.setName("DropBox");
                 server.setPassword(pass);
                 server.setUser(uid);
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
-                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview, R.id.server_authenticate);
+                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
+                        R.id.server_authenticate);
                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
                 AndroidAuthSession sess = OpenDropBox.buildSession(server);
                 sess.finishAuthentication();
@@ -302,17 +305,18 @@ public class ServerSetupActivity
             sp.edit().clear().commit();
         }
     }
-    
+
     private void getDropboxAccountInfo()
     {
         final OpenDropBox db = (OpenDropBox)(server.getOpenPath());
-        if(db.getAccountInfo() != null)
+        if (db.getAccountInfo() != null)
         {
             db.getAccountInfo(new OpenDropBox.GetAccountInfoCallback() {
                 public void onException(Exception e) {
                     // TODO Auto-generated method stub
-                    
+
                 }
+
                 public void onGetAccountInfo(Account account) {
                     server.setName(account.displayName);
                     db.setName(account.displayName);
@@ -338,13 +342,13 @@ public class ServerSetupActivity
 
     public void setIcon(int res)
     {
-        //getSupportActionBar().setIcon(res);
+        // getSupportActionBar().setIcon(res);
     }
 
     @Override
     public void setTitle(int titleId) {
         super.setTitle(titleId);
-        //getSupportActionBar().setTitle(titleId);
+        // getSupportActionBar().setTitle(titleId);
     }
 
     // @Override
@@ -379,7 +383,7 @@ public class ServerSetupActivity
         switch (id)
         {
             case android.R.string.ok:
-                //onSaveInstanceState(mArgs);
+                // onSaveInstanceState(mArgs);
                 for (int i = 0; i < mMapIDs.length; i++)
                 {
                     int vid = mMapIDs[i];
@@ -398,7 +402,7 @@ public class ServerSetupActivity
                         mArgs.putString("server_" + key, val);
                         if (id == R.id.text_password)
                         {
-                            final String sig = SettingsActivity.GetSignatureKey(this);
+                            final String sig = SettingsActivity.GetMasterPassword(this, true, false);
                             try {
                                 val = SimpleCrypto.encrypt(sig, val);
                             } catch (Exception e) {
@@ -461,51 +465,58 @@ public class ServerSetupActivity
                             enableAuthenticateButton(true);
                         }
                     });
-                } else if(t2.startsWith("db")) {
-                    //AppKeyPair kp = new AppKeyPair(PrivatePreferences.getKey("dropbox_key"), PrivatePreferences.getKey("dropbox_secret"));
-                    //AndroidAuthSession dbAuth = new AndroidAuthSession(kp, AccessType.DROPBOX);
-                    if(checkDropBoxAppKeySetup())
+                } else if (t2.startsWith("db")) {
+                    // AppKeyPair kp = new
+                    // AppKeyPair(PrivatePreferences.getKey("dropbox_key"),
+                    // PrivatePreferences.getKey("dropbox_secret"));
+                    // AndroidAuthSession dbAuth = new AndroidAuthSession(kp,
+                    // AccessType.DROPBOX);
+                    if (checkDropBoxAppKeySetup())
                         OpenDropBox.startAuthentication(this);
                 }
                 return true;
             case R.id.server_logout:
-                if(t2.startsWith("box"))
+                if (t2.startsWith("box"))
                     Box.getInstance(PrivatePreferences.getBoxAPIKey())
-                        .logout(server.getPassword(), new LogoutListener() {
-                            
-                            @Override
-                            public void onIOException(IOException e) {
-                                Toast.makeText(ServerSetupActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                                Logger.LogError("Couldn't log out of Box", e);
-                            }
-                            
-                            @Override
-                            public void onComplete(String status) {
-                                Toast.makeText(ServerSetupActivity.this, status, Toast.LENGTH_SHORT).show();
-                                enableAuthenticateButton(true);
-                            }
-                        });
-                else if(t2.startsWith("db"))
+                            .logout(server.getPassword(), new LogoutListener() {
+
+                                @Override
+                                public void onIOException(IOException e) {
+                                    Toast.makeText(ServerSetupActivity.this, e.getMessage(),
+                                            Toast.LENGTH_LONG).show();
+                                    Logger.LogError("Couldn't log out of Box", e);
+                                }
+
+                                @Override
+                                public void onComplete(String status) {
+                                    Toast.makeText(ServerSetupActivity.this, status,
+                                            Toast.LENGTH_SHORT).show();
+                                    enableAuthenticateButton(true);
+                                }
+                            });
+                else if (t2.startsWith("db"))
                     ((OpenDropBox)server.getOpenPath()).unlink();
                 enableAuthenticateButton(true);
                 return true;
         }
         return false;
     }
-    
+
     private void enableAuthenticateButton(boolean enable)
     {
         ViewUtils.setViewsVisible(mBaseView, false, R.id.server_logout);
-        if(enable)
+        if (enable)
         {
-            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate), R.id.server_authenticate);
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate),
+                    R.id.server_authenticate);
             ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_authenticate);
         } else {
-            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate) + " ...", R.id.server_authenticate);
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate) + " ...",
+                    R.id.server_authenticate);
             ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
         }
     }
-    
+
     private boolean checkDropBoxAppKeySetup() {
         String APP_KEY = OpenDropBox.getAppKeyPair().key;
 
@@ -634,19 +645,19 @@ public class ServerSetupActivity
             return true;
         return super.onOptionsItemSelected(item);
     }
-    
-//    @Override
-//    public boolean onCreateOptionsMenu(android.view.Menu menu) {
-//        getMenuInflater().inflate(R.menu.dialog_buttons, menu);
-//        return super.onCreateOptionsMenu(menu);
-//    }
-//    
-//    @Override
-//    public boolean onOptionsItemSelected(android.view.MenuItem item) {
-//        if(onClick(item.getItemId()))
-//            return true;
-//        return super.onOptionsItemSelected(item);
-//    }
+
+    // @Override
+    // public boolean onCreateOptionsMenu(android.view.Menu menu) {
+    // getMenuInflater().inflate(R.menu.dialog_buttons, menu);
+    // return super.onCreateOptionsMenu(menu);
+    // }
+    //
+    // @Override
+    // public boolean onOptionsItemSelected(android.view.MenuItem item) {
+    // if(onClick(item.getItemId()))
+    // return true;
+    // return super.onOptionsItemSelected(item);
+    // }
 
     @Override
     public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
@@ -659,7 +670,8 @@ public class ServerSetupActivity
         if (position < 3)
         {
             ViewUtils.setViewsVisible(v, false, R.id.server_auth_buttons);
-            ViewUtils.setViewsVisible(v, true, R.id.server_texts, R.id.check_port, R.id.text_port, R.id.label_port);
+            ViewUtils.setViewsVisible(v, true, R.id.server_texts, R.id.check_port, R.id.text_port,
+                    R.id.label_port);
         }
         if (OnlyOnSMB.length > 0)
             ViewUtils.setViewsVisible(v, position == 2, OnlyOnSMB);
@@ -672,15 +684,16 @@ public class ServerSetupActivity
             server.setType("smb");
         else if (position >= 3)
         {
-            if(position == 3)
+            if (position == 3)
                 server.setType("box");
-            else if(position == 4)
+            else if (position == 4)
             {
                 server.setType("db");
-                if(!server.get("account", "").equals(""))
+                if (!server.get("account", "").equals(""))
                     getDropboxAccountInfo();
             }
-            ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port, R.id.label_port);
+            ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port,
+                    R.id.label_port);
             ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
             if (!server.getPassword().equals(""))
             {
@@ -691,7 +704,7 @@ public class ServerSetupActivity
             }
         }
     }
-    
+
     @Override
     public void onNothingSelected(AdapterView<?> arg0) {
     }
@@ -734,10 +747,19 @@ public class ServerSetupActivity
     public static boolean showServerDialog(final OpenApp app, final int iServersIndex) {
         final Context context = app.getContext();
 
-        DialogHandler.showServerWarning(context);
         Intent intent = new Intent(context, ServerSetupActivity.class);
         intent.putExtra("server_index", iServersIndex);
         app.startActivityForResult(intent, SettingsActivity.MODE_SERVER);
+
+        return true;
+    }
+
+    public static boolean showServerDialog(final Activity activity, final int iServersIndex) {
+        final Context context = activity;
+
+        Intent intent = new Intent(context, ServerSetupActivity.class);
+        intent.putExtra("server_index", iServersIndex);
+        activity.startActivityForResult(intent, SettingsActivity.MODE_SERVER);
 
         return true;
     }
@@ -815,13 +837,32 @@ public class ServerSetupActivity
                 // Logger.LogDebug("Created default servers file (" +
                 // f.getPath() + ")");
                 String data = f.readAscii();
-                if (SettingsActivity.DEBUG)
+                if (DEBUG)
                     Logger.LogDebug("Server JSON: " + data);
-                OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
-                        SettingsActivity.GetMasterPassword(context));
-                if (SettingsActivity.DEBUG)
-                    Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
-                            + data.length() + " bytes from " + f.getPath());
+                JSONArray jarr = new JSONArray(data);
+                final Preferences prefs = new Preferences(context);
+                String dk = SettingsActivity.GetMasterPassword(context);
+                if (//!prefs.getBoolean("warn", "master_key_fallback", false) &&
+                        !canDecryptPasswords(jarr, dk))
+                {
+                    if(DEBUG)
+                        Logger.LogDebug("ServerSetup can't decrypt. Trying to fall back!");
+                    String dk2 = SettingsActivity.GetMasterPassword(context, false, true);
+                    if (canDecryptPasswords(jarr, dk2))
+                    {
+                        try {
+                            if(DEBUG)
+                                Logger.LogDebug("ServerSetup decrypt success!");
+                            encryptPasswords(jarr, dk);
+                            //prefs.setSetting("warn", "master_key_fallback", true);
+                            //f.write(jarr.toString());
+                        } catch(Exception e) {
+                            Logger.LogDebug("ServerSetup encrypt failed!");
+                        }
+                    }
+                } else if(DEBUG) Logger.LogDebug("Server setup upgraded!");
+                OpenServers.setDecryptKey(dk);
+                OpenServers.DefaultServers = new OpenServers(jarr);
                 return OpenServers.DefaultServers;
             }
         } catch (IOException e) {
@@ -833,9 +874,60 @@ public class ServerSetupActivity
         }
     }
 
+    public static void encryptPasswords(JSONArray json, String key)
+    {
+        for (int i = 0; i < json.length(); i++)
+        {
+            JSONObject o = json.optJSONObject(i);
+            if (o.has("password"))
+            {
+                String pw = o.optString("password");
+                if (pw != null && !pw.equals(""))
+                {
+                    try {
+                        pw = SimpleCrypto.encrypt(key, pw);
+                        o.put("password", pw);
+                    } catch (Exception e) {
+                    }
+                }
+            }
+            try {
+                json.put(i, o);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static boolean canDecryptPasswords(JSONArray json, String key) throws JSONException
+    {
+        for (int i = 0; i < json.length(); i++)
+        {
+            JSONObject o = json.optJSONObject(i);
+            if (o.has("password"))
+            {
+                String pw = o.optString("password");
+                if (pw != null && !pw.equals(""))
+                {
+                    try {
+                        pw = SimpleCrypto.decrypt(key, pw);
+                        o.put("password", pw);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }
+            }
+            json.put(i, o);
+        }
+        return true;
+    }
+
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
+        SaveToDefaultServers(servers.getJSONArray(true, context), context);
+    }
+    public static void SaveToDefaultServers(JSONArray json, Context context) {
         final OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
-        final String data = servers.getJSONArray(true, context).toString();
+        final String data = json.toString(); 
         new Thread(new Runnable() {
             public void run() {
                 Writer w = null;
@@ -845,7 +937,8 @@ public class ServerSetupActivity
                     w = new BufferedWriter(new FileWriter(f.getFile()));
                     if (SettingsActivity.DEBUG)
                         Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
-                    // data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
+                    // data = SimpleCrypto.encrypt(GetSignatureKey(context),
+                    // data);
                     w.write(data);
                     w.close();
                     if (SettingsActivity.DEBUG)
