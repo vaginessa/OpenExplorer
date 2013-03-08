@@ -358,7 +358,7 @@ public class ContentAdapter extends BaseAdapter {
                 mIcon.setImageDrawable(ThumbnailCreator.getFileExtIcon(file.getExtension(),
                         getContext(), mWidth > 72));
             else if (!mShowThumbnails || !file.hasThumbnail()) {
-                mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
+                mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight, getContext()));
             } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
                 // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());

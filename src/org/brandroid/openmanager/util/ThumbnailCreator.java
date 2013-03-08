@@ -63,6 +63,7 @@ import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -323,7 +324,16 @@ public class ThumbnailCreator {
 
     public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c) {
         if (c != null && c.getResources() != null)
-            return c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+        {
+            Drawable d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+            if(file instanceof OpenPath.ThumbnailOverlayInterface)
+            {
+                Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c, mWidth > 36);
+                if(over != null)
+                    d = new LayerDrawable(new Drawable[]{d,over});
+            }
+            return d;
+        }
         else
             return null;
     }
