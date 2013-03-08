@@ -325,7 +325,11 @@ public class ThumbnailCreator {
     public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c) {
         if (c != null && c.getResources() != null)
         {
-            Drawable d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+            Drawable d = null;
+            if(file.isTextFile())
+                d = ThumbnailCreator.getFileExtIcon(file.getExtension(), c, mWidth > 72);
+            else
+                d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
             if(file instanceof OpenPath.ThumbnailOverlayInterface)
             {
                 Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c, mWidth > 36);
