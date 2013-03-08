@@ -22,7 +22,7 @@ public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;
     private CopyOnWriteArrayList<OpenServer> mData;
     public static OpenServers DefaultServers = null;
-    private String mDecryptKey;
+    private static String mDecryptKey;
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
     public OpenServers() {
@@ -44,7 +44,7 @@ public class OpenServers implements Iterable<OpenServer> {
             }
     }
     
-    protected String getDecryptKey() { return mDecryptKey; }
+    protected static String getDecryptKey() { return mDecryptKey; }
 
     public OpenServer findByPath(String type, String host, String user, String path) {
         for (int i = 0; i < mData.size(); i++) {

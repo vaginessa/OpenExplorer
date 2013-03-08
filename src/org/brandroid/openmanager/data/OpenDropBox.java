@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.Utils;
 import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -37,6 +39,7 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 import com.dropbox.client2.session.TokenPair;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -47,16 +50,18 @@ import android.content.pm.Signature;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 
 public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler,
-        OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler, OpenPath.OpenStream {
+        OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler, OpenPath.OpenStream,
+        OpenPath.ThumbnailOverlayInterface {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final OpenDropBox mParent;
-    private final Entry mEntry;
+    private Entry mEntry;
     private final DropboxAPI<AndroidAuthSession> mAPI;
     private List<OpenPath> mChildren = null;
     private String mName = null;
@@ -68,7 +73,6 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     {
         mAPI = api;
         mParent = null;
-        mEntry = null;
     }
 
     public OpenDropBox(OpenDropBox parent, Entry child)
@@ -161,17 +165,19 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     public String getToken() {
         return mAPI.getSession().getAccessTokenPair().secret;
     }
-    
+
     @Override
     public void list(final ListListener listener) {
-        if(mChildren != null)
+        if (mChildren != null)
             listener.onListReceived(getChildren());
 
         mChildren = new Vector<OpenPath>();
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    Entry e = mAPI.metadata(getPath(), -1, null, true, null);
+                    String hash = mEntry != null ? mEntry.hash : null;
+                    String rev = mEntry != null ? mEntry.rev : null;
+                    Entry e = mAPI.metadata(getPath(), -1, hash, true, rev);
                     for (Entry kid : e.contents)
                     {
                         OpenDropBox child = new OpenDropBox(OpenDropBox.this, kid);
@@ -233,8 +239,19 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         String[] stored = null;
         String pw = server.getPassword();
         if (pw != null && !pw.equals(""))
+        {
+            if(DEBUG)
+                Logger.LogDebug("DropBox pw: " + pw);
+            if(pw.indexOf(",") == -1)
+            {
+                try {
+                    pw = SimpleCrypto.decrypt(pw, OpenServers.getDecryptKey());
+                } catch(Exception e) {
+                }
+            }
             stored = pw.split(",");
-        if (stored != null) {
+        }
+        if (stored != null && stored.length == 2) {
             AccessTokenPair accessToken = new AccessTokenPair(stored[0], stored[1]);
             session = new AndroidAuthSession(appKeyPair, AccessType.DROPBOX, accessToken);
         } else {
@@ -290,7 +307,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         if (intent == null || intent.getExtras() == null)
             return false;
         if (DEBUG)
-            Logger.LogDebug("OpenDropBox.handleIntent: " + intent.getExtras().toString());
+            Logger.LogDebug("OpenDropBox.handleIntent: " + intent.getExtras().keySet().toString());
         String token, secret, uid;
         if (intent.hasExtra(EXTRA_ACCESS_TOKEN)) {
             // Dropbox app auth.
@@ -301,6 +318,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
             // Web auth.
             Uri uri = intent.getData();
             if (uri != null) {
+                if(DEBUG)
+                    Logger.LogDebug("OpenDropBox.handle Web Auth: " + uri.toString());
                 String path = uri.getPath();
                 if ("/connect".equals(path)) {
                     try {
@@ -319,6 +338,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         {
             out.setPassword(token + "," + secret);
             out.setUser(uid);
+            if(DEBUG)
+                Logger.LogDebug("OpenDropBox auth finish. Token: " + token + "  Secret: " + secret);
             return true;
         }
         return false;
@@ -436,15 +457,23 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         if (mEntry != null)
             ret = mEntry.path;
         return ret;
-        //return "db-" + mAPI.getSession().getAppKeyPair().key + "://1" + ret;
+        // return "db-" + mAPI.getSession().getAppKeyPair().key + "://1" + ret;
+    }
+    
+    public void setPath(String path)
+    {
+        mEntry = new Entry();
+        mEntry.path = path;
     }
 
     @Override
     public String getAbsolutePath() {
         TokenPair access = mAPI.getSession().getAccessTokenPair();
-        return "db-" + mAPI.getSession().getAppKeyPair().key + "://" + Utils.urlencode(access.key)
-                + ":" + Utils.urlencode(access.secret)
-                + "@www.dropbox.com" + getPath();
+        String ret = "db-" + PrivatePreferences.getKey("dropbox_key") + "://";
+        if(access != null)
+            ret += Utils.urlencode(access.key) + ":" + Utils.urlencode(access.secret) + "@";
+        ret += "www.dropbox.com" + getPath();
+        return ret;
     }
 
     @Override
@@ -524,10 +553,10 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     public Boolean canRead() {
         return true;
     }
-    
+
     @Override
     public String getMimeType() {
-        if(mEntry != null)
+        if (mEntry != null)
             return mEntry.mimeType;
         return super.getMimeType();
     }
@@ -544,7 +573,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
 
     @Override
     public Boolean exists() {
-        if(mEntry != null)
+        if (mEntry != null)
             return !mEntry.isDeleted;
         return true;
     }
@@ -558,13 +587,14 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     public Boolean mkdir() {
         return false;
     }
-    
+
+    @SuppressLint("NewApi")
     @Override
     public InputStream getInputStream() throws IOException {
         try {
             return mAPI.getFileStream(mEntry.path, mEntry.rev);
         } catch (DropboxException e) {
-            if(Build.VERSION.SDK_INT > 8)
+            if (Build.VERSION.SDK_INT > 8)
                 throw new IOException("DropboxException getting InputStream!", e);
             else
                 throw new IOException("DropboxException getting InputStream: " + e.getMessage());
@@ -605,45 +635,47 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         }
         return false;
     }
-    
+
     @Override
     public boolean hasThumbnail() {
-        if(mEntry != null)
+        if (mEntry != null)
             return mEntry.thumbExists;
         return super.hasThumbnail();
     }
-    
+
     @Override
     public boolean getThumbnail(final int w, final ThumbnailReturnCallback callback) {
-        if(!hasThumbnail()) return false;
+        if (!hasThumbnail())
+            return false;
         new Thread(new Runnable() {
             public void run() {
                 ThumbSize sz = ThumbSize.ICON_32x32;
-                if(w > 128)
+                if (w > 128)
                     sz = ThumbSize.ICON_256x256;
-                else if(w > 64)
+                else if (w > 64)
                     sz = ThumbSize.ICON_128x128;
-                else if(w > 32)
+                else if (w > 32)
                     sz = ThumbSize.ICON_64x64;
                 try {
-                    DropboxInputStream input = mAPI.getThumbnailStream(mEntry.path, sz, ThumbFormat.PNG);
+                    DropboxInputStream input = mAPI.getThumbnailStream(mEntry.path, sz,
+                            ThumbFormat.PNG);
                     final Bitmap bmp = BitmapFactory.decodeStream(input);
                     OpenExplorer.getHandler().post(new Runnable() {
                         public void run() {
                             callback.onThumbReturned(bmp);
                         }
                     });
-                } catch(DropboxException e) {
-                    
+                } catch (DropboxException e) {
+
                 }
             }
         }).start();
         return false;
     }
-    
+
     @Override
     public boolean isImageFile() {
-        if(mEntry != null)
+        if (mEntry != null)
             return mEntry.thumbExists;
         return false;
     }
@@ -709,4 +741,10 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     // For communication between AndroidAuthSesssion and this activity.
     static final String EXTRA_INTERNAL_CONSUMER_KEY = "EXTRA_INTERNAL_CONSUMER_KEY";
     static final String EXTRA_INTERNAL_CONSUMER_SECRET = "EXTRA_INTERNAL_CONSUMER_SECRET";
+
+    @Override
+    public Drawable getOverlayDrawable(Context c, boolean large) {
+        return c.getResources().getDrawable(
+                large ? R.drawable.lg_dropbox_overlay : R.drawable.sm_dropbox_overlay);
+    }
 }
