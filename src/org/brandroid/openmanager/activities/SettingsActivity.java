@@ -40,6 +40,7 @@ import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.Utils;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -306,10 +307,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             // SharedPreferences sp =
             // Preferences.getPreferences(getApplicationContext(), "servers");
             // String servers = sp.getString("servers", "");
-            OpenServers servers = prefs.LoadDefaultServers(this); // new
-                                                        // OpenServers(prefs.getJSON("global",
-                                                        // "servers", new
-                                                        // JSONObject()));
+            OpenServers servers = prefs.LoadDefaultServers(this);
+            // new OpenServers(prefs.getJSON("global", "servers", new
+            // JSONObject()));
             if (path.equals("server_add")) {
                 setTitle(getTitle() + " - Add New");
                 getPreferenceScreen().findPreference("server_delete").setEnabled(false);
@@ -383,9 +383,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             // for(int i = mPrefServers.getPreferenceCount() - 1; i > 0; i--)
             // mPrefServers.removePreference(mPrefServers.getPreference(i));
             OpenServers servers = prefs.LoadDefaultServers(this); // new
-                                                        // OpenServers(prefs.getSetting("global",
-                                                        // "servers", new
-                                                        // JSONObject()));
+            // OpenServers(prefs.getSetting("global",
+            // "servers", new
+            // JSONObject()));
             for (int i = 0; i < servers.size(); i++) {
                 OpenServer server = servers.get(i);
                 // Logger.LogDebug("Checking server [" + sName + "]");
@@ -459,9 +459,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             String sPath = data.getStringExtra("path");
             Preferences prefs = new Preferences(getApplicationContext());
             OpenServers servers = prefs.LoadDefaultServers(this); // new
-                                                        // OpenServers(prefs.getJSON("global",
-                                                        // "servers", new
-                                                        // JSONObject()));
+            // OpenServers(prefs.getJSON("global",
+            // "servers", new
+            // JSONObject()));
             OpenServer server = null;
             int index = 0;
             if (sPath.equals("server_add")) {
@@ -527,7 +527,17 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     {
         final Preferences prefs = new Preferences(context);
         String msg = context.getResources().getString(R.string.s_master_pass_warning);
-        final String old = prefs.getSetting("global", "pref_master_pass", (String)null);
+        String pw = prefs.getSetting("global", "pref_master_pass", (String)null);
+        final String sigKey = GetSignatureKey(context);
+        if (pw != null && !pw.equals(""))
+            try {
+                pw = SimpleCrypto.decrypt(sigKey, pw);
+            } catch (Exception e) {
+                pw = ""; // corrupted? allow reset
+            }
+        else
+            pw = "";
+        final String old = pw;
         final boolean isUpdate = old != null && !old.equals("");
         if (isUpdate)
             msg += "\n\n" + context.getResources().getString(R.string.s_pass_old);
@@ -546,11 +556,24 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                     return;
                 }
                 if (!isUpdate || old.equals(inp.getInputTopText()))
-                    prefs.setSetting("global", "pref_master_pass",
-                            inp.getInputText());
+                {
+                    final String newPw = inp.getInputText();
+                    new Thread(new Runnable() {
+                        public void run() {
+                            String encPw = newPw;
+                            try {
+                                encPw = SimpleCrypto.encrypt(sigKey, encPw);
+                            } catch (Exception e) {
+                            }
+                            prefs.setSetting("global",
+                                    "pref_master_pass", encPw
+                                    );
+                        }
+                    }).start();
+                }
             }
-        })
-                .create().show();
+        });
+        inp.create().show();
     }
 
     @Override
@@ -781,18 +804,25 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public static String GetMasterPassword(Context context) {
-        Preferences prefs = new Preferences(context);
-        String ret = (prefs.getSetting("global", "pref_master_pass", (String)null));
-        if (ret == null || ret.equals(""))
-            return GetSignatureKey(context);
-        else
-            return ret;
+        String pass = new Preferences(context)
+                .getSetting("global", "pref_master_pass", (String)null);
+        String sigKey = GetSignatureKey(context);
+        if (pass == null || pass.equals(""))
+            return sigKey;
+        else {
+            try {
+                pass = SimpleCrypto.decrypt(sigKey, pass);
+            } catch (Exception e) {
+            }
+            return pass;
+        }
     }
 
     public static String GetSignatureKey(Context context) {
         String ret = "";
         try {
-            Signature[] sigs = context.getPackageManager().getPackageInfo(context.getPackageName(),
+            Signature[] sigs = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(),
                     PackageManager.GET_SIGNATURES).signatures;
             for (Signature sig : sigs)
                 ret += sig.toCharsString();

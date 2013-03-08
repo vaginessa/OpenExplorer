@@ -72,7 +72,7 @@ import android.widget.Toast;
 public class ServerSetupActivity
         extends SherlockActivity
         implements OnCheckedChangeListener, OnClickListener, OnItemSelectedListener,
-        OnMenuItemClickListener, LogoutListener {
+        OnMenuItemClickListener {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -267,16 +267,14 @@ public class ServerSetupActivity
                 server.setName(login);
                 ViewUtils.setText(mBaseView, login, R.id.text_name);
             }
-            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
-            ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
-            ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_logout);
+            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview, R.id.server_authenticate);
+            ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
         } else {
             if(OpenDropBox.handleIntent(data, server))
             {
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
-                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
-                ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
-                ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_logout);
+                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview, R.id.server_authenticate);
+                ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
             }
         }
         SharedPreferences sp = getSharedPreferences("dropbox", Context.MODE_PRIVATE);
@@ -295,9 +293,8 @@ public class ServerSetupActivity
                 server.setPassword(pass);
                 server.setUser(uid);
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
-                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
-                ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
-                ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_logout);
+                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview, R.id.server_authenticate);
+                ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
                 AndroidAuthSession sess = OpenDropBox.buildSession(server);
                 sess.finishAuthentication();
                 getDropboxAccountInfo();
@@ -442,6 +439,7 @@ public class ServerSetupActivity
             case R.id.server_authenticate:
                 if (t2.startsWith("box"))
                 {
+                    enableAuthenticateButton(false);
                     Box box = Box.getInstance(PrivatePreferences.getBoxAPIKey());
                     box.getTicket(new GetTicketListener() {
 
@@ -453,12 +451,14 @@ public class ServerSetupActivity
                             }
                             else {
                                 // onGetTicketFail();
+                                enableAuthenticateButton(true);
                             }
                         }
 
                         @Override
                         public void onIOException(final IOException e) {
                             // onGetTicketFail();
+                            enableAuthenticateButton(true);
                         }
                     });
                 } else if(t2.startsWith("db")) {
@@ -471,14 +471,39 @@ public class ServerSetupActivity
             case R.id.server_logout:
                 if(t2.startsWith("box"))
                     Box.getInstance(PrivatePreferences.getBoxAPIKey())
-                        .logout(server.getPassword(), this);
+                        .logout(server.getPassword(), new LogoutListener() {
+                            
+                            @Override
+                            public void onIOException(IOException e) {
+                                Toast.makeText(ServerSetupActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                                Logger.LogError("Couldn't log out of Box", e);
+                            }
+                            
+                            @Override
+                            public void onComplete(String status) {
+                                Toast.makeText(ServerSetupActivity.this, status, Toast.LENGTH_SHORT).show();
+                                enableAuthenticateButton(true);
+                            }
+                        });
                 else if(t2.startsWith("db"))
-                {
-                    // TODO: log out of DropBox
-                }
+                    ((OpenDropBox)server.getOpenPath()).unlink();
+                enableAuthenticateButton(true);
                 return true;
         }
         return false;
+    }
+    
+    private void enableAuthenticateButton(boolean enable)
+    {
+        ViewUtils.setViewsVisible(mBaseView, false, R.id.server_logout);
+        if(enable)
+        {
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate), R.id.server_authenticate);
+            ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_authenticate);
+        } else {
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate) + " ...", R.id.server_authenticate);
+            ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
+        }
     }
     
     private boolean checkDropBoxAppKeySetup() {
@@ -659,28 +684,14 @@ public class ServerSetupActivity
             ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
             if (!server.getPassword().equals(""))
             {
-                ViewUtils.setViewsEnabled(v, true, R.id.server_logout);
-                ViewUtils.setViewsEnabled(v, false, R.id.server_authenticate);
+                ViewUtils.setViewsVisible(v, true, R.id.server_logout);
+                ViewUtils.setViewsVisible(v, false, R.id.server_authenticate);
             } else {
-                ViewUtils.setViewsEnabled(v, false, R.id.server_logout);
-                ViewUtils.setViewsEnabled(v, true, R.id.server_authenticate);
+                enableAuthenticateButton(true);
             }
         }
     }
-
-    @Override
-    public void onIOException(IOException e) {
-        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-        Logger.LogError("Couldn't log out of Box", e);
-    }
-
-    @Override
-    public void onComplete(String status) {
-        Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
-        ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_logout);
-        ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_authenticate);
-    }
-
+    
     @Override
     public void onNothingSelected(AdapterView<?> arg0) {
     }

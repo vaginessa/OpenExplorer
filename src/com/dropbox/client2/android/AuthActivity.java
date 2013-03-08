@@ -156,7 +156,7 @@ public class AuthActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         String token = null, secret = null, uid = null;
         
-        Logger.LogDebug("DropBox Auth: onNewIntent (" + intent.getExtras().toString() + ")!");
+        Logger.LogDebug("DropBox Auth: onNewIntent (" + (intent != null ? intent.getExtras() : "") + ")!");
 
         if (intent.hasExtra(EXTRA_ACCESS_TOKEN)) {
             // Dropbox app auth.
@@ -179,7 +179,7 @@ public class AuthActivity extends Activity {
         }
         
         SharedPreferences sp = (SharedPreferences)getSharedPreferences("dropbox", Context.MODE_PRIVATE);
-        sp.edit().putString("token", token).putString("secret", secret).putString("uid", uid).apply();
+        sp.edit().putString("token", token).putString("secret", secret).putString("uid", uid).commit();
         
         setIntent(intent);
         setResult(1, intent);

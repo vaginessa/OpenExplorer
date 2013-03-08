@@ -27,21 +27,26 @@ import com.box.androidlib.User;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateHandler, OpenPath.OpenPathSizable {
+public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable,
+        OpenPath.ThumbnailOverlayInterface, OpenPath.ListHandler {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final Box mBox;
     private final User mUser;
     private final DAO mFile;
     private final OpenBox mParent;
+    private Long mId = 0l;
 
     private List<OpenPath> mChildren = null;
 
@@ -97,6 +102,8 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     public long getId()
     {
+        if (mId > 0)
+            return mId;
         if (isDirectory())
             return getFolder().getId();
         return getFile().getId();
@@ -107,6 +114,39 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
     }
 
     @Override
+    public void list(final ListListener listener) {
+        if(mChildren != null)
+            listener.onListReceived(getChildren());
+        mChildren = new Vector<OpenPath>();
+        if (DEBUG)
+            Logger.LogDebug("Box listing for " + getId() + "!");
+        mBox.getAccountTree(getToken(), getId(), null, new GetAccountTreeListener() {
+            
+            @Override
+            public void onIOException(IOException e) {
+                listener.onException(e);
+            }
+            
+            @Override
+            public void onComplete(BoxFolder targetFolder, String status) {
+                if (targetFolder != null)
+                {
+                    for (BoxFolder f : targetFolder.getFoldersInFolder())
+                    {
+                        OpenBox kid = new OpenBox(OpenBox.this, f);
+                        mChildren.add(kid);
+                    }
+                    for (BoxFile f : targetFolder.getFilesInFolder())
+                    {
+                        OpenBox kid = new OpenBox(OpenBox.this, f);
+                        mChildren.add(kid);
+                    }
+                }
+                listener.onListReceived(getChildren());
+            }
+        });
+    }
+    
     public void list(final OpenContentUpdateListener callback) throws IOException {
         if (mChildren != null)
         {
@@ -180,7 +220,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
 
     @Override
     public String getAbsolutePath() {
-        return "box://" + Utils.urlencode(mUser.getLogin()) + ":" + Utils.urlencode(getToken()) + "@m.box.com" + getPath();
+        return "box://" + Utils.urlencode(mUser.getLogin()) + ":" + Utils.urlencode(getToken()) + "@m.box.com" + "/" + getId();
     }
 
     @Override
@@ -453,5 +493,14 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathUpdateH
     @Override
     public long getFreeSpace() {
         return getTotalSpace() - getUsedSpace();
+    }
+
+    public void setId(long id) {
+        mId = id;
+    }
+
+    @Override
+    public Drawable getOverlayDrawable(Context c, boolean large) {
+        return c.getResources().getDrawable(large ? R.drawable.lg_box_overlay : R.drawable.sm_box_overlay);
     }
 }
