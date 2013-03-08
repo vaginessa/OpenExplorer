@@ -35,7 +35,7 @@ import android.net.Uri;
  * @author Brandon Bowles
  * @see OpenNetworkPath
  */
-public class OpenSFTP extends OpenNetworkPath {
+public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private static final long serialVersionUID = 3263112609308933024L;
     private long filesize = 0l;
     private Session mSession = null;
@@ -384,7 +384,6 @@ public class OpenSFTP extends OpenNetworkPath {
     public void disconnect() {
         if (mChannel == null && mSession == null)
             return;
-        super.disconnect();
         if (mChannel != null)
             mChannel.disconnect();
         if (mSession != null)
@@ -409,7 +408,6 @@ public class OpenSFTP extends OpenNetworkPath {
             // getName());
             return;
         }
-        super.connect();
         // Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
         // disconnect();
         // Logger.LogDebug("Ready for new connection");

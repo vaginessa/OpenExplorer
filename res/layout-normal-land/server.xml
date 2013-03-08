@@ -69,79 +69,92 @@
                     android:textAppearance="@style/Text.Small" />
             </RelativeLayout>
 
+            <include
+                layout="@layout/server_auth_stub"
+			    android:layout_width="match_parent"
+			    android:layout_height="wrap_content"
+                />
+
             <LinearLayout
+                android:id="@+id/server_texts"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
 
-                <FrameLayout
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+
+                    <FrameLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" >
+
+                        <include
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            layout="@layout/server_host" />
+                    </FrameLayout>
+
+                    <EditText
+                        android:id="@+id/text_path"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:hint="@string/s_pref_server_path"
+                        android:inputType="textNoSuggestions|text|textWebEditText"
+                        android:singleLine="true" >
+                    </EditText>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1" >
+                    android:orientation="horizontal" >
 
-                    <include
+                    <EditText
+                        android:id="@+id/text_user"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        layout="@layout/server_host" />
-                </FrameLayout>
+                        android:layout_weight="1"
+                        android:hint="@string/s_pref_server_user"
+                        android:inputType="textNoSuggestions"
+                        android:singleLine="true" />
 
-                <EditText
-                    android:id="@+id/text_path"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="@string/s_pref_server_path"
-                    android:inputType="textNoSuggestions|text|textWebEditText"
-                    android:singleLine="true" >
-                </EditText>
-            </LinearLayout>
+                    <EditText
+                        android:id="@+id/text_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/s_pref_server_password"
+                        android:inputType="textPassword"
+                        android:singleLine="true" />
+                </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" >
-
-                <EditText
-                    android:id="@+id/text_user"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/s_pref_server_user"
-                    android:inputType="textNoSuggestions"
-                    android:singleLine="true" />
+                    android:orientation="horizontal" >
 
-                <EditText
-                    android:id="@+id/text_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/s_pref_server_password"
-                    android:inputType="textPassword"
-                    android:singleLine="true" />
-            </LinearLayout>
+                    <EditText
+                        android:id="@+id/text_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/s_pref_server_name"
+                        android:inputType="textNoSuggestions"
+                        android:singleLine="true" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" >
-
-                <EditText
-                    android:id="@+id/text_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/s_pref_server_name"
-                    android:inputType="textNoSuggestions"
-                    android:singleLine="true" />
-
-                <CheckBox
-                    android:id="@+id/check_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:lines="1"
-                    android:text="@string/s_show_password"
-                    android:textAppearance="@style/Text.Small" />
+                    <CheckBox
+                        android:id="@+id/check_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:lines="1"
+                        android:text="@string/s_show_password"
+                        android:textAppearance="@style/Text.Small" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

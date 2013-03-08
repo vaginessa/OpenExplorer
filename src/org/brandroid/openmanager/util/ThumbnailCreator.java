@@ -30,8 +30,10 @@ import java.util.jar.JarFile;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -61,6 +63,7 @@ import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -120,7 +123,7 @@ public class ThumbnailCreator {
         mImage.post(new Runnable() {
             @Override
             public void run() {
-                mImage.setImageBitmap(getFileExtIcon(file.getExtension(), mImage.getContext(),
+                mImage.setImageDrawable(getFileExtIcon(file.getExtension(), mImage.getContext(),
                         useLarge));
             }
         });
@@ -150,7 +153,7 @@ public class ThumbnailCreator {
             postImageResource(mImage, getDefaultResourceId(file, mWidth, mHeight));
 
         if (file.hasThumbnail()) {
-            if (showThumbPreviews && !file.requiresThread()) {
+            if (showThumbPreviews) {
                 Bitmap thumb = // !mCacheMap.containsKey(file.getPath()) ? null
                 // :
                 getThumbnailCache(app, file.getPath(), mWidth, mHeight);
@@ -167,6 +170,23 @@ public class ThumbnailCreator {
                     try {
                         if (!fails.containsKey(file.getPath())) {
                             if (!app.getMemoryCache().containsKey(file.getPath()))
+                            {
+                                if (file instanceof OpenPath.ThumbnailHandler && file.hasThumbnail()) {
+                                    ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth, new OpenPath.ThumbnailReturnCallback() {
+                                        public void onThumbReturned(Bitmap bmp) {
+                                            try {
+                                                String mCacheFilename = getCacheFilename(file.getAbsolutePath(), mWidth, mHeight);
+                                                saveThumbnail(app.getContext(), mCacheFilename, bmp);
+                                                app.getMemoryCache().put(mCacheFilename, bmp);
+                                                mListener.updateImage(bmp);
+                                            } catch(OutOfMemoryError e) {
+                                                showThumbPreviews = false;
+                                                Logger.LogWarning("No more memory for thumbs!");
+                                            }
+                                        }
+                                    });
+                                    return true;
+                                }
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -184,7 +204,7 @@ public class ThumbnailCreator {
                                         }
                                     }
                                 }).start();
-                            else
+                            } else
                                 // new Thread(new Runnable() {public void run()
                                 // {
                                 mListener.updateImage(getThumbnailCache(app, file.getPath(),
@@ -240,7 +260,7 @@ public class ThumbnailCreator {
             mImage.post(new Runnable() {
                 @Override
                 public void run() {
-                    mImage.setImageBitmap(getFileExtIcon(ext, mContext, useLarge));
+                    mImage.setImageDrawable(getFileExtIcon(ext, mContext, useLarge));
                 }
             });
         } else if (mImage.getDrawable() == null)
@@ -283,7 +303,7 @@ public class ThumbnailCreator {
         return false;
     }
 
-    public static Bitmap getFileExtIcon(String ext, Context mContext, Boolean useLarge) {
+    public static Drawable getFileExtIcon(String ext, Context mContext, Boolean useLarge) {
         Bitmap src = BitmapFactory.decodeResource(mContext.getResources(),
                 useLarge ? R.drawable.lg_file : R.drawable.sm_file);
         Bitmap b = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
@@ -299,12 +319,25 @@ public class ThumbnailCreator {
         p.setShadowLayer(2.5f, 1, 1, Color.BLACK);
         c.drawText(ext, src.getWidth() / 2, (src.getHeight() / 2) + ((th / 3) * 2), p);
         c.save();
-        return b;
+        return new BitmapDrawable(mContext.getResources(), b);
     }
 
     public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c) {
         if (c != null && c.getResources() != null)
-            return c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+        {
+            Drawable d = null;
+            if(file.isTextFile())
+                d = ThumbnailCreator.getFileExtIcon(file.getExtension(), c, mWidth > 72);
+            else
+                d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
+            if(file instanceof OpenPath.ThumbnailOverlayInterface)
+            {
+                Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c, mWidth > 36);
+                if(over != null)
+                    d = new LayerDrawable(new Drawable[]{d,over});
+            }
+            return d;
+        }
         else
             return null;
     }
@@ -439,6 +472,10 @@ public class ThumbnailCreator {
             if (file instanceof OpenFTP) {
                 return R.drawable.lg_ftp;
             }
+            if (file instanceof OpenBox)
+                return R.drawable.icon_box;
+            if (file instanceof OpenDropBox)
+                return R.drawable.icon_dropbox;
 
             // Local Filesystem Icons
             if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")
@@ -535,10 +572,10 @@ public class ThumbnailCreator {
 
         if (mContext != null) {
             if (!file.isDirectory() && file.isTextFile())
-                return new SoftReference<Bitmap>(
+                return new SoftReference<Bitmap>(((BitmapDrawable)
                         getFileExtIcon(file.getName()
                                 .substring(file.getName().lastIndexOf(".") + 1).toUpperCase(),
-                                mContext, mWidth > 72));
+                                mContext, mWidth > 72)).getBitmap());
 
             bmp = BitmapFactory.decodeResource(mContext.getResources(),
                     getDefaultResourceId(file, mWidth, mHeight));

@@ -14,7 +14,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateListener;
+import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.SortType.Type;
@@ -220,7 +220,7 @@ public class ContentAdapter extends BaseAdapter {
     private OpenPath[] getList() {
         try {
             if (mParent == null
-                    || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateListener))
+                    || (!mParent.isLoaded() && mParent instanceof OpenPathUpdateHandler))
                 return new OpenPath[0];
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
@@ -354,11 +354,8 @@ public class ContentAdapter extends BaseAdapter {
                 mIcon.setAlpha(100);
             else
                 mIcon.setAlpha(255);
-            if (file.isTextFile())
-                mIcon.setImageBitmap(ThumbnailCreator.getFileExtIcon(file.getExtension(),
-                        getContext(), mWidth > 72));
-            else if (!mShowThumbnails || !file.hasThumbnail()) {
-                mIcon.setImageResource(ThumbnailCreator.getDefaultResourceId(file, mWidth, mHeight));
+            if (!mShowThumbnails || !file.hasThumbnail()) {
+                mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight, getContext()));
             } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
                 // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());

@@ -16,6 +16,7 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Looper;
@@ -114,4 +115,6 @@ public interface OpenApp {
     public void queueToTracker(Runnable run);
 
     public int getThemedResourceId(int styleableId, int defaultResourceId);
+
+    public void startActivityForResult(Intent intent, int requestCode);
 }

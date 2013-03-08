@@ -10,6 +10,9 @@ import java.util.Map;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.R.xml;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
+import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.data.OpenServers;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -395,5 +398,11 @@ public class Preferences {
         globalOut.commit();
         newPrefs.commit();
         Logger.LogVerbose("Upgraded " + changes + " preferences");
+    }
+
+    public OpenServers LoadDefaultServers(SettingsActivity settingsActivity) {
+        if (OpenServers.DefaultServers == null)
+            OpenServers.DefaultServers = ServerSetupActivity.LoadDefaultServers(settingsActivity.getApplicationContext());
+        return OpenServers.DefaultServers;
     }
 }

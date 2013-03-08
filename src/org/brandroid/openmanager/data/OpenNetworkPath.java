@@ -27,6 +27,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     protected String mName = null;
     protected int mPort = -1;
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
+    private OpenServer mServer;
 
     public interface NetworkListener {
         public static final NetworkListener DefaultListener = new NetworkListener() {
@@ -59,6 +60,16 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
 
         public void OnAuthenticated(OpenPath path);
     }
+    
+    public final void setServer(OpenServer server)
+    {
+        mServer = server;
+    }
+    
+    public final OpenServer getServer()
+    {
+        return mServer;
+    }
 
     @Override
     public Boolean canWrite() {
@@ -68,14 +79,6 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     @Override
     public final Boolean requiresThread() {
         return true;
-    }
-
-    public void connect() throws IOException {
-        Logger.LogVerbose("Connecting OpenNetworkPath");
-    }
-
-    public void disconnect() {
-        Logger.LogVerbose("Disconnecting OpenNetworkPath");
     }
 
     public String getTempFileName() {
@@ -121,6 +124,11 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
             return;
         }
         copyFrom(tmp, task);
+    }
+    
+    @Override
+    public boolean hasThumbnail() {
+        return false;
     }
 
     /**
@@ -186,8 +194,12 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
             }
         });
     }
-
-    public abstract boolean isConnected() throws IOException;
+    
+    public interface PipeNeeded {
+        public boolean isConnected() throws IOException;
+        public void connect() throws IOException;
+        public void disconnect();
+    }
 
     /**
      * This does not change the actual path of the underlying object, just what

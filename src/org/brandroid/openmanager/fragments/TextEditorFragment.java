@@ -17,7 +17,7 @@ import java.util.Date;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.FolderPickerActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.LinesAdapter;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenContent;
@@ -254,7 +254,7 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                 int serverIndex = bundle.getInt("edit_server");
                 Logger.LogDebug("Loading server #" + serverIndex);
                 if (serverIndex > -1) {
-                    OpenServers servers = SettingsActivity.LoadDefaultServers(getActivity());
+                    OpenServers servers = ServerSetupActivity.LoadDefaultServers(getActivity());
                     if (serverIndex < servers.size()) {
                         OpenServer server = servers.get(serverIndex);
                         FTPManager man = new FTPManager(server.getHost(), server.getUser(),
@@ -687,8 +687,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                 } else {
                     throw new IOException("Invalid output stream.");
                 }
-                if (mPath instanceof OpenNetworkPath)
-                    ((OpenNetworkPath)mPath).disconnect();
+                if (mPath instanceof OpenNetworkPath.PipeNeeded)
+                    ((OpenNetworkPath.PipeNeeded)mPath).disconnect();
                 mData = data;
                 return bytes.length;
             } catch (Exception e) {
@@ -780,8 +780,8 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
                         }
                     }
                 }
-                if (mPath instanceof OpenNetworkPath)
-                    ((OpenNetworkPath)mPath).disconnect();
+                if (mPath instanceof OpenNetworkPath.PipeNeeded)
+                    ((OpenNetworkPath.PipeNeeded)mPath).disconnect();
                 return sb.toString();
             } else if (path.indexOf("ftp:/") > -1) {
                 BufferedInputStream in = null;

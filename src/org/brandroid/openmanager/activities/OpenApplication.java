@@ -25,6 +25,7 @@ import com.stericson.RootTools.RootTools;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.TypedArray;
@@ -289,5 +290,10 @@ public class OpenApplication extends Application implements OpenApp {
             mRootAccess = false;
         }
         return mRootAccess;
+    }
+    
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        
     }
 }

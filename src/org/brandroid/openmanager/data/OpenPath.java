@@ -26,7 +26,10 @@ import org.brandroid.utils.Utils;
 
 import com.android.gallery3d.data.MediaObject;
 import com.android.gallery3d.data.Path;
+
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Parcel;
@@ -351,8 +354,20 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public SoftReference<Bitmap> getThumbnail(OpenApp app, int w, int h) {
         return ThumbnailCreator.generateThumb(app, this, w, h, app.getContext());
     }
-
-    /**
+    
+    public interface ThumbnailReturnCallback {
+        public void onThumbReturned(Bitmap bmp);
+    }
+    
+    public interface ThumbnailHandler {
+        public boolean getThumbnail(int w, ThumbnailReturnCallback callback);
+    }
+    
+    public interface ThumbnailOverlayInterface {
+        public Drawable getOverlayDrawable(Context c, boolean large);
+    }
+    
+     /**
      * Get cached Thumbnail.
      * 
      * @param app OpenApp inhereted object that can provide Context to
@@ -483,7 +498,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see Parcelable
      */
     public void writeToParcel(Parcel out, int flags) {
-        out.writeString(getPath());
+        out.writeString(getAbsolutePath());
     }
 
     /**
@@ -786,6 +801,12 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public interface OpsHandler {
         public void makeChild(String name, OpsListener listener);
         public void delete(OpsListener listener);
+    }
+    
+    public interface OpenPathSizable {
+        public long getTotalSpace();
+        public long getUsedSpace();
+        public long getFreeSpace();
     }
     
     public void postException(final Exception e, final ExceptionListener listener)
