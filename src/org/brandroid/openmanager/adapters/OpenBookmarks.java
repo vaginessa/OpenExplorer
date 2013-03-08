@@ -926,10 +926,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             Logger.LogWarning("No tag set on long click in OpenBookmarks.");
             return false;
         }
-        return onLongClick((BookmarkHolder)v.getTag());
-    }
-
-    public boolean onLongClick(BookmarkHolder h) {
+        BookmarkHolder h = ((BookmarkHolder)v.getTag());
         OpenPath path = h.getOpenPath();
         Logger.LogInfo("BookMark.onLongClick(" + path + ")");
         if (path instanceof OpenCommand)

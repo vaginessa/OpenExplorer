@@ -316,7 +316,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (adapter != null && adapter.equals(mContentAdapter)) {
             // Logger.LogDebug("ContentFragment.setListAdapter updateData()");
             mContentAdapter.updateData();
-            if (mContentAdapter.getCount() == 0 && !isDetached()) {
+            if (mPath != null && mContentAdapter.getCount() == 0 && !isDetached()) {
                 ViewUtils.setText(
                         getView(),
                         getResources().getString(

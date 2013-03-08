@@ -419,7 +419,7 @@ public class FileManager {
                     String user = uri.getUserInfo();
                     String pw = "";
                     AccessTokenPair access = null;
-                    if (user.indexOf(":") > -1)
+                    if (user != null && user.indexOf(":") > -1)
                     {
                         user = user.substring(0, user.indexOf(":"));
                         pw = pw.substring(pw.indexOf(":") + 1);

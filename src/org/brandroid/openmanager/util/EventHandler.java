@@ -557,9 +557,9 @@ public class EventHandler {
 
     public static AsyncTask execute(AsyncTask job, OpenFile... params) {
         if (OpenExplorer.BEFORE_HONEYCOMB)
-            job.execute(params);
+            job.execute((Object[])params);
         else
-            job.executeOnExecutor(getExecutor(), params);
+            job.executeOnExecutor(getExecutor(), (Object[])params);
         return job;
     }
 
@@ -582,9 +582,9 @@ public class EventHandler {
 
     public static AsyncTask execute(AsyncTask job, String... params) {
         if (OpenExplorer.BEFORE_HONEYCOMB)
-            job.execute(params);
+            job.execute((Object[])params);
         else
-            job.executeOnExecutor(getExecutor(), params);
+            job.executeOnExecutor(getExecutor(), (Object[])params);
         return job;
     }
 
