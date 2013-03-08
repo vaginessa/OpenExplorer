@@ -35,7 +35,9 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.FTPManager;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
+import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -54,6 +56,12 @@ import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
+import com.box.androidlib.User;
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.session.AccessTokenPair;
+import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session.AccessType;
 import com.jcraft.jsch.UserInfo;
 
 import android.content.Context;
@@ -389,11 +397,51 @@ public class FileManager {
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get samba from cache.", e);
                 }
-            } /*else if (path.startsWith("/data") || path.startsWith("/system")
-                    || path.startsWith("/mnt/shell")
-                    || (path.indexOf("/emulated/") > -1 && path.indexOf("/emulated/0") == -1))
-                ret = new OpenFileRoot(new OpenFile(path));
-              */
+            } else if (path.startsWith("box")) {
+                try {
+                    Uri uri = Uri.parse(path);
+                    String pw = uri.getUserInfo();
+                    if (pw.indexOf(":") > -1)
+                        pw = pw.substring(pw.indexOf(":") + 1);
+                    User user = new User();
+                    user.setAuthToken(pw);
+                    ret = new OpenBox(user);
+                    try {
+                        ((OpenBox)ret).setId(Long.parseLong(uri.getLastPathSegment()));
+                    } catch (Exception e) {
+                    }
+                } catch (Exception e) {
+                    Logger.LogError("Couldn't get Box.com from cache.", e);
+                }
+            } else if (path.startsWith("db")) {
+                try {
+                    Uri uri = Uri.parse(path);
+                    String user = uri.getUserInfo();
+                    String pw = "";
+                    AccessTokenPair access = null;
+                    if (user != null && user.indexOf(":") > -1)
+                    {
+                        user = user.substring(0, user.indexOf(":"));
+                        pw = pw.substring(pw.indexOf(":") + 1);
+                        access = new AccessTokenPair(user, pw);
+                    }
+                    AppKeyPair app = new AppKeyPair(
+                            PrivatePreferences.getKey("dropbox_key"),
+                            PrivatePreferences.getKey("dropbox_secret"));
+                    DropboxAPI<AndroidAuthSession> api = new DropboxAPI<AndroidAuthSession>(
+                            new AndroidAuthSession(app, AccessType.DROPBOX, access)
+                            );
+                    ret = new OpenDropBox(api);
+                    ((OpenDropBox)ret).setPath(uri.getPath());
+                } catch (Exception e) {
+                    Logger.LogError("Couldn't get dropbox from cache.", e);
+                }
+            } /*
+               * else if (path.startsWith("/data") || path.startsWith("/system")
+               * || path.startsWith("/mnt/shell") || (path.indexOf("/emulated/")
+               * > -1 && path.indexOf("/emulated/0") == -1)) ret = new
+               * OpenFileRoot(new OpenFile(path));
+               */
             else if (path.startsWith("/"))
                 ret = new OpenFile(path);
             else if (path.startsWith("file://"))
@@ -410,11 +458,11 @@ public class FileManager {
                 return ret;
             if (ret instanceof OpenFile && ret.isArchive() && Preferences.Pref_Zip_Internal)
                 ret = new OpenZip((OpenFile)ret);
-            //            if (ret instanceof OpenFile
-            //                    && (ret.getMimeType().contains("tar")
-            //                            || ret.getExtension().equalsIgnoreCase("tar")
-            //                            || ret.getExtension().equalsIgnoreCase("win")))
-            //                ret = new OpenTar((OpenFile)ret);
+            // if (ret instanceof OpenFile
+            // && (ret.getMimeType().contains("tar")
+            // || ret.getExtension().equalsIgnoreCase("tar")
+            // || ret.getExtension().equalsIgnoreCase("win")))
+            // ret = new OpenTar((OpenFile)ret);
             if (ret.requiresThread() && bGetNetworkedFiles) {
                 if (ret.listFiles() != null)
                     setOpenCache(path, ret);

@@ -25,7 +25,7 @@ import org.kamranzafar.jtar.*;
 
 import android.net.Uri;
 
-public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener, OpenPath.OpenStream {
+public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateHandler, OpenPath.OpenStream {
     private final OpenFile mFile;
     private OpenPath[] mChildren = null;
     private ArrayList<OpenTarEntry> mEntries = null;
@@ -105,7 +105,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         return getAllEntries(null);
     }
 
-    public List<OpenTarEntry> getAllEntries(OpenContentUpdater updater) throws IOException {
+    public List<OpenTarEntry> getAllEntries(OpenContentUpdateListener updater) throws IOException {
         if (mEntries != null)
             return mEntries;
         mEntries = new ArrayList<OpenTarEntry>();
@@ -170,7 +170,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
         return mEntries;
     }
 
-    private OpenPath findVirtualPath(String name, OpenContentUpdater updater) {
+    private OpenPath findVirtualPath(String name, OpenContentUpdateListener updater) {
         if (mVirtualPaths.containsKey(name))
             return mVirtualPaths.get(name);
         OpenTarVirtualPath path = null;
@@ -221,7 +221,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
     }
 
     @Override
-    public void list(final OpenContentUpdater callback) throws IOException {
+    public void list(final OpenContentUpdateListener callback) throws IOException {
         final RootManager rm = new RootManager();
         new Thread(new Runnable() {
             public void run() {
@@ -232,7 +232,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateListener
                         callback.addContentPath(p);
                     callback.doneUpdating();
                 } catch (Exception e2) {
-                    callback.showError("Unable to browse tar - " + e2.getMessage());
+                    callback.onUpdateException(e2);
                     callback.doneUpdating();
                     Logger.LogError("Error listing TAR #2.", e2);
                 }

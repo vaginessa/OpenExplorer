@@ -200,7 +200,7 @@ public class LzmaAlone
 				eos = true;
 			if (params.Command == CommandLine.kEncode)
 			{
-				SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
+				SevenZip.LZMAEncoder encoder = new SevenZip.LZMAEncoder();
 				if (!encoder.SetAlgorithm(params.Algorithm))
 					throw new Exception("Incorrect compression mode");
 				if (!encoder.SetDictionarySize(params.DictionarySize))
@@ -228,7 +228,7 @@ public class LzmaAlone
 				byte[] properties = new byte[propertiesSize];
 				if (inStream.read(properties, 0, propertiesSize) != propertiesSize)
 					throw new Exception("input .lzma file is too short");
-				SevenZip.Compression.LZMA.Decoder decoder = new SevenZip.Compression.LZMA.Decoder();
+				SevenZip.LZMADecoder decoder = new SevenZip.LZMADecoder();
 				if (!decoder.SetDecoderProperties2(properties))
 					throw new Exception("Incorrect stream properties");
 				long outSize = 0;

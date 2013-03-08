@@ -17,6 +17,10 @@
         <item name="android:textSize">10dp</item>
     </style>
 
+    <style name="Text.Small.Checkbox" parent="@android:style/TextAppearance.Small">
+        <item name="android:textSize">10dp</item>
+    </style>
+
     <style name="Text.Small.Dialog" parent="@style/Text.Small">
         <item name="android:textColor">?attr/dialogTextColorSecondary</item>
         <item name="android:textSize">14dp</item>

@@ -86,8 +86,8 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
         if (params != null)
             for (OpenPath path : params) {
                 try {
-                    if (path instanceof OpenNetworkPath && ((OpenNetworkPath)path).isConnected())
-                        ((OpenNetworkPath)path).disconnect();
+                    if (path instanceof OpenNetworkPath.PipeNeeded && ((OpenNetworkPath.PipeNeeded)path).isConnected())
+                        ((OpenNetworkPath.PipeNeeded)path).disconnect();
                 } catch (IOException e) {
                 }
                 mFileTasks.remove(path.getPath());

@@ -6,7 +6,8 @@
 
 package net.contrapunctus.lzma;
 
-import SevenZip.Compression.LZMA.Encoder;
+import SevenZip.LZMAEncoder;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,7 +20,7 @@ class EncoderThread extends Thread
     protected ArrayBlockingQueue<byte[]> q;
     protected InputStream in;
     protected OutputStream out;
-    protected Encoder enc;
+    protected LZMAEncoder enc;
     protected IOException exn;
 
     private static final PrintStream dbg = System.err;
@@ -41,7 +42,7 @@ class EncoderThread extends Thread
         q = ConcurrentBufferOutputStream.newQueue();
         in = ConcurrentBufferInputStream.create( q );
         out = _out;
-        enc = new Encoder();
+        enc = new LZMAEncoder();
         exn = null;
         enc.SetDictionarySize(1 << (dictSzPow2 == null ? DEFAULT_DICT_SZ_POW2 : dictSzPow2).intValue());
         if (fastBytes != null)

@@ -327,6 +327,11 @@
     <string name="no_items">No items.</string>
     <string name="clipboard">Clipboard</string>
     <string name="theme">Theme</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="menu_view_font_small">Small</string>
+    <string name="menu_view_font_medium">Medium</string>
+    <string name="menu_view_font_large">Large</string>
     <string name="s_pref_theme">Select Theme</string>
     <string name="s_theme_dark">Dark</string>
     <string name="s_theme_light">Light</string>
@@ -406,5 +411,13 @@
     <string name="s_archives">Archives</string>
     <string name="s_compress">Compress</string>
     <string name="s_compress_type">Compression Type</string>
+    <string name="s_compressed">compressed</string>
+    <string name="s_delete_after">Delete source after completion</string>
+    <string name="s_master_pass">Master Password</string>
+    <string name="s_master_pass_warning">You may enter a master password, used as the encryption key for any stored passwords. If you leave this blank, passwords will still be encrypted, and the default master password will be used. Please note that if you update your password with stored network passwords, you will probably need to reset passwords and authenticate cloud servers after resetting this password.</string>
+    <string name="s_pass_old">Enter old password:</string>
+    <string name="s_pass_new">Enter new password:</string>
+    <string name="s_logout">Log out</string>
+    <string name="s_authenticate">Authenticate</string>
 
 </resources>

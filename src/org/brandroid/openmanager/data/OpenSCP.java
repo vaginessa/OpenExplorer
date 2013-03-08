@@ -21,7 +21,7 @@ import com.jcraft.jsch.UserInfo;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class OpenSCP extends OpenNetworkPath {
+public class OpenSCP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private long filesize = 0l;
     private boolean isConnected = false;
     private Session mSession = null;

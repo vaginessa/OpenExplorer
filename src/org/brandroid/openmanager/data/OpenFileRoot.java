@@ -26,7 +26,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.PatternMatcher;
 
-public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateListener,
+public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHandler,
         OpenPath.NeedsTempFile, OpenPathByteIO, OpenDynamicPath {
 
     private static final long serialVersionUID = -1540464774342269126L;
@@ -203,7 +203,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateLis
             mChildren.get().add(kid);
     }
 
-    public void list(final OpenContentUpdater callback) throws IOException {
+    public void list(final OpenPath.OpenContentUpdateListener callback) throws IOException {
         mLoaded = false;
         if (getChildren() != null) {
             for (OpenPath kid : getChildren())

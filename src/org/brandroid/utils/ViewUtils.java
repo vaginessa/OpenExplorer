@@ -7,19 +7,26 @@ import java.util.ArrayList;
 import org.brandroid.openmanager.activities.OpenExplorer;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.ViewStub;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 public class ViewUtils {
@@ -113,6 +120,32 @@ public class ViewUtils {
             if (pm.findPreference(key) != null)
                 pm.findPreference(key).setOnPreferenceChangeListener(listener);
     }
+    
+    public static void setOnChangeListener(View parent, TextWatcher watcher, int... ids)
+    {
+        if(ids.length == 0 && parent instanceof TextView)
+            ((TextView)parent).addTextChangedListener(watcher);
+        else
+            for(int id : ids)
+            {
+                View v = parent.findViewById(id);
+                if(v != null && v instanceof TextView)
+                    ((TextView)v).addTextChangedListener(watcher);
+            }
+    }
+    
+    public static void setOnChangeListener(View parent, OnCheckedChangeListener listener, int... ids)
+    {
+        if(ids.length == 0 && parent instanceof CompoundButton)
+            ((CompoundButton)parent).setOnCheckedChangeListener(listener);
+        else
+            for(int id : ids)
+            {
+                View v = parent.findViewById(id);
+                if(v != null && v instanceof CompoundButton)
+                    ((CompoundButton)v).setOnCheckedChangeListener(listener);
+            }
+    }
 
     public static void setOnClicks(PreferenceManager pm, OnPreferenceClickListener listener,
             String... keys) {
@@ -162,10 +195,22 @@ public class ViewUtils {
         }
     }
 
-    public static void setText(View parent, final CharSequence text, int... textViewID) {
+    public static void setText(final View parent, final CharSequence text, int... textViewID) {
         if (parent == null)
             return;
         boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
+        if (textViewID.length == 0)
+            if(parent != null && parent instanceof TextView)
+            {
+                if(ui)
+                    ((TextView)parent).setText(text);
+                else
+                    parent.post(new Runnable() {
+                        public void run() {
+                            ((TextView)parent).setText(text);
+                        }
+                    });
+            }
         for (int id : textViewID) {
             final View v = parent.findViewById(id);
             if (v == null || !(v instanceof TextView))
@@ -313,7 +358,7 @@ public class ViewUtils {
             Method m;
             try {
                 m = View.class.getMethod("setAlpha", new Class[] {
-                    Float.class
+                        Float.class
                 });
                 m.invoke(v, alpha);
                 return;
@@ -408,11 +453,24 @@ public class ViewUtils {
         for (View v : views)
             if (v != null)
                 v.setEnabled(enabled);
+        setAlpha(enabled ? 1.0f : 0.5f, views);
     }
 
     public static void setEnabled(View parent, boolean enabled, int... ids) {
-        for (int id : ids)
-            if (parent.findViewById(id) != null)
-                parent.findViewById(id).setEnabled(enabled);
+        if (ids.length > 0)
+        {
+            for (int id : ids)
+                if (parent.findViewById(id) != null)
+                    setEnabled(enabled, parent.findViewById(id));
+        } else if (parent instanceof ViewGroup) {
+            ViewGroup vp = (ViewGroup)parent;
+            for (int i = 0; i < vp.getChildCount(); i++)
+            {
+                View v = vp.getChildAt(i);
+                if (v.isClickable())
+                    setEnabled(enabled, v);
+            }
+        }
+
     }
 }

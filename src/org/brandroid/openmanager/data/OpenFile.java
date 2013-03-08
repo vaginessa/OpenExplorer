@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.Date;
 
+import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenPath.*;
@@ -19,6 +20,8 @@ import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
+
+import com.stericson.RootTools.RootTools;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
@@ -28,7 +31,7 @@ import android.os.Environment;
 import android.os.StatFs;
 
 @SuppressLint("NewApi")
-public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream {
+public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream, OpenPathSizable {
     private static final long serialVersionUID = 6436156952322586833L;
     private File mFile;
     private OpenFile[] mChildren = null;
@@ -508,7 +511,8 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
         } catch (IOException e) {
             Logger.LogError(
                     "Couldn't CopyFrom (" + sourceFile.getPath() + " -> " + getPath() + ")", e);
-            ret = new OpenFileRoot(this).copyFrom(sourceFile);
+            if(OpenApplication.hasRootAccess())
+                ret = new OpenFileRoot(this).copyFrom(sourceFile);
         } finally {
             if (source != null)
                 try {
@@ -566,7 +570,8 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
             is.read(ret);
         } catch (Exception e) {
             Logger.LogError("Unable to read byte[] data from OpenFile(" + getPath() + ")", e);
-            ret = new OpenFileRoot(this).readBytes();
+            if(OpenApplication.hasRootAccess())
+                ret = new OpenFileRoot(this).readBytes();
         } finally {
             if (is != null)
                 try {
@@ -613,7 +618,8 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
             os.close();
         } catch (IOException e) {
             Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
-            new OpenFileRoot(this).writeBytes(buffer);
+            if(OpenApplication.hasRootAccess())
+                new OpenFileRoot(this).writeBytes(buffer);
         } finally {
             if (os != null)
                 try {
@@ -663,8 +669,10 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
             else
                 return getFile().createNewFile();
         } catch (Exception e) {
-            return new OpenFileRoot(this).touch();
+            if(OpenApplication.hasRootAccess())
+                return new OpenFileRoot(this).touch();
         }
+        return false;
     }
 
     public boolean isRemoveable() {

@@ -113,7 +113,7 @@ public class LzmaBench
 	
 	static class CrcOutStream extends java.io.OutputStream
 	{
-		public Common.CRC CRC = new Common.CRC();
+		public SevenZip.CRC CRC = new SevenZip.CRC();
 		
 		public void Init()
 		{ 
@@ -300,8 +300,8 @@ public class LzmaBench
 		}
 		System.out.print("\n       Compressing                Decompressing\n\n");
 		
-		SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
-		SevenZip.Compression.LZMA.Decoder decoder = new SevenZip.Compression.LZMA.Decoder();
+		SevenZip.LZMAEncoder encoder = new SevenZip.LZMAEncoder();
+		SevenZip.LZMADecoder decoder = new SevenZip.LZMADecoder();
 		
 		if (!encoder.SetDictionarySize(dictionarySize))
 			throw new Exception("Incorrect dictionary size");
@@ -318,7 +318,7 @@ public class LzmaBench
 
 		rg.Set(kBufferSize);
 		rg.Generate();
-		Common.CRC crc = new Common.CRC();
+		SevenZip.CRC crc = new SevenZip.CRC();
 		crc.Init();
 		crc.Update(rg.Buffer, 0, rg.BufferSize);
 		

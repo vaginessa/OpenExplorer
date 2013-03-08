@@ -21,11 +21,11 @@ import org.brandroid.utils.Logger;
 
 import SevenZip.ArchiveExtractCallback;
 import SevenZip.HRESULT;
+import SevenZip.Handler;
+import SevenZip.IArchiveExtractCallback;
+import SevenZip.IInArchive;
 import SevenZip.MyRandomAccessFile;
-import SevenZip.Archive.IArchiveExtractCallback;
-import SevenZip.Archive.IInArchive;
-import SevenZip.Archive.SevenZipEntry;
-import SevenZip.Archive.SevenZip.Handler;
+import SevenZip.SevenZipEntry;
 import android.net.Uri;
 
 public class OpenLZMA extends OpenPath implements OpenStream {

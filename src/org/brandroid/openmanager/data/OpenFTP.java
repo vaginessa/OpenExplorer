@@ -1,45 +1,25 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-
-import jcifs.smb.SmbAuthException;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.SortType;
-import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 
-import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
-public class OpenFTP extends OpenNetworkPath {
+public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private FTPFile mFile;
     private final FTPManager mManager;
     private final ArrayList<OpenFTP> mChildren = new ArrayList<OpenFTP>();
@@ -132,14 +112,12 @@ public class OpenFTP extends OpenNetworkPath {
                 return;
         } catch (IOException e) {
         }
-        super.disconnect();
         if (mManager != null)
             mManager.disconnect();
     }
 
     @Override
     public void connect() throws IOException {
-        super.connect();
         if (mManager != null)
             mManager.connect();
     }
@@ -217,6 +195,8 @@ public class OpenFTP extends OpenNetworkPath {
 
     @Override
     public OpenFTP[] listFiles() throws IOException {
+        if (Thread.currentThread().equals(OpenExplorer.UiThread))
+            return getChildren();
         if (isListing)
             return getChildren();
         isListing = true;

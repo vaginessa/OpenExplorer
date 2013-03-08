@@ -20,10 +20,10 @@ package org.brandroid.openmanager.util;
 
 import SevenZip.ArchiveExtractCallback;
 import SevenZip.HRESULT;
+import SevenZip.Handler;
+import SevenZip.IArchiveExtractCallback;
+import SevenZip.IInArchive;
 import SevenZip.MyRandomAccessFile;
-import SevenZip.Archive.IArchiveExtractCallback;
-import SevenZip.Archive.IInArchive;
-import SevenZip.Archive.SevenZip.Handler;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Build;
@@ -87,6 +87,7 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.itadaki.bzip2.BZip2InputStream;
@@ -556,9 +557,9 @@ public class EventHandler {
 
     public static AsyncTask execute(AsyncTask job, OpenFile... params) {
         if (OpenExplorer.BEFORE_HONEYCOMB)
-            job.execute(params);
+            job.execute((Object[])params);
         else
-            job.executeOnExecutor(getExecutor(), params);
+            job.executeOnExecutor(getExecutor(), (Object[])params);
         return job;
     }
 
@@ -581,9 +582,9 @@ public class EventHandler {
 
     public static AsyncTask execute(AsyncTask job, String... params) {
         if (OpenExplorer.BEFORE_HONEYCOMB)
-            job.execute(params);
+            job.execute((Object[])params);
         else
-            job.executeOnExecutor(getExecutor(), params);
+            job.executeOnExecutor(getExecutor(), (Object[])params);
         return job;
     }
 
@@ -807,21 +808,21 @@ public class EventHandler {
                     if (mIntoPath.requiresThread())
                         notifIcon = android.R.drawable.stat_sys_upload;
                     notifIcon = R.drawable.ic_menu_copy;
-                    showDialog = false;
+                    showDialog = true;
                     showNotification = true;
                     break;
                 case CUT:
                     notifIcon = R.drawable.ic_menu_cut;
-                    showDialog = false;
+                    showDialog = true;
                     showNotification = true;
                     break;
                 case ZIP:
-                    showDialog = false;
+                    showDialog = true;
                     showNotification = true;
                     break;
                 case EXTRACT:
                     showDialog = true;
-                    showNotification = false;
+                    showNotification = true;
                     isCancellable = false;
                     break;
                 default:
@@ -1010,11 +1011,20 @@ public class EventHandler {
 
                 case EXTRACT:
                     if (params[0] instanceof OpenStream)
-                        ret += extractFiles(params[0], mIntoPath, mInitParams);
+                    {
+                        int x = extractFiles(params[0], mIntoPath, mInitParams);
+                        if(x > 0 && new Preferences(mContext).getBoolean("global", "pref_archive_postdelete", false))
+                            params[0].delete();
+                        ret += x;
+                    }
                     break;
 
                 case ZIP:
-                    ret += compressFiles(mIntoPath, params);
+                    int x = compressFiles(mIntoPath, params);
+                    if(x > 0 && new Preferences(mContext).getBoolean("global", "pref_archive_postdelete", false))
+                        for(OpenPath p : params)
+                            p.delete();
+                    ret += x;
                     break;
 
             }
@@ -1031,33 +1041,40 @@ public class EventHandler {
                 case TAR:
                     OpenStream fs = (OpenStream)mArchive;
                     OutputStream os = null;
-                    OutputStream tos = null;
                     int ret = 0;
                     try {
                         mTotalCount = files.length;
-                        if (files.length > 1)
-                            tos = new TarOutputStream(fs.getOutputStream());
-                        else
-                            tos = fs.getOutputStream();
+                        os = new BufferedOutputStream(fs.getOutputStream());
                         if (mCompressType == CompressionType.GZ)
-                            os = new GZIPOutputStream(tos);
+                            os = new GZIPOutputStream(os);
                         else if (mCompressType == CompressionType.BZ2)
-                            os = new BZip2OutputStream(tos);
-                        else
-                            os = tos;
+                            os = new BZip2OutputStream(os);
+                        if (files.length > 1)
+                            os = new TarOutputStream(os);
                         if (files.length == 1)
-                            tos.write(((OpenFile)files[0]).readBytes());
-                        else
+                        {
+                            mTotalCount = (int)files[0].length();
+                            InputStream is = new BufferedInputStream(
+                                    ((OpenStream)files[0]).getInputStream());
+                            copyStreams(is, os, true, false);
+                        } else {
+                            mTotalCount = 0;
+                            for (OpenPath file : files)
+                                mTotalCount += file.length();
                             for (OpenPath file : files)
                             {
-                                TarEntry te = new TarEntry(((OpenFile)file).getFile(), file.getName());
-                                ((TarOutputStream)tos).putNextEntry(te);
+                                ((TarOutputStream)os).putNextEntry(
+                                        new TarEntry(((OpenFile)file).getFile(), file.getName()));
+                                InputStream is = new BufferedInputStream(
+                                        ((OpenStream)file).getInputStream());
+                                copyStreams(is, os, true, false);
+                                //os.write(((OpenFile)file).readBytes());
                             }
+                        }
                     } catch (IOException e) {
                         Logger.LogError("Unable to compress files!", e);
                         return -1;
                     } finally {
-                        closeStream(tos);
                         closeStream(os);
                     }
                     return 1;
@@ -1070,11 +1087,33 @@ public class EventHandler {
             }
         }
 
+        private void copyStreams(InputStream in, OutputStream out, boolean doCloseInput,
+                boolean doCloseOutput) throws IOException {
+            byte[] buffer = new byte[2048];
+            int count = 0;
+            int pos = 0;
+            while ((count = in.read(buffer)) != -1)
+            {
+                out.write(buffer, 0, count);
+                pos += count;
+                onProgressUpdateCallback(pos, mTotalCount);
+            }
+            if (doCloseInput)
+                try {
+                    if (in != null)
+                        in.close();
+                } catch (Exception e) {
+                }
+            if (doCloseOutput)
+                try {
+                    if (out != null)
+                        out.close();
+                } catch (Exception e) {
+                }
+        }
+
         protected int extractFiles(OpenPath file, OpenPath into, String... includes) {
             int ret = 0;
-            if (file.getMimeType().contains("zip") &&
-                    (ret = extractZipFiles((OpenStream)file, into)) > 0)
-                return ret;
             if (file.getMimeType().contains("rar") &&
                     (ret = extractRarFiles(new OpenRAR((OpenFile)file), into)) > 0)
                 return ret;
@@ -1087,6 +1126,9 @@ public class EventHandler {
             if (file.getMimeType().contains("bz") &&
                     (ret = extractBZip2(file, into)) > 0)
                 return ret;
+            if (file.getMimeType().contains("zip") &&
+                    (ret = extractZipFiles((OpenStream)file, into)) > 0)
+                return ret;
             return 0;
         }
 
@@ -1097,12 +1139,11 @@ public class EventHandler {
             try {
                 input = new BufferedInputStream(new BZip2InputStream(
                         ((OpenStream)file).getInputStream(), false));
-                mTotalCount = 1;
+                mTotalCount = (int)file.length();
                 if (into.isDirectory())
                     into = into.getChild(file.getName().replace("." + file.getExtension(), ""));
-                out = ((OpenStream)into).getOutputStream();
-                OpenPath.copyStreams(input, out);
-                input.close();
+                out = new BufferedOutputStream(((OpenStream)into).getOutputStream());
+                copyStreams(input, out, true, false);
                 return 1;
             } catch (Exception e) {
                 return 0;
@@ -1131,12 +1172,11 @@ public class EventHandler {
             try {
                 input = new BufferedInputStream(new GZIPInputStream(
                         ((OpenStream)file).getInputStream()));
-                mTotalCount = 1;
+                mTotalCount = (int)file.length();
                 if (into.isDirectory())
                     into = into.getChild(file.getName().replace("." + file.getExtension(), ""));
-                out = ((OpenStream)into).getOutputStream();
-                OpenPath.copyStreams(input, out);
-                input.close();
+                out = new BufferedOutputStream(((OpenStream)into).getOutputStream());
+                copyStreams(input, out, true, true);
                 return 1;
             } catch (Exception e) {
                 return 0;
@@ -1369,19 +1409,20 @@ public class EventHandler {
                 return -1;
             }
 
+            mTotalCount = (int)rar.length();
+
             for (OpenRAREntry entry : entries) {
                 OpenPath newFile = directory.getChild(entry.getName());
                 if (!newFile.getParent().exists() && !newFile.getParent().mkdir())
                     continue;
                 if (!(newFile instanceof OpenStream))
                     continue;
-                FileOutputStream out = null;
+                OutputStream out = null;
                 try {
-                    out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
-                    OpenPath.copyStreams(entry.getInputStream(), out);
-                    out.close();
+                    InputStream is = new BufferedInputStream(entry.getInputStream());
+                    out = new BufferedOutputStream(((OpenStream)newFile).getOutputStream());
+                    copyStreams(is, out, false, true);
                     ret++;
-                    publishMyProgress(ret);
                 } catch (Exception e) {
                     Logger.LogError("Couldn't unrar!", e);
                 } finally {
@@ -1392,13 +1433,12 @@ public class EventHandler {
         }
 
         private int extractZipFiles(OpenStream zip, OpenPath directory) {
+            if(OpenExplorer.IS_DEBUG_BUILD)
+                Logger.LogVerbose("Extracting ZIP: " + zip + " (into " + directory + ")");
             byte[] data = new byte[FileManager.BUFFER];
             ZipEntry entry;
             ZipInputStream zipstream = null;
-            FileOutputStream out = null;
-
-            if (!directory.mkdir())
-                return -1;
+            OutputStream out = null;
 
             int ret = -1;
 
@@ -1410,23 +1450,26 @@ public class EventHandler {
                 while ((entry = zipstream.getNextEntry()) != null) {
                     OpenPath newFile = directory.getChild(entry.getName());
                     if (!newFile.getParent().exists() && !newFile.getParent().mkdir())
+                    {
+                        Logger.LogWarning("Unable to create parent directory while unzipping");
                         continue;
+                    }
                     if (!(newFile instanceof OpenStream))
+                    {
+                        Logger.LogWarning("ZIP: New File isn't a stream? " + newFile);
                         continue;
+                    }
 
                     int read = 0;
                     try {
-                        out = (FileOutputStream)((OpenStream)newFile).getOutputStream();
-                        while ((read = zipstream.read(data, 0, FileManager.BUFFER)) != -1)
-                            out.write(data, 0, read);
-                        publishMyProgress(ret);
+                        out = new BufferedOutputStream(((OpenStream)newFile).getOutputStream());
+                        copyStreams(zipstream, out, false, true);
+                        ret++;
                     } catch (Exception e) {
-
+                        Logger.LogError("Unable to unzip file!", e);
                     } finally {
                         zipstream.closeEntry();
-                        closeStream(out);
                     }
-                    ret++;
                 }
 
             } catch (FileNotFoundException e) {
@@ -1737,8 +1780,30 @@ public class EventHandler {
 
                     break;
 
+                case ZIP:
+                    int typeRes = R.string.s_compressed;
+                    if (result == null || result == 0)
+                        Toast.makeText(
+                                mContext,
+                                mIntoPath.getMimeType().replace("application/", "") + ": " +
+                                        getResourceString(mContext, R.string.s_msg_none, typeRes),
+                                Toast.LENGTH_SHORT).show();
+                    else if (result != null && result < 0)
+                        Toast.makeText(
+                                mContext,
+                                mIntoPath.getMimeType().replace("application/", "") + ": " +
+                                        getResourceString(mContext, R.string.s_msg_some, typeRes),
+                                Toast.LENGTH_SHORT).show();
+                    else
+                        Toast.makeText(
+                                mContext,
+                                mIntoPath.getMimeType().replace("application/", "") + ": " +
+                                        getResourceString(mContext, R.string.s_msg_all, typeRes),
+                                Toast.LENGTH_SHORT).show();
+                    break;
+
                 case EXTRACT:
-                    int typeRes = R.string.s_extracted;
+                    typeRes = R.string.s_extracted;
                     if (result == null || result == 0)
                         Toast.makeText(
                                 mContext,

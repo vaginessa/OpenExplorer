@@ -6,8 +6,9 @@
 
 package net.contrapunctus.lzma;
 
-import SevenZip.Compression.LZMA.Encoder;
-import SevenZip.Compression.LZMA.Decoder;
+import SevenZip.LZMADecoder;
+import SevenZip.LZMAEncoder;
+
 import java.io.*;
 
 public class LzmaInputStream extends FilterInputStream
