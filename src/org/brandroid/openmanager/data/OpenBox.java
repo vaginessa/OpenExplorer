@@ -27,7 +27,9 @@ import com.box.androidlib.User;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -37,7 +39,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable,
-        OpenPath.ListHandler {
+        OpenPath.ThumbnailOverlayInterface, OpenPath.ListHandler {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final Box mBox;
@@ -495,5 +497,10 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
 
     public void setId(long id) {
         mId = id;
+    }
+
+    @Override
+    public Drawable getOverlayDrawable(Context c, boolean large) {
+        return c.getResources().getDrawable(large ? R.drawable.lg_box_overlay : R.drawable.sm_box_overlay);
     }
 }
