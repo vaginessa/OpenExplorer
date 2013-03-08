@@ -2629,6 +2629,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                  * OpenPath.flushDbCache(); goHome(); return true;
                  */
 
+            case R.id.menu_refresh2:
             case R.id.menu_refresh:
                 ContentFragment content = getDirContentFragment(true);
                 if (content != null) {

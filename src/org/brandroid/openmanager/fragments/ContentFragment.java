@@ -1207,6 +1207,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         final boolean fromPasteMenu = file.equals(mPath);
 
         switch (id) {
+            case R.id.menu_refresh2:
             case R.id.menu_refresh:
                 if (DEBUG)
                     Logger.LogDebug("Refreshing " + getPath().getPath());

@@ -194,7 +194,12 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
     @Override
     public String getName() {
         if (isDirectory() && getFolder().getId() == 0)
-            return mUser.getLogin();
+        {
+            if(getServer() != null)
+                return getServer().getName();
+            if(mUser != null)
+                return mUser.getLogin();
+        }
         if (isDirectory() && getFolder().getFolderName() != null)
         {
             if (getFolder().getFolderName().equals(""))
