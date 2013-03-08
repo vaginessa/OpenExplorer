@@ -306,10 +306,8 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             // SharedPreferences sp =
             // Preferences.getPreferences(getApplicationContext(), "servers");
             // String servers = sp.getString("servers", "");
-            OpenServers servers = prefs.LoadDefaultServers(this); // new
-                                                        // OpenServers(prefs.getJSON("global",
-                                                        // "servers", new
-                                                        // JSONObject()));
+            OpenServers servers = prefs.LoadDefaultServers(this);
+            // new OpenServers(prefs.getJSON("global", "servers", new JSONObject()));
             if (path.equals("server_add")) {
                 setTitle(getTitle() + " - Add New");
                 getPreferenceScreen().findPreference("server_delete").setEnabled(false);
@@ -383,9 +381,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             // for(int i = mPrefServers.getPreferenceCount() - 1; i > 0; i--)
             // mPrefServers.removePreference(mPrefServers.getPreference(i));
             OpenServers servers = prefs.LoadDefaultServers(this); // new
-                                                        // OpenServers(prefs.getSetting("global",
-                                                        // "servers", new
-                                                        // JSONObject()));
+            // OpenServers(prefs.getSetting("global",
+            // "servers", new
+            // JSONObject()));
             for (int i = 0; i < servers.size(); i++) {
                 OpenServer server = servers.get(i);
                 // Logger.LogDebug("Checking server [" + sName + "]");
@@ -459,9 +457,9 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             String sPath = data.getStringExtra("path");
             Preferences prefs = new Preferences(getApplicationContext());
             OpenServers servers = prefs.LoadDefaultServers(this); // new
-                                                        // OpenServers(prefs.getJSON("global",
-                                                        // "servers", new
-                                                        // JSONObject()));
+            // OpenServers(prefs.getJSON("global",
+            // "servers", new
+            // JSONObject()));
             OpenServer server = null;
             int index = 0;
             if (sPath.equals("server_add")) {
@@ -781,127 +779,19 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public static String GetMasterPassword(Context context) {
-        Preferences prefs = new Preferences(context);
-        try {
-            OpenFile f = OpenFile.getExternalMemoryDrive(true).getChild("Android").getChild("data")
-                    .getChild("org.brandroid.openmanager").getChild("files")
-                    .getChild("servers.json");
-            if (prefs.getSetting("global", "servers_private", false))
-            {
-                if (f.exists())
-                {
-                    if (f.length() > f2.length())
-                        f2.copyFrom(f);
-                    f.delete();
-                }
-                return f2;
-            }
-            if (!f.exists())
-                f.touch();
-            if (!f.exists() || !f.canWrite())
-            {
-                prefs.setSetting("global", "servers_private", true);
-                return f2;
-            }
-            else if (f2.exists()) {
-                if (OpenExplorer.IS_DEBUG_BUILD)
-                    Logger.LogVerbose("Old servers.json(" + f2.length()
-                            + ") found. Overwriting new servers.json(" + f.length() + ")!");
-                if (!f.exists() || f2.length() > f.length())
-                    f.copyFrom(f2);
-                f2.delete();
-            }
-            if (OpenExplorer.isBlackBerry() && f.exists() && f.canWrite()) {
-                f2 = OpenFile.getExternalMemoryDrive(true).getChild(".servers.json");
-                if (f2.exists()) {
-                    if (!f.exists() || f2.length() > f.length())
-                        f.copyFrom(f2);
-                    f2.delete();
-                }
-            }
-            if (!f.exists() && !f.touch())
-            {
-                prefs.setSetting("global", "servers_private", true);
-                return f2;
-            }
-            return f;
-        } catch (Exception e) {
-            prefs.setSetting("global", "servers_private", true);
-            return f2;
-        }
-    }
-
-    public static void SaveToDefaultServers(OpenServers servers, Context context) {
-        Writer w = null;
-        OpenFile f = GetDefaultServerFile(context);
-        try {
-            f.delete();
-            f.create();
-            w = new BufferedWriter(new FileWriter(f.getFile()));
-            String data = servers.getJSONArray(true, context).toString();
-            Logger.LogDebug("Writing to " + f.getPath() + ": " + data);
-            // data = SimpleCrypto.encrypt(GetSignatureKey(context), data);
-            w.write(data);
-            w.close();
-            Logger.LogDebug("Wrote " + data.length() + " bytes to OpenServers (" + f.getPath()
-                    + ").");
-        } catch (IOException e) {
-            Logger.LogError("Couldn't save OpenServers.", e);
-        } catch (Exception e) {
-            Logger.LogError("Problem encrypting servers?", e);
-        } finally {
-            try {
-                if (w != null)
-                    w.close();
-            } catch (IOException e2) {
-                Logger.LogError("Couldn't close writer during error", e2);
-            }
-        }
-    }
-
-    public OpenServers LoadDefaultServers() {
-        if (OpenServers.DefaultServers == null)
-            OpenServers.DefaultServers = LoadDefaultServers(getApplicationContext());
-        return OpenServers.DefaultServers;
-    }
-
-    public static OpenServers LoadDefaultServers(Context context) {
-        if (OpenServers.DefaultServers != null)
-            return OpenServers.DefaultServers;
-        OpenFile f = GetDefaultServerFile(context);
-        try {
-            if (!f.exists() && !f.create()) {
-                Logger.LogWarning("Couldn't create default servers file (" + f.getPath() + ")");
-                return new OpenServers();
-            } else if (f.length() <= 1)
-                return new OpenServers(); // Empty file
-            else {
-                // Logger.LogDebug("Created default servers file (" +
-                // f.getPath() + ")");
-                String data = f.readAscii();
-                if (RootTools.debugMode)
-                    Logger.LogDebug("Server JSON: " + data);
-                OpenServers.DefaultServers = new OpenServers(new JSONArray(data),
-                        GetSignatureKey(context));
-                if (RootTools.debugMode)
-                    Logger.LogDebug("Loaded " + OpenServers.DefaultServers.size() + " servers @ "
-                            + data.length() + " bytes from " + f.getPath());
-                return OpenServers.DefaultServers;
-            }
-        } catch (IOException e) {
-            Logger.LogError("Error loading default server list.", e);
-            return new OpenServers();
-        } catch (JSONException e) {
-            Logger.LogError("Error decoding JSON for default server list.", e);
-            return new OpenServers();
-        }
-
+        String pass = new Preferences(context)
+                .getSetting("global", "pref_master_pass", (String)null);
+        if (pass == null || pass.equals(""))
+            return GetSignatureKey(context);
+        else
+            return pass;
     }
 
     public static String GetSignatureKey(Context context) {
         String ret = "";
         try {
-            Signature[] sigs = context.getPackageManager().getPackageInfo(context.getPackageName(),
+            Signature[] sigs = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(),
                     PackageManager.GET_SIGNATURES).signatures;
             for (Signature sig : sigs)
                 ret += sig.toCharsString();
