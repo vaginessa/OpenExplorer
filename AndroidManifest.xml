@@ -19,8 +19,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="216"
-    android:versionName="0.216" >
+    android:versionCode="220"
+    android:versionName="0.220" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -54,17 +54,18 @@
         android:required="false" />
 
     <application
-        android:name=".activities.OpenApplication"
+        android:name="org.brandroid.openmanager.activities.OpenApplication"
+        android:allowBackup="true"
         android:icon="@drawable/icon_flat"
         android:label="@string/app_name"
         android:largeHeap="true"
-        android:theme="@style/AppTheme.Dark"
-        android:uiOptions="splitActionBarWhenNarrow" >
+        android:theme="@style/AppTheme.Dark" >
         <activity
-            android:name=".activities.OpenExplorer"
+            android:name="org.brandroid.openmanager.activities.OpenExplorer"
             android:configChanges="screenSize|keyboard|keyboardHidden"
             android:label="@string/app_name"
             android:launchMode="singleTop"
+      		android:uiOptions="splitActionBarWhenNarrow"
             android:theme="@style/AppTheme.Dark" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -119,15 +120,31 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.ServerSetupActivity"
+            android:name="com.box.androidlib.BoxAuthentication"
             android:configChanges="screenSize|keyboard|keyboardHidden"
-            android:theme="@style/Dialog" >
+            android:launchMode="singleTop" />
+        <activity
+            android:name="org.brandroid.openmanager.activities.ServerSetupActivity"
+      		android:uiOptions="none"
+            android:configChanges="screenSize|keyboard|keyboardHidden" >
         </activity>
         <activity
-            android:name=".activities.FolderPickerActivity"
+            android:name="com.dropbox.client2.android.AuthActivity"
+            android:configChanges="orientation|keyboard"
+            android:launchMode="singleTask" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="db-vajaedmhzkkp3sw" />
+			</intent-filter>
+        </activity>
+        <activity
+            android:name="org.brandroid.openmanager.activities.FolderPickerActivity"
             android:configChanges="screenSize|keyboard|keyboardHidden"
-            android:label="@string/s_title_picker"
-            android:theme="@style/Dialog" >
+            android:label="@string/s_title_picker" >
             <intent-filter>
                 <action android:name="android.intent.action.PICK" />
 
@@ -148,23 +165,20 @@
 
         <meta-data
             android:name="android.app.default_searchable"
-            android:value=".activities.OpenExplorer" />
+            android:value="org.brandroid.openmanager.activities.OpenExplorer" />
 
         <activity
-            android:name=".activities.Authenticator"
-            android:label="Authenticator" />
-        <activity
-            android:name=".activities.SearchableActivity"
+            android:name="org.brandroid.openmanager.activities.SearchableActivity"
             android:launchMode="singleTop" >
         </activity>
 
-        <service android:name=".services.FileScannerService" >
+        <service android:name="org.brandroid.openmanager.services.FileScannerService" >
         </service>
 
-        <activity android:name=".activities.FileScannerProgress" >
+        <activity android:name="org.brandroid.openmanager.activities.FileScannerProgress" >
         </activity>
         <activity
-            android:name=".activities.UsbActivity"
+            android:name="org.brandroid.openmanager.activities.UsbActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance" >
             <intent-filter>
@@ -176,24 +190,30 @@
                 android:resource="@xml/device_filter" />
         </activity>
         <activity
-            android:name=".activities.IncomingMessageInterstitial"
+            android:name="org.brandroid.openmanager.activities.IncomingMessageInterstitial"
             android:excludeFromRecents="true"
             android:label="File Operations Complete"
             android:launchMode="singleInstance" >
         </activity>
         <activity
-            android:name=".activities.WTFSenderActivity"
+            android:name="org.brandroid.openmanager.activities.WTFSenderActivity"
             android:theme="@style/Dialog" />
         <activity
-            android:name=".activities.SettingsActivity"
-            android:label="@string/s_menu_prefs_global"
-            android:theme="@style/AppTheme.Dark" />
+            android:name="org.brandroid.openmanager.activities.SettingsActivity"
+            android:exported="false"
+            android:label="@string/s_menu_prefs_global" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.PREFERENCE" />
+            </intent-filter>
+        </activity>
         <activity
-            android:name=".activities.BluetoothActivity"
+            android:name="org.brandroid.openmanager.activities.BluetoothActivity"
             android:label="Bluetooth"
             android:theme="@style/Dialog" />
         <activity
-            android:name=".activities.SplashActivity"
+            android:name="org.brandroid.openmanager.activities.SplashActivity"
             android:theme="@style/Dialog" />
 
         <meta-data

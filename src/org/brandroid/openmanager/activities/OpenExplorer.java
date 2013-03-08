@@ -225,6 +225,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int REQ_PICK_FOLDER = 10;
     public static final int REQUEST_VIEW = 11;
     public static final int RESULT_RESTART_NEEDED = 12;
+    public static final int REQ_AUTHENTICATE_BOX = 13;
+    public static final int REQ_AUTHENTICATE_DROPBOX = 14;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
@@ -262,7 +264,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static long lastSubmit = 0l;
     private OpenPath mLastPath = null;
     private BroadcastReceiver storageReceiver = null;
-    private Handler mHandler = new Handler(); // handler for the main thread
+    private static final Handler mHandler = new Handler(); // handler for the main thread
     // private int mViewMode = VIEW_LIST;
     // private static long mLastCursorEnsure = 0;
     private static boolean mRunningCursorEnsure = false;
@@ -629,6 +631,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void showDonateDialog(int resMessage, String sTitle, final String pref) {
         if (getPreferences().getBoolean("warn", pref, false))
             return;
+        int[] opts = new int[] {R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate};
+        if(Build.VERSION.SDK_INT > 13)
+            opts = new int[] {R.string.s_menu_rate, R.string.s_no, R.string.s_menu_donate};
         DialogHandler.showMultiButtonDialog(this, getString(resMessage), sTitle,
                 new OnClickListener() {
                     @Override
@@ -652,7 +657,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         if (dialog != null)
                             dialog.dismiss();
                     }
-                }, R.string.s_menu_donate, R.string.s_no, R.string.s_menu_rate, R.string.s_cancel);
+                }, opts);
     }
 
     public void launchReviews() {
@@ -1229,32 +1234,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private void initPager() {
         mViewPager = ((OpenViewPager)findViewById(R.id.content_pager));
-        TabPageIndicator indicator = null;
         if (mViewPagerEnabled && mViewPager != null) {
             setViewVisibility(false, false, R.id.content_frag, R.id.title_path);
             setViewVisibility(mTwoRowTitle, false, R.id.title_text);
             setViewVisibility(true, false, R.id.content_pager, R.id.content_pager_indicator);
             mViewPager.setOnPageChangeListener(this);
-            // mViewPager.setOnPageIndicatorChangeListener(this);
-            View indicator_frame = findViewById(R.id.content_pager_indicator);
-            try {
-                // LayoutAnimationController lac = new
-                // LayoutAnimationController(AnimationUtils.makeInAnimation(getApplicationContext(),
-                // false));
-                if (indicator_frame != null)
-                    indicator_frame.setAnimation(AnimationUtils.makeInAnimation(
-                            getApplicationContext(), false));
-            } catch (Resources.NotFoundException e) {
-                Logger.LogError("Couldn't load pager animation.", e);
-            }
-            indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
+            TabPageIndicator indicator = (TabPageIndicator)findViewById(R.id.content_pager_indicator);
             if (indicator != null)
                 mViewPager.setIndicator(indicator);
             else
                 Logger.LogError("Couldn't find indicator!");
-            // mViewPager = new ViewPager(getApplicationContext());
-            // ((ViewGroup)findViewById(R.id.content_frag)).addView(mViewPager);
-            // findViewById(R.id.content_frag).setId(R.id.fake_content_id);
         } else {
             // mViewPagerEnabled = false;
             mViewPager = null; // (ViewPager)findViewById(R.id.content_pager);
@@ -1711,7 +1700,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setBeamPushUrisCallback(new NfcAdapter.CreateBeamUrisCallback() {
                 @Override
                 public Uri[] createBeamUris(NfcEvent event) {
-                    Set<OpenPath> selectedFiles = getClipboard();
+                    List<OpenPath> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<Uri> fileUri = new ArrayList<Uri>();
                         for (OpenPath f : selectedFiles) {
@@ -1732,7 +1721,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setNdefPushMessageCallback(new CreateNdefMessageCallback() {
                 public NdefMessage createNdefMessage(NfcEvent event) {
                     Logger.LogVerbose("Beam me up, scotty!");
-                    Set<OpenPath> selectedFiles = getClipboard();
+                    List<OpenPath> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<NdefRecord> recs = new ArrayList<NdefRecord>();
                         for (OpenPath f : selectedFiles) {
@@ -3082,6 +3071,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         } else if (requestCode == REQ_INTENT) {
 
         } else {
+            super.onActivityResult(requestCode, resultCode, data);
             if (getSelectedFragment() != null)
                 getSelectedFragment().onActivityResult(requestCode, resultCode, data);
         }
@@ -3191,7 +3181,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         getSetting(mLastPath, "view", 0);
 
-        if (path instanceof OpenNetworkPath) {
+        if (path instanceof OpenNetworkPath.PipeNeeded) {
             if (mLogFragment != null && mLogFragment.getPopup() == null)
                 initLogPopup();
             if (mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())
@@ -3870,6 +3860,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 mViewPager.notifyDataSetChanged();
             }
         });
+    }
+    
+    public static Handler getHandler() {
+        return mHandler;
     }
 
     public OpenApplication getOpenApplication() {

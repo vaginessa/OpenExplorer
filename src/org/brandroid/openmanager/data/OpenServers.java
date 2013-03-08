@@ -8,7 +8,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,17 +18,21 @@ import org.json.JSONObject;
 
 import android.content.Context;
 
-public class OpenServers {
+public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;
-    private ArrayList<OpenServer> mData = new ArrayList<OpenServer>();
+    private CopyOnWriteArrayList<OpenServer> mData;
     public static OpenServers DefaultServers = null;
+    private static String mDecryptKey;
+    private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
     public OpenServers() {
-        mData = new ArrayList<OpenServer>();
+        mData = new CopyOnWriteArrayList<OpenServer>();
+        mDecryptKey = null;
     }
 
     public OpenServers(JSONArray arr, String decryptPW) {
         this();
+        mDecryptKey = decryptPW;
         if (arr == null)
             return;
         for (int i = 0; i < arr.length(); i++)
@@ -37,6 +43,8 @@ public class OpenServers {
                 e.printStackTrace();
             }
     }
+    
+    protected static String getDecryptKey() { return mDecryptKey; }
 
     public OpenServer findByPath(String type, String host, String user, String path) {
         for (int i = 0; i < mData.size(); i++) {
@@ -73,7 +81,8 @@ public class OpenServers {
             Logger.LogWarning("Invalid Server: " + value);
             return false;
         }
-        Logger.LogDebug("Adding Server: " + value);
+        if(DEBUG)
+            Logger.LogDebug("Adding Server: " + value);
         return mData.add(value);
     }
 
@@ -82,7 +91,8 @@ public class OpenServers {
     }
 
     public boolean set(int index, OpenServer value) {
-        Logger.LogDebug("Setting Server #" + index + ": " + value);
+        if(DEBUG)
+            Logger.LogDebug("Setting Server #" + index + ": " + value);
         if (!value.isValid())
             return false;
         if (index >= size())
@@ -115,5 +125,10 @@ public class OpenServers {
         for (int i = 0; i < mData.size(); i++)
             ret.put(mData.get(i).getJSONObject(encryptPW, context));
         return ret;
+    }
+
+    @Override
+    public Iterator<OpenServer> iterator() {
+        return mData.iterator();
     }
 }

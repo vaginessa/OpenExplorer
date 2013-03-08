@@ -84,23 +84,7 @@
                 android:dependency="pref_thumbs"
                 android:key="pref_thumbs_cache_clear"
                 android:title="@string/s_pref_thumbs_cache_clear" />
-            <!--
-             <PreferenceScreen
-            android:key="pref_reset_views"
-            android:title="@string/s_pref_reset" 
-            android:summary="@string/s_pref_reset_summary"
-            />
-            -->
         </PreferenceCategory>
-        <!--
-             <ListPreference
-		    android:key="pref_basebar_split"
-		    android:title="@string/s_pref_basebar"
-		    android:entries="@array/basebar_split"
-		    android:entryValues="@array/basebar_split_values"
-		    android:enabled="@bool/prehoneycomb"
-		    />
-        -->
     </PreferenceScreen>
     <PreferenceScreen
         android:icon="@drawable/ic_paper"
@@ -189,25 +173,20 @@
         </PreferenceCategory>
     </PreferenceScreen>
     <PreferenceScreen
-        android:icon="@drawable/ic_menu_preferences"
-        android:key="advanced"
-        android:title="@string/s_pref_advanced" >
+        android:icon="@drawable/ic_action_zip_holo_dark"
+        android:key="archives"
+        android:title="@string/s_archives" >
+        <ListPreference
+            android:defaultValue="Zip"
+            android:entries="@array/compression_types"
+            android:entryValues="@array/compression_types"
+            android:key="pref_archive_type"
+            android:title="@string/s_compress_type" />
+
         <CheckBoxPreference
+            android:title="@string/s_delete_after"
             android:defaultValue="false"
-            android:key="pref_root"
-            android:title="@string/s_menu_root" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="pref_system_mount"
-            android:summaryOff="@string/s_menu_system_mount_off"
-            android:summaryOn="@string/s_menu_system_mount_on"
-            android:title="@string/s_menu_system_mount" />
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="pref_intent_internal"
-            android:summaryOff="@string/s_pref_intent_internal_off"
-            android:summaryOn="@string/s_pref_intent_internal_on"
-            android:title="@string/s_pref_intent_internal" />
+            android:key="pref_archive_postdelete" />
 
         <PreferenceCategory android:title="@string/s_title_archive_handler" >
             <ListPreference
@@ -235,7 +214,31 @@
                 android:key="pref_archives_bzip2"
                 android:title="BZip2" />
         </PreferenceCategory>
-
+    </PreferenceScreen>
+    <PreferenceScreen
+        android:icon="@drawable/ic_menu_preferences"
+        android:key="advanced"
+        android:title="@string/s_pref_advanced" >
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_root"
+            android:title="@string/s_menu_root" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_system_mount"
+            android:summaryOff="@string/s_menu_system_mount_off"
+            android:summaryOn="@string/s_menu_system_mount_on"
+            android:title="@string/s_menu_system_mount" />
+        <PreferenceScreen
+            android:key="pref_master_pass"
+            android:title="@string/s_master_pass" 
+            />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_intent_internal"
+            android:summaryOff="@string/s_pref_intent_internal_off"
+            android:summaryOn="@string/s_pref_intent_internal_on"
+            android:title="@string/s_pref_intent_internal" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="pref_text_internal"

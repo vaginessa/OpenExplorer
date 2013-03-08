@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
@@ -25,7 +26,10 @@ import org.brandroid.utils.Utils;
 
 import com.android.gallery3d.data.MediaObject;
 import com.android.gallery3d.data.Path;
+
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Parcel;
@@ -161,7 +165,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             return list().length;
         else {
             int ret = 0;
-            for (OpenPath kid : list())
+            OpenPath[] kids = list();
+            if(kids == null) return 0;
+            for (OpenPath kid : kids)
                 if (!kid.isHidden())
                     ret++;
             return ret;
@@ -348,8 +354,20 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public SoftReference<Bitmap> getThumbnail(OpenApp app, int w, int h) {
         return ThumbnailCreator.generateThumb(app, this, w, h, app.getContext());
     }
-
-    /**
+    
+    public interface ThumbnailReturnCallback {
+        public void onThumbReturned(Bitmap bmp);
+    }
+    
+    public interface ThumbnailHandler {
+        public boolean getThumbnail(int w, ThumbnailReturnCallback callback);
+    }
+    
+    public interface ThumbnailOverlayInterface {
+        public Drawable getOverlayDrawable(Context c, boolean large);
+    }
+    
+     /**
      * Get cached Thumbnail.
      * 
      * @param app OpenApp inhereted object that can provide Context to
@@ -480,7 +498,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see Parcelable
      */
     public void writeToParcel(Parcel out, int flags) {
-        out.writeString(getPath());
+        out.writeString(getAbsolutePath());
     }
 
     /**
@@ -723,7 +741,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * Interface used to update the UI thread when child objects are found. This
      * should be used for things like listing children and searching.
      */
-    public interface OpenContentUpdater {
+    public interface OpenContentUpdateListener {
         /**
          * Callback used to add OpenPath to List on UI thread.
          * 
@@ -736,13 +754,74 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          */
         public void doneUpdating();
         
-        public void showError(String message);
+        public void onUpdateException(Exception e);
+    }
+    
+    public interface ExceptionListener {
+        public void onException(Exception e);
+    }
+    
+    public interface ListListener extends ExceptionListener {
+        public void onListReceived(OpenPath[] list);
+    }
+    
+    public interface OpsListener extends ExceptionListener {
+        public void onMakeFinished(String name, boolean success);
+        public void onDeleteFinished(boolean success);
+    }
+    
+    public interface ListHandler {
+        public void list(final ListListener listener);
+    }
+    
+    public interface IsCancelledListener {
+        public boolean isCancelled();
+    }
+    
+    public interface ProgressUpdateListener extends IsCancelledListener {
+        public void onProgressUpdate(Integer... progress);
+    }
+    
+    public interface DownloadListener extends ExceptionListener, ProgressUpdateListener {
+        public OutputStream getOutputStream();
+    }
+    
+    public interface DownloadHandler {
+        public void download(final DownloadListener streamProvider);
+    }
+    
+    public interface UploadListener extends ExceptionListener, ProgressUpdateListener {
+        public InputStream getInputStream();
+    }
+    
+    public interface UploadHandler {
+        public void upload(final UploadListener streamProvider);
+    }
+    
+    public interface OpsHandler {
+        public void makeChild(String name, OpsListener listener);
+        public void delete(OpsListener listener);
+    }
+    
+    public interface OpenPathSizable {
+        public long getTotalSpace();
+        public long getUsedSpace();
+        public long getFreeSpace();
+    }
+    
+    public void postException(final Exception e, final ExceptionListener listener)
+    {
+        OpenExplorer.getHandler().post(new Runnable() {
+            public void run() {
+                listener.onException(e);
+            }
+        });
     }
 
     /**
      * Listener callback used to handle Updater callback
      */
-    public interface OpenPathUpdateListener {
+    public interface OpenPathUpdateHandler {
         /**
          * List files from a threaded path.
          * 
@@ -750,7 +829,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          *            found.
          * @throws IOException
          */
-        public void list(OpenContentUpdater callback) throws IOException;
+        public void list(OpenContentUpdateListener callback) throws IOException;
     }
 
     /**
@@ -1073,14 +1152,42 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public boolean canHandleInternally() {
         return false;
     }
-
+    
     public static void copyStreams(InputStream in, OutputStream out) throws IOException {
+        copyStreams(in, out, false, false, null);
+    }
+
+    public static void copyStreams(InputStream in, OutputStream out, boolean doCloseInput, boolean doCloseOutput, final ProgressUpdateListener progress) throws IOException {
         byte[] buffer = new byte[2048];
         int count = 0;
+        int total = 0;
         while((count = in.read(buffer)) != -1)
         {
+            if(progress.isCancelled())
+                break;
             out.write(buffer, 0, count);
+            total += count;
+            if(progress != null)
+            {
+                final int t = total;
+                OpenExplorer.getHandler().post(new Runnable() {
+                    public void run() {
+                        progress.onProgressUpdate(t);
+                    }
+                });
+            }
         }
+        if(doCloseInput)
+            try {
+                if(in != null)
+                    in.close();
+            } catch(Exception e) { }
+        if(doCloseOutput)
+            try {
+                if(out != null)
+                    out.close();
+            } catch(Exception e) { }
     }
+    
 
 }

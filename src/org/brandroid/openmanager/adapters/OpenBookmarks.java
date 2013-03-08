@@ -2,43 +2,31 @@
 package org.brandroid.openmanager.adapters;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbFile;
-
-import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.BookmarkHolder;
-import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
-import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathMerged;
-import org.brandroid.openmanager.data.OpenSCP;
-import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.fragments.DialogHandler;
-import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
@@ -48,7 +36,6 @@ import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
-import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.stericson.RootTools.Mount;
@@ -57,10 +44,9 @@ import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -248,32 +234,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
         }
 
-        OpenServers servers = SettingsActivity.LoadDefaultServers(getContext());
+        OpenServers servers = ServerSetupActivity.LoadDefaultServers(getContext());
         for (int i = 0; i < servers.size(); i++) {
             OpenServer server = servers.get(i);
+            Logger.LogDebug("Checking server #" + i + ": " + server.toString());
             SimpleUserInfo info = new SimpleUserInfo();
             info.setPassword(server.getPassword());
-            OpenNetworkPath onp = null;
-            if (server.getType().equalsIgnoreCase("ftp")) {
-                onp = new OpenFTP(null, new FTPFile(), new FTPManager(server.getHost(),
-                        server.getUser(), server.getPassword(), server.getPath()));
-            } else if (server.getType().equalsIgnoreCase("scp")) {
-                onp = new OpenSCP(server.getHost(), server.getUser(), server.getPath(), info);
-            } else if (server.getType().equalsIgnoreCase("sftp")) {
-                onp = new OpenSFTP(server.getHost(), server.getUser(), server.getPath());
-            } else if (server.getType().equalsIgnoreCase("smb")) {
-                try {
-                    onp = new OpenSMB(new SmbFile("smb://" + server.getHost() + "/"
-                            + server.getPath(), new NtlmPasswordAuthentication(server.getUser()
-                            .indexOf("/") > -1 ? server.getUser().substring(0,
-                            server.getUser().indexOf("/")) : "", server.getUser(),
-                            server.getPassword())));
-                } catch (MalformedURLException e) {
-                    Logger.LogError("Couldn't add Samba share to bookmarks.", e);
-                    continue;
-                }
-            } else
-                continue;
+            OpenNetworkPath onp = server.getOpenPath();
             if (onp == null)
                 continue;
             onp.setServersIndex(i);
@@ -281,7 +248,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             onp.setUserInfo(info);
             if (server.getPort() > 0)
                 onp.setPort(server.getPort());
-            checkAndAdd(BookmarkType.BOOKMARK_SERVER, onp);
+            addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
         }
         addBookmark(BookmarkType.BOOKMARK_SERVER,
                 new OpenCommand(mApp.getResources().getString(R.string.s_pref_server_add),
@@ -313,6 +280,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public boolean hasBookmark(OpenPath path) {
         if (path == null)
             return true;
+        if (path instanceof OpenNetworkPath)
+            return false;
         if (path.getPath() == null)
             return false;
         for (CopyOnWriteArrayList<OpenPath> arr : mBookmarksArray.values())
@@ -371,6 +340,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public String getPathTitle(OpenPath path) {
+        if(path instanceof OpenNetworkPath)
+            return path.getName();
         String ret = getPathTitleDefault(path);
         if (mPrefs.contains("title_" + path.getPath()))
             ret = getSetting("title_" + path.getPath(), ret);
@@ -414,6 +385,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         if (file.getDepth() > 4)
             return file.getName();
         if (file instanceof OpenCursor || file instanceof OpenMediaStore
+                || file instanceof OpenNetworkPath
                 || file instanceof OpenPathMerged)
             return file.getName();
         String path = file.getPath().toLowerCase();
@@ -542,8 +514,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     private void handleCommand(int command) {
         switch (command) {
             case OpenCommand.COMMAND_ADD_SERVER:
-                DialogHandler.showServerDialog(mApp, new OpenFTP((OpenFTP)null, null, null), null,
-                        true);
+                Intent intent = new Intent(mApp.getContext(), ServerSetupActivity.class);
+                getContext().startActivity(intent);
+                //ServerSetupActivity.showServerDialog(mApp, new OpenFTP((OpenFTP)null, null, null), null, true);
                 break;
         }
     }
@@ -716,15 +689,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         long size = 0l;
         long free = 0l;
         long total = 0l;
-        try {
-            if (mFile instanceof OpenSMB) {
-                total = size = ((OpenSMB)mFile).getDiskSpace();
-                free = ((OpenSMB)mFile).getDiskFreeSpace();
-            }
-        } catch (Exception e) {
-            Logger.LogError("Couldn't get SMB size.", e);
-            return;
-        }
+        if (mFile != null && mFile instanceof OpenPath.OpenPathSizable)
+        {
+            OpenPathSizable f = (OpenPathSizable)mFile;
+            size = total = f.getTotalSpace();
+            free = f.getFreeSpace();
+        } else return;
         int total_width = mParentView.getWidth() - size_bar.getLeft();
         if (total_width <= 0)
             total_width = mParentView.getWidth();
@@ -732,13 +702,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             total_width = mParentView.getRootView().findViewById(R.id.list_frag).getWidth();
         if (total_width <= 0)
             total_width = getContext().getResources().getDimensionPixelSize(R.dimen.popup_width);
-        if (mFile != null && mFile.getClass().equals(OpenFile.class)
-                && mFile.getPath().indexOf("usic") == -1
-                && mFile.getPath().indexOf("ownload") == -1) {
-            OpenFile f = (OpenFile)mFile;
-            size = total = f.getTotalSpace();
-            free = f.getFreeSpace();
-        }
 
         if (size > 0 && free < size) {
             String sFree = DialogHandler.formatSize(free, false);
@@ -870,10 +833,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     mCountText.setVisibility(View.GONE);
             }
 
-            if (group == BOOKMARK_DRIVE || path instanceof OpenSMB) {
+            if (path instanceof OpenPath.OpenPathSizable) {
                 updateSizeIndicator(path, row);
             } else {
-                ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);
+                ViewUtils.setViewsVisibleNow(row, false, R.id.size_layout, R.id.size_bar);
             }
 
             boolean hasKids = true;
@@ -972,7 +935,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         if (path instanceof OpenCommand)
             handleCommand(((OpenCommand)path).getCommand());
         else if (path instanceof OpenNetworkPath)
-            DialogHandler.showServerDialog(mApp, (OpenNetworkPath)path, h, false);
+            ServerSetupActivity.showServerDialog(mApp, (OpenNetworkPath)path);
         else
             showStandardDialog(path, h);
         return true;
