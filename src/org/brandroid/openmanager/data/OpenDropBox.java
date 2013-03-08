@@ -175,9 +175,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    String hash = mEntry != null ? mEntry.hash : null;
-                    String rev = mEntry != null ? mEntry.rev : null;
-                    Entry e = mAPI.metadata(getPath(), -1, hash, true, rev);
+                    Entry e = mAPI.metadata(getPath(), -1, null, true, null);
                     for (Entry kid : e.contents)
                     {
                         OpenDropBox child = new OpenDropBox(OpenDropBox.this, kid);
@@ -746,5 +744,9 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     public Drawable getOverlayDrawable(Context c, boolean large) {
         return c.getResources().getDrawable(
                 large ? R.drawable.lg_dropbox_overlay : R.drawable.sm_dropbox_overlay);
+    }
+
+    public void unlink() {
+        getSession().unlink();
     }
 }
