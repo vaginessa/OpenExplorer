@@ -444,6 +444,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
             return mEntry.fileName();
         if (mName != null)
             return mName;
+        if (getServer() != null)
+            return getServer().getName();
         if (getAccountInfo() != null)
             return getAccountInfo().displayName;
         return "??";
