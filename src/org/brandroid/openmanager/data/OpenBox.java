@@ -44,6 +44,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
     private final User mUser;
     private final DAO mFile;
     private final OpenBox mParent;
+    private Long mId = 0l;
 
     private List<OpenPath> mChildren = null;
 
@@ -99,6 +100,8 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
 
     public long getId()
     {
+        if (mId > 0)
+            return mId;
         if (isDirectory())
             return getFolder().getId();
         return getFile().getId();
@@ -488,5 +491,9 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
     @Override
     public long getFreeSpace() {
         return getTotalSpace() - getUsedSpace();
+    }
+
+    public void setId(long id) {
+        mId = id;
     }
 }
