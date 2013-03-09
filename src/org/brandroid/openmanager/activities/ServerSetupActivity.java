@@ -35,13 +35,9 @@ import com.box.androidlib.GetAuthTokenListener;
 import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
-import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
-import com.dropbox.client2.session.AppKeyPair;
-import com.dropbox.client2.session.Session.AccessType;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -51,6 +47,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -70,10 +67,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ServerSetupActivity
-        extends SherlockActivity
-        implements OnCheckedChangeListener, OnClickListener, OnItemSelectedListener,
-        OnMenuItemClickListener {
+public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
+        OnClickListener, OnItemSelectedListener, OnMenuItemClickListener {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -132,8 +127,22 @@ public class ServerSetupActivity
 
         final Context context = this;
         servers = LoadDefaultServers(context);
-        server = iServersIndex > -1 ? servers.get(iServersIndex)
-                : new OpenServer().setName("New Server");
+        if (iServersIndex > -1)
+            server = servers.get(iServersIndex);
+        else
+        {
+            if (mArgs.containsKey("server"))
+            {
+                JSONObject json = null;
+                try {
+                    json = new JSONObject(mArgs.getString("server"));
+                    server = new OpenServer(json);
+                } catch (Exception e) {
+                }
+            }
+            if (server == null)
+                server = new OpenServer().setName("New Server");
+        }
 
         server.setServerIndex(iServersIndex);
 
@@ -155,6 +164,8 @@ public class ServerSetupActivity
             serverType = 2;
         else if (t2.startsWith("box"))
             serverType = 3;
+        else if (t2.startsWith("db"))
+            serverType = 4;
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
@@ -402,7 +413,8 @@ public class ServerSetupActivity
                         mArgs.putString("server_" + key, val);
                         if (id == R.id.text_password)
                         {
-                            final String sig = SettingsActivity.GetMasterPassword(this, true, false);
+                            final String sig = SettingsActivity
+                                    .GetMasterPassword(this, true, false);
                             try {
                                 val = SimpleCrypto.encrypt(sig, val);
                             } catch (Exception e) {
@@ -412,8 +424,9 @@ public class ServerSetupActivity
                         server.setSetting(key, val);
                     }
                 }
-                if (server.getServerIndex() > -1)
-                    servers.set(server.getServerIndex(), server);
+                int si = server.getServerIndex();
+                if (si > -1)
+                    servers.set(si, server);
                 else
                     servers.add(server);
                 SaveToDefaultServers(servers, this);
@@ -737,11 +750,32 @@ public class ServerSetupActivity
     }
 
     public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath) {
-        return showServerDialog(app, mPath.getServersIndex());
+        return showServerDialog(app, mPath.getServerIndex());
     }
 
     public static boolean showServerDialog(final OpenApp app, final OpenNetworkPath mPath) {
-        return showServerDialog(app, mPath.getServersIndex());
+        return showServerDialog(app, mPath.getServerIndex());
+    }
+
+    public static boolean showServerDialog(final Context app, final OpenNetworkPath mPath) {
+
+        OpenServer server = mPath.getServer();
+        int iServersIndex = mPath.getServerIndex();
+        Intent intent = new Intent(app, ServerSetupActivity.class);
+        intent.putExtra("server_index", iServersIndex);
+        intent.putExtra("server", server.getJSONObject(false, app).toString());
+        app.startActivity(intent);
+
+        return true;
+    }
+
+    public static boolean showServerDialog(final Context context, final int iServersIndex) {
+
+        Intent intent = new Intent(context, ServerSetupActivity.class);
+        intent.putExtra("server_index", iServersIndex);
+        context.startActivity(intent);
+
+        return true;
     }
 
     public static boolean showServerDialog(final OpenApp app, final int iServersIndex) {
@@ -842,25 +876,28 @@ public class ServerSetupActivity
                 JSONArray jarr = new JSONArray(data);
                 final Preferences prefs = new Preferences(context);
                 String dk = SettingsActivity.GetMasterPassword(context);
-                if (//!prefs.getBoolean("warn", "master_key_fallback", false) &&
-                        !canDecryptPasswords(jarr, dk))
+                if (// !prefs.getBoolean("warn", "master_key_fallback", false)
+                    // &&
+                !canDecryptPasswords(jarr, dk))
                 {
-                    if(DEBUG)
+                    if (DEBUG)
                         Logger.LogDebug("ServerSetup can't decrypt. Trying to fall back!");
                     String dk2 = SettingsActivity.GetMasterPassword(context, false, true);
                     if (canDecryptPasswords(jarr, dk2))
                     {
                         try {
-                            if(DEBUG)
+                            if (DEBUG)
                                 Logger.LogDebug("ServerSetup decrypt success!");
                             encryptPasswords(jarr, dk);
-                            //prefs.setSetting("warn", "master_key_fallback", true);
-                            //f.write(jarr.toString());
-                        } catch(Exception e) {
+                            // prefs.setSetting("warn", "master_key_fallback",
+                            // true);
+                            // f.write(jarr.toString());
+                        } catch (Exception e) {
                             Logger.LogDebug("ServerSetup encrypt failed!");
                         }
                     }
-                } else if(DEBUG) Logger.LogDebug("Server setup upgraded!");
+                } else if (DEBUG)
+                    Logger.LogDebug("Server setup upgraded!");
                 OpenServers.setDecryptKey(dk);
                 OpenServers.DefaultServers = new OpenServers(jarr);
                 return OpenServers.DefaultServers;
@@ -923,11 +960,13 @@ public class ServerSetupActivity
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
+        OpenServers.DefaultServers = servers;
         SaveToDefaultServers(servers.getJSONArray(true, context), context);
     }
+
     public static void SaveToDefaultServers(JSONArray json, Context context) {
         final OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
-        final String data = json.toString(); 
+        final String data = json.toString();
         new Thread(new Runnable() {
             public void run() {
                 Writer w = null;

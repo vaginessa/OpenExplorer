@@ -34,7 +34,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable, OpenNetworkPath.PipeNeeded {
+public class OpenSMB extends OpenNetworkPath implements OpenPath.ListHandler, OpenPath.OpenPathSizable, OpenNetworkPath.PipeNeeded {
     private SmbFile mFile;
     private OpenSMB mParent;
     private OpenSMB[] mChildren = null;
@@ -221,19 +221,33 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
             return mChildren;
         return listFiles();
     }
+    
+    @Override
+    public void list(final ListListener listener) {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    listFiles();
+                    postListReceived(getChildren(), listener);
+                    getParent(); // just make sure we have parents
+                    mDiskSpace = mFile.getDiskSpace();
+                    mDiskFreeSpace = mFile.getDiskFreeSpace();
+                    AllocInfo disk = mFile.getDiskInfo();
+                    if (disk != null) {
+                        mDiskSpace = disk.getCapacity();
+                        mDiskFreeSpace = disk.getFree();
+                    }
+                } catch(final Exception e) {
+                    postException(e, listener);
+                }
+            }
+        }).start();
+    }
 
     @Override
     public OpenSMB[] listFiles() throws IOException {
         if (Thread.currentThread().equals(OpenExplorer.UiThread))
-            return null;
-        mDiskSpace = mFile.getDiskSpace();
-        mDiskFreeSpace = mFile.getDiskFreeSpace();
-        AllocInfo disk = mFile.getDiskInfo();
-        if (disk != null) {
-            mDiskSpace = disk.getCapacity();
-            mDiskFreeSpace = disk.getFree();
-        }
-        Logger.LogVerbose("Listing children under " + getPath());
+            return getChildren();
         SmbFile[] kids = null;
         try {
             getAttributes();
@@ -503,8 +517,8 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
 
     private String getServerPath(String path) {
         OpenServer server = null;
-        if (getServersIndex() >= 0)
-            server = OpenServers.DefaultServers.get(getServersIndex());
+        if (getServerIndex() >= 0)
+            server = OpenServers.DefaultServers.get(getServerIndex());
         else {
             Uri uri = Uri.parse(path);
             String user = uri.getUserInfo();
@@ -576,6 +590,8 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
     }
 
     public long getDiskSpace() {
+        if(mDiskSpace != null)
+            return mDiskSpace;
         if (!Thread.currentThread().equals(OpenExplorer.UiThread))
             try {
                 mDiskSpace = mFile.getDiskSpace();
@@ -585,6 +601,8 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
     }
 
     public long getDiskFreeSpace() {
+        if(mDiskFreeSpace != null)
+            return mDiskFreeSpace;
         if (!Thread.currentThread().equals(OpenExplorer.UiThread))
             try {
                 mDiskFreeSpace = mFile.getDiskFreeSpace();

@@ -124,7 +124,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
             
             @Override
             public void onIOException(IOException e) {
-                listener.onException(e);
+                postException(e, listener);
             }
             
             @Override
@@ -142,7 +142,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.OpenPathSizable
                         mChildren.add(kid);
                     }
                 }
-                listener.onListReceived(getChildren());
+                postListReceived(getChildren(), listener);
             }
         });
     }

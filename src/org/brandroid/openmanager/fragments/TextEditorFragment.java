@@ -484,9 +484,9 @@ public class TextEditorFragment extends OpenFragment implements OnClickListener,
         if (mData != null && mData.length() < Preferences.Pref_Text_Max_Size)
             outState.putString("edit_data", mData);
         if (mPath instanceof OpenNetworkPath) {
-            if (((OpenNetworkPath)mPath).getServersIndex() > -1) {
-                Logger.LogDebug("Saving server #" + ((OpenNetworkPath)mPath).getServersIndex());
-                outState.putInt("edit_server", ((OpenNetworkPath)mPath).getServersIndex());
+            if (((OpenNetworkPath)mPath).getServerIndex() > -1) {
+                Logger.LogDebug("Saving server #" + ((OpenNetworkPath)mPath).getServerIndex());
+                outState.putInt("edit_server", ((OpenNetworkPath)mPath).getServerIndex());
             } else
                 Logger.LogWarning("No server #");
         }

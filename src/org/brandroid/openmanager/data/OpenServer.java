@@ -2,8 +2,6 @@
 package org.brandroid.openmanager.data;
 
 import java.net.MalformedURLException;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Locale;
 
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -11,7 +9,6 @@ import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
@@ -25,6 +22,8 @@ import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class OpenServer {
     private final JSONObject mData;
@@ -48,20 +47,45 @@ public class OpenServer {
          * obj.opt(key).toString())); } }
          */
     }
-    
-    public int getServerIndex() {
-        return mServerIndex;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof OpenServer))
+            return false;
+        OpenServer os = (OpenServer)o;
+        if (os.getHost().equals(getHost()) &&
+                os.getPassword().equals(getPassword()) &&
+                os.getUser().equals(getUser()) &&
+                os.getPath().equals(getPath()) &&
+                os.getPort() == getPort())
+            return true;
+        return super.equals(o);
     }
-    
+
+    public int getServerIndex() {
+        if (mServerIndex > -1)
+            return mServerIndex;
+
+        for (int i = 0; i < OpenServers.DefaultServers.size(); i++)
+        {
+            if (OpenServers.DefaultServers.get(i).equals(this))
+            {
+                mServerIndex = i;
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public boolean isPasswordDecrypted()
     {
         return mPasswordDecrypted;
     }
-    
+
     public void setServerIndex(int i) {
         mServerIndex = i;
     }
-    
+
     private static String getDecryptKey()
     {
         return OpenServers.getDecryptKey();
@@ -69,7 +93,8 @@ public class OpenServer {
 
     public void decryptPW(boolean threaded)
     {
-        if(mPasswordDecrypted) return;
+        if (mPasswordDecrypted)
+            return;
         final String mPassword = get("password");
         Runnable decryptor = new Runnable() {
             public void run() {
@@ -78,11 +103,11 @@ public class OpenServer {
                     mData.put("password", pw);
                     mPasswordDecrypted = true;
                 } catch (Exception e) {
-                    //Logger.LogError("Error decrypting password.", e);
+                    // Logger.LogError("Error decrypting password.", e);
                 }
             }
         };
-        if(threaded)
+        if (threaded)
             new Thread(decryptor).start();
         else
             decryptor.run();
@@ -90,7 +115,8 @@ public class OpenServer {
 
     public void encryptPW(boolean threaded)
     {
-        if(!mPasswordDecrypted) return;
+        if (!mPasswordDecrypted)
+            return;
         final String mPassword = get("password");
         Runnable encryptor = new Runnable() {
             public void run() {
@@ -99,7 +125,7 @@ public class OpenServer {
                     mData.put("password", pw);
                     mPasswordDecrypted = false;
                 } catch (Exception e) {
-                    //Logger.LogError("Error decrypting password.", e);
+                    // Logger.LogError("Error decrypting password.", e);
                 }
             }
         };
@@ -185,7 +211,7 @@ public class OpenServer {
     public OpenServer setSetting(String key, long value) {
         try {
             mData.put(key, value);
-        } catch(JSONException e) {
+        } catch (JSONException e) {
         }
         return this;
     }
@@ -240,7 +266,8 @@ public class OpenServer {
             DropboxAPI<AndroidAuthSession> mApi = new DropboxAPI<AndroidAuthSession>(
                     OpenDropBox.buildSession(this));
             mPath = new OpenDropBox(mApi);
-        } else return null;
+        } else
+            return null;
         mPath.setServer(this);
         return mPath;
     }

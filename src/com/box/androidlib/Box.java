@@ -19,6 +19,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
+
 import android.os.Handler;
 
 
@@ -161,7 +163,7 @@ public class Box {
     /**
      * Handler through which response listener callbacks will be invoked.
      */
-    private final Handler mHandler;
+    private static final Handler mHandler = OpenExplorer.getHandler();
 
     /**
      * Constructs a new instance of Box with a given API key.
@@ -171,7 +173,6 @@ public class Box {
      */
     protected Box(final String apiKey) {
         mApiKey = apiKey;
-        mHandler = new Handler();
     }
 
     /**
