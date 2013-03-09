@@ -28,9 +28,5 @@ public class PrivatePreferences {
         privateKeys.put("box_secret", "BcTh1GpJpma1cJc58sqcfZSjDZeuiYZ2");
         privateKeys.put("dropbox_key", "vajaedmhzkkp3sw");
         privateKeys.put("dropbox_secret", "plkrfrygu17glgn");
-        privateKeys.put("master_key", "I'm not sure why I'm going " +
-                "through the trouble of making this " +
-                "encryption mechanism so secure. " +
-                "I doubt anyone will ever try to hack it.");
     }
 }
