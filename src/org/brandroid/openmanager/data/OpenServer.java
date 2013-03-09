@@ -2,8 +2,6 @@
 package org.brandroid.openmanager.data;
 
 import java.net.MalformedURLException;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Locale;
 
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -11,7 +9,6 @@ import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;

@@ -15,13 +15,12 @@ import android.os.AsyncTask;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.UserInfo;
 
-public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
+public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream, ListHandler {
     /**
 	 * 
 	 */
     private static final long serialVersionUID = -3829590216951441869L;
     protected UserInfo mUserInfo;
-    private int mServersIndex = -1;
     public static final JSch DefaultJSch = new JSch();
     public static int Timeout = 20000;
     protected String mName = null;
@@ -235,12 +234,25 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         return mUserInfo;
     }
 
-    public int getServersIndex() {
-        return mServersIndex;
+    public int getServerIndex() {
+        if(mServer != null)
+            return mServer.getServerIndex();
+        return -1;
     }
 
-    public void setServersIndex(int index) {
-        mServersIndex = index;
+    @Override
+    public void list(final ListListener listener) {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    listFiles();
+                    postListReceived(getChildren(), listener);
+                    getParent(); // just make sure we have parents
+                } catch(final Exception e) {
+                    postException(e, listener);
+                }
+            }
+        }).start();
     }
 
     public abstract OpenNetworkPath[] getChildren();

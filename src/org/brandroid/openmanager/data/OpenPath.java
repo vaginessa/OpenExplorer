@@ -809,6 +809,15 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         public long getFreeSpace();
     }
     
+    public void postListReceived(final OpenPath[] mChildren, final ListListener listener)
+    {
+        OpenExplorer.getHandler().post(new Runnable() {
+            public void run() {
+                listener.onListReceived(mChildren);
+            }
+        });
+    }
+    
     public void postException(final Exception e, final ExceptionListener listener)
     {
         OpenExplorer.getHandler().post(new Runnable() {

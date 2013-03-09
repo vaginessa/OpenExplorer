@@ -149,6 +149,7 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
@@ -3174,6 +3175,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void changePath(OpenPath path, Boolean addToStack) {
         changePath(path, addToStack, false);
     }
+    
+    private boolean needsDisconectDuringChange(OpenPath from, OpenPath to)
+    {
+        if(to == null) return true;
+        if(!to.getClass().equals(from.getClass()))
+            return true;
+        return ((OpenNetworkPath)from).getServerIndex() !=
+                ((OpenNetworkPath)to).getServerIndex();
+    }
 
     private void changePath(OpenPath path, Boolean addToStack, Boolean force) {
         try {
@@ -3194,7 +3204,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             force = true;
         
         if(mLastPath instanceof OpenNetworkPath.PipeNeeded)
-            ((PipeNeeded)mLastPath).disconnect();
+            if(needsDisconectDuringChange(mLastPath, path))
+                ((PipeNeeded)mLastPath).disconnect();
 
         onClipboardUpdate();
 

@@ -176,6 +176,11 @@ public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
             mSize = mFile.getSize();
         return 0;
     }
+    
+    private void setParent(OpenFTP parent)
+    {
+        mParent = parent;
+    }
 
     @Override
     public OpenFTP getParent() {
@@ -349,7 +354,7 @@ public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
         if (!path.endsWith(name))
             path += (path.endsWith("/") ? "" : "/") + name;
         OpenFTP ret = new OpenFTP(path, null, new FTPManager(mManager, path));
-        ret.setServersIndex(mServersIndex);
+        ret.setParent(this);
         return ret;
     }
 

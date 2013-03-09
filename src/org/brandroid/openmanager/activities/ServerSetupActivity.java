@@ -35,13 +35,9 @@ import com.box.androidlib.GetAuthTokenListener;
 import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
-import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
-import com.dropbox.client2.session.AppKeyPair;
-import com.dropbox.client2.session.Session.AccessType;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -98,7 +94,7 @@ public class ServerSetupActivity
     private Bundle mArgs;
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
-    private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
     public int getThemeId() {
         String themeName = new Preferences(this)
@@ -737,11 +733,11 @@ public class ServerSetupActivity
     }
 
     public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath) {
-        return showServerDialog(app, mPath.getServersIndex());
+        return showServerDialog(app, mPath.getServerIndex());
     }
 
     public static boolean showServerDialog(final OpenApp app, final OpenNetworkPath mPath) {
-        return showServerDialog(app, mPath.getServersIndex());
+        return showServerDialog(app, mPath.getServerIndex());
     }
 
     public static boolean showServerDialog(final OpenApp app, final int iServersIndex) {

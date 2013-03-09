@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import jcifs.smb.AllocInfo;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
@@ -104,7 +107,6 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
         mRemotePath = myUri.getPath();
         mSession = parent.mSession;
         mChannel = parent.mChannel;
-        setServersIndex(parent.getServersIndex());
     }
 
     public OpenSFTP(OpenSFTP parent, LsEntry child) {
@@ -126,7 +128,6 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
         mRemotePath = myUri.getPath();
         mSession = parent.mSession;
         mChannel = parent.mChannel;
-        setServersIndex(parent.getServersIndex());
         // Logger.LogDebug("Created OpenSFTP @ " + mRemotePath);
     }
 
@@ -220,7 +221,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
                 if (path.length() > 8) {
                     OpenSFTP par = (OpenSFTP)FileManager.getOpenCache(path);
                     if (par != null && par.getPath().length() < getPath().length()) {
-                        par.setServersIndex(getServersIndex());
+                        par.setServer(getServer());
                         par.mSession = this.mSession;
                         par.mChannel = this.mChannel;
                         return par;
@@ -244,7 +245,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
             return 0;
         return super.getChildCount(countHidden);
     }
-
+    
     @Override
     public OpenPath[] list() throws IOException {
         if (mChildren != null)
