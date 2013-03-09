@@ -66,7 +66,13 @@ import android.widget.Toast;
 
 public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickListener,
         OnChildClickListener, OnItemLongClickListener {
-    private ConcurrentMap<Integer, CopyOnWriteArrayList<OpenPath>> mBookmarksArray;
+    @SuppressWarnings("unchecked")
+    private List<OpenPath> mBMDrives = new ArrayList<OpenPath>();
+    private List<OpenPath> mBMSmarts = new ArrayList<OpenPath>();
+    private List<OpenPath> mBMFavs = new ArrayList<OpenPath>();
+    private List<OpenPath> mBMServers = new ArrayList<OpenPath>();
+    private List<OpenPath> mBMEditing = new ArrayList<OpenPath>();
+    // private static List<OpenPath>[] mBookmarksArray;
     // private ImageView mLastIndicater = null;
     private BookmarkAdapter mBookmarkAdapter;
     private String mBookmarkString;
@@ -83,7 +89,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public static final int BOOKMARK_SMART_FOLDER = 1;
     public static final int BOOKMARK_FAVORITE = 2;
     public static final int BOOKMARK_SERVER = 3;
-    public static final int BOOKMARK_OFFLINE = 4;
+    public static final int BOOKMARK_EDITING = 4;
 
     public interface NotifyAdapterCallback {
         public void notifyAdapter();
@@ -91,7 +97,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     public OpenBookmarks(OpenApp app, ExpandableListView newList) {
         mApp = app;
-        mBookmarksArray = new ConcurrentHashMap<Integer, CopyOnWriteArrayList<OpenPath>>();
         // for(BookmarkType type : BookmarkType.values())
         // mBookmarksArray.put(getTypeInteger(type), new ArrayList<OpenPath>());
         mPrefs = new Preferences(getContext()).getPreferences("bookmarks");
@@ -148,7 +153,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public int size() {
-        return mBookmarksArray.size();
+        return 4;
     }
 
     private Context getContext() {
@@ -224,37 +229,39 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot(), callback);
                 }
                 // }
+
+                if (mBookmarkString.length() > 0) {
+                    String[] l = mBookmarkString.split(";");
+
+                    for (String s : l)
+                        checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
+                }
+
+                OpenServers servers = ServerSetupActivity.LoadDefaultServers(getContext());
+                for (int i = 0; i < servers.size(); i++) {
+                    OpenServer server = servers.get(i);
+                    Logger.LogDebug("Checking server #" + i + ": " + server.toString());
+                    SimpleUserInfo info = new SimpleUserInfo();
+                    info.setPassword(server.getPassword());
+                    OpenNetworkPath onp = server.getOpenPath();
+                    if (onp == null)
+                        continue;
+                    onp.setServer(server);
+                    onp.setName(server.getName());
+                    onp.setUserInfo(info);
+                    if (server.getPort() > 0)
+                        onp.setPort(server.getPort());
+                    addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
+                }
+                addBookmark(BookmarkType.BOOKMARK_SERVER,
+                        new OpenCommand(mApp.getResources().getString(R.string.s_pref_server_add),
+                                OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add),
+                        null);
+                
+                if (mBookmarkAdapter != null)
+                    mBookmarkAdapter.notifyDataSetChanged();
             }
         }).start();
-
-        if (mBookmarkString.length() > 0) {
-            String[] l = mBookmarkString.split(";");
-
-            for (String s : l)
-                checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
-        }
-
-        OpenServers servers = ServerSetupActivity.LoadDefaultServers(getContext());
-        for (int i = 0; i < servers.size(); i++) {
-            OpenServer server = servers.get(i);
-            Logger.LogDebug("Checking server #" + i + ": " + server.toString());
-            SimpleUserInfo info = new SimpleUserInfo();
-            info.setPassword(server.getPassword());
-            OpenNetworkPath onp = server.getOpenPath();
-            if (onp == null)
-                continue;
-            onp.setServersIndex(i);
-            onp.setName(server.getName());
-            onp.setUserInfo(info);
-            if (server.getPort() > 0)
-                onp.setPort(server.getPort());
-            addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
-        }
-        addBookmark(BookmarkType.BOOKMARK_SERVER,
-                new OpenCommand(mApp.getResources().getString(R.string.s_pref_server_add),
-                        OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add), null);
-        if (mBookmarkAdapter != null)
-            mBookmarkAdapter.notifyDataSetChanged();
     }
 
     public void saveBookmarks() {
@@ -277,6 +284,17 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         mPrefs.edit().putBoolean(key, value).commit();
     }
 
+    public static int getBookmarkType(OpenPath path)
+    {
+        if (path instanceof OpenNetworkPath)
+            return BOOKMARK_SERVER;
+        if (path instanceof OpenSmartFolder || path instanceof OpenCursor)
+            return BOOKMARK_SMART_FOLDER;
+        if (path instanceof OpenFile)
+            return BOOKMARK_DRIVE;
+        return BOOKMARK_FAVORITE;
+    }
+
     public boolean hasBookmark(OpenPath path) {
         if (path == null)
             return true;
@@ -284,12 +302,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             return false;
         if (path.getPath() == null)
             return false;
-        for (CopyOnWriteArrayList<OpenPath> arr : mBookmarksArray.values())
-            for (OpenPath p : arr)
-                if (p.getPath() != null
-                        && p.getPath().replaceAll("/", "")
-                                .equals(path.getPath().replaceAll("/", "")))
-                    return true;
+        for (int i = 0; i < 5; i++)
+            if (getListOfType(i).contains(path))
+                return true;
         return false;
     }
 
@@ -302,30 +317,53 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         });
     }
 
+    public List<OpenPath> getListOfType(int type)
+    {
+        switch (type)
+        {
+            case 0:
+                return mBMDrives;
+            case 1:
+                return mBMSmarts;
+            case 2:
+                return mBMFavs;
+            case 3:
+                return mBMServers;
+            case 4:
+                return mBMEditing;
+        }
+        return null;
+    }
+
     public void addBookmark(BookmarkType type, OpenPath path, NotifyAdapterCallback callback) {
         int iType = getTypeInteger(type);
-        CopyOnWriteArrayList<OpenPath> paths = new CopyOnWriteArrayList<OpenPath>();
-        if (mBookmarksArray.containsKey(iType))
-            paths = mBookmarksArray.get(iType);
-        if (!paths.contains(paths)) {
-            paths.add(path);
-            mBookmarksArray.put(iType, paths);
-            if (callback != null)
-                callback.notifyAdapter();
+        if (!getListOfType(iType).contains(path)) {
+            getListOfType(iType).add(path);
+            notifyAdapter(callback);
         }
+    }
+
+    public void notifyAdapter(NotifyAdapterCallback callback)
+    {
+        if (callback == null)
+            return;
+        if (Thread.currentThread().equals(OpenExplorer.UiThread))
+            callback.notifyAdapter();
+        // else OpenExplorer.getHandler().post(new Runnable() {
+        // public void run() {
+        // // do we want to post if it's on a separate thread?
+        // }
+        // });
     }
 
     public void addBookmark(BookmarkType type, OpenPath path, int index,
             NotifyAdapterCallback callback) {
         int iType = getTypeInteger(type);
-        CopyOnWriteArrayList<OpenPath> paths = new CopyOnWriteArrayList<OpenPath>();
-        if (mBookmarksArray.containsKey(iType))
-            paths = mBookmarksArray.get(iType);
-        if (!paths.contains(path)) {
-            paths.add(Math.max(paths.size() - 1, index), path);
-            mBookmarksArray.put(iType, paths);
-            if (callback != null)
-                callback.notifyAdapter();
+        if (!getListOfType(iType).contains(path)) {
+            getListOfType(iType).add(
+                    Math.max(getListOfType(iType).size() - 1, index),
+                    path);
+            notifyAdapter(callback);
         }
     }
 
@@ -336,11 +374,11 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     private void clearBookmarks() {
         for (int i = 0; i < BookmarkType.values().length; i++)
-            mBookmarksArray.put(i, new CopyOnWriteArrayList<OpenPath>());
+            getListOfType(i).clear();
     }
 
     public String getPathTitle(OpenPath path) {
-        if(path instanceof OpenNetworkPath)
+        if (path instanceof OpenNetworkPath)
             return path.getName();
         String ret = getPathTitleDefault(path);
         if (mPrefs.contains("title_" + path.getPath()))
@@ -516,7 +554,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             case OpenCommand.COMMAND_ADD_SERVER:
                 Intent intent = new Intent(mApp.getContext(), ServerSetupActivity.class);
                 getContext().startActivity(intent);
-                //ServerSetupActivity.showServerDialog(mApp, new OpenFTP((OpenFTP)null, null, null), null, true);
+                // ServerSetupActivity.showServerDialog(mApp, new
+                // OpenFTP((OpenFTP)null, null, null), null, true);
                 break;
         }
     }
@@ -561,14 +600,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     @Override
     public void onBookMarkAdd(OpenPath path) {
         int type = getTypeInteger(BookmarkType.BOOKMARK_FAVORITE);
-        if (mBookmarksArray == null)
-            mBookmarksArray = new ConcurrentHashMap<Integer, CopyOnWriteArrayList<OpenPath>>();
-        if (mBookmarksArray.get(type) == null)
-            mBookmarksArray.put(type, new CopyOnWriteArrayList<OpenPath>());
-        mBookmarksArray.get(type).add(path);
-        mBookmarkString = (mBookmarkString != null && mBookmarkString != "" ? mBookmarkString + ";"
-                : "") + path.getPath();
-        mBookmarkAdapter.notifyDataSetChanged();
+        List<OpenPath> list = getListOfType(type);
+        list.add(path);
+        OpenExplorer.getHandler().post(new Runnable() {
+            public void run() {
+                mBookmarkAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     public boolean showStandardDialog(final OpenPath mPath, final BookmarkHolder mHolder) {
@@ -681,7 +719,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public void updateSizeIndicator(OpenPath mFile, View mParentView) {
-        View mSizeView = mParentView.findViewById(R.id.size_layout);
         View size_bar = mParentView.findViewById(R.id.size_bar);
         TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
         if (size_bar == null)
@@ -694,7 +731,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             OpenPathSizable f = (OpenPathSizable)mFile;
             size = total = f.getTotalSpace();
             free = f.getFreeSpace();
-        } else return;
+        } else
+            return;
         int total_width = mParentView.getWidth() - size_bar.getLeft();
         if (total_width <= 0)
             total_width = mParentView.getWidth();
@@ -767,31 +805,35 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     R.id.size_text);
     }
 
-    private class BookmarkAdapter extends BaseExpandableListAdapter {
+    private class BookmarkAdapter extends BaseExpandableListAdapter implements Runnable {
         @Override
         public OpenPath getChild(int group, int pos) {
-            return mBookmarksArray.get(group).get(pos);
+            return getListOfType(group).get(pos);
         }
 
         @Override
         public long getChildId(int group, int pos) {
             return pos;
         }
+        
+        @Override
+        public void run() {
+            notifyDataSetChanged();
+        }
 
         @Override
         public void notifyDataSetChanged() {
             if (Thread.currentThread().equals(OpenExplorer.UiThread))
                 super.notifyDataSetChanged();
+            else
+                OpenExplorer.getHandler().post(this);
         }
 
         @Override
         public View getChildView(int group, int pos, boolean isLastChild, View convertView,
                 ViewGroup parent) {
-            View row = convertView;
-            if (row == null) {
-                row = LayoutInflater.from(getContext()).inflate(R.layout.bookmark_layout, null);
-            }
-
+            View row = LayoutInflater.from(getContext()).inflate(R.layout.bookmark_layout, null);
+            
             OpenPath path = getChild(group, pos);
 
             BookmarkHolder mHolder = null;
@@ -836,7 +878,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             if (path instanceof OpenPath.OpenPathSizable) {
                 updateSizeIndicator(path, row);
             } else {
-                ViewUtils.setViewsVisibleNow(row, false, R.id.size_layout, R.id.size_bar);
+                ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);
             }
 
             boolean hasKids = true;
@@ -858,20 +900,19 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
         @Override
         public int getChildrenCount(int group) {
-            if (mBookmarksArray.containsKey(group))
-                return mBookmarksArray.get(group).size();
-            else
-                return 0;
+            List<OpenPath> list = getGroup(group);
+            if(list == null) return 0;
+            return list.size();
         }
 
         @Override
-        public CopyOnWriteArrayList<OpenPath> getGroup(int group) {
-            return mBookmarksArray.get(group);
+        public List<OpenPath> getGroup(int group) {
+            return getListOfType(group);
         }
 
         @Override
         public int getGroupCount() {
-            return mBookmarksArray.size();
+            return getContext().getResources().getStringArray(R.array.bookmark_groups).length;
         }
 
         @Override
@@ -896,6 +937,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             }
 
             String[] groups = getContext().getResources().getStringArray(R.array.bookmark_groups);
+            if(group >= groups.length)
+                return null;
             if (mText != null)
                 mText.setText(groups[group]
                         + (getChildrenCount(group) > 0 ? "("

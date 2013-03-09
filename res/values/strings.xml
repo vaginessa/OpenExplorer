@@ -419,5 +419,6 @@
     <string name="s_pass_new">Enter new password:</string>
     <string name="s_logout">Log out</string>
     <string name="s_authenticate">Authenticate</string>
+    <string name="s_bookmark_history">History</string>
 
 </resources>

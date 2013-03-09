@@ -60,13 +60,14 @@
         <item>@string/s_bookmark_smart</item>
         <item>@string/s_bookmark_favorites</item>
         <item>@string/s_bookmark_servers</item>
+        <item>@string/s_bookmark_history</item>
     </string-array>
     <string-array name="bookmark_groups_values">
         <item>Drives</item>
         <item>Smart Folders</item>
         <item>Favorites</item>
         <item>Servers</item>
-        <item>Cache</item>
+        <item>History</item>
     </string-array>
     <string-array name="basebar_split">
         <item>@string/s_split_auto</item>
