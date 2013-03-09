@@ -87,6 +87,9 @@ public class BookmarkHolder {
     }
 
     public Boolean isEjectable() {
+        return isEjectable(getOpenPath());
+    }
+    public static Boolean isEjectable(OpenPath mFile) {
         String path = mFile.getPath().toLowerCase();
         if (path.startsWith("/storage/") && (path.endsWith("sdcard1") || path.contains("usb")))
             return true;

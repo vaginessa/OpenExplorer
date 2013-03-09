@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp" 
+    android:background="?attr/drawerListSelector"
+    >
+<RelativeLayout
     android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="top|left"
-    android:background="?attr/drawerListSelector"
-    android:gravity="center|left"
-    android:paddingLeft="8dp"
-    android:paddingRight="8dp" >
+    android:gravity="center|left" >
 
     <ProgressBar
         android:id="@+id/size_bar"
@@ -48,9 +52,6 @@
         android:paddingRight="8dp"
         android:paddingTop="8dp"
         android:text="@string/s_bookmarks"
-        android:singleLine="true"
-        android:lines="1"
-        android:ellipsize="middle"
         android:textAppearance="?android:attr/textAppearance"
         android:textColor="?attr/drawerTextColorPrimary"
         android:textSize="18sp" />
@@ -98,3 +99,4 @@
     </RelativeLayout>
 
 </RelativeLayout>
+</FrameLayout>

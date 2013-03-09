@@ -5,12 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.OpenExplorer.OnBookMarkChangeListener;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.data.BookmarkHolder;
@@ -30,7 +27,6 @@ import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
-import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -42,17 +38,26 @@ import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager.BadTokenException;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
@@ -60,21 +65,26 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickListener,
-        OnChildClickListener, OnItemLongClickListener {
-    @SuppressWarnings("unchecked")
-    private List<OpenPath> mBMDrives = new ArrayList<OpenPath>();
-    private List<OpenPath> mBMSmarts = new ArrayList<OpenPath>();
-    private List<OpenPath> mBMFavs = new ArrayList<OpenPath>();
-    private List<OpenPath> mBMServers = new ArrayList<OpenPath>();
-    private List<OpenPath> mBMEditing = new ArrayList<OpenPath>();
+public class OpenBookmarks implements OnGroupClickListener,
+        OnChildClickListener, OnItemLongClickListener, OpenExplorer.OnBookMarkChangeListener,
+        OnLongClickListener {
+    private final List<OpenPath> mBMDrives = new ArrayList<OpenPath>();
+    private final List<OpenPath> mBMSmarts = new ArrayList<OpenPath>();
+    private final List<OpenPath> mBMFavs = new ArrayList<OpenPath>();
+    private final List<OpenPath> mBMServers = new ArrayList<OpenPath>();
+    private final List<OpenPath> mBMHistory = new ArrayList<OpenPath>();
     // private static List<OpenPath>[] mBookmarksArray;
     // private ImageView mLastIndicater = null;
+    private View mBaseView;
     private BookmarkAdapter mBookmarkAdapter;
+    private OnBookmarkSelectListener mChangePathListener;
+    private final Resources mResources;
+    private final Preferences mPreferences;
     private String mBookmarkString;
     private Boolean mHasExternal = false, mHasInternal = false;
     private Boolean mShowTitles = true;
@@ -84,7 +94,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     private static List<String> mBlkids = null;
     private static List<String> mProcMounts = null;
     private static List<String> mDFs = null;
-    private final OpenApp mApp;
     public static final int BOOKMARK_DRIVE = 0;
     public static final int BOOKMARK_SMART_FOLDER = 1;
     public static final int BOOKMARK_FAVORITE = 2;
@@ -94,18 +103,31 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     public interface NotifyAdapterCallback {
         public void notifyAdapter();
     }
+    
+    public interface OnBookmarkSelectListener {
+        public void onBookmarkSelect(OpenPath path);
+    }
+    
+    public void setOnBookmarkSelectListener(OnBookmarkSelectListener listener) {
+        mChangePathListener = listener;
+    }
 
-    public OpenBookmarks(OpenApp app, ExpandableListView newList) {
-        mApp = app;
+    public OpenBookmarks(OpenApp app, View view) {
+        mResources = app.getResources();
+        mPreferences = app.getPreferences();
+        OpenExplorer.setOnBookMarkAddListener(this);
+        mBaseView = view;
+        // mApp = app;
         // for(BookmarkType type : BookmarkType.values())
         // mBookmarksArray.put(getTypeInteger(type), new ArrayList<OpenPath>());
-        mPrefs = new Preferences(getContext()).getPreferences("bookmarks");
+        mPrefs = new Preferences(app.getContext()).getPreferences("bookmarks");
         if (mBookmarkString == null)
             mBookmarkString = mPrefs.getString("bookmarks", "");
-        if (newList != null)
-            setupListView(newList);
+        mBookmarkAdapter = new BookmarkAdapter();
+        if (view != null && view instanceof ExpandableListView)
+            setupListView((ExpandableListView)view);
         if (app != null)
-            scanBookmarks();
+            scanBookmarks(app);
     }
 
     public void scanRoot() {
@@ -152,18 +174,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         return ret;
     }
 
-    public int size() {
-        return 4;
-    }
-
-    private Context getContext() {
-        return mApp.getContext();
-    }
-
     @Override
-    public void scanBookmarks() {
+    public void scanBookmarks(OpenApp app) {
         scanRoot();
-        scanBookmarksInner();
+        scanBookmarksInner(app);
         /*
          * new Thread(new Runnable() {
          * @Override public void run() { scanBookmarksInner(); } }).start();
@@ -173,7 +187,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     /**
      * 
      */
-    private void scanBookmarksInner() {
+    private void scanBookmarksInner(OpenApp mApp) {
+        final Context context = mApp.getContext();
         Logger.LogDebug("Scanning bookmarks...");
         final OpenFile storage = new OpenFile(Environment.getExternalStorageDirectory());
         // mBookmarksArray.clear();
@@ -193,12 +208,6 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
         checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
         checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
-
-        final NotifyAdapterCallback callback = new NotifyAdapterCallback() {
-            public void notifyAdapter() {
-                refresh();
-            }
-        };
 
         new Thread(new Runnable() {
             @Override
@@ -226,7 +235,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     // if(!file.getFile().canWrite()) continue;
                     // if(sItem.toLowerCase().indexOf("asec") > -1)
                     // continue;
-                    checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot(), callback);
+                    checkAndAdd(BookmarkType.BOOKMARK_DRIVE, file.setRoot());
                 }
                 // }
 
@@ -237,7 +246,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                         checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
                 }
 
-                OpenServers servers = ServerSetupActivity.LoadDefaultServers(getContext());
+                OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
                 for (int i = 0; i < servers.size(); i++) {
                     OpenServer server = servers.get(i);
                     Logger.LogDebug("Checking server #" + i + ": " + server.toString());
@@ -254,14 +263,136 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                     addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
                 }
                 addBookmark(BookmarkType.BOOKMARK_SERVER,
-                        new OpenCommand(mApp.getResources().getString(R.string.s_pref_server_add),
+                        new OpenCommand(context.getResources()
+                                .getString(R.string.s_pref_server_add),
                                 OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add),
                         null);
-                
-                if (mBookmarkAdapter != null)
-                    mBookmarkAdapter.notifyDataSetChanged();
+
+                OpenExplorer.getHandler().post(new Runnable() {
+                    public void run() {
+                        notifyDataSetChanged(context);
+                    }
+                });
             }
         }).start();
+    }
+
+    public void notifyDataSetChanged(final Context context)
+    {
+        if (mBaseView instanceof ExpandableListView)
+        {
+            mBookmarkAdapter.notifyDataSetChanged();
+            return;
+        }
+        final LayoutInflater inflater = LayoutInflater.from(context);
+        LinearLayout ret = (LinearLayout)mBaseView;
+        ret.setOrientation(LinearLayout.VERTICAL);
+        for (int type = 0; type < mBookmarkAdapter.getGroupCount(); type++)
+        {
+            final int typeid = type;
+            View cat = null;
+            if (ret.getChildCount() > type * 2)
+                cat = ret.getChildAt(type * 2);
+            boolean toAdd = cat == null;
+            cat = mBookmarkAdapter.getGroupView(type, true, cat, ret);
+            if (toAdd)
+                ret.addView(cat);
+
+            View kidView = null;
+            if (ret.getChildCount() > (type * 2) + 1)
+                kidView = (LinearLayout)ret.getChildAt((type * 2) + 1);
+            else {
+                kidView = new LinearLayout(context);
+                ret.addView(kidView);
+            }
+            final LinearLayout kidContainer = (LinearLayout)kidView;
+            final int dp = getResources().getDimensionPixelSize(R.dimen.one_dp);
+            kidContainer.setOrientation(LinearLayout.VERTICAL);
+            List<OpenPath> list = getListOfType(typeid);
+            for (int i = 0; i < list.size(); i++)
+            {
+                final int kidid = i;
+                final OpenPath path = list.get(i);
+                View kid = null;
+                toAdd = false;
+                if (kidContainer.getChildCount() > i * 2)
+                    kid = kidContainer.getChildAt(i * 2);
+                else {
+                    kid = inflater.inflate(R.layout.bookmark_layout, null);
+                    kidContainer.addView(kid);
+                    kidContainer.addView(makeDivider(context));
+                }
+                if(kid == null) continue;
+                makeBookmarkView(kid, path);
+            }
+            
+            while(list.size() * 2 < kidContainer.getChildCount())
+                kidContainer.removeViewAt(kidContainer.getChildCount() - 1);
+
+            cat.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    final boolean toShow = !kidContainer.isShown();
+                    ViewUtils.setViewsVisible(kidContainer, toShow);
+                    onGroupClick(null, v, typeid, typeid);
+                }
+            });
+            cat.setBackgroundResource(android.R.drawable.list_selector_background);
+        }
+    }
+    
+    private View makeDivider(Context context)
+    {
+        View ret = new View(context);
+        ret.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 2 * getResources().getDimensionPixelSize(R.dimen.one_dp)));
+        ret.setBackgroundResource(android.R.drawable.divider_horizontal_dark);
+        return ret;
+    }
+
+    public void makeBookmarkView(final View parent, final OpenPath path)
+    {
+        ViewUtils.setText(parent, getPathTitle(path), R.id.content_text);
+        ViewUtils.setImageResource(parent, ThumbnailCreator.getDrawerResourceId(path),
+                R.id.content_icon, R.id.bookmark_icon, android.R.id.icon);
+        if (path instanceof OpenSmartFolder || path instanceof OpenPathMerged) {
+            ViewUtils.setText(parent, "(" + path.getListLength() + ")", R.id.content_count);
+        } else if (path instanceof OpenCursor) {
+            final OpenCursor oc = (OpenCursor)path;
+            int cnt = oc.getListLength();
+            if (cnt > 0)
+                ViewUtils.setText(parent, "(" + cnt + ")", R.id.content_count);
+            oc.setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
+                @Override
+                public void updateBookmarkCount(final int count) {
+                    ViewUtils.setText(parent, count > 0 ? "(" + count + ")" : null,
+                            R.id.content_count);
+                }
+            });
+        } else
+            ViewUtils.setViewsVisible(parent, false, R.id.content_count);
+
+        if (path instanceof OpenPath.OpenPathSizable) {
+            updateSizeIndicator(path, parent);
+        } else {
+            ViewUtils.setViewsVisible(parent, false, R.id.size_layout, R.id.size_bar);
+        }
+
+        parent.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                if (path != null) {
+                    if (path instanceof OpenCommand)
+                        handleCommand(v.getContext(), ((OpenCommand)path).getCommand());
+                    else if (mChangePathListener != null)
+                        mChangePathListener.onBookmarkSelect(path);
+                    else 
+                        OpenExplorer.changePath(v.getContext(), path);
+                }
+            }
+        });
+        parent.setOnLongClickListener(new OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                return OpenBookmarks.this.onLongClick(v, path);
+            }
+        });
     }
 
     public void saveBookmarks() {
@@ -309,12 +440,9 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public void addBookmark(BookmarkType type, OpenPath path) {
-        addBookmark(type, path, new NotifyAdapterCallback() {
-            public void notifyAdapter() {
-                if (mBookmarkAdapter != null)
-                    mBookmarkAdapter.notifyDataSetChanged();
-            }
-        });
+        int iType = getTypeInteger(type);
+        if (!getListOfType(iType).contains(path))
+            getListOfType(iType).add(path);
     }
 
     public List<OpenPath> getListOfType(int type)
@@ -330,17 +458,14 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             case 3:
                 return mBMServers;
             case 4:
-                return mBMEditing;
+                return mBMHistory;
         }
         return null;
     }
 
     public void addBookmark(BookmarkType type, OpenPath path, NotifyAdapterCallback callback) {
-        int iType = getTypeInteger(type);
-        if (!getListOfType(iType).contains(path)) {
-            getListOfType(iType).add(path);
-            notifyAdapter(callback);
-        }
+        addBookmark(type, path);
+        notifyAdapter(callback);
     }
 
     public void notifyAdapter(NotifyAdapterCallback callback)
@@ -367,9 +492,12 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         }
     }
 
-    public void refresh() {
-        if (mBookmarkAdapter != null)
-            mBookmarkAdapter.notifyDataSetChanged();
+    public void refresh(OpenApp app) {
+        notifyDataSetChanged(app.getContext());
+    }
+
+    public void refresh(Context context) {
+        notifyDataSetChanged(context);
     }
 
     private void clearBookmarks() {
@@ -408,7 +536,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             }
         }
         if (path.toString().toLowerCase().indexOf("/usb") > -1) {
-            ret = getContext().getString(R.string.storage_usb);
+            ret = getString(R.string.storage_usb);
             setPathTitle(path, ret);
             return ret;
         }
@@ -417,6 +545,18 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     public void setPathTitle(OpenPath path, String title) {
         setSetting("title_" + path.getPath(), title);
+    }
+
+    public Resources getResources() {
+        return mResources;
+    }
+
+    public String getString(int resId) {
+        return mResources.getString(resId);
+    }
+
+    public CharSequence getText(int resId) {
+        return mResources.getText(resId);
     }
 
     public String getPathTitleDefault(OpenPath file) {
@@ -430,21 +570,20 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         String name = file.getName().toLowerCase();
         if (OpenExplorer.isNook()) {
             if (path.equals("/mnt/media"))
-                return mApp.getResources().getString(R.string.s_internal);
+                return getString(R.string.s_internal);
             else if (name.indexOf("sdcard") > -1)
-                return mApp.getResources().getString(R.string.s_external);
+                return getString(R.string.s_external);
         }
         if (path.equals("/"))
             return "/";
         else if (name.indexOf("ext") > -1 || name.equals("sdcard1"))
-            return mApp.getResources().getString(R.string.s_external);
+            return getString(R.string.s_external);
         else if (Build.VERSION.SDK_INT > 16 && path.equals("/storage/emulated/0")) // 4.2
-            return mApp.getResources().getString(R.string.s_internal);
+            return getString(R.string.s_internal);
         else if (name.indexOf("download") > -1)
-            return mApp.getResources().getString(R.string.s_downloads);
+            return getString(R.string.s_downloads);
         else if (name.indexOf("sdcard") > -1)
-            return mApp.getResources().getString(
-                    mHasExternal ? R.string.s_internal : R.string.s_external);
+            return getString(mHasExternal ? R.string.s_internal : R.string.s_external);
         else if (name.indexOf("usb") > -1 || name.indexOf("/media") > -1
                 || name.indexOf("removeable") > -1 || name.indexOf("storage") > -1) {
             try {
@@ -457,35 +596,30 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         return file.getName();
     }
 
+    public Preferences getPreferences() {
+        return mPreferences;
+    }
+
     private boolean checkPrefs(BookmarkType type, OpenPath path) {
         if (path.getPath().equals("/"))
-            return mApp.getPreferences().getSetting(null, "pref_show_root", false);
+            return getPreferences().getSetting(null, "pref_show_root", false);
         else if (OpenFile.getInternalMemoryDrive().equals(path))
-            return mApp.getPreferences().getSetting(null, "pref_show_internal", true);
+            return getPreferences().getSetting(null, "pref_show_internal", true);
         else if (OpenFile.getExternalMemoryDrive(true).equals(path))
-            return mApp.getPreferences().getSetting(null, "pref_show_external", true);
+            return getPreferences().getSetting(null, "pref_show_external", true);
         else if (type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Videos"))
-            return mApp.getPreferences().getSetting(null, "pref_show_videos", true);
+            return getPreferences().getSetting(null, "pref_show_videos", true);
         else if (type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Photos"))
-            return mApp.getPreferences().getSetting(null, "pref_show_photos", true);
+            return getPreferences().getSetting(null, "pref_show_photos", true);
         else if (type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Music"))
-            return mApp.getPreferences().getSetting(null, "pref_show_music", true);
+            return getPreferences().getSetting(null, "pref_show_music", true);
         else if (type == BookmarkType.BOOKMARK_SMART_FOLDER && path.getPath().equals("Downloads"))
-            return mApp.getPreferences().getSetting(null, "pref_show_downloads", true);
+            return getPreferences().getSetting(null, "pref_show_downloads", true);
         else
-            return !mApp.getPreferences().getSetting("bookmarks", "hide_" + path.getPath(), false);
+            return !getPreferences().getSetting("bookmarks", "hide_" + path.getPath(), false);
     }
 
     private boolean checkAndAdd(BookmarkType type, OpenPath path) {
-        return checkAndAdd(type, path, new NotifyAdapterCallback() {
-            public void notifyAdapter() {
-                if (mBookmarkAdapter != null)
-                    mBookmarkAdapter.notifyDataSetChanged();
-            }
-        });
-    }
-
-    private boolean checkAndAdd(BookmarkType type, OpenPath path, NotifyAdapterCallback callback) {
         if (path == null)
             return false;
         boolean bypassHide = false; // mExplorer.getPreferences().getSetting("global",
@@ -507,20 +641,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         if (path instanceof OpenCursor || path instanceof OpenNetworkPath
                 || path instanceof OpenSmartFolder || path instanceof OpenPathMerged
                 || path.exists()) {
-            addBookmark(type, path, callback);
+            addBookmark(type, path);
             return true;
         }
         return false;
-    }
-
-    public void hideTitles() {
-        mShowTitles = false;
-        refresh();
-    }
-
-    public void showTitles() {
-        mShowTitles = true;
-        refresh();
     }
 
     public void setupListView(ExpandableListView lv) {
@@ -539,21 +663,17 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
         // registerForContextMenu(lv);
 
-        if (mBookmarkAdapter == null)
-            mBookmarkAdapter = new BookmarkAdapter();
         // mBookmarkAdapter = new BookmarkAdapter(mExplorer,
         // R.layout.bookmark_layout, mBookmarksArray);
         lv.setAdapter(mBookmarkAdapter);
 
-        OpenExplorer.setOnBookMarkAddListener(this);
-
     }
 
-    private void handleCommand(int command) {
+    private void handleCommand(Context ctx, int command) {
         switch (command) {
             case OpenCommand.COMMAND_ADD_SERVER:
-                Intent intent = new Intent(mApp.getContext(), ServerSetupActivity.class);
-                getContext().startActivity(intent);
+                Intent intent = new Intent(ctx, ServerSetupActivity.class);
+                ctx.startActivity(intent);
                 // ServerSetupActivity.showServerDialog(mApp, new
                 // OpenFTP((OpenFTP)null, null, null), null, true);
                 break;
@@ -570,12 +690,14 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     @Override
     public boolean onChildClick(ExpandableListView parent, View v, int groupPosition,
             int childPosition, long id) {
-        OpenPath path = mBookmarkAdapter.getChild(groupPosition, childPosition);
+        OpenPath path = getListOfType(groupPosition).get(childPosition);
         if (path != null) {
             if (path instanceof OpenCommand)
-                handleCommand(((OpenCommand)path).getCommand());
+                handleCommand(v.getContext(), ((OpenCommand)path).getCommand());
+            else if(mChangePathListener != null)
+                mChangePathListener.onBookmarkSelect(path);
             else
-                ((OpenExplorer)mApp).changePath(path);
+                OpenExplorer.changePath(v.getContext(), path);
             return true;
         }
         return false;
@@ -598,20 +720,26 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
      */
 
     @Override
-    public void onBookMarkAdd(OpenPath path) {
+    public void onBookMarkAdd(Context context, OpenPath path) {
         int type = getTypeInteger(BookmarkType.BOOKMARK_FAVORITE);
         List<OpenPath> list = getListOfType(type);
         list.add(path);
-        OpenExplorer.getHandler().post(new Runnable() {
-            public void run() {
-                mBookmarkAdapter.notifyDataSetChanged();
-            }
-        });
+        refresh(context);
     }
 
-    public boolean showStandardDialog(final OpenPath mPath, final BookmarkHolder mHolder) {
+    public boolean showStandardDialog(final Context context,
+            final OpenPath mPath, final BookmarkHolder mHolder) {
+
+        final View v = mHolder != null ? mHolder.getView() : new View(context);
+
+        return showStandardDialog(context, mPath, v);
+
+    }
+
+    public boolean showStandardDialog(final Context context, final OpenPath mPath, final View v)
+    {
         int removeId = R.string.s_remove;
-        if (mHolder != null && mHolder.isEjectable())
+        if (BookmarkHolder.isEjectable(mPath))
             removeId = R.string.s_eject;
         else if (mPath.getPath().equals("/")
                 || mPath.equals(OpenFile.getExternalMemoryDrive(false))
@@ -622,51 +750,41 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             removeId = R.string.s_hide;
         final int idRemove = removeId;
 
-        final View v = mHolder != null ? mHolder.getView() : new View(getContext());
-
         final String oldPath = mPath.getPath();
 
-        final InputDialog builder = new InputDialog(getContext())
+        final InputDialog builder = new InputDialog(context)
                 .setTitle(R.string.s_title_bookmark_prefix)
-                .setIcon(mHolder != null ? mHolder.getIcon(mApp) : null)
-                .setDefaultText(getPathTitle(mPath)).setDefaultTop(oldPath)
+                .setIcon(ThumbnailCreator.getDefaultDrawable(mPath, 64, 64, context))
+                .setDefaultText(getPathTitle(mPath))
+                .setDefaultTop(removeId == R.string.s_hide ? null : oldPath)
                 .setMessage(R.string.s_alert_bookmark_rename)
                 .setNeutralButton(removeId, new DialogInterface.OnClickListener() {
                     @Override
                     @SuppressLint("NewApi")
                     public void onClick(DialogInterface dialog, int which) {
                         if (mPath.getPath().equals("/"))
-                            mApp.getPreferences().setSetting("global", "pref_show_root", false);
+                            getPreferences().setSetting("global", "pref_show_root", false);
                         else if (mPath.equals(OpenFile.getInternalMemoryDrive()))
-                            mApp.getPreferences().setSetting("global", "pref_show_internal", false);
+                            getPreferences().setSetting("global", "pref_show_internal", false);
                         else if (mPath.equals(OpenFile.getExternalMemoryDrive(true)))
-                            mApp.getPreferences().setSetting("global", "pref_show_external", false);
+                            getPreferences().setSetting("global", "pref_show_external", false);
                         else if (mPath instanceof OpenMediaStore)
-                            mApp.getPreferences().setSetting("global",
+                            getPreferences().setSetting("global",
                                     "pref_show_" + mPath.getPath().toLowerCase(), false);
                         else if (idRemove == R.string.s_eject)
-                            tryEject(mPath.getPath(), mHolder);
+                            tryEject(v, mPath.getPath());
                         else {
                             setSetting("hide_" + mPath.getPath(), true);
                             if (mBookmarkString != null
                                     && (";" + mBookmarkString + ";").indexOf(mPath.getPath()) > -1)
                                 mBookmarkString = (";" + mBookmarkString + ";").replace(
                                         ";" + mPath.getPath() + ";", ";").replaceAll("^;|;$", "");
-                            if (Build.VERSION.SDK_INT >= 12)
-                                v.animate()
-                                        .alpha(0)
-                                        .setDuration(200)
-                                        .setListener(
-                                                new org.brandroid.openmanager.adapters.AnimatorEndListener() {
-                                                    @Override
-                                                    public void onAnimationEnd(Animator animation) {
-                                                        scanBookmarks();
-                                                    }
-                                                });
-                            else
-                                v.setVisibility(View.GONE);
+                            v.post(new Runnable() {
+                                public void run() {
+                                    v.setVisibility(View.GONE);
+                                }
+                            });
                         }
-                        scanBookmarks();
                     }
                 }).setNegativeButton(R.string.s_cancel, new DialogInterface.OnClickListener() {
                     @Override
@@ -679,14 +797,16 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
             public void onClick(DialogInterface dialog, int which) {
                 String path = builder.getInputTopText();
                 if (!path.equals(oldPath)) {
-                    SharedPreferences sp = mApp.getPreferences().getPreferences("bookmarks");
+                    SharedPreferences sp = context.getSharedPreferences("bookmarks",
+                            Context.MODE_PRIVATE);
+                    // sp.edit().putStringSet("bookmarks", mBMFavs);
                     String full = sp.getString("bookmarks", "") + ";";
                     full = full.replace(oldPath + ";", path + ";");
                     sp.edit().putString("bookmarks", full).commit();
                     setPathTitle(FileManager.getOpenCache(path), builder.getInputText());
                 } else
                     setPathTitle(mPath, builder.getInputText().toString());
-                mBookmarkAdapter.notifyDataSetChanged();
+                notifyDataSetChanged(context);
             }
         }).create();
         try {
@@ -698,20 +818,21 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     @SuppressLint("NewApi")
-    protected void tryEject(String sPath, BookmarkHolder mHolder) {
-        final View viewf = mHolder.getView();
+    protected void tryEject(final View viewf, String sPath) {
+        final Context context = viewf.getContext();
         if (RootManager.tryExecute("umount " + sPath)) {
-            Toast.makeText(mApp.getContext(), R.string.s_alert_remove_safe, Toast.LENGTH_LONG);
+            Toast.makeText(context, R.string.s_alert_remove_safe, Toast.LENGTH_LONG).show();
             if (Build.VERSION.SDK_INT >= 12)
                 viewf.animate().setDuration(500).y(viewf.getY() - viewf.getHeight()).alpha(0)
                         .setListener(new org.brandroid.openmanager.adapters.AnimatorEndListener() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                scanBookmarks();
+                                refresh(context);
                             }
                         });
-        } else
-            Toast.makeText(mApp.getContext(), R.string.s_alert_remove_error, Toast.LENGTH_LONG);
+        } else {
+            Toast.makeText(context, R.string.s_alert_remove_error, Toast.LENGTH_LONG).show();
+        }
     }
 
     public String getBookMarkNameString() {
@@ -719,6 +840,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
     }
 
     public void updateSizeIndicator(OpenPath mFile, View mParentView) {
+        if (mParentView == null)
+            return;
         View size_bar = mParentView.findViewById(R.id.size_bar);
         TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
         if (size_bar == null)
@@ -739,7 +862,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         if (total_width <= 0 && mParentView.getRootView().findViewById(R.id.list_frag) != null)
             total_width = mParentView.getRootView().findViewById(R.id.list_frag).getWidth();
         if (total_width <= 0)
-            total_width = getContext().getResources().getDimensionPixelSize(R.dimen.popup_width);
+            total_width = getResources().getDimensionPixelSize(R.dimen.popup_width);
 
         if (size > 0 && free < size) {
             String sFree = DialogHandler.formatSize(free, false);
@@ -815,7 +938,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         public long getChildId(int group, int pos) {
             return pos;
         }
-        
+
         @Override
         public void run() {
             notifyDataSetChanged();
@@ -832,8 +955,10 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         @Override
         public View getChildView(int group, int pos, boolean isLastChild, View convertView,
                 ViewGroup parent) {
-            View row = LayoutInflater.from(getContext()).inflate(R.layout.bookmark_layout, null);
-            
+            final View row = LayoutInflater.from(parent.getContext()).inflate(
+                    R.layout.bookmark_layout,
+                    null);
+
             OpenPath path = getChild(group, pos);
 
             BookmarkHolder mHolder = null;
@@ -852,23 +977,13 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 } else if (path instanceof OpenCursor) {
                     final OpenCursor oc = (OpenCursor)path;
                     int cnt = oc.getListLength();
-                    if (cnt > 0 && !mCountText.getText().toString().equals("(" + cnt + ")"))
+                    if (cnt > 0)
                         mCountText.setText("(" + cnt + ")");
                     oc.setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
                         @Override
                         public void updateBookmarkCount(final int count) {
-                            mCountText.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (count == 0)
-                                        return;
-                                    String txt = "(" + count + ")";
-                                    if (!mCountText.getText().toString().equals(txt)) {
-                                        mCountText.setText(txt);
-                                        mCountText.setVisibility(View.VISIBLE);
-                                    }
-                                }
-                            });
+                            ViewUtils.setText(row, count > 0 ? "(" + count + ")" : null,
+                                    R.id.content_count);
                         }
                     });
                 } else
@@ -901,7 +1016,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
         @Override
         public int getChildrenCount(int group) {
             List<OpenPath> list = getGroup(group);
-            if(list == null) return 0;
+            if (list == null)
+                return 0;
             return list.size();
         }
 
@@ -912,7 +1028,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
         @Override
         public int getGroupCount() {
-            return getContext().getResources().getStringArray(R.array.bookmark_groups).length;
+            return getResources().getStringArray(R.array.bookmark_groups).length;
         }
 
         @Override
@@ -925,7 +1041,7 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 ViewGroup parent) {
             View ret = convertView;
             if (ret == null) {
-                ret = ((LayoutInflater)getContext().getSystemService(
+                ret = ((LayoutInflater)parent.getContext().getSystemService(
                         Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.bookmark_group, null);
             }
 
@@ -936,8 +1052,8 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
                 mText.setTypeface(Typeface.DEFAULT);
             }
 
-            String[] groups = getContext().getResources().getStringArray(R.array.bookmark_groups);
-            if(group >= groups.length)
+            String[] groups = getResources().getStringArray(R.array.bookmark_groups);
+            if (group >= groups.length)
                 return null;
             if (mText != null)
                 mText.setText(groups[group]
@@ -959,25 +1075,26 @@ public class OpenBookmarks implements OnBookMarkChangeListener, OnGroupClickList
 
     }
 
-    public BookmarkAdapter getListAdapter() {
-        return mBookmarkAdapter;
-    }
-
     public boolean onLongClick(View v) {
-        if (v.getTag() == null) {
+        if (v.getTag() == null || !(v.getTag() instanceof BookmarkHolder)) {
             // ((ExpandableListAdapter)list.getAdapter()).get
             Logger.LogWarning("No tag set on long click in OpenBookmarks.");
             return false;
         }
         BookmarkHolder h = ((BookmarkHolder)v.getTag());
         OpenPath path = h.getOpenPath();
+        return onLongClick(v, path);
+    }
+    public boolean onLongClick(View v, OpenPath path)
+    {
+        final Context c = v.getContext();
         Logger.LogInfo("BookMark.onLongClick(" + path + ")");
         if (path instanceof OpenCommand)
-            handleCommand(((OpenCommand)path).getCommand());
+            handleCommand(c, ((OpenCommand)path).getCommand());
         else if (path instanceof OpenNetworkPath)
-            ServerSetupActivity.showServerDialog(mApp, (OpenNetworkPath)path);
+            ServerSetupActivity.showServerDialog(c, (OpenNetworkPath)path);
         else
-            showStandardDialog(path, h);
+            showStandardDialog(c, path, v);
         return true;
     }
 
