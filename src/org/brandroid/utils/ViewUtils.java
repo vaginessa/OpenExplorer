@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -318,11 +319,13 @@ public class ViewUtils {
     public static void setViewsVisible(final View parent, final boolean visible, final int... ids) {
         if (parent == null)
             return;
-        parent.post(new Runnable() {
-            public void run() {
-                setViewsVisibleNow(parent, visible, ids);
-            }
-        });
+        if(Thread.currentThread().equals(OpenExplorer.UiThread))
+            parent.post(new Runnable() {
+                public void run() {
+                    setViewsVisibleNow(parent, visible, ids);
+                }
+            });
+        else setViewsVisibleNow(parent, visible, ids);
     }
 
     public static void toggleChecked(View view) {
@@ -415,6 +418,31 @@ public class ViewUtils {
         else
             for (int id : ids)
                 setImageResource(parent.findViewById(id), drawableId);
+    }
+
+    public static void setImageDrawable(final View parent, final Drawable d, int... ids) {
+        if(parent == null) return;
+        if(ids.length > 0)
+        {
+            for(int id : ids)
+                setImageDrawable(parent.findViewById(id), d);
+            return;
+        }
+        Runnable run = new Runnable() {
+            @SuppressLint("NewApi")
+            public void run() {
+                if(parent instanceof ImageView)
+                    ((ImageView)parent).setImageDrawable(d);
+                else if (parent instanceof ImageButton)
+                    ((ImageButton)parent).setImageDrawable(d);
+                else if (Build.VERSION.SDK_INT > 15)
+                    parent.setBackground(d);
+            }
+        };
+        if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+            new Thread(run).start();
+        else
+            run.run();
     }
 
     public static View getFirstView(Activity a, int... ids) {

@@ -26,39 +26,23 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.R.anim;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.app.Dialog;
-import android.content.ActivityNotFoundException;
+import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Shader;
 import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ClipDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.ScaleDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
-import android.graphics.drawable.shapes.Shape;
-import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
 import android.text.util.Linkify;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -69,17 +53,16 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.ViewParent;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.Button;
-import android.widget.GridLayout;
-import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -96,10 +79,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -119,7 +100,6 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.HeatmapAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -136,11 +116,6 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.view.MenuItem;
-import com.box.androidlib.BoxConstants;
-import com.box.androidlib.GetAccountInfoListener;
-import com.box.androidlib.GetAuthTokenListener;
-import com.box.androidlib.GetTicketListener;
-import com.box.androidlib.User;
 
 public class DialogHandler {
 
@@ -1199,14 +1174,15 @@ public class DialogHandler {
                 + (ms > 6000 ? (s >= 10 ? "" : "0") + s : (ms < 1000 ? ms + "ms" : s + "s"));
     }
 
-    public static void showServerWarning(final Context context) {
+    public static boolean showServerWarning(final Context context) {
         if (Preferences.Warn_Networking)
-            return;
+            return false;
         Preferences.Warn_Networking = true;
         showWarning(context, R.string.warn_networking, 20, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 new Preferences(context).setSetting("warn", "networking", true);
             }
         });
+        return true;
     }
 }

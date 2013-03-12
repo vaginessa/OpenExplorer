@@ -476,6 +476,8 @@ public class ThumbnailCreator {
                 return R.drawable.icon_box;
             if (file instanceof OpenDropBox)
                 return R.drawable.icon_dropbox;
+            if(file instanceof OpenCommand)
+                return ((OpenCommand)file).getDrawableId();
 
             // Local Filesystem Icons
             if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")

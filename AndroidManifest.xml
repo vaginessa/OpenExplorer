@@ -129,6 +129,16 @@
             android:configChanges="screenSize|keyboard|keyboardHidden" >
         </activity>
         <activity
+            android:name="org.brandroid.openmanager.data.OpenFTP$Server" 
+            android:label="@string/s_server_ftp"
+            android:icon="@drawable/sm_ftp"
+            >
+            <intent-filter>
+                <action android:name="org.brandroid.openmanager.server_type" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name="com.dropbox.client2.android.AuthActivity"
             android:configChanges="orientation|keyboard"
             android:launchMode="singleTask" >

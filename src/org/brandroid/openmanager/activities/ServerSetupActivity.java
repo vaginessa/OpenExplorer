@@ -5,9 +5,11 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 import java.util.Locale;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
@@ -16,8 +18,12 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.ShellSession;
+import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.ViewUtils;
@@ -26,9 +32,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
 import com.box.androidlib.Box;
 import com.box.androidlib.DAO;
 import com.box.androidlib.GetAuthTokenListener;
@@ -38,12 +49,18 @@ import com.box.androidlib.User;
 import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -53,9 +70,11 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -63,12 +82,17 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
-        OnClickListener, OnItemSelectedListener, OnMenuItemClickListener {
+        OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -246,7 +270,24 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     protected void onResume() {
         super.onResume();
         handleIntent(getIntent());
-        DialogHandler.showServerWarning(this);
+        if(!DialogHandler.showServerWarning(this))
+        {
+            showServerTypeDialog(this, new OnItemSelectedListener() {
+
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    // TODO Auto-generated method stub
+                    
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    // TODO Auto-generated method stub
+                    
+                }
+                
+            });
+        }
     }
 
     @Override
@@ -514,6 +555,67 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         }
         return false;
     }
+    
+    public static class ServerTypeAdapter extends BaseAdapter
+    {
+        //private final int[] mServerTypes;
+        private final List<ResolveInfo> mResolves;
+        private final LayoutInflater mInflater;
+        private final PackageManager mPackageManager;
+        //private final String[] mServerLabels;
+        
+        public ServerTypeAdapter(OpenApp app)
+        {
+            mInflater = LayoutInflater.from(app.getContext());
+            mPackageManager = app.getContext().getPackageManager();
+            Intent intent = new Intent("org.brandroid.openmanager.server_type");
+            mResolves = IntentManager.getResolvesAvailable(intent, app);
+            //mServerTypes = app.getContext().getResources().getIntArray(R.array.server_types);
+            //mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types_values)
+            
+        }
+
+        @Override
+        public int getCount() {
+            return mResolves.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mResolves.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if(convertView == null)
+                convertView = mInflater.inflate(android.R.layout.simple_list_item_single_choice, null);
+            ResolveInfo info = mResolves.get(position);
+            TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
+            CharSequence text = info.loadLabel(mPackageManager);
+            Drawable icon = info.loadIcon(mPackageManager);
+            tv.setText(text);
+            tv.setCompoundDrawables(icon, null, null, null);
+            return convertView;
+        }
+        
+    }
+    
+    public static void showServerTypeDialog(final OpenApp app, final OnItemSelectedListener onSelect)
+    {
+        final Context context = app.getContext();
+        final ListView lv = new ListView(context);
+        final ServerTypeAdapter adapter = new ServerTypeAdapter(app);
+        lv.setAdapter(adapter);
+        new AlertDialog.Builder(context)
+            .setView(lv)
+            .setOnItemSelectedListener(onSelect)
+            .create();
+    }
 
     private void enableAuthenticateButton(boolean enable)
     {
@@ -749,14 +851,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         }
     }
 
-    public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath) {
-        return showServerDialog(app, mPath.getServerIndex());
-    }
-
-    public static boolean showServerDialog(final OpenApp app, final OpenNetworkPath mPath) {
-        return showServerDialog(app, mPath.getServerIndex());
-    }
-
     public static boolean showServerDialog(final Context app, final OpenNetworkPath mPath) {
 
         OpenServer server = mPath.getServer();
@@ -765,15 +859,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         intent.putExtra("server_index", iServersIndex);
         intent.putExtra("server", server.getJSONObject(false, app).toString());
         app.startActivity(intent);
-
-        return true;
-    }
-
-    public static boolean showServerDialog(final Context context, final int iServersIndex) {
-
-        Intent intent = new Intent(context, ServerSetupActivity.class);
-        intent.putExtra("server_index", iServersIndex);
-        context.startActivity(intent);
 
         return true;
     }
@@ -998,5 +1083,101 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 }
             }
         }).start();
+    }
+
+    @Override
+    public DataManager getDataManager() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ImageCacheService getImageCacheService() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DownloadCache getDownloadCache() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ThreadPool getThreadPool() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public LruCache<String, Bitmap> getMemoryCache() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DiskLruCache getDiskCache() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ActionMode getActionMode() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setActionMode(ActionMode mode) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public OpenClipboard getClipboard() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ShellSession getShellSession() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Context getContext() {
+        // TODO Auto-generated method stub
+        return getApplicationContext();
+    }
+
+    @Override
+    public Preferences getPreferences() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void refreshBookmarks() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public GoogleAnalyticsTracker getAnalyticsTracker() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void queueToTracker(Runnable run) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public int getThemedResourceId(int styleableId, int defaultResourceId) {
+        // TODO Auto-generated method stub
+        return 0;
     }
 }

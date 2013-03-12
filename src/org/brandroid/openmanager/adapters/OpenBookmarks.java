@@ -5,9 +5,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Vector;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.OpenExplorer.OnBookMarkChangeListener;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.data.BookmarkHolder;
@@ -38,7 +39,6 @@ import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
 import android.animation.Animator;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -54,10 +54,6 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager.BadTokenException;
-import android.view.animation.Animation;
-import android.view.animation.Transformation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseExpandableListAdapter;
@@ -73,11 +69,11 @@ import android.widget.Toast;
 public class OpenBookmarks implements OnGroupClickListener,
         OnChildClickListener, OnItemLongClickListener, OpenExplorer.OnBookMarkChangeListener,
         OnLongClickListener {
-    private final List<OpenPath> mBMDrives = new ArrayList<OpenPath>();
-    private final List<OpenPath> mBMSmarts = new ArrayList<OpenPath>();
-    private final List<OpenPath> mBMFavs = new ArrayList<OpenPath>();
-    private final List<OpenPath> mBMServers = new ArrayList<OpenPath>();
-    private final List<OpenPath> mBMHistory = new ArrayList<OpenPath>();
+    private final List<OpenPath> mBMDrives = new Vector<OpenPath>();
+    private final List<OpenPath> mBMSmarts = new Vector<OpenPath>();
+    private final List<OpenPath> mBMFavs = new Vector<OpenPath>();
+    private final List<OpenPath> mBMServers = new Vector<OpenPath>();
+    private final List<OpenPath> mBMHistory = new Vector<OpenPath>();
     // private static List<OpenPath>[] mBookmarksArray;
     // private ImageView mLastIndicater = null;
     private View mBaseView;
@@ -103,11 +99,11 @@ public class OpenBookmarks implements OnGroupClickListener,
     public interface NotifyAdapterCallback {
         public void notifyAdapter();
     }
-    
+
     public interface OnBookmarkSelectListener {
         public void onBookmarkSelect(OpenPath path);
     }
-    
+
     public void setOnBookmarkSelectListener(OnBookmarkSelectListener listener) {
         mChangePathListener = listener;
     }
@@ -322,28 +318,31 @@ public class OpenBookmarks implements OnGroupClickListener,
                     kidContainer.addView(kid);
                     kidContainer.addView(makeDivider(context));
                 }
-                if(kid == null) continue;
+                if (kid == null)
+                    continue;
                 makeBookmarkView(kid, path);
             }
-            
-            while(list.size() * 2 < kidContainer.getChildCount())
+
+            while (list.size() * 2 < kidContainer.getChildCount())
                 kidContainer.removeViewAt(kidContainer.getChildCount() - 1);
 
             cat.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     final boolean toShow = !kidContainer.isShown();
                     ViewUtils.setViewsVisible(kidContainer, toShow);
+                    mBookmarkAdapter.getGroupView(typeid, toShow, v, (ViewGroup)mBaseView);
                     onGroupClick(null, v, typeid, typeid);
                 }
             });
             cat.setBackgroundResource(android.R.drawable.list_selector_background);
         }
     }
-    
+
     private View makeDivider(Context context)
     {
         View ret = new View(context);
-        ret.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 2 * getResources().getDimensionPixelSize(R.dimen.one_dp)));
+        ret.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 2 * getResources()
+                .getDimensionPixelSize(R.dimen.one_dp)));
         ret.setBackgroundResource(android.R.drawable.divider_horizontal_dark);
         return ret;
     }
@@ -351,7 +350,8 @@ public class OpenBookmarks implements OnGroupClickListener,
     public void makeBookmarkView(final View parent, final OpenPath path)
     {
         ViewUtils.setText(parent, getPathTitle(path), R.id.content_text);
-        ViewUtils.setImageResource(parent, ThumbnailCreator.getDrawerResourceId(path),
+        ViewUtils.setImageResource(parent,
+                ThumbnailCreator.getDrawerResourceId(path),
                 R.id.content_icon, R.id.bookmark_icon, android.R.id.icon);
         if (path instanceof OpenSmartFolder || path instanceof OpenPathMerged) {
             ViewUtils.setText(parent, "(" + path.getListLength() + ")", R.id.content_count);
@@ -369,6 +369,9 @@ public class OpenBookmarks implements OnGroupClickListener,
             });
         } else
             ViewUtils.setViewsVisible(parent, false, R.id.content_count);
+        
+        if(path instanceof OpenCommand)
+            ViewUtils.setViewsVisible(parent, false, R.id.content_icon, R.id.bookmark_icon);
 
         if (path instanceof OpenPath.OpenPathSizable) {
             updateSizeIndicator(path, parent);
@@ -383,7 +386,7 @@ public class OpenBookmarks implements OnGroupClickListener,
                         handleCommand(v.getContext(), ((OpenCommand)path).getCommand());
                     else if (mChangePathListener != null)
                         mChangePathListener.onBookmarkSelect(path);
-                    else 
+                    else
                         OpenExplorer.changePath(v.getContext(), path);
                 }
             }
@@ -694,7 +697,7 @@ public class OpenBookmarks implements OnGroupClickListener,
         if (path != null) {
             if (path instanceof OpenCommand)
                 handleCommand(v.getContext(), ((OpenCommand)path).getCommand());
-            else if(mChangePathListener != null)
+            else if (mChangePathListener != null)
                 mChangePathListener.onBookmarkSelect(path);
             else
                 OpenExplorer.changePath(v.getContext(), path);
@@ -1056,10 +1059,12 @@ public class OpenBookmarks implements OnGroupClickListener,
             if (group >= groups.length)
                 return null;
             if (mText != null)
-                mText.setText(groups[group]
-                        + (getChildrenCount(group) > 0 ? "("
-                                + (getChildrenCount(group) - (group == BOOKMARK_SERVER ? 1 : 0))
-                                + ")" : ""));
+            {
+                int kc = getChildrenCount(group);
+                if (group == BOOKMARK_SERVER)
+                    kc--;
+                mText.setText(groups[group] + (kc > 0 ? "(" + kc + ")" : ""));
+            }
             return ret;
         }
 
@@ -1085,6 +1090,7 @@ public class OpenBookmarks implements OnGroupClickListener,
         OpenPath path = h.getOpenPath();
         return onLongClick(v, path);
     }
+
     public boolean onLongClick(View v, OpenPath path)
     {
         final Context c = v.getContext();
