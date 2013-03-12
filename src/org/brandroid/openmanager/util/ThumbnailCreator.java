@@ -400,24 +400,8 @@ public class ThumbnailCreator {
         } else if (file instanceof OpenCommand) {
             return ((OpenCommand)file).getDrawableId();
 
-        } else if (ext.equalsIgnoreCase("doc") || ext.equalsIgnoreCase("docx")) {
-            return (useLarge ? R.drawable.lg_doc : R.drawable.sm_doc);
-
-        } else if (ext.equalsIgnoreCase("xls") || ext.equalsIgnoreCase("xlsx")
-                || ext.equalsIgnoreCase("csv") || ext.equalsIgnoreCase("xlsm")) {
-            return (useLarge ? R.drawable.lg_excel : R.drawable.sm_excel);
-
-        } else if (ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) {
-            return (useLarge ? R.drawable.lg_powerpoint : R.drawable.sm_powerpoint);
-
         } else if (mime.contains("zip") || mime.contains("tar") || mime.contains("compressed")) {
             return (useLarge ? R.drawable.lg_zip : R.drawable.sm_zip);
-
-        } else if (ext.equalsIgnoreCase("pdf")) {
-            return (useLarge ? R.drawable.lg_pdf : R.drawable.sm_pdf);
-
-        } else if (ext.equalsIgnoreCase("xml") || ext.equalsIgnoreCase("html")) {
-            return (useLarge ? R.drawable.lg_xml_html : R.drawable.sm_xml_html);
 
         } else if (ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav")
                 || ext.equalsIgnoreCase("wma") || ext.equalsIgnoreCase("m4p")
