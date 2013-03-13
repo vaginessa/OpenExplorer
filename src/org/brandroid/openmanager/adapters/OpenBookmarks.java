@@ -11,6 +11,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
 import org.brandroid.openmanager.data.BookmarkHolder;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -41,7 +42,6 @@ import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Typeface;
@@ -56,7 +56,6 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager.BadTokenException;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
-import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -65,7 +64,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class OpenBookmarks implements OnGroupClickListener,
-        OpenExplorer.OnBookMarkChangeListener {
+        OnBookMarkChangeListener {
     private final List<OpenPath> mBMDrives = new Vector<OpenPath>();
     private final List<OpenPath> mBMSmarts = new Vector<OpenPath>();
     private final List<OpenPath> mBMFavs = new Vector<OpenPath>();

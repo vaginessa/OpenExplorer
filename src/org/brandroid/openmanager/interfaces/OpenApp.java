@@ -2,6 +2,7 @@
 package org.brandroid.openmanager.interfaces;
 
 import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.LruCache;
@@ -22,6 +23,12 @@ import android.graphics.Bitmap;
 import android.os.Looper;
 
 public interface OpenApp {
+
+    public interface OnBookMarkChangeListener {
+        public void onBookMarkAdd(OpenApp app, OpenPath path);
+    
+        public void scanBookmarks(OpenApp app);
+    }
 
     /**
      * Taken from Gallery3D implementation. Not fully implemented. Return

@@ -133,7 +133,6 @@ import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer.OnBookMarkChangeListener;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
 import org.brandroid.openmanager.adapters.OpenBookmarks.OnBookmarkSelectListener;
@@ -169,6 +168,7 @@ import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
@@ -293,7 +293,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private View mBookmarksView;
     private OpenBookmarks mBookmarks;
     private BetterPopupWindow mBookmarksPopup;
-    private static OpenExplorer.OnBookMarkChangeListener mBookmarkListener;
+    private static OpenApp.OnBookMarkChangeListener mBookmarkListener;
     private ViewGroup mToolbarButtons = null;
     private ViewGroup mStaticButtons = null;
     private static ActionBar mBar = null;
@@ -3556,7 +3556,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     public static void setOnBookMarkAddListener(
-            OpenExplorer.OnBookMarkChangeListener bookmarkListener) {
+            OpenApp.OnBookMarkChangeListener bookmarkListener) {
         mBookmarkListener = bookmarkListener;
     }
 
@@ -3575,12 +3575,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return ret;
         }
 
-    }
-
-    public interface OnBookMarkChangeListener {
-        public void onBookMarkAdd(OpenApp app, OpenPath path);
-
-        public void scanBookmarks(OpenApp app);
     }
 
     public OpenPath getLastPath() {
