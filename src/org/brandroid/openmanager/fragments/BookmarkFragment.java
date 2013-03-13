@@ -97,9 +97,9 @@ public class BookmarkFragment extends OpenFragment implements OnBookMarkChangeLi
     }
 
     @Override
-    public void onBookMarkAdd(Context context, OpenPath path) {
+    public void onBookMarkAdd(OpenApp app, OpenPath path) {
         if (mBookmarks != null)
-            mBookmarks.onBookMarkAdd(context, path);
+            mBookmarks.onBookMarkAdd(app, path);
     }
 
     public void scanBookmarks(OpenApp app) {

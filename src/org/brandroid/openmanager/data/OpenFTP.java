@@ -16,6 +16,7 @@ import org.brandroid.utils.Logger;
 
 import com.jcraft.jsch.UserInfo;
 
+import android.app.Activity;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -95,6 +96,11 @@ public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
     public OpenFTP(OpenFTP parent, FTPFile file, FTPManager man, UserInfo info) {
         this(parent, file, man);
         setUserInfo(info);
+    }
+    
+    public static class Server extends Activity
+    {
+        
     }
 
     public FTPFile getFile() {

@@ -28,6 +28,7 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -123,17 +124,23 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
     }
 
+    @SuppressLint("NewApi")
     public void onBuildHeaders(List<Header> target) {
+        if(Build.VERSION.SDK_INT < 12) return; // This shouldn't matter, but just in case
         loadHeadersFromResource(R.xml.preference_headers, target);
     }
 
+    @SuppressLint("NewApi")
     public void startPreferenceFragment(Fragment fragment, boolean push) {
         super.startPreferenceFragment(fragment, push);
+        if(Build.VERSION.SDK_INT < 12) return; // This shouldn't matter, but just in case
         Logger.LogDebug("startPreferenceFragment(" + fragment.toString() + ", " + push + ")");
         setOnChange(((PreferenceFragment)fragment).getPreferenceScreen(), false);
     }
 
+    @SuppressLint("NewApi")
     public boolean onPreferenceStartFragment(PreferenceFragment caller, Preference pref) {
+        if(Build.VERSION.SDK_INT < 12) return false; // This shouldn't matter, but just in case
         Logger.LogDebug("onPreferenceStartFragment(" + caller + ", " + pref + ")");
         return super.onPreferenceStartFragment(caller, pref);
     }
@@ -295,7 +302,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             // SharedPreferences sp =
             // Preferences.getPreferences(getApplicationContext(), "servers");
             // String servers = sp.getString("servers", "");
-            OpenServers servers = prefs.LoadDefaultServers(this);
+            OpenServers servers = ServerSetupActivity.LoadDefaultServers(this);
             // new OpenServers(prefs.getJSON("global", "servers", new
             // JSONObject()));
             if (path.equals("server_add")) {
@@ -369,7 +376,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         if (mPrefServers != null) {
             // for(int i = mPrefServers.getPreferenceCount() - 1; i > 0; i--)
             // mPrefServers.removePreference(mPrefServers.getPreference(i));
-            OpenServers servers = prefs.LoadDefaultServers(this); // new
+            OpenServers servers = ServerSetupActivity.LoadDefaultServers(this); // new
             // OpenServers(prefs.getSetting("global",
             // "servers", new
             // JSONObject()));
@@ -442,7 +449,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         if (requestCode == MODE_SERVER && data != null) {
             String sPath = data.getStringExtra("path");
             Preferences prefs = new Preferences(getApplicationContext());
-            OpenServers servers = prefs.LoadDefaultServers(this); // new
+            OpenServers servers = ServerSetupActivity.LoadDefaultServers(this); // new
             // OpenServers(prefs.getJSON("global",
             // "servers", new
             // JSONObject()));
@@ -619,13 +626,15 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             OpenExplorer.showSplashIntent(activity,
                     new Preferences(activity).getSetting("global", "pref_start", "External"));
             return true;
-        } else if (key.startsWith("server_modify")) {
+        } else if (key.startsWith("server_modify") && activity instanceof OpenApp) {
             int snum = -1;
+            OpenNetworkPath onp = null;
             try {
                 snum = Integer.parseInt(key.replace("server_modify_", ""));
+                onp = ServerSetupActivity.LoadDefaultServers(activity).get(snum).getOpenPath();
             } catch (NumberFormatException e) {
             }
-            ServerSetupActivity.showServerDialog(activity, snum);
+            ServerSetupActivity.showServerDialog((OpenApp)activity, onp);
             return true;
         } else if (key.equals("server_update")) {
             Intent iNew = activity.getIntent();

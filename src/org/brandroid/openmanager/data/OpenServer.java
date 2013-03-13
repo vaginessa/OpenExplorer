@@ -53,12 +53,16 @@ public class OpenServer {
         if (!(o instanceof OpenServer))
             return false;
         OpenServer os = (OpenServer)o;
-        if (os.getHost().equals(getHost()) &&
-                os.getPassword().equals(getPassword()) &&
-                os.getUser().equals(getUser()) &&
-                os.getPath().equals(getPath()) &&
-                os.getPort() == getPort())
-            return true;
+        try {
+            if (os.getHost().equals(getHost()) &&
+                    os.getPassword().equals(getPassword()) &&
+                    os.getUser().equals(getUser()) &&
+                    os.getPath().equals(getPath()) &&
+                    os.getPort() == getPort())
+                return true;
+        } catch (NullPointerException npe) {
+            return false;
+        }
         return super.equals(o);
     }
 
@@ -177,7 +181,12 @@ public class OpenServer {
     }
 
     public String get(String key) {
-        String ret = mData.optString(key);
+        Object o = mData.opt(key);
+        String ret = null;
+        if (o instanceof String)
+            ret = (String)o;
+        else if (o != null)
+            ret = o.toString();
         if (DEBUG)
             Logger.LogDebug("OpenServer.getSetting(" + key + ") = " + ret);
         return ret;
@@ -353,8 +362,12 @@ public class OpenServer {
 
     public int getPort() {
         try {
-            return Integer.parseInt(get("port"));
+            String p = get("port", "-1");
+            if (p == null || p.equals("null"))
+                return -1;
+            return Integer.parseInt(p);
         } catch (NumberFormatException e) {
+            Logger.LogError("Invalid number for port? ", e);
             return -1;
         }
     }
