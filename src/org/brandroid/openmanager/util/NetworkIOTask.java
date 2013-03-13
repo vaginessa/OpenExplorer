@@ -129,7 +129,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
                 if (path instanceof OpenNetworkPath) {
                     int si = ((OpenNetworkPath)path).getServerIndex();
                     if (si > -1)
-                        server = OpenServers.DefaultServers.get(si);
+                        server = OpenServers.getDefaultServers().get(si);
                     if (server != null && server.getPassword() != null
                             && server.getPassword() != "")
                         info.setPassword(server.getPassword());

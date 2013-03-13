@@ -13,7 +13,8 @@ import android.content.Context;
 public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;
     private CopyOnWriteArrayList<OpenServer> mData;
-    public static OpenServers DefaultServers = null;
+    private static OpenServers DefaultServers = new OpenServers();
+    private static boolean mDefaultServersSet = false;
     private static String mDecryptKey;
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
@@ -35,6 +36,10 @@ public class OpenServers implements Iterable<OpenServer> {
                 e.printStackTrace();
             }
     }
+    
+    public static boolean hasDefaultServers() { return mDefaultServersSet; }
+    public static OpenServers setDefaultServers(OpenServers servers) { mDefaultServersSet = true; DefaultServers = servers; return servers; }
+    public static OpenServers getDefaultServers() { return DefaultServers; }
     
     public static void setDecryptKey(String key) { mDecryptKey = key; }
     

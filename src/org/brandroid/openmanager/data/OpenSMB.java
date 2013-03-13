@@ -49,7 +49,7 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.ListHandler, Op
         URL url = new URL(null, urlString, Handler.SMB_HANDLER);
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
         if (auth.getPassword() == null || auth.getPassword() == "") {
-            OpenServers servers = OpenServers.DefaultServers;
+            OpenServers servers = OpenServers.getDefaultServers();
             OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
             if (s != null) {
                 auth.setUsername(s.getUser());
@@ -86,7 +86,7 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.ListHandler, Op
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
         if (auth.getUsername() == null || auth.getUsername() == "" || auth.getPassword() == null
                 || auth.getPassword() == "") {
-            OpenServers servers = OpenServers.DefaultServers;
+            OpenServers servers = OpenServers.getDefaultServers();
             OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
             if (s == null)
                 s = servers.findByHost("smb", url.getHost());
@@ -518,18 +518,18 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.ListHandler, Op
     private String getServerPath(String path) {
         OpenServer server = null;
         if (getServerIndex() >= 0)
-            server = OpenServers.DefaultServers.get(getServerIndex());
+            server = OpenServers.getDefaultServers().get(getServerIndex());
         else {
             Uri uri = Uri.parse(path);
             String user = uri.getUserInfo();
             if (user.indexOf(":") > -1)
                 user = user.substring(0, user.indexOf(":"));
-            server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user,
+            server = OpenServers.getDefaultServers().findByPath("smb", uri.getHost(), user,
                     uri.getPath());
             if (server == null)
-                server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
+                server = OpenServers.getDefaultServers().findByUser("smb", uri.getHost(), user);
             if (server == null)
-                server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+                server = OpenServers.getDefaultServers().findByHost("smb", uri.getHost());
 
             Logger.LogVerbose("User: " + user + " :: " + server.getUser() + ":"
                     + server.getPassword().substring(0, 1)

@@ -70,12 +70,16 @@ public class OpenServer {
         if (mServerIndex > -1)
             return mServerIndex;
 
-        for (int i = 0; i < OpenServers.DefaultServers.size(); i++)
+        if(OpenServers.hasDefaultServers())
         {
-            if (OpenServers.DefaultServers.get(i).equals(this))
+            OpenServers servers = OpenServers.getDefaultServers();
+            for (int i = 0; i < servers.size(); i++)
             {
-                mServerIndex = i;
-                return i;
+                if (servers.get(i).equals(this))
+                {
+                    mServerIndex = i;
+                    return i;
+                }
             }
         }
         return -1;
@@ -182,7 +186,7 @@ public class OpenServer {
 
     public String get(String key) {
         Object o = mData.opt(key);
-        String ret = null;
+        String ret = "";
         if (o instanceof String)
             ret = (String)o;
         else if (o != null)
@@ -226,11 +230,11 @@ public class OpenServer {
     }
 
     public String getHost() {
-        return get("host");
+        return get("host", "");
     }
 
     public String getPath() {
-        String mPath = get("dir");
+        String mPath = get("dir", "");
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
     }
 

@@ -827,7 +827,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     if (path instanceof OpenNetworkPath)
                     {
                         ((OpenNetworkPath)path).getServer().setPassword(password);
-                        ServerSetupActivity.SaveToDefaultServers(OpenServers.DefaultServers, c);
+                        ServerSetupActivity.SaveToDefaultServers(OpenServers.getDefaultServers(), c);
                     }
                 } catch (Exception e) {
                 }

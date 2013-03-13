@@ -324,7 +324,9 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                         R.id.server_authenticate);
                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
                 AndroidAuthSession sess = OpenDropBox.buildSession(server);
-                sess.finishAuthentication();
+                try {
+                    sess.finishAuthentication();
+                } catch(Exception e) { }
                 getDropboxAccountInfo();
             }
             sp.edit().clear().commit();
@@ -991,8 +993,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     }
 
     public static OpenServers LoadDefaultServers(Context context) {
-        if (OpenServers.DefaultServers != null)
-            return OpenServers.DefaultServers;
+        if (OpenServers.hasDefaultServers())
+            return OpenServers.getDefaultServers();
         OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
         try {
             if (!f.exists() && !f.create()) {
@@ -1032,8 +1034,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 } else if (DEBUG)
                     Logger.LogDebug("Server setup upgraded!");
                 OpenServers.setDecryptKey(dk);
-                OpenServers.DefaultServers = new OpenServers(jarr);
-                return OpenServers.DefaultServers;
+                return OpenServers.setDefaultServers(new OpenServers(jarr));
             }
         } catch (IOException e) {
             Logger.LogError("Error loading default server list.", e);
@@ -1093,7 +1094,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
-        OpenServers.DefaultServers = servers;
+        OpenServers.setDefaultServers(servers);
         SaveToDefaultServers(servers.getJSONArray(true, context), context);
     }
 
