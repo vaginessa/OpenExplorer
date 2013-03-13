@@ -563,10 +563,10 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
                             }
                             prefs.setSetting("global", "pref_master_pass", encPw);
                             OpenServers.setDecryptKey(GetMasterPassword(context));
-                            JSONArray jarr = OpenServers.DefaultServers.getJSONArray();
+                            JSONArray jarr = OpenServers.getDefaultServers().getJSONArray();
                             ServerSetupActivity.encryptPasswords(jarr, newPw);
                             ServerSetupActivity.SaveToDefaultServers(jarr, context);
-                            OpenServers.DefaultServers = new OpenServers(jarr);
+                            OpenServers.setDefaultServers(new OpenServers(jarr));
                         }
                     }).start();
                 }
