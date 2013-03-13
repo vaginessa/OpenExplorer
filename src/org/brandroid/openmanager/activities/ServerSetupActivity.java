@@ -11,7 +11,6 @@ import java.util.Locale;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenDropBox;
-import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenServer;
@@ -55,16 +54,17 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -78,14 +78,12 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -114,6 +112,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     private OpenServers servers;
     private OpenServer server;
     private View mBaseView;
+    private Spinner mTypeSpinner;
     private Bundle mArgs;
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
@@ -147,7 +146,10 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             mArgs = new Bundle();
 
         int iServersIndex = mArgs.getInt("server_index", -1);
-        int serverType = mArgs.getInt("server_type", -1);
+        int serverType = mArgs.getInt("server_type_id", -1);
+        
+        if(DEBUG)
+            Logger.LogDebug("ServerSetupActivity.server_type = " + serverType);
 
         final Context context = this;
         servers = LoadDefaultServers(context);
@@ -170,26 +172,15 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
         server.setServerIndex(iServersIndex);
 
-        String t2 = server.getType().toLowerCase(Locale.US);
-        if (serverType > -1) {
-            if (serverType == 0)
-                server.setType("ftp");
-            else if (serverType == 1)
-                server.setType("sftp");
-            else if (serverType == 2)
-                server.setType("smb");
-            else if (serverType == 3)
-                server.setType("box");
-        } else if (t2.startsWith("ftp"))
-            serverType = 0;
-        else if (t2.startsWith("sftp"))
-            serverType = 1;
-        else if (t2.startsWith("smb"))
-            serverType = 2;
-        else if (t2.startsWith("box"))
-            serverType = 3;
-        else if (t2.startsWith("db"))
-            serverType = 4;
+        String t2 = "ftp";
+        if(server.getType() != null)
+            t2 = server.getType().toLowerCase(Locale.US);
+        if (serverType > -1 && t2.equals("ftp")) {
+            t2 = getServerTypeString(serverType);
+            if(t2 != null)
+                server.setType(t2);
+        } else if(serverType == -1)
+            serverType = getServerTypeFromString(t2);
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
@@ -204,7 +195,14 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             int id = mMapIDs[i];
             String map = mMapKeys[i];
             if (mArgs.containsKey("server_" + map))
-                server.setSetting(map, mArgs.getString("server_" + map));
+            {
+                Object o = mArgs.get("server_" + map);
+                String val = null;
+                if(o instanceof String)
+                    val = (String)o;
+                else continue;
+                server.setSetting(map, val);
+            }
             ViewUtils.setText(mBaseView, server.get(map, ""), id);
         }
         ViewUtils.setOnChangeListener(mBaseView, (OnCheckedChangeListener)this,
@@ -247,47 +245,22 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         CheckBox mCheckPort = (CheckBox)mBaseView.findViewById(R.id.check_port);
         TextView mTextPort = (TextView)mBaseView.findViewById(R.id.text_port);
         if (server.getPort() > 0) {
-            if (mCheckPort != null)
-                mCheckPort.setChecked(false);
-            if (mTextPort != null)
-                mTextPort.setText("" + server.getPort());
+            ViewUtils.setText(mTextPort, "" + server.getPort());
+            ViewUtils.setViewsChecked(mCheckPort, false);
         } else if (mCheckPort != null)
             mCheckPort.setChecked(true);
 
-        Spinner mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
+        mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
         mServerTypes = getResources().getStringArray(R.array.server_types_values);
-        int pos = 0;
-        for (int i = 0; i < mServerTypes.length; i++)
-            if (server.getType().toLowerCase(Locale.US).startsWith(mServerTypes[i])) {
-                pos = i;
-                break;
-            }
         mTypeSpinner.setOnItemSelectedListener(this);
-        mTypeSpinner.setSelection(pos);
+        mTypeSpinner.setSelection(serverType);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         handleIntent(getIntent());
-        if(!DialogHandler.showServerWarning(this))
-        {
-            showServerTypeDialog(this, new OnItemSelectedListener() {
-
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    // TODO Auto-generated method stub
-                    
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                    // TODO Auto-generated method stub
-                    
-                }
-                
-            });
-        }
+        DialogHandler.showServerWarning(this);
     }
 
     @Override
@@ -380,9 +353,15 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         }
     }
 
-    private int getServerTypeDrawable(int serverType) {
+    public static int getServerTypeDrawable(int serverType) {
         switch (serverType)
         {
+            case 0:
+                return R.drawable.sm_ftp;
+            case 1:
+                return R.drawable.sm_folder_secure;
+            case 2:
+                return R.drawable.sm_folder_pipe;
             case 3:
                 return R.drawable.icon_box;
             case 4:
@@ -394,13 +373,14 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     public void setIcon(int res)
     {
+        getSupportActionBar().setIcon(res);
         // getSupportActionBar().setIcon(res);
     }
 
     @Override
     public void setTitle(int titleId) {
         super.setTitle(titleId);
-        // getSupportActionBar().setTitle(titleId);
+        getSupportActionBar().setTitle(titleId);
     }
 
     // @Override
@@ -555,34 +535,39 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         }
         return false;
     }
-    
+
     public static class ServerTypeAdapter extends BaseAdapter
     {
-        //private final int[] mServerTypes;
+        private final String[] mServerTypes;
         private final List<ResolveInfo> mResolves;
         private final LayoutInflater mInflater;
         private final PackageManager mPackageManager;
-        //private final String[] mServerLabels;
-        
+        private final Resources mResources;
+        private final String[] mServerLabels;
+
         public ServerTypeAdapter(OpenApp app)
         {
             mInflater = LayoutInflater.from(app.getContext());
             mPackageManager = app.getContext().getPackageManager();
             Intent intent = new Intent("org.brandroid.openmanager.server_type");
             mResolves = IntentManager.getResolvesAvailable(intent, app);
-            //mServerTypes = app.getContext().getResources().getIntArray(R.array.server_types);
-            //mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types_values)
-            
+            mServerTypes = app.getContext().getResources()
+                    .getStringArray(R.array.server_types_values);
+            mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
+            mResources = app.getResources();
         }
 
         @Override
         public int getCount() {
-            return mResolves.size();
+            return mServerTypes.length +
+                    mResolves.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mResolves.get(position);
+            if (position < mServerTypes.length)
+                return mServerTypes[position];
+            return mResolves.get(position - mServerTypes.length);
         }
 
         @Override
@@ -592,29 +577,85 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            if(convertView == null)
-                convertView = mInflater.inflate(android.R.layout.simple_list_item_single_choice, null);
-            ResolveInfo info = mResolves.get(position);
+            if (convertView == null)
+                convertView = mInflater.inflate(R.layout.server_type_item, null);
             TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
-            CharSequence text = info.loadLabel(mPackageManager);
-            Drawable icon = info.loadIcon(mPackageManager);
+            CharSequence text = null;
+            Drawable icon = null;
+            if (position < mServerTypes.length)
+            {
+                text = mServerLabels[position];
+                String type = mServerTypes[position];
+                int iType = getServerTypeFromString(type);
+                if(iType > -1)
+                    icon = parent.getResources().getDrawable(
+                            ServerSetupActivity.getServerTypeDrawable(iType));
+                else
+                    ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
+
+            } else {
+                ResolveInfo info = mResolves.get(position - mServerTypes.length);
+                text = info.loadLabel(mPackageManager);
+                icon = info.loadIcon(mPackageManager);
+            }
+            ViewUtils.setImageDrawable(convertView, icon, android.R.id.icon);
             tv.setText(text);
-            tv.setCompoundDrawables(icon, null, null, null);
             return convertView;
         }
-        
+
     }
     
+    public static int getServerTypeFromString(String type)
+    {
+        if (type.equalsIgnoreCase("ftp"))
+            return 0;
+        else if (type.equalsIgnoreCase("sftp"))
+            return 1;
+        else if (type.equalsIgnoreCase("smb"))
+            return 2;
+        else if (type.equalsIgnoreCase("box"))
+            return 3;
+        else if (type.startsWith("db"))
+            return 4;
+        else return -1;
+    }
+    
+    public static String getServerTypeString(int type)
+    {
+        switch(type)
+        {
+            case 0: return "ftp";
+            case 1: return "sftp";
+            case 2: return "smb";
+            case 3: return "box";
+            case 4: return "db";
+            default: return null;
+        }
+    }
+
     public static void showServerTypeDialog(final OpenApp app, final OnItemSelectedListener onSelect)
     {
+        // OpenExplorer.getHandler().post(new Runnable() {public void run() {
         final Context context = app.getContext();
         final ListView lv = new ListView(context);
         final ServerTypeAdapter adapter = new ServerTypeAdapter(app);
         lv.setAdapter(adapter);
-        new AlertDialog.Builder(context)
-            .setView(lv)
-            .setOnItemSelectedListener(onSelect)
-            .create();
+        final AlertDialog dlg = new AlertDialog.Builder(context)
+                .setView(lv)
+                .setTitle(R.string.s_pref_server_type)
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).create();
+        lv.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                dlg.dismiss();
+                onSelect.onItemSelected(parent, view, position, id);
+            }
+        });
+        dlg.show();
+        // }});
     }
 
     private void enableAuthenticateButton(boolean enable)
@@ -780,7 +821,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             return;
         String type = mServerTypes[position];
         server.setType(type);
-        setIcon(getServerTypeDrawable(position));
+        setIcon(getServerTypeDrawable(getServerTypeFromString(type)));
         final View v = mBaseView;
         if (position < 3)
         {
@@ -810,7 +851,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port,
                     R.id.label_port);
             ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
-            if (!server.getPassword().equals(""))
+            if (server.getPassword() != null && !server.getPassword().equals(""))
             {
                 ViewUtils.setViewsVisible(v, true, R.id.server_logout);
                 ViewUtils.setViewsVisible(v, false, R.id.server_authenticate);
@@ -851,34 +892,41 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         }
     }
 
-    public static boolean showServerDialog(final Context app, final OpenNetworkPath mPath) {
+    public static boolean showServerDialog(final OpenApp app, final OpenNetworkPath mPath) {
 
-        OpenServer server = mPath.getServer();
-        int iServersIndex = mPath.getServerIndex();
-        Intent intent = new Intent(app, ServerSetupActivity.class);
-        intent.putExtra("server_index", iServersIndex);
-        intent.putExtra("server", server.getJSONObject(false, app).toString());
-        app.startActivity(intent);
+        OpenServer server = null;
+        int iServersIndex = -1;
+        if (mPath != null)
+        {
+            server = mPath.getServer();
+            iServersIndex = mPath.getServerIndex();
+        }
+        if (iServersIndex == -1)
+        {
+            showServerTypeDialog(app, new OnItemSelectedListener() {
 
-        return true;
-    }
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    Intent intent = new Intent(app.getContext(), ServerSetupActivity.class);
+                    intent.putExtra("server_type_id", position);
+                    app.startActivityForResult(intent, OpenExplorer.REQ_INTENT);
+                }
 
-    public static boolean showServerDialog(final OpenApp app, final int iServersIndex) {
-        final Context context = app.getContext();
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    // TODO Auto-generated method stub
 
-        Intent intent = new Intent(context, ServerSetupActivity.class);
-        intent.putExtra("server_index", iServersIndex);
-        app.startActivityForResult(intent, SettingsActivity.MODE_SERVER);
+                }
 
-        return true;
-    }
-
-    public static boolean showServerDialog(final Activity activity, final int iServersIndex) {
-        final Context context = activity;
-
-        Intent intent = new Intent(context, ServerSetupActivity.class);
-        intent.putExtra("server_index", iServersIndex);
-        activity.startActivityForResult(intent, SettingsActivity.MODE_SERVER);
+            });
+        } else {
+            Intent intent = new Intent(app.getContext(), ServerSetupActivity.class);
+            intent.putExtra("server_index", iServersIndex);
+            JSONObject jo = server.getJSONObject(false, app.getContext());
+            intent.putExtra("server", jo.toString());
+            intent.putExtra("server_type_id", getServerTypeFromString(server.getType()));
+            app.startActivityForResult(intent, OpenExplorer.REQ_INTENT);
+        }
 
         return true;
     }
@@ -1130,7 +1178,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     @Override
     public void setActionMode(ActionMode mode) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -1147,8 +1195,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     @Override
     public Context getContext() {
-        // TODO Auto-generated method stub
-        return getApplicationContext();
+        return this;
     }
 
     @Override
@@ -1160,7 +1207,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     @Override
     public void refreshBookmarks() {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -1172,7 +1219,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     @Override
     public void queueToTracker(Runnable run) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override

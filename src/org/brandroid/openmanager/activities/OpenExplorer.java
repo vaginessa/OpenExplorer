@@ -2218,10 +2218,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         refreshCursors();
         if (mBookmarks != null) {
             mBookmarks.scanBookmarks(this);
-            mBookmarks.refresh((OpenApp)this);
         }
-        if (mBookmarksView != null)
-            mBookmarksView.invalidate();
     }
 
     public ContentFragment getDirContentFragment(Boolean activate) {
@@ -3581,7 +3578,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     public interface OnBookMarkChangeListener {
-        public void onBookMarkAdd(Context context, OpenPath path);
+        public void onBookMarkAdd(OpenApp app, OpenPath path);
 
         public void scanBookmarks(OpenApp app);
     }

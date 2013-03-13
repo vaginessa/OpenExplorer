@@ -109,9 +109,16 @@ public class ViewUtils {
         for (int id : ids) {
             final View v = view.findViewById(id);
             if (v != null)
-                // v.post(new Runnable(){public void run(){
+            {
+                Runnable enabler = new Runnable(){public void run(){
                 v.setEnabled(enabled);
-            // }});
+                v.setVisibility(View.VISIBLE);
+                }};
+                if(Thread.currentThread().equals(OpenExplorer.UiThread))
+                    enabler.run();
+                else
+                    OpenExplorer.getHandler().post(enabler);
+            }
         }
     }
 
@@ -440,7 +447,7 @@ public class ViewUtils {
             }
         };
         if(!Thread.currentThread().equals(OpenExplorer.UiThread))
-            new Thread(run).start();
+            OpenExplorer.getHandler().post(run);
         else
             run.run();
     }
