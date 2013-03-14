@@ -125,8 +125,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
                                 callback.onGetAccountInfo(mAccount);
                             }
                         });
-                    } catch (DropboxException e) {
-                        callback.onException(e);
+                    } catch (final DropboxException e) {
+                        postException(e, callback);
                     }
                 }
             }).start();
@@ -181,13 +181,9 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
                         OpenDropBox child = new OpenDropBox(OpenDropBox.this, kid);
                         mChildren.add(child);
                     }
-                    OpenExplorer.getHandler().post(new Runnable() {
-                        public void run() {
-                            listener.onListReceived(getChildren());
-                        }
-                    });
+                    postListReceived(getChildren(), listener);
                 } catch (DropboxException e) {
-                    listener.onException(e);
+                    postException(e, listener);
                 }
             }
         }).start();
@@ -238,13 +234,13 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         String pw = server.getPassword();
         if (pw != null && !pw.equals(""))
         {
-            if(DEBUG)
+            if (DEBUG)
                 Logger.LogDebug("DropBox pw: " + pw);
-            if(pw.indexOf(",") == -1)
+            if (pw.indexOf(",") == -1)
             {
                 try {
                     pw = SimpleCrypto.decrypt(pw, OpenServers.getDecryptKey());
-                } catch(Exception e) {
+                } catch (Exception e) {
                 }
             }
             stored = pw.split(",");
@@ -277,7 +273,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         AppKeyPair appKeyPair = getAppKeyPair();
 
         Intent intent = getOfficialIntent(c, appKeyPair.key, appKeyPair.secret);
-        if (hasDropboxApp(c, intent)) {
+        if (!OpenServers.getDefaultServers().hasServerType("db")
+                && hasDropboxApp(c, intent)) {
             c.startActivity(intent); // ,
                                      // OpenExplorer.REQ_AUTHENTICATE_DROPBOX);
         } else {
@@ -316,7 +313,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
             // Web auth.
             Uri uri = intent.getData();
             if (uri != null) {
-                if(DEBUG)
+                if (DEBUG)
                     Logger.LogDebug("OpenDropBox.handle Web Auth: " + uri.toString());
                 String path = uri.getPath();
                 if ("/connect".equals(path)) {
@@ -336,7 +333,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         {
             out.setPassword(token + "," + secret);
             out.setUser(uid);
-            if(DEBUG)
+            if (DEBUG)
                 Logger.LogDebug("OpenDropBox auth finish. Token: " + token + "  Secret: " + secret);
             return true;
         }
@@ -459,7 +456,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         return ret;
         // return "db-" + mAPI.getSession().getAppKeyPair().key + "://1" + ret;
     }
-    
+
     public void setPath(String path)
     {
         mEntry = new Entry();
@@ -470,7 +467,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
     public String getAbsolutePath() {
         TokenPair access = mAPI.getSession().getAccessTokenPair();
         String ret = "db-" + PrivatePreferences.getKey("dropbox_key") + "://";
-        if(access != null)
+        if (access != null)
             ret += Utils.urlencode(access.key) + ":" + Utils.urlencode(access.secret) + "@";
         ret += "www.dropbox.com" + getPath();
         return ret;

@@ -5,19 +5,26 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 import java.util.Locale;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenDrive;
+import org.brandroid.openmanager.data.OpenDrive.OnAuthTokenListener;
 import org.brandroid.openmanager.data.OpenDropBox;
-import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.ShellSession;
+import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.ViewUtils;
@@ -26,28 +33,37 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
 import com.box.androidlib.Box;
 import com.box.androidlib.DAO;
 import com.box.androidlib.GetAuthTokenListener;
 import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
-import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
-import com.dropbox.client2.session.AppKeyPair;
-import com.dropbox.client2.session.Session.AccessType;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -56,24 +72,27 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ServerSetupActivity
-        extends SherlockActivity
-        implements OnCheckedChangeListener, OnClickListener, OnItemSelectedListener,
-        OnMenuItemClickListener {
+public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
+        OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -95,6 +114,7 @@ public class ServerSetupActivity
     private OpenServers servers;
     private OpenServer server;
     private View mBaseView;
+    private Spinner mTypeSpinner;
     private Bundle mArgs;
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
@@ -128,33 +148,43 @@ public class ServerSetupActivity
             mArgs = new Bundle();
 
         int iServersIndex = mArgs.getInt("server_index", -1);
-        int serverType = mArgs.getInt("server_type", -1);
+        int serverType = mArgs.getInt("server_type_id", -1);
+        
+        if(DEBUG)
+            Logger.LogDebug("ServerSetupActivity.server_type = " + serverType);
 
         final Context context = this;
         servers = LoadDefaultServers(context);
-        server = iServersIndex > -1 ? servers.get(iServersIndex)
-                : new OpenServer().setName("New Server");
+        if (iServersIndex > -1)
+            server = servers.get(iServersIndex);
+        else
+        {
+            if (mArgs.containsKey("server"))
+            {
+                JSONObject json = null;
+                try {
+                    json = new JSONObject(mArgs.getString("server"));
+                    server = new OpenServer(json);
+                } catch (Exception e) {
+                }
+            }
+            if (server == null)
+                server = new OpenServer().setName("New Server");
+        }
 
         server.setServerIndex(iServersIndex);
 
-        String t2 = server.getType().toLowerCase(Locale.US);
-        if (serverType > -1) {
-            if (serverType == 0)
-                server.setType("ftp");
-            else if (serverType == 1)
-                server.setType("sftp");
-            else if (serverType == 2)
-                server.setType("smb");
-            else if (serverType == 3)
-                server.setType("box");
-        } else if (t2.startsWith("ftp"))
-            serverType = 0;
-        else if (t2.startsWith("sftp"))
-            serverType = 1;
-        else if (t2.startsWith("smb"))
-            serverType = 2;
-        else if (t2.startsWith("box"))
-            serverType = 3;
+        String t2 = "ftp";
+        if(server.getType() != null)
+            t2 = server.getType().toLowerCase(Locale.US);
+        if (serverType > -1 && t2.equals("ftp")) {
+            t2 = getServerTypeString(serverType);
+            if(t2 != null)
+                server.setType(t2);
+        } else if(serverType == -1)
+            serverType = getServerTypeFromString(t2);
+        else if (t2.startsWith("drive"))
+            serverType = 4;
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
@@ -169,7 +199,14 @@ public class ServerSetupActivity
             int id = mMapIDs[i];
             String map = mMapKeys[i];
             if (mArgs.containsKey("server_" + map))
-                server.setSetting(map, mArgs.getString("server_" + map));
+            {
+                Object o = mArgs.get("server_" + map);
+                String val = null;
+                if(o instanceof String)
+                    val = (String)o;
+                else continue;
+                server.setSetting(map, val);
+            }
             ViewUtils.setText(mBaseView, server.get(map, ""), id);
         }
         ViewUtils.setOnChangeListener(mBaseView, (OnCheckedChangeListener)this,
@@ -212,23 +249,15 @@ public class ServerSetupActivity
         CheckBox mCheckPort = (CheckBox)mBaseView.findViewById(R.id.check_port);
         TextView mTextPort = (TextView)mBaseView.findViewById(R.id.text_port);
         if (server.getPort() > 0) {
-            if (mCheckPort != null)
-                mCheckPort.setChecked(false);
-            if (mTextPort != null)
-                mTextPort.setText("" + server.getPort());
+            ViewUtils.setText(mTextPort, "" + server.getPort());
+            ViewUtils.setViewsChecked(mCheckPort, false);
         } else if (mCheckPort != null)
             mCheckPort.setChecked(true);
 
-        Spinner mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
+        mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
         mServerTypes = getResources().getStringArray(R.array.server_types_values);
-        int pos = 0;
-        for (int i = 0; i < mServerTypes.length; i++)
-            if (server.getType().toLowerCase(Locale.US).startsWith(mServerTypes[i])) {
-                pos = i;
-                break;
-            }
         mTypeSpinner.setOnItemSelectedListener(this);
-        mTypeSpinner.setSelection(pos);
+        mTypeSpinner.setSelection(serverType);
     }
 
     @Override
@@ -299,7 +328,9 @@ public class ServerSetupActivity
                         R.id.server_authenticate);
                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
                 AndroidAuthSession sess = OpenDropBox.buildSession(server);
-                sess.finishAuthentication();
+                try {
+                    sess.finishAuthentication();
+                } catch(Exception e) { }
                 getDropboxAccountInfo();
             }
             sp.edit().clear().commit();
@@ -328,13 +359,21 @@ public class ServerSetupActivity
         }
     }
 
-    private int getServerTypeDrawable(int serverType) {
+    public static int getServerTypeDrawable(int serverType) {
         switch (serverType)
         {
+            case 0:
+                return R.drawable.sm_ftp;
+            case 1:
+                return R.drawable.sm_folder_secure;
+            case 2:
+                return R.drawable.sm_folder_pipe;
             case 3:
                 return R.drawable.icon_box;
             case 4:
                 return R.drawable.icon_dropbox;
+            case 5:
+                return R.drawable.icon_drive;
             default:
                 return R.drawable.lg_ftp;
         }
@@ -342,13 +381,14 @@ public class ServerSetupActivity
 
     public void setIcon(int res)
     {
+        getSupportActionBar().setIcon(res);
         // getSupportActionBar().setIcon(res);
     }
 
     @Override
     public void setTitle(int titleId) {
         super.setTitle(titleId);
-        // getSupportActionBar().setTitle(titleId);
+        getSupportActionBar().setTitle(titleId);
     }
 
     // @Override
@@ -402,7 +442,8 @@ public class ServerSetupActivity
                         mArgs.putString("server_" + key, val);
                         if (id == R.id.text_password)
                         {
-                            final String sig = SettingsActivity.GetMasterPassword(this, true, false);
+                            final String sig = SettingsActivity
+                                    .GetMasterPassword(this, true, false);
                             try {
                                 val = SimpleCrypto.encrypt(sig, val);
                             } catch (Exception e) {
@@ -412,8 +453,9 @@ public class ServerSetupActivity
                         server.setSetting(key, val);
                     }
                 }
-                if (server.getServerIndex() > -1)
-                    servers.set(server.getServerIndex(), server);
+                int si = server.getServerIndex();
+                if (si > -1)
+                    servers.set(si, server);
                 else
                     servers.add(server);
                 SaveToDefaultServers(servers, this);
@@ -473,6 +515,20 @@ public class ServerSetupActivity
                     // AccessType.DROPBOX);
                     if (checkDropBoxAppKeySetup())
                         OpenDropBox.startAuthentication(this);
+                } else if (t2.startsWith("drive")) {
+                    OpenDrive.selectAccount(this, new OnAuthTokenListener() {
+                        public void onException(Exception e) {
+                            Logger.LogError("Unable to authenticate Drive.", e);
+                            Toast.makeText(ServerSetupActivity.this, "Unable to authenticate Drive.", Toast.LENGTH_LONG).show();
+                }
+                        
+                        @Override
+                        public void onAuthTokenReceived(String token) {
+                            server.setPassword(token);
+                            ViewUtils.setText(mBaseView, token, R.id.text_password);
+                            enableAuthenticateButton(false);
+                        }
+                    });
                 }
                 return true;
             case R.id.server_logout:
@@ -500,6 +556,128 @@ public class ServerSetupActivity
                 return true;
         }
         return false;
+    }
+
+    public static class ServerTypeAdapter extends BaseAdapter
+    {
+        private final String[] mServerTypes;
+        private final List<ResolveInfo> mResolves;
+        private final LayoutInflater mInflater;
+        private final PackageManager mPackageManager;
+        private final Resources mResources;
+        private final String[] mServerLabels;
+
+        public ServerTypeAdapter(OpenApp app)
+        {
+            mInflater = LayoutInflater.from(app.getContext());
+            mPackageManager = app.getContext().getPackageManager();
+            Intent intent = new Intent("org.brandroid.openmanager.server_type");
+            mResolves = IntentManager.getResolvesAvailable(intent, app);
+            mServerTypes = app.getContext().getResources()
+                    .getStringArray(R.array.server_types_values);
+            mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
+            mResources = app.getResources();
+        }
+
+        @Override
+        public int getCount() {
+            return mServerTypes.length +
+                    mResolves.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            if (position < mServerTypes.length)
+                return mServerTypes[position];
+            return mResolves.get(position - mServerTypes.length);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null)
+                convertView = mInflater.inflate(R.layout.server_type_item, null);
+            TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
+            CharSequence text = null;
+            Drawable icon = null;
+            if (position < mServerTypes.length)
+            {
+                text = mServerLabels[position];
+                String type = mServerTypes[position];
+                int iType = getServerTypeFromString(type);
+                if(iType > -1)
+                    icon = parent.getResources().getDrawable(
+                            ServerSetupActivity.getServerTypeDrawable(iType));
+                else
+                    ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
+
+            } else {
+                ResolveInfo info = mResolves.get(position - mServerTypes.length);
+                text = info.loadLabel(mPackageManager);
+                icon = info.loadIcon(mPackageManager);
+            }
+            ViewUtils.setImageDrawable(convertView, icon, android.R.id.icon);
+            tv.setText(text);
+            return convertView;
+        }
+
+    }
+    
+    public static int getServerTypeFromString(String type)
+    {
+        if (type.equalsIgnoreCase("ftp"))
+            return 0;
+        else if (type.equalsIgnoreCase("sftp"))
+            return 1;
+        else if (type.equalsIgnoreCase("smb"))
+            return 2;
+        else if (type.equalsIgnoreCase("box"))
+            return 3;
+        else if (type.startsWith("db"))
+            return 4;
+        else return -1;
+    }
+    
+    public static String getServerTypeString(int type)
+    {
+        switch(type)
+        {
+            case 0: return "ftp";
+            case 1: return "sftp";
+            case 2: return "smb";
+            case 3: return "box";
+            case 4: return "db";
+            default: return null;
+        }
+    }
+
+    public static void showServerTypeDialog(final OpenApp app, final OnItemSelectedListener onSelect)
+    {
+        // OpenExplorer.getHandler().post(new Runnable() {public void run() {
+        final Context context = app.getContext();
+        final ListView lv = new ListView(context);
+        final ServerTypeAdapter adapter = new ServerTypeAdapter(app);
+        lv.setAdapter(adapter);
+        final AlertDialog dlg = new AlertDialog.Builder(context)
+                .setView(lv)
+                .setTitle(R.string.s_pref_server_type)
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).create();
+        lv.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                dlg.dismiss();
+                onSelect.onItemSelected(parent, view, position, id);
+            }
+        });
+        dlg.show();
+        // }});
     }
 
     private void enableAuthenticateButton(boolean enable)
@@ -665,7 +843,7 @@ public class ServerSetupActivity
             return;
         String type = mServerTypes[position];
         server.setType(type);
-        setIcon(getServerTypeDrawable(position));
+        setIcon(getServerTypeDrawable(getServerTypeFromString(type)));
         final View v = mBaseView;
         if (position < 3)
         {
@@ -695,7 +873,7 @@ public class ServerSetupActivity
             ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port,
                     R.id.label_port);
             ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
-            if (!server.getPassword().equals(""))
+            if (server.getPassword() != null && !server.getPassword().equals(""))
             {
                 ViewUtils.setViewsVisible(v, true, R.id.server_logout);
                 ViewUtils.setViewsVisible(v, false, R.id.server_authenticate);
@@ -736,30 +914,41 @@ public class ServerSetupActivity
         }
     }
 
-    public static boolean showServerDialog(final OpenApp app, final OpenFTP mPath) {
-        return showServerDialog(app, mPath.getServersIndex());
-    }
-
     public static boolean showServerDialog(final OpenApp app, final OpenNetworkPath mPath) {
-        return showServerDialog(app, mPath.getServersIndex());
-    }
 
-    public static boolean showServerDialog(final OpenApp app, final int iServersIndex) {
-        final Context context = app.getContext();
+        OpenServer server = null;
+        int iServersIndex = -1;
+        if (mPath != null)
+        {
+            server = mPath.getServer();
+            iServersIndex = mPath.getServerIndex();
+        }
+        if (iServersIndex == -1)
+        {
+            showServerTypeDialog(app, new OnItemSelectedListener() {
 
-        Intent intent = new Intent(context, ServerSetupActivity.class);
-        intent.putExtra("server_index", iServersIndex);
-        app.startActivityForResult(intent, SettingsActivity.MODE_SERVER);
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    Intent intent = new Intent(app.getContext(), ServerSetupActivity.class);
+                    intent.putExtra("server_type_id", position);
+                    app.startActivityForResult(intent, OpenExplorer.REQ_SERVER_NEW);
+                }
 
-        return true;
-    }
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    // TODO Auto-generated method stub
 
-    public static boolean showServerDialog(final Activity activity, final int iServersIndex) {
-        final Context context = activity;
+                }
 
-        Intent intent = new Intent(context, ServerSetupActivity.class);
-        intent.putExtra("server_index", iServersIndex);
-        activity.startActivityForResult(intent, SettingsActivity.MODE_SERVER);
+            });
+        } else {
+            Intent intent = new Intent(app.getContext(), ServerSetupActivity.class);
+            intent.putExtra("server_index", iServersIndex);
+            JSONObject jo = server.getJSONObject(false, app.getContext());
+            intent.putExtra("server", jo.toString());
+            intent.putExtra("server_type_id", getServerTypeFromString(server.getType()));
+            app.startActivityForResult(intent, OpenExplorer.REQ_SERVER_MODIFY);
+        }
 
         return true;
     }
@@ -824,8 +1013,8 @@ public class ServerSetupActivity
     }
 
     public static OpenServers LoadDefaultServers(Context context) {
-        if (OpenServers.DefaultServers != null)
-            return OpenServers.DefaultServers;
+        if (OpenServers.hasDefaultServers())
+            return OpenServers.getDefaultServers();
         OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
         try {
             if (!f.exists() && !f.create()) {
@@ -842,28 +1031,30 @@ public class ServerSetupActivity
                 JSONArray jarr = new JSONArray(data);
                 final Preferences prefs = new Preferences(context);
                 String dk = SettingsActivity.GetMasterPassword(context);
-                if (//!prefs.getBoolean("warn", "master_key_fallback", false) &&
-                        !canDecryptPasswords(jarr, dk))
+                if (// !prefs.getBoolean("warn", "master_key_fallback", false)
+                    // &&
+                !canDecryptPasswords(jarr, dk))
                 {
-                    if(DEBUG)
+                    if (DEBUG)
                         Logger.LogDebug("ServerSetup can't decrypt. Trying to fall back!");
                     String dk2 = SettingsActivity.GetMasterPassword(context, false, true);
                     if (canDecryptPasswords(jarr, dk2))
                     {
                         try {
-                            if(DEBUG)
+                            if (DEBUG)
                                 Logger.LogDebug("ServerSetup decrypt success!");
                             encryptPasswords(jarr, dk);
-                            //prefs.setSetting("warn", "master_key_fallback", true);
-                            //f.write(jarr.toString());
-                        } catch(Exception e) {
+                            // prefs.setSetting("warn", "master_key_fallback",
+                            // true);
+                            // f.write(jarr.toString());
+                        } catch (Exception e) {
                             Logger.LogDebug("ServerSetup encrypt failed!");
                         }
                     }
-                } else if(DEBUG) Logger.LogDebug("Server setup upgraded!");
+                } else if (DEBUG)
+                    Logger.LogDebug("Server setup upgraded!");
                 OpenServers.setDecryptKey(dk);
-                OpenServers.DefaultServers = new OpenServers(jarr);
-                return OpenServers.DefaultServers;
+                return OpenServers.setDefaultServers(new OpenServers(jarr));
             }
         } catch (IOException e) {
             Logger.LogError("Error loading default server list.", e);
@@ -923,11 +1114,13 @@ public class ServerSetupActivity
     }
 
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
+        OpenServers.setDefaultServers(servers);
         SaveToDefaultServers(servers.getJSONArray(true, context), context);
     }
+
     public static void SaveToDefaultServers(JSONArray json, Context context) {
         final OpenFile f = ServerSetupActivity.GetDefaultServerFile(context);
-        final String data = json.toString(); 
+        final String data = json.toString();
         new Thread(new Runnable() {
             public void run() {
                 Writer w = null;
@@ -959,5 +1152,100 @@ public class ServerSetupActivity
                 }
             }
         }).start();
+    }
+
+    @Override
+    public DataManager getDataManager() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ImageCacheService getImageCacheService() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DownloadCache getDownloadCache() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ThreadPool getThreadPool() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public LruCache<String, Bitmap> getMemoryCache() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DiskLruCache getDiskCache() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ActionMode getActionMode() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setActionMode(ActionMode mode) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public OpenClipboard getClipboard() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ShellSession getShellSession() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public Preferences getPreferences() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void refreshBookmarks() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public GoogleAnalyticsTracker getAnalyticsTracker() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void queueToTracker(Runnable run) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public int getThemedResourceId(int styleableId, int defaultResourceId) {
+        // TODO Auto-generated method stub
+        return 0;
     }
 }

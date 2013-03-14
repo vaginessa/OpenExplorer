@@ -1,26 +1,19 @@
 
 package org.brandroid.openmanager.data;
 
-import jcifs.UniAddress;
 import jcifs.smb.AllocInfo;
 import jcifs.smb.Handler;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
-import jcifs.smb.SmbShareInfo;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -32,7 +25,6 @@ import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 
 public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable, OpenNetworkPath.PipeNeeded {
     private SmbFile mFile;
@@ -49,7 +41,7 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
         URL url = new URL(null, urlString, Handler.SMB_HANDLER);
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
         if (auth.getPassword() == null || auth.getPassword() == "") {
-            OpenServers servers = OpenServers.DefaultServers;
+            OpenServers servers = OpenServers.getDefaultServers();
             OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
             if (s != null) {
                 auth.setUsername(s.getUser());
@@ -86,7 +78,7 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(url.getUserInfo());
         if (auth.getUsername() == null || auth.getUsername() == "" || auth.getPassword() == null
                 || auth.getPassword() == "") {
-            OpenServers servers = OpenServers.DefaultServers;
+            OpenServers servers = OpenServers.getDefaultServers();
             OpenServer s = servers.findByUser("smb", url.getHost(), auth.getUsername());
             if (s == null)
                 s = servers.findByHost("smb", url.getHost());
@@ -221,19 +213,33 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
             return mChildren;
         return listFiles();
     }
+    
+    @Override
+    public void list(final ListListener listener) {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    listFiles();
+                    postListReceived(getChildren(), listener);
+                    getParent(); // just make sure we have parents
+                    mDiskSpace = mFile.getDiskSpace();
+                    mDiskFreeSpace = mFile.getDiskFreeSpace();
+                    AllocInfo disk = mFile.getDiskInfo();
+                    if (disk != null) {
+                        mDiskSpace = disk.getCapacity();
+                        mDiskFreeSpace = disk.getFree();
+                    }
+                } catch(final Exception e) {
+                    postException(e, listener);
+                }
+            }
+        }).start();
+    }
 
     @Override
     public OpenSMB[] listFiles() throws IOException {
         if (Thread.currentThread().equals(OpenExplorer.UiThread))
-            return null;
-        mDiskSpace = mFile.getDiskSpace();
-        mDiskFreeSpace = mFile.getDiskFreeSpace();
-        AllocInfo disk = mFile.getDiskInfo();
-        if (disk != null) {
-            mDiskSpace = disk.getCapacity();
-            mDiskFreeSpace = disk.getFree();
-        }
-        Logger.LogVerbose("Listing children under " + getPath());
+            return getChildren();
         SmbFile[] kids = null;
         try {
             getAttributes();
@@ -503,19 +509,19 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
 
     private String getServerPath(String path) {
         OpenServer server = null;
-        if (getServersIndex() >= 0)
-            server = OpenServers.DefaultServers.get(getServersIndex());
+        if (getServerIndex() >= 0)
+            server = OpenServers.getDefaultServers().get(getServerIndex());
         else {
             Uri uri = Uri.parse(path);
             String user = uri.getUserInfo();
             if (user.indexOf(":") > -1)
                 user = user.substring(0, user.indexOf(":"));
-            server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(), user,
+            server = OpenServers.getDefaultServers().findByPath("smb", uri.getHost(), user,
                     uri.getPath());
             if (server == null)
-                server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
+                server = OpenServers.getDefaultServers().findByUser("smb", uri.getHost(), user);
             if (server == null)
-                server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+                server = OpenServers.getDefaultServers().findByHost("smb", uri.getHost());
 
             Logger.LogVerbose("User: " + user + " :: " + server.getUser() + ":"
                     + server.getPassword().substring(0, 1)
@@ -576,6 +582,8 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
     }
 
     public long getDiskSpace() {
+        if(mDiskSpace != null)
+            return mDiskSpace;
         if (!Thread.currentThread().equals(OpenExplorer.UiThread))
             try {
                 mDiskSpace = mFile.getDiskSpace();
@@ -585,6 +593,8 @@ public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable
     }
 
     public long getDiskFreeSpace() {
+        if(mDiskFreeSpace != null)
+            return mDiskFreeSpace;
         if (!Thread.currentThread().equals(OpenExplorer.UiThread))
             try {
                 mDiskFreeSpace = mFile.getDiskFreeSpace();

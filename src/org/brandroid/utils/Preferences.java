@@ -1,15 +1,11 @@
 
 package org.brandroid.utils;
 
-import java.io.File;
-import java.io.StringReader;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.xml;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.data.OpenServers;
@@ -21,7 +17,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.util.JsonReader;
 
 public class Preferences {
     private static Preferences preferences;
@@ -398,11 +393,5 @@ public class Preferences {
         globalOut.commit();
         newPrefs.commit();
         Logger.LogVerbose("Upgraded " + changes + " preferences");
-    }
-
-    public OpenServers LoadDefaultServers(SettingsActivity settingsActivity) {
-        if (OpenServers.DefaultServers == null)
-            OpenServers.DefaultServers = ServerSetupActivity.LoadDefaultServers(settingsActivity.getApplicationContext());
-        return OpenServers.DefaultServers;
     }
 }

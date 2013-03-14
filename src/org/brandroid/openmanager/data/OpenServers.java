@@ -1,27 +1,21 @@
 
 package org.brandroid.openmanager.data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.Context;
 
 public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;
-    private CopyOnWriteArrayList<OpenServer> mData;
-    public static OpenServers DefaultServers = null;
+    private List<OpenServer> mData;
+    private static OpenServers DefaultServers = new OpenServers();
+    private static boolean mDefaultServersSet = false;
     private static String mDecryptKey;
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
 
@@ -43,6 +37,10 @@ public class OpenServers implements Iterable<OpenServer> {
                 e.printStackTrace();
             }
     }
+    
+    public static boolean hasDefaultServers() { return mDefaultServersSet; }
+    public static OpenServers setDefaultServers(OpenServers servers) { mDefaultServersSet = true; DefaultServers = servers; return servers; }
+    public static OpenServers getDefaultServers() { return DefaultServers; }
     
     public static void setDecryptKey(String key) { mDecryptKey = key; }
     
@@ -67,6 +65,13 @@ public class OpenServers implements Iterable<OpenServer> {
                 return server;
         }
         return null;
+    }
+    
+    public boolean hasServerType(String type) {
+        for(OpenServer server : mData)
+            if(server.getType().equalsIgnoreCase(type))
+                return true;
+        return false;
     }
 
     public OpenServer findByHost(String type, String host) {

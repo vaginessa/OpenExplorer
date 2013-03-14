@@ -108,10 +108,12 @@ import android.widget.ExpandableListView;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
@@ -130,9 +132,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
+import org.brandroid.openmanager.adapters.OpenBookmarks.OnBookmarkSelectListener;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
@@ -149,8 +153,10 @@ import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -164,15 +170,14 @@ import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MimeTypes;
-import org.brandroid.openmanager.util.OpenInterfaces.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.MimeTypeParser;
-import org.brandroid.openmanager.util.OpenInterfaces;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
@@ -217,7 +222,7 @@ import org.xmlpull.v1.XmlPullParserException;
 public class OpenExplorer extends OpenFragmentActivity implements OnBackStackChangedListener,
         OnClipboardUpdateListener, OnWorkerUpdateListener, OnPageTitleClickListener,
         LoaderCallbacks<Cursor>, OnPageChangeListener, OpenApp, IconContextItemSelectedListener,
-        OnKeyListener, OnFragmentDPADListener, OnFocusChangeListener {
+        OnKeyListener, OnFragmentDPADListener, OnFocusChangeListener, OnBookmarkSelectListener {
 
     private MenuItem mMenuPaste;
     public static final int REQ_PREFERENCES = 6;
@@ -229,6 +234,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int RESULT_RESTART_NEEDED = 12;
     public static final int REQ_AUTHENTICATE_BOX = 13;
     public static final int REQ_AUTHENTICATE_DROPBOX = 14;
+    public static final int REQ_SERVER_NEW = 15;
+    public static final int REQ_SERVER_MODIFY = 16;
+    public static final int REQ_AUTHENTICATE_DRIVE = 15;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
@@ -287,10 +295,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private static ArrayPagerAdapter mViewPagerAdapter;
 
     private static final boolean mViewPagerEnabled = true;
-    private ExpandableListView mBookmarksList;
+    private View mBookmarksView;
     private OpenBookmarks mBookmarks;
     private BetterPopupWindow mBookmarksPopup;
-    private static OnBookMarkChangeListener mBookmarkListener;
+    private static OpenApp.OnBookMarkChangeListener mBookmarkListener;
     private ViewGroup mToolbarButtons = null;
     private ViewGroup mStaticButtons = null;
     private static ActionBar mBar = null;
@@ -824,7 +832,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     if (path instanceof OpenNetworkPath)
                     {
                         ((OpenNetworkPath)path).getServer().setPassword(password);
-                        ServerSetupActivity.SaveToDefaultServers(OpenServers.DefaultServers, c);
+                        ServerSetupActivity.SaveToDefaultServers(OpenServers.getDefaultServers(), c);
                     }
                 } catch (Exception e) {
                 }
@@ -854,11 +862,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 return true;
             }
         });
+        OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
+        new Thread(new Runnable() {
+            public void run() {
+                OpenVFS.getManager().setLogger(Logger.VFSLogger);
+            }
+        }).start();
         try {
             OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
                     FileManager.DefaultUserInfo, Preferences.getPreferences(
                             getApplicationContext(), "hosts")));
-            OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
         } catch (JSchException e) {
             Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
         }
@@ -939,7 +952,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     protected void onNewIntent(Intent intent) {
         Logger.LogDebug("New Intent! " + intent.toString());
         setIntent(intent);
-        // handleIntent(intent); //Unneeded, onResume will handle
+        handleIntent(intent); // Unneeded, onResume will handle
     }
 
     public boolean showMenu(int menuId, final View from, final boolean fromTouch) {
@@ -1210,13 +1223,20 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         getPreferences().upgradeViewSettings();
     }
 
+    private static ScrollView wrapLayoutWithScroller(View child)
+    {
+        ScrollView ret = new ScrollView(child.getContext());
+        ret.addView(child);
+        return ret;
+    }
+
     private void initBookmarkDropdown() {
-        if (mBookmarksList == null)
-            mBookmarksList = new ExpandableListView(this);
+        if (mBookmarksView == null)
+            mBookmarksView = new LinearLayout(this);
         if (findViewById(R.id.list_frag) != null) {
             ViewGroup leftNav = ((ViewGroup)findViewById(R.id.list_frag));
             leftNav.removeAllViews();
-            leftNav.addView(mBookmarksList);
+            leftNav.addView(wrapLayoutWithScroller(mBookmarksView));
         } else {
             View anchor = null;
             if (anchor == null)
@@ -1231,11 +1251,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mBookmarksPopup.setLayout(R.layout.contextmenu_simple);
             mBookmarksPopup.setAnimation(R.style.Animations_SlideFromLeft);
             mBookmarksPopup.setPopupHeight(LayoutParams.MATCH_PARENT);
-            mBookmarksPopup.setContentView(mBookmarksList);
+            mBookmarksPopup.setContentView(wrapLayoutWithScroller(mBookmarksView));
         }
-        mBookmarks = new OpenBookmarks(this, mBookmarksList);
-        for (int i = 0; i < mBookmarksList.getCount(); i++)
-            mBookmarksList.expandGroup(i);
+        mBookmarks = new OpenBookmarks(this, mBookmarksView);
+        mBookmarks.setOnBookmarkSelectListener(this);
+        if (mBookmarksView instanceof ExpandableListView)
+        {
+            ExpandableListView lv = (ExpandableListView)mBookmarksView;
+            for (int i = 0; i < lv.getCount(); i++)
+                lv.expandGroup(i);
+        }
     }
 
     private void initLogPopup() {
@@ -1496,10 +1521,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         ThumbnailCreator.flushCache(this, false);
         FileManager.clearOpenCache();
         EventHandler.cancelRunningTasks();
-    }
-
-    public void setBookmarksPopupListAdapter(ListAdapter adapter) {
-        mBookmarksList.setAdapter(adapter);
     }
 
     @SuppressWarnings("unused")
@@ -2206,11 +2227,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             Logger.LogVerbose("refreshBookmarks()");
         refreshCursors();
         if (mBookmarks != null) {
-            mBookmarks.scanBookmarks();
-            mBookmarks.refresh();
+            mBookmarks.scanBookmarks(this);
         }
-        if (mBookmarksList != null)
-            mBookmarksList.invalidate();
     }
 
     public ContentFragment getDirContentFragment(Boolean activate) {
@@ -2640,7 +2658,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     content.runUpdateTask(true);
                     changePath(content.getPath(), false, true);
                 }
-                mBookmarks.refresh();
+                mBookmarks.refresh((OpenApp)this);
                 return true;
 
             case R.id.menu_settings:
@@ -3094,7 +3112,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 }
             }
         } else if (requestCode == REQ_INTENT) {
-
+        } else if (requestCode == REQ_SERVER_MODIFY || requestCode == REQ_SERVER_NEW) {
+            refreshBookmarks();
         } else {
             super.onActivityResult(requestCode, resultCode, data);
             if (getSelectedFragment() != null)
@@ -3175,6 +3194,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         changePath(path, addToStack, false);
     }
 
+    private boolean needsDisconectDuringChange(OpenPath from, OpenPath to)
+    {
+        if (to == null)
+            return true;
+        if (!to.getClass().equals(from.getClass()))
+            return true;
+        return ((OpenNetworkPath)from).getServerIndex() != ((OpenNetworkPath)to).getServerIndex();
+    }
+
     private void changePath(OpenPath path, Boolean addToStack, Boolean force) {
         try {
             // if(mLastPath != null && !mLastPath.equals(path) && mLastPath
@@ -3192,9 +3220,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mLastPath = getDirContentFragment(false).getPath();
         if (!(mLastPath instanceof OpenFile) || !(path instanceof OpenFile))
             force = true;
-        
-        if(mLastPath instanceof OpenNetworkPath.PipeNeeded)
-            ((PipeNeeded)mLastPath).disconnect();
+
+        if (mLastPath instanceof OpenNetworkPath.PipeNeeded)
+            if (needsDisconectDuringChange(mLastPath, path))
+                ((PipeNeeded)mLastPath).disconnect();
 
         onClipboardUpdate();
 
@@ -3522,7 +3551,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Logger.LogVerbose("Bookmarks: " + sBookmarks);
         getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
         if (mBookmarkListener != null)
-            mBookmarkListener.onBookMarkAdd(file);
+            mBookmarkListener.onBookMarkAdd(this, file);
     }
 
     public void removeBookmark(OpenPath file) {
@@ -3538,7 +3567,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     public static void setOnBookMarkAddListener(
-            OpenInterfaces.OnBookMarkChangeListener bookmarkListener) {
+            OpenApp.OnBookMarkChangeListener bookmarkListener) {
         mBookmarkListener = bookmarkListener;
     }
 
@@ -3859,23 +3888,39 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return;
         if (!f.isDetached()) {
             invalidateOptionsMenu();
-            final ImageView icon = (ImageView)findViewById(R.id.title_icon);
-            Drawable d = f.getIcon();
-            if (d == null && f instanceof OpenPathFragmentInterface) {
-                OpenPath path = ((OpenPathFragmentInterface)f).getPath();
-                ThumbnailCreator.setThumbnail(this, icon, path, 96, 96,
-                        new OnUpdateImageListener() {
-                            public void updateImage(Bitmap b) {
-                                BitmapDrawable bd = new BitmapDrawable(getResources(), b);
-                                bd.setGravity(Gravity.CENTER);
-                                icon.setImageDrawable(bd);
+            new Thread(new Runnable() {
+                public void run() {
+                    final ImageView icon = (ImageView)findViewById(R.id.title_icon);
+                    final Drawable d = f.getIcon();
+                    if (d == null && f instanceof OpenPathFragmentInterface) {
+                        OpenPath path = ((OpenPathFragmentInterface)f).getPath();
+                        ThumbnailCreator.setThumbnail(OpenExplorer.this, icon, path, 96, 96,
+                                new OnUpdateImageListener() {
+                                    public void updateImage(Bitmap b) {
+                                        final BitmapDrawable bd = new BitmapDrawable(
+                                                getResources(), b);
+                                        bd.setGravity(Gravity.CENTER);
+                                        getHandler().post(new Runnable() {
+                                            public void run() {
+                                                if (Build.VERSION.SDK_INT < 14)
+                                                    icon.setImageDrawable(bd);
+                                                else
+                                                    ImageUtils.fadeToDrawable(icon, bd);
+                                            }
+                                        });
+                                    }
+                                });
+                    } else if (d != null)
+                        getHandler().post(new Runnable() {
+                            public void run() {
+                                if (Build.VERSION.SDK_INT < 14)
+                                    icon.setImageDrawable(d);
+                                else
+                                    ImageUtils.fadeToDrawable(icon, d);
                             }
                         });
-            }
-            if (Build.VERSION.SDK_INT < 14)
-                icon.setImageDrawable(d);
-            else
-                ImageUtils.fadeToDrawable(icon, d);
+                }
+            }).start();
         }
         // if((f instanceof ContentFragment) && (((ContentFragment)f).getPath()
         // instanceof OpenNetworkPath)) ((ContentFragment)f).refreshData(null,
@@ -4063,6 +4108,18 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         else if (themeName.equals("custom"))
             return R.style.AppTheme_Custom;
         return 0;
+    }
+
+    public static void changePath(Context context, OpenPath path) {
+        Intent intent = new Intent(context, OpenExplorer.class);
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setData(path.getUri());
+        context.startActivity(intent);
+    }
+
+    @Override
+    public void onBookmarkSelect(OpenPath path) {
+        changePath(path, true, true);
     }
 
 }

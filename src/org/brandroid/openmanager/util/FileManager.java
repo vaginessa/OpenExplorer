@@ -37,6 +37,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
+import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFileRoot;
@@ -50,6 +51,7 @@ import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenTar;
+import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
@@ -287,6 +289,7 @@ public class FileManager {
             ret = new OpenFTP(path, null, new FTPManager());
         else if (path.startsWith("sftp:/"))
             ret = new OpenSFTP(path);
+            //ret = new OpenVFS(path);
         else if (path.startsWith("smb:/"))
             try {
                 ret = new OpenSMB(path);
@@ -349,29 +352,31 @@ public class FileManager {
         if (mOpenCache == null)
             mOpenCache = new Hashtable<String, OpenPath>();
         OpenPath ret = mOpenCache.get(path);
+        OpenServers servers = OpenServers.getDefaultServers();
         if (ret == null) {
-            if (path.startsWith("ftp:/") && OpenServers.DefaultServers != null) {
+            if (path.startsWith("ftp:/") && servers != null) {
                 Logger.LogDebug("Checking cache for " + path);
                 FTPManager man = new FTPManager(path);
                 FTPFile file = new FTPFile();
                 file.setName(path.substring(path.lastIndexOf("/") + 1));
                 Uri uri = Uri.parse(path);
-                OpenServer server = OpenServers.DefaultServers.findByHost("ftp", uri.getHost());
+                OpenServer server = servers.findByHost("ftp", uri.getHost());
                 man.setUser(server.getUser());
                 man.setPassword(server.getPassword());
                 ret = new OpenFTP(null, file, man);
             } else if (path.startsWith("scp:/")) {
                 Uri uri = Uri.parse(path);
                 ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
-            } else if (path.startsWith("sftp:/") && OpenServers.DefaultServers != null) {
+            } else if (path.startsWith("sftp:/") && servers != null) {
                 Uri uri = Uri.parse(path);
-                OpenServer server = OpenServers.DefaultServers.findByHost("sftp", uri.getHost());
+                OpenServer server = servers.findByHost("sftp", uri.getHost());
+                // ret = new OpenVFS(path);
                 ret = new OpenSFTP(uri);
                 SimpleUserInfo info = new SimpleUserInfo();
                 if (server != null)
                     info.setPassword(server.getPassword());
                 ((OpenSFTP)ret).setUserInfo(info);
-            } else if (path.startsWith("smb:/") && OpenServers.DefaultServers != null) {
+            } else if (path.startsWith("smb:/") && servers != null) {
                 try {
                     Uri uri = Uri.parse(path);
                     String user = uri.getUserInfo();
@@ -379,12 +384,12 @@ public class FileManager {
                         user = user.substring(0, user.indexOf(":"));
                     else
                         user = "";
-                    OpenServer server = OpenServers.DefaultServers.findByPath("smb", uri.getHost(),
+                    OpenServer server = servers.findByPath("smb", uri.getHost(),
                             user, uri.getPath());
                     if (server == null)
-                        server = OpenServers.DefaultServers.findByUser("smb", uri.getHost(), user);
+                        server = servers.findByUser("smb", uri.getHost(), user);
                     if (server == null)
-                        server = OpenServers.DefaultServers.findByHost("smb", uri.getHost());
+                        server = servers.findByHost("smb", uri.getHost());
                     if (user == "")
                         user = server.getUser();
                     if (server != null && server.getPassword() != null
@@ -412,6 +417,17 @@ public class FileManager {
                     }
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get Box.com from cache.", e);
+                }
+            } else if (path.startsWith("drive")) {
+
+                try {
+                    Uri uri = Uri.parse(path);
+                    String pw = uri.getUserInfo();
+                    if (pw.indexOf(":") > -1)
+                        pw = pw.substring(pw.indexOf(":") + 1);
+                    ret = new OpenDrive(pw);
+                } catch (Exception e) {
+                    Logger.LogError("Couldn't get Drive item from cache.", e);
                 }
             } else if (path.startsWith("db")) {
                 try {

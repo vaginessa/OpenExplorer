@@ -47,6 +47,7 @@
         <item>@string/s_server_smb</item>
         <item>Box</item>
         <item>DropBox</item>
+        <item>Drive</item>
     </string-array>
     <string-array name="server_types_values">
         <item>ftp</item>
@@ -54,19 +55,21 @@
         <item>smb</item>
         <item>box</item>
         <item>db</item>
+        <item>drive</item>
     </string-array>
     <string-array name="bookmark_groups">
         <item>@string/s_bookmark_drives</item>
         <item>@string/s_bookmark_smart</item>
         <item>@string/s_bookmark_favorites</item>
         <item>@string/s_bookmark_servers</item>
+        <item>@string/s_bookmark_history</item>
     </string-array>
     <string-array name="bookmark_groups_values">
         <item>Drives</item>
         <item>Smart Folders</item>
         <item>Favorites</item>
         <item>Servers</item>
-        <item>Cache</item>
+        <item>History</item>
     </string-array>
     <string-array name="basebar_split">
         <item>@string/s_split_auto</item>

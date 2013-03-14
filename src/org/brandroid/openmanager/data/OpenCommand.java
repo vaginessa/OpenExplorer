@@ -8,6 +8,7 @@ import java.lang.ref.SoftReference;
 
 import org.brandroid.openmanager.util.ThumbnailCreator;
 
+import android.R;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
@@ -16,7 +17,7 @@ public class OpenCommand extends OpenPath {
 
     private final String mText;
     private final int mCommand;
-    private int mDrawableId = 0;
+    private int mDrawableId = R.drawable.ic_input_add;
 
     public OpenCommand(String text, int command) {
         this(text, command, 0);

@@ -1,9 +1,8 @@
 
 package org.brandroid.openmanager.data;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Locale;
 
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -11,7 +10,6 @@ import jcifs.smb.SmbFile;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.SettingsActivity;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
@@ -25,6 +23,7 @@ import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 
 import android.content.Context;
+import android.net.Uri;
 
 public class OpenServer {
     private final JSONObject mData;
@@ -48,20 +47,53 @@ public class OpenServer {
          * obj.opt(key).toString())); } }
          */
     }
-    
-    public int getServerIndex() {
-        return mServerIndex;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof OpenServer))
+            return false;
+        OpenServer os = (OpenServer)o;
+        try {
+            if (os.getHost().equals(getHost()) &&
+                    os.getPassword().equals(getPassword()) &&
+                    os.getUser().equals(getUser()) &&
+                    os.getPath().equals(getPath()) &&
+                    os.getPort() == getPort())
+                return true;
+        } catch (NullPointerException npe) {
+            return false;
+        }
+        return super.equals(o);
     }
-    
+
+    public int getServerIndex() {
+        if (mServerIndex > -1)
+            return mServerIndex;
+
+        if(OpenServers.hasDefaultServers())
+        {
+            OpenServers servers = OpenServers.getDefaultServers();
+            for (int i = 0; i < servers.size(); i++)
+            {
+                if (servers.get(i).equals(this))
+                {
+                    mServerIndex = i;
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
     public boolean isPasswordDecrypted()
     {
         return mPasswordDecrypted;
     }
-    
+
     public void setServerIndex(int i) {
         mServerIndex = i;
     }
-    
+
     private static String getDecryptKey()
     {
         return OpenServers.getDecryptKey();
@@ -69,7 +101,8 @@ public class OpenServer {
 
     public void decryptPW(boolean threaded)
     {
-        if(mPasswordDecrypted) return;
+        if (mPasswordDecrypted)
+            return;
         final String mPassword = get("password");
         Runnable decryptor = new Runnable() {
             public void run() {
@@ -78,11 +111,11 @@ public class OpenServer {
                     mData.put("password", pw);
                     mPasswordDecrypted = true;
                 } catch (Exception e) {
-                    //Logger.LogError("Error decrypting password.", e);
+                    // Logger.LogError("Error decrypting password.", e);
                 }
             }
         };
-        if(threaded)
+        if (threaded)
             new Thread(decryptor).start();
         else
             decryptor.run();
@@ -90,7 +123,8 @@ public class OpenServer {
 
     public void encryptPW(boolean threaded)
     {
-        if(!mPasswordDecrypted) return;
+        if (!mPasswordDecrypted)
+            return;
         final String mPassword = get("password");
         Runnable encryptor = new Runnable() {
             public void run() {
@@ -99,7 +133,7 @@ public class OpenServer {
                     mData.put("password", pw);
                     mPasswordDecrypted = false;
                 } catch (Exception e) {
-                    //Logger.LogError("Error decrypting password.", e);
+                    // Logger.LogError("Error decrypting password.", e);
                 }
             }
         };
@@ -151,7 +185,12 @@ public class OpenServer {
     }
 
     public String get(String key) {
-        String ret = mData.optString(key);
+        Object o = mData.opt(key);
+        String ret = "";
+        if (o instanceof String)
+            ret = (String)o;
+        else if (o != null)
+            ret = o.toString();
         if (DEBUG)
             Logger.LogDebug("OpenServer.getSetting(" + key + ") = " + ret);
         return ret;
@@ -185,17 +224,19 @@ public class OpenServer {
     public OpenServer setSetting(String key, long value) {
         try {
             mData.put(key, value);
-        } catch(JSONException e) {
+        } catch (JSONException e) {
         }
         return this;
     }
 
     public String getHost() {
-        return get("host");
+        return get("host", "");
     }
 
     public String getPath() {
-        String mPath = get("dir");
+        String mPath = get("dir", "");
+        if(!mPath.startsWith("/"))
+            mPath = "/" + mPath;
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
     }
 
@@ -213,6 +254,7 @@ public class OpenServer {
             mPath = new OpenSCP(getHost(), getUser(), getPath(), info);
         } else if (t2.startsWith("sftp")) {
             mPath = new OpenSFTP(getHost(), getUser(), getPath());
+            //mPath = new OpenVFS("sftp://" + getUser() + ":" + getPassword() + "@" + getHost() + getPath());
         } else if (t2.startsWith("smb")) {
             try {
                 mPath = new OpenSMB(new SmbFile("smb://" + getHost() + "/" + getPath(),
@@ -240,6 +282,9 @@ public class OpenServer {
             DropboxAPI<AndroidAuthSession> mApi = new DropboxAPI<AndroidAuthSession>(
                     OpenDropBox.buildSession(this));
             mPath = new OpenDropBox(mApi);
+        } else if (t2.startsWith("drive"))
+        {
+            return new OpenDrive(getPassword());
         } else return null;
         mPath.setServer(this);
         return mPath;
@@ -255,7 +300,9 @@ public class OpenServer {
 
     public String getName() {
         String mName = get("name");
-        return mName != null && !mName.equals("") ? mName : getHost();
+        if(mName != null && !mName.equals(""))
+            return mName;
+        return getOpenPath().getName();
     }
 
     public OpenServer setHost(String host) {
@@ -326,8 +373,12 @@ public class OpenServer {
 
     public int getPort() {
         try {
-            return Integer.parseInt(get("port"));
+            String p = get("port", "-1");
+            if (p == null || p.equals("null"))
+                return -1;
+            return Integer.parseInt(p);
         } catch (NumberFormatException e) {
+            Logger.LogError("Invalid number for port? ", e);
             return -1;
         }
     }
@@ -352,4 +403,96 @@ public class OpenServer {
     public long get(String key, long defValue) {
         return mData.optLong(key, defValue);
     }
+/*
+    @Override
+    public String getAbsolutePath() {
+        return getOpenPath().getAbsolutePath();
+    }
+
+    @Override
+    public long length() {
+        return getOpenPath().length();
+    }
+
+    @Override
+    public OpenPath getParent() {
+        return null;
+    }
+
+    @Override
+    public OpenPath getChild(String name) {
+        return getOpenPath().getChild(name);
+    }
+
+    @Override
+    public OpenPath[] list() throws IOException {
+        return getOpenPath().list();
+    }
+
+    @Override
+    public OpenPath[] listFiles() throws IOException {
+         return getOpenPath().listFiles();
+    }
+
+    @Override
+    public Boolean isDirectory() {
+        return getOpenPath().isDirectory();
+    }
+
+    @Override
+    public Boolean isFile() {
+        return getOpenPath().isFile();
+    }
+
+    @Override
+    public Boolean isHidden() {
+        return getOpenPath().isHidden();
+    }
+
+    @Override
+    public Uri getUri() {
+        return getOpenPath().getUri();
+    }
+
+    @Override
+    public Long lastModified() {
+        return getOpenPath().lastModified();
+    }
+
+    @Override
+    public Boolean canRead() {
+        return getOpenPath().canRead();
+    }
+
+    @Override
+    public Boolean canWrite() {
+        return getOpenPath().canWrite();
+    }
+
+    @Override
+    public Boolean canExecute() {
+        return getOpenPath().canExecute();
+    }
+
+    @Override
+    public Boolean exists() {
+        return getOpenPath().exists();
+    }
+
+    @Override
+    public Boolean requiresThread() {
+        return true;
+    }
+
+    @Override
+    public Boolean delete() {
+        OpenServers.getDefaultServers().remove(getServerIndex());
+        return true;
+    }
+
+    @Override
+    public Boolean mkdir() {
+        return getOpenPath().mkdir();
+    }
+*/
 }
