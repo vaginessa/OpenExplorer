@@ -282,8 +282,10 @@ public class OpenServer {
             DropboxAPI<AndroidAuthSession> mApi = new DropboxAPI<AndroidAuthSession>(
                     OpenDropBox.buildSession(this));
             mPath = new OpenDropBox(mApi);
-        } else
-            return null;
+        } else if (t2.startsWith("drive"))
+        {
+            return new OpenDrive(getPassword());
+        } else return null;
         mPath.setServer(this);
         return mPath;
     }
