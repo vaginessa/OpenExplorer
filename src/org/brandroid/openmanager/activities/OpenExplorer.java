@@ -232,6 +232,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int RESULT_RESTART_NEEDED = 12;
     public static final int REQ_AUTHENTICATE_BOX = 13;
     public static final int REQ_AUTHENTICATE_DROPBOX = 14;
+    public static final int REQ_SERVER_NEW = 15;
+    public static final int REQ_SERVER_MODIFY = 16;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
@@ -3102,7 +3104,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 }
             }
         } else if (requestCode == REQ_INTENT) {
-
+        } else if (requestCode == REQ_SERVER_MODIFY || requestCode == REQ_SERVER_NEW) {
+            refreshBookmarks();
         } else {
             super.onActivityResult(requestCode, resultCode, data);
             if (getSelectedFragment() != null)

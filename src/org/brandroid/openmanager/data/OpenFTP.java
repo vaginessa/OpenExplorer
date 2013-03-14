@@ -20,7 +20,7 @@ import android.app.Activity;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
+public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded, OpenPath.ListHandler {
     private FTPFile mFile;
     private final FTPManager mManager;
     private final ArrayList<OpenFTP> mChildren = new ArrayList<OpenFTP>();

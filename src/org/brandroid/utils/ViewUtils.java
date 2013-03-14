@@ -110,11 +110,13 @@ public class ViewUtils {
             final View v = view.findViewById(id);
             if (v != null)
             {
-                Runnable enabler = new Runnable(){public void run(){
-                v.setEnabled(enabled);
-                v.setVisibility(View.VISIBLE);
-                }};
-                if(Thread.currentThread().equals(OpenExplorer.UiThread))
+                Runnable enabler = new Runnable() {
+                    public void run() {
+                        v.setEnabled(enabled);
+                        v.setVisibility(View.VISIBLE);
+                    }
+                };
+                if (Thread.currentThread().equals(OpenExplorer.UiThread))
                     enabler.run();
                 else
                     OpenExplorer.getHandler().post(enabler);
@@ -128,29 +130,30 @@ public class ViewUtils {
             if (pm.findPreference(key) != null)
                 pm.findPreference(key).setOnPreferenceChangeListener(listener);
     }
-    
+
     public static void setOnChangeListener(View parent, TextWatcher watcher, int... ids)
     {
-        if(ids.length == 0 && parent instanceof TextView)
+        if (ids.length == 0 && parent instanceof TextView)
             ((TextView)parent).addTextChangedListener(watcher);
         else
-            for(int id : ids)
+            for (int id : ids)
             {
                 View v = parent.findViewById(id);
-                if(v != null && v instanceof TextView)
+                if (v != null && v instanceof TextView)
                     ((TextView)v).addTextChangedListener(watcher);
             }
     }
-    
-    public static void setOnChangeListener(View parent, OnCheckedChangeListener listener, int... ids)
+
+    public static void setOnChangeListener(View parent, OnCheckedChangeListener listener,
+            int... ids)
     {
-        if(ids.length == 0 && parent instanceof CompoundButton)
+        if (ids.length == 0 && parent instanceof CompoundButton)
             ((CompoundButton)parent).setOnCheckedChangeListener(listener);
         else
-            for(int id : ids)
+            for (int id : ids)
             {
                 View v = parent.findViewById(id);
-                if(v != null && v instanceof CompoundButton)
+                if (v != null && v instanceof CompoundButton)
                     ((CompoundButton)v).setOnCheckedChangeListener(listener);
             }
     }
@@ -208,9 +211,9 @@ public class ViewUtils {
             return;
         boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
         if (textViewID.length == 0)
-            if(parent != null && parent instanceof TextView)
+            if (parent != null && parent instanceof TextView)
             {
-                if(ui)
+                if (ui)
                     ((TextView)parent).setText(text);
                 else
                     parent.post(new Runnable() {
@@ -326,13 +329,14 @@ public class ViewUtils {
     public static void setViewsVisible(final View parent, final boolean visible, final int... ids) {
         if (parent == null)
             return;
-        if(Thread.currentThread().equals(OpenExplorer.UiThread))
+        if (Thread.currentThread().equals(OpenExplorer.UiThread))
             parent.post(new Runnable() {
                 public void run() {
                     setViewsVisibleNow(parent, visible, ids);
                 }
             });
-        else setViewsVisibleNow(parent, visible, ids);
+        else
+            setViewsVisibleNow(parent, visible, ids);
     }
 
     public static void toggleChecked(View view) {
@@ -412,9 +416,19 @@ public class ViewUtils {
         return ((ViewStub)view.findViewById(stubId)).inflate();
     }
 
-    public static void setImageResource(View parent, int drawableId, int... ids) {
+    public static void setImageResource(final View parent, final int drawableId, final int... ids) {
         if (parent == null)
             return;
+        if (!Thread.currentThread().equals(OpenExplorer.UiThread))
+        {
+            OpenExplorer.getHandler().post(new Runnable() {
+                public void run() {
+                    setImageResource(parent, drawableId, ids);
+                }
+            });
+            return;
+        }
+        setViewsVisibleNow(parent, drawableId != 0, ids);
         if (ids.length == 0)
             if (parent instanceof ImageView)
                 ((ImageView)parent).setImageResource(drawableId);
@@ -428,17 +442,18 @@ public class ViewUtils {
     }
 
     public static void setImageDrawable(final View parent, final Drawable d, int... ids) {
-        if(parent == null) return;
-        if(ids.length > 0)
+        if (parent == null)
+            return;
+        if (ids.length > 0)
         {
-            for(int id : ids)
+            for (int id : ids)
                 setImageDrawable(parent.findViewById(id), d);
             return;
         }
         Runnable run = new Runnable() {
             @SuppressLint("NewApi")
             public void run() {
-                if(parent instanceof ImageView)
+                if (parent instanceof ImageView)
                     ((ImageView)parent).setImageDrawable(d);
                 else if (parent instanceof ImageButton)
                     ((ImageButton)parent).setImageDrawable(d);
@@ -446,7 +461,7 @@ public class ViewUtils {
                     parent.setBackground(d);
             }
         };
-        if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+        if (!Thread.currentThread().equals(OpenExplorer.UiThread))
             OpenExplorer.getHandler().post(run);
         else
             run.run();

@@ -2478,13 +2478,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (getExplorer() == null)
             return;
         if (!Thread.currentThread().equals(OpenExplorer.UiThread)) {
-            if (getView() != null)
-                getView().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyDataSetChanged();
-                    }
-                });
+            OpenExplorer.getHandler().post(new Runnable() {
+                public void run() {
+                    notifyDataSetChanged();
+                }
+            });
             return;
         }
         if (mContentAdapter == null) {

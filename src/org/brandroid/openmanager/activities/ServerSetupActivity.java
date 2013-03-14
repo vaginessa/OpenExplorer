@@ -911,7 +911,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     Intent intent = new Intent(app.getContext(), ServerSetupActivity.class);
                     intent.putExtra("server_type_id", position);
-                    app.startActivityForResult(intent, OpenExplorer.REQ_INTENT);
+                    app.startActivityForResult(intent, OpenExplorer.REQ_SERVER_NEW);
                 }
 
                 @Override
@@ -927,7 +927,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             JSONObject jo = server.getJSONObject(false, app.getContext());
             intent.putExtra("server", jo.toString());
             intent.putExtra("server_type_id", getServerTypeFromString(server.getType()));
-            app.startActivityForResult(intent, OpenExplorer.REQ_INTENT);
+            app.startActivityForResult(intent, OpenExplorer.REQ_SERVER_MODIFY);
         }
 
         return true;
