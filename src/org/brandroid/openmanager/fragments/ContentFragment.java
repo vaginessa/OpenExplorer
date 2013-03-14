@@ -674,7 +674,6 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         NetworkIOTask.addTask(sPath, mTask);
         EventHandler.executeNetwork(mTask, mPath);
         new Thread(new Runnable() {
-            @Override
             public void run() {
                 try {
                     Thread.sleep(30000);
@@ -2491,6 +2490,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (mGrid != null
                 && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
             mGrid.setAdapter(mContentAdapter);
+        
+        mContentAdapter.getAll();
 
         // if(mContentAdapter != null)
         // mContentAdapter.updateData();

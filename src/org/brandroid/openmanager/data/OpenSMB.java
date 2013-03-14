@@ -1,26 +1,19 @@
 
 package org.brandroid.openmanager.data;
 
-import jcifs.UniAddress;
 import jcifs.smb.AllocInfo;
 import jcifs.smb.Handler;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
-import jcifs.smb.SmbShareInfo;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.SoftReference;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -32,9 +25,8 @@ import org.brandroid.utils.Logger;
 
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 
-public class OpenSMB extends OpenNetworkPath implements OpenPath.ListHandler, OpenPath.OpenPathSizable, OpenNetworkPath.PipeNeeded {
+public class OpenSMB extends OpenNetworkPath implements OpenPath.OpenPathSizable, OpenNetworkPath.PipeNeeded {
     private SmbFile mFile;
     private OpenSMB mParent;
     private OpenSMB[] mChildren = null;

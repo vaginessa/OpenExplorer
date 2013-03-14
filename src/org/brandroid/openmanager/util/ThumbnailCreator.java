@@ -30,6 +30,7 @@ import java.util.jar.JarFile;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
@@ -41,7 +42,10 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
@@ -171,20 +175,26 @@ public class ThumbnailCreator {
                         if (!fails.containsKey(file.getPath())) {
                             if (!app.getMemoryCache().containsKey(file.getPath()))
                             {
-                                if (file instanceof OpenPath.ThumbnailHandler && file.hasThumbnail()) {
-                                    ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth, new OpenPath.ThumbnailReturnCallback() {
-                                        public void onThumbReturned(Bitmap bmp) {
-                                            try {
-                                                String mCacheFilename = getCacheFilename(file.getAbsolutePath(), mWidth, mHeight);
-                                                saveThumbnail(app.getContext(), mCacheFilename, bmp);
-                                                app.getMemoryCache().put(mCacheFilename, bmp);
-                                                mListener.updateImage(bmp);
-                                            } catch(OutOfMemoryError e) {
-                                                showThumbPreviews = false;
-                                                Logger.LogWarning("No more memory for thumbs!");
-                                            }
-                                        }
-                                    });
+                                if (file instanceof OpenPath.ThumbnailHandler
+                                        && file.hasThumbnail()) {
+                                    ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth,
+                                            new OpenPath.ThumbnailReturnCallback() {
+                                                public void onThumbReturned(Bitmap bmp) {
+                                                    try {
+                                                        String mCacheFilename = getCacheFilename(
+                                                                file.getAbsolutePath(), mWidth,
+                                                                mHeight);
+                                                        saveThumbnail(app.getContext(),
+                                                                mCacheFilename, bmp);
+                                                        app.getMemoryCache().put(mCacheFilename,
+                                                                bmp);
+                                                        mListener.updateImage(bmp);
+                                                    } catch (OutOfMemoryError e) {
+                                                        showThumbPreviews = false;
+                                                        Logger.LogWarning("No more memory for thumbs!");
+                                                    }
+                                                }
+                                            });
                                     return true;
                                 }
                                 new Thread(new Runnable() {
@@ -326,15 +336,18 @@ public class ThumbnailCreator {
         if (c != null && c.getResources() != null)
         {
             Drawable d = null;
-            if(file.isTextFile())
+            if (file.isTextFile())
                 d = ThumbnailCreator.getFileExtIcon(file.getExtension(), c, mWidth > 72);
             else
                 d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
-            if(file instanceof OpenPath.ThumbnailOverlayInterface)
+            if (file instanceof OpenPath.ThumbnailOverlayInterface)
             {
-                Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c, mWidth > 36);
-                if(over != null)
-                    d = new LayerDrawable(new Drawable[]{d,over});
+                Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c,
+                        mWidth > 36);
+                if (over != null)
+                    d = new LayerDrawable(new Drawable[] {
+                            d, over
+                    });
             }
             return d;
         }
@@ -355,7 +368,7 @@ public class ThumbnailCreator {
             else if (file instanceof OpenCursor)
                 hasKids = true;
         } catch (IOException e) {
-            //TODO Catch exception properly
+            // TODO Catch exception properly
         }
 
         if (file.isDirectory()) {
@@ -363,7 +376,7 @@ public class ThumbnailCreator {
             if (file instanceof OpenSMB) {
                 return (useLarge ? R.drawable.lg_folder_pipe : R.drawable.sm_folder_pipe);
             }
-            if (file instanceof OpenSFTP) {
+            if (file instanceof OpenVFS || file instanceof OpenSFTP) {
                 return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
             }
             if (file instanceof OpenFTP) {
@@ -447,10 +460,15 @@ public class ThumbnailCreator {
 
         if (file.isDirectory()) {
             // Network Object Icons
+            if (file instanceof OpenServer)
+            {
+                return ServerSetupActivity.getServerTypeDrawable(ServerSetupActivity
+                        .getServerTypeFromString(((OpenServer)file).getType()));
+            }
             if (file instanceof OpenSMB) {
                 return R.drawable.lg_folder_pipe;
             }
-            if (file instanceof OpenSFTP) {
+            if (file instanceof OpenVFS || file instanceof OpenSFTP) {
                 return R.drawable.lg_folder_secure;
             }
             if (file instanceof OpenFTP) {
@@ -460,7 +478,7 @@ public class ThumbnailCreator {
                 return R.drawable.icon_box;
             if (file instanceof OpenDropBox)
                 return R.drawable.icon_dropbox;
-            if(file instanceof OpenCommand)
+            if (file instanceof OpenCommand)
                 return ((OpenCommand)file).getDrawableId();
 
             // Local Filesystem Icons
@@ -600,7 +618,7 @@ public class ThumbnailCreator {
                 opts.inPurgeable = true;
                 opts.outHeight = mHeight;
                 // if(!showCenteredCroppedPreviews)
-                //    opts.outWidth = mWidth;
+                // opts.outWidth = mWidth;
                 int kind = mWidth > 96 ? MediaStore.Video.Thumbnails.MINI_KIND
                         : MediaStore.Video.Thumbnails.MICRO_KIND;
                 try {

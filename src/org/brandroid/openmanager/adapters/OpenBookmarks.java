@@ -105,6 +105,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     }
 
     public OpenBookmarks(OpenApp app, View view) {
+        mBookmarkAdapter = new BookmarkAdapter();
         mResources = app.getResources();
         mPreferences = app.getPreferences();
         OpenExplorer.setOnBookMarkAddListener(this);
@@ -115,7 +116,6 @@ public class OpenBookmarks implements OnGroupClickListener,
         mPrefs = new Preferences(app.getContext()).getPreferences("bookmarks");
         if (mBookmarkString == null)
             mBookmarkString = mPrefs.getString("bookmarks", "");
-        mBookmarkAdapter = new BookmarkAdapter();
         if (view != null && view instanceof ExpandableListView)
             setupListView((ExpandableListView)view);
         if (app != null)
@@ -237,36 +237,30 @@ public class OpenBookmarks implements OnGroupClickListener,
                     for (String s : l)
                         checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
                 }
-
-                OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
-                for (int i = 0; i < servers.size(); i++) {
-                    OpenServer server = servers.get(i);
-                    Logger.LogDebug("Checking server #" + i + ": " + server.toString());
-                    SimpleUserInfo info = new SimpleUserInfo();
-                    info.setPassword(server.getPassword());
-                    OpenNetworkPath onp = server.getOpenPath();
-                    if (onp == null)
-                        continue;
-                    onp.setServer(server);
-                    onp.setName(server.getName());
-                    onp.setUserInfo(info);
-                    if (server.getPort() > 0)
-                        onp.setPort(server.getPort());
-                    addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
-                }
-                addBookmark(BookmarkType.BOOKMARK_SERVER,
-                        new OpenCommand(context.getResources()
-                                .getString(R.string.s_pref_server_add),
-                                OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add),
-                        null);
-
-                OpenExplorer.getHandler().post(new Runnable() {
-                    public void run() {
-                        notifyDataSetChanged(mApp);
-                    }
-                });
             }
         }).start();
+
+        addBookmark(BookmarkType.BOOKMARK_SERVER,
+                new OpenCommand(context.getResources()
+                        .getString(R.string.s_pref_server_add),
+                        OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add),
+                null);
+
+        notifyDataSetChanged(mApp);
+
+        OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
+        for (int i = 0; i < servers.size(); i++) {
+            final int ind = i;
+            final OpenServer server = servers.get(i);
+            //new Thread(new Runnable() {public void run() {
+                    Logger.LogDebug("Checking server #" + ind + ": " + server.toString());
+                    //SimpleUserInfo info = new SimpleUserInfo();
+                    //info.setPassword(server.getPassword());
+                    addBookmark(BookmarkType.BOOKMARK_SERVER, server,
+                            Math.min(ind, getListOfType(BOOKMARK_SERVER).size() - 1), null);
+                //}}).start();
+        }
+        notifyDataSetChanged(mApp);
     }
 
     public void notifyDataSetChanged(final OpenApp app)
@@ -366,8 +360,8 @@ public class OpenBookmarks implements OnGroupClickListener,
             });
         } else
             ViewUtils.setViewsVisible(parent, false, R.id.content_count);
-        
-        if(path instanceof OpenCommand)
+
+        if (path instanceof OpenCommand)
             ViewUtils.setViewsVisible(parent, false, R.id.content_icon, R.id.bookmark_icon);
 
         if (path instanceof OpenPath.OpenPathSizable) {
@@ -495,7 +489,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     public void refresh(OpenApp app) {
         notifyDataSetChanged(app);
     }
-    
+
     private void clearBookmarks() {
         for (int i = 0; i < BookmarkType.values().length; i++)
             getListOfType(i).clear();
@@ -647,10 +641,10 @@ public class OpenBookmarks implements OnGroupClickListener,
         Logger.LogDebug("Setting up ListView in OpenBookmarks");
         // lv.setDrawSelectorOnTop(true);
         // lv.setSelector(R.drawable.selector_blue);
-        //lv.setOnChildClickListener(this);
-        //lv.setOnGroupClickListener(this);
+        // lv.setOnChildClickListener(this);
+        // lv.setOnGroupClickListener(this);
         lv.setGroupIndicator(null);
-        //lv.setOnItemLongClickListener(this);
+        // lv.setOnItemLongClickListener(this);
         lv.setLongClickable(true);
         // lv.setOnItemClickListener(this);
         // lv.setBackgroundResource(R.drawable.listgradback);
@@ -674,7 +668,7 @@ public class OpenBookmarks implements OnGroupClickListener,
                 break;
         }
     }
-    
+
     @Override
     public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
         // if(mBookmarksArray.get(groupPosition).size() > 0)

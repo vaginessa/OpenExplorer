@@ -132,6 +132,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
@@ -155,6 +156,7 @@ import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -859,14 +861,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 return true;
             }
         });
-        try {
-            OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
-                    FileManager.DefaultUserInfo, Preferences.getPreferences(
-                            getApplicationContext(), "hosts")));
-            OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
-        } catch (JSchException e) {
-            Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
-        }
+        OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
+        new Thread(new Runnable() {
+            public void run() {
+                OpenVFS.getManager().setLogger(Logger.VFSLogger);
+            }
+        }).start();
     }
 
     private MimeTypes getMimeTypes() {

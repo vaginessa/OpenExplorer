@@ -20,7 +20,7 @@ import android.app.Activity;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded, OpenPath.ListHandler {
+public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private FTPFile mFile;
     private final FTPManager mManager;
     private final ArrayList<OpenFTP> mChildren = new ArrayList<OpenFTP>();
@@ -129,7 +129,9 @@ public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
     }
 
     public void setName(String name) {
-        mName = name;
+        if(!Thread.currentThread().equals(OpenExplorer.UiThread) && getParent() != null)
+            getParent().setName(name);
+        else mName = name;
     }
 
     @Override
@@ -199,7 +201,7 @@ public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
                     return (OpenFTP)FileManager.getOpenCache(path);
             }
         } catch (Exception e) {
-            Logger.LogError("Unable to get OpenSFTP.getParent(" + getPath() + ")", e);
+            Logger.LogError("Unable to get OpenFTP.getParent(" + getPath() + ")", e);
         }
         return null;
     }
