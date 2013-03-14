@@ -647,8 +647,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             ((OpenPath.ListHandler)mPath).list(new OpenPath.ListListener() {
                 public void onException(final Exception e) {
                     Logger.LogWarning("Unable to list.", e);
+                    try {
                     Toast.makeText(getContext(), "Unable to list. " + e,
                             Toast.LENGTH_LONG).show();
+                    } catch(Exception e2) { }
                 }
 
                 public void onListReceived(OpenPath[] list) {
@@ -674,7 +676,6 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         NetworkIOTask.addTask(sPath, mTask);
         EventHandler.executeNetwork(mTask, mPath);
         new Thread(new Runnable() {
-            @Override
             public void run() {
                 try {
                     Thread.sleep(30000);
@@ -2478,13 +2479,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (getExplorer() == null)
             return;
         if (!Thread.currentThread().equals(OpenExplorer.UiThread)) {
-            if (getView() != null)
-                getView().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyDataSetChanged();
-                    }
-                });
+            OpenExplorer.getHandler().post(new Runnable() {
+                public void run() {
+                    notifyDataSetChanged();
+                }
+            });
             return;
         }
         if (mContentAdapter == null) {
@@ -2493,6 +2492,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (mGrid != null
                 && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))
             mGrid.setAdapter(mContentAdapter);
+        
+        mContentAdapter.getAll();
 
         // if(mContentAdapter != null)
         // mContentAdapter.updateData();

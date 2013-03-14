@@ -273,7 +273,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         AppKeyPair appKeyPair = getAppKeyPair();
 
         Intent intent = getOfficialIntent(c, appKeyPair.key, appKeyPair.secret);
-        if (hasDropboxApp(c, intent)) {
+        if (!OpenServers.getDefaultServers().hasServerType("db")
+                && hasDropboxApp(c, intent)) {
             c.startActivity(intent); // ,
                                      // OpenExplorer.REQ_AUTHENTICATE_DROPBOX);
         } else {

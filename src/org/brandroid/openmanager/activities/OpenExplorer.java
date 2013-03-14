@@ -132,6 +132,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
@@ -155,6 +156,7 @@ import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -232,6 +234,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int RESULT_RESTART_NEEDED = 12;
     public static final int REQ_AUTHENTICATE_BOX = 13;
     public static final int REQ_AUTHENTICATE_DROPBOX = 14;
+    public static final int REQ_SERVER_NEW = 15;
+    public static final int REQ_SERVER_MODIFY = 16;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
@@ -857,11 +861,16 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 return true;
             }
         });
+        OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
+        new Thread(new Runnable() {
+            public void run() {
+                OpenVFS.getManager().setLogger(Logger.VFSLogger);
+            }
+        }).start();
         try {
             OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
                     FileManager.DefaultUserInfo, Preferences.getPreferences(
                             getApplicationContext(), "hosts")));
-            OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
         } catch (JSchException e) {
             Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
         }
@@ -3102,7 +3111,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 }
             }
         } else if (requestCode == REQ_INTENT) {
-
+        } else if (requestCode == REQ_SERVER_MODIFY || requestCode == REQ_SERVER_NEW) {
+            refreshBookmarks();
         } else {
             super.onActivityResult(requestCode, resultCode, data);
             if (getSelectedFragment() != null)

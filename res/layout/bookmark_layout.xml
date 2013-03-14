@@ -32,6 +32,7 @@
         android:layout_height="32dp"
         android:layout_centerVertical="true"
         android:layout_marginRight="8dp"
+        android:visibility="invisible"
         android:src="@drawable/icon" />
 
     <TextView

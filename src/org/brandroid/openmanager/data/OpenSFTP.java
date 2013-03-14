@@ -29,6 +29,7 @@ import com.jcraft.jsch.UserInfo;
 
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 
 /**
  * Main class for SFTP connections. Please note that as a descendent of
@@ -62,7 +63,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
         mUserInfo = new SimpleUserInfo();
         if (user != null && user.indexOf(":") > -1) {
             String pw = Uri.decode(user.substring(user.indexOf(":") + 1));
-            mUser = Uri.decode(user.substring(0, user.indexOf(":") - 1));
+            mUser = Uri.decode(user.substring(0, user.indexOf(":")));
             ((SimpleUserInfo)mUserInfo).setPassword(pw);
         } else if (user != null)
             mUser = Uri.decode(user);
@@ -255,6 +256,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
 
     @Override
     public OpenPath[] listFiles() throws IOException {
+        if(Thread.currentThread().equals(OpenExplorer.UiThread)) return getChildren();
         try {
             connect();
             String lsPath = mRemotePath.replace(mChannel.pwd() + "/", "");
@@ -280,7 +282,10 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
             throw new IOException("SftpException during listFiles");
         } catch (JSchException e) {
             Logger.LogError("JSchException during listFiles", e);
-            throw new IOException("JSchException during listFiles");
+            if(Build.VERSION.SDK_INT > 8)
+                throw new IOException("JSchException during listFiles", e);
+            else
+                throw new IOException("JSchException during listFiles - " + e.getMessage());
         }
         FileManager.setOpenCache(getAbsolutePath(), this);
         return mChildren;

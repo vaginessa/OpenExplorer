@@ -15,7 +15,7 @@ import android.os.AsyncTask;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.UserInfo;
 
-public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream, ListHandler {
+public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
     /**
 	 * 
 	 */
@@ -240,7 +240,6 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         return -1;
     }
 
-    @Override
     public void list(final ListListener listener) {
         new Thread(new Runnable() {
             public void run() {

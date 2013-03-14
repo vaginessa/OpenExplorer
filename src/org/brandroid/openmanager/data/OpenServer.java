@@ -1,6 +1,7 @@
 
 package org.brandroid.openmanager.data;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Locale;
 
@@ -22,8 +23,7 @@ import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 
 import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.net.Uri;
 
 public class OpenServer {
     private final JSONObject mData;
@@ -235,6 +235,8 @@ public class OpenServer {
 
     public String getPath() {
         String mPath = get("dir", "");
+        if(!mPath.startsWith("/"))
+            mPath = "/" + mPath;
         return mPath + (mPath.equals("") || mPath.endsWith("/") ? "" : "/");
     }
 
@@ -252,6 +254,7 @@ public class OpenServer {
             mPath = new OpenSCP(getHost(), getUser(), getPath(), info);
         } else if (t2.startsWith("sftp")) {
             mPath = new OpenSFTP(getHost(), getUser(), getPath());
+            //mPath = new OpenVFS("sftp://" + getUser() + ":" + getPassword() + "@" + getHost() + getPath());
         } else if (t2.startsWith("smb")) {
             try {
                 mPath = new OpenSMB(new SmbFile("smb://" + getHost() + "/" + getPath(),
@@ -295,7 +298,9 @@ public class OpenServer {
 
     public String getName() {
         String mName = get("name");
-        return mName != null && !mName.equals("") ? mName : getHost();
+        if(mName != null && !mName.equals(""))
+            return mName;
+        return getOpenPath().getName();
     }
 
     public OpenServer setHost(String host) {
@@ -396,4 +401,96 @@ public class OpenServer {
     public long get(String key, long defValue) {
         return mData.optLong(key, defValue);
     }
+/*
+    @Override
+    public String getAbsolutePath() {
+        return getOpenPath().getAbsolutePath();
+    }
+
+    @Override
+    public long length() {
+        return getOpenPath().length();
+    }
+
+    @Override
+    public OpenPath getParent() {
+        return null;
+    }
+
+    @Override
+    public OpenPath getChild(String name) {
+        return getOpenPath().getChild(name);
+    }
+
+    @Override
+    public OpenPath[] list() throws IOException {
+        return getOpenPath().list();
+    }
+
+    @Override
+    public OpenPath[] listFiles() throws IOException {
+         return getOpenPath().listFiles();
+    }
+
+    @Override
+    public Boolean isDirectory() {
+        return getOpenPath().isDirectory();
+    }
+
+    @Override
+    public Boolean isFile() {
+        return getOpenPath().isFile();
+    }
+
+    @Override
+    public Boolean isHidden() {
+        return getOpenPath().isHidden();
+    }
+
+    @Override
+    public Uri getUri() {
+        return getOpenPath().getUri();
+    }
+
+    @Override
+    public Long lastModified() {
+        return getOpenPath().lastModified();
+    }
+
+    @Override
+    public Boolean canRead() {
+        return getOpenPath().canRead();
+    }
+
+    @Override
+    public Boolean canWrite() {
+        return getOpenPath().canWrite();
+    }
+
+    @Override
+    public Boolean canExecute() {
+        return getOpenPath().canExecute();
+    }
+
+    @Override
+    public Boolean exists() {
+        return getOpenPath().exists();
+    }
+
+    @Override
+    public Boolean requiresThread() {
+        return true;
+    }
+
+    @Override
+    public Boolean delete() {
+        OpenServers.getDefaultServers().remove(getServerIndex());
+        return true;
+    }
+
+    @Override
+    public Boolean mkdir() {
+        return getOpenPath().mkdir();
+    }
+*/
 }

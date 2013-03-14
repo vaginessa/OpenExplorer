@@ -2,6 +2,7 @@
 package org.brandroid.openmanager.data;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -12,7 +13,7 @@ import android.content.Context;
 
 public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;
-    private CopyOnWriteArrayList<OpenServer> mData;
+    private List<OpenServer> mData;
     private static OpenServers DefaultServers = new OpenServers();
     private static boolean mDefaultServersSet = false;
     private static String mDecryptKey;
@@ -64,6 +65,13 @@ public class OpenServers implements Iterable<OpenServer> {
                 return server;
         }
         return null;
+    }
+    
+    public boolean hasServerType(String type) {
+        for(OpenServer server : mData)
+            if(server.getType().equalsIgnoreCase(type))
+                return true;
+        return false;
     }
 
     public OpenServer findByHost(String type, String host) {

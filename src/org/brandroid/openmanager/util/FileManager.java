@@ -50,6 +50,7 @@ import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenTar;
+import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
@@ -287,6 +288,7 @@ public class FileManager {
             ret = new OpenFTP(path, null, new FTPManager());
         else if (path.startsWith("sftp:/"))
             ret = new OpenSFTP(path);
+            //ret = new OpenVFS(path);
         else if (path.startsWith("smb:/"))
             try {
                 ret = new OpenSMB(path);
@@ -367,6 +369,7 @@ public class FileManager {
             } else if (path.startsWith("sftp:/") && servers != null) {
                 Uri uri = Uri.parse(path);
                 OpenServer server = servers.findByHost("sftp", uri.getHost());
+                // ret = new OpenVFS(path);
                 ret = new OpenSFTP(uri);
                 SimpleUserInfo info = new SimpleUserInfo();
                 if (server != null)
