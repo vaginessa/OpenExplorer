@@ -330,7 +330,7 @@ public class ViewUtils {
         if (parent == null)
             return;
         if (Thread.currentThread().equals(OpenExplorer.UiThread))
-            parent.post(new Runnable() {
+            OpenExplorer.getHandler().post(new Runnable() {
                 public void run() {
                     setViewsVisibleNow(parent, visible, ids);
                 }

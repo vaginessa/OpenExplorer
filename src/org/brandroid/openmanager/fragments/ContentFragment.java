@@ -647,8 +647,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             ((OpenPath.ListHandler)mPath).list(new OpenPath.ListListener() {
                 public void onException(final Exception e) {
                     Logger.LogWarning("Unable to list.", e);
+                    try {
                     Toast.makeText(getContext(), "Unable to list. " + e,
                             Toast.LENGTH_LONG).show();
+                    } catch(Exception e2) { }
                 }
 
                 public void onListReceived(OpenPath[] list) {

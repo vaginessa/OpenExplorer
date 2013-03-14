@@ -39,7 +39,7 @@ import android.os.Build;
  * @author Brandon Bowles
  * @see OpenNetworkPath
  */
-public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded, OpenPath.ListHandler {
+public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private static final long serialVersionUID = 3263112609308933024L;
     private long filesize = 0l;
     private Session mSession = null;
@@ -256,6 +256,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
 
     @Override
     public OpenPath[] listFiles() throws IOException {
+        if(Thread.currentThread().equals(OpenExplorer.UiThread)) return getChildren();
         try {
             connect();
             String lsPath = mRemotePath.replace(mChannel.pwd() + "/", "");

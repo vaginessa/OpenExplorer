@@ -240,26 +240,32 @@ public class OpenBookmarks implements OnGroupClickListener,
             }
         }).start();
 
-        addBookmark(BookmarkType.BOOKMARK_SERVER,
-                new OpenCommand(context.getResources()
-                        .getString(R.string.s_pref_server_add),
-                        OpenCommand.COMMAND_ADD_SERVER, android.R.drawable.ic_menu_add),
-                null);
-
         notifyDataSetChanged(mApp);
 
-        OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
-        for (int i = 0; i < servers.size(); i++) {
-            final int ind = i;
-            final OpenServer server = servers.get(i);
-            //new Thread(new Runnable() {public void run() {
+        final OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
+        new Thread(new Runnable() {
+            public void run() {
+                for (int i = 0; i < servers.size(); i++) {
+                    final int ind = i;
+                    final OpenServer server = servers.get(i);
                     Logger.LogDebug("Checking server #" + ind + ": " + server.toString());
-                    //SimpleUserInfo info = new SimpleUserInfo();
-                    //info.setPassword(server.getPassword());
-                    addBookmark(BookmarkType.BOOKMARK_SERVER, server,
-                            Math.min(ind, getListOfType(BOOKMARK_SERVER).size() - 1), null);
-                //}}).start();
-        }
+                    OpenNetworkPath onp = server.getOpenPath();
+                    onp.setServer(server);
+                    SimpleUserInfo info = new SimpleUserInfo();
+                    info.setPassword(server.getPassword());
+                    onp.setUserInfo(info);
+                    onp.setName(server.getName());
+                    if (server.getPort() > 0)
+                        onp.setPort(server.getPort());
+                    addBookmark(BookmarkType.BOOKMARK_SERVER, onp);
+                }
+                addBookmark(BookmarkType.BOOKMARK_SERVER,
+                        new OpenCommand(
+                                mApp.getResources().getString(R.string.s_pref_server_add),
+                                OpenCommand.COMMAND_ADD_SERVER),
+                        null);
+            }
+        }).start();
         notifyDataSetChanged(mApp);
     }
 
@@ -341,9 +347,13 @@ public class OpenBookmarks implements OnGroupClickListener,
     public void makeBookmarkView(final OpenApp app, final View parent, final OpenPath path)
     {
         ViewUtils.setText(parent, getPathTitle(path), R.id.content_text);
-        ViewUtils.setImageResource(parent,
-                ThumbnailCreator.getDrawerResourceId(path),
-                R.id.content_icon, R.id.bookmark_icon, android.R.id.icon);
+        if (path instanceof OpenCommand)
+            ViewUtils.setViewsVisible(parent, false, R.id.content_icon,
+                    R.id.bookmark_icon);
+        else
+            ViewUtils.setImageResource(parent,
+                    ThumbnailCreator.getDrawerResourceId(path),
+                    R.id.content_icon, R.id.bookmark_icon, android.R.id.icon);
         if (path instanceof OpenSmartFolder || path instanceof OpenPathMerged) {
             ViewUtils.setText(parent, "(" + path.getListLength() + ")", R.id.content_count);
         } else if (path instanceof OpenCursor) {
@@ -360,9 +370,6 @@ public class OpenBookmarks implements OnGroupClickListener,
             });
         } else
             ViewUtils.setViewsVisible(parent, false, R.id.content_count);
-
-        if (path instanceof OpenCommand)
-            ViewUtils.setViewsVisible(parent, false, R.id.content_icon, R.id.bookmark_icon);
 
         if (path instanceof OpenPath.OpenPathSizable) {
             updateSizeIndicator(path, parent);
@@ -973,7 +980,7 @@ public class OpenBookmarks implements OnGroupClickListener,
 
             ViewUtils.setText(row, getPathTitle(path), R.id.content_text);
 
-            mIcon.setImageResource(ThumbnailCreator.getDrawerResourceId(path));
+            ViewUtils.setImageResource(mIcon, ThumbnailCreator.getDrawerResourceId(path));
 
             ViewUtils.setAlpha(mIcon, !hasKids ? 0.5f : 1.0f);
 

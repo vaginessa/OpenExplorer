@@ -867,6 +867,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 OpenVFS.getManager().setLogger(Logger.VFSLogger);
             }
         }).start();
+        try {
+            OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
+                    FileManager.DefaultUserInfo, Preferences.getPreferences(
+                            getApplicationContext(), "hosts")));
+        } catch (JSchException e) {
+            Logger.LogWarning("Couldn't set Preference-backed Host Key Repository", e);
+        }
     }
 
     private MimeTypes getMimeTypes() {

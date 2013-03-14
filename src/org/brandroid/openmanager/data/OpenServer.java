@@ -25,7 +25,7 @@ import com.dropbox.client2.android.AndroidAuthSession;
 import android.content.Context;
 import android.net.Uri;
 
-public class OpenServer extends OpenPath {
+public class OpenServer {
     private final JSONObject mData;
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
     private OpenNetworkPath mPath;
@@ -401,7 +401,7 @@ public class OpenServer extends OpenPath {
     public long get(String key, long defValue) {
         return mData.optLong(key, defValue);
     }
-
+/*
     @Override
     public String getAbsolutePath() {
         return getOpenPath().getAbsolutePath();
@@ -492,4 +492,5 @@ public class OpenServer extends OpenPath {
     public Boolean mkdir() {
         return getOpenPath().mkdir();
     }
+*/
 }

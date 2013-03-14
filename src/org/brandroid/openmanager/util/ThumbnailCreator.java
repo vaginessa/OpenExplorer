@@ -460,11 +460,6 @@ public class ThumbnailCreator {
 
         if (file.isDirectory()) {
             // Network Object Icons
-            if (file instanceof OpenServer)
-            {
-                return ServerSetupActivity.getServerTypeDrawable(ServerSetupActivity
-                        .getServerTypeFromString(((OpenServer)file).getType()));
-            }
             if (file instanceof OpenSMB) {
                 return R.drawable.lg_folder_pipe;
             }
