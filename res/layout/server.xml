@@ -152,14 +152,11 @@
                 </RelativeLayout>
             </LinearLayout>
 
-            <include
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                layout="@layout/server_auth_stub" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/label_name"
                 android:text="@string/s_pref_server_name" />
 
             <EditText
@@ -170,6 +167,11 @@
                 android:hint="@string/s_pref_server_name"
                 android:inputType="textNoSuggestions"
                 android:singleLine="true" />
+            
+            <include
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/server_auth_stub" />
         </LinearLayout>
     </ScrollView>
 

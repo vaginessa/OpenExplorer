@@ -317,6 +317,8 @@ public class ViewUtils {
         if (ids.length == 0) {
             if (parent.getVisibility() != vis)
                 parent.setVisibility(vis);
+            if (visible && parent.getParent() != null && !parent.getParent().equals(parent) && parent.getParent() instanceof View)
+                ((View)parent.getParent()).setVisibility(View.VISIBLE);
         } else
             for (int id : ids) {
                 View v = parent.findViewById(id);

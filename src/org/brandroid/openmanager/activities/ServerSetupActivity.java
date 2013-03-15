@@ -25,6 +25,7 @@ import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
+import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.ViewUtils;
@@ -51,10 +52,13 @@ import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
 
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -64,15 +68,20 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -94,7 +103,7 @@ import android.widget.Toast;
 
 public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
         OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp,
-        OpenDrive.OnAuthTokenListener {
+        OpenDrive.OnAuthTokenListener, OnItemClickListener {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -121,6 +130,160 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+
+    public static class ServerTypeAdapter extends BaseAdapter
+    {
+        private final String[] mServerTypes;
+        private final List<ResolveInfo> mResolves;
+        private final LayoutInflater mInflater;
+        private final PackageManager mPackageManager;
+        private final Resources mResources;
+        private final String[] mServerLabels;
+
+        public ServerTypeAdapter(OpenApp app)
+        {
+            mInflater = LayoutInflater.from(app.getContext());
+            mPackageManager = app.getContext().getPackageManager();
+            Intent intent = new Intent("org.brandroid.openmanager.server_type");
+            mResolves = IntentManager.getResolvesAvailable(intent, app);
+            mServerTypes = app.getContext().getResources()
+                    .getStringArray(R.array.server_types_values);
+            mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
+            mResources = app.getResources();
+        }
+
+        @Override
+        public int getCount() {
+            return mServerTypes.length +
+                    mResolves.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            if (position < mServerTypes.length)
+                return mServerTypes[position];
+            return mResolves.get(position - mServerTypes.length);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null)
+                convertView = mInflater.inflate(R.layout.server_type_item, null);
+            TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
+            CharSequence text = null;
+            Drawable icon = null;
+            if (position < mServerTypes.length)
+            {
+                text = mServerLabels[position];
+                String type = mServerTypes[position];
+                int iType = getServerTypeFromString(type);
+                if (iType > -1)
+                    icon = parent.getResources().getDrawable(
+                            ServerSetupActivity.getServerTypeDrawable(iType));
+                else
+                    ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
+
+            } else {
+                ResolveInfo info = mResolves.get(position - mServerTypes.length);
+                text = info.loadLabel(mPackageManager);
+                icon = info.loadIcon(mPackageManager);
+            }
+            ViewUtils.setImageDrawable(convertView, icon, android.R.id.icon);
+            tv.setText(text);
+            return convertView;
+        }
+
+    }
+
+    public class AccountTypeAdapter extends BaseAdapter
+    {
+        private final AccountManager accountManager;
+        private final android.accounts.Account[] accounts;
+
+        public AccountTypeAdapter(Context context)
+        {
+            accountManager = AccountManager.get(context);
+            accounts = new GoogleAccountManager(accountManager).getAccounts();
+        }
+
+        @Override
+        public int getCount() {
+            return accounts.length;
+        }
+
+        @Override
+        public android.accounts.Account getItem(int position) {
+            return accounts[position];
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View view, ViewGroup parent) {
+            final Context context = parent.getContext();
+            if (view == null)
+                view = LayoutInflater.from(context)
+                        .inflate(R.layout.server_account_row, null);
+            android.accounts.Account account = getItem(position);
+            final String name = account.name;
+            ((TextView)view.findViewById(R.id.server_account_name)).setText(name);
+            final TextView mStatus = (TextView)view.findViewById(R.id.server_account_status);
+            mStatus.setText(colorify(context.getString(R.string.s_pending), Color.GRAY));
+            new Thread(new Runnable() {
+                public void run() {
+                    OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null,
+                            name);
+                    if (server == null)
+                        ViewUtils.setText(mStatus,
+                                colorify(context.getString(R.string.s_authenticate), Color.BLUE));
+                    else {
+                        OpenDrive.getAuthToken(ServerSetupActivity.this, new OnAuthTokenListener() {
+                            public void onException(Exception e) {
+                                ViewUtils.setText(
+                                        mStatus,
+                                        colorify(context.getString(R.string.httpErrorAuth),
+                                                Color.RED));
+                                Logger.LogError("Unable to get Auth token?", e);
+                            }
+
+                            public void onDriveAuthTokenReceived(String account, String token) {
+                                ViewUtils.setText(
+                                        mStatus,
+                                        colorify(
+                                                context.getString(R.string.s_authenticate_success),
+                                                Color.GREEN));
+                            }
+                        }, name);
+                    }
+                }
+            }).start();
+            return view;
+        }
+
+    }
+
+    public CharSequence colorify(int resId, int color) {
+        return colorify(getString(resId), color);
+    }
+
+    public static CharSequence colorify(String txt, int color) {
+        if (color != 0) {
+            color = Color.rgb(Color.red(color), Color.green(color), Color.blue(color));
+            SpannableString line = new SpannableString(txt);
+            line.setSpan(new ForegroundColorSpan(color), 0, line.length(),
+                    Spanned.SPAN_COMPOSING);
+            return line;
+        } else
+            return txt;
+    }
 
     public int getThemeId() {
         String themeName = new Preferences(this)
@@ -273,7 +436,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Logger.LogVerbose("ServerSetupActivity.onActivityResult(" + requestCode + ", " + resultCode + ", " + data);
+        Logger.LogVerbose("ServerSetupActivity.onActivityResult(" + requestCode + ", " + resultCode
+                + ", " + data);
         if (data != null)
         {
             handleIntent(data);
@@ -287,7 +451,12 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     private void handleIntent(Intent data) {
         if (DEBUG)
-            Logger.LogDebug("ServerSetupActivity.handleIntent(" + data.getExtras() + ")");
+            Logger.LogDebug("ServerSetupActivity.handleIntent(" + data + ")");
+        checkSharedPreferences();
+        if (data == null)
+            return;
+        if (data.getExtras() == null)
+            return;
         if (data != null && data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
         {
             String token = data.getStringExtra("AUTH_TOKEN");
@@ -306,7 +475,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         } else {
             if (data.hasExtra(AccountManager.KEY_INTENT))
                 OpenDrive.getAuthToken(this, this, data.getExtras());
-            if (OpenDropBox.handleIntent(data, server))
+            else if (OpenDropBox.handleIntent(data, server))
             {
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
                 ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
@@ -314,6 +483,11 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
             }
         }
+        invalidateOptionsMenu();
+    }
+
+    private boolean checkSharedPreferences()
+    {
         SharedPreferences sp = getSharedPreferences("dropbox", Context.MODE_PRIVATE);
         if (sp != null && sp.contains("token"))
         {
@@ -341,7 +515,9 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 getDropboxAccountInfo();
             }
             sp.edit().clear().commit();
+            return true;
         }
+        return false;
     }
 
     private void getDropboxAccountInfo()
@@ -523,7 +699,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     if (checkDropBoxAppKeySetup())
                         OpenDropBox.startAuthentication(this);
                 } else if (t2.startsWith("drive")) {
-                    OpenDrive.selectAccount(this, this);
+                    showAccountList();
                 }
                 return true;
             case R.id.server_logout:
@@ -551,75 +727,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 return true;
         }
         return false;
-    }
-
-    public static class ServerTypeAdapter extends BaseAdapter
-    {
-        private final String[] mServerTypes;
-        private final List<ResolveInfo> mResolves;
-        private final LayoutInflater mInflater;
-        private final PackageManager mPackageManager;
-        private final Resources mResources;
-        private final String[] mServerLabels;
-
-        public ServerTypeAdapter(OpenApp app)
-        {
-            mInflater = LayoutInflater.from(app.getContext());
-            mPackageManager = app.getContext().getPackageManager();
-            Intent intent = new Intent("org.brandroid.openmanager.server_type");
-            mResolves = IntentManager.getResolvesAvailable(intent, app);
-            mServerTypes = app.getContext().getResources()
-                    .getStringArray(R.array.server_types_values);
-            mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
-            mResources = app.getResources();
-        }
-
-        @Override
-        public int getCount() {
-            return mServerTypes.length +
-                    mResolves.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            if (position < mServerTypes.length)
-                return mServerTypes[position];
-            return mResolves.get(position - mServerTypes.length);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null)
-                convertView = mInflater.inflate(R.layout.server_type_item, null);
-            TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
-            CharSequence text = null;
-            Drawable icon = null;
-            if (position < mServerTypes.length)
-            {
-                text = mServerLabels[position];
-                String type = mServerTypes[position];
-                int iType = getServerTypeFromString(type);
-                if (iType > -1)
-                    icon = parent.getResources().getDrawable(
-                            ServerSetupActivity.getServerTypeDrawable(iType));
-                else
-                    ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
-
-            } else {
-                ResolveInfo info = mResolves.get(position - mServerTypes.length);
-                text = info.loadLabel(mPackageManager);
-                icon = info.loadIcon(mPackageManager);
-            }
-            ViewUtils.setImageDrawable(convertView, icon, android.R.id.icon);
-            tv.setText(text);
-            return convertView;
-        }
-
     }
 
     public static int getServerTypeFromString(String type)
@@ -824,6 +931,13 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuUtils.setMenuEnabled(menu, server.isValid(), android.R.string.ok);
+        MenuUtils.setMenuVisible(menu, server.getServerIndex() > -1, R.string.s_remove);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (onClick(item.getItemId()))
             return true;
@@ -866,20 +980,20 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             server.setType("sftp");
         else if (position == 2)
             server.setType("smb");
-        else if (position >= 3)
-        {
+        else if (position >= 3) {
+            ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons, R.id.text_name,
+                    R.id.label_name);
             if (position == 3)
                 server.setType("box");
-            else if (position == 4)
-            {
+            else if (position == 4) {
                 server.setType("db");
                 if (!server.get("account", "").equals(""))
                     getDropboxAccountInfo();
-            } else if (position == 5)
+            } else if (position == 5) {
                 server.setType("drive");
+            }
             ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port,
                     R.id.label_port);
-            ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
             if (server.getPassword() != null && !server.getPassword().equals(""))
             {
                 ViewUtils.setViewsVisible(v, true, R.id.server_logout);
@@ -888,6 +1002,23 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 enableAuthenticateButton(true);
             }
         }
+    }
+
+    private void showAccountList() {
+        ListView lvAccounts = new ListView(getContext());
+        lvAccounts.setAdapter(new AccountTypeAdapter(getContext()));
+        final Dialog dlg = new AlertDialog.Builder(getContext())
+                .setView(lvAccounts)
+                .setTitle(R.string.s_server_account_title)
+                .setNeutralButton(android.R.string.cancel, null)
+                .create();
+        lvAccounts.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                dlg.dismiss();
+                ServerSetupActivity.this.onItemClick(parent, view, position, id);
+            }
+        });
+        dlg.show();
     }
 
     @Override
@@ -1038,9 +1169,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 JSONArray jarr = new JSONArray(data);
                 final Preferences prefs = new Preferences(context);
                 String dk = SettingsActivity.GetMasterPassword(context);
-                if (// !prefs.getBoolean("warn", "master_key_fallback", false)
-                    // &&
-                !canDecryptPasswords(jarr, dk))
+                if (!canDecryptPasswords(jarr, dk))
                 {
                     if (DEBUG)
                         Logger.LogDebug("ServerSetup can't decrypt. Trying to fall back!");
@@ -1263,11 +1392,29 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 .show();
     }
 
+    @SuppressLint("NewApi")
     @Override
-    public void onAuthTokenReceived(String token) {
+    public void onDriveAuthTokenReceived(String account, String token) {
+        server.setUser(account);
         server.setPassword(token);
+        server.setName(account);
+        ViewUtils.setText(mBaseView, account, R.id.text_name, R.id.text_user);
         ViewUtils.setText(mBaseView, token, R.id.text_password);
-        enableAuthenticateButton(false);
-        Toast.makeText(getContext(), "Token received!", Toast.LENGTH_LONG).show();
+        ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+        ViewUtils.setViewsVisible(mBaseView, false, R.id.server_authenticate);
+        invalidateOptionsMenu();
     }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Object data = parent.getItemAtPosition(position);
+        if (data instanceof android.accounts.Account)
+        {
+            android.accounts.Account account = (android.accounts.Account)data;
+            ViewUtils.setText(view, colorify(R.string.s_authenticating, Color.YELLOW),
+                    R.id.server_account_status);
+            OpenDrive.getAuthToken(this, this, account.name);
+        }
+    }
+
 }
