@@ -28,7 +28,10 @@ public class PrivatePreferences {
         privateKeys.put("box_secret", "BcTh1GpJpma1cJc58sqcfZSjDZeuiYZ2");
         privateKeys.put("dropbox_key", "vajaedmhzkkp3sw");
         privateKeys.put("dropbox_secret", "plkrfrygu17glgn");
-        privateKeys.put("drive_client_id", "645291897772-1a86vuv4n5vfpcecb1c26gib52a4013m.apps.googleusercontent.com");
+        privateKeys.put("oauth_drive_client_id", "645291897772.apps.googleusercontent.com");
+        privateKeys.put("oauth_drive_secret", "xo9-oPP7P7Rj5er3J1qmzhoG");
+        privateKeys.put("debug_drive_client_id", "645291897772-j66m64an4a8kj8he60ciarpmj12428ul.apps.googleusercontent.com");
+        privateKeys.put("drive_client_id", "645291897772-c540moos4f9bo15jg7aqfat5c0cj5d0v.apps.googleusercontent.com");
         privateKeys.put("drive_secret", "4Q7GP50Vc412WEx0T2LY40p_");
         privateKeys.put("google_api_key", "AIzaSyCaxVyRcOV5nej6x-6iONgKOsrNGmrk4ZI");
         privateKeys.put("master_key", "I'm not sure why I'm going " +
