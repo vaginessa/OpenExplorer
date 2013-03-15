@@ -223,8 +223,8 @@ public class OpenDrive extends OpenNetworkPath {
     @Override
     public String getPath() {
         if (mFile != null)
-            return "drive://drive.brandroid.org/" + mFile.getSelfLink();
-        return "drive://drive.brandroid.org/" + mFolderId;
+            return "drive://" + Utils.urlencode(mCredential.getServiceAccountUser()) + "@drive.brandroid.org/" + mFile.getSelfLink();
+        return "drive://" + Utils.urlencode(mCredential.getServiceAccountUser()) + "@drive.brandroid.org/" + mFolderId;
     }
 
     @Override
