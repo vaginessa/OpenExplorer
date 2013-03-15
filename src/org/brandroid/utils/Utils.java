@@ -561,7 +561,7 @@ public class Utils {
     public static String urlencode(String s) {
         try {
             s = URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
         }
         return s;
     }
@@ -569,7 +569,7 @@ public class Utils {
     public static String urldecode(String s) {
         try {
             s = URLDecoder.decode(s, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
         }
         return s;
     }

@@ -406,7 +406,7 @@ public class FileManager {
                 try {
                     Uri uri = Uri.parse(path);
                     String pw = uri.getUserInfo();
-                    if (pw.indexOf(":") > -1)
+                    if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);
                     User user = new User();
                     user.setAuthToken(pw);
@@ -423,7 +423,7 @@ public class FileManager {
                 try {
                     Uri uri = Uri.parse(path);
                     String pw = uri.getUserInfo();
-                    if (pw.indexOf(":") > -1)
+                    if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);
                     ret = new OpenDrive(pw);
                 } catch (Exception e) {

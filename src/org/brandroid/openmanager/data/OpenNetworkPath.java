@@ -69,6 +69,13 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     {
         return mServer;
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        if(o == null) return false;
+        if(!(o instanceof OpenNetworkPath)) return false;
+        return super.equals(o);
+    }
 
     @Override
     public Boolean canWrite() {

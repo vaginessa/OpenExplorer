@@ -60,7 +60,8 @@ public class OpenServers implements Iterable<OpenServer> {
     public OpenServer findByUser(String type, String host, String user) {
         for (int i = 0; i < mData.size(); i++) {
             OpenServer server = mData.get(i);
-            if (server.getHost().equalsIgnoreCase(host) && server.getType().equalsIgnoreCase(type)
+            if ((host == null || server.getHost().equalsIgnoreCase(host))
+                    && server.getType().equalsIgnoreCase(type)
                     && (user == "" || server.getUser().equalsIgnoreCase(user)))
                 return server;
         }
