@@ -6,14 +6,20 @@ import java.util.List;
 import java.util.Vector;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.utils.Logger;
+
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.services.GoogleKeyInitializer;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 
+import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
@@ -22,12 +28,19 @@ import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
+import android.widget.Toast;
 
 public class OpenDrive extends OpenNetworkPath {
 
-    private Drive mDrive;
+    public final static String DRIVE_SCOPE_AUTH_TYPE = "oauth2:" + DriveScopes.DRIVE_READONLY;
+
+    private static Drive mDrive;
     private final GoogleCredential mCredential;
     private String mName = "Drive";
     private String mFolderId = "0";
@@ -39,10 +52,13 @@ public class OpenDrive extends OpenNetworkPath {
     {
         mCredential = new GoogleCredential();
         mCredential.setAccessToken(token);
-        mDrive = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(),
-                mCredential)
-                .setApplicationName("OpenExplorer")
-                .build();
+        if (mDrive == null)
+            mDrive = new Drive.Builder(
+                        AndroidHttp.newCompatibleTransport(),
+                        new GsonFactory(),
+                        mCredential)
+                    .setApplicationName("OpenExplorer")
+                    .build();
         mParent = null;
         mFile = null;
     }
@@ -69,44 +85,82 @@ public class OpenDrive extends OpenNetworkPath {
         });
     }
 
+    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
+            Bundle bundle)
+    {
+        Toast.makeText(activity, "Auth Token? " + bundle, Toast.LENGTH_LONG).show();
+        Logger.LogVerbose("Account Callback: " + bundle);
+        if (bundle.containsKey(AccountManager.KEY_INTENT)) {
+            Intent intent = (Intent)bundle.getParcelable(AccountManager.KEY_INTENT);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE_DRIVE);
+        } else if (bundle.containsKey(AccountManager.KEY_AUTHTOKEN)) {
+            postAuthCallback(bundle.getString(AccountManager.KEY_AUTHTOKEN), callback);
+        } else if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
+        {
+            String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
+            Toast.makeText(activity, accountName, Toast.LENGTH_SHORT).show();
+            GoogleAccountManager accountManager = new GoogleAccountManager(activity);
+            Account account = accountManager.getAccountByName(accountName);
+            accountManager.getAccountManager()
+                    .getAuthToken(account, DRIVE_SCOPE_AUTH_TYPE, null, activity,
+                            new AccountManagerCallback<Bundle>() {
+                                public void run(AccountManagerFuture<Bundle> future) {
+                                    Bundle bundle = new Bundle();
+                                    try {
+                                        bundle = future.getResult();
+                                        getAuthToken(activity, callback, bundle);
+                                    } catch (Exception e) {
+                                        callback.onException(e);
+                                    }
+                                }
+
+                            }, OpenExplorer.getHandler());
+        }
+    }
+
     public static void selectAccount(final Activity activity, final OnAuthTokenListener callback)
     {
-        new Thread(new Runnable() {
-            public void run() {
-                new GoogleAccountManager(activity).getAccountManager()
-                        .getAuthTokenByFeatures(GoogleAccountManager.ACCOUNT_TYPE,
-                                "oauth2:" + DriveScopes.DRIVE, null,
-                                activity, null, null, new AccountManagerCallback<Bundle>() {
-                                    public void run(AccountManagerFuture<Bundle> future) {
-                                        try {
-                                            Bundle bundle = future.getResult();
-                                            if (bundle.containsKey(AccountManager.KEY_INTENT))
-                                            {
-                                                Intent intent = (Intent)bundle
-                                                        .getParcelable(AccountManager.KEY_INTENT);
-                                                activity.startActivityForResult(intent,
-                                                        OpenExplorer.REQ_AUTHENTICATE_DRIVE);
-                                            } else if (bundle
-                                                    .containsKey(AccountManager.KEY_AUTHTOKEN))
-                                            {
-                                                postAuthCallback(bundle
-                                                        .getString(AccountManager.KEY_AUTHTOKEN),
-                                                        callback);
-                                            }
-                                        } catch (OperationCanceledException e) {
-                                            // TODO Auto-generated catch block
-                                            e.printStackTrace();
-                                        } catch (AuthenticatorException e) {
-                                            // TODO Auto-generated catch block
-                                            e.printStackTrace();
-                                        } catch (IOException e) {
-                                            // TODO Auto-generated catch block
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }, OpenExplorer.getHandler());
+        if (mDrive == null)
+        {
+            GoogleCredential credential = new GoogleCredential.Builder()
+                    .setClientSecrets(
+                            PrivatePreferences.getKey("drive_client_id"),
+                            PrivatePreferences.getKey("drive_secret"))
+                    .build();
+            String appName = activity.getApplicationInfo().name;
+            try {
+                appName += "/" + activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
+            } catch (NameNotFoundException e) {
             }
-        }).start();
+            mDrive = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(), credential)
+                    .setApplicationName(appName)
+                    .setHttpRequestInitializer(credential)
+                    .build();
+        }
+        // new Thread(new Runnable() {
+        // public void run() {
+        GoogleAccountCredential acct = GoogleAccountCredential.usingOAuth2(activity, DriveScopes.DRIVE);
+        Account[] accounts = acct.getAllAccounts();
+        if(accounts.length > 0)
+        {
+            Account a = accounts[0];
+            acct.getGoogleAccountManager().getAccountManager().getAuthToken(a, DRIVE_SCOPE_AUTH_TYPE, null, activity, new AccountManagerCallback<Bundle>() {
+                public void run(AccountManagerFuture<Bundle> future) {
+                    Bundle bundle = new Bundle();
+                    try {
+                        bundle = future.getResult();
+                        getAuthToken(activity, callback, bundle);
+                    } catch (Exception e) {
+                        callback.onException(e);
+                    }
+                }
+
+            }, OpenExplorer.getHandler());
+        }
+        //activity.startActivityForResult(acct.newChooseAccountIntent(), OpenExplorer.REQ_AUTHENTICATE_DRIVE);
+        // }
+        // }).start();
     }
 
     @Override
