@@ -37,6 +37,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
+import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
 import org.brandroid.openmanager.data.OpenFileRoot;
@@ -416,6 +417,17 @@ public class FileManager {
                     }
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get Box.com from cache.", e);
+                }
+            } else if (path.startsWith("drive")) {
+
+                try {
+                    Uri uri = Uri.parse(path);
+                    String pw = uri.getUserInfo();
+                    if (pw.indexOf(":") > -1)
+                        pw = pw.substring(pw.indexOf(":") + 1);
+                    ret = new OpenDrive(pw);
+                } catch (Exception e) {
+                    Logger.LogError("Couldn't get Drive item from cache.", e);
                 }
             } else if (path.startsWith("db")) {
                 try {

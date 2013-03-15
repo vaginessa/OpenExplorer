@@ -10,6 +10,8 @@ import java.util.Locale;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenDrive;
+import org.brandroid.openmanager.data.OpenDrive.OnAuthTokenListener;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -181,6 +183,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 server.setType(t2);
         } else if(serverType == -1)
             serverType = getServerTypeFromString(t2);
+        else if (t2.startsWith("drive"))
+            serverType = 4;
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
@@ -368,6 +372,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 return R.drawable.icon_box;
             case 4:
                 return R.drawable.icon_dropbox;
+            case 5:
+                return R.drawable.icon_drive;
             default:
                 return R.drawable.lg_ftp;
         }
@@ -509,6 +515,20 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     // AccessType.DROPBOX);
                     if (checkDropBoxAppKeySetup())
                         OpenDropBox.startAuthentication(this);
+                } else if (t2.startsWith("drive")) {
+                    OpenDrive.selectAccount(this, new OnAuthTokenListener() {
+                        public void onException(Exception e) {
+                            Logger.LogError("Unable to authenticate Drive.", e);
+                            Toast.makeText(ServerSetupActivity.this, "Unable to authenticate Drive.", Toast.LENGTH_LONG).show();
+                }
+                        
+                        @Override
+                        public void onAuthTokenReceived(String token) {
+                            server.setPassword(token);
+                            ViewUtils.setText(mBaseView, token, R.id.text_password);
+                            enableAuthenticateButton(false);
+                        }
+                    });
                 }
                 return true;
             case R.id.server_logout:
