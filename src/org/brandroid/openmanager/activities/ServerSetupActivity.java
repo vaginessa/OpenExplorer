@@ -52,6 +52,7 @@ import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -92,7 +93,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
-        OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp {
+        OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp,
+        OpenDrive.OnAuthTokenListener {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -149,8 +151,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
         int iServersIndex = mArgs.getInt("server_index", -1);
         int serverType = mArgs.getInt("server_type_id", -1);
-        
-        if(DEBUG)
+
+        if (DEBUG)
             Logger.LogDebug("ServerSetupActivity.server_type = " + serverType);
 
         final Context context = this;
@@ -175,13 +177,13 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         server.setServerIndex(iServersIndex);
 
         String t2 = "ftp";
-        if(server.getType() != null)
+        if (server.getType() != null)
             t2 = server.getType().toLowerCase(Locale.US);
         if (serverType > -1 && t2.equals("ftp")) {
             t2 = getServerTypeString(serverType);
-            if(t2 != null)
+            if (t2 != null)
                 server.setType(t2);
-        } else if(serverType == -1)
+        } else if (serverType == -1)
             serverType = getServerTypeFromString(t2);
         else if (t2.startsWith("drive"))
             serverType = 4;
@@ -202,9 +204,10 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             {
                 Object o = mArgs.get("server_" + map);
                 String val = null;
-                if(o instanceof String)
+                if (o instanceof String)
                     val = (String)o;
-                else continue;
+                else
+                    continue;
                 server.setSetting(map, val);
             }
             ViewUtils.setText(mBaseView, server.get(map, ""), id);
@@ -270,6 +273,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Logger.LogVerbose("ServerSetupActivity.onActivityResult(" + requestCode + ", " + resultCode + ", " + data);
         if (data != null)
         {
             handleIntent(data);
@@ -300,6 +304,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     R.id.server_authenticate);
             ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
         } else {
+            if (data.hasExtra(AccountManager.KEY_INTENT))
+                OpenDrive.getAuthToken(this, this, data.getExtras());
             if (OpenDropBox.handleIntent(data, server))
             {
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
@@ -330,7 +336,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 AndroidAuthSession sess = OpenDropBox.buildSession(server);
                 try {
                     sess.finishAuthentication();
-                } catch(Exception e) { }
+                } catch (Exception e) {
+                }
                 getDropboxAccountInfo();
             }
             sp.edit().clear().commit();
@@ -516,19 +523,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     if (checkDropBoxAppKeySetup())
                         OpenDropBox.startAuthentication(this);
                 } else if (t2.startsWith("drive")) {
-                    OpenDrive.selectAccount(this, new OnAuthTokenListener() {
-                        public void onException(Exception e) {
-                            Logger.LogError("Unable to authenticate Drive.", e);
-                            Toast.makeText(ServerSetupActivity.this, "Unable to authenticate Drive.", Toast.LENGTH_LONG).show();
-                }
-                        
-                        @Override
-                        public void onAuthTokenReceived(String token) {
-                            server.setPassword(token);
-                            ViewUtils.setText(mBaseView, token, R.id.text_password);
-                            enableAuthenticateButton(false);
-                        }
-                    });
+                    OpenDrive.selectAccount(this, this);
                 }
                 return true;
             case R.id.server_logout:
@@ -609,7 +604,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 text = mServerLabels[position];
                 String type = mServerTypes[position];
                 int iType = getServerTypeFromString(type);
-                if(iType > -1)
+                if (iType > -1)
                     icon = parent.getResources().getDrawable(
                             ServerSetupActivity.getServerTypeDrawable(iType));
                 else
@@ -626,7 +621,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         }
 
     }
-    
+
     public static int getServerTypeFromString(String type)
     {
         if (type.equalsIgnoreCase("ftp"))
@@ -639,19 +634,30 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             return 3;
         else if (type.startsWith("db"))
             return 4;
-        else return -1;
+        else if (type.startsWith("drive"))
+            return 5;
+        else
+            return -1;
     }
-    
+
     public static String getServerTypeString(int type)
     {
-        switch(type)
+        switch (type)
         {
-            case 0: return "ftp";
-            case 1: return "sftp";
-            case 2: return "smb";
-            case 3: return "box";
-            case 4: return "db";
-            default: return null;
+            case 0:
+                return "ftp";
+            case 1:
+                return "sftp";
+            case 2:
+                return "smb";
+            case 3:
+                return "box";
+            case 4:
+                return "db";
+            case 5:
+                return "drive";
+            default:
+                return null;
         }
     }
 
@@ -869,7 +875,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 server.setType("db");
                 if (!server.get("account", "").equals(""))
                     getDropboxAccountInfo();
-            }
+            } else if (position == 5)
+                server.setType("drive");
             ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port,
                     R.id.label_port);
             ViewUtils.setViewsVisible(v, true, R.id.server_auth_buttons);
@@ -1247,5 +1254,20 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     public int getThemedResourceId(int styleableId, int defaultResourceId) {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public void onException(Exception e) {
+        Logger.LogError("Unable to authenticate Drive.", e);
+        Toast.makeText(ServerSetupActivity.this, "Unable to authenticate Drive.", Toast.LENGTH_LONG)
+                .show();
+    }
+
+    @Override
+    public void onAuthTokenReceived(String token) {
+        server.setPassword(token);
+        ViewUtils.setText(mBaseView, token, R.id.text_password);
+        enableAuthenticateButton(false);
+        Toast.makeText(getContext(), "Token received!", Toast.LENGTH_LONG).show();
     }
 }
