@@ -11,13 +11,14 @@ import java.util.Locale;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenDrive;
-import org.brandroid.openmanager.data.OpenDrive.OnAuthTokenListener;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenPath.ExceptionListener;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.interfaces.OnAuthTokenListener;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.PrivatePreferences;
@@ -48,13 +49,21 @@ import com.box.androidlib.GetAuthTokenListener;
 import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
-import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential.Builder;
 import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 
+import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -65,6 +74,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -103,7 +113,7 @@ import android.widget.Toast;
 
 public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
         OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp,
-        OpenDrive.OnAuthTokenListener, OnItemClickListener {
+        OnAuthTokenListener, OnItemClickListener {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -244,24 +254,21 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     if (server == null)
                         ViewUtils.setText(mStatus,
                                 colorify(context.getString(R.string.s_authenticate), Color.BLUE));
-                    else {
-                        OpenDrive.getAuthToken(ServerSetupActivity.this, new OnAuthTokenListener() {
-                            public void onException(Exception e) {
-                                ViewUtils.setText(
-                                        mStatus,
-                                        colorify(context.getString(R.string.httpErrorAuth),
-                                                Color.RED));
-                                Logger.LogError("Unable to get Auth token?", e);
-                            }
-
-                            public void onDriveAuthTokenReceived(String account, String token) {
-                                ViewUtils.setText(
-                                        mStatus,
-                                        colorify(
-                                                context.getString(R.string.s_authenticate_success),
-                                                Color.GREEN));
-                            }
-                        }, name);
+                    else if (server.getUser() != null)
+                    {
+                        String pw = server.getUser();
+                        if (pw.indexOf(":") > -1)
+                            pw = pw.substring(pw.lastIndexOf(":") + 1);
+                        if (pw.indexOf(",") > -1)
+                            pw = pw.substring(0, pw.indexOf(","));
+                        if (!pw.equals(""))
+                            ViewUtils.setText(
+                                    mStatus,
+                                    colorify(context.getString(R.string.s_authenticate_success),
+                                            Color.GREEN));
+                        else
+                            ViewUtils.setText(mStatus,
+                                    colorify(context.getString(R.string.s_authenticate), Color.RED));
                     }
                 }
             }).start();
@@ -314,6 +321,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
         int iServersIndex = mArgs.getInt("server_index", -1);
         int serverType = mArgs.getInt("server_type_id", -1);
+        mServerTypes = getResources().getStringArray(R.array.server_types_values);
+        String[] mServerLabels = getResources().getStringArray(R.array.server_types);
 
         if (DEBUG)
             Logger.LogDebug("ServerSetupActivity.server_type = " + serverType);
@@ -334,7 +343,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 }
             }
             if (server == null)
-                server = new OpenServer().setName("New Server");
+                server = new OpenServer().setName(serverType > -1 ? mServerLabels[serverType] : "New Server");
         }
 
         server.setServerIndex(iServersIndex);
@@ -348,8 +357,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 server.setType(t2);
         } else if (serverType == -1)
             serverType = getServerTypeFromString(t2);
-        else if (t2.startsWith("drive"))
-            serverType = 4;
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
@@ -421,7 +428,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             mCheckPort.setChecked(true);
 
         mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
-        mServerTypes = getResources().getStringArray(R.array.server_types_values);
         mTypeSpinner.setOnItemSelectedListener(this);
         mTypeSpinner.setSelection(serverType);
     }
@@ -460,21 +466,25 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         if (data != null && data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
         {
             String token = data.getStringExtra("AUTH_TOKEN");
+            Toast.makeText(getContext(), "Token Received: " + token, Toast.LENGTH_SHORT).show();
             server.setPassword(token);
             server.setUser(token);
             ViewUtils.setText(mBaseView, token, R.id.text_password);
             if (data.getExtras().containsKey("AUTH_LOGIN"))
             {
                 String login = data.getStringExtra("AUTH_LOGIN");
-                server.setName(login);
-                ViewUtils.setText(mBaseView, login, R.id.text_name);
+                if(servers.findByType(server.getType()).size() > 1)
+                {
+                    server.setName(login);
+                    ViewUtils.setText(mBaseView, login, R.id.text_name);
+                }
             }
-            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
-                    R.id.server_authenticate);
+            enableAuthenticateButton(false);
+            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
             ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
         } else {
             if (data.hasExtra(AccountManager.KEY_INTENT))
-                OpenDrive.getAuthToken(this, this, data.getExtras());
+                ServerSetupActivity.getAuthToken(this, this, data.getExtras());
             else if (OpenDropBox.handleIntent(data, server))
             {
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
@@ -531,11 +541,16 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
                 }
 
-                public void onGetAccountInfo(Account account) {
-                    server.setName(account.displayName);
-                    db.setName(account.displayName);
-                    ViewUtils.setText(mBaseView, account.displayName, R.id.text_name);
+                public void onGetAccountInfo(com.dropbox.client2.DropboxAPI.Account account) {
+                    if (OpenServers.getDefaultServers().findByType("db").size() > 0)
+                    {
+                        server.setName(account.displayName);
+                        db.setName(account.displayName);
+                        ViewUtils.setText(mBaseView, account.displayName, R.id.text_name);
+                    }
                     server.setSetting("quota", account.quota);
+                    server.setSetting("normal", account.quotaNormal);
+                    server.setSetting("shared", account.quotaShared);
                     SaveToDefaultServers(servers, ServerSetupActivity.this);
                 }
             });
@@ -558,7 +573,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             case 5:
                 return R.drawable.icon_drive;
             default:
-                return R.drawable.lg_ftp;
+                return R.drawable.sm_ftp;
         }
     }
 
@@ -699,7 +714,12 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     if (checkDropBoxAppKeySetup())
                         OpenDropBox.startAuthentication(this);
                 } else if (t2.startsWith("drive")) {
-                    showAccountList();
+                    if (server.getServerIndex() > -1) // Refresh token
+                    {
+                        server.setPassword("");
+                        getAuthToken(this, this, server.getUser(), true);
+                    } else
+                        showAccountList();
                 }
                 return true;
             case R.id.server_logout:
@@ -723,6 +743,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                             });
                 else if (t2.startsWith("db"))
                     ((OpenDropBox)server.getOpenPath()).unlink();
+                else if (t2.startsWith("drive"))
+                    invalidateAuthToken(this, server.getPassword());
                 enableAuthenticateButton(true);
                 return true;
         }
@@ -802,9 +824,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     R.id.server_authenticate);
             ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_authenticate);
         } else {
-            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate) + " ...",
-                    R.id.server_authenticate);
-            ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticating), R.id.server_authenticate);
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh), R.id.server_authenticate);
         }
     }
 
@@ -997,7 +1018,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             if (server.getPassword() != null && !server.getPassword().equals(""))
             {
                 ViewUtils.setViewsVisible(v, true, R.id.server_logout);
-                ViewUtils.setViewsVisible(v, false, R.id.server_authenticate);
+                ViewUtils.setText(v, getString(R.string.s_authenticate_refresh), R.id.server_authenticate);
             } else {
                 enableAuthenticateButton(true);
             }
@@ -1387,7 +1408,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     @Override
     public void onException(Exception e) {
-        Logger.LogError("Unable to authenticate Drive.", e);
+        Logger.LogError("Unable to authenticate.", e);
         Toast.makeText(ServerSetupActivity.this, "Unable to authenticate Drive.", Toast.LENGTH_LONG)
                 .show();
     }
@@ -1413,8 +1434,110 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             android.accounts.Account account = (android.accounts.Account)data;
             ViewUtils.setText(view, colorify(R.string.s_authenticating, Color.YELLOW),
                     R.id.server_account_status);
-            OpenDrive.getAuthToken(this, this, account.name);
+            getAuthToken(this, this, account.name);
         }
+    }
+
+    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
+            Bundle bundle)
+    {
+        if (bundle.containsKey(AccountManager.KEY_INTENT)) {
+            Intent intent = (Intent)bundle.getParcelable(AccountManager.KEY_INTENT);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE_DRIVE);
+        } else if (bundle.containsKey(AccountManager.KEY_AUTHTOKEN)) {
+            String account = "";
+            if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
+                account = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
+            String token = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+            postAuthCallback(account, token, callback);
+        } else if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
+        {
+            String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
+            getAuthToken(activity, callback, accountName);
+        }
+    }
+
+    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
+            String accountName)
+    {
+        getAuthToken(activity, callback, accountName, false);
+    }
+    
+    public static void invalidateAuthToken(Activity activity, String authToken)
+    {
+        AccountManager.get(activity).invalidateAuthToken(OpenDrive.DRIVE_SCOPE_AUTH_TYPE, authToken);
+    }
+
+    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
+            String accountName, boolean refresh)
+    {
+        GoogleAccountManager accountManager = new GoogleAccountManager(activity);
+        Account account = accountManager.getAccountByName(accountName);
+        OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
+        if(server != null && refresh)
+            invalidateAuthToken(activity, server.getPassword());
+        accountManager.getAccountManager()
+                .getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
+                        new AccountManagerCallback<Bundle>() {
+                            public void run(AccountManagerFuture<Bundle> future) {
+                                Bundle bundle = new Bundle();
+                                try {
+                                    bundle = future.getResult();
+                                    getAuthToken(activity, callback, bundle);
+                                } catch (Exception e) {
+                                    callback.onException(e);
+                                }
+                            }
+
+                        }, OpenExplorer.getHandler());
+    }
+
+    private static boolean received401 = false;
+
+    public static boolean interceptOldToken(Exception e, String authToken, String accountName,
+            final Activity activity, final OnAuthTokenListener callback)
+    {
+        if (e instanceof GoogleJsonResponseException)
+        {
+            GoogleJsonResponseException re = (GoogleJsonResponseException)e;
+            if (re.getStatusCode() == 401 && !received401)
+            {
+                received401 = true;
+                try {
+                    AccountManager am = AccountManager.get(activity);
+                    GoogleAccountManager man = new GoogleAccountManager(am);
+                    man.invalidateAuthToken(authToken);
+                    Account account = man.getAccountByName(accountName);
+                    am.getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
+                            new AccountManagerCallback<Bundle>() {
+                                public void run(AccountManagerFuture<Bundle> future) {
+                                    Bundle bundle = new Bundle();
+                                    try {
+                                        bundle = future.getResult();
+                                        getAuthToken(activity, callback, bundle);
+                                    } catch (Exception e) {
+                                        callback.onException(e);
+                                    }
+                                }
+                            }, OpenExplorer.getHandler());
+                    return true;
+                } catch (Exception e2) {
+                    Logger.LogError("Error getting new Auth token", e2);
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void postAuthCallback(final String account, final String token,
+            final OnAuthTokenListener callback)
+    {
+        OpenExplorer.post(new Runnable() {
+            public void run() {
+                callback.onDriveAuthTokenReceived(account, token);
+            }
+        });
     }
 
 }

@@ -3,6 +3,7 @@ package org.brandroid.openmanager.data;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -21,7 +22,6 @@ public class OpenServers implements Iterable<OpenServer> {
 
     public OpenServers() {
         mData = new CopyOnWriteArrayList<OpenServer>();
-        mDecryptKey = null;
     }
 
     public OpenServers(JSONArray arr) {
@@ -31,6 +31,7 @@ public class OpenServers implements Iterable<OpenServer> {
         for (int i = 0; i < arr.length(); i++)
             try {
                 OpenServer server = new OpenServer(arr.getJSONObject(i));
+                server.setServerIndex(i);
                 add(server);
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
@@ -73,6 +74,14 @@ public class OpenServers implements Iterable<OpenServer> {
             if(server.getType().equalsIgnoreCase(type))
                 return true;
         return false;
+    }
+    
+    public List<OpenServer> findByType(String type) {
+        Vector<OpenServer> ret = new Vector<OpenServer>();
+        for(OpenServer server : mData)
+            if(server.getType().equals(type))
+                ret.add(server);
+        return ret;
     }
 
     public OpenServer findByHost(String type, String host) {

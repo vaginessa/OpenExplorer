@@ -207,6 +207,19 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         public void disconnect();
     }
 
+    public interface CloudCopyListener extends OpenPath.ExceptionListener {
+        public void onCopyComplete(String status);
+    }
+    
+    public interface CloudDeleteListener extends OpenPath.ExceptionListener {
+        public void onDeleteComplete(String status);
+    }
+    
+    public interface CloudOpsHandler extends ListHandler {
+        public boolean copyTo(OpenNetworkPath folder, CloudCopyListener callback);
+        public boolean delete(CloudDeleteListener callback);
+    }
+
     /**
      * This does not change the actual path of the underlying object, just what
      * is displayed to the user.
@@ -248,7 +261,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     }
 
     public void list(final ListListener listener) {
-        new Thread(new Runnable() {
+        thread(new Runnable() {
             public void run() {
                 try {
                     listFiles();
@@ -258,7 +271,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
                     postException(e, listener);
                 }
             }
-        }).start();
+        });
     }
 
     public abstract OpenNetworkPath[] getChildren();

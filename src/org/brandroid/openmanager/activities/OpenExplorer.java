@@ -3938,6 +3938,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static Handler getHandler() {
         return mHandler;
     }
+    
+    public static void post(Runnable r) {
+        getHandler().post(r);
+    }
 
     public OpenApplication getOpenApplication() {
         return (OpenApplication)getApplication();

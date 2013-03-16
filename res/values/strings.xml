@@ -423,5 +423,6 @@
     <string name="s_bookmark_history">History</string>
     <string name="s_server_account_title">Account:</string>
     <string name="s_authenticate_success">Authentication successful</string>
+    <string name="s_authenticate_refresh">Refresh Authentication</string>
 
 </resources>

@@ -35,9 +35,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenLZMA;
@@ -49,9 +51,11 @@ import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenRAR;
+import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenTar;
 import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenZip;
+import org.brandroid.openmanager.interfaces.OnAuthTokenListener;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.EventHandler.CompressionType;
@@ -128,6 +132,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.stericson.RootTools.RootTools;
 
 @SuppressLint("NewApi")
@@ -646,6 +651,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         } else if (mPath instanceof OpenPath.ListHandler) {
             ((OpenPath.ListHandler)mPath).list(new OpenPath.ListListener() {
                 public void onException(final Exception e) {
+                    if(interceptOldToken(e)) return;
                     Logger.LogWarning("Unable to list.", e);
                     try {
                     Toast.makeText(getContext(), "Unable to list. " + e,
@@ -685,6 +691,31 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     mTask.doCancel(false);
             }
         }).start();
+    }
+    
+    private boolean interceptOldToken(Exception e)
+    {
+        if(!(mPath instanceof OpenDrive)) return false;
+        final OpenDrive drive = (OpenDrive)mPath;
+        final GoogleCredential cred = drive.getCredential();
+        return ServerSetupActivity.interceptOldToken(e, cred.getAccessToken(), drive.getServer().getUser(), getExplorer(), new OnAuthTokenListener() {
+            
+            @Override
+            public void onException(Exception e) {
+                // TODO Auto-generated method stub
+                
+            }
+            
+            @Override
+            public void onDriveAuthTokenReceived(String account, String token) {
+                Toast.makeText(getContext(), "Token for " + account + " refreshed! " + token, Toast.LENGTH_SHORT).show();
+                runUpdateTask(true);
+                cred.setAccessToken(token);
+                drive.setCredential(cred);
+                drive.getServer().setPassword(token);
+                ServerSetupActivity.SaveToDefaultServers(OpenServers.getDefaultServers(), getContext());
+            }
+        });
     }
 
     /*

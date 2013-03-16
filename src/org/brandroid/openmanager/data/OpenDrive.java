@@ -1,55 +1,66 @@
 
 package org.brandroid.openmanager.data;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.commons.logging.Log;
+import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.util.PrivatePreferences;
-import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.auth.oauth2.CredentialRefreshListener;
+import com.google.api.client.auth.oauth2.TokenErrorResponse;
+import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.services.GoogleKeyInitializer;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.AbstractInputStreamContent;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Bundle;
-import android.widget.Toast;
+import android.os.AsyncTask;
 
-public class OpenDrive extends OpenNetworkPath {
+public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
+        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler {
 
     public final static String DRIVE_SCOPE_AUTH_TYPE = "oauth2:" + DriveScopes.DRIVE;
 
-    private static Drive mGlobalDrive;
-    private final GoogleCredential mCredential;
+    public static Drive mGlobalDrive;
+    private GoogleCredential mCredential;
     private String mName = "Drive";
-    private String mFolderId = "*";
+    private String mFolderId = "";
     private final OpenDrive mParent;
     private final File mFile;
     private OpenDrive[] mChildren;
+    public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
+    public static final JsonFactory mJsonFactory = new GsonFactory();
+    private static final List<String> SCOPES = Arrays.asList(
+            "https://www.googleapis.com/auth/drive.file");
+    private static CredentialRefreshListener mRefreshListener = null;
+
+    static {
+        if (OpenExplorer.IS_DEBUG_BUILD)
+            Logger.getLogger(HttpTransport.class.getName()).setLevel(Level.ALL);
+    }
 
     public OpenDrive(String token)
     {
@@ -61,11 +72,26 @@ public class OpenDrive extends OpenNetworkPath {
         mCredential.setAccessToken(token);
         if (mGlobalDrive == null)
             mGlobalDrive = new Drive
-                    .Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(), mCredential)
-                            .setApplicationName("OpenExplorer")
+                    .Builder(mTransport, mJsonFactory, mCredential)
+                            .setApplicationName("OpenExplorer/1.0")
+                            .setHttpRequestInitializer(mCredential)
                             .build();
         mParent = null;
         mFile = null;
+    }
+
+    public GoogleCredential getCredential() {
+        return mCredential;
+    }
+
+    public void setCredential(GoogleCredential cred) {
+        mCredential = cred;
+        if (mGlobalDrive == null)
+            mGlobalDrive = new Drive
+                    .Builder(mTransport, mJsonFactory, mCredential)
+                            .setApplicationName("OpenExplorer/1.0")
+                            .setHttpRequestInitializer(mCredential)
+                            .build();
     }
 
     public OpenDrive(OpenDrive parent, File file)
@@ -76,114 +102,9 @@ public class OpenDrive extends OpenNetworkPath {
         mFolderId = file.getId();
     }
 
-    public interface OnAuthTokenListener extends OpenPath.ExceptionListener
+    public static void setRefreshListener(CredentialRefreshListener listener)
     {
-        public void onDriveAuthTokenReceived(String account, String token);
-    }
-
-    private static void postAuthCallback(final String account, final String token,
-            final OnAuthTokenListener callback)
-    {
-        OpenExplorer.getHandler().post(new Runnable() {
-            public void run() {
-                callback.onDriveAuthTokenReceived(account, token);
-            }
-        });
-    }
-
-    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
-            String accountName)
-    {
-        GoogleAccountManager accountManager = new GoogleAccountManager(activity);
-        Account account = accountManager.getAccountByName(accountName);
-        accountManager.getAccountManager()
-                .getAuthToken(account, DRIVE_SCOPE_AUTH_TYPE, null, activity,
-                        new AccountManagerCallback<Bundle>() {
-                            public void run(AccountManagerFuture<Bundle> future) {
-                                Bundle bundle = new Bundle();
-                                try {
-                                    bundle = future.getResult();
-                                    getAuthToken(activity, callback, bundle);
-                                } catch (Exception e) {
-                                    callback.onException(e);
-                                }
-                            }
-
-                        }, OpenExplorer.getHandler());
-    }
-
-    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
-            Bundle bundle)
-    {
-        Toast.makeText(activity, "Auth Token? " + bundle, Toast.LENGTH_LONG).show();
-        Logger.LogVerbose("Account Callback: " + bundle);
-        if (bundle.containsKey(AccountManager.KEY_INTENT)) {
-            Intent intent = (Intent)bundle.getParcelable(AccountManager.KEY_INTENT);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            activity.startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE_DRIVE);
-        } else if (bundle.containsKey(AccountManager.KEY_AUTHTOKEN)) {
-            String account = "";
-            if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
-                account = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-            String token = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-            postAuthCallback(account, token, callback);
-        } else if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
-        {
-            String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-            getAuthToken(activity, callback, accountName);
-        }
-    }
-
-    public static void selectAccount(final Activity activity, final OnAuthTokenListener callback)
-    {
-        if (mGlobalDrive == null)
-        {
-            GoogleCredential credential = new GoogleCredential.Builder()
-                    .setClientSecrets(
-                            PrivatePreferences.getKey("oauth_drive_client_id", ""),
-                            PrivatePreferences.getKey("oauth_drive_secret", "")
-                    )
-                    .build();
-            String appName = activity.getApplicationInfo().name;
-            try {
-                appName += "/"
-                        + activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
-            } catch (NameNotFoundException e) {
-            }
-            mGlobalDrive = new Drive.Builder(AndroidHttp.newCompatibleTransport(),
-                    new GsonFactory(), credential)
-                    .setApplicationName(appName)
-                    .setHttpRequestInitializer(credential)
-                    .build();
-        }
-        // new Thread(new Runnable() {
-        // public void run() {
-        GoogleAccountCredential acct = GoogleAccountCredential.usingOAuth2(activity,
-                DriveScopes.DRIVE);
-        Account[] accounts = acct.getAllAccounts();
-        if (accounts.length > 0)
-        {
-            Account a = accounts[0];
-            acct.getGoogleAccountManager()
-                    .getAccountManager()
-                    .getAuthToken(a, DRIVE_SCOPE_AUTH_TYPE, null, activity,
-                            new AccountManagerCallback<Bundle>() {
-                                public void run(AccountManagerFuture<Bundle> future) {
-                                    Bundle bundle = new Bundle();
-                                    try {
-                                        bundle = future.getResult();
-                                        getAuthToken(activity, callback, bundle);
-                                    } catch (Exception e) {
-                                        callback.onException(e);
-                                    }
-                                }
-
-                            }, OpenExplorer.getHandler());
-        }
-        // activity.startActivityForResult(acct.newChooseAccountIntent(),
-        // OpenExplorer.REQ_AUTHENTICATE_DRIVE);
-        // }
-        // }).start();
+        mRefreshListener = listener;
     }
 
     @Override
@@ -205,13 +126,18 @@ public class OpenDrive extends OpenNetworkPath {
 
     @Override
     public boolean syncUpload(OpenFile f, NetworkListener l) {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean syncDownload(OpenFile f, NetworkListener l) {
-        // TODO Auto-generated method stub
+        try {
+            OutputStream os = new BufferedOutputStream(f.getOutputStream());
+            mGlobalDrive.files().get(getFile().getId()).executeAndDownloadTo(os);
+            return true;
+        } catch(Exception e) {
+            l.OnNetworkFailure(this, f, e);
+        }
         return false;
     }
 
@@ -223,19 +149,31 @@ public class OpenDrive extends OpenNetworkPath {
     @Override
     public String getPath() {
         if (mFile != null)
-            return "drive://" + Utils.urlencode(mCredential.getServiceAccountUser()) + "@drive.brandroid.org/" + mFile.getSelfLink();
-        return "drive://" + Utils.urlencode(mCredential.getServiceAccountUser()) + "@drive.brandroid.org/" + mFolderId;
+            return getPathPrefix(false) + mFile.getSelfLink();
+        return getPathPrefix(false) + mFolderId;
+    }
+
+    public String getPathPrefix(boolean includeToken)
+    {
+        String ret = "drive://";
+        if (mCredential != null && mCredential.getServiceAccountUser() != null)
+            ret += Utils.urlencode(mCredential.getServiceAccountUser()) + ":";
+        if (includeToken && mCredential != null)
+            ret += mCredential.getAccessToken() + "@";
+        ret += "drive.brandroid.org/";
+        return ret;
     }
 
     @Override
     public String getAbsolutePath() {
-        return "drive://" + Utils.urlencode(mCredential.getServiceAccountUser()) + ":"
-                + mCredential.getAccessToken() + "@drive.brandroid.org/" + mFolderId;
+        if (mFile != null)
+            return getPathPrefix(true) + mFile.getSelfLink();
+        return getPathPrefix(true) + mFolderId;
     }
 
     @Override
     public long length() {
-        if (mFile != null)
+        if (mFile != null && mFile.getFileSize() != null)
             return mFile.getFileSize();
         return 0;
     }
@@ -326,5 +264,152 @@ public class OpenDrive extends OpenNetworkPath {
     public Boolean mkdir() {
         return false;
     }
+
+    @Override
+    public Drawable getOverlayDrawable(Context c, boolean large) {
+        return c.getResources().getDrawable(
+                large ? R.drawable.lg_drive_overlay : R.drawable.sm_drive_overlay);
+    }
+
+    public File getFile() {
+        return mFile;
+    }
+
+    @Override
+    public boolean copyTo(OpenNetworkPath path, final CloudCopyListener callback) {
+        if (path instanceof OpenDrive)
+        {
+            final OpenDrive folder = (OpenDrive)path;
+            thread(new Runnable() {
+                public void run() {
+                    try {
+                        mGlobalDrive.files().copy(getFile().getId(), folder.getFile()).execute();
+                        post(new Runnable() {
+                            public void run() {
+                                callback.onCopyComplete("Copy completed successfully");
+                            }
+                        });
+                    } catch (Exception e) {
+                        postException(e, callback);
+                    }
+                }
+            });
+        }
+        return false;
+    }
+
+    @Override
+    public boolean delete(final CloudDeleteListener callback) {
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    mGlobalDrive.files().delete(getFile().getId()).execute();
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onDeleteComplete("Delete complete.");
+                        }
+                    });
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        });
+        return false;
+    }
+
+    @Override
+    public void list(final ListListener listener) {
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    List<OpenDrive> kids = new Vector<OpenDrive>();
+                    for (File f : mGlobalDrive.files().list().execute().getItems())
+                        kids.add(new OpenDrive(OpenDrive.this, f));
+                    mChildren = kids.toArray(new OpenDrive[kids.size()]);
+                    postListReceived(mChildren, listener);
+                } catch (Exception e) {
+                    postException(e, listener);
+                }
+            }
+        });
+    }
+    
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return new BufferedInputStream(mGlobalDrive.files().get(getFile().getId()).executeAsInputStream());
+    }
+    
+    @Override
+    public boolean copyFrom(final OpenFile f, AsyncTask task) {
+        try {
+            final InputStream in = new BufferedInputStream(f.getInputStream());
+            mGlobalDrive.files().insert(getFile(), new AbstractInputStreamContent(getExtension()) {
+                public boolean retrySupported() {
+                    return true;
+                }
+                public long getLength() throws IOException {
+                    return f.length();
+                }
+                public InputStream getInputStream() throws IOException {
+                    return in;
+                }
+            }).execute();
+            return true;
+        } catch(Exception e) {
+            
+        }
+        return super.copyFrom(f, task);
+    }
+    
+    @Override
+    public OutputStream getOutputStream() throws IOException {
+        return null;
+    }
+
+    @Override
+    public OpenFile tempDownload(final AsyncTask task) throws IOException {
+        OpenFile ret = getTempFile();
+        syncDownload(ret, new NetworkListener() {
+            
+            @Override
+            public void OnNetworkFailure(OpenNetworkPath np, OpenFile dest, Exception e) {
+                task.cancel(false);
+            }
+            
+            @Override
+            public void OnNetworkCopyUpdate(Integer... progress) {
+                
+            }
+            
+            @Override
+            public void OnNetworkCopyFinished(OpenNetworkPath np, OpenFile dest) {
+                // TODO Auto-generated method stub
+                
+            }
+        });
+        return ret;
+    }
+
+    @Override
+    public void tempUpload(AsyncTask task) throws IOException {
+        
+    }
+
+    @Override
+    public boolean getThumbnail(int w, final ThumbnailReturnCallback callback) {
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    InputStream in = new BufferedInputStream(mGlobalDrive.files().get(mFile.getThumbnail().getImage()).executeMediaAsInputStream());
+                    Bitmap bmp = BitmapFactory.decodeStream(in);
+                    callback.onThumbReturned(bmp);
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        });
+        return false;
+    }
+    
 
 }
