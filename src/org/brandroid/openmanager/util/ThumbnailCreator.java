@@ -180,6 +180,11 @@ public class ThumbnailCreator {
                                         && file.hasThumbnail()) {
                                     ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth,
                                             new OpenPath.ThumbnailReturnCallback() {
+                                                @Override
+                                                public void onException(Exception e) {
+                                                    
+                                                }
+
                                                 public void onThumbReturned(Bitmap bmp) {
                                                     try {
                                                         String mCacheFilename = getCacheFilename(
@@ -447,9 +452,7 @@ public class ThumbnailCreator {
 
     public static int getDrawerResourceId(OpenPath file) {
         final String mName = file.getName();
-        final String ext = mName.substring(mName.lastIndexOf(".") + 1);
         final String sPath2 = mName.toLowerCase();
-        final boolean useLarge = true;
         boolean hasKids = false;
         try {
             if (!file.requiresThread() && file.isDirectory())
@@ -462,13 +465,13 @@ public class ThumbnailCreator {
         if (file.isDirectory()) {
             // Network Object Icons
             if (file instanceof OpenSMB) {
-                return R.drawable.lg_folder_pipe;
+                return R.drawable.sm_folder_pipe;
             }
             if (file instanceof OpenVFS || file instanceof OpenSFTP) {
-                return R.drawable.lg_folder_secure;
+                return R.drawable.sm_folder_secure;
             }
             if (file instanceof OpenFTP) {
-                return R.drawable.lg_ftp;
+                return R.drawable.sm_ftp;
             }
             if (file instanceof OpenBox)
                 return R.drawable.icon_box;
@@ -476,11 +479,13 @@ public class ThumbnailCreator {
                 return R.drawable.icon_dropbox;
             if (file instanceof OpenDrive)
                 return R.drawable.icon_drive;
+            if (file instanceof OpenServer)
+                return getDrawerResourceId(((OpenServer)file).getOpenPath());
 
             // Local Filesystem Icons
             if (file.getAbsolutePath() != null && file.getAbsolutePath().equals("/")
                     && mName.equals("")) {
-                return R.drawable.lg_drive;
+                return R.drawable.sm_drive;
             } else if (file instanceof OpenSmartFolder || sPath2.indexOf("download") > -1) {
                 return R.drawable.ic_drawer_download_holo_dark;
             } else if ((mName.equalsIgnoreCase("Photos") || mName.equalsIgnoreCase("dcim")
@@ -493,23 +498,23 @@ public class ThumbnailCreator {
             } else if (hasKids
                     && (sPath2.indexOf("ext") > -1 || sPath2.indexOf("sdcard") > -1 || sPath2
                             .indexOf("microsd") > -1)) {
-                return R.drawable.lg_sdcard;
+                return R.drawable.sm_sdcard;
             } else if (hasKids
                     && (sPath2.indexOf("usb") > -1 || sPath2.indexOf("/mnt/media/") > -1 || sPath2
                             .indexOf("removeable") > -1)) {
-                return R.drawable.lg_usb;
+                return R.drawable.sm_usb;
             } else {
                 return R.drawable.ic_drawer_folder_holo_dark;
             }
 
         } else if (file instanceof OpenFTP && file.isDirectory()) {
-            return (useLarge ? R.drawable.lg_ftp : R.drawable.sm_ftp);
+            return R.drawable.sm_ftp;
 
         } else if (file instanceof OpenNetworkPath && file.isDirectory()) {
-            return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
+            return R.drawable.sm_folder_secure;
 
         } else {
-            return (useLarge ? R.drawable.lg_unknown : R.drawable.sm_unknown);
+            return R.drawable.sm_unknown;
         }
     }
 

@@ -26,11 +26,11 @@ import com.dropbox.client2.android.AndroidAuthSession;
 import android.content.Context;
 import android.net.Uri;
 
-public class OpenServer {
+public class OpenServer extends OpenPath {
     private final JSONObject mData;
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
     private OpenNetworkPath mPath;
-    private int mServerIndex = -1;
+    private Integer mServerIndex = null;
     private boolean mPasswordDecrypted = false;
 
     public OpenServer() {
@@ -69,22 +69,17 @@ public class OpenServer {
     }
 
     public int getServerIndex() {
-        if (mServerIndex > -1)
+        if (mServerIndex != null)
             return mServerIndex;
 
         if (OpenServers.hasDefaultServers())
         {
             OpenServers servers = OpenServers.getDefaultServers();
             for (int i = 0; i < servers.size(); i++)
-            {
                 if (servers.get(i).equals(this))
-                {
-                    mServerIndex = i;
-                    return i;
-                }
-            }
+                    return mServerIndex = i;
         }
-        return -1;
+        return mServerIndex = -1;
     }
 
     public boolean isPasswordDecrypted()
@@ -118,7 +113,7 @@ public class OpenServer {
             }
         };
         if (threaded)
-            new Thread(decryptor).start();
+            thread(decryptor);
         else
             decryptor.run();
     }
@@ -415,32 +410,95 @@ public class OpenServer {
     public long get(String key, long defValue) {
         return mData.optLong(key, defValue);
     }
-    /*
-     * @Override public String getAbsolutePath() { return
-     * getOpenPath().getAbsolutePath(); }
-     * @Override public long length() { return getOpenPath().length(); }
-     * @Override public OpenPath getParent() { return null; }
-     * @Override public OpenPath getChild(String name) { return
-     * getOpenPath().getChild(name); }
-     * @Override public OpenPath[] list() throws IOException { return
-     * getOpenPath().list(); }
-     * @Override public OpenPath[] listFiles() throws IOException { return
-     * getOpenPath().listFiles(); }
-     * @Override public Boolean isDirectory() { return
-     * getOpenPath().isDirectory(); }
-     * @Override public Boolean isFile() { return getOpenPath().isFile(); }
-     * @Override public Boolean isHidden() { return getOpenPath().isHidden(); }
-     * @Override public Uri getUri() { return getOpenPath().getUri(); }
-     * @Override public Long lastModified() { return
-     * getOpenPath().lastModified(); }
-     * @Override public Boolean canRead() { return getOpenPath().canRead(); }
-     * @Override public Boolean canWrite() { return getOpenPath().canWrite(); }
-     * @Override public Boolean canExecute() { return
-     * getOpenPath().canExecute(); }
-     * @Override public Boolean exists() { return getOpenPath().exists(); }
-     * @Override public Boolean requiresThread() { return true; }
-     * @Override public Boolean delete() {
-     * OpenServers.getDefaultServers().remove(getServerIndex()); return true; }
-     * @Override public Boolean mkdir() { return getOpenPath().mkdir(); }
-     */
+
+    @Override
+    public String getAbsolutePath() {
+        return "server://" + getServerIndex();
+    }
+
+    @Override
+    public long length() {
+        return 0;
+    }
+
+    @Override
+    public OpenPath getParent() {
+        return null;
+    }
+
+    @Override
+    public OpenPath getChild(String name) {
+        return null;
+    }
+
+    @Override
+    public OpenPath[] list() throws IOException {
+        return null;
+    }
+
+    @Override
+    public OpenPath[] listFiles() throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean isDirectory() {
+        return true;
+    }
+
+    @Override
+    public Boolean isFile() {
+        return false;
+    }
+
+    @Override
+    public Boolean isHidden() {
+        return false;
+    }
+
+    @Override
+    public Uri getUri() {
+        return null;
+    }
+
+    @Override
+    public Long lastModified() {
+        return null;
+    }
+
+    @Override
+    public Boolean canRead() {
+        return true;
+    }
+
+    @Override
+    public Boolean canWrite() {
+        return false;
+    }
+
+    @Override
+    public Boolean canExecute() {
+        return false;
+    }
+
+    @Override
+    public Boolean exists() {
+        return true;
+    }
+
+    @Override
+    public Boolean requiresThread() {
+        return true;
+    }
+
+    @Override
+    public Boolean delete() {
+        return false;
+    }
+
+    @Override
+    public Boolean mkdir() {
+        return false;
+    }
 }

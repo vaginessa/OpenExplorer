@@ -816,87 +816,67 @@ public class OpenBookmarks implements OnGroupClickListener,
     public void updateSizeIndicator(OpenPath mFile, View mParentView) {
         if (mParentView == null)
             return;
-        View size_bar = mParentView.findViewById(R.id.size_bar);
-        TextView mSizeText = (TextView)mParentView.findViewById(R.id.size_text);
-        if (size_bar == null)
-            return;
         long size = 0l;
         long free = 0l;
-        long total = 0l;
         if (mFile != null && mFile instanceof OpenPath.OpenPathSizable)
         {
             OpenPathSizable f = (OpenPathSizable)mFile;
-            size = total = f.getTotalSpace();
+            size = f.getTotalSpace();
             free = f.getFreeSpace();
         } else
             return;
-        int total_width = mParentView.getWidth() - size_bar.getLeft();
-        if (total_width <= 0)
-            total_width = mParentView.getWidth();
-        if (total_width <= 0 && mParentView.getRootView().findViewById(R.id.list_frag) != null)
-            total_width = mParentView.getRootView().findViewById(R.id.list_frag).getWidth();
-        if (total_width <= 0)
-            total_width = getResources().getDimensionPixelSize(R.dimen.popup_width);
-
-        if (size > 0 && free < size) {
-            String sFree = DialogHandler.formatSize(free, false);
-            String sTotal = DialogHandler.formatSize(size);
-            // if(sFree.endsWith(sTotal.substring(sTotal.lastIndexOf(" ") + 1)))
-            // sFree = DFInfo.getFriendlySize(free, false);
-            mSizeText.setText(sFree + "/" + sTotal);
-            mSizeText.setVisibility(View.VISIBLE);
-
+        updateSizeIndicator(mParentView, size, free);
+    }
+    
+    /**
+     * Update Size ProgressBar and TextViews
+     * 
+     * @param mParentView
+     * @param sizes Format: [Total [Used [Secondary]]]
+     */
+    public void updateSizeIndicator(View mParentView, long... sizes)
+    {
+        long size = 0l;
+        long used = 0l;
+        long posB = 0l;
+        boolean onlySize = false;
+        if(sizes.length > 0)
+            size = sizes[0];
+        if(sizes.length > 1)
+            used = sizes[1];
+        else onlySize = true;
+        if(sizes.length > 2)
+            posB = sizes[2];
+        
+        if (size > 0) {
+            String txt = "";
+            if(used > 0)
+                txt = DialogHandler.formatSize(used, false) + "/";
+            txt += DialogHandler.formatSize(size);
+            if(posB > 0)
+                txt += " (" + DialogHandler.formatSize(posB) + ")";
+            ViewUtils.setText(mParentView, txt, R.id.size_text);
+            
             while (size > 100000) {
                 size /= 10;
-                free /= 10;
+                used /= 10;
+                posB /= 10;
             }
-            float total_percent = ((float)total / (float)Math.max(total, mLargestDataSize));
+            float total_percent = ((float)size / (float)Math.max(size, mLargestDataSize));
             total_percent = Math.min(20, total_percent);
-            int percent_width = (int)(total_percent * total_width);
-            // Logger.LogInfo("Size Total: " + mLargestDataSize + " This: " +
-            // total + " Percent: " + total_percent + " Width: " + percent_width
-            // + " / " + total_width);
-            if (size_bar instanceof ProgressBar) {
-                ProgressBar bar = (ProgressBar)size_bar;
+            
+            ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
+            ViewUtils.setViewsVisible(bar, !onlySize, R.id.size_bar);
+            
+            if (bar != null && !onlySize) {
                 bar.setMax((int)size);
-                bar.setProgress((int)(size - free));
-                if (bar.getProgress() == 0)
-                    bar.setVisibility(View.GONE);
-                else if (percent_width > 0) {
-                    bar.setVisibility(View.VISIBLE);
-                    // RelativeLayout.LayoutParams lp =
-                    // (RelativeLayout.LayoutParams)bar.getLayoutParams();
-                    // //new LayoutParams(percent_width,
-                    // LayoutParams.MATCH_PARENT);
-                    // lp.rightMargin = total_width - percent_width;
-                    // //lp.width = percent_width;
-                    // lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-                    // //bar.setLayoutParams(lp);
-                    // bar.requestLayout();
-                }
-                size_bar.setTag(true);
-            } else {
-                long taken = Math.min(0, size - free);
-                float percent = (float)taken / (float)size;
-                // mParentView.measure(LayoutParams.MATCH_PARENT,
-                // LayoutParams.WRAP_CONTENT);
-                int size_width = total_width; // mParentView.getMeasuredWidth();
-                Logger.LogVerbose("Parent Width: " + size_width);
-                size_width = Math.min(0, (int)(percent * size_width));
-                size_bar.getBackground().setBounds(0, 0, size_width, 0);
-                size_bar.setTag(true);
+                bar.setProgress((int)used);
+                if(posB > 0)
+                    bar.setSecondaryProgress((int)posB);
             }
 
             ViewUtils.setViewsVisible(mParentView, true, R.id.size_bar, R.id.size_layout,
                     R.id.size_text);
-            if (size_bar.getTag() == null)
-                size_bar.setVisibility(View.GONE);
-        } else if (mFile != null && OpenCursor.class.equals(mFile.getClass())) {
-            // bar.setVisibility(View.INVISIBLE);
-            if (size_bar.getTag() == null)
-                size_bar.setVisibility(View.GONE);
-            mSizeText.setText(DialogHandler.formatSize(((OpenCursor)mFile).getTotalSize()));
-            ViewUtils.setViewsVisible(mParentView, true, R.id.size_text);
         } else
             ViewUtils.setViewsVisible(mParentView, false, R.id.size_bar, R.id.size_layout,
                     R.id.size_text);
@@ -964,7 +944,19 @@ public class OpenBookmarks implements OnGroupClickListener,
                     mCountText.setVisibility(View.GONE);
             }
 
-            if (path instanceof OpenPath.OpenPathSizable) {
+            if (path instanceof OpenPath.SpaceHandler) {
+                ((OpenPath.SpaceHandler)path).getSpace(new OpenPath.SpaceListener() {
+                    public void onException(Exception e) {
+                        ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);
+                    }
+                    
+                    @Override
+                    public void onSpaceReturned(long... space) {
+                        updateSizeIndicator(row, space);
+                    }
+                });
+            }
+            else if (path instanceof OpenPath.OpenPathSizable) {
                 updateSizeIndicator(path, row);
             } else {
                 ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);

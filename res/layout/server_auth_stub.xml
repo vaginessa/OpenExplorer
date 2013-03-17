@@ -6,6 +6,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
+    <WebView
+        android:id="@+id/server_webview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
     <Button
         android:id="@+id/server_authenticate"
         android:layout_width="match_parent"
@@ -17,11 +23,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/s_logout" />
-
-    <WebView
-        android:id="@+id/server_webview"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone" />
 
 </LinearLayout>

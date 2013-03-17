@@ -55,8 +55,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 
-public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler,
-        OpenPath.OpenPathSizable, OpenPath.ThumbnailHandler, OpenPath.OpenStream,
+public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
+        OpenPath.OpenPathSizable, OpenPath.SpaceHandler, OpenPath.ThumbnailHandler,
+        OpenPath.OpenStream,
         OpenPath.ThumbnailOverlayInterface {
 
     private static final long serialVersionUID = 5742031992345655964L;
@@ -80,6 +81,54 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
         mParent = parent;
         mAPI = mParent.mAPI;
         mEntry = child;
+    }
+
+    @Override
+    public boolean copyTo(OpenNetworkPath path, final CloudCopyListener callback) {
+        if (path instanceof OpenDropBox)
+        {
+            final OpenDropBox folder = (OpenDropBox)path;
+            new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        final Entry entry = mAPI.copy(getDBPath(), folder.getDBPath());
+                        post(new Runnable() {
+                            public void run() {
+                                callback.onCopyComplete(entry.path + " created!");
+                            }
+                        });
+                    } catch (Exception e) {
+                        postException(e, callback);
+                    }
+                }
+            }).start();
+        }
+        return false;
+    }
+
+    public boolean delete(final CloudDeleteListener callback) {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    mAPI.delete(mEntry.path);
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onDeleteComplete(mEntry.path + " deleted!");
+                        }
+                    });
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }).start();
+        return true;
+    }
+
+    public String getDBPath()
+    {
+        if (mEntry != null)
+            return mEntry.path;
+        return getPath();
     }
 
     @Override
@@ -120,7 +169,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
                                     new JSONObject(accountInfo).toString());
                         }
 
-                        OpenExplorer.getHandler().post(new Runnable() {
+                        post(new Runnable() {
                             public void run() {
                                 callback.onGetAccountInfo(mAccount);
                             }
@@ -657,7 +706,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
                     DropboxInputStream input = mAPI.getThumbnailStream(mEntry.path, sz,
                             ThumbFormat.PNG);
                     final Bitmap bmp = BitmapFactory.decodeStream(input);
-                    OpenExplorer.getHandler().post(new Runnable() {
+                    post(new Runnable() {
                         public void run() {
                             callback.onThumbReturned(bmp);
                         }
@@ -686,12 +735,14 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
 
     @Override
     public long getUsedSpace() {
+        if (getServer() != null)
+            return getServer().get("normal", 0l);
         return 0;
     }
 
     @Override
     public long getFreeSpace() {
-        return getTotalSpace();
+        return getTotalSpace() - getUsedSpace();
     }
 
     /**
@@ -747,5 +798,37 @@ public class OpenDropBox extends OpenNetworkPath implements OpenPath.ListHandler
 
     public void unlink() {
         getSession().unlink();
+    }
+
+    @Override
+    public void getSpace(final SpaceListener callback) {
+        if(getServer().get("quota", 0) > 0)
+        {
+            callback.onSpaceReturned(getTotalSpace(), getUsedSpace());
+            return;
+        }
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    final Account account = mAPI.accountInfo();
+                    OpenServer server = getServer();
+                    server.setSetting("quota", account.quota);
+                    server.setSetting("normal", account.quotaNormal);
+                    server.setSetting("shared", account.quotaShared);
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onSpaceReturned(
+                                    account.quota,
+                                    account.quotaNormal,
+                                    account.quotaShared
+                                    );
+                        }
+                    });
+
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        });
     }
 }

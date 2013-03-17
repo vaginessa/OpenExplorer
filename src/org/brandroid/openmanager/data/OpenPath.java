@@ -355,7 +355,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         return ThumbnailCreator.generateThumb(app, this, w, h, app.getContext());
     }
     
-    public interface ThumbnailReturnCallback {
+    public interface ThumbnailReturnCallback extends ExceptionListener {
         public void onThumbReturned(Bitmap bmp);
     }
     
@@ -803,15 +803,35 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         public void delete(OpsListener listener);
     }
     
+    public interface SpaceListener extends ExceptionListener {
+        /**
+         * Callback function for {@link SpaceListener} to
+         * determine space available on requested device.
+         * 
+         * @param space Format: [Total [Used [Secondary]]]
+         */
+        public void onSpaceReturned(long... space);
+    }
+    public interface SpaceHandler {
+        public void getSpace(SpaceListener callback);
+    }
     public interface OpenPathSizable {
         public long getTotalSpace();
         public long getUsedSpace();
         public long getFreeSpace();
     }
     
+    public void thread(Runnable r) {
+        new Thread(r).start();
+    }
+    
+    public void post(Runnable r) {
+        OpenExplorer.post(r);
+    }
+    
     public void postListReceived(final OpenPath[] mChildren, final ListListener listener)
     {
-        OpenExplorer.getHandler().post(new Runnable() {
+        post(new Runnable() {
             public void run() {
                 listener.onListReceived(mChildren);
             }
@@ -820,7 +840,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     
     public void postException(final Exception e, final ExceptionListener listener)
     {
-        OpenExplorer.getHandler().post(new Runnable() {
+        post(new Runnable() {
             public void run() {
                 listener.onException(e);
             }
