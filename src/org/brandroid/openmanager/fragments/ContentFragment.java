@@ -47,6 +47,7 @@ import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.IsCancelledListener;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPathArray;
@@ -157,6 +158,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public static int mGridImageSize = 128;
     public static int mListImageSize = 36;
     public Boolean mShowLongDate = false;
+    private boolean isCancelled = false; 
     private int mTopIndex = 0;
     private OpenPath mTopPath = null;
     protected OpenPath mPath = null;
@@ -602,7 +604,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (mPath instanceof OpenPathUpdateHandler) {
             try {
                 mContentAdapter.clearData();
-                setProgressVisibility(true);
+                setProgressClickHandler(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        isCancelled = true;
+                    }
+                });
 
                 ((OpenPathUpdateHandler)mPath).list(new OpenContentUpdateListener() {
                     @Override
@@ -626,6 +632,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         setProgressVisibility(false);
                         Logger.LogError("Unable to run Task!", e);
                         Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public boolean isCancelled() {
+                        return ContentFragment.this.isCancelled;
                     }
                 });
                 return;
@@ -2062,6 +2073,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         // View.GONE);
         if (getExplorer() != null)
             getExplorer().setProgressVisibility(visible);
+    }
+    
+    private void setProgressClickHandler(android.view.View.OnClickListener listener)
+    {
+        if(getExplorer() != null)
+            getExplorer().setProgressClickHandler(listener);
     }
 
     public SortType getSorting() {

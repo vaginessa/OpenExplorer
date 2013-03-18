@@ -757,6 +757,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * Callback used to designate when updates have completed
          */
         public void doneUpdating();
+        
+        public boolean isCancelled();
     }
     
     public interface ExceptionListener {

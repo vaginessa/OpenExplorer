@@ -379,6 +379,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                                 callback.addContentPath(getOpenDrives(OpenDrive.this, fl.getItems()));
                             }
                         });
+                        if(callback.isCancelled()) break;
                         if(pg.equals(fl.getNextPageToken())) break;
                         pg = fl.getNextPageToken();
                         if(pg == null || pg.equals("")) break;

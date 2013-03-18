@@ -4123,4 +4123,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         changePath(path, true, true);
     }
 
+    public void setProgressClickHandler(android.view.View.OnClickListener listener) {
+        ViewUtils.setOnClicks(this, listener, R.id.title_progress);
+        ViewUtils.setViewsVisible(this, true, R.id.title_progress);
+    }
+
 }
