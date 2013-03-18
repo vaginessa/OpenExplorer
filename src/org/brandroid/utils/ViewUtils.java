@@ -171,6 +171,12 @@ public class ViewUtils {
                 parent.findViewById(id).setOnClickListener(listener);
     }
 
+    public static void setOnClicks(Activity parent, OnClickListener listener, int... ids) {
+        for (int id : ids)
+            if (parent.findViewById(id) != null)
+                parent.findViewById(id).setOnClickListener(listener);
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> ArrayList<T> findChildByClass(ViewGroup parent, Class<T> class1) {
         ArrayList<T> ret = new ArrayList<T>();

@@ -1978,44 +1978,45 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 getSupportLoaderManager().initLoader(1, null, this);
                 new Thread(new Runnable() {
                     public void run() {
-                        if (mHasExternal)
-                            for (OpenPath kid : extDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("photo") > -1
-                                        || kid.getName().toLowerCase().indexOf("picture") > -1
-                                        || kid.getName().toLowerCase().indexOf("dcim") > -1
-                                        || kid.getName().toLowerCase().indexOf("camera") > -1)
-                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
-                                            "gif", "jpeg"));
-                        if (mHasInternal)
-                            for (OpenPath kid : intDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("photo") > -1
-                                        || kid.getName().toLowerCase().indexOf("picture") > -1
-                                        || kid.getName().toLowerCase().indexOf("dcim") > -1
-                                        || kid.getName().toLowerCase().indexOf("camera") > -1)
-                                    mPhotoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
-                                            "gif", "jpeg"));
-                        if (isNook()) {
-                            OpenFile files = intDrive.getChild("My Files");
-                            for (int i = 0; i < 2; i++) {
-                                if (i == 1) {
-                                    if (extDrive != null)
-                                        files = extDrive.getChild("My Files");
-                                    continue;
-                                }
-                                if (files != null && files.exists()) {
-                                    files = files.getChild("Pictures");
-                                    if (files != null && files.exists())
-                                        mPhotoSearchParent.addSearch(new SmartSearch(files,
+                        try {
+                            if (mHasExternal)
+                                for (OpenPath kid : extDrive.list())
+                                    if (kid.getName().toLowerCase().indexOf("photo") > -1
+                                            || kid.getName().toLowerCase().indexOf("picture") > -1
+                                            || kid.getName().toLowerCase().indexOf("dcim") > -1
+                                            || kid.getName().toLowerCase().indexOf("camera") > -1)
+                                        mPhotoSearchParent.addSearch(new SmartSearch(kid,
                                                 SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
                                                 "gif", "jpeg"));
+                            if (mHasInternal)
+                                for (OpenPath kid : intDrive.list())
+                                    if (kid.getName().toLowerCase().indexOf("photo") > -1
+                                            || kid.getName().toLowerCase().indexOf("picture") > -1
+                                            || kid.getName().toLowerCase().indexOf("dcim") > -1
+                                            || kid.getName().toLowerCase().indexOf("camera") > -1)
+                                        mPhotoSearchParent.addSearch(new SmartSearch(kid,
+                                                SmartSearch.SearchType.TypeIn, "jpg", "bmp", "png",
+                                                "gif", "jpeg"));
+                            if (isNook()) {
+                                OpenFile files = intDrive.getChild("My Files");
+                                for (int i = 0; i < 2; i++) {
+                                    if (i == 1) {
+                                        if (extDrive != null)
+                                            files = extDrive.getChild("My Files");
+                                        continue;
+                                    }
+                                    if (files != null && files.exists()) {
+                                        files = files.getChild("Pictures");
+                                        if (files != null && files.exists())
+                                            mPhotoSearchParent.addSearch(new SmartSearch(files,
+                                                    SmartSearch.SearchType.TypeIn, "jpg", "bmp",
+                                                    "png",
+                                                    "gif", "jpeg"));
+                                    }
                                 }
                             }
-                        }
-                        try {
                             mPhotosMerged.refreshKids();
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             Logger.LogError("Couldn't refresh merged Videos");
                         }
                     }
@@ -3165,7 +3166,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (i > 0) {
                 if (entry != null && entry.getBreadCrumbTitle() != null) {
                     try {
-                        mLastPath = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString());
+                        mLastPath = FileManager.getOpenCache(
+                                entry.getBreadCrumbTitle().toString(), true, OpenPath.Sorting);
                     } catch (Exception e) {
                         Logger.LogError("Couldn't get back cache.", e);
                     }
@@ -3271,13 +3273,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 BackStackEntry entry = fragmentManager.getBackStackEntryAt(bsCount - 1);
                 last = entry.getBreadCrumbTitle() != null ? entry.getBreadCrumbTitle().toString()
                         : "";
-                Logger.LogVerbose("Changing " + last + " to " + path.getPath() + "? "
-                        + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
-            } else
-                Logger.LogVerbose("First changePath to " + path.getPath());
-            if (mStateReady && (last == null || !last.equalsIgnoreCase(path.getPath()))) {
-                fragmentManager.beginTransaction().setBreadCrumbTitle(path.getPath())
-                        .addToBackStack("path").commitAllowingStateLoss();
+                if (IS_DEBUG_BUILD)
+                    Logger.LogDebug("Changing " + last + " to " + path.getPath() + "? "
+                            + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
+            } else if (IS_DEBUG_BUILD)
+                Logger.LogDebug("First changePath to " + path.getPath());
+            if (mStateReady && (last == null || !last.equalsIgnoreCase(path.getAbsolutePath()))) {
+                fragmentManager.beginTransaction().setBreadCrumbTitle(path.getAbsolutePath())
+                        .addToBackStack("path").commit();
             }
         }
         final OpenFragment cf = ContentFragment.getInstance(path, newView,
@@ -3900,23 +3903,17 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                         final BitmapDrawable bd = new BitmapDrawable(
                                                 getResources(), b);
                                         bd.setGravity(Gravity.CENTER);
-                                        getHandler().post(new Runnable() {
+                                        post(new Runnable() {
                                             public void run() {
-                                                if (Build.VERSION.SDK_INT < 14)
-                                                    icon.setImageDrawable(bd);
-                                                else
-                                                    ImageUtils.fadeToDrawable(icon, bd);
+                                                ImageUtils.fadeToDrawable(icon, bd);
                                             }
                                         });
                                     }
                                 });
                     } else if (d != null)
-                        getHandler().post(new Runnable() {
+                        post(new Runnable() {
                             public void run() {
-                                if (Build.VERSION.SDK_INT < 14)
-                                    icon.setImageDrawable(d);
-                                else
-                                    ImageUtils.fadeToDrawable(icon, d);
+                                ImageUtils.fadeToDrawable(icon, d);
                             }
                         });
                 }
@@ -3938,7 +3935,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static Handler getHandler() {
         return mHandler;
     }
-    
+
     public static void post(Runnable r) {
         getHandler().post(r);
     }
@@ -4124,6 +4121,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @Override
     public void onBookmarkSelect(OpenPath path) {
         changePath(path, true, true);
+    }
+
+    public void setProgressClickHandler(android.view.View.OnClickListener listener) {
+        ViewUtils.setOnClicks(this, listener, R.id.title_progress);
+        ViewUtils.setViewsVisible(this, true, R.id.title_progress);
     }
 
 }

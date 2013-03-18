@@ -1503,7 +1503,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             GoogleJsonResponseException re = (GoogleJsonResponseException)e;
             if (re.getStatusCode() == 401 && !received401)
             {
-                received401 = true;
+                //received401 = true;
                 try {
                     AccountManager am = AccountManager.get(activity);
                     GoogleAccountManager man = new GoogleAccountManager(am);

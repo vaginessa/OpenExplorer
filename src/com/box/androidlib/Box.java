@@ -493,9 +493,9 @@ public class Box {
      * @param listener
      *            The callback that will run
      */
-    public final void getAccountTree(final String authToken, final long folderId, final String[] params, final GetAccountTreeListener listener) {
+    public final Thread getAccountTree(final String authToken, final long folderId, final String[] params, final GetAccountTreeListener listener) {
 
-        new Thread() {
+        Thread ret = new Thread() {
 
             @Override
             public void run() {
@@ -519,7 +519,9 @@ public class Box {
                     });
                 }
             }
-        }.start();
+        };
+        ret.start();
+        return ret;
     }
 
     /**

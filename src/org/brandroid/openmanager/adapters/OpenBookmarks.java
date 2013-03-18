@@ -21,6 +21,7 @@ import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
@@ -123,7 +124,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     }
 
     public void scanRoot() {
-        Logger.LogDebug("Trying to get roots");
+        //Logger.LogDebug("Trying to get roots");
         if (mBlkids == null && mProcMounts == null) {
             mProcMounts = new ArrayList<String>();
             mBlkids = new ArrayList<String>();
@@ -248,7 +249,7 @@ public class OpenBookmarks implements OnGroupClickListener,
                 for (int i = 0; i < servers.size(); i++) {
                     final int ind = i;
                     final OpenServer server = servers.get(i);
-                    Logger.LogDebug("Checking server #" + ind + ": " + server.toString());
+                    //Logger.LogDebug("Checking server #" + ind + ": " + server.toString());
                     OpenNetworkPath onp = server.getOpenPath();
                     onp.setServer(server);
                     SimpleUserInfo info = new SimpleUserInfo();
@@ -371,8 +372,23 @@ public class OpenBookmarks implements OnGroupClickListener,
         } else
             ViewUtils.setViewsVisible(parent, false, R.id.content_count);
 
-        if (path instanceof OpenPath.OpenPathSizable) {
-            updateSizeIndicator(path, parent);
+
+        if (path instanceof OpenPath.SpaceHandler) {
+            ViewUtils.setViewsVisible(parent, true, R.id.size_layout, R.id.size_bar);
+            ((OpenPath.SpaceHandler)path).getSpace(new OpenPath.SpaceListener() {
+                public void onException(Exception e) {
+                    ViewUtils.setViewsVisible(parent, false, R.id.size_layout, R.id.size_bar);
+                }
+                public void onSpaceReturned(long space, long used, long third) {
+                    updateSizeIndicator(path, parent, space, used, third);
+                }
+            });
+        } else if (path instanceof OpenPath.OpenPathSizable) {
+            OpenPathSizable f = (OpenPathSizable)path;
+            long size = f.getTotalSpace();
+            long used = f.getUsedSpace();
+            long last = f.getThirdSpace();
+            updateSizeIndicator(path, parent, size, used, last);
         } else {
             ViewUtils.setViewsVisible(parent, false, R.id.size_layout, R.id.size_bar);
         }
@@ -812,67 +828,47 @@ public class OpenBookmarks implements OnGroupClickListener,
     public String getBookMarkNameString() {
         return mBookmarkString;
     }
-
-    public void updateSizeIndicator(OpenPath mFile, View mParentView) {
-        if (mParentView == null)
-            return;
-        long size = 0l;
-        long free = 0l;
-        if (mFile != null && mFile instanceof OpenPath.OpenPathSizable)
-        {
-            OpenPathSizable f = (OpenPathSizable)mFile;
-            size = f.getTotalSpace();
-            free = f.getFreeSpace();
-        } else
-            return;
-        updateSizeIndicator(mParentView, size, free);
-    }
     
     /**
      * Update Size ProgressBar and TextViews
      * 
      * @param mParentView
-     * @param sizes Format: [Total [Used [Secondary]]]
+     * @param total Total Size to display
+     * @param used Used Size to display
+     * @param third Optional 3rd Size to display
      */
-    public void updateSizeIndicator(View mParentView, long... sizes)
+    public void updateSizeIndicator(OpenPath path, View mParentView, long total, long used, long third)
     {
-        long size = 0l;
-        long used = 0l;
-        long posB = 0l;
-        boolean onlySize = false;
-        if(sizes.length > 0)
-            size = sizes[0];
-        if(sizes.length > 1)
-            used = sizes[1];
-        else onlySize = true;
-        if(sizes.length > 2)
-            posB = sizes[2];
+        boolean onlySize = used < 0;
         
-        if (size > 0) {
+        if(OpenExplorer.IS_DEBUG_BUILD)
+            Logger.LogDebug("Update Size indicator for " + path + ": " + total + ", " + used + ", " + third);
+        
+        if (total > 0) {
             String txt = "";
             if(used > 0)
                 txt = DialogHandler.formatSize(used, false) + "/";
-            txt += DialogHandler.formatSize(size);
-            if(posB > 0)
-                txt += " (" + DialogHandler.formatSize(posB) + ")";
+            txt += DialogHandler.formatSize(total);
+            if(third > 0)
+                txt += " (" + DialogHandler.formatSize(third) + ")";
             ViewUtils.setText(mParentView, txt, R.id.size_text);
             
-            while (size > 100000) {
-                size /= 10;
+            while (total > 100000) {
+                total /= 10;
                 used /= 10;
-                posB /= 10;
+                third /= 10;
             }
-            float total_percent = ((float)size / (float)Math.max(size, mLargestDataSize));
+            float total_percent = ((float)total / (float)Math.max(total, mLargestDataSize));
             total_percent = Math.min(20, total_percent);
             
             ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
             ViewUtils.setViewsVisible(bar, !onlySize, R.id.size_bar);
             
             if (bar != null && !onlySize) {
-                bar.setMax((int)size);
+                bar.setMax((int)total);
                 bar.setProgress((int)used);
-                if(posB > 0)
-                    bar.setSecondaryProgress((int)posB);
+                if(third > 0)
+                    bar.setSecondaryProgress((int)third);
             }
 
             ViewUtils.setViewsVisible(mParentView, true, R.id.size_bar, R.id.size_layout,
@@ -913,69 +909,8 @@ public class OpenBookmarks implements OnGroupClickListener,
                     R.layout.bookmark_layout,
                     null);
 
-            OpenPath path = getChild(group, pos);
-
-            BookmarkHolder mHolder = null;
-            mHolder = new BookmarkHolder(path, getPathTitle(path), row, 0);
-            row.setTag(mHolder);
-
-            final TextView mCountText = (TextView)row.findViewById(R.id.content_count);
-            final ImageView mIcon = (ImageView)row.findViewById(R.id.bookmark_icon);
-
-            if (mCountText != null) {
-                if (path instanceof OpenSmartFolder || path instanceof OpenPathMerged) {
-                    if (!mCountText.isShown())
-                        mCountText.setVisibility(View.VISIBLE);
-                    if (!mCountText.getText().toString().equals("(" + path.length() + ")"))
-                        mCountText.setText("(" + path.length() + ")");
-                } else if (path instanceof OpenCursor) {
-                    final OpenCursor oc = (OpenCursor)path;
-                    int cnt = oc.getListLength();
-                    if (cnt > 0)
-                        mCountText.setText("(" + cnt + ")");
-                    oc.setUpdateBookmarkTextListener(new UpdateBookmarkTextListener() {
-                        @Override
-                        public void updateBookmarkCount(final int count) {
-                            ViewUtils.setText(row, count > 0 ? "(" + count + ")" : null,
-                                    R.id.content_count);
-                        }
-                    });
-                } else
-                    mCountText.setVisibility(View.GONE);
-            }
-
-            if (path instanceof OpenPath.SpaceHandler) {
-                ((OpenPath.SpaceHandler)path).getSpace(new OpenPath.SpaceListener() {
-                    public void onException(Exception e) {
-                        ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);
-                    }
-                    
-                    @Override
-                    public void onSpaceReturned(long... space) {
-                        updateSizeIndicator(row, space);
-                    }
-                });
-            }
-            else if (path instanceof OpenPath.OpenPathSizable) {
-                updateSizeIndicator(path, row);
-            } else {
-                ViewUtils.setViewsVisible(row, false, R.id.size_layout, R.id.size_bar);
-            }
-
-            boolean hasKids = true;
-            try {
-                if (!path.requiresThread())
-                    hasKids = path.getChildCount(true) > 0;
-            } catch (IOException e) {
-                // TODO handle exception
-            }
-
-            ViewUtils.setText(row, getPathTitle(path), R.id.content_text);
-
-            ViewUtils.setImageResource(mIcon, ThumbnailCreator.getDrawerResourceId(path));
-
-            ViewUtils.setAlpha(mIcon, !hasKids ? 0.5f : 1.0f);
-
+            makeBookmarkView((OpenApp)this, row, getChild(group, pos));
+            
             return row;
         }
 

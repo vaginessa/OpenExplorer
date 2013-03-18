@@ -237,6 +237,11 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     public String getName(String defaultName) {
         return mName != null ? mName : defaultName;
     }
+    
+    @Override
+    public String getAbsolutePath() {
+        return getServer().getAbsolutePath();
+    }
 
     public final String getRemotePath() {
         String name = getName();
@@ -260,8 +265,8 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         return -1;
     }
 
-    public void list(final ListListener listener) {
-        thread(new Runnable() {
+    public Thread list(final ListListener listener) {
+        return thread(new Runnable() {
             public void run() {
                 try {
                     listFiles();

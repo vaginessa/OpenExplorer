@@ -12,8 +12,6 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
-import org.brandroid.utils.ViewUtils;
-
 import com.box.androidlib.Box;
 import com.box.androidlib.BoxFile;
 import com.box.androidlib.BoxFolder;
@@ -24,25 +22,16 @@ import com.box.androidlib.FileDownloadListener;
 import com.box.androidlib.FileUploadListener;
 import com.box.androidlib.GetAccountInfoListener;
 import com.box.androidlib.GetAccountTreeListener;
-import com.box.androidlib.GetAuthTokenListener;
-import com.box.androidlib.GetTicketListener;
 import com.box.androidlib.User;
 
-import android.annotation.SuppressLint;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.view.View;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
-        OpenPath.ThumbnailOverlayInterface, OpenNetworkPath.CloudOpsHandler {
+        OpenPath.ThumbnailOverlayInterface, OpenNetworkPath.CloudOpsHandler,
+        OpenPath.OpenPathSizable {
 
     private static final long serialVersionUID = 5742031992345655964L;
     private final Box mBox;
@@ -71,12 +60,13 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
         mUser = parent.mUser;
         mFile = child;
     }
-    
+
     @Override
     public void getSpace(final SpaceListener callback) {
-        if(mUser != null && mUser.getSpaceAmount() > 0)
+        if (mUser != null && mUser.getSpaceAmount() > 0)
         {
-            callback.onSpaceReturned(mUser.getSpaceAmount(), mUser.getSpaceUsed(), mUser.getMaxUploadSize());
+            callback.onSpaceReturned(mUser.getSpaceAmount(), mUser.getSpaceUsed(),
+                    mUser.getMaxUploadSize());
             return;
         }
         try {
@@ -84,8 +74,9 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
                 public void onIOException(IOException e) {
                     callback.onException(e);
                 }
+
                 public void onComplete(User user, String status) {
-                    if(user != null)
+                    if (user != null)
                     {
                         callback.onSpaceReturned(
                                 user.getSpaceAmount(),
@@ -95,7 +86,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
                     }
                 }
             });
-        } catch(Exception e) {
+        } catch (Exception e) {
             postException(e, callback);
         }
     }
@@ -190,13 +181,13 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     }
 
     @Override
-    public void list(final ListListener listener) {
+    public Thread list(final ListListener listener) {
         if (mChildren != null)
             listener.onListReceived(getChildren());
         mChildren = new Vector<OpenPath>();
         if (DEBUG)
             Logger.LogDebug("Box listing for " + getId() + "!");
-        mBox.getAccountTree(getToken(), getId(), null, new GetAccountTreeListener() {
+        return mBox.getAccountTree(getToken(), getId(), null, new GetAccountTreeListener() {
 
             @Override
             public void onIOException(IOException e) {
@@ -238,13 +229,13 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
 
             @Override
             public void onIOException(IOException e) {
-                callback.onUpdateException(e);
+                callback.onException(e);
             }
 
             @Override
             public void onComplete(BoxFolder targetFolder, String status) {
                 if (status.equals("not_logged_in"))
-                    callback.onUpdateException(new Exception(status));
+                    callback.onException(new Exception(status));
                 if (DEBUG)
                     Logger.LogDebug("Box.onComplete!: " + status + " " + targetFolder);
                 if (targetFolder != null)
@@ -468,5 +459,26 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     public Drawable getOverlayDrawable(Context c, boolean large) {
         return c.getResources().getDrawable(
                 large ? R.drawable.lg_box_overlay : R.drawable.sm_box_overlay);
+    }
+
+    @Override
+    public long getTotalSpace() {
+        if (mUser != null)
+            return mUser.getSpaceAmount();
+        return 0;
+    }
+
+    @Override
+    public long getUsedSpace() {
+        if (mUser != null)
+            return mUser.getSpaceUsed();
+        return 0;
+    }
+
+    @Override
+    public long getThirdSpace() {
+        if (mUser != null)
+            return mUser.getMaxUploadSize();
+        return 0;
     }
 }

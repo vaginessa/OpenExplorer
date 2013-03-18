@@ -3,15 +3,23 @@ package org.brandroid.openmanager.adapters;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
@@ -33,6 +41,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.Html;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,7 +59,10 @@ public class ContentAdapter extends BaseAdapter {
     private final int GB = MG * KB;
 
     private final OpenPath mParent;
-    private final ArrayList<OpenPath> mData2 = new ArrayList<OpenPath>();
+    private SortedSet<OpenPath> mData2 = new TreeSet<OpenPath>();
+    private OpenPath[] mFinalItems;
+    private boolean isFinal = false;
+    // private final List<OpenPath> mData2 = new ArrayList<OpenPath>();
     public int mViewMode = OpenExplorer.VIEW_LIST;
     public boolean mShowThumbnails = true;
     private boolean mShowHiddenFiles = false;
@@ -172,8 +184,11 @@ public class ContentAdapter extends BaseAdapter {
                 + (showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files")
                 + " + " + (doSort ? mSorting.toString() : "no sort"));
 
+        OpenPath.Sorting = mSorting;
         mData2.clear();
-
+        isFinal = false;
+        mFinalItems = null;
+        
         if (items != null)
             for (OpenPath f : items) {
                 if (f == null)
@@ -191,30 +206,41 @@ public class ContentAdapter extends BaseAdapter {
                 mData2.add(f);
             }
 
-        if (doSort)
-            sort();
+        finalize();
+    }
+    
+    private void prefinalize() {
+        if(isFinal) return;
+        mFinalItems = mData2.toArray(new OpenPath[mData2.size()]);
+        mData2.clear();
+        isFinal = true;
+    }
 
+    public void finalize() {
+        prefinalize();
         super.notifyDataSetChanged();
+    }
+    
+    private void unfinalize() {
+        if(!isFinal) return;
+        isFinal = false;
+        mData2.clear();
+        mData2.addAll(Arrays.asList(mFinalItems));
+    }
+
+    public boolean isFinalized() {
+        return isFinal;
     }
 
     @Override
     public void notifyDataSetChanged() {
+        finalize();
         // super.notifyDataSetChanged();
         /*
          * Please note, this is on purpose. We want to hook into
          * notifyDataSetChanged to ensure filters & sorting are enabled.
          */
         super.notifyDataSetChanged();
-    }
-
-    public void sort() {
-        sort(mSorting);
-    }
-
-    public void sort(SortType sort) {
-        OpenPath.Sorting = sort;
-        if (mData2 != null && mData2.size() > 1)
-            Collections.sort(mData2);
     }
 
     private OpenPath[] getList() {
@@ -224,11 +250,13 @@ public class ContentAdapter extends BaseAdapter {
                 return new OpenPath[0];
             if (mParent.requiresThread() && Thread.currentThread().equals(OpenExplorer.UiThread))
                 return mParent.list();
-            else if(!mParent.canRead())
+            else if (!mParent.canRead())
             {
-                if(OpenApplication.hasRootAccess(true))
+                if ((mParent instanceof OpenFile)
+                        && OpenApplication.hasRootAccess(true))
                     return new OpenFileRoot(mParent).listFiles();
-                else return new OpenPath[0];
+                else
+                    return new OpenPath[0];
             } else
                 return mParent.listFiles();
         } catch (Exception e) {
@@ -237,13 +265,6 @@ public class ContentAdapter extends BaseAdapter {
         }
     }
 
-    public View getView(OpenPath path, View view, ViewGroup parent) {
-        if (!mData2.contains(path))
-            return null;
-        return getView(mData2.indexOf(path), view, parent);
-    }
-
-    // //@Override
     @Override
     public View getView(int position, View view, ViewGroup parent) {
         int mode = getViewMode();
@@ -355,7 +376,8 @@ public class ContentAdapter extends BaseAdapter {
             else
                 mIcon.setAlpha(255);
             if (!mShowThumbnails || !file.hasThumbnail()) {
-                mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight, getContext()));
+                mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight,
+                        getContext()));
             } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
                 // {
                 // Logger.LogDebug("Bitmapping " + file.getPath());
@@ -372,15 +394,9 @@ public class ContentAdapter extends BaseAdapter {
                                     Runnable doit = new Runnable() {
                                         @Override
                                         public void run() {
-                                            if (!OpenExplorer.BEFORE_HONEYCOMB) {
-                                                BitmapDrawable d = new BitmapDrawable(
-                                                        getResources(), b);
-                                                d.setGravity(Gravity.CENTER);
-                                                ImageUtils.fadeToDrawable(mIcon, d);
-                                            } else {
-                                                mIcon.setImageBitmap(b);
-                                                // mIcon.setAlpha(255);
-                                            }
+                                            BitmapDrawable d = new BitmapDrawable(getResources(), b);
+                                            d.setGravity(Gravity.CENTER);
+                                            ImageUtils.fadeToDrawable(mIcon, d);
                                             mIcon.setTag(file);
                                         }
                                     };
@@ -427,24 +443,25 @@ public class ContentAdapter extends BaseAdapter {
             case DATE:
             case DATE_DESC:
                 mDate.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                // mInfo.setTextAppearance(getContext(), R.style.Text_Small);
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case SIZE:
             case SIZE_DESC:
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small_Highlight);
+                // mInfo.setTextAppearance(getContext(),
+                // R.style.Text_Small_Highlight);
                 mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
                 break;
             case ALPHA:
             case ALPHA_DESC:
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large);
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                // mInfo.setTextAppearance(getContext(), R.style.Text_Small);
                 mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
             default:
                 mNameView.setTextAppearance(getContext(), R.style.Text_Large_Dim);
-                //mInfo.setTextAppearance(getContext(), R.style.Text_Small);
+                // mInfo.setTextAppearance(getContext(), R.style.Text_Small);
                 mDate.setTextAppearance(getContext(), R.style.Text_Small);
                 break;
         }
@@ -454,38 +471,50 @@ public class ContentAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return mData2.size() + (mPlusParent ? 1 : 0);
+        if(!isFinal)
+            prefinalize();
+        return mFinalItems.length + (mPlusParent ? 1 : 0);
     }
 
     @Override
     public OpenPath getItem(int position) {
-        if (mPlusParent && position == 0)
-            return mParent.getParent();
-        int pos = position - (mPlusParent ? 1 : 0);
-        if (pos < 0 || pos >= mData2.size())
+        if(!isFinal)
+            prefinalize();
+        if (mPlusParent)
+        {
+            if (position == 0)
+                return mParent.getParent();
+            else
+                position--;
+        }
+        if (position < 0 || position >= mFinalItems.length)
             return null;
-        return mData2.get(pos);
+        return mFinalItems[position];
     }
 
     @Override
     public long getItemId(int position) {
+        if(!isFinal)
+            prefinalize();
         return position;
     }
 
     public void clearData() {
         mData2.clear();
+        isFinal = false;
+        mFinalItems = null;
     }
 
-    public void add(OpenPath p) {
-        mData2.add(p);
+    public void addAll(Collection<? extends OpenPath> collection) {
+        if (isFinal)
+            unfinalize();
+        mData2.addAll(collection);
+        notifyDataSetChanged();
     }
 
-    public boolean contains(OpenPath f) {
-        return mData2.contains(f);
-    }
-
-    public ArrayList<OpenPath> getAll() {
-        return mData2;
+    public void selectAll()
+    {
+        mSelectedSet.addAll(isFinal ? Arrays.asList(mFinalItems) : mData2);
     }
 
     public CopyOnWriteArrayList<OpenPath> getSelectedSet() {
@@ -522,6 +551,10 @@ public class ContentAdapter extends BaseAdapter {
         updateSelected(path, !isSelected(path));
     }
 
+    public void toggleSelected(OpenPath path, Callback callback) {
+        updateSelected(path, !isSelected(path), callback);
+    }
+
     /**
      * This is used as a callback from the list items, to set the selected state
      * <p>
@@ -530,7 +563,7 @@ public class ContentAdapter extends BaseAdapter {
      * @param itemView the item being changed
      * @param newSelected the new value of the selected flag (checkbox state)
      */
-    private void updateSelected(OpenPath path, boolean newSelected) {
+    private void updateSelected(OpenPath path, boolean newSelected, Callback mCallback) {
         if (newSelected) {
             mSelectedSet.add(path);
         } else {
@@ -539,6 +572,10 @@ public class ContentAdapter extends BaseAdapter {
         if (mCallback != null) {
             mCallback.onAdapterSelectedChanged(path, newSelected, mSelectedSet.size());
         }
+    }
+
+    private void updateSelected(OpenPath path, boolean newSelected) {
+        updateSelected(path, newSelected, mCallback);
     }
 
     public void setShowHiddenFiles(boolean show) {

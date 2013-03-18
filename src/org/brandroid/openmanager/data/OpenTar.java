@@ -232,7 +232,7 @@ public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateHandler,
                         callback.addContentPath(p);
                     callback.doneUpdating();
                 } catch (Exception e2) {
-                    callback.onUpdateException(e2);
+                    callback.onException(e2);
                     callback.doneUpdating();
                     Logger.LogError("Error listing TAR #2.", e2);
                 }
