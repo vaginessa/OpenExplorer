@@ -413,7 +413,28 @@ public class OpenServer extends OpenPath {
 
     @Override
     public String getAbsolutePath() {
-        return "server://" + getServerIndex();
+        String ret = ""; //getType() + "://";
+        if(getUser() != null || getPassword() != null)
+        {
+            if(getUser() != null)
+                ret += Uri.encode(getUser());
+            if(getPassword() != null)
+                ret += ":" + Uri.encode(getPassword());
+            ret += "@";
+        }
+        if(getHost() != null)
+            ret += getHost();
+        if(getPort() > 0)
+            ret += ":" + getPort();
+        String p = getPath();
+        if(p != null)
+        {
+            if(!ret.endsWith("/") || !p.startsWith("/"))
+                ret += "/";
+            ret += p;
+            ret = ret.replace("//", "/");
+        }
+        return getType() + "://" + ret;
     }
 
     @Override
