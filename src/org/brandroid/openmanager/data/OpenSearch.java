@@ -51,7 +51,7 @@ public class OpenSearch extends OpenPath {
     }
 
     public interface SearchProgressUpdateListener {
-        void onAddResults(OpenPath[] results);
+        void onAddResults(List<OpenPath> results);
 
         void onUpdate();
 
@@ -166,7 +166,7 @@ public class OpenSearch extends OpenPath {
         int sz = mResultsArray.size();
         if (sz > mLastSent) {
             int cnt = sz - mLastSent;
-            OpenPath[] toSend = mResultsArray.subList(mLastSent, sz).toArray(new OpenPath[cnt]);
+            List<OpenPath> toSend = mResultsArray.subList(mLastSent, sz);
             mLastSent = sz;
             mListener.onAddResults(toSend);
         }

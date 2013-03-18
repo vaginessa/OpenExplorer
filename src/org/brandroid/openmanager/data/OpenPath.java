@@ -58,6 +58,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
     public abstract String getPath();
 
+    /**
+     * This should return a Parceleable string that can be used to recreate the OpenPath object
+     * @return String
+     */
     public abstract String getAbsolutePath();
 
     public abstract long length();
@@ -741,20 +745,18 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * Interface used to update the UI thread when child objects are found. This
      * should be used for things like listing children and searching.
      */
-    public interface OpenContentUpdateListener {
+    public interface OpenContentUpdateListener extends ExceptionListener {
         /**
          * Callback used to add OpenPath to List on UI thread.
          * 
          * @param file OpenPath of found file.
          */
-        public void addContentPath(OpenPath file);
+        public void addContentPath(OpenPath... file);
 
         /**
          * Callback used to designate when updates have completed
          */
         public void doneUpdating();
-        
-        public void onUpdateException(Exception e);
     }
     
     public interface ExceptionListener {
@@ -771,7 +773,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     }
     
     public interface ListHandler {
-        public void list(final ListListener listener);
+        public Thread list(final ListListener listener);
     }
     
     public interface IsCancelledListener {
@@ -808,9 +810,11 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * Callback function for {@link SpaceListener} to
          * determine space available on requested device.
          * 
-         * @param space Format: [Total [Used [Secondary]]]
+         * @param total Total size available in bytes.
+         * @param used Used amount in bytes. Set to -1 to ignore.
+         * @param third Third amount in bytes. This is optional. Set to 0 or less to ignore.
          */
-        public void onSpaceReturned(long... space);
+        public void onSpaceReturned(long total, long used, long third);
     }
     public interface SpaceHandler {
         public void getSpace(SpaceListener callback);
@@ -818,11 +822,13 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public interface OpenPathSizable {
         public long getTotalSpace();
         public long getUsedSpace();
-        public long getFreeSpace();
+        public long getThirdSpace();
     }
     
-    public void thread(Runnable r) {
-        new Thread(r).start();
+    public Thread thread(Runnable r) {
+        Thread ret = new Thread(r);
+        ret.start();
+        return ret;
     }
     
     public void post(Runnable r) {

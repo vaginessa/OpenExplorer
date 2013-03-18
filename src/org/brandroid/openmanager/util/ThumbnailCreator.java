@@ -173,60 +173,61 @@ public class ThumbnailCreator {
                     // ((ThumbnailTask)mImage.getTag()).cancel(true);
 
                     try {
-                        if (!fails.containsKey(file.getPath())) {
-                            if (!app.getMemoryCache().containsKey(file.getPath()))
-                            {
-                                if (file instanceof OpenPath.ThumbnailHandler
-                                        && file.hasThumbnail()) {
-                                    ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth,
-                                            new OpenPath.ThumbnailReturnCallback() {
-                                                @Override
-                                                public void onException(Exception e) {
-                                                    
-                                                }
+                        if (fails.containsKey(file.getPath()))
+                            return false;
+                        if (!app.getMemoryCache().containsKey(file.getPath()))
+                        {
+                            if (file instanceof OpenPath.ThumbnailHandler
+                                    && file.hasThumbnail()) {
+                                ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth,
+                                        new OpenPath.ThumbnailReturnCallback() {
+                                            @Override
+                                            public void onException(Exception e) {
 
-                                                public void onThumbReturned(Bitmap bmp) {
-                                                    try {
-                                                        String mCacheFilename = getCacheFilename(
-                                                                file.getAbsolutePath(), mWidth,
-                                                                mHeight);
-                                                        saveThumbnail(app.getContext(),
-                                                                mCacheFilename, bmp);
-                                                        app.getMemoryCache().put(mCacheFilename,
-                                                                bmp);
-                                                        mListener.updateImage(bmp);
-                                                    } catch (OutOfMemoryError e) {
-                                                        showThumbPreviews = false;
-                                                        Logger.LogWarning("No more memory for thumbs!");
-                                                    }
+                                            }
+
+                                            public void onThumbReturned(Bitmap bmp) {
+                                                try {
+                                                    String mCacheFilename = getCacheFilename(
+                                                            file.getAbsolutePath(), mWidth,
+                                                            mHeight);
+                                                    saveThumbnail(app.getContext(),
+                                                            mCacheFilename, bmp);
+                                                    app.getMemoryCache().put(mCacheFilename,
+                                                            bmp);
+                                                    mListener.updateImage(bmp);
+                                                } catch (OutOfMemoryError e) {
+                                                    showThumbPreviews = false;
+                                                    Logger.LogWarning("No more memory for thumbs!");
                                                 }
-                                            });
-                                    return true;
-                                }
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            SoftReference<Bitmap> gen = generateThumb(app, file,
-                                                    mWidth, mHeight, mContext);
-                                            if (gen != null && gen.get() != null)
-                                                mListener.updateImage(gen.get());
-                                            else
-                                                Logger.LogWarning("Couldn't generate thumb for "
-                                                        + file.getPath());
-                                        } catch (OutOfMemoryError e) {
-                                            showThumbPreviews = false;
-                                            Logger.LogWarning("No more memory for thumbs!");
-                                        }
+                                            }
+                                        });
+                                return true;
+                            }
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        SoftReference<Bitmap> gen = generateThumb(app, file,
+                                                mWidth, mHeight, mContext);
+                                        if (gen != null && gen.get() != null)
+                                            mListener.updateImage(gen.get());
+                                        else
+                                            Logger.LogWarning("Couldn't generate thumb for "
+                                                    + file.getPath());
+                                    } catch (OutOfMemoryError e) {
+                                        showThumbPreviews = false;
+                                        Logger.LogWarning("No more memory for thumbs!");
                                     }
-                                }).start();
-                            } else
-                                // new Thread(new Runnable() {public void run()
-                                // {
-                                mListener.updateImage(getThumbnailCache(app, file.getPath(),
-                                        mWidth, mHeight));
-                            // }}).start();
-                        }
+                                }
+                            }).start();
+                        } else
+                            // new Thread(new Runnable() {public void run()
+                            // {
+                            mListener.updateImage(getThumbnailCache(app, file.getPath(),
+                                    mWidth, mHeight));
+                        // }}).start();
+
                         // mImage.setTag(task);
                         // if(struct != null) task.execute(struct);
                     } catch (RejectedExecutionException rej) {

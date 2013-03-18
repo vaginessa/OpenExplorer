@@ -216,12 +216,12 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
     }
 
     @Override
-    public void list(final ListListener listener) {
+    public Thread list(final ListListener listener) {
         if (mChildren != null)
             listener.onListReceived(getChildren());
 
         mChildren = new Vector<OpenPath>();
-        new Thread(new Runnable() {
+        return thread(new Runnable() {
             public void run() {
                 try {
                     Entry e = mAPI.metadata(getPath(), -1, null, true, null);
@@ -235,7 +235,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
                     postException(e, listener);
                 }
             }
-        }).start();
+        });
     }
 
     public void list(final OpenContentUpdateListener callback) throws IOException {
@@ -259,7 +259,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
                     }
                     callback.doneUpdating();
                 } catch (DropboxException e) {
-                    callback.onUpdateException(e);
+                    callback.onException(e);
                 }
             }
         }).start();
@@ -728,6 +728,8 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
 
     @Override
     public long getTotalSpace() {
+        if (mAccount != null)
+            return mAccount.quota;
         if (getServer() != null)
             return getServer().get("quota", 0l);
         return 0;
@@ -735,12 +737,13 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
 
     @Override
     public long getUsedSpace() {
+        if (mAccount != null)
+            return mAccount.quotaNormal;
         if (getServer() != null)
             return getServer().get("normal", 0l);
         return 0;
     }
 
-    @Override
     public long getFreeSpace() {
         return getTotalSpace() - getUsedSpace();
     }
@@ -802,9 +805,13 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
 
     @Override
     public void getSpace(final SpaceListener callback) {
+        if(mAccount != null)
+        {
+            callback.onSpaceReturned(mAccount.quota, mAccount.quotaNormal, mAccount.quotaShared);
+        }
         if(getServer().get("quota", 0) > 0)
         {
-            callback.onSpaceReturned(getTotalSpace(), getUsedSpace());
+            callback.onSpaceReturned(getTotalSpace(), getUsedSpace(), getThirdSpace());
             return;
         }
         thread(new Runnable() {
@@ -830,5 +837,12 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
                 }
             }
         });
+    }
+
+    @Override
+    public long getThirdSpace() {
+        if(mAccount != null)
+            return mAccount.quotaShared;
+        return 0;
     }
 }
