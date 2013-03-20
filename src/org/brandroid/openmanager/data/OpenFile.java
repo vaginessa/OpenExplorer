@@ -32,7 +32,7 @@ import android.os.Environment;
 import android.os.StatFs;
 
 @SuppressLint("NewApi")
-public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream, SpaceHandler {
+public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream, SpaceHandler, OpenPath.OpenPathSizable {
     private static final long serialVersionUID = 6436156952322586833L;
     private File mFile;
     private WeakReference<OpenFile[]> mChildren = null;
@@ -149,6 +149,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     }
 
     public long getTotalSpace() {
+        if (mTotalSpace != null) return mTotalSpace;
         if (getDepth() > 4) {
             if (getPath().indexOf("/mnt/") > -1) {
                 OpenFile toCheck = this;
@@ -158,27 +159,36 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
                         break;
                 }
                 if (toCheck != null)
-                    return toCheck.getTotalSpace();
+                    return mTotalSpace = toCheck.getTotalSpace();
             }
         }
         try {
             StatFs stat = new StatFs(getPath());
             if (stat.getBlockCount() > 0)
-                return (long)stat.getBlockCount() * (long)stat.getBlockSize();
+                return mTotalSpace = (long)stat.getBlockCount() * (long)stat.getBlockSize();
         } catch (Exception e) {
             Logger.LogWarning("Couldn't get Total Space for " + getPath(), e);
         }
         if (DFInfo.LoadDF().containsKey(getPath()))
-            return (long)DFInfo.LoadDF().get(getPath()).getSize();
+            return mTotalSpace = (long)DFInfo.LoadDF().get(getPath()).getSize();
         return Build.VERSION.SDK_INT > 8 ? mFile.getTotalSpace() * 1024 * 1024 : length();
     }
 
     public long getUsedSpace() {
+        if (mUsedSpace != null) return mUsedSpace;
+        try {
+            StatFs stat = new StatFs(getPath());
+            if (stat.getBlockCount() > 0)
+                return mUsedSpace = (stat.getAvailableBlocks()) * (long)stat.getBlockSize();
+        } catch (Exception e) {
+            Logger.LogWarning("Couldn't get Total Space for " + getPath(), e);
+        }
+
         long ret = length();
         if (isDirectory())
             for (OpenPath kid : list())
                 ret += ((OpenFile)kid).getUsedSpace();
-        return ret;
+        return mUsedSpace = ret;
     }
 
     public int countAllFiles() {
@@ -749,5 +759,10 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
                 }
             }
         });
+    }
+
+    @Override
+    public long getThirdSpace() {
+        return 0;
     }
 }

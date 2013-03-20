@@ -92,6 +92,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     public static final int BOOKMARK_FAVORITE = 2;
     public static final int BOOKMARK_SERVER = 3;
     public static final int BOOKMARK_EDITING = 4;
+    private Boolean mFirstRun = true;
 
     public interface NotifyAdapterCallback {
         public void notifyAdapter();
@@ -202,13 +203,13 @@ public class OpenBookmarks implements OnGroupClickListener,
         checkAndAdd(BookmarkType.BOOKMARK_DRIVE, new OpenFile("/").setRoot());
         checkAndAdd(BookmarkType.BOOKMARK_DRIVE, storage.setRoot());
 
-        new Thread(new Runnable() {
+        Runnable drives = new Runnable() {
             @Override
             public void run() {
 
                 checkAndAdd(BookmarkType.BOOKMARK_DRIVE, OpenFile.getUsbDrive());
 
-                Hashtable<String, DFInfo> df = DFInfo.LoadDF(true);
+                Hashtable<String, DFInfo> df = DFInfo.LoadDF(mFirstRun);
                 mAllDataSize = 0l;
                 for (String sItem : df.keySet()) {
                     if (sItem.toLowerCase().startsWith("/dev"))
@@ -239,12 +240,17 @@ public class OpenBookmarks implements OnGroupClickListener,
                         checkAndAdd(BookmarkType.BOOKMARK_FAVORITE, new OpenFile(s));
                 }
             }
-        }).start();
-
-        notifyDataSetChanged(mApp);
+        };
+        
+        if(mFirstRun)
+        {
+            notifyDataSetChanged(mApp);
+            new Thread(drives).start();
+        }
+        else drives.run();
 
         final OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
-        new Thread(new Runnable() {
+        Runnable cloud = new Runnable() {
             public void run() {
                 for (int i = 0; i < servers.size(); i++) {
                     final int ind = i;
@@ -266,7 +272,13 @@ public class OpenBookmarks implements OnGroupClickListener,
                                 OpenCommand.COMMAND_ADD_SERVER),
                         null);
             }
-        }).start();
+        };
+        if(mFirstRun)
+        {
+            new Thread(cloud).start();
+            mFirstRun = false;
+        } else cloud.run();
+        
         notifyDataSetChanged(mApp);
     }
 
@@ -373,7 +385,13 @@ public class OpenBookmarks implements OnGroupClickListener,
             ViewUtils.setViewsVisible(parent, false, R.id.content_count);
 
 
-        if (path instanceof OpenPath.SpaceHandler) {
+        if (path instanceof OpenPath.OpenPathSizable && ((OpenPathSizable)path).getTotalSpace() > 0) {
+            OpenPathSizable f = (OpenPathSizable)path;
+            long size = f.getTotalSpace();
+            long used = f.getUsedSpace();
+            long last = f.getThirdSpace();
+            updateSizeIndicator(path, parent, size, used, last);
+        } else if (path instanceof OpenPath.SpaceHandler) {
             ViewUtils.setViewsVisible(parent, true, R.id.size_layout, R.id.size_bar);
             ((OpenPath.SpaceHandler)path).getSpace(new OpenPath.SpaceListener() {
                 public void onException(Exception e) {
@@ -383,14 +401,8 @@ public class OpenBookmarks implements OnGroupClickListener,
                     updateSizeIndicator(path, parent, space, used, third);
                 }
             });
-        } else if (path instanceof OpenPath.OpenPathSizable) {
-            OpenPathSizable f = (OpenPathSizable)path;
-            long size = f.getTotalSpace();
-            long used = f.getUsedSpace();
-            long last = f.getThirdSpace();
-            updateSizeIndicator(path, parent, size, used, last);
         } else {
-            ViewUtils.setViewsVisible(parent, false, R.id.size_layout, R.id.size_bar);
+            ViewUtils.setViewsVisibleNow(parent, false, R.id.size_layout, R.id.size_bar);
         }
 
         parent.setOnClickListener(new OnClickListener() {
