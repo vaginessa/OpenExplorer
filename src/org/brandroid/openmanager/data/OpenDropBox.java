@@ -14,6 +14,7 @@ import java.util.Vector;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
@@ -84,7 +85,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
     }
 
     @Override
-    public boolean copyTo(OpenNetworkPath path, final CloudCopyListener callback) {
+    public boolean copyTo(OpenNetworkPath path, final CloudCompletionListener callback) {
         if (path instanceof OpenDropBox)
         {
             final OpenDropBox folder = (OpenDropBox)path;
@@ -94,7 +95,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
                         final Entry entry = mAPI.copy(getDBPath(), folder.getDBPath());
                         post(new Runnable() {
                             public void run() {
-                                callback.onCopyComplete(entry.path + " created!");
+                                callback.onCloudComplete(entry.path + " created!");
                             }
                         });
                     } catch (Exception e) {
@@ -844,5 +845,67 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
         if(mAccount != null)
             return mAccount.quotaShared;
         return 0;
+    }
+
+    @Override
+    public Cancellable uploadToCloud(final OpenFile file, final CloudProgressListener callback) {
+        return runCloud(new Runnable() {
+            public void run() {
+                try {
+                    mAPI.putFile(getRemotePath(), file.getInputStream(), file.length(), null, new ProgressListener() {
+                        public void onProgress(long bytes, long total) {
+                            callback.onProgress(bytes);
+                        }
+                    });
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onCloudComplete("Upload complete");
+                        }
+                    });
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+    }
+
+    @Override
+    public Cancellable downloadFromCloud(final OpenFile file, final CloudProgressListener callback) {
+        return runCloud(new Runnable() {
+            public void run() {
+                try {
+                    mAPI.getFile(getRemotePath(), null, file.getOutputStream(), new ProgressListener() {
+                        public void onProgress(final long bytes, long total) {
+                            post(new Runnable() {
+                                public void run() {
+                                    callback.onProgress(bytes);
+                                }
+                            });
+                        }
+                    });
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onCloudComplete("Download complete");
+                        }
+                    });
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+    }
+
+    @Override
+    public boolean touch(final CloudCompletionListener callback) {
+        runCloud(new Runnable() {
+            public void run() {
+                try {
+                    mAPI.putFileRequest(getRemotePath(), null, 0, null, null);
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+        return true;
     }
 }

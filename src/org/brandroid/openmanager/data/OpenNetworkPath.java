@@ -207,17 +207,59 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         public void disconnect();
     }
 
-    public interface CloudCopyListener extends OpenPath.ExceptionListener {
-        public void onCopyComplete(String status);
+    public interface CloudCompletionListener extends OpenPath.ExceptionListener {
+        public void onCloudComplete(String status);
+    }
+    public interface CloudProgressListener extends CloudCompletionListener {
+        public void onProgress(long bytes);
     }
     
     public interface CloudDeleteListener extends OpenPath.ExceptionListener {
         public void onDeleteComplete(String status);
     }
     
+    public interface Cancellable {
+        public boolean cancel();
+    }
+    
     public interface CloudOpsHandler extends ListHandler {
-        public boolean copyTo(OpenNetworkPath folder, CloudCopyListener callback);
+        public boolean copyTo(OpenNetworkPath folder, CloudCompletionListener callback);
         public boolean delete(CloudDeleteListener callback);
+        public Cancellable uploadToCloud(OpenFile file, CloudProgressListener callback);
+        public Cancellable downloadFromCloud(OpenFile file, CloudProgressListener callback);
+        public boolean touch(CloudCompletionListener callback);
+    }
+    
+    public static Cancellable runCloud(final Runnable r, final CloudCompletionListener listener)
+    {
+        return getThreadCancellor(thread(new Runnable() {
+            public void run() {
+                try {
+                    r.run();
+                    post(new Runnable() {
+                        public void run() {
+                            listener.onCloudComplete("Complete");
+                        }
+                    });
+                } catch(Exception e) {
+                    postException(e, listener);
+                }
+            }
+        }));
+    }
+    
+    public static Cancellable getThreadCancellor(final Thread thread)
+    {
+        return new Cancellable() {
+            public boolean cancel() {
+                if(thread.isAlive())
+                {
+                    thread.interrupt();
+                    return true;
+                }
+                return false;
+            }
+        };
     }
 
     /**

@@ -73,6 +73,8 @@ import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenMediaStore;
+import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
@@ -650,6 +652,7 @@ public class EventHandler {
         private final int[] mLastProgress = new int[3];
         private int notifIcon;
         private CompressionType mCompressType = CompressionType.ZIP;
+        private Cancellable mCloudCancellor;
 
         private OnWorkerUpdateListener mListener;
 
@@ -781,6 +784,8 @@ public class EventHandler {
 
         @Override
         protected void onCancelled() {
+            if(mCloudCancellor != null)
+                mCloudCancellor.cancel();
             mNotifier.cancel(mNotifyId);
             super.onCancelled();
             mTasks.remove(this);
@@ -808,12 +813,12 @@ public class EventHandler {
                     if (mIntoPath.requiresThread())
                         notifIcon = android.R.drawable.stat_sys_upload;
                     notifIcon = R.drawable.ic_menu_copy;
-                    showDialog = true;
+                    showDialog = false;
                     showNotification = true;
                     break;
                 case CUT:
                     notifIcon = R.drawable.ic_menu_cut;
-                    showDialog = true;
+                    showDialog = false;
                     showNotification = true;
                     break;
                 case ZIP:
@@ -832,8 +837,8 @@ public class EventHandler {
             if (showDialog)
                 try {
                     mPDialog = ProgressDialog.show(mContext, getTitle(),
-                            getResourceString(mContext, R.string.s_title_wait).toString(), true,
-                            true, new DialogInterface.OnCancelListener() {
+                            getResourceString(mContext, R.string.s_title_wait).toString(), false,
+                            isCancellable, new DialogInterface.OnCancelListener() {
                                 public void onCancel(DialogInterface dialog) {
                                     cancelRunningTasks();
                                 }
@@ -896,8 +901,8 @@ public class EventHandler {
                 PendingIntent pendingIntent = PendingIntent.getActivity(mContext,
                         OpenExplorer.REQUEST_VIEW, intent, 0);
                 mBuilder.setContentIntent(pendingIntent);
-                mBuilder.setOngoing(false);
-                mBuilder.setOnlyAlertOnce(true);
+                mBuilder.setOngoing(true);
+                //mBuilder.setOnlyAlertOnce(true);
                 NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
                 style.bigText(getDetailedText());
                 style.setBigContentTitle(getOperation() + " " + mCurrentPath.getName());
@@ -1247,11 +1252,120 @@ public class EventHandler {
             running[0] = false;
             return ret;
         }
+        
+        private Boolean checkCloudUpload(OpenPath old, OpenPath intoDir)
+        {
+            if (old instanceof OpenFile && intoDir instanceof OpenNetworkPath.CloudOpsHandler)
+            {
+                final Boolean[] ret = new Boolean[]{false};
+                final Thread waiter = new Thread(new Runnable() {
+                    public void run() {
+                        try {
+                            while(!ret[0])
+                                Thread.currentThread().sleep(1000);
+                        } catch(Exception e) {
+                        }
+                    }
+                });
+                final long srcLength = old.length();
+                mCloudCancellor = ((OpenNetworkPath.CloudOpsHandler)intoDir).uploadToCloud((OpenFile)old, new OpenNetworkPath.CloudProgressListener() {
+                    public void onException(Exception e) {
+                        if(waiter.isAlive())
+                        {
+                            ret[0] = true;
+                            waiter.interrupt();
+                        }
+                    }
+                    
+                    @Override
+                    public void onCloudComplete(String status) {
+                        if(waiter.isAlive())
+                        {
+                            ret[0] = true;
+                            waiter.interrupt();
+                        }                        
+                    }
+                    
+                    @Override
+                    public void onProgress(long bytes) {
+                        publishMyProgress((int)bytes, (int)srcLength);
+                    }
+                });
+                
+                waiter.run();
+                
+                if(!ret[0])
+                {
+                    mCloudCancellor.cancel();
+                }
+                
+                return true;
+            }
+            return false;
+        }
+        
+        private Boolean checkCloudDownload(OpenPath from, OpenPath into)
+        {
+
+            if (into instanceof OpenFile && from instanceof OpenNetworkPath.CloudOpsHandler)
+            {
+                final Boolean[] ret = new Boolean[]{false};
+                final Thread waiter = new Thread(new Runnable() {
+                    public void run() {
+                        try {
+                            while(!ret[0])
+                                Thread.currentThread().sleep(1000);
+                        } catch(Exception e) {
+                        }
+                    }
+                });
+                final long srcLength = from.length();
+                mCloudCancellor = ((OpenNetworkPath.CloudOpsHandler)into).uploadToCloud((OpenFile)from, new OpenNetworkPath.CloudProgressListener() {
+                    public void onException(Exception e) {
+                        if(waiter.isAlive())
+                        {
+                            ret[0] = true;
+                            waiter.interrupt();
+                        }
+                    }
+                    
+                    @Override
+                    public void onCloudComplete(String status) {
+                        if(waiter.isAlive())
+                        {
+                            ret[0] = true;
+                            waiter.interrupt();
+                        }                        
+                    }
+                    
+                    @Override
+                    public void onProgress(long bytes) {
+                        publishMyProgress((int)bytes, (int)srcLength);
+                    }
+                });
+                
+                waiter.run();
+                
+                if(!ret[0])
+                {
+                    mCloudCancellor.cancel();
+                }
+                
+                return ret[0];
+            }
+            return null;
+        }
 
         private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total)
                 throws IOException {
             if (old.equals(intoDir))
                 return false;
+            Boolean check = checkCloudUpload(old, intoDir);
+            if(check != null)
+                return check;
+            check = checkCloudDownload(old, intoDir);
+            if(check != null)
+                return check;
             if (old instanceof OpenFile && !old.isDirectory() && intoDir instanceof OpenFile)
                 if (copyFileToDirectory((OpenFile)old, (OpenFile)intoDir, total))
                     return true;

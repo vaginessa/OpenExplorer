@@ -72,12 +72,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                         PrivatePreferences.getKey("oauth_drive_secret", ""))
                 .build();
         mCredential.setAccessToken(token);
-        if (mGlobalDrive == null)
-            mGlobalDrive = new Drive
-                    .Builder(mTransport, mJsonFactory, mCredential)
-                            .setApplicationName("OpenExplorer/1.0")
-                            .setHttpRequestInitializer(mCredential)
-                            .build();
+        setCredential(mCredential);
         mParent = null;
         mFile = null;
         mFolder = null;
@@ -89,12 +84,11 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     public void setCredential(GoogleCredential cred) {
         mCredential = cred;
-        if (mGlobalDrive == null)
-            mGlobalDrive = new Drive
-                    .Builder(mTransport, mJsonFactory, mCredential)
-                            .setApplicationName("OpenExplorer/1.0")
-                            .setHttpRequestInitializer(mCredential)
-                            .build();
+        mGlobalDrive = new Drive
+                .Builder(mTransport, mJsonFactory, mCredential)
+                        .setApplicationName("OpenExplorer/1.0")
+                        .setHttpRequestInitializer(mCredential)
+                        .build();
     }
 
     public OpenDrive(OpenDrive parent, File file)
@@ -260,6 +254,11 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public Boolean canRead() {
         return true;
     }
+    
+    @Override
+    public Boolean canWrite() {
+        return true;
+    }
 
     @Override
     public Boolean canExecute() {
@@ -292,7 +291,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     }
 
     @Override
-    public boolean copyTo(OpenNetworkPath path, final CloudCopyListener callback) {
+    public boolean copyTo(OpenNetworkPath path, final CloudCompletionListener callback) {
         if (path instanceof OpenDrive)
         {
             final OpenDrive folder = (OpenDrive)path;
@@ -302,7 +301,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                         mGlobalDrive.files().copy(getFile().getId(), folder.getFile()).execute();
                         post(new Runnable() {
                             public void run() {
-                                callback.onCopyComplete("Copy completed successfully");
+                                callback.onCloudComplete("Copy completed successfully");
                             }
                         });
                     } catch (Exception e) {
@@ -468,6 +467,66 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             }
         });
         return false;
+    }
+
+    @Override
+    public Cancellable uploadToCloud(final OpenFile file, final CloudProgressListener callback) {
+        return runCloud(new Runnable() {
+            public void run() {
+                try {
+                    final AbstractInputStreamContent input = new AbstractInputStreamContent("Drive#File") {
+                        
+                        @Override
+                        public boolean retrySupported() {
+                            return false;
+                        }
+                        
+                        @Override
+                        public long getLength() throws IOException {
+                            return file.length();
+                        }
+                        
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            return file.getInputStream();
+                        }
+                    };
+                    mGlobalDrive.files().update(mFolderId, getFile(), input).execute();
+                    postCompletion("Upload complete", callback);
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+    }
+
+    @Override
+    public Cancellable downloadFromCloud(final OpenFile file, final CloudProgressListener callback) {
+        return runCloud(new Runnable() {
+            public void run() {
+                try {
+                    mGlobalDrive.files().get(mFolderId).executeAndDownloadTo(file.getOutputStream());
+                    postCompletion("Download complete", callback);
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+    }
+
+    @Override
+    public boolean touch(final CloudCompletionListener callback) {
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    mGlobalDrive.files().touch(mFolderId);
+                    postCompletion("File touched", callback);
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        });
+        return true;
     }
 
 }

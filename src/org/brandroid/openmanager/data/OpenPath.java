@@ -15,6 +15,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.data.OpenNetworkPath.CloudCompletionListener;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager;
@@ -827,17 +828,17 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         public long getThirdSpace();
     }
     
-    public Thread thread(Runnable r) {
+    public static Thread thread(Runnable r) {
         Thread ret = new Thread(r);
         ret.start();
         return ret;
     }
     
-    public void post(Runnable r) {
+    public static void post(Runnable r) {
         OpenExplorer.post(r);
     }
     
-    public void postListReceived(final OpenPath[] mChildren, final ListListener listener)
+    public static void postListReceived(final OpenPath[] mChildren, final ListListener listener)
     {
         post(new Runnable() {
             public void run() {
@@ -846,7 +847,16 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         });
     }
     
-    public void postException(final Exception e, final ExceptionListener listener)
+    public static void postCompletion(final String status, final CloudCompletionListener listener)
+    {
+        post(new Runnable() {
+            public void run() {
+                listener.onCloudComplete(status);
+            }
+        });
+    }
+    
+    public static void postException(final Exception e, final ExceptionListener listener)
     {
         post(new Runnable() {
             public void run() {
