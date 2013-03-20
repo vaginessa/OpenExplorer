@@ -100,9 +100,9 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
         if (mChildCount != null)
             return mChildCount;
         if (mChildren != null)
-            return mChildren.get().length;
+            return mChildCount = mChildren.get().length;
         else
-            return -1;
+            return list().length;
     }
 
     public long getFreeSpace() {
@@ -410,6 +410,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
             bGrandPeeked = true;
         }
         
+        mChildCount = mChildren.length;
         this.mChildren = new WeakReference<OpenFile[]>(mChildren);
 
         return mChildren;
@@ -454,12 +455,10 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     }
 
     @Override
-    public OpenPath[] list() {
+    public OpenFile[] list() {
         if (mChildren != null)
             return mChildren.get();
-        if(mChildCount != null)
-            return listFiles();
-        return new OpenPath[0];
+        return listFiles();
     }
 
     @Override

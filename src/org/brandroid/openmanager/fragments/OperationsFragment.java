@@ -69,7 +69,7 @@ public class OperationsFragment extends OpenFragment implements Poppable {
             final View view = convertView;
             final ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
             final TextView text1 = (TextView)view.findViewById(android.R.id.text1);
-            ViewUtils.setText(view, bw.getDetailedText(), R.id.big_text);
+            //ViewUtils.setText(view, bw.getDetailedText(), R.id.big_text);
             ViewUtils.setOnClicks(view, new OnClickListener() {
                 public void onClick(View v) {
                     if(bw.getStatus() == Status.RUNNING)

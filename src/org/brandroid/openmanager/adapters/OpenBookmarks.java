@@ -392,7 +392,7 @@ public class OpenBookmarks implements OnGroupClickListener,
             long last = f.getThirdSpace();
             updateSizeIndicator(path, parent, size, used, last);
         } else if (path instanceof OpenPath.SpaceHandler) {
-            ViewUtils.setViewsVisible(parent, true, R.id.size_layout, R.id.size_bar);
+            //ViewUtils.setViewsVisible(parent, true, R.id.size_layout, R.id.size_bar);
             ((OpenPath.SpaceHandler)path).getSpace(new OpenPath.SpaceListener() {
                 public void onException(Exception e) {
                     ViewUtils.setViewsVisible(parent, false, R.id.size_layout, R.id.size_bar);
