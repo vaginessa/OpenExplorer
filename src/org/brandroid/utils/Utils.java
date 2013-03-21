@@ -38,6 +38,7 @@ import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Random;
 
 import org.brandroid.openmanager.data.OpenPath;
@@ -572,5 +573,21 @@ public class Utils {
         } catch (Exception e) {
         }
         return s;
+    }
+
+    public static String formatDuration(long ms) {
+        int s = (int)(ms / 1000), m = s / 60, h = m / 60;
+        m = m % 60;
+        s = s % 60;
+        return (ms > 360000 ? h + ":" : "")
+                + (ms > 6000 ? (h == 0 || m >= 10 ? "" : "0") + m + ":" : "")
+                + (ms > 6000 ? (s >= 10 ? "" : "0") + s : (ms < 1000 ? ms + "ms" : s + "s"));
+    }
+
+    public static String getLangCode() {
+        String lang = Locale.getDefault().toString().toUpperCase();
+        if (lang.length() > 2)
+            lang = lang.substring(0, 2);
+        return lang;
     }
 }

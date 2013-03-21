@@ -26,7 +26,6 @@ import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.util.DFInfo;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.InputDialog;
@@ -125,7 +124,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     }
 
     public void scanRoot() {
-        //Logger.LogDebug("Trying to get roots");
+        // Logger.LogDebug("Trying to get roots");
         if (mBlkids == null && mProcMounts == null) {
             mProcMounts = new ArrayList<String>();
             mBlkids = new ArrayList<String>();
@@ -241,13 +240,14 @@ public class OpenBookmarks implements OnGroupClickListener,
                 }
             }
         };
-        
-        if(mFirstRun)
+
+        if (mFirstRun)
         {
             notifyDataSetChanged(mApp);
             new Thread(drives).start();
         }
-        else drives.run();
+        else
+            drives.run();
 
         final OpenServers servers = ServerSetupActivity.LoadDefaultServers(context);
         Runnable cloud = new Runnable() {
@@ -255,7 +255,8 @@ public class OpenBookmarks implements OnGroupClickListener,
                 for (int i = 0; i < servers.size(); i++) {
                     final int ind = i;
                     final OpenServer server = servers.get(i);
-                    //Logger.LogDebug("Checking server #" + ind + ": " + server.toString());
+                    // Logger.LogDebug("Checking server #" + ind + ": " +
+                    // server.toString());
                     OpenNetworkPath onp = server.getOpenPath();
                     onp.setServer(server);
                     SimpleUserInfo info = new SimpleUserInfo();
@@ -273,12 +274,13 @@ public class OpenBookmarks implements OnGroupClickListener,
                         null);
             }
         };
-        if(mFirstRun)
+        if (mFirstRun)
         {
             new Thread(cloud).start();
             mFirstRun = false;
-        } else cloud.run();
-        
+        } else
+            cloud.run();
+
         notifyDataSetChanged(mApp);
     }
 
@@ -384,7 +386,6 @@ public class OpenBookmarks implements OnGroupClickListener,
         } else
             ViewUtils.setViewsVisible(parent, false, R.id.content_count);
 
-
         if (path instanceof OpenPath.OpenPathSizable && ((OpenPathSizable)path).getTotalSpace() > 0) {
             OpenPathSizable f = (OpenPathSizable)path;
             long size = f.getTotalSpace();
@@ -392,11 +393,13 @@ public class OpenBookmarks implements OnGroupClickListener,
             long last = f.getThirdSpace();
             updateSizeIndicator(path, parent, size, used, last);
         } else if (path instanceof OpenPath.SpaceHandler) {
-            //ViewUtils.setViewsVisible(parent, true, R.id.size_layout, R.id.size_bar);
+            // ViewUtils.setViewsVisible(parent, true, R.id.size_layout,
+            // R.id.size_bar);
             ((OpenPath.SpaceHandler)path).getSpace(new OpenPath.SpaceListener() {
                 public void onException(Exception e) {
                     ViewUtils.setViewsVisible(parent, false, R.id.size_layout, R.id.size_bar);
                 }
+
                 public void onSpaceReturned(long space, long used, long third) {
                     updateSizeIndicator(path, parent, space, used, third);
                 }
@@ -840,7 +843,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     public String getBookMarkNameString() {
         return mBookmarkString;
     }
-    
+
     /**
      * Update Size ProgressBar and TextViews
      * 
@@ -849,22 +852,27 @@ public class OpenBookmarks implements OnGroupClickListener,
      * @param used Used Size to display
      * @param third Optional 3rd Size to display
      */
-    public void updateSizeIndicator(OpenPath path, View mParentView, long total, long used, long third)
+    public void updateSizeIndicator(OpenPath path, View mParentView, long total, long used,
+            long third)
     {
         boolean onlySize = used < 0;
-        
-        if(OpenExplorer.IS_DEBUG_BUILD)
-            Logger.LogDebug("Update Size indicator for " + path + ": " + total + ", " + used + ", " + third);
-        
+
+        if (OpenExplorer.IS_DEBUG_BUILD)
+            Logger.LogDebug("Update Size indicator for " + path + ": " + total + ", " + used + ", "
+                    + third);
+
         if (total > 0) {
             String txt = "";
-            if(used > 0)
-                txt = DialogHandler.formatSize(used, false) + "/";
-            txt += DialogHandler.formatSize(total);
-            if(third > 0)
-                txt += " (" + DialogHandler.formatSize(third) + ")";
+            if (used > 0)
+            {
+                boolean same = OpenPath.getSizeSuffix(used).equals(OpenPath.getSizeSuffix(total));
+                txt = OpenPath.formatSize(used, !same) + "/";
+            }
+            txt += OpenPath.formatSize(total);
+            if (third > 0)
+                txt += " (" + OpenPath.formatSize(third) + ")";
             ViewUtils.setText(mParentView, txt, R.id.size_text);
-            
+
             while (total > 100000) {
                 total /= 10;
                 used /= 10;
@@ -872,14 +880,14 @@ public class OpenBookmarks implements OnGroupClickListener,
             }
             float total_percent = ((float)total / (float)Math.max(total, mLargestDataSize));
             total_percent = Math.min(20, total_percent);
-            
+
             ProgressBar bar = (ProgressBar)mParentView.findViewById(R.id.size_bar);
             ViewUtils.setViewsVisible(bar, !onlySize, R.id.size_bar);
-            
+
             if (bar != null && !onlySize) {
                 bar.setMax((int)total);
                 bar.setProgress((int)used);
-                if(third > 0)
+                if (third > 0)
                     bar.setSecondaryProgress((int)third);
             }
 
@@ -922,7 +930,7 @@ public class OpenBookmarks implements OnGroupClickListener,
                     null);
 
             makeBookmarkView((OpenApp)this, row, getChild(group, pos));
-            
+
             return row;
         }
 

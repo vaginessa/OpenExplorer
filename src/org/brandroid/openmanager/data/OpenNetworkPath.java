@@ -4,7 +4,6 @@ package org.brandroid.openmanager.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath.*;
@@ -341,7 +340,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         String deets = "";
 
         if (!isDirectory())
-            deets += DialogHandler.formatSize(length());
+            deets += OpenPath.formatSize(length());
 
         return deets;
     }

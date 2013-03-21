@@ -1381,7 +1381,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @SuppressWarnings("deprecation")
     public static void launchTranslator(Activity a) {
         new Preferences(a).setSetting("warn", "translate", true);
-        String lang = DialogHandler.getLangCode();
+        String lang = Utils.getLangCode();
         Uri uri = Uri.parse("http://brandroid.org/translation_helper.php?lang=" + lang + "&full="
                 + Locale.getDefault().getDisplayLanguage() + "&wid="
                 + a.getWindowManager().getDefaultDisplay().getWidth());
@@ -1448,10 +1448,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private int checkLanguage() {
-        String lang = DialogHandler.getLangCode();
+        String lang = Utils.getLangCode();
         if (lang.equals("EN"))
             return 0;
-        return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf("," + DialogHandler.getLangCode() + ",") == -1 ? 2
+        return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf("," + Utils.getLangCode() + ",") == -1 ? 2
                 : 1;
     }
 
@@ -1719,7 +1719,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             + " "
                             + getVolumeName(path)
                             + " @ "
-                            + DialogHandler.formatSize((long)sf.getBlockSize()
+                            + OpenPath.formatSize((long)sf.getBlockSize()
                                     * (long)sf.getAvailableBlocks()));
                     refreshBookmarks();
                     if (mLastPath.getPath().equals(path))
@@ -2879,7 +2879,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 R.layout.clipboard_layout, null);
         final TextView tvStatus = (TextView)root.findViewById(R.id.multiselect_status);
         tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
-                + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                + OpenPath.formatSize(getClipboard().getTotalSize()));
         GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
         final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
         mListClipboard.setAdapter(getClipboard());
@@ -2887,7 +2887,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             @Override
             public void onClipboardUpdate() {
                 tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
-                        + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                        + OpenPath.formatSize(getClipboard().getTotalSize()));
                 OpenExplorer.this.onClipboardUpdate();
             }
         });

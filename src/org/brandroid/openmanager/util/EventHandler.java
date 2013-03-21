@@ -742,7 +742,7 @@ public class EventHandler {
             if (!auto) {
                 if (mLastRate > 0)
                     return getResourceString(mContext, R.string.s_status_rate)
-                            + DialogHandler.formatSize(mLastRate).replace(" ", "").toLowerCase()
+                            + OpenPath.formatSize(mLastRate).replace(" ", "").toLowerCase()
                             + "/s";
                 else
                     return "";
@@ -863,8 +863,8 @@ public class EventHandler {
             ret += "Source: " + mCurrentPath.getParent() + "\n";
             ret += "Destination: " + mIntoPath + "\n";
             if (mLastProgress.length > 2 && mLastProgress[0] > 0 && mLastProgress[1] > 0) {
-                ret += "Progress: " + DialogHandler.formatSize(mLastProgress[0]) + " / "
-                        + DialogHandler.formatSize(mLastProgress[1]) + " ";
+                ret += "Progress: " + OpenPath.formatSize(mLastProgress[0]) + " / "
+                        + OpenPath.formatSize(mLastProgress[1]) + " ";
                 ret += "(" + getLastRate(false) + ")\n";
             }
             ret += getResourceString(mContext, R.string.s_status_remaining) + " ";
