@@ -179,7 +179,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
         try {
             StatFs stat = new StatFs(getPath());
             if (stat.getBlockCount() > 0)
-                return mUsedSpace = (stat.getAvailableBlocks()) * (long)stat.getBlockSize();
+                return mUsedSpace = (stat.getBlockCount() - stat.getFreeBlocks()) * (long)stat.getBlockSize();
         } catch (Exception e) {
             Logger.LogWarning("Couldn't get Total Space for " + getPath(), e);
         }

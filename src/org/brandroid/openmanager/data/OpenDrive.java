@@ -6,6 +6,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
@@ -55,7 +56,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     private final OpenDrive mParent;
     private final File mFile;
     private final ParentReference mFolder;
-    private OpenDrive[] mChildren;
+    private WeakReference<OpenDrive[]> mChildren;
     public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
     public static final JsonFactory mJsonFactory = new GsonFactory();
 
@@ -147,7 +148,9 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public OpenNetworkPath[] getChildren() {
-        return mChildren;
+        if(mChildren != null)
+            return mChildren.get();
+        return new OpenNetworkPath[0];
     }
 
     @Override
@@ -195,7 +198,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     @Override
     public OpenPath[] list() throws IOException {
         if (mChildren != null)
-            return mChildren;
+            return mChildren.get();
         return listFiles();
     }
 
@@ -210,8 +213,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             OpenDrive kid = new OpenDrive(this, f);
             kids.add(kid);
         }
-        mChildren = kids.toArray(new OpenDrive[kids.size()]);
-        return mChildren;
+        mChildren = new WeakReference<OpenDrive[]>(kids.toArray(new OpenDrive[kids.size()]));
+        return mChildren.get();
     }
 
     @Override
@@ -360,8 +363,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     }
 
     @Override
-    public void list(final OpenContentUpdateListener callback) throws IOException {
-        thread(new Runnable() {
+    public Cancellable list(final OpenContentUpdateListener callback) {
+        return cancelify(thread(new Runnable() {
             public void run() {
                 try {
                     String pg = "";
@@ -378,7 +381,6 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                                 callback.addContentPath(getOpenDrives(OpenDrive.this, fl.getItems()));
                             }
                         });
-                        if(callback.isCancelled()) break;
                         if(pg.equals(fl.getNextPageToken())) break;
                         pg = fl.getNextPageToken();
                         if(pg == null || pg.equals("")) break;
@@ -387,7 +389,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                     postException(e, callback);
                 }
             }
-        });
+        }));
     }
 
     public Thread list(final ListListener listener) {
@@ -408,8 +410,9 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                             kids.add(new OpenDrive(OpenDrive.this, f));
                         pg = fl.getNextPageToken();
                     } while (added > 0);
-                    mChildren = kids.toArray(new OpenDrive[kids.size()]);
+                    OpenDrive[] mChildren = kids.toArray(new OpenDrive[kids.size()]);
                     postListReceived(mChildren, listener);
+                    OpenDrive.this.mChildren = new WeakReference<OpenDrive[]>(mChildren);
                 } catch (Exception e) {
                     postException(e, listener);
                 }

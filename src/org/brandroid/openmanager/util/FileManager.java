@@ -425,6 +425,11 @@ public class FileManager {
                     String pw = uri.getUserInfo();
                     if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);
+                    else {
+                        OpenServer server = servers.findByUser("drive", null, pw != null ? pw : null);
+                        if(server != null && server.getPassword() != null)
+                            pw = server.getPassword();
+                    }
                     ret = new OpenDrive(pw);
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get Drive item from cache.", e);

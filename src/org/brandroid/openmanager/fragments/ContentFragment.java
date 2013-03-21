@@ -46,6 +46,7 @@ import org.brandroid.openmanager.data.OpenFileRoot;
 import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.IsCancelledListener;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
@@ -602,47 +603,47 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return;
         }
         if (mPath instanceof OpenPathUpdateHandler) {
-            try {
-                mContentAdapter.clearData();
-                setProgressClickHandler(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        isCancelled = true;
-                    }
-                });
+            mContentAdapter.clearData();
+            
+            final OpenContentUpdateListener updateCallback = new OpenContentUpdateListener() {
+                @Override
+                public void addContentPath(final OpenPath... files) {
+                    mContentAdapter.addAll(Arrays.asList(files));
+                }
 
-                ((OpenPathUpdateHandler)mPath).list(new OpenContentUpdateListener() {
-                    @Override
-                    public void addContentPath(final OpenPath... files) {
-                        mContentAdapter.addAll(Arrays.asList(files));
-                    }
+                @Override
+                public void doneUpdating() {
+                    OpenExplorer.getHandler().post(new Runnable() {
+                        public void run() {
+                            setProgressVisibility(false);
+                            notifyDataSetChanged();
+                            ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
+                        }
+                    });
+                }
 
-                    @Override
-                    public void doneUpdating() {
-                        OpenExplorer.getHandler().post(new Runnable() {
-                            public void run() {
-                                setProgressVisibility(false);
-                                notifyDataSetChanged();
-                                ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onException(Exception e) {
-                        setProgressVisibility(false);
-                        Logger.LogError("Unable to run Task!", e);
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public boolean isCancelled() {
-                        return ContentFragment.this.isCancelled;
-                    }
-                });
-                return;
-            } catch (IOException e) {
-                Logger.LogError("Couldn't list with ContentUpdater");
-            }
+                @Override
+                public void onException(Exception e) {
+                    setProgressVisibility(false);
+                    Logger.LogError("Unable to run Task!", e);
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            };
+            
+            final Cancellable mUpdateTask = ((OpenPathUpdateHandler)mPath).list(updateCallback);
+            
+            final Cancellable cancellor = new Cancellable() {
+                public boolean cancel() {
+                    updateCallback.doneUpdating();
+                    return mUpdateTask.cancel();
+                }
+            }; 
+            
+            setProgressClickHandler(new View.OnClickListener() {
+                public void onClick(View v) {
+                    cancellor.cancel();
+                }
+            });
         } else if (mPath instanceof OpenPath.ListHandler) {
             setProgressVisibility(true);
             ((OpenPath.ListHandler)mPath).list(new OpenPath.ListListener() {
@@ -2071,12 +2072,15 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         // if(mProgressBarLoading != null && mData.length == 0)
         // mProgressBarLoading.setVisibility(visible ? View.VISIBLE :
         // View.GONE);
+        ViewUtils.setViewsVisible(getView(), visible, R.id.content_status_bar);
         if (getExplorer() != null)
             getExplorer().setProgressVisibility(visible);
     }
     
     private void setProgressClickHandler(android.view.View.OnClickListener listener)
     {
+        ViewUtils.setViewsVisible(getView(), true, R.id.content_status_bar);
+        ViewUtils.setOnClicks(getView(), listener, R.id.content_cancel);
         if(getExplorer() != null)
             getExplorer().setProgressClickHandler(listener);
     }
