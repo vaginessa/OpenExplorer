@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -18,20 +17,14 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Utils;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.CredentialRefreshListener;
-import com.google.api.client.auth.oauth2.TokenErrorResponse;
-import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.ChildReference;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
@@ -60,13 +53,10 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
     public static final JsonFactory mJsonFactory = new GsonFactory();
 
-    static {
-        if (OpenExplorer.IS_DEBUG_BUILD)
-            Logger.getLogger(HttpTransport.class.getName()).setLevel(Level.ALL);
-    }
-
     public OpenDrive(String token)
     {
+        if (OpenExplorer.IS_DEBUG_BUILD)
+            Logger.getLogger(HttpTransport.class.getName()).setLevel(Level.ALL);
         mCredential = new GoogleCredential.Builder()
                 .setClientSecrets(
                         PrivatePreferences.getKey("oauth_drive_client_id", ""),
@@ -77,19 +67,6 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         mParent = null;
         mFile = null;
         mFolder = null;
-    }
-
-    public GoogleCredential getCredential() {
-        return mCredential;
-    }
-
-    public void setCredential(GoogleCredential cred) {
-        mCredential = cred;
-        mGlobalDrive = new Drive
-                .Builder(mTransport, mJsonFactory, mCredential)
-                        .setApplicationName("OpenExplorer/1.0")
-                        .setHttpRequestInitializer(mCredential)
-                        .build();
     }
 
     public OpenDrive(OpenDrive parent, File file)
@@ -108,6 +85,19 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         mFile = null;
         mFolder = pr;
         mFolderId = pr.getId();
+    }
+
+    public GoogleCredential getCredential() {
+        return mCredential;
+    }
+
+    public void setCredential(GoogleCredential cred) {
+        mCredential = cred;
+        mGlobalDrive = new Drive
+                .Builder(mTransport, mJsonFactory, mCredential)
+                        .setApplicationName("OpenExplorer/1.0")
+                        .setHttpRequestInitializer(mCredential)
+                        .build();
     }
 
     @Override

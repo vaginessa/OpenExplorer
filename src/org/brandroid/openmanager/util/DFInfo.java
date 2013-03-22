@@ -125,6 +125,8 @@ public class DFInfo {
                     continue;
                 if (sl.indexOf("/obb") > -1)
                     continue;
+                if (sl.indexOf("/sys/") > -1)
+                    continue;
                 try {
                     String[] slParts = sl.split(" ");
                     DFInfo item = new DFInfo(slParts[0], getSize(slParts[1]), getSize(slParts[2]),
