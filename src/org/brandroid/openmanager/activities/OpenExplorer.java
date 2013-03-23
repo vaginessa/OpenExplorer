@@ -130,6 +130,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Vector;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
@@ -145,6 +146,7 @@ import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListene
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -1747,10 +1749,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setBeamPushUrisCallback(new NfcAdapter.CreateBeamUrisCallback() {
                 @Override
                 public Uri[] createBeamUris(NfcEvent event) {
-                    List<OpenPath> selectedFiles = getClipboard();
+                    List<OpenData> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<Uri> fileUri = new ArrayList<Uri>();
-                        for (OpenPath f : selectedFiles) {
+                        for (OpenData data : selectedFiles) {
+                            OpenPath f = data.getPath();
                             // Beam ignores folders and system files
                             if (!f.isDirectory() && f.canWrite()) {
                                 fileUri.add(f.getUri());
@@ -1768,10 +1771,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             mNfcAdapter.setNdefPushMessageCallback(new CreateNdefMessageCallback() {
                 public NdefMessage createNdefMessage(NfcEvent event) {
                     Logger.LogVerbose("Beam me up, scotty!");
-                    List<OpenPath> selectedFiles = getClipboard();
+                    List<OpenData> selectedFiles = getClipboard();
                     if (selectedFiles.size() > 0) {
                         List<NdefRecord> recs = new ArrayList<NdefRecord>();
-                        for (OpenPath f : selectedFiles) {
+                        for (OpenData data : selectedFiles) {
+                            OpenPath f = data.getPath();
                             if (!(f instanceof OpenFile) || f.isDirectory() || !f.canWrite())
                                 continue;
                             OpenFile of = (OpenFile)f;
@@ -1875,7 +1879,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     public void addHoldingFile(OpenPath path) {
-        getClipboard().add(path);
+        getClipboard().add(new OpenData(path, getResources(), false));
         invalidateOptionsMenu();
     }
 
@@ -2573,7 +2577,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             SubMenu sub = menu.findItem(R.id.content_paste).getSubMenu();
             if (sub != null) {
                 int i = 0;
-                for (final OpenPath item : getClipboard().getAll()) {
+                for (final OpenData item : getClipboard().getAll()) {
                     sub.add(Menu.CATEGORY_CONTAINER, i++, i, item.getName()).setCheckable(true)
                             .setChecked(true)
                             .setOnMenuItemClickListener(new OnMenuItemClickListener() {
@@ -2582,7 +2586,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                     getClipboard().remove(item);
                                     return true;
                                 }
-                            }).setIcon(ThumbnailCreator.getDefaultResourceId(item, 32, 32));
+                            }).setIcon(ThumbnailCreator.getDefaultDrawable(item, 32, 32, getContext()));
                 }
             }
         }
@@ -2683,7 +2687,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         getResources().getString(R.string.s_menu_delete_all),
                         new DialogInterface.OnClickListener() { // yes
                             public void onClick(DialogInterface dialog, int which) {
-                                getEventHandler().deleteFile(getClipboard(), OpenExplorer.this,
+                                getEventHandler().deleteFile(getClipboard().toPaths(), OpenExplorer.this,
                                         false);
                             }
                         });

@@ -13,22 +13,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenApplication;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
-import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
+import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.SortType.Type;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathView;
+import org.brandroid.openmanager.views.RemoteImageView;
 import org.brandroid.utils.ImageUtils;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
@@ -60,9 +63,9 @@ public class ContentAdapter extends BaseAdapter {
 
     private final OpenPath mParent;
     private SortedSet<OpenPath> mData2 = new TreeSet<OpenPath>();
-    private OpenPath[] mFinalItems;
+    private OpenData[] mFinalItems;
     private boolean isFinal = false;
-    // private final List<OpenPath> mData2 = new ArrayList<OpenPath>();
+    // private final List<OpenData> mData2 = new ArrayList<OpenData>();
     public int mViewMode = OpenExplorer.VIEW_LIST;
     public boolean mShowThumbnails = true;
     private boolean mShowHiddenFiles = false;
@@ -80,7 +83,7 @@ public class ContentAdapter extends BaseAdapter {
     /**
      * Set of seleced message IDs.
      */
-    private final CopyOnWriteArrayList<OpenPath> mSelectedSet = new CopyOnWriteArrayList<OpenPath>();
+    private final CopyOnWriteArrayList<OpenData> mSelectedSet = new CopyOnWriteArrayList<OpenData>();
 
     /**
      * Callback from MessageListAdapter. All methods are called on the UI
@@ -88,7 +91,7 @@ public class ContentAdapter extends BaseAdapter {
      */
     public interface Callback {
         /** Called when the user selects/unselects a message */
-        void onAdapterSelectedChanged(OpenPath path, boolean newSelected, int mSelectedCount);
+        void onAdapterSelectedChanged(OpenData path, boolean newSelected, int mSelectedCount);
     }
 
     private final Callback mCallback;
@@ -115,9 +118,9 @@ public class ContentAdapter extends BaseAdapter {
     }
 
     public interface CheckClipboardListener {
-        public boolean checkClipboard(OpenPath file);
+        public boolean checkClipboard(OpenData file);
 
-        public void removeFromClipboard(OpenPath file);
+        public void removeFromClipboard(OpenData file);
     }
 
     public void setShowPlusParent(boolean showUp) {
@@ -195,12 +198,6 @@ public class ContentAdapter extends BaseAdapter {
                     continue;
                 if (!showHidden && f.isHidden())
                     continue;
-                if (!f.requiresThread()) {
-                    if (!f.exists())
-                        continue;
-                    if (f.isFile() && !(f.length() >= 0))
-                        continue;
-                }
                 if (!mShowFiles && !f.isDirectory())
                     continue;
                 mData2.add(f);
@@ -209,9 +206,19 @@ public class ContentAdapter extends BaseAdapter {
         finalize();
     }
     
+    private OpenData[] convertToData(Collection<OpenPath> paths)
+    {
+        OpenData[] ret = new OpenData[paths.size()];
+        int i = 0;
+        final Resources r = getResources();
+        for(OpenPath p : paths)
+            ret[i++] = new OpenData(p, r, mViewMode == OpenExplorer.VIEW_GRID);
+        return ret;
+    }
+    
     private void prefinalize() {
         if(isFinal) return;
-        mFinalItems = mData2.toArray(new OpenPath[mData2.size()]);
+        mFinalItems = convertToData(mData2);
         mData2.clear();
         isFinal = true;
     }
@@ -225,7 +232,7 @@ public class ContentAdapter extends BaseAdapter {
         if(!isFinal) return;
         isFinal = false;
         mData2.clear();
-        mData2.addAll(Arrays.asList(mFinalItems));
+        //mData2.addAll(Arrays.asList(mFinalItems));
     }
 
     public boolean isFinalized() {
@@ -273,7 +280,8 @@ public class ContentAdapter extends BaseAdapter {
                 : (!OpenExplorer.DEBUG_TOGGLE ? R.layout.file_list_item
                         : R.layout.list_content_layout);
         final boolean useLarge = getViewMode() == OpenExplorer.VIEW_GRID;
-        final OpenPath file = getItem(position); // super.getItem(position);
+        final OpenData data = getItem(position); // super.getItem(position);
+        //final OpenData file = data.getPath();
 
         View row;
 
@@ -283,22 +291,18 @@ public class ContentAdapter extends BaseAdapter {
                     Context.LAYOUT_INFLATER_SERVICE);
 
             row = in.inflate(layout, parent, false);
-            BookmarkHolder mHolder = new BookmarkHolder(file, file.getName(), row, mode);
-            row.setTag(mHolder);
+            //BookmarkHolder mHolder = new BookmarkHolder(file, file.getName(), row, mode);
+            row.setTag(data);
             // file.setTag(mHolder);
         } else {
             row = view;
         }
 
-        if (file == null) {
+        if (data == null) {
             return row;
         } else if (row instanceof OpenPathView) {
-            ((OpenPathView)row).associateFile(file, this);
+            ((OpenPathView)row).associateFile(data, this);
         }
-
-        Object o = file.getTag();
-        if (o != null && o instanceof OpenPath && ((OpenPath)o).equals(file))
-            return row;
 
         TextView mInfo = (TextView)row.findViewById(R.id.content_info);
         TextView mDate = (TextView)row.findViewById(R.id.content_date);
@@ -317,111 +321,46 @@ public class ContentAdapter extends BaseAdapter {
                 mDate.setText("");
             return row;
         }
-        final String mName = file.getName();
+        final String mName = data.getName();
 
         int mWidth = getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.IMAGE_SIZE_GRID
                 : OpenExplorer.IMAGE_SIZE_LIST;
         int mHeight = mWidth;
 
-        boolean showLongDate = false;
-        if (getResources().getBoolean(R.bool.show_long_date))
-            showLongDate = true;
-
-        // mHolder.getIconView().measure(LayoutParams.MATCH_PARENT,
-        // LayoutParams.MATCH_PARENT);
-        // Logger.LogVerbose("Content Icon Size: " +
-        // mHolder.getIconView().getMeasuredWidth() + "x" +
-        // mHolder.getIconView().getMeasuredHeight());
-
-        // view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        // mHolder.setInfo(getFileDetails(file, false));
-
-        if (mInfo != null) {
-            String sInfo = String.format(file.getDetails(getShowHiddenFiles()), getResources()
-                    .getString(R.string.s_files));
-            if (OpenPath.Sorting.getType() == Type.SIZE
-                    || OpenPath.Sorting.getType() == Type.SIZE_DESC)
-                sInfo = "<b>" + sInfo + "</b>";
-            if (mShowDetails && mParent.showChildPath()) {
-                sInfo += " :: " + file.getPath().replace(file.getName(), "");
-                showLongDate = false;
-            } else if (!mShowDetails)
-                sInfo = "";
-
-            if (mDate != null)
-                mDate.setText(file.getFormattedDate(showLongDate));
-            else
-                sInfo += (sInfo.equals("") ? "" : " | ") + file.getFormattedDate(showLongDate);
-
-            mInfo.setText(Html.fromHtml(sInfo));
-        }
+        if (mInfo != null && mShowDetails)
+                mInfo.setText(data.getInfo());
+        if (mDate != null)
+            mDate.setText(data.getDateString());
 
         if (mNameView != null)
             mNameView.setText(mName);
 
-        /*
-         * if(file.isHidden()) ViewUtils.setAlpha(0.5f, mNameView, mPathView,
-         * mInfo); else ViewUtils.setAlpha(1.0f, mNameView, mPathView, mInfo);
-         */
-
-        // if(!mHolder.getTitle().equals(mName))
-        // mHolder.setTitle(mName);
-        // RemoteImageView mIcon =
-        // (RemoteImageView)view.findViewById(R.id.content_icon);
-
         if (mIcon != null) {
             // mIcon.invalidate();
-            if (file.isHidden())
+            if (data.isHidden())
                 mIcon.setAlpha(100);
             else
                 mIcon.setAlpha(255);
-            if (!mShowThumbnails || !file.hasThumbnail()) {
-                mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight,
+            if (!mShowThumbnails || !data.hasThumbnail()) {
+                mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(data, mWidth, mHeight,
                         getContext()));
-            } else { // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-                // {
-                // Logger.LogDebug("Bitmapping " + file.getPath());
-                // if(OpenExplorer.BEFORE_HONEYCOMB) mIcon.setAlpha(0);
-                ThumbnailCreator.setThumbnail(mApp, mIcon, file, mWidth, mHeight,
-                        new OnUpdateImageListener() {
-                            @Override
-                            public void updateImage(final Bitmap b) {
-                                if (mIcon.getTag() == null
-                                        || (mIcon.getTag() instanceof OpenPath && ((OpenPath)mIcon
-                                                .getTag()).equals(file)))
-                                // if(!ThumbnailCreator.getImagePath(mIcon).equals(file.getPath()))
-                                {
-                                    Runnable doit = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            BitmapDrawable d = new BitmapDrawable(getResources(), b);
-                                            d.setGravity(Gravity.CENTER);
-                                            ImageUtils.fadeToDrawable(mIcon, d);
-                                            mIcon.setTag(file);
-                                        }
-                                    };
-                                    if (!Thread.currentThread().equals(OpenExplorer.UiThread))
-                                        mIcon.post(doit);
-                                    else
-                                        doit.run();
-                                }
-                            }
-                        });
+            } else {
+                data.setImageBitmap((RemoteImageView)mIcon, mApp, mWidth);
             }
         }
 
         // row.setTag(file);
-        boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
+        boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(data));
         boolean mShowCheck = true; // mChecked || (mSelectedSet != null &&
         // mSelectedSet.size() > 0);
-        boolean mShowClip = mApp.getClipboard().contains(file);
+        boolean mShowClip = mApp.getClipboard().contains(data);
 
         if (mShowClip) {
             ViewUtils.setViewsVisible(row, true, R.id.content_clipboard);
             ViewUtils.setOnClicks(row, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mApp.getClipboard().remove(file);
+                    mApp.getClipboard().remove(data);
                     v.setVisibility(View.GONE);
                 }
             }, R.id.content_clipboard);
@@ -430,7 +369,7 @@ public class ContentAdapter extends BaseAdapter {
             ViewUtils.setOnClicks(row, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    toggleSelected(file);
+                    toggleSelected(data);
                 }
             }, R.id.checkmark_area);
         }
@@ -477,13 +416,13 @@ public class ContentAdapter extends BaseAdapter {
     }
 
     @Override
-    public OpenPath getItem(int position) {
+    public OpenData getItem(int position) {
         if(!isFinal)
             prefinalize();
         if (mPlusParent)
         {
             if (position == 0)
-                return mParent.getParent();
+                return new OpenData(mParent.getParent(), getResources(), mViewMode == OpenExplorer.VIEW_GRID);
             else
                 position--;
         }
@@ -514,20 +453,27 @@ public class ContentAdapter extends BaseAdapter {
 
     public void selectAll()
     {
-        mSelectedSet.addAll(isFinal ? Arrays.asList(mFinalItems) : mData2);
+        mSelectedSet.addAll(Arrays.asList(mFinalItems));
     }
 
-    public CopyOnWriteArrayList<OpenPath> getSelectedSet() {
+    public List<OpenData> getSelectedSet() {
         return mSelectedSet;
     }
+    
+    public List<OpenPath> getSelectedPaths() {
+        List<OpenPath> ret = new Vector<OpenPath>();
+        for(OpenData data : mSelectedSet)
+            ret.add(data.getPath());
+        return ret;
+    }
 
-    public void setSelectedSet(ArrayList<OpenPath> set) {
-        for (OpenPath rememberedPath : set) {
+    public void setSelectedSet(ArrayList<OpenData> set) {
+        for (OpenData rememberedPath : set) {
             mSelectedSet.add(rememberedPath);
         }
     }
 
-    public void addSelection(OpenPath path) {
+    public void addSelection(OpenData path) {
         if (!mSelectedSet.contains(path))
             mSelectedSet.add(path);
     }
@@ -543,15 +489,15 @@ public class ContentAdapter extends BaseAdapter {
         }
     }
 
-    public boolean isSelected(OpenPath path) {
+    public boolean isSelected(OpenData path) {
         return getSelectedSet().contains(path);
     }
 
-    public void toggleSelected(OpenPath path) {
+    public void toggleSelected(OpenData path) {
         updateSelected(path, !isSelected(path));
     }
 
-    public void toggleSelected(OpenPath path, Callback callback) {
+    public void toggleSelected(OpenData path, Callback callback) {
         updateSelected(path, !isSelected(path), callback);
     }
 
@@ -563,7 +509,7 @@ public class ContentAdapter extends BaseAdapter {
      * @param itemView the item being changed
      * @param newSelected the new value of the selected flag (checkbox state)
      */
-    private void updateSelected(OpenPath path, boolean newSelected, Callback mCallback) {
+    private void updateSelected(OpenData path, boolean newSelected, Callback mCallback) {
         if (newSelected) {
             mSelectedSet.add(path);
         } else {
@@ -574,7 +520,7 @@ public class ContentAdapter extends BaseAdapter {
         }
     }
 
-    private void updateSelected(OpenPath path, boolean newSelected) {
+    private void updateSelected(OpenData path, boolean newSelected) {
         updateSelected(path, newSelected, mCallback);
     }
 

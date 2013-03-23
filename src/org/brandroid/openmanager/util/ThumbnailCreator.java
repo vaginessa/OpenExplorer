@@ -34,6 +34,7 @@ import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFTP;
@@ -339,18 +340,18 @@ public class ThumbnailCreator {
         return new BitmapDrawable(mContext.getResources(), b);
     }
 
-    public static Drawable getDefaultDrawable(OpenPath file, int mWidth, int mHeight, Context c) {
+    public static Drawable getDefaultDrawable(OpenData file, int mWidth, int mHeight, Context c) {
         if (c != null && c.getResources() != null)
         {
             Drawable d = null;
-            if (file.isTextFile())
+            String ext = file.getExtension();
+            if(file.isTextFile())
                 d = ThumbnailCreator.getFileExtIcon(file.getExtension(), c, mWidth > 72);
             else
-                d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
-            if (file instanceof OpenPath.ThumbnailOverlayInterface)
+                d = c.getResources().getDrawable(file.getDrawableId());
+            if (file.getOverlayDrawableId() > 0)
             {
-                Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c,
-                        mWidth > 36);
+                Drawable over = c.getResources().getDrawable(file.getOverlayDrawableId());
                 if (over != null)
                     d = new LayerDrawable(new Drawable[] {
                             d, over
@@ -368,15 +369,7 @@ public class ThumbnailCreator {
         final String mime = file.getMimeType();
         final String sPath2 = mName.toLowerCase();
         final boolean useLarge = mWidth > 36;
-        boolean hasKids = false;
-        try {
-            if (!file.requiresThread() && file.isDirectory())
-                hasKids = file.getChildCount(false) > 0;
-            else if (file instanceof OpenCursor)
-                hasKids = true;
-        } catch (IOException e) {
-            // TODO Catch exception properly
-        }
+        boolean hasKids = file.isDirectory() && file.length() > 0;
 
         if (file.isDirectory()) {
             // Network Object Icons

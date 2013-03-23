@@ -374,7 +374,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     }
 
     public interface ThumbnailOverlayInterface {
-        public Drawable getOverlayDrawable(Context c, boolean large);
+        public int getOverlayDrawableId(boolean large);
     }
 
     /**

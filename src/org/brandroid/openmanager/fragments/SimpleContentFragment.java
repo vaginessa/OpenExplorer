@@ -4,6 +4,7 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ContentAdapter;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.SortType;
@@ -101,7 +102,7 @@ public class SimpleContentFragment extends Fragment implements ContentAdapter.Ca
     }
 
     @Override
-    public void onAdapterSelectedChanged(OpenPath path, boolean newSelected, int mSelectedCount) {
+    public void onAdapterSelectedChanged(OpenData path, boolean newSelected, int mSelectedCount) {
         // TODO Auto-generated method stub
 
     }

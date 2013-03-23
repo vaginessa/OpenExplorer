@@ -8,9 +8,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.Vector;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -42,11 +44,11 @@ import android.widget.Toast;
  * @author BrandoCommando
  */
 @SuppressLint("NewApi")
-public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
+public class OpenClipboard extends BaseAdapter implements List<OpenData> {
     private static final long serialVersionUID = 8847538312028343319L;
     public boolean DeleteSource = false;
     public boolean ClearAfter = true;
-    private final ArrayList<OpenPath> list = new ArrayList<OpenPath>();
+    private final ArrayList<OpenData> list = new ArrayList<OpenData>();
     private final Context mContext;
     private OnClipboardUpdateListener listener = null;
     // private boolean mMultiselect = false;
@@ -118,7 +120,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
                     String txt = data.getItemAt(i).coerceToText(mContext).toString();
                     for (String s : txt.split("\n"))
                         if (s != null && new File(s).exists())
-                            add(new OpenFile(s));
+                            addPath(new OpenFile(s));
                 }
                 return;
             }
@@ -128,7 +130,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
             if (clipText != null) {
                 for (String s : clipText.toString().split("\n"))
                     if (s != null && new File(s).exists())
-                        add(new OpenFile(s));
+                        addPath(new OpenFile(s));
             }
         }
     }
@@ -155,9 +157,17 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return list.size();
     }
 
+    public List<OpenPath> toPaths()
+    {
+        List<OpenPath> ret = new Vector<OpenPath>();
+        for(OpenData d : getAll())
+            ret.add(d.getPath());
+        return ret;
+    }
+
     public boolean hasPastable() {
-        for (OpenPath p : list)
-            if (isPastable(p))
+        for (OpenData p : list)
+            if (isPastable(p.getPath()))
                 return true;
         return false;
     }
@@ -172,11 +182,11 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return true;
     }
 
-    public OpenPath getItem(int pos) {
+    public OpenData getItem(int pos) {
         return list.get(pos);
     }
 
-    public List<OpenPath> getAll() {
+    public List<OpenData> getAll() {
         return list;
     }
 
@@ -195,22 +205,16 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         // ret.setLayoutParams(new Gallery.LayoutParams(w, w));
         // double sz = (double)w * 0.7;
 
-        final OpenPath file = (OpenPath)getItem(position);
+        final OpenData file = getItem(position);
         if (file == null)
             return ret;
 
         TextView text = (TextView)ret.findViewById(R.id.content_text);
         Context c = parent.getContext();
         Drawable d = ThumbnailCreator.getDefaultDrawable(file, w, w, c);
-        boolean isCut = file.getTag() != null && file.getTag() instanceof Integer
-                && ((Integer)file.getTag()).equals(R.id.menu_context_cut);
-        if (isCut)
-            d = new LayerDrawable(new Drawable[] {
-                    d, c.getResources().getDrawable(R.drawable.ic_menu_cut)
-            });
         float alpha = 1f;
         int checkbox = android.R.drawable.checkbox_on_background;
-        if (!isPastable(file))
+        if (!isPastable(file.getPath()))
             alpha = 0.5f;
 
         ret.setPadding(ret.getPaddingLeft(), ret.getPaddingTop(), 0, ret.getPaddingBottom());
@@ -236,7 +240,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
 
             // info.setVisibility(View.GONE);
             if (file.isDirectory())
-                info.setText(file.getListLength() + " "
+                info.setText(file.length() + " "
                         + info.getContext().getResources().getString(R.string.s_files));
             else
                 info.setText(OpenPath.formatSize(file.length()));
@@ -244,7 +248,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
                 if (file.getName() != null)
                     text.setText(file.getName());
                 if (file.getPath() != null)
-                    info.setText(info.getText() + " : " + file.getParent().getPath());
+                    info.setText(info.getText() + " : " + file.getPath().getParent().getPath());
                 image.setImageDrawable(d);
                 ViewUtils.setAlpha(alpha, image, info, text);
                 // ThumbnailCreator.setThumbnail(image, file, w, w); //(int)(w *
@@ -261,20 +265,18 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return ret;
     }
 
-    public Iterator<OpenPath> iterator() {
+    public Iterator<OpenData> iterator() {
         return list.iterator();
     }
 
     public View addPath(OpenPath path) {
-        add(path);
+        add(new OpenData(path, mContext.getResources(), false));
         int pos = indexOf(path);
         return getView(pos, null, null);
     }
 
-    public boolean add(OpenPath path) {
+    public boolean add(OpenData path) {
         boolean ret = true;
-        if (path.getTag() == null || !(path.getTag() instanceof Integer))
-            path.setTag((Integer)(DeleteSource ? R.id.menu_context_cut : R.id.menu_context_copy));
         if (list.contains(path))
             ret = false;
         else
@@ -283,19 +285,17 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return ret;
     }
 
-    public void add(int index, OpenPath path) {
+    public void add(int index, OpenData path) {
         if (path == null)
             return;
         if (list.contains(path))
             return;
-        if (path.getTag() == null || !(path.getTag() instanceof Integer))
-            path.setTag((Integer)(DeleteSource ? R.id.menu_context_cut : R.id.menu_context_copy));
         if (!list.contains(path))
             list.add(index, path);
         onClipboardUpdate();
     }
 
-    public boolean addAll(Collection<? extends OpenPath> collection) {
+    public boolean addAll(Collection<? extends OpenData> collection) {
         list.removeAll(collection); // remove and re-add
         boolean ret = list.addAll(collection);
         list.remove(null);
@@ -303,7 +303,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return ret;
     }
 
-    public boolean addAll(int index, Collection<? extends OpenPath> collection) {
+    public boolean addAll(int index, Collection<? extends OpenData> collection) {
         list.removeAll(collection); // remove and re-add
         boolean ret = list.addAll(index, collection);
         list.remove(null);
@@ -324,7 +324,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return list.containsAll(paths);
     }
 
-    public OpenPath get(int location) {
+    public OpenData get(int location) {
         return list.get(location);
     }
 
@@ -336,16 +336,16 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return list.lastIndexOf(path);
     }
 
-    public ListIterator<OpenPath> listIterator() {
+    public ListIterator<OpenData> listIterator() {
         return list.listIterator();
     }
 
-    public ListIterator<OpenPath> listIterator(int location) {
+    public ListIterator<OpenData> listIterator(int location) {
         return list.listIterator(location);
     }
 
-    public OpenPath remove(int location) {
-        OpenPath ret = list.remove(location);
+    public OpenData remove(int location) {
+        OpenData ret = list.remove(location);
         onClipboardUpdate();
         return ret;
     }
@@ -366,8 +366,8 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return list.retainAll(paths);
     }
 
-    public OpenPath set(int index, OpenPath path) {
-        OpenPath ret = list.set(index, path);
+    public OpenData set(int index, OpenData path) {
+        OpenData ret = list.set(index, path);
         onClipboardUpdate();
         return ret;
     }
@@ -376,7 +376,7 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
         return list.size();
     }
 
-    public List<OpenPath> subList(int start, int end) {
+    public List<OpenData> subList(int start, int end) {
         return list.subList(start, end);
     }
 
@@ -394,8 +394,8 @@ public class OpenClipboard extends BaseAdapter implements List<OpenPath> {
 
     public long getTotalSize() {
         long ret = 0;
-        for(OpenPath p : list)
-            if(p.length() > 0)
+        for(OpenData p : list)
+            if(!p.isDirectory() && p.length() > 0)
                 ret += p.length();
         return ret;
     }

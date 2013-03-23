@@ -167,7 +167,7 @@ public class PickerFragment extends OpenFragment implements OnItemClickListener,
 
     @Override
     public void onItemClick(AdapterView<?> list, View view, int pos, long id) {
-        OpenPath path = ((ContentAdapter)list.getAdapter()).getItem(pos);
+        OpenPath path = ((ContentAdapter)list.getAdapter()).getItem(pos).getPath();
         if (mPickListener != null)
             mPickListener.onOpenPathPicked(path);
         else

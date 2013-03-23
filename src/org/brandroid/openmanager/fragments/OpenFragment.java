@@ -12,6 +12,7 @@ import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
 import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.BetterPopupWindow;
@@ -676,13 +677,13 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     @Override
-    public void removeFromClipboard(OpenPath file) {
+    public void removeFromClipboard(OpenData file) {
         if (getClipboard() != null)
             getClipboard().remove(file);
     }
 
     @Override
-    public boolean checkClipboard(OpenPath file) {
+    public boolean checkClipboard(OpenData file) {
         if (getClipboard() != null)
             return getClipboard().contains(file);
         else

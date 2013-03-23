@@ -274,9 +274,9 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     }
 
     @Override
-    public Drawable getOverlayDrawable(Context c, boolean large) {
-        return c.getResources().getDrawable(
-                large ? R.drawable.lg_drive_overlay : R.drawable.sm_drive_overlay);
+    public int getOverlayDrawableId(boolean large) {
+        return 
+                large ? R.drawable.lg_drive_overlay : R.drawable.sm_drive_overlay;
     }
 
     public File getFile() {

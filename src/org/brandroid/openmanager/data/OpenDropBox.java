@@ -793,11 +793,10 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
     // For communication between AndroidAuthSesssion and this activity.
     static final String EXTRA_INTERNAL_CONSUMER_KEY = "EXTRA_INTERNAL_CONSUMER_KEY";
     static final String EXTRA_INTERNAL_CONSUMER_SECRET = "EXTRA_INTERNAL_CONSUMER_SECRET";
-
+    
     @Override
-    public Drawable getOverlayDrawable(Context c, boolean large) {
-        return c.getResources().getDrawable(
-                large ? R.drawable.lg_dropbox_overlay : R.drawable.sm_dropbox_overlay);
+    public int getOverlayDrawableId(boolean large) {
+        return large ? R.drawable.lg_dropbox_overlay : R.drawable.sm_dropbox_overlay;
     }
 
     public void unlink() {

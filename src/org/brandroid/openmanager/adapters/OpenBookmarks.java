@@ -759,7 +759,7 @@ public class OpenBookmarks implements OnGroupClickListener,
 
         final InputDialog builder = new InputDialog(context)
                 .setTitle(R.string.s_title_bookmark_prefix)
-                .setIcon(ThumbnailCreator.getDefaultDrawable(mPath, 64, 64, context))
+                .setIcon(ThumbnailCreator.getDefaultResourceId(mPath, 64, 64))
                 .setDefaultText(getPathTitle(mPath))
                 .setDefaultTop(removeId == R.string.s_hide ? null : oldPath)
                 .setMessage(R.string.s_alert_bookmark_rename)

@@ -40,6 +40,7 @@ import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenFileRoot;
@@ -836,7 +837,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     @Override
     public void onItemClick(final AdapterView<?> list, final View view, final int position,
             final long id) {
-        OpenPath file = (OpenPath)list.getItemAtPosition(position);
+        OpenData data = (OpenData)list.getItemAtPosition(position);
+        OpenPath file = data.getPath();
         Logger.LogInfo("ContentFragment.onItemClick (" + file.getPath() + ")");
 
         if (getActionMode() == null)
@@ -880,7 +882,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
         if (getActionMode() != null) {
             if (mLastSelectionModeCallback != null) {
-                toggleSelection(view, file);
+                toggleSelection(view, new OpenData(file, getResources(), false));
             } else {
                 // Animation anim = Animation.
                 /*
@@ -899,7 +901,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                  * ((ViewGroup)getView()).addView(panel); }
                  */
 
-                addToMultiSelect(file);
+                addToMultiSelect(data);
                 ((TextView)view.findViewById(R.id.content_text)).setTextAppearance(
                         list.getContext(), R.style.Text_Large_Highlight);
             }
@@ -950,7 +952,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
     }
 
-    private void addToMultiSelect(final OpenPath file) {
+    private void addToMultiSelect(final OpenData file) {
         getContentAdapter().getSelectedSet().add(file);
     }
 
@@ -1152,13 +1154,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (DEBUG)
             Logger.LogDebug("ContentFragment.onOptionsItemSelected(0x"
                     + Integer.toHexString(item.getItemId()) + ":" + item.getTitle() + ")");
-        OpenPath path = null;
+        OpenData data = null;
         if (getSelectedCount() > 0)
-            path = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1);
+            data = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1);
         else if (mMenuContextItemIndex > -1
                 && mMenuContextItemIndex < getContentAdapter().getCount())
-            path = getContentAdapter().getItem(mMenuContextItemIndex);
-        if (path != null && executeMenu(item.getItemId(), getActionMode(), path))
+            data = getContentAdapter().getItem(mMenuContextItemIndex);
+        if (data != null && executeMenu(item.getItemId(), getActionMode(), data.getPath()))
             return true;
         switch (item.getItemId()) {
             case R.id.menu_sort:
@@ -1233,7 +1235,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             parent = OpenFile.getExternalMemoryDrive(true);
         final OpenPath folder = parent;
         String name = file != null ? file.getName() : null;
-        CopyOnWriteArrayList<OpenPath> selection = mContentAdapter.getSelectedSet();
+        List<OpenData> selection = mContentAdapter.getSelectedSet();
 
         final boolean fromPasteMenu = file.equals(mPath);
 
@@ -1296,16 +1298,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 }
                 break;
 
-            case R.id.menu_multi:
-                // changeMultiSelectState(getActionMode() != null);
-                if (!fromPasteMenu)
-                    getClipboard().add(file);
-                return true;
-
             case R.id.menu_context_bookmark:
                 if (getSelectedCount() > 0)
-                    for (OpenPath p : mContentAdapter.getSelectedSet())
-                        getExplorer().addBookmark(p);
+                    for (OpenData p : mContentAdapter.getSelectedSet())
+                        getExplorer().addBookmark(p.getPath());
                 else
                     getExplorer().addBookmark(file);
                 finishMode(mode);
@@ -1326,7 +1322,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             case R.id.menu_context_cut:
                 getClipboard().DeleteSource = id == R.id.menu_context_cut;
                 file.setTag(id);
-                getClipboard().add(file);
+                getClipboard().add(new OpenData(file, getResources(), false));
                 return true;
 
             case R.id.menu_context_paste:
@@ -1346,9 +1342,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     checkClipboardForLZMA(cb, into);
                     if (cb.size() > 0) {
                         if (cb.DeleteSource)
-                            getHandler().cutFile(cb, into, getActivity());
+                            getHandler().cutFile(cb.toPaths(), into, getActivity());
                         else
-                            getHandler().copyFile(cb, into, getActivity());
+                            getHandler().copyFile(cb.toPaths(), into, getActivity());
                         refreshOperations();
                     }
 
@@ -1368,7 +1364,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 if (!(intoPath instanceof OpenFile))
                     intoPath = OpenFile.getExternalMemoryDrive(true);
                 if (!fromPasteMenu)
-                    getClipboard().add(file);
+                    getClipboard().add(new OpenData(mPath, getResources(), false));
                 else
                     getClipboard().setCurrentPath(intoPath);
 
@@ -1377,7 +1373,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         + "." + EventHandler.DefaultCompressionType
                                 .toString().toLowerCase(Locale.US);
                 if (getClipboard().size() > 1) {
-                    OpenPath last = getClipboard().get(getClipboard().getCount() - 1);
+                    OpenPath last = getClipboard().get(getClipboard().getCount() - 1).getPath();
                     if (last != null && last.getParent() != null) {
                         if (last.getParent() instanceof OpenCursor)
                             zname = folder.getPath();
@@ -1389,7 +1385,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                 }
                 final String def = zname;
-                showZipDialog(intoPath, def, folder, getClipboard(), new OnClickListener() {
+                showZipDialog(intoPath, def, folder, getClipboard().toPaths(), new OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         if (dialog != null)
                             dialog.dismiss();
@@ -1553,7 +1549,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     private boolean checkClipboardForTar(final OpenClipboard cb, final OpenPath into) {
         final Hashtable<OpenTar, Vector<OpenTarEntry>> tarKids = new Hashtable<OpenTar, Vector<OpenTar.OpenTarEntry>>();
-        for (OpenPath p : cb)
+        for (OpenPath p : cb.toPaths())
             if (p instanceof OpenTarEntry)
             {
                 OpenTarEntry kid = (OpenTarEntry)p;
@@ -1589,7 +1585,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     private boolean checkClipboardForLZMA(final OpenClipboard cb, final OpenPath into) {
         final Hashtable<OpenLZMA, Vector<OpenLZMAEntry>> lzKids = new Hashtable<OpenLZMA, Vector<OpenLZMA.OpenLZMAEntry>>();
-        for (OpenPath p : cb)
+        for (OpenPath p : cb.toPaths())
             if (p instanceof OpenLZMAEntry)
             {
                 OpenLZMAEntry kid = (OpenLZMAEntry)p;
@@ -1951,7 +1947,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return;
         mTopIndex = mGrid.getFirstVisiblePosition();
         if (mContentAdapter != null && mTopIndex > -1 && mTopIndex < mContentAdapter.getCount()) {
-            mTopPath = mContentAdapter.getItem(mTopIndex);
+            mTopPath = mContentAdapter.getItem(mTopIndex).getPath();
             Logger.LogVerbose("Top Path saved to " + mTopIndex
                     + (mTopPath != null ? " :: " + mTopPath.getName() : ""));
         }
@@ -2225,7 +2221,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     }
 
     @Override
-    public void onAdapterSelectedChanged(OpenPath path, boolean newSelected, int mSelectedCount) {
+    public void onAdapterSelectedChanged(OpenData path, boolean newSelected, int mSelectedCount) {
         updateSelectionMode();
     }
 
@@ -2257,13 +2253,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 mShareActionProvider = (ShareActionProvider)mShare.getActionProvider();
                 if (mShareActionProvider != null) {
                     int cnt = getSelectedCount();
-                    OpenPath first = mContentAdapter.getSelectedSet().get(0);
+                    OpenData first = mContentAdapter.getSelectedSet().get(0);
                     Intent shareIntent = null;
                     shareIntent = new Intent(cnt > 1 ? Intent.ACTION_SEND_MULTIPLE
                             : Intent.ACTION_VIEW);
                     if (first != null) {
                         shareIntent.setType(first.getMimeType());
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, first.getUri());
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, first.getPath().getUri());
                     }
                     mShareActionProvider.setShareIntent(shareIntent);
                     mShareActionProvider
@@ -2285,15 +2281,15 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 Intent shareIntent = null;
                 int cnt = getSelectedCount();
                 menu.removeGroup(10);
-                OpenPath first = mContentAdapter.getSelectedSet().get(0);
+                OpenPath first = mContentAdapter.getSelectedSet().get(0).getPath();
                 if (cnt > 1) {
                     shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
                     String type = first.getMimeType();
                     ArrayList<Uri> uris = new ArrayList<Uri>();
-                    for (OpenPath sel : mContentAdapter.getSelectedSet()) {
+                    for (OpenData sel : mContentAdapter.getSelectedSet()) {
                         if (!type.equals(sel.getMimeType()))
                             type = "*/*";
-                        uris.add(sel.getUri());
+                        uris.add(sel.getPath().getUri());
                     }
                     shareIntent.setType(type);
                     shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
@@ -2326,13 +2322,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             }
 
             boolean writable = true, readable = true;
-            for (OpenPath p : mContentAdapter.getSelectedSet()) {
-                if (!p.canWrite())
+            for (OpenData p : mContentAdapter.getSelectedSet()) {
+                if (!p.getPath().canWrite())
                     writable = false;
-                if (!p.canRead())
+                if (!p.getPath().canRead())
                     readable = false;
             }
-            OpenPath last = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1);
+            OpenPath last = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1).getPath();
 
             MenuUtils.setMenuEnabled(menu, writable, R.id.menu_context_delete,
                     R.id.menu_context_cut);
@@ -2362,7 +2358,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         @SuppressLint("NewApi")
         @Override
         public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
-            final CopyOnWriteArrayList<OpenPath> selections = mContentAdapter.getSelectedSet();
+            final List<OpenPath> selections = mContentAdapter.getSelectedPaths();
             final OpenPath last = selections.get(selections.size() - 1);
             switch (item.getItemId()) {
                 case R.id.menu_context_selectall:
@@ -2370,7 +2366,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     mode.invalidate();
                     break;
                 case R.id.menu_context_copy:
-                    getClipboard().addAll(selections);
+                    getClipboard().addAll(mContentAdapter.getSelectedSet());
                     deselectAll();
                     break;
                 case R.id.menu_context_delete:
@@ -2444,12 +2440,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        OpenPath path = getContentAdapter().getItem(position);
+        OpenData path = getContentAdapter().getItem(position);
         toggleSelection(view, path);
         return true;
     }
 
-    private void toggleSelection(View view, OpenPath path) {
+    private void toggleSelection(View view, OpenData path) {
         view.invalidate();
         mContentAdapter.toggleSelected(path);
     }

@@ -2,6 +2,7 @@
 package org.brandroid.openmanager.views;
 
 import org.brandroid.openmanager.adapters.ContentAdapter;
+import org.brandroid.openmanager.data.OpenData;
 import org.brandroid.openmanager.data.OpenPath;
 
 import org.brandroid.openmanager.R;
@@ -20,7 +21,7 @@ import android.widget.LinearLayout;
 @SuppressLint("NewApi")
 public class OpenPathView extends LinearLayout {
 
-    private OpenPath mFile;
+    private OpenData mFile;
     private boolean mDownEvent;
     private int mCheckmarkX;
     private ContentAdapter mAdapter;
@@ -43,10 +44,10 @@ public class OpenPathView extends LinearLayout {
     }
 
     public OpenPath getOpenPath() {
-        return mFile;
+        return mFile.getPath();
     }
 
-    public void associateFile(OpenPath file, ContentAdapter adapter) {
+    public void associateFile(OpenData file, ContentAdapter adapter) {
         mFile = file;
         mAdapter = adapter;
     }
