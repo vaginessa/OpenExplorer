@@ -237,6 +237,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int REQ_AUTHENTICATE_BOX = 15;
     public static final int REQ_AUTHENTICATE_DROPBOX = 16;
     public static final int REQ_AUTHENTICATE_DRIVE = 17;
+    public static final int REQ_EVENT_CANCEL = 18;
+    public static final int REQ_EVENT_VIEW = 19;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
