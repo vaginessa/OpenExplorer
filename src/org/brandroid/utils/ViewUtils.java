@@ -166,6 +166,7 @@ public class ViewUtils {
     }
 
     public static void setOnClicks(View parent, OnClickListener listener, int... ids) {
+        if(parent == null) return;
         for (int id : ids)
             if (parent.findViewById(id) != null)
                 parent.findViewById(id).setOnClickListener(listener);

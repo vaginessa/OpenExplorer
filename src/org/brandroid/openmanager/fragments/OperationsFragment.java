@@ -111,7 +111,7 @@ public class OperationsFragment extends OpenFragment implements Poppable {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        boolean isRunning = getHandler().getRunningTasks().length > 0;
+        boolean isRunning = getEventHandler().getRunningTasks().length > 0;
         MenuUtils.setMenuEnabled(menu, isRunning, R.id.menu_ops_stop);
     }
 

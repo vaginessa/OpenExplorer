@@ -15,6 +15,7 @@ import java.util.Vector;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.SimpleCrypto;
@@ -51,6 +52,7 @@ import android.content.pm.Signature;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -691,7 +693,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
     }
 
     @Override
-    public boolean getThumbnail(final int w, final ThumbnailReturnCallback callback) {
+    public boolean getThumbnail(final OpenApp app, final int w, final ThumbnailReturnCallback callback) {
         if (!hasThumbnail())
             return false;
         new Thread(new Runnable() {
@@ -706,10 +708,10 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
                 try {
                     DropboxInputStream input = mAPI.getThumbnailStream(mEntry.path, sz,
                             ThumbFormat.PNG);
-                    final Bitmap bmp = BitmapFactory.decodeStream(input);
+                    final BitmapDrawable bd = new BitmapDrawable(app.getResources(), input);
                     post(new Runnable() {
                         public void run() {
-                            callback.onThumbReturned(bmp);
+                            callback.onThumbReturned(bd);
                         }
                     });
                 } catch (DropboxException e) {

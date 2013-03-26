@@ -35,6 +35,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
@@ -426,10 +427,10 @@ public class FileManager {
                     String pw = uri.getUserInfo();
                     if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);
-                    else {
-                        OpenServer server = servers.findByUser("drive", null, pw != null ? pw : null);
-                        if(server != null && server.getPassword() != null)
-                            pw = server.getPassword();
+                    else if(servers != null) {
+                        OpenServer server = servers.findByUser("drive", null, pw);
+                        if(server != null)
+                            return (OpenDrive)server.getOpenPath();
                     }
                     ret = new OpenDrive(pw);
                 } catch (Exception e) {

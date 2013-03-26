@@ -366,11 +366,11 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     }
 
     public interface ThumbnailReturnCallback extends ExceptionListener {
-        public void onThumbReturned(Bitmap bmp);
+        public void onThumbReturned(Drawable bmp);
     }
 
     public interface ThumbnailHandler {
-        public boolean getThumbnail(int w, ThumbnailReturnCallback callback);
+        public boolean getThumbnail(OpenApp app, int w, ThumbnailReturnCallback callback);
     }
 
     public interface ThumbnailOverlayInterface {
@@ -563,7 +563,12 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see isTextFile(String)
      */
     public boolean isTextFile() {
-        return !isDirectory() && isTextFile(getName());
+        return !isDirectory() && isMimeText(getMimeType());
+    }
+    
+    public static boolean isMimeText(String mime)
+    {
+        return mime.startsWith("text");
     }
 
     /**
@@ -1170,7 +1175,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             if (isDirectory())
                 deets += list().length + " %s";
             else if (isFile())
-                deets += OpenPath.formatSize(length());
+                deets += formatSize(length());
         } catch (Exception e) {
         }
 
@@ -1231,6 +1236,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public static final int gb = mb * 1024;
 
     public static String formatSize(long size, int decimalPoints, boolean includeUnits) {
+        
+        if(size < 0) return "";
 
         int factor = (10 ^ decimalPoints);
 
@@ -1276,7 +1283,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     }
 
     public static String formatSize(long size, boolean includeUnits) {
-        return OpenPath.formatSize(size, 2, includeUnits);
+        return formatSize(size, 2, includeUnits);
     }
 
     public static void copyStreams(InputStream in, OutputStream out) throws IOException {

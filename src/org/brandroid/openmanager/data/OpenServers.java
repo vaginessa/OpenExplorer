@@ -38,14 +38,28 @@ public class OpenServers implements Iterable<OpenServer> {
                 e.printStackTrace();
             }
     }
-    
-    public static boolean hasDefaultServers() { return mDefaultServersSet; }
-    public static OpenServers setDefaultServers(OpenServers servers) { mDefaultServersSet = true; DefaultServers = servers; return servers; }
-    public static OpenServers getDefaultServers() { return DefaultServers; }
-    
-    public static void setDecryptKey(String key) { mDecryptKey = key; }
-    
-    protected static String getDecryptKey() { return mDecryptKey; }
+
+    public static boolean hasDefaultServers() {
+        return mDefaultServersSet;
+    }
+
+    public static OpenServers setDefaultServers(OpenServers servers) {
+        mDefaultServersSet = true;
+        DefaultServers = servers;
+        return servers;
+    }
+
+    public static OpenServers getDefaultServers() {
+        return DefaultServers;
+    }
+
+    public static void setDecryptKey(String key) {
+        mDecryptKey = key;
+    }
+
+    protected static String getDecryptKey() {
+        return mDecryptKey;
+    }
 
     public OpenServer findByPath(String type, String host, String user, String path) {
         for (int i = 0; i < mData.size(); i++) {
@@ -63,23 +77,24 @@ public class OpenServers implements Iterable<OpenServer> {
             OpenServer server = mData.get(i);
             if ((host == null || server.getHost().equalsIgnoreCase(host))
                     && server.getType().equalsIgnoreCase(type)
-                    && (user == "" || server.getUser().equalsIgnoreCase(user)))
+                    && (user == null || user == ""
+                    || server.getUser().equalsIgnoreCase(user)))
                 return server;
         }
         return null;
     }
-    
+
     public boolean hasServerType(String type) {
-        for(OpenServer server : mData)
-            if(server.getType().equalsIgnoreCase(type))
+        for (OpenServer server : mData)
+            if (server.getType().equalsIgnoreCase(type))
                 return true;
         return false;
     }
-    
+
     public List<OpenServer> findByType(String type) {
         Vector<OpenServer> ret = new Vector<OpenServer>();
-        for(OpenServer server : mData)
-            if(server.getType().equals(type))
+        for (OpenServer server : mData)
+            if (server.getType().equals(type))
                 ret.add(server);
         return ret;
     }
@@ -98,7 +113,7 @@ public class OpenServers implements Iterable<OpenServer> {
             Logger.LogWarning("Invalid Server: " + value);
             return false;
         }
-        if(DEBUG)
+        if (DEBUG)
             Logger.LogDebug("Adding Server: " + value);
         return mData.add(value);
     }
@@ -108,7 +123,7 @@ public class OpenServers implements Iterable<OpenServer> {
     }
 
     public boolean set(int index, OpenServer value) {
-        if(DEBUG)
+        if (DEBUG)
             Logger.LogDebug("Setting Server #" + index + ": " + value);
         if (!value.isValid())
             return false;

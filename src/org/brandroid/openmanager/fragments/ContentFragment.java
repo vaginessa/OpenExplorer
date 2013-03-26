@@ -23,13 +23,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -48,7 +45,6 @@ import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.IsCancelledListener;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPathArray;
@@ -60,7 +56,6 @@ import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.interfaces.OnAuthTokenListener;
 import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.EventHandler.CompressionType;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
@@ -71,7 +66,6 @@ import org.brandroid.openmanager.util.NetworkIOTask;
 import org.brandroid.openmanager.util.NetworkIOTask.OnTaskUpdateListener;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.views.SpriteAnimatorSurfaceView;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
@@ -85,15 +79,10 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask.Status;
@@ -108,7 +97,6 @@ import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
@@ -118,7 +106,6 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
@@ -136,7 +123,8 @@ import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.stericson.RootTools.RootTools;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 
 @SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment implements OnItemLongClickListener,
@@ -159,7 +147,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public static int mGridImageSize = 128;
     public static int mListImageSize = 36;
     public Boolean mShowLongDate = false;
-    private boolean isCancelled = false; 
+    private boolean isCancelled = false;
     private int mTopIndex = 0;
     private OpenPath mTopPath = null;
     protected OpenPath mPath = null;
@@ -579,8 +567,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 loaded = kids.length;
             }
             Logger.LogDebug("Loaded " + loaded + " entries from cache");
-        }
-        runUpdateTask(!allowSkips);
+        } else
+            runUpdateTask(!allowSkips);
 
         mRefreshReady = true;
 
@@ -604,7 +592,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
         if (mPath instanceof OpenPathUpdateHandler) {
             mContentAdapter.clearData();
-            
+            setProgressVisibility(true);
+
             final OpenContentUpdateListener updateCallback = new OpenContentUpdateListener() {
                 @Override
                 public void addContentPath(final OpenPath... files) {
@@ -613,7 +602,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
                 @Override
                 public void doneUpdating() {
-                    OpenExplorer.getHandler().post(new Runnable() {
+                    getHandler().post(new Runnable() {
                         public void run() {
                             setProgressVisibility(false);
                             notifyDataSetChanged();
@@ -623,22 +612,34 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 }
 
                 @Override
-                public void onException(Exception e) {
+                public void onException(final Exception e) {
                     setProgressVisibility(false);
+                    if(e instanceof UserRecoverableAuthIOException)
+                    {
+                        UserRecoverableAuthIOException ue = (UserRecoverableAuthIOException)e;
+                        Intent intent = ue.getIntent();
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return;
+                    } else if (interceptOldToken(e))
+                            return;
                     Logger.LogError("Unable to run Task!", e);
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    getHandler().post(new Runnable() {
+                        public void run() {
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                        }});
                 }
             };
-            
+
             final Cancellable mUpdateTask = ((OpenPathUpdateHandler)mPath).list(updateCallback);
-            
+
             final Cancellable cancellor = new Cancellable() {
                 public boolean cancel() {
                     updateCallback.doneUpdating();
                     return mUpdateTask.cancel();
                 }
-            }; 
-            
+            };
+
             setProgressClickHandler(new View.OnClickListener() {
                 public void onClick(View v) {
                     cancellor.cancel();
@@ -695,6 +696,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     {
         if (!(mPath instanceof OpenDrive))
             return false;
+        if (!(e instanceof GoogleJsonResponseException))
+            return false;
+        GoogleJsonResponseException re = (GoogleJsonResponseException)e;
+        if(re.getStatusCode() != 401) return false; 
         final OpenDrive drive = (OpenDrive)mPath;
         final GoogleCredential cred = drive.getCredential();
         return ServerSetupActivity.interceptOldToken(e, cred.getAccessToken(), drive.getServer()
@@ -796,16 +801,16 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                         public void onClick(DialogInterface dialog, int which) {
                             if (dialog != null)
                                 dialog.dismiss();
-                            getHandler().extractSet(tar, dest, getContext(), includes);
+                            getEventHandler().extractSet(tar, dest, getContext(), includes);
                         }
                     });
         else
-            getHandler().extractSet(tar, dest, getContext(), includes);
+            getEventHandler().extractSet(tar, dest, getContext(), includes);
     }
 
     private void extractSet(final OpenPath archive, final OpenPath dest, final String... includes)
     {
-        getHandler().extractSet(archive, dest, getContext(), includes);
+        getEventHandler().extractSet(archive, dest, getContext(), includes);
     }
 
     private void browseArchive(OpenPath archive)
@@ -829,7 +834,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             OpenPath into = archive.getParent();
             if (archive.getMimeType().contains("tar"))
                 into = into.getChild(archive.getName().replace("." + archive.getExtension(), ""));
-            getHandler().extractSet(archive, into, getContext());
+            getEventHandler().extractSet(archive, into, getContext());
         }
     }
 
@@ -1313,12 +1318,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
             case R.id.menu_context_delete:
                 // fileList.add(file);
-                getHandler().deleteFile(file, this, true);
+                getEventHandler().deleteFile(file, this, true);
                 finishMode(mode);
                 return true;
 
             case R.id.menu_context_rename:
-                getHandler().renameFile(file, true, getActivity());
+                getEventHandler().renameFile(file, true, getActivity());
                 finishMode(mode);
                 return true;
 
@@ -1346,9 +1351,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     checkClipboardForLZMA(cb, into);
                     if (cb.size() > 0) {
                         if (cb.DeleteSource)
-                            getHandler().cutFile(cb, into, getActivity());
+                            getEventHandler().cutFile(cb, into, getActivity());
                         else
-                            getHandler().copyFile(cb, into, getActivity());
+                            getEventHandler().copyFile(cb, into, getActivity());
                         refreshOperations();
                     }
 
@@ -1413,7 +1418,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 return true;
 
                 // case R.id.menu_context_unzip:
-                // getHandler().unzipFile(file, getExplorer());
+                // getEventHandler().unzipFile(file, getExplorer());
                 // return true;
 
             case R.id.menu_context_info:
@@ -1450,7 +1455,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
                 // this is for bluetooth
                 // files.add(path);
-                // getHandler().sendFile(files);
+                // getEventHandler().sendFile(files);
                 // mode.finish();
                 // return true;
         }
@@ -1543,7 +1548,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 OpenPath zipFile = zFolder.getChild(dZip.getInputText());
                 Logger.LogVerbose("Zipping " + files.size() + " items to "
                         + zipFile.getPath());
-                getHandler().zipFile(zipFile, files, getExplorer());
+                getEventHandler().zipFile(zipFile, files, getExplorer());
                 refreshOperations();
                 onClick.onClick(dialog, which);
             }
@@ -2073,15 +2078,17 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         // mProgressBarLoading.setVisibility(visible ? View.VISIBLE :
         // View.GONE);
         ViewUtils.setViewsVisible(getView(), visible, R.id.content_status_bar);
+        if(!visible)
+            ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
         if (getExplorer() != null)
             getExplorer().setProgressVisibility(visible);
     }
-    
+
     private void setProgressClickHandler(android.view.View.OnClickListener listener)
     {
         ViewUtils.setViewsVisible(getView(), true, R.id.content_status_bar);
         ViewUtils.setOnClicks(getView(), listener, R.id.content_cancel);
-        if(getExplorer() != null)
+        if (getExplorer() != null)
             getExplorer().setProgressClickHandler(listener);
     }
 
@@ -2406,7 +2413,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     });
                     break;
                 case R.id.menu_context_rename:
-                    getHandler().renameFile(last, last.isDirectory(), getActivity());
+                    getEventHandler().renameFile(last, last.isDirectory(), getActivity());
                     finishMode(mode);
                     break;
                 case R.id.menu_context_info:

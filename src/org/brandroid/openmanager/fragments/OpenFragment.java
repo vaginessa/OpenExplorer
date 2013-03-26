@@ -56,6 +56,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.view.ContextMenu;
@@ -603,14 +604,9 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     public String getClassName() {
         return this.getClass().getSimpleName();
     }
-
-    /**
-     * Get instance of Event Handler.
-     * 
-     * @return
-     */
-    protected EventHandler getHandler() {
-        return OpenExplorer.getEventHandler();
+    
+    public static Handler getHandler() {
+        return OpenExplorer.getHandler();
     }
 
     /**
