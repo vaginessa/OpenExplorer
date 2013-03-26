@@ -20,6 +20,7 @@ package org.brandroid.openmanager.util;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.io.File;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -34,6 +35,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.FTPManager;
 import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
@@ -425,6 +427,11 @@ public class FileManager {
                     String pw = uri.getUserInfo();
                     if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);
+                    else if(servers != null) {
+                        OpenServer server = servers.findByUser("drive", null, pw);
+                        if(server != null)
+                            return (OpenDrive)server.getOpenPath();
+                    }
                     ret = new OpenDrive(pw);
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get Drive item from cache.", e);
@@ -435,10 +442,25 @@ public class FileManager {
                     String user = uri.getUserInfo();
                     String pw = "";
                     AccessTokenPair access = null;
-                    if (user != null && user.indexOf(":") > -1)
+                    if(user == null || user.equals(""))
                     {
-                        user = user.substring(0, user.indexOf(":"));
-                        pw = pw.substring(pw.indexOf(":") + 1);
+                        List<OpenServer> dbservers = servers.findByType("dropbox");
+                        if(dbservers.size() == 1)
+                        {
+                            OpenServer server = dbservers.get(0);
+                            pw = server.getPassword();
+                        }
+                    } else if (user != null)
+                    {
+                        if(user.indexOf(":") > -1)
+                        {
+                            user = user.substring(0, user.indexOf(":"));
+                            pw = pw.substring(pw.indexOf(":") + 1);
+                        } else {
+                            OpenServer server = servers.findByUser("dropbox", null, user);
+                            if(server != null)
+                                pw = server.getPassword();
+                        }
                         access = new AccessTokenPair(user, pw);
                     }
                     AppKeyPair app = new AppKeyPair(

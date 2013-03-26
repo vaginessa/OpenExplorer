@@ -237,6 +237,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int REQ_AUTHENTICATE_BOX = 15;
     public static final int REQ_AUTHENTICATE_DROPBOX = 16;
     public static final int REQ_AUTHENTICATE_DRIVE = 17;
+    public static final int REQ_EVENT_CANCEL = 18;
+    public static final int REQ_EVENT_VIEW = 19;
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
@@ -345,6 +347,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
         Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
         Preferences.Pref_ShowThumbs = prefs.getBoolean("global", "pref_thumbs", true);
+        Preferences.Pref_CacheThumbs = prefs.getBoolean("global", "pref_thumbs_cache", false);
         Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
         Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
         Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
@@ -1381,7 +1384,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     @SuppressWarnings("deprecation")
     public static void launchTranslator(Activity a) {
         new Preferences(a).setSetting("warn", "translate", true);
-        String lang = DialogHandler.getLangCode();
+        String lang = Utils.getLangCode();
         Uri uri = Uri.parse("http://brandroid.org/translation_helper.php?lang=" + lang + "&full="
                 + Locale.getDefault().getDisplayLanguage() + "&wid="
                 + a.getWindowManager().getDefaultDisplay().getWidth());
@@ -1448,10 +1451,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private int checkLanguage() {
-        String lang = DialogHandler.getLangCode();
+        String lang = Utils.getLangCode();
         if (lang.equals("EN"))
             return 0;
-        return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf("," + DialogHandler.getLangCode() + ",") == -1 ? 2
+        return ",AR,EL,PL,ES,FR,KO,HE,DE,RU,".indexOf("," + Utils.getLangCode() + ",") == -1 ? 2
                 : 1;
     }
 
@@ -1681,6 +1684,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void submitStats() {
         if (!Logger.isLoggingEnabled())
             return;
+        if (OpenExplorer.IS_DEBUG_BUILD)
+            return;
         setupLoggingDb();
         if (new Date().getTime() - lastSubmit < 60000)
             return;
@@ -1719,7 +1724,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             + " "
                             + getVolumeName(path)
                             + " @ "
-                            + DialogHandler.formatSize((long)sf.getBlockSize()
+                            + OpenPath.formatSize((long)sf.getBlockSize()
                                     * (long)sf.getAvailableBlocks()));
                     refreshBookmarks();
                     if (mLastPath.getPath().equals(path))
@@ -1926,14 +1931,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 getSupportLoaderManager().initLoader(0, null, this);
                 new Thread(new Runnable() {
                     public void run() {
-                        if (mHasExternal)
+                        if (mHasExternal && extDrive != null)
                             for (OpenPath kid : extDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
                                     mVideoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                             "mkv", "mp4"));
-                        if (mHasInternal)
+                        if (mHasInternal && intDrive != null)
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
@@ -2093,6 +2098,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public void ensureCursorCache() {
         // findCursors();
+        if (!Preferences.Pref_CacheThumbs)
+            return;
         if (!Preferences.Pref_ShowThumbs)
             return;
         if (mRunningCursorEnsure
@@ -2879,7 +2886,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 R.layout.clipboard_layout, null);
         final TextView tvStatus = (TextView)root.findViewById(R.id.multiselect_status);
         tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
-                + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                + OpenPath.formatSize(getClipboard().getTotalSize()));
         GridView mGridCommands = (GridView)root.findViewById(R.id.multiselect_command_grid);
         final ListView mListClipboard = (ListView)root.findViewById(R.id.multiselect_item_list);
         mListClipboard.setAdapter(getClipboard());
@@ -2887,7 +2894,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             @Override
             public void onClipboardUpdate() {
                 tvStatus.setText(getClipboard().size() + " " + getString(R.string.s_files) + " :: "
-                        + DialogHandler.formatSize(getClipboard().getTotalSize()));
+                        + OpenPath.formatSize(getClipboard().getTotalSize()));
                 OpenExplorer.this.onClipboardUpdate();
             }
         });

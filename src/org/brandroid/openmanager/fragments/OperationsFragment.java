@@ -69,16 +69,13 @@ public class OperationsFragment extends OpenFragment implements Poppable {
             final View view = convertView;
             final ProgressBar pb = (ProgressBar)view.findViewById(android.R.id.progress);
             final TextView text1 = (TextView)view.findViewById(android.R.id.text1);
-            final ImageButton closeButton = (ImageButton)view
-                    .findViewById(android.R.id.closeButton);
-            if (closeButton != null) {
-                closeButton.setOnClickListener(new OnClickListener() {
-                    public void onClick(View v) {
-                        if(bw.getStatus() == Status.RUNNING)
-                            bw.cancel(true);
-                    }
-                });
-            }
+            //ViewUtils.setText(view, bw.getDetailedText(), R.id.big_text);
+            ViewUtils.setOnClicks(view, new OnClickListener() {
+                public void onClick(View v) {
+                    if(bw.getStatus() == Status.RUNNING)
+                        bw.cancel(true);
+                }
+            }, android.R.id.closeButton);
             bw.updateView(view);
             bw.setWorkerUpdateListener(new OnWorkerUpdateListener() {
                 public void onWorkerThreadComplete(EventType type, String... results) {
@@ -114,7 +111,7 @@ public class OperationsFragment extends OpenFragment implements Poppable {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        boolean isRunning = getHandler().getRunningTasks().length > 0;
+        boolean isRunning = getEventHandler().getRunningTasks().length > 0;
         MenuUtils.setMenuEnabled(menu, isRunning, R.id.menu_ops_stop);
     }
 

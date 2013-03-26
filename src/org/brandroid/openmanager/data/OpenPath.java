@@ -15,7 +15,8 @@ import java.util.zip.GZIPInputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.data.OpenNetworkPath.CloudCompletionListener;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.MimeTypes;
@@ -26,6 +27,7 @@ import org.brandroid.utils.Utils;
 
 import com.android.gallery3d.data.MediaObject;
 import com.android.gallery3d.data.Path;
+import com.box.androidlib.Cancelable;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -51,15 +53,18 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     private OpenPathThreadUpdater mUpdater;
     protected static OpenPathDbAdapter mDb = null;
     public static Boolean AllowDBCache = true;
-    
-    public static java.text.DateFormat DateFormatInstance = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.ENGLISH);
+
+    public static java.text.DateFormat DateFormatInstance = new SimpleDateFormat(
+            "MMM dd yyyy HH:mm:ss", Locale.ENGLISH);
 
     public abstract String getName();
 
     public abstract String getPath();
 
     /**
-     * This should return a Parceleable string that can be used to recreate the OpenPath object
+     * This should return a Parceleable string that can be used to recreate the
+     * OpenPath object
+     * 
      * @return String
      */
     public abstract String getAbsolutePath();
@@ -170,7 +175,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         else {
             int ret = 0;
             OpenPath[] kids = list();
-            if(kids == null) return 0;
+            if (kids == null)
+                return 0;
             for (OpenPath kid : kids)
                 if (!kid.isHidden())
                     ret++;
@@ -358,20 +364,20 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public SoftReference<Bitmap> getThumbnail(OpenApp app, int w, int h) {
         return ThumbnailCreator.generateThumb(app, this, w, h, app.getContext());
     }
-    
+
     public interface ThumbnailReturnCallback extends ExceptionListener {
-        public void onThumbReturned(Bitmap bmp);
+        public void onThumbReturned(Drawable bmp);
     }
-    
+
     public interface ThumbnailHandler {
-        public boolean getThumbnail(int w, ThumbnailReturnCallback callback);
+        public boolean getThumbnail(OpenApp app, int w, ThumbnailReturnCallback callback);
     }
-    
+
     public interface ThumbnailOverlayInterface {
         public Drawable getOverlayDrawable(Context c, boolean large);
     }
-    
-     /**
+
+    /**
      * Get cached Thumbnail.
      * 
      * @param app OpenApp inhereted object that can provide Context to
@@ -557,7 +563,12 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see isTextFile(String)
      */
     public boolean isTextFile() {
-        return !isDirectory() && isTextFile(getName());
+        return !isDirectory() && isMimeText(getMimeType());
+    }
+    
+    public static boolean isMimeText(String mime)
+    {
+        return mime.startsWith("text");
     }
 
     /**
@@ -729,15 +740,16 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          */
         public void update(String status);
     }
-    
+
     public interface OpenDynamicPath
     {
         public void setPath(String path);
     }
-    
+
     public interface OpenStream
     {
         public InputStream getInputStream() throws IOException;
+
         public OutputStream getOutputStream() throws IOException;
     }
 
@@ -757,87 +769,106 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * Callback used to designate when updates have completed
          */
         public void doneUpdating();
-        
-        public boolean isCancelled();
     }
-    
+
     public interface ExceptionListener {
         public void onException(Exception e);
     }
-    
+
     public interface ListListener extends ExceptionListener {
         public void onListReceived(OpenPath[] list);
     }
-    
+
     public interface OpsListener extends ExceptionListener {
         public void onMakeFinished(String name, boolean success);
+
         public void onDeleteFinished(boolean success);
     }
-    
+
     public interface ListHandler {
         public Thread list(final ListListener listener);
     }
-    
+
     public interface IsCancelledListener {
         public boolean isCancelled();
     }
-    
+
     public interface ProgressUpdateListener extends IsCancelledListener {
         public void onProgressUpdate(Integer... progress);
     }
-    
+
     public interface DownloadListener extends ExceptionListener, ProgressUpdateListener {
         public OutputStream getOutputStream();
     }
-    
+
     public interface DownloadHandler {
         public void download(final DownloadListener streamProvider);
     }
-    
+
     public interface UploadListener extends ExceptionListener, ProgressUpdateListener {
         public InputStream getInputStream();
     }
-    
+
     public interface UploadHandler {
         public void upload(final UploadListener streamProvider);
     }
-    
+
     public interface OpsHandler {
         public void makeChild(String name, OpsListener listener);
+
         public void delete(OpsListener listener);
     }
-    
+
     public interface SpaceListener extends ExceptionListener {
         /**
-         * Callback function for {@link SpaceListener} to
-         * determine space available on requested device.
+         * Callback function for {@link SpaceListener} to determine space
+         * available on requested device.
          * 
          * @param total Total size available in bytes.
          * @param used Used amount in bytes. Set to -1 to ignore.
-         * @param third Third amount in bytes. This is optional. Set to 0 or less to ignore.
+         * @param third Third amount in bytes. This is optional. Set to 0 or
+         *            less to ignore.
          */
         public void onSpaceReturned(long total, long used, long third);
     }
+
     public interface SpaceHandler {
         public void getSpace(SpaceListener callback);
     }
+
     public interface OpenPathSizable {
         public long getTotalSpace();
+
         public long getUsedSpace();
+
         public long getThirdSpace();
     }
-    
-    public Thread thread(Runnable r) {
+
+    public static Thread thread(Runnable r) {
         Thread ret = new Thread(r);
         ret.start();
         return ret;
     }
     
-    public void post(Runnable r) {
+    public static Cancellable cancelify(final Thread t)
+    {
+        return new Cancellable() {
+            public boolean cancel() {
+                if(t != null && t.isAlive())
+                {
+                    t.interrupt();
+                    return true;
+                }
+                return false;
+            }
+        };
+    }
+
+    public static void post(Runnable r) {
         OpenExplorer.post(r);
     }
-    
-    public void postListReceived(final OpenPath[] mChildren, final ListListener listener)
+
+    public static void postListReceived(final OpenPath[] mChildren, final ListListener listener)
     {
         post(new Runnable() {
             public void run() {
@@ -845,8 +876,17 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             }
         });
     }
-    
-    public void postException(final Exception e, final ExceptionListener listener)
+
+    public static void postCompletion(final String status, final CloudCompletionListener listener)
+    {
+        post(new Runnable() {
+            public void run() {
+                listener.onCloudComplete(status);
+            }
+        });
+    }
+
+    public static void postException(final Exception e, final ExceptionListener listener)
     {
         post(new Runnable() {
             public void run() {
@@ -866,7 +906,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          *            found.
          * @throws IOException
          */
-        public void list(OpenContentUpdateListener callback) throws IOException;
+        public Cancellable list(OpenContentUpdateListener callback);
     }
 
     /**
@@ -883,7 +923,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          *         not.
          */
         public boolean copyFrom(OpenStream file);
-        
+
         public boolean copyTo(OpenStream dest) throws IOException;
     }
 
@@ -923,8 +963,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
          * OpenPath object.
          */
         public void tempUpload(AsyncTask<?, ?, ?> task) throws IOException;
-        
+
         public String getTempFileName();
+
         public OpenFile getTempFile();
     }
 
@@ -988,15 +1029,16 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             return mDb;
         return null;
     }
-    
+
     /**
      * Explicitly close the cache Database adapter.
      */
     public static void closeDb() {
         try {
-            if(mDb != null)
+            if (mDb != null)
                 mDb.close();
-        } catch(Exception e) { }
+        } catch (Exception e) {
+        }
     }
 
     /**
@@ -1011,8 +1053,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     /**
      * Indicates whether file should be added to database cache.
      * 
-     * @return {@code true} if file should be cached, {@code false] if not.
-
+     * @return {@code true} if file should be cached, {@code false] if not.
      */
     public boolean addToDb() {
         return addToDb(false);
@@ -1132,9 +1173,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
         try {
             if (isDirectory())
-                deets += getChildCount(countHiddenChildren) + " %s";
+                deets += list().length + " %s";
             else if (isFile())
-                deets += DialogHandler.formatSize(length());
+                deets += formatSize(length());
         } catch (Exception e) {
         }
 
@@ -1189,22 +1230,78 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     public boolean canHandleInternally() {
         return false;
     }
-    
+
+    public static final int kb = 1024;
+    public static final int mb = kb * 1024;
+    public static final int gb = mb * 1024;
+
+    public static String formatSize(long size, int decimalPoints, boolean includeUnits) {
+        
+        if(size < 0) return "";
+
+        int factor = (10 ^ decimalPoints);
+
+        String ssize = "";
+
+        if (size <= kb)
+            ssize = size + " B";
+        else if (size > kb && size <= mb)
+            ssize = ((double)Math.round(((double)size / kb) * factor) / factor)
+                    + (includeUnits ? " KB" : "");
+        else if (size > mb && size <= gb)
+            ssize = ((double)Math.round(((double)size / mb) * factor) / factor)
+                    + (includeUnits ? " MB" : "");
+        else if (size > gb)
+            ssize = ((double)Math.round(((double)size / gb) * factor) / factor)
+                    + (includeUnits ? " GB" : "");
+
+        return ssize;
+    }
+
+    public static String getSizeSuffix(long size)
+    {
+
+        if (size < kb)
+            return " B";
+        else if (size > kb && size < mb)
+            return " KB";
+        else if (size > mb && size < gb)
+            return " MB";
+        else if (size > gb)
+            return " GB";
+
+        else
+            return "";
+    }
+
+    public static String formatSize(long size, int decimalPoints) {
+        return OpenPath.formatSize(size, decimalPoints, true);
+    }
+
+    public static String formatSize(long size) {
+        return formatSize(size, true);
+    }
+
+    public static String formatSize(long size, boolean includeUnits) {
+        return formatSize(size, 2, includeUnits);
+    }
+
     public static void copyStreams(InputStream in, OutputStream out) throws IOException {
         copyStreams(in, out, false, false, null);
     }
 
-    public static void copyStreams(InputStream in, OutputStream out, boolean doCloseInput, boolean doCloseOutput, final ProgressUpdateListener progress) throws IOException {
+    public static void copyStreams(InputStream in, OutputStream out, boolean doCloseInput,
+            boolean doCloseOutput, final ProgressUpdateListener progress) throws IOException {
         byte[] buffer = new byte[2048];
         int count = 0;
         int total = 0;
-        while((count = in.read(buffer)) != -1)
+        while ((count = in.read(buffer)) != -1)
         {
-            if(progress.isCancelled())
+            if (progress.isCancelled())
                 break;
             out.write(buffer, 0, count);
             total += count;
-            if(progress != null)
+            if (progress != null)
             {
                 final int t = total;
                 OpenExplorer.getHandler().post(new Runnable() {
@@ -1214,17 +1311,18 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
                 });
             }
         }
-        if(doCloseInput)
+        if (doCloseInput)
             try {
-                if(in != null)
+                if (in != null)
                     in.close();
-            } catch(Exception e) { }
-        if(doCloseOutput)
+            } catch (Exception e) {
+            }
+        if (doCloseOutput)
             try {
-                if(out != null)
+                if (out != null)
                     out.close();
-            } catch(Exception e) { }
+            } catch (Exception e) {
+            }
     }
-    
 
 }

@@ -179,15 +179,17 @@ public class ThumbnailCreator {
                         {
                             if (file instanceof OpenPath.ThumbnailHandler
                                     && file.hasThumbnail()) {
-                                ((OpenPath.ThumbnailHandler)file).getThumbnail(mWidth,
+                                ((OpenPath.ThumbnailHandler)file).getThumbnail(app, mWidth,
                                         new OpenPath.ThumbnailReturnCallback() {
                                             @Override
                                             public void onException(Exception e) {
 
                                             }
 
-                                            public void onThumbReturned(Bitmap bmp) {
+                                            public void onThumbReturned(Drawable d) {
                                                 try {
+                                                    if(!(d instanceof BitmapDrawable)) return;
+                                                    Bitmap bmp = ((BitmapDrawable)d).getBitmap();
                                                     String mCacheFilename = getCacheFilename(
                                                             file.getAbsolutePath(), mWidth,
                                                             mHeight);

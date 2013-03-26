@@ -156,7 +156,7 @@ public class DialogHandler {
             @Override
             public void OnHeatmapTasksComplete(long mTotalBytes, boolean allDone) {
                 mTotalSize.setText(app.getContext().getResources().getString(R.string.s_size)
-                        + ": " + formatSize(mTotalBytes) + (allDone ? "" : "..."));
+                        + ": " + OpenPath.formatSize(mTotalBytes) + (allDone ? "" : "..."));
             }
         });
 
@@ -184,41 +184,6 @@ public class DialogHandler {
         lv.setAdapter(adapter);
 
         return v;
-    }
-
-    public static String formatSize(long size) {
-        return formatSize(size, true);
-    }
-
-    public static String formatSize(long size, boolean includeUnits) {
-        return formatSize(size, 2, includeUnits);
-    }
-
-    public static String formatSize(long size, int decimalPoints) {
-        return formatSize(size, decimalPoints, true);
-    }
-
-    public static String formatSize(long size, int decimalPoints, boolean includeUnits) {
-        int kb = 1024;
-        int mb = kb * 1024;
-        int gb = mb * 1024;
-        String ssize = "";
-
-        int factor = (10 ^ decimalPoints);
-
-        if (size < kb)
-            ssize = size + " B";
-        else if (size > kb && size < mb)
-            ssize = ((double)Math.round(((double)size / kb) * factor) / factor)
-                    + (includeUnits ? " KB" : "");
-        else if (size > mb && size < gb)
-            ssize = ((double)Math.round(((double)size / mb) * factor) / factor)
-                    + (includeUnits ? " MB" : "");
-        else if (size > gb)
-            ssize = ((double)Math.round(((double)size / gb) * factor) / factor)
-                    + (includeUnits ? " GB" : "");
-
-        return ssize;
     }
 
     public static void populateFileInfoViews(OpenApp app, View v, OpenPath file) throws IOException {
@@ -309,8 +274,8 @@ public class DialogHandler {
         @Override
         protected void onProgressUpdate(Integer... values) {
             updateTexts(mTextFiles, fileCount, mTextDirs, dirCount, mTextSize,
-                    formatSize(totalSize), mTextFree, formatSize(freeSize), mTextTotal,
-                    formatSize(diskTotal));
+                    OpenPath.formatSize(totalSize), mTextFree, OpenPath.formatSize(freeSize), mTextTotal,
+                    OpenPath.formatSize(diskTotal));
         }
 
         @Override
@@ -357,7 +322,7 @@ public class DialogHandler {
             String[] ret = new String[] {
                     firstDirs + (dirCount > firstDirs ? " (" + dirCount + ")" : ""),
                     firstFiles + (fileCount > firstFiles ? " (" + fileCount + ")" : ""),
-                    formatSize(totalSize), formatSize(freeSize), formatSize(diskTotal)
+                    OpenPath.formatSize(totalSize), OpenPath.formatSize(freeSize), OpenPath.formatSize(diskTotal)
             };
             return ret;
         }
@@ -1127,13 +1092,6 @@ public class DialogHandler {
         return ret;
     }
 
-    public static String getLangCode() {
-        String lang = Locale.getDefault().toString().toUpperCase();
-        if (lang.length() > 2)
-            lang = lang.substring(0, 2);
-        return lang;
-    }
-
     public static String getDeviceInfo() {
         String ret = "";
         String sep = "\n";
@@ -1143,7 +1101,7 @@ public class DialogHandler {
             ret += "Screen: " + OpenExplorer.SCREEN_WIDTH + "x" + OpenExplorer.SCREEN_HEIGHT + sep;
         if (OpenExplorer.SCREEN_DPI > -1)
             ret += "DPI: " + OpenExplorer.SCREEN_DPI + sep;
-        ret += "Lang: " + getLangCode() + sep;
+        ret += "Lang: " + Utils.getLangCode() + sep;
         ret += "Runs: " + Preferences.Run_Count + sep;
         ret += "Fingerprint: " + Build.FINGERPRINT + sep;
         ret += "Manufacturer: " + Build.MANUFACTURER + sep;
@@ -1163,15 +1121,6 @@ public class DialogHandler {
             ret += "Unknown: " + Build.UNKNOWN + sep;
         ret += "ID: " + Build.ID;
         return ret;
-    }
-
-    public static String formatDuration(long ms) {
-        int s = (int)(ms / 1000), m = s / 60, h = m / 60;
-        m = m % 60;
-        s = s % 60;
-        return (ms > 360000 ? h + ":" : "")
-                + (ms > 6000 ? (h == 0 || m >= 10 ? "" : "0") + m + ":" : "")
-                + (ms > 6000 ? (s >= 10 ? "" : "0") + s : (ms < 1000 ? ms + "ms" : s + "s"));
     }
 
     public static boolean showServerWarning(final Context context) {

@@ -6,31 +6,29 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Vector;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.CredentialRefreshListener;
-import com.google.api.client.auth.oauth2.TokenErrorResponse;
-import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.ChildReference;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
@@ -38,6 +36,7 @@ import com.google.api.services.drive.model.ParentReference;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -50,18 +49,17 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     public static Drive mGlobalDrive;
     private GoogleCredential mCredential;
-    private String mName = "Drive";
-    private String mFolderId = "";
-    private final OpenDrive mParent;
+    private String mName = null;
+    private String mFolderId = "root";
+    private OpenDrive mParent;
     private final File mFile;
-    private final ParentReference mFolder;
-    private OpenDrive[] mChildren;
+    private static final WeakHashMap<String, OpenDrive> mGlobalFiles = new WeakHashMap<String, OpenDrive>();
+    private static final WeakHashMap<String, List<OpenDrive>> mGlobalChildren = new WeakHashMap<String, List<OpenDrive>>();
     public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
     public static final JsonFactory mJsonFactory = new GsonFactory();
-
     static {
         if (OpenExplorer.IS_DEBUG_BUILD)
-            Logger.getLogger(HttpTransport.class.getName()).setLevel(Level.ALL);
+            java.util.logging.Logger.getLogger(mTransport.getClass().getName()).setLevel(Level.ALL);
     }
 
     public OpenDrive(String token)
@@ -72,29 +70,9 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                         PrivatePreferences.getKey("oauth_drive_secret", ""))
                 .build();
         mCredential.setAccessToken(token);
-        if (mGlobalDrive == null)
-            mGlobalDrive = new Drive
-                    .Builder(mTransport, mJsonFactory, mCredential)
-                            .setApplicationName("OpenExplorer/1.0")
-                            .setHttpRequestInitializer(mCredential)
-                            .build();
+        setCredential(mCredential);
         mParent = null;
         mFile = null;
-        mFolder = null;
-    }
-
-    public GoogleCredential getCredential() {
-        return mCredential;
-    }
-
-    public void setCredential(GoogleCredential cred) {
-        mCredential = cred;
-        if (mGlobalDrive == null)
-            mGlobalDrive = new Drive
-                    .Builder(mTransport, mJsonFactory, mCredential)
-                            .setApplicationName("OpenExplorer/1.0")
-                            .setHttpRequestInitializer(mCredential)
-                            .build();
     }
 
     public OpenDrive(OpenDrive parent, File file)
@@ -103,16 +81,18 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         mCredential = mParent.mCredential;
         mFile = file;
         mFolderId = file.getId();
-        mFolder = null;
     }
 
-    public OpenDrive(OpenDrive parent, ParentReference pr)
-    {
-        mParent = parent;
-        mCredential = mParent.mCredential;
-        mFile = null;
-        mFolder = pr;
-        mFolderId = pr.getId();
+    public GoogleCredential getCredential() {
+        return mCredential;
+    }
+
+    public void setCredential(GoogleCredential cred) {
+        mCredential = cred;
+        mGlobalDrive = new Drive
+                .Builder(mTransport, mJsonFactory, mCredential)
+                        .setApplicationName("OpenExplorer/1.0")
+                        .build();
     }
 
     @Override
@@ -153,14 +133,24 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public OpenNetworkPath[] getChildren() {
-        return mChildren;
+        if (mGlobalChildren != null && mGlobalChildren.containsKey(mFolderId))
+            return mGlobalChildren.get(mFolderId).toArray(new OpenDrive[0]);
+        return new OpenNetworkPath[0];
     }
 
     @Override
     public String getPath() {
-        if (mFile != null)
-            return getPathPrefix(false) + mFile.getSelfLink();
-        return getPathPrefix(false) + mFolderId;
+        String ret = "";
+        if(getParent() != null)
+            ret = getParent().getPath();
+        else ret = getPathPrefix(false);
+        if(!ret.endsWith("/"))
+            ret += "/";
+        if(mName != null)
+            ret += getName();
+        if(isDirectory() && !ret.endsWith("/"))
+            ret += "/";
+        return ret;
     }
 
     public String getPathPrefix(boolean includeToken)
@@ -185,7 +175,14 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public long length() {
         if (mFile != null && mFile.getFileSize() != null)
             return mFile.getFileSize();
-        return 0;
+        return -1;
+    }
+    
+    @Override
+    public String getMimeType() {
+        if(mFile != null && mFile.getMimeType() != null)
+            return mFile.getMimeType();
+        return super.getMimeType();
     }
 
     @Override
@@ -200,8 +197,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public OpenPath[] list() throws IOException {
-        if (mChildren != null)
-            return mChildren;
+        if (mGlobalChildren != null)
+            return getChildren();
         return listFiles();
     }
 
@@ -209,15 +206,9 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public OpenPath[] listFiles() throws IOException {
         if (Thread.currentThread().equals(OpenExplorer.UiThread))
             return getChildren();
-        List<OpenDrive> kids = new Vector<OpenDrive>();
-        for (File f : mGlobalDrive.files().list()
-                .execute().getItems())
-        {
-            OpenDrive kid = new OpenDrive(this, f);
-            kids.add(kid);
-        }
-        mChildren = kids.toArray(new OpenDrive[kids.size()]);
-        return mChildren;
+        getOpenDrives(this, mGlobalDrive.files().list()
+                .execute().getItems());
+        return getChildren();
     }
 
     @Override
@@ -262,6 +253,13 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     }
 
     @Override
+    public Boolean canWrite() {
+        if (mFile != null)
+            return mFile.getEditable();
+        return true;
+    }
+
+    @Override
     public Boolean canExecute() {
         return false;
     }
@@ -292,7 +290,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     }
 
     @Override
-    public boolean copyTo(OpenNetworkPath path, final CloudCopyListener callback) {
+    public boolean copyTo(OpenNetworkPath path, final CloudCompletionListener callback) {
         if (path instanceof OpenDrive)
         {
             final OpenDrive folder = (OpenDrive)path;
@@ -302,7 +300,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                         mGlobalDrive.files().copy(getFile().getId(), folder.getFile()).execute();
                         post(new Runnable() {
                             public void run() {
-                                callback.onCopyComplete("Copy completed successfully");
+                                callback.onCloudComplete("Copy completed successfully");
                             }
                         });
                     } catch (Exception e) {
@@ -351,44 +349,116 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         });
         return false;
     }
-    
+
     private static OpenDrive[] getOpenDrives(OpenDrive parent, List<File> files)
     {
         List<OpenDrive> ret = new Vector<OpenDrive>();
-        for(File f : files)
-            ret.add(new OpenDrive(parent, f));
+        for (File f : files)
+        {
+            OpenDrive d = new OpenDrive(parent, f);
+            d.cacheParents();
+            if (d.getParent().equals(parent))
+                ret.add(d);
+        }
         return ret.toArray(new OpenDrive[ret.size()]);
     }
 
+    public boolean hasParent(String folderId)
+    {
+        for (ParentReference p : getFile().getParents())
+        {
+            if (folderId.equals("root") && p.getIsRoot())
+                return true;
+            if (p.getId().equals(folderId))
+                return true;
+        }
+        return false;
+    }
+
+    public void cacheParents()
+    {
+        boolean changedParent = false;
+        for (ParentReference p : getFile().getParents())
+        {
+            String id = p.getId();
+            // if(p.getIsRoot())
+            // id = "root";
+            if (!id.equals(mFolderId) && !(p.getIsRoot() && mFolderId.equals("root"))
+                    && mGlobalFiles != null && mGlobalFiles.containsKey(id) && !changedParent)
+            {
+                mParent = mGlobalFiles.get(id);
+                changedParent = true;
+            }
+            List<OpenDrive> kids;
+            if (!mGlobalChildren.containsKey(id) || mGlobalChildren.get(id) == null)
+                kids = new Vector<OpenDrive>();
+            else
+                kids = mGlobalChildren.get(id);
+            kids.add(this);
+            mGlobalChildren.put(id, kids);
+        }
+    }
+
     @Override
-    public void list(final OpenContentUpdateListener callback) throws IOException {
-        thread(new Runnable() {
+    public Cancellable list(final OpenContentUpdateListener callback) {
+        return cancelify(thread(new Runnable() {
             public void run() {
                 try {
+                    if (mFolderId.equals("root"))
+                    {
+                        mFolderId = mGlobalDrive.files().get(mFolderId).setFields("id").execute()
+                                .getId();
+                        Logger.LogDebug("Drive root = " + mFolderId);
+                    }
                     String pg = "";
+                    List<OpenDrive> kids = mGlobalChildren.get(mFolderId);
+                    if (kids == null)
+                        kids = new Vector<OpenDrive>();
+                    else if (kids.size() > 0)
+                        callback.addContentPath(kids.toArray(new OpenDrive[kids.size()]));
                     for (;;)
                     {
-                        com.google.api.services.drive.Drive.Files.List lst =
-                                mGlobalDrive.files().list().setMaxResults(100);
-                        if(!pg.equals(""))
+                        Files.List lst = mGlobalDrive
+                                .files()
+                                .list()
+                                .setQ("'" + mFolderId + "' in parents")
+                                .setFields(
+                                        "items(editable,fileSize,iconLink,id,kind,labels/hidden,mimeType,modifiedDate,parents(id,isRoot),thumbnail/image,title),nextPageToken")
+                                .setMaxResults(100);
+                        if (!pg.equals(""))
                             lst.setPageToken(pg);
                         final FileList fl = lst.execute();
-                        if(fl.size() == 0) break;
-                        post(new Runnable() {
-                            public void run() {
-                                callback.addContentPath(getOpenDrives(OpenDrive.this, fl.getItems()));
-                            }
-                        });
-                        if(callback.isCancelled()) break;
-                        if(pg.equals(fl.getNextPageToken())) break;
+                        if (fl.size() == 0)
+                            break;
+                        Vector<OpenDrive> theseKids = new Vector<OpenDrive>();
+                        for (OpenDrive kid : getOpenDrives(OpenDrive.this, fl.getItems()))
+                        {
+                            if (kids.contains(kid))
+                                continue;
+                            else if (kid.hasParent(mFolderId))
+                                theseKids.add(kid);
+                        }
+                        if (theseKids.size() > 0)
+                        {
+                            final OpenDrive[] ka = theseKids
+                                    .toArray(new OpenDrive[theseKids.size()]);
+                            post(new Runnable() {
+                                public void run() {
+                                    callback.addContentPath(ka);
+                                }
+                            });
+                        }
+                        if (pg.equals(fl.getNextPageToken()))
+                            break;
                         pg = fl.getNextPageToken();
-                        if(pg == null || pg.equals("")) break;
+                        if (pg == null || pg.equals(""))
+                            break;
                     }
                 } catch (Exception e) {
                     postException(e, callback);
                 }
             }
-        });
+        }));
     }
 
     public Thread list(final ListListener listener) {
@@ -401,16 +471,14 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                     do {
                         com.google.api.services.drive.Drive.Files.List lst =
                                 mGlobalDrive.files().list();
-                        if(!pg.equals(""))
+                        if (!pg.equals(""))
                             lst.setPageToken(pg);
                         final FileList fl = lst.execute();
                         added = fl.size();
-                        for (File f : fl.getItems())
-                            kids.add(new OpenDrive(OpenDrive.this, f));
+                        getOpenDrives(OpenDrive.this, fl.getItems());
                         pg = fl.getNextPageToken();
                     } while (added > 0);
-                    mChildren = kids.toArray(new OpenDrive[kids.size()]);
-                    postListReceived(mChildren, listener);
+                    postListReceived(getChildren(), listener);
                 } catch (Exception e) {
                     postException(e, listener);
                 }
@@ -452,22 +520,94 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public OutputStream getOutputStream() throws IOException {
         return null;
     }
+    
+    public String getId()
+    {
+        if(mFile != null)
+            return mFile.getId();
+        return null;
+    }
 
     @Override
-    public boolean getThumbnail(int w, final ThumbnailReturnCallback callback) {
+    public boolean getThumbnail(final OpenApp app, int w, final ThumbnailReturnCallback callback) {
+        if(mFile != null && mFile.getThumbnail() != null && mFile.getThumbnail().getImage() != null)
         thread(new Runnable() {
             public void run() {
                 try {
                     InputStream in = new BufferedInputStream(mGlobalDrive.files()
                             .get(mFile.getThumbnail().getImage()).executeMediaAsInputStream());
-                    Bitmap bmp = BitmapFactory.decodeStream(in);
-                    callback.onThumbReturned(bmp);
+                    BitmapDrawable bd = new BitmapDrawable(app.getResources(), in);
+                    callback.onThumbReturned(bd);
                 } catch (Exception e) {
                     postException(e, callback);
                 }
             }
         });
+        else
+            callback.onThumbReturned(IntentManager.getDefaultIcon(this, app));
         return false;
+    }
+
+    @Override
+    public Cancellable uploadToCloud(final OpenFile file, final CloudProgressListener callback) {
+        return runCloud(new Runnable() {
+            public void run() {
+                try {
+                    final AbstractInputStreamContent input = new AbstractInputStreamContent(
+                            "Drive#File") {
+
+                        @Override
+                        public boolean retrySupported() {
+                            return false;
+                        }
+
+                        @Override
+                        public long getLength() throws IOException {
+                            return file.length();
+                        }
+
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            return file.getInputStream();
+                        }
+                    };
+                    mGlobalDrive.files().update(getId(), getFile(), input).execute();
+                    postCompletion("Upload complete", callback);
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+    }
+
+    @Override
+    public Cancellable downloadFromCloud(final OpenFile file, final CloudProgressListener callback) {
+        return runCloud(new Runnable() {
+            public void run() {
+                try {
+                    mGlobalDrive.files().get(getId())
+                            .executeAndDownloadTo(file.getOutputStream());
+                    postCompletion("Download complete", callback);
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }, callback);
+    }
+
+    @Override
+    public boolean touch(final CloudCompletionListener callback) {
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    mGlobalDrive.files().touch(getId());
+                    postCompletion("File touched", callback);
+                } catch (Exception e) {
+                    postException(e, callback);
+                }
+            }
+        });
+        return true;
     }
 
 }

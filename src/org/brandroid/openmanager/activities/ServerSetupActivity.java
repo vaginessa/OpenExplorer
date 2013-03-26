@@ -343,7 +343,13 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 }
             }
             if (server == null)
-                server = new OpenServer().setName(serverType > -1 ? mServerLabels[serverType] : "New Server");
+            {
+                String name = "New Server";
+                if (serverType > -1)
+                    name = mServerLabels[serverType] + " " +
+                            (servers.findByType(mServerTypes[serverType]).size() + 1);
+                server = new OpenServer().setName(name);
+        }
         }
 
         server.setServerIndex(iServersIndex);
@@ -473,7 +479,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             if (data.getExtras().containsKey("AUTH_LOGIN"))
             {
                 String login = data.getStringExtra("AUTH_LOGIN");
-                if(servers.findByType(server.getType()).size() > 1)
+                if (servers.findByType(server.getType()).size() > 0)
                 {
                     server.setName(login);
                     ViewUtils.setText(mBaseView, login, R.id.text_name);
@@ -795,6 +801,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         // OpenExplorer.getHandler().post(new Runnable() {public void run() {
         final Context context = app.getContext();
         final ListView lv = new ListView(context);
+        if (OpenExplorer.isNook())
+            lv.setBackgroundColor(Color.BLACK);
         final ServerTypeAdapter adapter = new ServerTypeAdapter(app);
         lv.setAdapter(adapter);
         final AlertDialog dlg = new AlertDialog.Builder(context)
@@ -824,8 +832,10 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     R.id.server_authenticate);
             ViewUtils.setViewsEnabled(mBaseView, true, R.id.server_authenticate);
         } else {
-            ViewUtils.setText(mBaseView, getString(R.string.s_authenticating), R.id.server_authenticate);
-            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh), R.id.server_authenticate);
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticating),
+                    R.id.server_authenticate);
+            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh),
+                    R.id.server_authenticate);
         }
     }
 
@@ -1018,7 +1028,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             if (server.getPassword() != null && !server.getPassword().equals(""))
             {
                 ViewUtils.setViewsVisible(v, true, R.id.server_logout);
-                ViewUtils.setText(v, getString(R.string.s_authenticate_refresh), R.id.server_authenticate);
+                ViewUtils.setText(v, getString(R.string.s_authenticate_refresh),
+                        R.id.server_authenticate);
             } else {
                 enableAuthenticateButton(true);
             }
@@ -1028,6 +1039,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     private void showAccountList() {
         ListView lvAccounts = new ListView(getContext());
         lvAccounts.setAdapter(new AccountTypeAdapter(getContext()));
+        if (OpenExplorer.isNook())
+            lvAccounts.setBackgroundColor(Color.BLACK);
         final Dialog dlg = new AlertDialog.Builder(getContext())
                 .setView(lvAccounts)
                 .setTitle(R.string.s_server_account_title)
@@ -1418,7 +1431,9 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     public void onDriveAuthTokenReceived(String account, String token) {
         server.setUser(account);
         server.setPassword(token);
-        server.setName(account);
+        String name = account.substring(0, account.indexOf("@"));
+        if (servers.findByType("drive").size() > 0)
+            server.setName(name);
         ViewUtils.setText(mBaseView, account, R.id.text_name, R.id.text_user);
         ViewUtils.setText(mBaseView, token, R.id.text_password);
         ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
@@ -1463,10 +1478,11 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     {
         getAuthToken(activity, callback, accountName, false);
     }
-    
+
     public static void invalidateAuthToken(Activity activity, String authToken)
     {
-        AccountManager.get(activity).invalidateAuthToken(OpenDrive.DRIVE_SCOPE_AUTH_TYPE, authToken);
+        AccountManager.get(activity)
+                .invalidateAuthToken(OpenDrive.DRIVE_SCOPE_AUTH_TYPE, authToken);
     }
 
     public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
@@ -1475,7 +1491,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         GoogleAccountManager accountManager = new GoogleAccountManager(activity);
         Account account = accountManager.getAccountByName(accountName);
         OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
-        if(server != null && refresh)
+        if (server != null && refresh)
             invalidateAuthToken(activity, server.getPassword());
         accountManager.getAccountManager()
                 .getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
@@ -1485,9 +1501,13 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                                 try {
                                     bundle = future.getResult();
                                     getAuthToken(activity, callback, bundle);
-                                } catch (Exception e) {
-                                    callback.onException(e);
+                                } catch (final Exception e) {
+                                    OpenExplorer.post(new Runnable() {
+                                        public void run() {
+                                            callback.onException(e);
                                 }
+                                    });
+                            }
                             }
 
                         }, OpenExplorer.getHandler());
@@ -1503,7 +1523,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             GoogleJsonResponseException re = (GoogleJsonResponseException)e;
             if (re.getStatusCode() == 401 && !received401)
             {
-                //received401 = true;
+                // received401 = true;
                 try {
                     AccountManager am = AccountManager.get(activity);
                     GoogleAccountManager man = new GoogleAccountManager(am);

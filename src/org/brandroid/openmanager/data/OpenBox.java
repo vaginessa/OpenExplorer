@@ -81,7 +81,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
                         callback.onSpaceReturned(
                                 user.getSpaceAmount(),
                                 user.getSpaceUsed(),
-                                user.getMaxUploadSize()
+                                0
                                 );
                     }
                 }
@@ -92,7 +92,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     }
 
     public boolean copyTo(final OpenNetworkPath path,
-            final OpenNetworkPath.CloudCopyListener callback) {
+            final OpenNetworkPath.CloudCompletionListener callback) {
         if (path instanceof OpenBox)
         {
             final OpenBox folder = (OpenBox)path;
@@ -103,7 +103,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
                         }
 
                         public void onComplete(String status) {
-                            callback.onCopyComplete(status);
+                            callback.onCloudComplete(status);
                         }
                     });
             return true;
@@ -477,8 +477,67 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
 
     @Override
     public long getThirdSpace() {
-        if (mUser != null)
-            return mUser.getMaxUploadSize();
+        //if (mUser != null)
+        //return mUser.getMaxUploadSize();
         return 0;
+    }
+    
+    @Override
+    public Cancellable downloadFromCloud(OpenFile file, final CloudProgressListener callback) {
+        return mBox.download(getToken(), getId(), file.getFile(), null, new FileDownloadListener() {
+            
+            @Override
+            public void onIOException(IOException e) {
+                callback.onException(e);
+            }
+            
+            @Override
+            public void onProgress(long bytesDownloaded) {
+                callback.onProgress(bytesDownloaded);
+            }
+            
+            @Override
+            public void onComplete(String status) {
+                callback.onCloudComplete(status);
+            }
+        });
+    }
+
+    @Override
+    public Cancellable uploadToCloud(final OpenFile file, final CloudProgressListener callback) {
+        return mBox.upload(getToken(), Box.UPLOAD_ACTION_UPLOAD, file.getFile(), file.getName(),
+                getFolderId(), new FileUploadListener() {
+            
+            @Override
+            public void onIOException(IOException e) {
+                callback.onException(e);
+            }
+            
+            @Override
+            public void onProgress(long bytesTransferredCumulative) {
+                callback.onProgress(bytesTransferredCumulative);
+            }
+            
+            @Override
+            public void onMalformedURLException(MalformedURLException e) {
+                callback.onException(e);
+            }
+            
+            @Override
+            public void onFileNotFoundException(FileNotFoundException e) {
+                callback.onException(e);
+            }
+            
+            @Override
+            public void onComplete(BoxFile boxFile, String status) {
+                callback.onCloudComplete(status);
+            }
+        });
+    }
+
+    @Override
+    public boolean touch(CloudCompletionListener callback) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }
