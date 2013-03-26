@@ -129,7 +129,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 @SuppressLint("NewApi")
 public class ContentFragment extends OpenFragment implements OnItemLongClickListener,
         OnItemClickListener, OnWorkerUpdateListener, OpenPathFragmentInterface,
-        OnTaskUpdateListener, ContentAdapter.Callback {
+        OnTaskUpdateListener, ContentAdapter.SelectionCallback {
 
     // private static MultiSelectHandler mMultiSelect;
     // private LinearLayout mPathView;
@@ -2204,7 +2204,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     /** Update the "selection" action mode bar */
     private void updateSelectionModeView() {
         getActionMode().invalidate();
-        notifyDataSetChanged();
+        //notifyDataSetChanged();
     }
 
     /**
@@ -2334,10 +2334,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
             boolean writable = true, readable = true;
             for (OpenPath p : mContentAdapter.getSelectedSet()) {
-                if (!p.canWrite())
+                if (writable && !p.canWrite())
                     writable = false;
-                if (!p.canRead())
+                if (readable && !p.canRead())
                     readable = false;
+                if(!readable)
+                    break;
             }
             OpenPath last = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1);
 
@@ -2457,8 +2459,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     }
 
     private void toggleSelection(View view, OpenPath path) {
-        view.invalidate();
-        mContentAdapter.toggleSelected(path);
+        //view.invalidate();
+        mContentAdapter.toggleSelected(path, view);
     }
 
     public void notifyDataSetChanged() {

@@ -75,7 +75,6 @@ public class ContentAdapter extends BaseAdapter {
     private boolean mPlusParent = false;
     private boolean mShowDetails = true;
     private boolean mShowFiles = true;
-    private boolean mShowChecks = false;
 
     private int checkboxOnId = -1;
     private int checkboxOffId = -1;
@@ -90,14 +89,14 @@ public class ContentAdapter extends BaseAdapter {
      * Callback from MessageListAdapter. All methods are called on the UI
      * thread.
      */
-    public interface Callback {
+    public interface SelectionCallback {
         /** Called when the user selects/unselects a message */
         void onAdapterSelectedChanged(OpenPath path, boolean newSelected, int mSelectedCount);
     }
 
-    private final Callback mCallback;
+    private final SelectionCallback mCallback;
 
-    public ContentAdapter(OpenApp app, Callback callback, int mode, OpenPath parent) {
+    public ContentAdapter(OpenApp app, SelectionCallback callback, int mode, OpenPath parent) {
         // super(context, layout, data);
         mApp = app;
         mCallback = callback;
@@ -279,38 +278,34 @@ public class ContentAdapter extends BaseAdapter {
         final boolean useLarge = getViewMode() == OpenExplorer.VIEW_GRID;
         final OpenPath file = getItem(position); // super.getItem(position);
 
-        View row;
-
         if (view == null || view.getTag() == null || !(view.getTag() instanceof BookmarkHolder)
                 || ((BookmarkHolder)view.getTag()).getMode() != mode) {
             LayoutInflater in = (LayoutInflater)getContext().getSystemService(
                     Context.LAYOUT_INFLATER_SERVICE);
 
-            row = in.inflate(layout, parent, false);
-            BookmarkHolder mHolder = new BookmarkHolder(file, file.getName(), row, mode);
-            row.setTag(mHolder);
+            view = in.inflate(layout, parent, false);
+            BookmarkHolder mHolder = new BookmarkHolder(file, file.getName(), view, mode);
+            view.setTag(mHolder);
             // file.setTag(mHolder);
-        } else {
-            row = view;
         }
 
         if (file == null) {
-            return row;
-        } else if (row instanceof OpenPathView) {
-            ((OpenPathView)row).associateFile(file, this);
+            return view;
+        } else if (view instanceof OpenPathView) {
+            ((OpenPathView)view).associateFile(file, this);
         }
 
         Object o = file.getTag();
         if (o != null && o instanceof OpenPath && ((OpenPath)o).equals(file))
-            return row;
+            return view;
 
-        TextView mInfo = (TextView)row.findViewById(R.id.content_info);
-        TextView mDate = (TextView)row.findViewById(R.id.content_date);
+        TextView mInfo = (TextView)view.findViewById(R.id.content_info);
+        TextView mDate = (TextView)view.findViewById(R.id.content_date);
         // TextView mPathView =
         // (TextView)row.findViewById(R.id.content_fullpath);
-        TextView mNameView = (TextView)row.findViewById(R.id.content_text);
-        final ImageView mIcon = (ImageView)row.findViewById(R.id.content_icon);
-        ImageView mCheck = (ImageView)row.findViewById(R.id.content_check);
+        TextView mNameView = (TextView)view.findViewById(R.id.content_text);
+        final ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
+        ImageView mCheck = (ImageView)view.findViewById(R.id.content_check);
 
         if (mPlusParent && position == 0) {
             mNameView.setText(R.string.s_menu_up);
@@ -319,7 +314,7 @@ public class ContentAdapter extends BaseAdapter {
                 mInfo.setText("");
             if (mDate != null)
                 mDate.setText("");
-            return row;
+            return view;
         }
         final String mName = file.getName();
 
@@ -375,7 +370,7 @@ public class ContentAdapter extends BaseAdapter {
 
         if (mIcon != null) {
             // mIcon.invalidate();
-            ViewUtils.setAlpha(file.isHidden() ? 0.4f : 1.0f, row, R.id.content_icon);
+            ViewUtils.setAlpha(file.isHidden() ? 0.4f : 1.0f, view, R.id.content_icon);
             if (!mShowThumbnails || !file.hasThumbnail()) {
                 mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight,
                         getContext()));
@@ -408,15 +403,19 @@ public class ContentAdapter extends BaseAdapter {
             }
         }
 
-        // row.setTag(file);
         boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
-        boolean mShowCheck = !mPlusParent || position > 0; // mChecked || (mSelectedSet != null &&
-        // mSelectedSet.size() > 0);
+        boolean mShowCheck = true;
+        if(mPlusParent && position == 0) mShowCheck = false;
+
+        if (mCheck != null)
+            mCheck.setImageResource(mChecked ? checkboxOnId : checkboxOffId);
+        ViewUtils.setViewsVisible(view, mShowCheck, R.id.content_check);
+        
         boolean mShowClip = mApp.getClipboard().contains(file);
 
         if (mShowClip) {
-            ViewUtils.setViewsVisible(row, true, R.id.content_clipboard);
-            ViewUtils.setOnClicks(row, new View.OnClickListener() {
+            ViewUtils.setViewsVisible(view, true, R.id.content_clipboard);
+            ViewUtils.setOnClicks(view, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mApp.getClipboard().remove(file);
@@ -424,18 +423,15 @@ public class ContentAdapter extends BaseAdapter {
                 }
             }, R.id.content_clipboard);
         } else {
-            ViewUtils.setViewsVisible(row, false, R.id.content_clipboard);
-            ViewUtils.setOnClicks(row, new View.OnClickListener() {
+            ViewUtils.setViewsVisible(view, false, R.id.content_clipboard);
+            final View p = view;
+            ViewUtils.setOnClicks(view, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    toggleSelected(file);
+                    toggleSelected(file, p);
                 }
             }, R.id.checkmark_area);
         }
-
-        if (mCheck != null)
-            mCheck.setImageResource(mChecked ? checkboxOnId : checkboxOffId);
-        ViewUtils.setViewsVisible(row, mShowCheck, R.id.content_check);
 
         switch (OpenPath.Sorting.getType()) {
             case DATE:
@@ -464,7 +460,7 @@ public class ContentAdapter extends BaseAdapter {
                 break;
         }
 
-        return row;
+        return view;
     }
 
     @Override
@@ -513,6 +509,7 @@ public class ContentAdapter extends BaseAdapter {
     public void selectAll()
     {
         mSelectedSet.addAll(isFinal ? Arrays.asList(mFinalItems) : mData2);
+        notifyDataSetChanged();
     }
 
     public CopyOnWriteArrayList<OpenPath> getSelectedSet() {
@@ -545,12 +542,12 @@ public class ContentAdapter extends BaseAdapter {
         return getSelectedSet().contains(path);
     }
 
-    public void toggleSelected(OpenPath path) {
-        updateSelected(path, !isSelected(path));
-    }
-
-    public void toggleSelected(OpenPath path, Callback callback) {
-        updateSelected(path, !isSelected(path), callback);
+    public void toggleSelected(OpenPath path, View row) {
+        boolean sel = !isSelected(path);
+        updateSelected(path, sel);
+        row.setSelected(sel);
+        ViewUtils.setImageResource(row, sel ? checkboxOnId : checkboxOffId, R.id.content_check);
+        row.invalidate();
     }
 
     /**
@@ -561,7 +558,7 @@ public class ContentAdapter extends BaseAdapter {
      * @param itemView the item being changed
      * @param newSelected the new value of the selected flag (checkbox state)
      */
-    private void updateSelected(OpenPath path, boolean newSelected, Callback mCallback) {
+    private void updateSelected(OpenPath path, boolean newSelected) {
         if (newSelected) {
             mSelectedSet.add(path);
         } else {
@@ -570,10 +567,6 @@ public class ContentAdapter extends BaseAdapter {
         if (mCallback != null) {
             mCallback.onAdapterSelectedChanged(path, newSelected, mSelectedSet.size());
         }
-    }
-
-    private void updateSelected(OpenPath path, boolean newSelected) {
-        updateSelected(path, newSelected, mCallback);
     }
 
     public void setShowHiddenFiles(boolean show) {
