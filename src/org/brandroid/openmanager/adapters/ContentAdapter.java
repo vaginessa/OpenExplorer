@@ -39,8 +39,12 @@ import com.stericson.RootTools.RootTools;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
 import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -337,23 +341,23 @@ public class ContentAdapter extends BaseAdapter {
         // mHolder.setInfo(getFileDetails(file, false));
 
         if (mInfo != null) {
-            String sInfo = String.format(file.getDetails(getShowHiddenFiles()), getResources()
-                    .getString(R.string.s_files));
+            SpannableStringBuilder sInfo = new SpannableStringBuilder(String.format(file.getDetails(getShowHiddenFiles()), getResources()
+                    .getString(R.string.s_files)));
             if (OpenPath.Sorting.getType() == Type.SIZE
                     || OpenPath.Sorting.getType() == Type.SIZE_DESC)
-                sInfo = "<b>" + sInfo + "</b>";
+                sInfo.setSpan(new StyleSpan(Typeface.BOLD), 0, sInfo.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
             if (mShowDetails && mParent.showChildPath()) {
-                sInfo += " :: " + file.getPath().replace(file.getName(), "");
+                sInfo.append(" :: " + file.getPath().replace(file.getName(), ""));
                 showLongDate = false;
             } else if (!mShowDetails)
-                sInfo = "";
+                sInfo.clear();
 
             if (mDate != null)
                 mDate.setText(file.getFormattedDate(showLongDate));
             else
-                sInfo += (sInfo.equals("") ? "" : " | ") + file.getFormattedDate(showLongDate);
+                sInfo.append((sInfo.length() == 0 ? "" : " | ") + file.getFormattedDate(showLongDate));
 
-            mInfo.setText(Html.fromHtml(sInfo));
+            mInfo.setText(sInfo);
         }
 
         if (mNameView != null)
@@ -371,10 +375,7 @@ public class ContentAdapter extends BaseAdapter {
 
         if (mIcon != null) {
             // mIcon.invalidate();
-            if (file.isHidden())
-                mIcon.setAlpha(100);
-            else
-                mIcon.setAlpha(255);
+            ViewUtils.setAlpha(file.isHidden() ? 0.4f : 1.0f, row, R.id.content_icon);
             if (!mShowThumbnails || !file.hasThumbnail()) {
                 mIcon.setImageDrawable(ThumbnailCreator.getDefaultDrawable(file, mWidth, mHeight,
                         getContext()));
@@ -400,10 +401,7 @@ public class ContentAdapter extends BaseAdapter {
                                             mIcon.setTag(file);
                                         }
                                     };
-                                    if (!Thread.currentThread().equals(OpenExplorer.UiThread))
-                                        mIcon.post(doit);
-                                    else
-                                        doit.run();
+                                    OpenExplorer.post(doit);
                                 }
                             }
                         });
@@ -412,7 +410,7 @@ public class ContentAdapter extends BaseAdapter {
 
         // row.setTag(file);
         boolean mChecked = (mSelectedSet != null && mSelectedSet.contains(file));
-        boolean mShowCheck = true; // mChecked || (mSelectedSet != null &&
+        boolean mShowCheck = !mPlusParent || position > 0; // mChecked || (mSelectedSet != null &&
         // mSelectedSet.size() > 0);
         boolean mShowClip = mApp.getClipboard().contains(file);
 
