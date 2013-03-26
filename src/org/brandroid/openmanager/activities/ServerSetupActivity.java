@@ -1485,8 +1485,11 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                                 try {
                                     bundle = future.getResult();
                                     getAuthToken(activity, callback, bundle);
-                                } catch (Exception e) {
-                                    callback.onException(e);
+                                } catch (final Exception e) {
+                                    OpenExplorer.post(new Runnable() {
+                                        public void run() {
+                                            callback.onException(e);
+                                        }});
                                 }
                             }
 
