@@ -347,6 +347,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Pref_Zip_Internal = prefs.getBoolean("global", "pref_zip_internal", true);
         Preferences.Pref_ShowUp = prefs.getBoolean("global", "pref_showup", false);
         Preferences.Pref_ShowThumbs = prefs.getBoolean("global", "pref_thumbs", true);
+        Preferences.Pref_CacheThumbs = prefs.getBoolean("global", "pref_thumbs_cache", false);
         Preferences.Pref_Language = prefs.getString("global", "pref_language", "");
         Preferences.Pref_Analytics = prefs.getBoolean("global", "pref_stats", true);
         Preferences.Pref_Text_Max_Size = prefs.getInt("global", "text_max", 500000);
@@ -1683,6 +1684,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void submitStats() {
         if (!Logger.isLoggingEnabled())
             return;
+        if (OpenExplorer.IS_DEBUG_BUILD)
+            return;
         setupLoggingDb();
         if (new Date().getTime() - lastSubmit < 60000)
             return;
@@ -1928,14 +1931,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 getSupportLoaderManager().initLoader(0, null, this);
                 new Thread(new Runnable() {
                     public void run() {
-                        if (mHasExternal)
+                        if (mHasExternal && extDrive != null)
                             for (OpenPath kid : extDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
                                     mVideoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                             "mkv", "mp4"));
-                        if (mHasInternal)
+                        if (mHasInternal && intDrive != null)
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
@@ -2095,6 +2098,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     public void ensureCursorCache() {
         // findCursors();
+        if (!Preferences.Pref_CacheThumbs)
+            return;
         if (!Preferences.Pref_ShowThumbs)
             return;
         if (mRunningCursorEnsure

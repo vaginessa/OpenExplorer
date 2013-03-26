@@ -424,5 +424,7 @@
     <string name="s_server_account_title">Account:</string>
     <string name="s_authenticate_success">Authentication successful</string>
     <string name="s_authenticate_refresh">Refresh Authentication</string>
+    <string name="s_pref_thumbs_cache">Retain Thumbnail Cache</string>
+    <string name="s_pref_thumbs_cache_summary">This will help speed up loading folders containing Pictures and Videos.</string>
 
 </resources>
