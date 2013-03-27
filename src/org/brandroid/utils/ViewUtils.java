@@ -216,6 +216,11 @@ public class ViewUtils {
     public static void setText(final View parent, final CharSequence text, int... textViewID) {
         if (parent == null)
             return;
+        
+        boolean empty = text == null || text.length() == 0;
+        ViewUtils.setViewsVisible(parent, !empty, textViewID);
+        if(empty) return;
+        
         boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
         if (textViewID.length == 0)
             if (parent != null && parent instanceof TextView)
