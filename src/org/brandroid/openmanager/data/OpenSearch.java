@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
@@ -48,6 +49,18 @@ public class OpenSearch extends OpenPath {
         mListener = listener;
         for (Parcelable p : results)
             mResultsArray.add(FileManager.getOpenCache(p.toString()));
+    }
+    
+    public Cancellable list(final OpenContentUpdateListener callback) {
+        return cancelify(thread(new Runnable() {
+            public void run() {
+                try {
+                    
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        }));
     }
 
     public interface SearchProgressUpdateListener {

@@ -279,11 +279,6 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
         return mName != null ? mName : defaultName;
     }
     
-    @Override
-    public String getAbsolutePath() {
-        return getServer().getAbsolutePath();
-    }
-
     public final String getRemotePath() {
         String name = getName();
         if (!name.endsWith("/") && !name.startsWith("/"))

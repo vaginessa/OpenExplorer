@@ -182,7 +182,9 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
 
     @Override
     public String getAbsolutePath() {
-        String ret = super.getAbsolutePath();
+        String ret = "sftp://";
+        if(getServer() != null)
+            ret = getServer().getAbsolutePath();
         if (ret.endsWith("/") && mRemotePath.startsWith("/"))
             ret = ret.substring(0, ret.length() - 1);
         else if(!ret.endsWith("/") && !mRemotePath.startsWith("/"))

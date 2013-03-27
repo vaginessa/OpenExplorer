@@ -10,7 +10,9 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Vector;
 import java.util.WeakHashMap;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -23,6 +25,8 @@ import org.brandroid.utils.Utils;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -59,7 +63,29 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public static final JsonFactory mJsonFactory = new GsonFactory();
     static {
         if (OpenExplorer.IS_DEBUG_BUILD)
-            java.util.logging.Logger.getLogger(mTransport.getClass().getName()).setLevel(Level.ALL);
+        {
+            java.util.logging.Logger l = java.util.logging.Logger.getLogger("com.google.api.client.http");
+            l.setLevel(Level.CONFIG);
+            l.addHandler(new Handler() {
+                
+                @Override
+                public void publish(LogRecord record) {
+                    Logger.LogVerbose(record.getMessage());
+                }
+                
+                @Override
+                public void flush() {
+                    // TODO Auto-generated method stub
+                    
+                }
+                
+                @Override
+                public void close() {
+                    // TODO Auto-generated method stub
+                    
+                }
+            });
+        }
     }
 
     public OpenDrive(String token)
@@ -166,9 +192,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public String getAbsolutePath() {
-        if (mFile != null)
-            return getPathPrefix(true) + mFile.getSelfLink();
-        return getPathPrefix(true) + mFolderId;
+        return getPathPrefix(true) + getId();
     }
 
     @Override
@@ -525,7 +549,13 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     {
         if(mFile != null)
             return mFile.getId();
-        return null;
+        return mFolderId;
+    }
+    
+    public OpenDrive setId(String id)
+    {
+        mFolderId = id;
+        return this;
     }
 
     @Override
@@ -584,12 +614,23 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public Cancellable downloadFromCloud(final OpenFile file, final CloudProgressListener callback) {
         return runCloud(new Runnable() {
             public void run() {
+                InputStream in = null;
                 try {
-                    mGlobalDrive.files().get(getId())
-                            .executeAndDownloadTo(file.getOutputStream());
-                    postCompletion("Download complete", callback);
+                    String url = mFile.getDownloadUrl();
+                    if(url == null || url.length() == 0) return;
+                    HttpResponse resp =
+                            mGlobalDrive.getRequestFactory().buildGetRequest(new GenericUrl(url))
+                                .execute();
+                    in = resp.getContent();
+                    copyStreams(in, file.getOutputStream());
                 } catch (Exception e) {
                     postException(e, callback);
+                } finally {
+                    if(in != null)
+                        try {
+                            in.close();
+                        } catch(Exception e2) {
+                        }
                 }
             }
         }, callback);

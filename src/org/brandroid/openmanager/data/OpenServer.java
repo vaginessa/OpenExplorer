@@ -434,7 +434,10 @@ public class OpenServer extends OpenPath {
             ret += p;
             ret = ret.replace("//", "/");
         }
-        return getType() + "://" + ret;
+        if(getType().equals("dropbox"))
+            return "db://" + ret;
+        else
+            return getType() + "://" + ret;
     }
 
     @Override
