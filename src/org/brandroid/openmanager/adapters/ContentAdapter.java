@@ -627,15 +627,15 @@ public class ContentAdapter extends BaseAdapter {
             if (stats[1] > 0)
                 ret.append(stats[1] + " " + getResources().getString(R.string.s_folders));
             if (stats[2] > 0)
-                ret.append((ret.length() > 0 ? ", " : "") + stats[2] + " " + getResources().getString(R.string.s_files) + ", ");
+                ret.append((ret.length() > 0 ? ", " : "") + stats[2] + " " + getResources().getString(R.string.s_files));
             if (stats[3] > 0)
-                ret.append((ret.length() > 0 ? ", " : "") + stats[3] + " " + getResources().getString(R.string.s_hidden) + ", ");
+                ret.append((ret.length() > 0 ? ", " : "") + stats[3] + " " + getResources().getString(R.string.s_hidden));
             if (bytes > 0)
                 ret.append((ret.length() > 0 ? ", " : "") + OpenPath.formatSize(bytes, 2, true));
             if (mParent instanceof OpenPath.OpenPathSizable
                     && ((OpenPathSizable)mParent).getTotalSpace() > 0)
             {
-                ret.append((ret.length() > 0 ? ", " : "") + " ("
+                ret.append(" ("
                         + OpenPath.formatSize(((OpenPathSizable)mParent).getTotalSpace()) +
                         " " + getResources().getString(R.string.s_total) + ")");
             }
