@@ -1287,6 +1287,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
         OpenServers.setDefaultServers(servers);
         SaveToDefaultServers(servers.getJSONArray(true, context), context);
+        servers.clean();
     }
 
     public static void SaveToDefaultServers(JSONArray json, Context context) {

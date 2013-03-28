@@ -937,6 +937,7 @@ public class EventHandler {
         private PendingIntent makePendingIntent(int reqIntent) {
             Intent intent = new Intent();
             intent.putExtra("TaskId", taskId);
+            intent.putExtra("RequestId", reqIntent);
             return PendingIntent.getActivity(mContext, reqIntent, intent, 0);
         }
 

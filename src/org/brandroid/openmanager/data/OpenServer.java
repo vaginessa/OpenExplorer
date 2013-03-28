@@ -32,6 +32,7 @@ public class OpenServer extends OpenPath {
     private OpenNetworkPath mPath;
     private Integer mServerIndex = null;
     private boolean mPasswordDecrypted = false;
+    private boolean mDirty = false;
 
     public OpenServer() {
         mData = new JSONObject();
@@ -204,6 +205,7 @@ public class OpenServer extends OpenPath {
     public OpenServer setSetting(String key, String value) {
         try {
             mData.put(key, value);
+            mDirty = true;
             if (DEBUG)
                 Logger.LogDebug("OpenServer.setSetting(" + key + ", " + value + ")");
         } catch (JSONException e) {
@@ -229,6 +231,7 @@ public class OpenServer extends OpenPath {
     public OpenServer setSetting(String key, long value) {
         try {
             mData.put(key, value);
+            mDirty = true;
         } catch (JSONException e) {
         }
         return this;
@@ -525,4 +528,10 @@ public class OpenServer extends OpenPath {
     public Boolean mkdir() {
         return false;
     }
+
+    public boolean isDirty() {
+        return mDirty;
+    }
+    
+    public void clean() { mDirty = false; }
 }

@@ -38,6 +38,7 @@ import android.provider.MediaStore;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -1161,6 +1162,23 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             new String(recs[dataPos++].getPayload()));
                 file.writeBytes(recs[dataPos].getPayload());
             }
+        } else if (intent.hasExtra("TaskId"))
+        {
+            int taskId = intent.getIntExtra("TaskId", 0);
+            int reqId = intent.getIntExtra("RequestId", 0);
+            NotificationManager nm = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            if(reqId == REQ_EVENT_CANCEL)
+            {
+                EventHandler.cancelRunningTasks();
+                nm.cancel(taskId);
+            } else if (reqId == REQ_EVENT_VIEW)
+            {
+                refreshOperations();
+                BetterPopupWindow pw = mOpsFragment.getPopup();
+                if(pw != null)
+                    pw.showLikePopDownMenu();
+            }
+            return true;
         }
         return false;
     }

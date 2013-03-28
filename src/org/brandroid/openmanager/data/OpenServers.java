@@ -37,6 +37,12 @@ public class OpenServers implements Iterable<OpenServer> {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+        clean();
+    }
+    
+    public void clean() {
+        for(OpenServer server : mData)
+            server.clean();
     }
 
     public static boolean hasDefaultServers() {
