@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbException;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenPath;
@@ -210,10 +211,13 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
     }
 
     @Override
-    protected void onProgressUpdate(OpenPath... values) {
+    protected void onProgressUpdate(final OpenPath... values) {
         super.onProgressUpdate(values);
-        mListener.setProgressVisibility(true);
-        mListener.addFiles(values);
+        OpenExplorer.post(new Runnable() {
+            public void run() {
+                mListener.setProgressVisibility(true);
+                mListener.addFiles(values);
+            }});
     }
 
     @Override
@@ -245,7 +249,10 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
                 }).start();
             mListener.updateData(result);
         }
-        mListener.setProgressVisibility(false);
+        OpenExplorer.post(new Runnable() {
+            public void run() {
+                mListener.setProgressVisibility(false);
+            }});
         // onCancelled(result);
         // mData2.clear();
     }

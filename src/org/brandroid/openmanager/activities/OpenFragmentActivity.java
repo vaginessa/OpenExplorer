@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbComReadAndX;
@@ -13,6 +15,7 @@ import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
+import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
@@ -314,6 +317,36 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
             @Override
             public void onReply(String line) {
                 sendToLogView("Reply: " + line, Color.BLUE);
+            }
+        });
+
+        OpenDrive.setHandler(new java.util.logging.Handler() {
+            
+            @Override
+            public void publish(LogRecord record) {
+                if(record.getLevel() == Level.SEVERE)
+                {
+                    Logger.LogError(record.getMessage(), record.getThrown());
+                    sendToLogView(record.getMessage(), Color.RED);
+                } else if (record.getLevel() == Level.WARNING)
+                {
+                    Logger.LogWarning(record.getMessage(), record.getThrown());
+                    sendToLogView(record.getMessage(), Color.MAGENTA);
+                } else {
+                    sendToLogView(record.getMessage(), Color.GREEN);
+                }
+            }
+            
+            @Override
+            public void flush() {
+                // TODO Auto-generated method stub
+                
+            }
+            
+            @Override
+            public void close() {
+                // TODO Auto-generated method stub
+                
             }
         });
         JSch.setLogger(new com.jcraft.jsch.Logger() {

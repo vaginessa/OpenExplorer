@@ -461,6 +461,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         handleIntent(intent);
     }
 
+    @SuppressLint("NewApi")
     private void handleIntent(Intent data) {
         if (DEBUG)
             Logger.LogDebug("ServerSetupActivity.handleIntent(" + data + ")");

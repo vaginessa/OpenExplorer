@@ -178,7 +178,8 @@ public class OpenSmartFolder extends OpenPath {
         if (mSearches.size() > 0)
         {
             for(int i = 0; i < mSearches.size(); i++)
-                if(!mSearches.get(i).mParent.isHidden())
+                if(mSearches.get(i).mParent instanceof OpenFile &&
+                        !mSearches.get(i).mParent.isHidden())
                     return mSearches.get(i).mParent;
         }
         return new OpenFile(

@@ -590,4 +590,14 @@ public class Utils {
             lang = lang.substring(0, 2);
         return lang;
     }
+
+    public static String ifNull(String a, String b) {
+        if(isNullOrEmpty(a))
+            return b;
+        return a;
+    }
+    public static <T> T[] ifNull(T[] a, T[] b) {
+        if (a != null) return a;
+        return b;
+    }
 }

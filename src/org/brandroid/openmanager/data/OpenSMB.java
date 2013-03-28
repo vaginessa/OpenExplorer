@@ -166,7 +166,9 @@ public class OpenSMB extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
 
     @Override
     public String getAbsolutePath() {
-        String ret = super.getAbsolutePath();
+        String ret = "smb://";
+        if(getServer() != null)
+            ret = getServer().getAbsolutePath();
         if(!ret.endsWith("/"))
             ret += "/";
         ret += mFile.getURL().getPath();

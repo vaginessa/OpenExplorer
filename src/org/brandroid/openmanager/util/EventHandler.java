@@ -75,6 +75,7 @@ import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.data.OpenNetworkPath.CloudOpsHandler;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
@@ -474,7 +475,7 @@ public class EventHandler {
                 files.remove(file);
             else
                 execute(new BackgroundWork(type,
-                        mContext, newPath, file.getName()), file);
+                        mContext, newPath), file);
         }
     }
 
@@ -673,6 +674,8 @@ public class EventHandler {
         }
 
         public BackgroundWork(EventType type, Context context, OpenPath intoPath, String... params) {
+//            if(OpenExplorer.IS_DEBUG_BUILD)
+//                Logger.LogVerbose("EventHandler.BackgroundWork: " + type.toString() + ", " + intoPath.getAbsolutePath() + ", " + Utils.joinArray(params, "-"));
             mType = type;
             mContext = context;
             mInitParams = params;
@@ -957,7 +960,7 @@ public class EventHandler {
         }
 
         protected Integer doInBackground(OpenPath... params) {
-            Logger.LogDebug("Starting Op!");
+            //Logger.LogDebug("Starting Op!");
             mTotalCount = params.length;
             int ret = 0;
 
@@ -992,6 +995,8 @@ public class EventHandler {
                     for (int i = 0; i < params.length; i++) {
                         mCurrentIndex = i;
                         mCurrentPath = params[i];
+                        if(OpenExplorer.IS_DEBUG_BUILD)
+                            Logger.LogVerbose("EventHandler.BackgroundWork.doInBackground: " + BackgroundWork.this.mType.toString() + ", " + mIntoPath.getAbsolutePath() + ", " + Utils.joinArray(mInitParams, "-") + " --> " + mCurrentPath.getAbsolutePath());
                         if (mCurrentPath.requiresThread())
                             isDownload = true;
                         publishProgress();
@@ -1266,40 +1271,23 @@ public class EventHandler {
             return ret;
         }
 
-        private Boolean checkCloudUpload(OpenPath old, OpenPath intoDir)
+        private Boolean checkCloudUpload(final OpenPath old, final OpenPath intoDir)
         {
             if (old instanceof OpenFile && intoDir instanceof OpenNetworkPath.CloudOpsHandler)
             {
-                final Boolean[] ret = new Boolean[] {
-                        false
-                };
-                final Thread waiter = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            while (!ret[0])
-                                Thread.currentThread().sleep(1000);
-                        } catch (Exception e) {
-                        }
-                    }
-                });
+                final CloudOpsHandler remote = ((OpenNetworkPath.CloudOpsHandler)intoDir);
+                final OpenFile local = (OpenFile)old;
                 final long srcLength = old.length();
-                mCloudCancellor = ((OpenNetworkPath.CloudOpsHandler)intoDir).uploadToCloud(
-                        (OpenFile)old, new OpenNetworkPath.CloudProgressListener() {
+                mCloudCancellor = remote.uploadToCloud(
+                        local, new OpenNetworkPath.CloudProgressListener() {
                             public void onException(Exception e) {
-                                if (waiter.isAlive())
-                                {
-                                    ret[0] = true;
-                                    waiter.interrupt();
-                                }
+                                Logger.LogError("Unable to upload to cloud", e);
+                                mThreadListener.onWorkerThreadFailure(BackgroundWork.this.mType, old, intoDir);
                             }
 
                             @Override
                             public void onCloudComplete(String status) {
-                                if (waiter.isAlive())
-                                {
-                                    ret[0] = true;
-                                    waiter.interrupt();
-                                }
+                                Logger.LogDebug("Cloud Upload finished");
                             }
 
                             @Override
@@ -1307,54 +1295,31 @@ public class EventHandler {
                                 publishMyProgress((int)bytes, (int)srcLength);
                             }
                         });
-
-                waiter.run();
-
-                if (!ret[0])
-                {
-                    mCloudCancellor.cancel();
-                }
 
                 return true;
             }
             return false;
         }
 
-        private Boolean checkCloudDownload(OpenPath from, OpenPath into)
+        private Boolean checkCloudDownload(final OpenPath from, OpenPath into)
         {
-
             if (into instanceof OpenFile && from instanceof OpenNetworkPath.CloudOpsHandler)
             {
-                final Boolean[] ret = new Boolean[] {
-                        false
-                };
-                final Thread waiter = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            while (!ret[0])
-                                Thread.currentThread().sleep(1000);
-                        } catch (Exception e) {
-                        }
-                    }
-                });
+                if(into.isDirectory())
+                    into = into.getChild(from.getName());
+                final CloudOpsHandler remote = ((OpenNetworkPath.CloudOpsHandler)from);
+                final OpenFile local = (OpenFile)into;
                 final long srcLength = from.length();
-                mCloudCancellor = ((OpenNetworkPath.CloudOpsHandler)into).uploadToCloud(
-                        (OpenFile)from, new OpenNetworkPath.CloudProgressListener() {
+                mCloudCancellor = remote.downloadFromCloud(
+                        local, new OpenNetworkPath.CloudProgressListener() {
                             public void onException(Exception e) {
-                                if (waiter.isAlive())
-                                {
-                                    ret[0] = true;
-                                    waiter.interrupt();
-                                }
+                                Logger.LogError("Unable to download from cloud", e);
+                                mThreadListener.onWorkerThreadFailure(BackgroundWork.this.mType, from, local);
                             }
 
                             @Override
                             public void onCloudComplete(String status) {
-                                if (waiter.isAlive())
-                                {
-                                    ret[0] = true;
-                                    waiter.interrupt();
-                                }
+                                Logger.LogDebug("Cloud download finished");
                             }
 
                             @Override
@@ -1363,28 +1328,19 @@ public class EventHandler {
                             }
                         });
 
-                waiter.run();
-
-                if (!ret[0])
-                {
-                    mCloudCancellor.cancel();
-                }
-
-                return ret[0];
+                return true;
             }
-            return null;
+            return false;
         }
 
         private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total)
                 throws IOException {
             if (old.equals(intoDir))
                 return false;
-            Boolean check = checkCloudUpload(old, intoDir);
-            if (check != null)
-                return check;
-            check = checkCloudDownload(old, intoDir);
-            if (check != null)
-                return check;
+            if(checkCloudDownload(old, intoDir))
+                return true;
+            if(checkCloudUpload(old, intoDir))
+                return true;
             if (old instanceof OpenFile && !old.isDirectory() && intoDir instanceof OpenFile)
                 if (copyFileToDirectory((OpenFile)old, (OpenFile)intoDir, total))
                     return true;
@@ -1401,7 +1357,8 @@ public class EventHandler {
                */
             if (!intoDir.canWrite())
                 return false;
-            Logger.LogVerbose("EventHandler.copyToDirectory : Using Stream copy");
+            if(OpenExplorer.IS_DEBUG_BUILD)
+                Logger.LogVerbose("EventHandler.copyToDirectory : Using Stream copy");
             if (intoDir instanceof OpenCursor) {
                 try {
                     if (old.isImageFile() && intoDir.getName().equals("Photos")) {

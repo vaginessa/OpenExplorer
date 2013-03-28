@@ -30,6 +30,7 @@ public class Preferences {
     public static boolean Pref_CacheThumbs = false;
     public static boolean Warn_TextEditor = false;
     public static boolean Warn_Networking = false;
+    public static boolean Pref_RealSizes = true;
     public static int Pref_Text_Max_Size = 500000;
     public static boolean Pref_Analytics = true;
     public static String Pref_Language = ""; // Default

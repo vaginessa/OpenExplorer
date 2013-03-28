@@ -23,6 +23,7 @@ import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 
 import com.android.gallery3d.data.MediaObject;
@@ -1173,7 +1174,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
         try {
             if (isDirectory())
-                deets += list().length + " %s";
+                deets += getListLength() + " %s";
             else if (isFile())
                 deets += formatSize(length());
         } catch (Exception e) {
@@ -1231,12 +1232,12 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
         return false;
     }
 
-    public static final int kb = 1024;
-    public static final int mb = kb * 1024;
-    public static final int gb = mb * 1024;
-
     public static String formatSize(long size, int decimalPoints, boolean includeUnits) {
         
+        int kb = Preferences.Pref_RealSizes ? 1024 : 1000;
+        int mb = kb * kb;
+        int gb = mb * kb;
+
         if(size < 0) return "";
 
         int factor = (10 ^ decimalPoints);
@@ -1260,6 +1261,9 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
     public static String getSizeSuffix(long size)
     {
+        int kb = Preferences.Pref_RealSizes ? 1024 : 1000;
+        int mb = kb * kb;
+        int gb = mb * kb;
 
         if (size < kb)
             return " B";
@@ -1323,6 +1327,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
                     out.close();
             } catch (Exception e) {
             }
+    }
+
+    public String getThumbnailCacheFilename(int w) {
+        return ThumbnailCreator.getCacheFilename(getAbsolutePath(), w, w);
     }
 
 }

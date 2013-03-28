@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:foreground="?attr/listColumnBackground"
     android:orientation="vertical" >
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical" >
@@ -22,7 +21,11 @@
         <GridView
             android:id="@+id/content_grid"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/content_status_bar"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
             android:layout_weight="1"
             android:columnWidth="@dimen/grid_width"
             android:drawSelectorOnTop="false"
@@ -34,29 +37,41 @@
             android:stretchMode="columnWidth" >
         </GridView>
 
+        <Button
+            android:id="@+id/content_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:text="@string/s_cancel"
+            android:textAppearance="@style/Text.Small.Dialog" />
+
         <LinearLayout
-            android:id="@+id/content_status_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:orientation="horizontal" >
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignWithParentIfMissing="true"
+            android:layout_toRightOf="@+id/content_cancel"
+            android:id="@+id/content_status_bar"
+            android:orientation="vertical" >
 
-            <Button
-                android:id="@+id/content_cancel"
-                android:text="@string/s_cancel"
-                android:textAppearance="@style/Text.Small.Dialog"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?attr/drawerBackgroundColor" />
 
             <TextView
                 android:id="@+id/content_status"
                 style="@style/Text.Small"
-                android:text="@string/s_status_loading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|left"
-                android:layout_weight="1"
-                android:layout_width="0dp" />
+                android:background="?attr/dialogBackgroundColorPrimary"
+                android:padding="4dp"
+                android:text="@string/s_status_loading"
+                android:textColor="?attr/dialogTextColorPrimary" />
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
 
 </FrameLayout>

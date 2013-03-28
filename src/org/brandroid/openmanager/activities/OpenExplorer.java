@@ -131,6 +131,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.brandroid.openmanager.R;
@@ -145,6 +147,7 @@ import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListene
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -1931,14 +1934,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 getSupportLoaderManager().initLoader(0, null, this);
                 new Thread(new Runnable() {
                     public void run() {
-                        if (mHasExternal && extDrive != null)
+                        if (mHasExternal && extDrive != null && intDrive.list() != null)
                             for (OpenPath kid : extDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
                                     mVideoSearchParent.addSearch(new SmartSearch(kid,
                                             SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                             "mkv", "mp4"));
-                        if (mHasInternal && intDrive != null)
+                        if (mHasInternal && intDrive != null && intDrive.list() != null)
                             for (OpenPath kid : intDrive.list())
                                 if (kid.getName().toLowerCase().indexOf("movies") > -1
                                         || kid.getName().toLowerCase().indexOf("video") > -1)
@@ -1984,8 +1987,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 new Thread(new Runnable() {
                     public void run() {
                         try {
-                            if (mHasExternal)
-                                for (OpenPath kid : extDrive.list())
+                            if (mHasExternal && extDrive != null && extDrive.list() != null)
+                                for (OpenPath kid : Utils.ifNull(extDrive.list(), new OpenPath[0]))
                                     if (kid.getName().toLowerCase().indexOf("photo") > -1
                                             || kid.getName().toLowerCase().indexOf("picture") > -1
                                             || kid.getName().toLowerCase().indexOf("dcim") > -1
@@ -2974,13 +2977,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (cf != null)
                 cf.onViewChanged(newView);
             invalidateOptionsMenu();
-        } else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && CAN_DO_CAROUSEL) { // if
-                                                                                              // we
-                                                                                              // need
-                                                                                              // to
-                                                                                              // transition
-                                                                                              // from
-                                                                                              // carousel
+        } else if (oldView == VIEW_CAROUSEL && newView != VIEW_CAROUSEL && CAN_DO_CAROUSEL) {
             if (IS_DEBUG_BUILD)
                 Logger.LogDebug("Switching from carousel!");
             if (mViewPagerEnabled) {
@@ -2995,7 +2992,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 R.id.content_frag,
                                 ContentFragment.getInstance(getCurrentPath(), mViewMode,
                                         getSupportFragmentManager()))
-                        .setBreadCrumbTitle(getCurrentPath().getPath())
+                        .setBreadCrumbTitle(getCurrentPath().getAbsolutePath())
                         // .addToBackStack(null)
                         .commit();
                 updateTitle(getCurrentPath().getPath());
@@ -3140,7 +3137,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (entry != null && entry.getBreadCrumbTitle() != null)
             try {
                 last = FileManager.getOpenCache(entry.getBreadCrumbTitle().toString(), false,
-                        (SortType)null);
+                        OpenPath.Sorting);
             } catch (IOException e) {
             }
         if (last == null)
@@ -3285,8 +3282,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             + (last.equalsIgnoreCase(path.getPath()) ? "No" : "Yes"));
             } else if (IS_DEBUG_BUILD)
                 Logger.LogDebug("First changePath to " + path.getPath());
-            if (mStateReady && (last == null || !last.equalsIgnoreCase(path.getAbsolutePath()))) {
-                fragmentManager.beginTransaction().setBreadCrumbTitle(path.getAbsolutePath())
+            String ap = path.getAbsolutePath();
+            if (mStateReady && (last == null || !last.equalsIgnoreCase(ap))) {
+                fragmentManager.beginTransaction().setBreadCrumbTitle(ap)
                         .addToBackStack("path").commit();
             }
         }
@@ -3745,8 +3743,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     @Override
     public void onWorkerThreadFailure(EventType type, OpenPath... files) {
-        for (OpenPath path : files)
-            sendToLogView(type.name() + " error on " + path, Color.RED);
+        String[] paths = new String[files.length];
+        for(int i = 0; i < paths.length; i++)
+            paths[i] = files[i].getAbsolutePath();
+        sendToLogView(type.name() + " error on " + Utils.joinArray(paths, " :: "), Color.RED);
     }
 
     @Override
