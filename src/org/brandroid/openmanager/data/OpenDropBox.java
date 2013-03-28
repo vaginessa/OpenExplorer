@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
@@ -72,6 +74,11 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
     private Account mAccount;
 
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    
+    static {
+        Logger.setHandler("org.apache.http.headers");
+        //Logger.setHandler(HttpRequestBase.class.getName());
+    }
 
     public OpenDropBox(DropboxAPI<AndroidAuthSession> api)
     {

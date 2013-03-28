@@ -8,6 +8,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import javax.annotation.RegEx;
+
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbComReadAndX;
 import jcifs.smb.SmbFile;
@@ -320,20 +322,24 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
             }
         });
 
-        OpenDrive.setHandler(new java.util.logging.Handler() {
+        Logger.setDefaultHandler(new java.util.logging.Handler() {
             
             @Override
             public void publish(LogRecord record) {
+                String msg = record.getMessage();
+                if(msg.startsWith("----") && msg.indexOf("\n") > -1)
+                    msg = msg.substring(msg.indexOf("\n") + 1);
+                if(msg.indexOf("\n") > -1)
+                    msg = msg.substring(0, msg.indexOf("\n") - 1) + "...(" + msg.split("\n").length + " lines)";
+                else if(msg.length() > 150)
+                    msg = msg.substring(0, 150) + "...(" + msg.length() + " bytes)";
+                msg = record.getLoggerName() + " - " + msg;
                 if(record.getLevel() == Level.SEVERE)
                 {
                     Logger.LogError(record.getMessage(), record.getThrown());
-                    sendToLogView(record.getMessage(), Color.RED);
-                } else if (record.getLevel() == Level.WARNING)
-                {
-                    Logger.LogWarning(record.getMessage(), record.getThrown());
-                    sendToLogView(record.getMessage(), Color.MAGENTA);
+                    sendToLogView(msg, Color.RED);
                 } else {
-                    sendToLogView(record.getMessage(), Color.GREEN);
+                    sendToLogView(msg, Color.GREEN);
                 }
             }
             
@@ -349,6 +355,7 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
                 
             }
         });
+        Logger.setHandler();
         JSch.setLogger(new com.jcraft.jsch.Logger() {
             @Override
             public void log(int level, String message) {
