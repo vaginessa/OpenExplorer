@@ -1329,4 +1329,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
             }
     }
 
+    public String getThumbnailCacheFilename(int w) {
+        return ThumbnailCreator.getCacheFilename(getAbsolutePath(), w, w);
+    }
+
 }

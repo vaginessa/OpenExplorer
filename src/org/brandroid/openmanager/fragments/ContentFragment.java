@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
@@ -44,6 +45,8 @@ import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.data.OpenNetworkPath.CloudOpsHandler;
+import org.brandroid.openmanager.data.OpenNetworkPath.CloudProgressListener;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
@@ -155,6 +158,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     protected OpenPath mPath = null;
     protected int mMenuContextItemIndex = -1;
     private boolean mRefreshReady = true;
+    private static String mLoadingMessage = null;
     public static final SortType.Type[] sortTypes = new SortType.Type[] {
             SortType.Type.ALPHA, SortType.Type.ALPHA_DESC, SortType.Type.SIZE,
             SortType.Type.SIZE_DESC, SortType.Type.DATE, SortType.Type.DATE_DESC,
@@ -272,7 +276,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 sort.setFoldersFirst(getViewSetting(getPath(), "ff", true));
             else
                 sort.setFoldersFirst(getSetting(null, "pref_sorting_folders", true));
-            mContentAdapter.setSorting(sort);
+            try {
+                mContentAdapter.setSorting(sort);
+            } catch(Exception e) {
+                Logger.LogWarning("Unable to set sorting!", e);
+            }
         }
         return mContentAdapter;
     }
@@ -362,6 +370,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             mViewMode = mBundle.getInt("view");
         else
             mViewMode = getSetting(mPath, "view", getGlobalViewMode());
+        
+        if(mLoadingMessage == null)
+            mLoadingMessage = getString(R.string.s_status_loading);
 
         // if (mPath == null)
         // Logger.LogDebug("Creating empty ContentFragment", new Exception(
@@ -1174,6 +1185,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     }
 
     public void downloadFile(OpenPath... paths) {
+        if(DEBUG)
+            Logger.LogDebug("ContentFragment.downloadFile: " + Utils.joinArray(paths, ", "));
         OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
         if (dl == null)
             dl = OpenFile.getExternalMemoryDrive(true);
@@ -1181,13 +1194,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             getExplorer().showToast(R.string.s_error_ftp);
             return;
         }
-        List<OpenPath> files = new ArrayList<OpenPath>();
-        for (OpenPath path : paths)
-            files.add(path);
-        getEventHandler().copyFile(files, dl, getActivity());
+        for(OpenPath p : paths)
+        {
+            getEventHandler().copyFile(p, dl, getContext());
+        }
         refreshOperations();
     }
-
+    
     public boolean executeMenu(final int id, final ActionMode mode, final OpenPath file) {
         Logger.LogInfo("ContentFragment.executeMenu(0x" + Integer.toHexString(id) + ") on " + file);
         final String path = file != null ? file.getPath() : null;
@@ -1196,7 +1209,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             parent = OpenFile.getExternalMemoryDrive(true);
         final OpenPath folder = parent;
         String name = file != null ? file.getName() : null;
-        CopyOnWriteArrayList<OpenPath> selection = mContentAdapter.getSelectedSet();
+        List<OpenPath> selection = mContentAdapter.getSelectedSet();
 
         final boolean fromPasteMenu = file.equals(mPath);
 
@@ -1213,12 +1226,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
             case R.id.menu_context_download:
                 if (selection != null && selection.size() > 0)
+                {
                     downloadFile(selection.toArray(new OpenPath[selection.size()]));
-                else
-                    downloadFile(file);
-                finishMode(mode);
-                return true;
-
+                    finishMode(mode);
+                    return true;
+                }
+                break;
             case R.id.menu_context_selectall:
                 if (getContentAdapter() == null)
                     return false;
@@ -2007,7 +2020,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         // View.GONE);
         ViewUtils.setViewsVisible(getView(), visible, R.id.content_cancel);
         if(visible)
-            setStatus(getString(R.string.s_status_loading));
+            setStatus(mLoadingMessage);
         else {
             updateStatus();
             ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
@@ -2044,13 +2057,12 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     public void updateStatus()
     {
-        mStatusBar.setVisibility(View.GONE);
+        ViewUtils.setViewsVisible(mStatusBar, false);
         new Thread(new Runnable() {
             public void run() {
                 final CharSequence cs = getContentAdapter().getStatus();
                 getHandler().post(new Runnable() {
                     public void run() {
-                        mStatusBar.setVisibility(View.VISIBLE);
                         setStatus(cs);
                     }
                 });
@@ -2059,10 +2071,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     public void setStatus(CharSequence status)
     {
-        boolean empty = status == null || status.length() == 0 || status.equals("Loading…");
-        mStatusBar.setVisibility(empty ? View.GONE : View.VISIBLE);
+        boolean empty = status == null || status.length() == 0 || status.toString().startsWith("Loading");
+        ViewUtils.setViewsVisible(mStatusBar, !empty);
         if(!empty)
-            mStatus.setText(status);
+            ViewUtils.setText(mStatus, status);
     }
 
     @Override
@@ -2070,9 +2082,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (mPath == null)
             return "???";
         String ret = mPath.getName();
-        if (ret == null || ret.equals(""))
+        if ((ret == null || ret.equals("")) && mPath != null && mPath.getUri() != null)
             ret = mPath.getUri().getLastPathSegment();
-        if (ret == null || ret.equals(""))
+        if ((ret == null || ret.equals("")) && mPath != null)
             ret = mPath.toString();
         if ((mPath instanceof OpenFile || mPath instanceof OpenNetworkPath)
                 && mPath.isDirectory() && !ret.endsWith("/"))
@@ -2246,8 +2258,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             int num = getSelectedCount();
             // Set title -- "# selected"
-            mode.setTitle(getExplorer().getResources().getQuantityString(R.plurals.num_selected,
+            if(num > 1)
+                mode.setTitle(getExplorer().getResources().getQuantityString(R.plurals.num_selected,
                     num, num));
+            else
+                mode.setTitle(mContentAdapter.getSelectedSet().get(0).getName());
 
             if (mShareActionProvider != null) {
                 Intent shareIntent = null;
@@ -2308,6 +2323,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     R.id.menu_context_cut);
             MenuUtils.setMenuEnabled(menu, readable, R.id.menu_context_copy, R.id.menu_context_cut,
                     R.id.menu_context_download, R.id.menu_context_rename, R.id.menu_context_zip);
+            
+            if(last instanceof CloudOpsHandler)
+                MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_ALWAYS, R.id.menu_context_download);
 
             if (num == 1) {
                 MenuUtils.setMenuVisible(menu, true, R.id.menu_context_bookmark);

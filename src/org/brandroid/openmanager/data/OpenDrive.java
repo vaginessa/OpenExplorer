@@ -19,6 +19,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
@@ -42,6 +43,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 
@@ -61,31 +63,12 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     private static final WeakHashMap<String, List<OpenDrive>> mGlobalChildren = new WeakHashMap<String, List<OpenDrive>>();
     public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
     public static final JsonFactory mJsonFactory = new GsonFactory();
-    static {
-        if (OpenExplorer.IS_DEBUG_BUILD)
-        {
-            java.util.logging.Logger l = java.util.logging.Logger.getLogger("com.google.api.client.http");
-            l.setLevel(Level.CONFIG);
-            l.addHandler(new Handler() {
-                
-                @Override
-                public void publish(LogRecord record) {
-                    Logger.LogVerbose(record.getMessage());
-                }
-                
-                @Override
-                public void flush() {
-                    // TODO Auto-generated method stub
-                    
-                }
-                
-                @Override
-                public void close() {
-                    // TODO Auto-generated method stub
-                    
-                }
-            });
-        }
+    public static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    
+    public static void setHandler(Handler handler) { 
+        java.util.logging.Logger l = java.util.logging.Logger.getLogger("com.google.api.client.http");
+        l.setLevel(Level.INFO);
+        l.addHandler(handler);
     }
 
     public OpenDrive(String token)
@@ -149,7 +132,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public boolean syncDownload(OpenFile f, NetworkListener l) {
         try {
             OutputStream os = new BufferedOutputStream(f.getOutputStream());
-            mGlobalDrive.files().get(getFile().getId()).executeAndDownloadTo(os);
+            InputStream in = new BufferedInputStream(getInputStream());
+            copyStreams(in, os);
             return true;
         } catch (Exception e) {
             l.OnNetworkFailure(this, f, e);
@@ -273,6 +257,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public Boolean canRead() {
+        if(mFile != null && Utils.isNullOrEmpty(mFile.getDownloadUrl()))
+            return false;
         return true;
     }
 
@@ -341,7 +327,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         OutputStream out = null;
         try {
             out = new BufferedOutputStream(f.getOutputStream());
-            mGlobalDrive.files().get(mFile.getId()).executeAndDownloadTo(out);
+            InputStream in = getInputStream();
+            copyStreams(in, out);
             return true;
         } catch (Exception e) {
             org.brandroid.utils.Logger.LogError("Unable to download Drive file!", e);
@@ -447,7 +434,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                                 .list()
                                 .setQ("'" + mFolderId + "' in parents")
                                 .setFields(
-                                        "items(editable,fileSize,iconLink,id,kind,labels/hidden,mimeType,modifiedDate,parents(id,isRoot),thumbnail/image,title),nextPageToken")
+                                        "items(downloadUrl,editable,fileSize,iconLink,thumbnailLink,id,kind,labels/hidden,mimeType,modifiedDate,parents(id,isRoot),thumbnail/image,title),nextPageToken")
                                 .setMaxResults(100);
                         if (!pg.equals(""))
                             lst.setPageToken(pg);
@@ -512,12 +499,20 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return new BufferedInputStream(mGlobalDrive.files().get(getFile().getId())
-                .executeAsInputStream());
+        if(DEBUG)
+            Logger.LogVerbose("OpenDrive.getInputStream");
+        InputStream in = null;
+        String url = mFile.getDownloadUrl();
+        if(url == null || url.length() == 0) return in;
+        return new BufferedInputStream(mGlobalDrive.getRequestFactory()
+                    .buildGetRequest(new GenericUrl(url))
+                .execute().getContent());
     }
 
     @Override
     public boolean copyFrom(final OpenFile f, AsyncTask task) {
+        if(DEBUG)
+            Logger.LogVerbose("OpenDrive.copyFrom");
         try {
             final InputStream in = new BufferedInputStream(f.getInputStream());
             mGlobalDrive.files().insert(getFile(), new AbstractInputStreamContent(getExtension()) {
@@ -542,6 +537,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public OutputStream getOutputStream() throws IOException {
+        if(DEBUG)
+            Logger.LogVerbose("OpenDrive.getOutputStream");
         return null;
     }
     
@@ -557,17 +554,41 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         mFolderId = id;
         return this;
     }
-
+    
     @Override
-    public boolean getThumbnail(final OpenApp app, int w, final ThumbnailReturnCallback callback) {
-        if(mFile != null && mFile.getThumbnail() != null && mFile.getThumbnail().getImage() != null)
+    public boolean hasThumbnail() {
+        if(mFile != null && (!Utils.isNullOrEmpty(mFile.getThumbnailLink()) || !Utils.isNullOrEmpty(mFile.getIconLink())))
+            return true;
+        else return false;
+    }
+    
+    @Override
+    public String getThumbnailCacheFilename(int w) {
+        if(hasThumbnail())
+            return ThumbnailCreator.getCacheFilename(getThumbnailUrl(), w, w);
+        else return super.getThumbnailCacheFilename(w);
+    }
+    
+    public String getThumbnailUrl() {
+        if(!hasThumbnail()) return null;
+        String url = mFile.getThumbnailLink();
+        if(Utils.isNullOrEmpty(url))
+            url = mFile.getIconLink();
+        return url;
+    }
+    
+    @Override
+    public boolean getThumbnail(final OpenApp app, final int w, final ThumbnailReturnCallback callback) {
+        if(DEBUG)
+            Logger.LogVerbose("OpenDrive.getThumbnail");
+        if(hasThumbnail())
         thread(new Runnable() {
             public void run() {
                 try {
-                    InputStream in = new BufferedInputStream(mGlobalDrive.files()
-                            .get(mFile.getThumbnail().getImage()).executeMediaAsInputStream());
-                    BitmapDrawable bd = new BitmapDrawable(app.getResources(), in);
-                    callback.onThumbReturned(bd);
+                    InputStream in = new BufferedInputStream(mGlobalDrive.getRequestFactory()
+                            .buildGetRequest(new GenericUrl(getThumbnailUrl()))
+                            .execute().getContent());
+                    callback.onThumbReturned(new BitmapDrawable(app.getResources(), in));
                 } catch (Exception e) {
                     postException(e, callback);
                 }
@@ -575,16 +596,18 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         });
         else
             callback.onThumbReturned(IntentManager.getDefaultIcon(this, app));
-        return false;
+        return true;
     }
 
     @Override
     public Cancellable uploadToCloud(final OpenFile file, final CloudProgressListener callback) {
+        if(DEBUG)
+            Logger.LogVerbose("OpenDrive.uploadToCloud");
         return runCloud(new Runnable() {
             public void run() {
                 try {
                     final AbstractInputStreamContent input = new AbstractInputStreamContent(
-                            "Drive#File") {
+                            "*/*") {
 
                         @Override
                         public boolean retrySupported() {
@@ -612,25 +635,27 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public Cancellable downloadFromCloud(final OpenFile file, final CloudProgressListener callback) {
+        if(DEBUG)
+            Logger.LogVerbose("OpenDrive.downloadFromCloud");
         return runCloud(new Runnable() {
             public void run() {
-                InputStream in = null;
                 try {
                     String url = mFile.getDownloadUrl();
-                    if(url == null || url.length() == 0) return;
-                    HttpResponse resp =
-                            mGlobalDrive.getRequestFactory().buildGetRequest(new GenericUrl(url))
-                                .execute();
-                    in = resp.getContent();
-                    copyStreams(in, file.getOutputStream());
+                    if(url == null || url.length() == 0) {
+                        callback.onException(new Exception("Bad Download URL"));
+                        return;
+                    }
+                    copyStreams(getInputStream(), file.getOutputStream(), true, true, new ProgressUpdateListener() {
+                        public boolean isCancelled() {
+                            return false;
+                        }
+                        public void onProgressUpdate(Integer... progress) {
+                            if(progress.length > 0)
+                                callback.onProgress((long)progress[0]);
+                        }
+                    });
                 } catch (Exception e) {
                     postException(e, callback);
-                } finally {
-                    if(in != null)
-                        try {
-                            in.close();
-                        } catch(Exception e2) {
-                        }
                 }
             }
         }, callback);

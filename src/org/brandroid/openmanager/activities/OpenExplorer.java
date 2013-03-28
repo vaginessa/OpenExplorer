@@ -131,6 +131,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.brandroid.openmanager.R;
@@ -145,6 +147,7 @@ import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListene
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -3740,8 +3743,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     @Override
     public void onWorkerThreadFailure(EventType type, OpenPath... files) {
-        for (OpenPath path : files)
-            sendToLogView(type.name() + " error on " + path, Color.RED);
+        String[] paths = new String[files.length];
+        for(int i = 0; i < paths.length; i++)
+            paths[i] = files[i].getAbsolutePath();
+        sendToLogView(type.name() + " error on " + Utils.joinArray(paths, " :: "), Color.RED);
     }
 
     @Override

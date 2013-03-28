@@ -44,6 +44,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -326,7 +328,7 @@ public class ContentAdapter extends BaseAdapter {
 
         final String mName = file.getName();
 
-        int mWidth = getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.IMAGE_SIZE_GRID
+        final int mWidth = getViewMode() == OpenExplorer.VIEW_GRID ? OpenExplorer.IMAGE_SIZE_GRID
                 : OpenExplorer.IMAGE_SIZE_LIST;
         int mHeight = mWidth;
 
@@ -401,8 +403,13 @@ public class ContentAdapter extends BaseAdapter {
                                     Runnable doit = new Runnable() {
                                         @Override
                                         public void run() {
-                                            BitmapDrawable d = new BitmapDrawable(getResources(), b);
-                                            d.setGravity(Gravity.CENTER);
+                                            Drawable d = new BitmapDrawable(getResources(), b);
+                                            ((BitmapDrawable)d).setGravity(Gravity.CENTER);
+                                            if(file instanceof OpenPath.ThumbnailOverlayInterface)
+                                            {
+                                                Drawable overlay = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(getContext(), mWidth > 36);
+                                                d = new LayerDrawable(new Drawable[]{d, overlay});
+                                            }
                                             ImageUtils.fadeToDrawable(mIcon, d);
                                             mIcon.setTag(file);
                                         }

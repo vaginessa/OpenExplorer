@@ -161,7 +161,7 @@ public class ThumbnailCreator {
             if (showThumbPreviews) {
                 Bitmap thumb = // !mCacheMap.containsKey(file.getPath()) ? null
                 // :
-                getThumbnailCache(app, file.getPath(), mWidth, mHeight);
+                getThumbnailCache(app, file.getThumbnailCacheFilename(mWidth), mWidth, mHeight);
 
                 if (thumb == null) {
                     mImage.setImageResource(getDefaultResourceId(file, mWidth, mHeight));
@@ -189,15 +189,16 @@ public class ThumbnailCreator {
                                             public void onThumbReturned(Drawable d) {
                                                 try {
                                                     if(!(d instanceof BitmapDrawable)) return;
-                                                    Bitmap bmp = ((BitmapDrawable)d).getBitmap();
-                                                    String mCacheFilename = getCacheFilename(
-                                                            file.getAbsolutePath(), mWidth,
-                                                            mHeight);
+                                                    final Bitmap bmp = ((BitmapDrawable)d).getBitmap();
+                                                    String mCacheFilename = file.getThumbnailCacheFilename(mWidth);
                                                     saveThumbnail(app.getContext(),
                                                             mCacheFilename, bmp);
                                                     app.getMemoryCache().put(mCacheFilename,
                                                             bmp);
-                                                    mListener.updateImage(bmp);
+                                                    OpenExplorer.post(new Runnable() {
+                                                        public void run() {
+                                                            mListener.updateImage(bmp);
+                                                        }});
                                                 } catch (OutOfMemoryError e) {
                                                     showThumbPreviews = false;
                                                     Logger.LogWarning("No more memory for thumbs!");
@@ -289,7 +290,7 @@ public class ThumbnailCreator {
         if (file.hasThumbnail()) {
             if (showThumbPreviews && !file.requiresThread()) {
 
-                Bitmap thumb = ThumbnailCreator.getThumbnailCache(app, file.getPath(), mWidth,
+                Bitmap thumb = ThumbnailCreator.getThumbnailCache(app, file.getThumbnailCacheFilename(mWidth), mWidth,
                         mHeight);
 
                 if (thumb == null) {
@@ -522,22 +523,21 @@ public class ThumbnailCreator {
     }
 
     public static boolean hasThumbnailCached(OpenApp app, OpenPath file, int w, int h) {
-        return app.getMemoryCache().containsKey(getCacheFilename(file.getPath(), w, h));
+        return app.getMemoryCache().containsKey(file.getThumbnailCacheFilename(w));
     }
 
     public static Bitmap getThumbnailCache(OpenApp app, OpenPath file, int w, int h) {
-        return getThumbnailCache(app, getCacheFilename(file.getPath(), w, h), w, h);
+        return getThumbnailCache(app, file.getThumbnailCacheFilename(w), w, h);
     }
 
-    public static Bitmap getThumbnailCache(OpenApp app, String name, int w, int h) {
-        String cacheName = getCacheFilename(name, w, h);
+    public static Bitmap getThumbnailCache(OpenApp app, String cacheName, int w, int h) {
         if (!app.getMemoryCache().containsKey(cacheName)) {
             File f = app.getContext().getFileStreamPath(cacheName);
             if (f.exists()) {
                 if (f.length() > 0)
                     app.getMemoryCache().put(cacheName, BitmapFactory.decodeFile(f.getPath()));
                 else
-                    fails.put(name, 1);
+                    fails.put(cacheName, 1);
             }
         }
         if (app.getMemoryCache().containsKey(cacheName))
@@ -550,7 +550,7 @@ public class ThumbnailCreator {
         app.getMemoryCache().put(cacheName, value);
     }
 
-    private static String getCacheFilename(String path, int w, int h) {
+    public static String getCacheFilename(String path, int w, int h) {
         return w + "_" + Utils.md5(path).replaceAll("[^A-Za-z0-9]", "-");
         // path.replaceAll("[^A-Za-z0-9]", "-") + ".jpg";
     }
@@ -569,12 +569,14 @@ public class ThumbnailCreator {
 
         // readCache = writeCache = true;
 
+        final String mCacheFilename = file.getThumbnailCacheFilename(mWidth);
+
         Boolean useGeneric = false;
         String mParent = file.getParent() != null ? file.getParent().getName() : null;
         if (fails == null)
             fails = new Hashtable<String, Integer>();
         if (mParent != null
-                && (fails.containsKey(file.getPath()) || (fails.containsKey(mParent) && fails
+                && (fails.containsKey(mCacheFilename) || (fails.containsKey(mParent) && fails
                         .get(mParent) > 10)))
             useGeneric = true;
 
@@ -591,13 +593,9 @@ public class ThumbnailCreator {
                 return new SoftReference<Bitmap>(bmp);
         }
 
-        String path = file.getPath();
-
-        if ((file.isImageFile() || file.isVideoFile() || file.isAPKFile())
-                && (bmp = getThumbnailCache(app, path, mWidth, mHeight)) != null)
+        if (file.hasThumbnail()
+                && (bmp = getThumbnailCache(app, mCacheFilename, mWidth, mHeight)) != null)
             return new SoftReference<Bitmap>(bmp);
-
-        final String mCacheFilename = getCacheFilename(path, mWidth, mHeight);
 
         // we already loaded this thumbnail, just return it.
         if (app.getMemoryCache().get(mCacheFilename) != null)
