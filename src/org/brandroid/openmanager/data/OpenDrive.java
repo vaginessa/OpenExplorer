@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
 import org.brandroid.openmanager.R;
@@ -64,12 +66,6 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
     public static final JsonFactory mJsonFactory = new GsonFactory();
     public static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
-    
-    public static void setHandler(Handler handler) { 
-        java.util.logging.Logger l = java.util.logging.Logger.getLogger("com.google.api.client.http");
-        l.setLevel(Level.INFO);
-        l.addHandler(handler);
-    }
 
     public OpenDrive(String token)
     {
@@ -82,6 +78,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         setCredential(mCredential);
         mParent = null;
         mFile = null;
+        Logger.setHandler("com.google.api.client.http");
     }
 
     public OpenDrive(OpenDrive parent, File file)
@@ -557,7 +554,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     
     @Override
     public boolean hasThumbnail() {
-        if(mFile != null && (!Utils.isNullOrEmpty(mFile.getThumbnailLink()) || !Utils.isNullOrEmpty(mFile.getIconLink())))
+        if(mFile != null && !Utils.isNullOrEmpty(mFile.getThumbnailLink()))
             return true;
         else return false;
     }

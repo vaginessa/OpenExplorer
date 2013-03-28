@@ -13,11 +13,13 @@ import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import com.box.androidlib.Box;
+import com.box.androidlib.BoxConfig;
 import com.box.androidlib.BoxFile;
 import com.box.androidlib.BoxFolder;
 import com.box.androidlib.CopyListener;
 import com.box.androidlib.DAO;
 import com.box.androidlib.DeleteListener;
+import com.box.androidlib.DevUtils;
 import com.box.androidlib.FileDownloadListener;
 import com.box.androidlib.FileUploadListener;
 import com.box.androidlib.GetAccountInfoListener;
@@ -43,6 +45,11 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     private List<OpenPath> mChildren = null;
 
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    
+    static {
+        BoxConfig.getInstance().setEnableHttpLogging(true);
+        DevUtils.setLogHandler(Logger.getDefaultHandler());
+    }
 
     public OpenBox(User user)
     {

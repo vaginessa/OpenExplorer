@@ -116,8 +116,10 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
 
     private CharSequence colorify(String txt, int color) {
         if (color != 0) {
-            color = Color.rgb(255 - Color.red(color), 255 - Color.green(color),
-                    255 - Color.blue(color));
+            color = Color.rgb(
+                        Color.red(color),
+                        Color.green(color),
+                        Color.blue(color));
             String stamp = getTimeStamp();
             txt = stamp + txt;
             SpannableString line = new SpannableString(txt);

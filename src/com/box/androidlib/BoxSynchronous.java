@@ -1190,11 +1190,11 @@ public class BoxSynchronous {
             conn.setConnectTimeout(BoxConfig.getInstance().getConnectionTimeOut());
             if (BoxConfig.getInstance().getHttpLoggingEnabled()) {
                 DevUtils.logcat("URL: " + theUri.toString());
-                Iterator<String> keys = conn.getRequestProperties().keySet().iterator();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    DevUtils.logcat("Request Header: " + key + " => " + conn.getRequestProperties().get(key));
-                }
+//                Iterator<String> keys = conn.getRequestProperties().keySet().iterator();
+//                while (keys.hasNext()) {
+//                    String key = keys.next();
+//                    DevUtils.logcat("Request Header: " + key + " => " + conn.getRequestProperties().get(key));
+//                }
             }
 
             int responseCode = -1;
@@ -1228,13 +1228,13 @@ public class BoxSynchronous {
             finally {
                 if (BoxConfig.getInstance().getHttpLoggingEnabled()) {
                     DevUtils.logcat("Response Code: " + responseCode);
-                    DevUtils.logcat("User-Agent : " + conn.getRequestProperty("User-Agent"));
+//                    DevUtils.logcat("User-Agent : " + conn.getRequestProperty("User-Agent"));
                     Map<String, List<String>> headerfields = conn.getHeaderFields();
                     if (headerfields != null) {
                         Set<Entry<String, List<String>>> headers = headerfields.entrySet();
                         for (Iterator<Map.Entry<String, List<String>>> i = headers.iterator(); i.hasNext();) {
                             Map.Entry<String, List<String>> map = i.next();
-                            DevUtils.logcat("Response Header: " + map.getKey() + " : " + map.getValue());
+//                            DevUtils.logcat("Response Header: " + map.getKey() + " : " + map.getValue());
                         }
                     }
                 }
