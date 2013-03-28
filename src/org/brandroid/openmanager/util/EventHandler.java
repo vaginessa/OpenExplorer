@@ -637,7 +637,6 @@ public class EventHandler {
         private final OpenPath mIntoPath;
         private ProgressDialog mPDialog;
         private Notification mNote = null;
-        private final int mNotifyId;
         private ArrayList<String> mSearchResults = null;
         private boolean isDownload = false;
         private boolean isCancellable = true;
@@ -685,7 +684,6 @@ public class EventHandler {
                         .getSystemService(Context.NOTIFICATION_SERVICE);
             taskId = mTasks.size();
             mStart = new Date();
-            mNotifyId = BACKGROUND_NOTIFICATION_ID + EventCount++;
             mTasks.add(this);
             if (mTaskListener != null)
                 mTaskListener.OnTasksChanged(getRunningTasks().length);
@@ -789,14 +787,14 @@ public class EventHandler {
         protected void onCancelled() {
             if (mCloudCancellor != null)
                 mCloudCancellor.cancel();
-            mNotifier.cancel(mNotifyId);
+            mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
             super.onCancelled();
             mTasks.remove(this);
         }
 
         @Override
         protected void onCancelled(Integer result) {
-            mNotifier.cancel(mNotifyId);
+            mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
             super.onCancelled(result);
             mTasks.remove(this);
         }
@@ -901,7 +899,6 @@ public class EventHandler {
                 }
                 mBuilder.setContentIntent(makePendingIntent(
                         OpenExplorer.REQ_EVENT_VIEW));
-                mBuilder.setOngoing(true);
                 // mBuilder.setOnlyAlertOnce(true);
                 NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
                 style.bigText(getDetailedText());
@@ -1737,7 +1734,7 @@ public class EventHandler {
             if (SHOW_NOTIFICATION_STATUS) {
 
                 try {
-                    mNotifier.notify(mNotifyId,
+                    mNotifier.notify(BACKGROUND_NOTIFICATION_ID,
                             prepareNotification(notifIcon, isCancellable, values));
                 } catch (Exception e) {
                     Logger.LogWarning("Couldn't update notification progress.", e);
@@ -1789,7 +1786,7 @@ public class EventHandler {
             // NotificationManager mNotifier =
             // (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
             Logger.LogDebug("EventHandler.onPostExecute(" + mIntoPath + ")");
-            mNotifier.cancel(mNotifyId);
+            mNotifier.cancel(BACKGROUND_NOTIFICATION_ID);
 
             if (mPDialog != null && mPDialog.isShowing())
                 mPDialog.dismiss();
