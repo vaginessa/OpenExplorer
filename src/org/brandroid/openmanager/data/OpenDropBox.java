@@ -76,7 +76,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
     
     static {
-        Logger.setHandler("org.apache.http.headers");
+        Logger.setHandler("Dropbox");
         //Logger.setHandler(HttpRequestBase.class.getName());
     }
 
@@ -861,7 +861,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
         return runCloud(new Runnable() {
             public void run() {
                 try {
-                    mAPI.putFile(getRemotePath(), file.getInputStream(), file.length(), null, new ProgressListener() {
+                    mAPI.putFile(getFilePath(), file.getInputStream(), file.length(), null, new ProgressListener() {
                         public void onProgress(long bytes, long total) {
                             callback.onProgress(bytes);
                         }
@@ -877,13 +877,19 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
             }
         }, callback);
     }
+    
+    private String getFilePath() {
+        if(mEntry != null)
+            return mEntry.path;
+        return super.getRemotePath();
+    }
 
     @Override
     public Cancellable downloadFromCloud(final OpenFile file, final CloudProgressListener callback) {
         return runCloud(new Runnable() {
             public void run() {
                 try {
-                    mAPI.getFile(getRemotePath(), null, file.getOutputStream(), new ProgressListener() {
+                    mAPI.getFile(getFilePath(), null, file.getOutputStream(), new ProgressListener() {
                         public void onProgress(final long bytes, long total) {
                             post(new Runnable() {
                                 public void run() {
@@ -909,7 +915,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
         runCloud(new Runnable() {
             public void run() {
                 try {
-                    mAPI.putFileRequest(getRemotePath(), null, 0, null, null);
+                    mAPI.putFileRequest(getFilePath(), null, 0, null, null);
                 } catch(Exception e) {
                     postException(e, callback);
                 }
