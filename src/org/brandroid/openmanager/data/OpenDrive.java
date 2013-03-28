@@ -55,7 +55,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     public final static String DRIVE_SCOPE_AUTH_TYPE = "oauth2:" + DriveScopes.DRIVE;
 
-    public static Drive mGlobalDrive;
+    public Drive mDrive;
     private GoogleCredential mCredential;
     private String mName = null;
     private String mFolderId = "root";
@@ -95,7 +95,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     public void setCredential(GoogleCredential cred) {
         mCredential = cred;
-        mGlobalDrive = new Drive
+        mDrive = new Drive
                 .Builder(mTransport, mJsonFactory, mCredential)
                         .setApplicationName("OpenExplorer/1.0")
                         .build();
@@ -211,7 +211,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public OpenPath[] listFiles() throws IOException {
         if (Thread.currentThread().equals(OpenExplorer.UiThread))
             return getChildren();
-        getOpenDrives(this, mGlobalDrive.files().list()
+        getOpenDrives(this, mDrive.files().list()
                 .execute().getItems());
         return getChildren();
     }
@@ -304,7 +304,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             thread(new Runnable() {
                 public void run() {
                     try {
-                        mGlobalDrive.files().copy(getFile().getId(), folder.getFile()).execute();
+                        mDrive.files().copy(getFile().getId(), folder.getFile()).execute();
                         post(new Runnable() {
                             public void run() {
                                 callback.onCloudComplete("Copy completed successfully");
@@ -344,7 +344,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         thread(new Runnable() {
             public void run() {
                 try {
-                    mGlobalDrive.files().delete(getFile().getId()).execute();
+                    mDrive.files().delete(getFile().getId()).execute();
                     post(new Runnable() {
                         public void run() {
                             callback.onDeleteComplete("Delete complete.");
@@ -414,7 +414,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                 try {
                     if (mFolderId.equals("root"))
                     {
-                        mFolderId = mGlobalDrive.files().get(mFolderId).setFields("id").execute()
+                        mFolderId = mDrive.files().get(mFolderId).setFields("id").execute()
                                 .getId();
                         Logger.LogDebug("Drive root = " + mFolderId);
                     }
@@ -426,7 +426,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                         callback.addContentPath(kids.toArray(new OpenDrive[kids.size()]));
                     for (;;)
                     {
-                        Files.List lst = mGlobalDrive
+                        Files.List lst = mDrive
                                 .files()
                                 .list()
                                 .setQ("'" + mFolderId + "' in parents")
@@ -478,7 +478,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                     String pg = "";
                     do {
                         com.google.api.services.drive.Drive.Files.List lst =
-                                mGlobalDrive.files().list();
+                                mDrive.files().list();
                         if (!pg.equals(""))
                             lst.setPageToken(pg);
                         final FileList fl = lst.execute();
@@ -501,7 +501,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         InputStream in = null;
         String url = mFile.getDownloadUrl();
         if(url == null || url.length() == 0) return in;
-        return new BufferedInputStream(mGlobalDrive.getRequestFactory()
+        return new BufferedInputStream(mDrive.getRequestFactory()
                     .buildGetRequest(new GenericUrl(url))
                 .execute().getContent());
     }
@@ -512,7 +512,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             Logger.LogVerbose("OpenDrive.copyFrom");
         try {
             final InputStream in = new BufferedInputStream(f.getInputStream());
-            mGlobalDrive.files().insert(getFile(), new AbstractInputStreamContent(getExtension()) {
+            mDrive.files().insert(getFile(), new AbstractInputStreamContent(getExtension()) {
                 public boolean retrySupported() {
                     return true;
                 }
@@ -582,7 +582,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         thread(new Runnable() {
             public void run() {
                 try {
-                    InputStream in = new BufferedInputStream(mGlobalDrive.getRequestFactory()
+                    InputStream in = new BufferedInputStream(mDrive.getRequestFactory()
                             .buildGetRequest(new GenericUrl(getThumbnailUrl()))
                             .execute().getContent());
                     callback.onThumbReturned(new BitmapDrawable(app.getResources(), in));
@@ -621,7 +621,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                             return file.getInputStream();
                         }
                     };
-                    mGlobalDrive.files().update(getId(), getFile(), input).execute();
+                    mDrive.files().update(getId(), getFile(), input).execute();
                     postCompletion("Upload complete", callback);
                 } catch (Exception e) {
                     postException(e, callback);
@@ -663,7 +663,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         thread(new Runnable() {
             public void run() {
                 try {
-                    mGlobalDrive.files().touch(getId());
+                    mDrive.files().touch(getId());
                     postCompletion("File touched", callback);
                 } catch (Exception e) {
                     postException(e, callback);

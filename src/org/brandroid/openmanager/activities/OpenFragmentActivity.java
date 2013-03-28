@@ -3,12 +3,8 @@ package org.brandroid.openmanager.activities;
 
 import java.net.URL;
 import java.util.Locale;
-import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-
-import javax.annotation.RegEx;
 
 import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbComReadAndX;
@@ -17,30 +13,23 @@ import jcifs.smb.SmbFile.OnSMBCommunicationListener;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
-import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.interfaces.OpenContextProvider;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LoggerDbAdapter;
 import org.brandroid.utils.Preferences;
-import com.actionbarsherlock.ActionBarSherlock;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuInflater;
-import com.box.androidlib.BoxAuthentication;
 import com.jcraft.jsch.JSch;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -329,17 +318,26 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
                 String msg = record.getMessage();
                 if(msg.startsWith("----") && msg.indexOf("\n") > -1)
                     msg = msg.substring(msg.indexOf("\n") + 1);
+                while(msg.startsWith("\n"))
+                    msg = msg.substring(1);
                 if(msg.indexOf("\n") > -1)
                     msg = msg.substring(0, msg.indexOf("\n") - 1) + "...(" + msg.split("\n").length + " lines)";
                 else if(msg.length() > 150)
                     msg = msg.substring(0, 150) + "...(" + msg.length() + " bytes)";
-                msg = record.getLoggerName() + " - " + msg;
+                String name = record.getLoggerName();
+                if(name.toLowerCase(Locale.US).contains("google"))
+                    name = "Drive";
+                msg = name + " - " + msg;
                 if(record.getLevel() == Level.SEVERE)
                 {
                     Logger.LogError(record.getMessage(), record.getThrown());
                     sendToLogView(msg, Color.RED);
-                } else {
+                } else if (record.getLevel() == Level.CONFIG) {
                     sendToLogView(msg, Color.GREEN);
+                } else if (record.getLevel() == Level.FINE) {
+                    sendToLogView(msg, Color.BLUE);
+                } else {
+                    sendToLogView(msg, Color.GRAY);
                 }
             }
             

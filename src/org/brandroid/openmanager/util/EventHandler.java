@@ -900,6 +900,7 @@ public class EventHandler {
                 mBuilder.setContentIntent(makePendingIntent(
                         OpenExplorer.REQ_EVENT_VIEW));
                 // mBuilder.setOnlyAlertOnce(true);
+                mBuilder.setAutoCancel(true);
                 NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
                 style.bigText(getDetailedText());
                 style.setBigContentTitle(getOperation() + " " + mCurrentPath.getName());
