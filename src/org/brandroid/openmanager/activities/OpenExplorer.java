@@ -870,11 +870,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         });
         OpenNetworkPath.Timeout = getPreferences().getSetting("global", "server_timeout", 20) * 1000;
-        new Thread(new Runnable() {
-            public void run() {
-                OpenVFS.getManager().setLogger(Logger.VFSLogger);
-            }
-        }).start();
         try {
             OpenSFTP.DefaultJSch.setHostKeyRepository(new SimpleHostKeyRepo(OpenSFTP.DefaultJSch,
                     FileManager.DefaultUserInfo, Preferences.getPreferences(

@@ -612,7 +612,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
 
     @Override
     public String getMimeType() {
-        if (mEntry != null)
+        if (mEntry != null && mEntry.mimeType != null)
             return mEntry.mimeType;
         return super.getMimeType();
     }

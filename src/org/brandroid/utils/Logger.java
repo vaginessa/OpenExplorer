@@ -145,7 +145,7 @@ public class Logger {
             if(Utils.isNullOrEmpty(name)) continue;
             if(name.equalsIgnoreCase("global")) continue;
             if(name.toLowerCase(Locale.US).contains("android")) continue;
-            if(name.equalsIgnoreCase("org.apache")) continue;
+            if(name.startsWith("org.apache")) continue;
             setHandler(name);
         }
     }

@@ -55,7 +55,6 @@ import org.brandroid.openmanager.data.OpenSearch;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenTar;
-import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;

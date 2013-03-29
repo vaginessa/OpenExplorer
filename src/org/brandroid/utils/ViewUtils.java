@@ -218,8 +218,11 @@ public class ViewUtils {
             return;
         
         boolean empty = text == null || text.length() == 0;
-        ViewUtils.setViewsVisible(parent, !empty, textViewID);
-        if(empty) return;
+        if(empty)
+        {
+            ViewUtils.setViewsVisible(parent, !empty, textViewID);
+            return;
+        }
         
         boolean ui = Thread.currentThread().equals(OpenExplorer.UiThread);
         if (textViewID.length == 0)
@@ -329,8 +332,8 @@ public class ViewUtils {
         if (ids.length == 0) {
             if (parent.getVisibility() != vis)
                 parent.setVisibility(vis);
-            if (visible && parent.getParent() != null && !parent.getParent().equals(parent) && parent.getParent() instanceof View)
-                ((View)parent.getParent()).setVisibility(View.VISIBLE);
+//            if (visible && parent.getParent() != null && !parent.getParent().equals(parent) && parent.getParent() instanceof View)
+//                ((View)parent.getParent()).setVisibility(View.VISIBLE);
         } else
             for (int id : ids) {
                 View v = parent.findViewById(id);
@@ -343,7 +346,7 @@ public class ViewUtils {
     public static void setViewsVisible(final View parent, final boolean visible, final int... ids) {
         if (parent == null)
             return;
-        if (Thread.currentThread().equals(OpenExplorer.UiThread))
+        if (!Thread.currentThread().equals(OpenExplorer.UiThread))
             OpenExplorer.getHandler().post(new Runnable() {
                 public void run() {
                     setViewsVisibleNow(parent, visible, ids);
