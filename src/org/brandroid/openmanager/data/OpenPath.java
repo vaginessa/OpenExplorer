@@ -976,6 +976,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
      * @see MimeTypes
      */
     public String getMimeType() {
+        if (isDirectory())
+            return "x-directory/normal";
         if (MimeTypes.Default != null)
             return MimeTypes.Default.getMimeType(getPath());
         return "*/*";

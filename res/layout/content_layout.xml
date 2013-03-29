@@ -47,13 +47,13 @@
             android:textAppearance="@style/Text.Small.Dialog" />
 
         <LinearLayout
+            android:id="@+id/content_status_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_alignWithParentIfMissing="true"
             android:layout_toRightOf="@+id/content_cancel"
-            android:id="@+id/content_status_bar"
             android:orientation="vertical" >
 
             <View
@@ -61,16 +61,34 @@
                 android:layout_height="2dp"
                 android:background="?attr/drawerBackgroundColor" />
 
-            <TextView
-                android:id="@+id/content_status"
-                style="@style/Text.Small"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|left"
-                android:background="?attr/dialogBackgroundColorPrimary"
-                android:padding="4dp"
-                android:text="@string/s_status_loading"
-                android:textColor="?attr/dialogTextColorPrimary" />
+                android:orientation="horizontal" >
+
+                <TextView
+                    android:id="@+id/content_status"
+                    style="@style/Text.Small"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|left"
+                    android:layout_weight="1"
+                    android:background="?attr/dialogBackgroundColorPrimary"
+                    android:padding="4dp"
+                    android:text="@string/s_status_loading"
+                    android:textColor="?attr/dialogTextColorPrimary" />
+
+                <TextView
+                    android:id="@+id/content_status_right"
+                    style="@style/Text.Small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|right"
+                    android:background="?attr/dialogBackgroundColorPrimary"
+                    android:padding="4dp"
+                    android:text="@string/s_status_loading"
+                    android:textColor="?attr/dialogTextColorPrimary" />
+            </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
 

@@ -106,6 +106,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -131,12 +132,19 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             R.id.text_path, R.id.text_path_label, R.id.text_port, R.id.label_port,
             R.id.check_port
     };
+    final static int[] NotOnCloud = new int[] {
+        R.id.server_texts, R.id.label_password, R.id.check_password,
+        R.id.check_port, R.id.text_port, R.id.label_port,
+        R.id.text_server_label, R.id.text_user_label, R.id.text_path_label, R.id.text_path,
+        R.id.text_password, R.id.text_user, R.id.text_server
+    };
     private String[] mServerTypes;
     private OpenServers servers;
     private OpenServer server;
     private View mBaseView;
     private Spinner mTypeSpinner;
     private Bundle mArgs;
+    private int mServerType = -1;
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
@@ -320,12 +328,12 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             mArgs = new Bundle();
 
         int iServersIndex = mArgs.getInt("server_index", -1);
-        int serverType = mArgs.getInt("server_type_id", -1);
+        mServerType = mArgs.getInt("server_type_id", -1);
         mServerTypes = getResources().getStringArray(R.array.server_types_values);
         String[] mServerLabels = getResources().getStringArray(R.array.server_types);
 
         if (DEBUG)
-            Logger.LogDebug("ServerSetupActivity.server_type = " + serverType);
+            Logger.LogDebug("ServerSetupActivity.server_type = " + mServerType);
 
         final Context context = this;
         servers = LoadDefaultServers(context);
@@ -345,9 +353,9 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             if (server == null)
             {
                 String name = "New Server";
-                if (serverType > -1)
-                    name = mServerLabels[serverType] + " " +
-                            (servers.findByType(mServerTypes[serverType]).size() + 1);
+                if (mServerType > -1)
+                    name = mServerLabels[mServerType] + " " +
+                            (servers.findByType(mServerTypes[mServerType]).size() + 1);
                 server = new OpenServer().setName(name);
         }
         }
@@ -357,19 +365,19 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         String t2 = "ftp";
         if (server.getType() != null)
             t2 = server.getType().toLowerCase(Locale.US);
-        if (serverType > -1 && t2.equals("ftp")) {
-            t2 = getServerTypeString(serverType);
+        if (mServerType > -1 && t2.equals("ftp")) {
+            t2 = getServerTypeString(mServerType);
             if (t2 != null)
                 server.setType(t2);
-        } else if (serverType == -1)
-            serverType = getServerTypeFromString(t2);
+        } else if (mServerType == -1)
+            mServerType = getServerTypeFromString(t2);
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
 
         mLoginWebView = (WebView)mBaseView.findViewById(R.id.server_webview);
 
-        setIcon(getServerTypeDrawable(serverType));
+        setIcon(getServerTypeDrawable(mServerType));
         setTitle(server.getName());
 
         for (int i = 0; i < mMapIDs.length; i++)
@@ -434,8 +442,10 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             mCheckPort.setChecked(true);
 
         mTypeSpinner = (Spinner)mBaseView.findViewById(R.id.server_type);
+        mTypeSpinner.setSelection(mServerType);
         mTypeSpinner.setOnItemSelectedListener(this);
-        mTypeSpinner.setSelection(serverType);
+        mTypeSpinner.setVisibility(View.VISIBLE);
+        onItemSelected(mTypeSpinner, mTypeSpinner.getChildAt(mServerType), mServerType, mTypeSpinner.getItemIdAtPosition(mServerType));
     }
 
     @Override
@@ -1000,8 +1010,12 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         if (position < 3)
         {
             ViewUtils.setViewsVisible(v, false, R.id.server_auth_buttons);
-            ViewUtils.setViewsVisible(v, true, R.id.server_texts, R.id.check_port, R.id.text_port,
-                    R.id.label_port);
+            LinearLayout stl = (LinearLayout)v.findViewById(R.id.server_texts);
+            if(stl != null)
+                stl.setVisibility(View.VISIBLE);
+            else
+                Logger.LogError("Unable to find server texts!");
+            ViewUtils.setViewsVisible(v, true, NotOnCloud);
         }
         if (OnlyOnSMB.length > 0)
             ViewUtils.setViewsVisible(v, position == 2, OnlyOnSMB);
@@ -1024,8 +1038,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             } else if (position == 5) {
                 server.setType("drive");
             }
-            ViewUtils.setViewsVisible(v, false, R.id.server_texts, R.id.check_port, R.id.text_port,
-                    R.id.label_port);
+            ViewUtils.setViewsVisible(v, false, NotOnCloud);
             if (server.getPassword() != null && !server.getPassword().equals(""))
             {
                 ViewUtils.setViewsVisible(v, true, R.id.server_logout);
@@ -1035,6 +1048,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 enableAuthenticateButton(true);
             }
         }
+        ViewUtils.setViewsVisible(mBaseView, true, R.id.server_type);
     }
 
     private void showAccountList() {
@@ -1287,6 +1301,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     public static void SaveToDefaultServers(OpenServers servers, Context context) {
         OpenServers.setDefaultServers(servers);
         SaveToDefaultServers(servers.getJSONArray(true, context), context);
+        servers.clean();
     }
 
     public static void SaveToDefaultServers(JSONArray json, Context context) {

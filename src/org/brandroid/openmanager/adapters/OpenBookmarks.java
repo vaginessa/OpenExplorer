@@ -401,6 +401,12 @@ public class OpenBookmarks implements OnGroupClickListener,
                 }
 
                 public void onSpaceReturned(long space, long used, long third) {
+                    if(path instanceof OpenNetworkPath)
+                    {
+                        OpenServer server = ((OpenNetworkPath)path).getServer();
+                        if(server.isDirty())
+                            ServerSetupActivity.SaveToDefaultServers(OpenServers.getDefaultServers(), app.getContext());
+                    }
                     updateSizeIndicator(path, parent, space, used, third);
                 }
             });

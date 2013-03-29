@@ -6,18 +6,13 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.WeakReference;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 import java.util.WeakHashMap;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
-
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
+import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.PrivatePreferences;
@@ -29,28 +24,25 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.About;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 
 public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
-        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler,
+        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler,
         OpenPath.OpenPathUpdateHandler {
 
     public final static String DRIVE_SCOPE_AUTH_TYPE = "oauth2:" + DriveScopes.DRIVE;
@@ -671,6 +663,38 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             }
         });
         return true;
+    }
+    
+    @Override
+    public void getSpace(final SpaceListener callback) {
+        final OpenServer server = getServer();
+        if(server != null && server.has("total"))
+        {
+            callback.onSpaceReturned(server.get("total", 0),
+                    server.get("agg", 0), 
+                    server.get("used", 0));
+            return;
+        }
+        thread(new Runnable() {
+            public void run() {
+                try {
+                    About me = mDrive.about().get().execute();
+                    if(server != null)
+                    {
+                        server
+                            .setSetting("total", me.getQuotaBytesTotal())
+                            .setSetting("agg", me.getQuotaBytesUsedAggregate())
+                            .setSetting("used", me.getQuotaBytesUsed());
+                    }
+                    callback.onSpaceReturned(
+                            me.getQuotaBytesTotal(),
+                            me.getQuotaBytesUsedAggregate(),
+                            me.getQuotaBytesUsed());
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+            }
+        });
     }
 
 }
