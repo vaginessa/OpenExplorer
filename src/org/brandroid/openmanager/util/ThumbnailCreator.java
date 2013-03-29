@@ -350,15 +350,6 @@ public class ThumbnailCreator {
                 d = ThumbnailCreator.getFileExtIcon(file.getExtension(), c, mWidth > 72);
             else
                 d = c.getResources().getDrawable(getDefaultResourceId(file, mWidth, mHeight));
-            if (file instanceof OpenPath.ThumbnailOverlayInterface)
-            {
-                Drawable over = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(c,
-                        mWidth > 36);
-                if (over != null)
-                    d = new LayerDrawable(new Drawable[] {
-                            d, over
-                    });
-            }
             return d;
         }
         else
@@ -386,7 +377,7 @@ public class ThumbnailCreator {
             if (file instanceof OpenSMB) {
                 return (useLarge ? R.drawable.lg_folder_pipe : R.drawable.sm_folder_pipe);
             }
-            if (file instanceof OpenVFS || file instanceof OpenSFTP) {
+            if (file instanceof OpenSFTP) {
                 return (useLarge ? R.drawable.lg_folder_secure : R.drawable.sm_folder_secure);
             }
             if (file instanceof OpenFTP) {
@@ -471,7 +462,7 @@ public class ThumbnailCreator {
             if (file instanceof OpenSMB) {
                 return R.drawable.sm_folder_pipe;
             }
-            if (file instanceof OpenVFS || file instanceof OpenSFTP) {
+            if (file instanceof OpenSFTP) {
                 return R.drawable.sm_folder_secure;
             }
             if (file instanceof OpenFTP) {
