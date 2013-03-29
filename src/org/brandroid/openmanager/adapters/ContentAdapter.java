@@ -381,6 +381,14 @@ public class ContentAdapter extends BaseAdapter {
         // RemoteImageView mIcon =
         // (RemoteImageView)view.findViewById(R.id.content_icon);
 
+        boolean hasOverlay = file instanceof OpenPath.ThumbnailOverlayInterface;
+        if (hasOverlay)
+            ViewUtils.setImageDrawable(view,
+                    ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(getContext(),
+                            mViewMode == OpenExplorer.VIEW_GRID),
+                    R.id.content_icon_overlay);
+        ViewUtils.setViewsVisible(view, hasOverlay, R.id.content_icon_overlay);
+
         if (mIcon != null) {
             // mIcon.invalidate();
             ViewUtils.setAlpha(file.isHidden() ? 0.4f : 1.0f, view, R.id.content_icon);
@@ -405,11 +413,6 @@ public class ContentAdapter extends BaseAdapter {
                                         public void run() {
                                             Drawable d = new BitmapDrawable(getResources(), b);
                                             ((BitmapDrawable)d).setGravity(Gravity.CENTER);
-                                            if(file instanceof OpenPath.ThumbnailOverlayInterface)
-                                            {
-                                                Drawable overlay = ((OpenPath.ThumbnailOverlayInterface)file).getOverlayDrawable(getContext(), mWidth > 36);
-                                                d = new LayerDrawable(new Drawable[]{d, overlay});
-                                            }
                                             ImageUtils.fadeToDrawable(mIcon, d);
                                             mIcon.setTag(file);
                                         }
@@ -443,7 +446,8 @@ public class ContentAdapter extends BaseAdapter {
                 @Override
                 public void onClick(View v) {
                     toggleSelected(file, p);
-                    mApp.getActionMode().invalidate();
+                    if (mApp != null && mApp.getActionMode() != null)
+                        mApp.getActionMode().invalidate();
                 }
             }, R.id.checkmark_area);
         }
@@ -591,6 +595,23 @@ public class ContentAdapter extends BaseAdapter {
     public boolean getShowHiddenFiles() {
         return mShowHiddenFiles;
     }
+    
+    public void getStatus2(final OpenPath.SpaceListener callback) {
+        if (mParent instanceof OpenPath.OpenPathSizable
+                && ((OpenPathSizable)mParent).getTotalSpace() > 0)
+        {
+            OpenPathSizable sz = (OpenPathSizable)mParent;
+            callback.onSpaceReturned(sz.getTotalSpace(), sz.getUsedSpace(), sz.getThirdSpace());
+        } else if (mParent instanceof OpenPath.SpaceHandler)
+            new Thread(new Runnable() {
+                public void run() {
+                    {
+                        ((SpaceHandler)mParent).getSpace(callback);
+                    }
+                }
+            }).start();
+        else callback.onException(null);
+    }
 
     public CharSequence getStatus() {
         final SpannableStringBuilder ret = new SpannableStringBuilder();
@@ -599,53 +620,50 @@ public class ContentAdapter extends BaseAdapter {
         }; // total, folders, files, hidden
         long bytes = 0;
         try {
-        if (mData2 != null)
-            for (OpenPath p : mData2)
-            {
-                stats[0]++;
-                if (!mShowHiddenFiles && p.isHidden())
-                    stats[3]++;
-                else if (p.isDirectory())
-                    stats[1]++;
-                else {
-                    stats[2]++;
-                    bytes += p.length();
+            if (mData2 != null)
+                for (OpenPath p : mData2)
+                {
+                    stats[0]++;
+                    if (!mShowHiddenFiles && p.isHidden())
+                        stats[3]++;
+                    else if (p.isDirectory())
+                        stats[1]++;
+                    else {
+                        stats[2]++;
+                        bytes += p.length();
+                    }
                 }
-            }
-        } catch(Exception e) { }
+        } catch (Exception e) {
+        }
         try {
-        if (mFinalItems != null)
-            for (OpenPath p : mFinalItems)
-            {
-                stats[0]++;
-                if (!mShowHiddenFiles && p.isHidden())
-                    stats[3]++;
-                else if (p.isDirectory())
-                    stats[1]++;
-                else {
-                    stats[2]++;
-                    bytes += p.length();
+            if (mFinalItems != null)
+                for (OpenPath p : mFinalItems)
+                {
+                    stats[0]++;
+                    if (!mShowHiddenFiles && p.isHidden())
+                        stats[3]++;
+                    else if (p.isDirectory())
+                        stats[1]++;
+                    else {
+                        stats[2]++;
+                        bytes += p.length();
+                    }
                 }
-            }
-        } catch(Exception e) { }
+        } catch (Exception e) {
+        }
         if (stats[0] == 0)
             return "";
         else {
             if (stats[1] > 0)
                 ret.append(stats[1] + " " + getResources().getString(R.string.s_folders));
             if (stats[2] > 0)
-                ret.append((ret.length() > 0 ? ", " : "") + stats[2] + " " + getResources().getString(R.string.s_files));
+                ret.append((ret.length() > 0 ? ", " : "") + stats[2] + " "
+                        + getResources().getString(R.string.s_files));
             if (stats[3] > 0)
-                ret.append((ret.length() > 0 ? ", " : "") + stats[3] + " " + getResources().getString(R.string.s_hidden));
+                ret.append((ret.length() > 0 ? ", " : "") + stats[3] + " "
+                        + getResources().getString(R.string.s_hidden));
             if (bytes > 0)
                 ret.append((ret.length() > 0 ? ", " : "") + OpenPath.formatSize(bytes, 2, true));
-            if (mParent instanceof OpenPath.OpenPathSizable
-                    && ((OpenPathSizable)mParent).getTotalSpace() > 0)
-            {
-                ret.append(" ("
-                        + OpenPath.formatSize(((OpenPathSizable)mParent).getTotalSpace()) +
-                        " " + getResources().getString(R.string.s_total) + ")");
-            }
 
         }
         return ret;

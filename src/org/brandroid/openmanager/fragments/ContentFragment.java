@@ -50,6 +50,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath.CloudProgressListener;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
+import org.brandroid.openmanager.data.OpenPath.SpaceListener;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenRAR;
@@ -2067,6 +2068,34 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                 });
             }}).start();
+        getContentAdapter().getStatus2(new SpaceListener() {
+            public void onException(Exception e) {
+                ViewUtils.setViewsVisible(getView(), false, R.id.content_status_right);
+            }
+            
+            @Override
+            public void onSpaceReturned(long total, long used, long third) {
+                String txt = "";
+                if(used > 0)
+                {
+                    txt = OpenPath.formatSize(used);
+                    if(total > 0)
+                        txt += "/";
+                }
+                if(total > 0)
+                    txt += OpenPath.formatSize(total);
+                if(third > 0)
+                    txt += "(" + OpenPath.formatSize(third) + ")";
+                if(txt.equals(""))
+                {
+                    ViewUtils.setViewsVisible(getView(), false, R.id.content_status_right);
+                    return;
+                }
+                txt += " " + getContext().getString(R.string.s_total);
+                ViewUtils.setText(getView(), txt, R.id.content_status_right);
+                ViewUtils.setViewsVisible(getView(), true, R.id.content_status_bar, R.id.content_status_right);
+            }
+        });        
     }
 
     public void setStatus(CharSequence status)
@@ -2271,7 +2300,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 OpenPath first = mContentAdapter.getSelectedSet().get(0);
                 if (cnt > 1) {
                     shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
-                    String type = first.getMimeType();
+                    String type = Utils.ifNull(first.getMimeType(), "*/*");
                     ArrayList<Uri> uris = new ArrayList<Uri>();
                     for (OpenPath sel : mContentAdapter.getSelectedSet()) {
                         if (!type.equals(sel.getMimeType()))
@@ -2282,7 +2311,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
                 } else {
                     shareIntent = new Intent(Intent.ACTION_VIEW);
-                    shareIntent.setDataAndType(first.getUri(), first.getMimeType());
+                    shareIntent.setDataAndType(first.getUri(), Utils.ifNull(first.getMimeType(), "*/*"));
                 }
                 List<ResolveInfo> resolves = IntentManager.getResolvesAvailable(shareIntent,
                         getExplorer());
