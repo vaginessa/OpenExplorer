@@ -72,6 +72,7 @@ import com.jcraft.jsch.UserInfo;
 import android.content.Context;
 import android.net.Uri;
 import android.os.StatFs;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class FileManager {
@@ -433,6 +434,8 @@ public class FileManager {
 
                 try {
                     Uri uri = Uri.parse(path);
+                    if(OpenExplorer.IS_DEBUG_BUILD)
+                        Logger.LogVerbose("Drive path (from " + path + "): " + TextUtils.join(", ", uri.getPathSegments()));
                     String pw = uri.getUserInfo();
                     if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);

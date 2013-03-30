@@ -2205,7 +2205,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     /** Update the "selection" action mode bar */
     private void updateSelectionModeView() {
-        getActionMode().invalidate();
+        if(isInSelectionMode())
+            getActionMode().invalidate();
         // notifyDataSetChanged();
     }
 
