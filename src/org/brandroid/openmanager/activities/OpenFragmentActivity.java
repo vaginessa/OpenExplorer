@@ -267,7 +267,7 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
 
     protected abstract void sendToLogView(String str, int color);
 
-    protected void setupLoggingDb() {
+    protected void setupLogviewHandlers() {
         FTP.setCommunicationListener(new OnFTPCommunicationListener() {
 
             @Override
@@ -312,23 +312,25 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
         });
 
         Logger.setDefaultHandler(new java.util.logging.Handler() {
-            
+
             @Override
             public void publish(LogRecord record) {
                 String msg = record.getMessage();
-                if(msg.startsWith("----") && msg.indexOf("\n") > -1)
+                if (msg.startsWith("----") && msg.indexOf("\n") > -1)
                     msg = msg.substring(msg.indexOf("\n") + 1);
-                while(msg.startsWith("\n"))
+                while (msg.startsWith("\n"))
                     msg = msg.substring(1);
-                if(msg.indexOf("\n") > -1)
-                    msg = msg.substring(0, msg.indexOf("\n") - 1) + "...(" + msg.split("\n").length + " lines)";
-                else if(msg.length() > 150)
-                    msg = msg.substring(0, 150) + "...(" + msg.length() + " bytes)";
+                /*
+                 * if(msg.indexOf("\n") > -1) msg = msg.substring(0,
+                 * msg.indexOf("\n") - 1) + "...(" + msg.split("\n").length +
+                 * " lines)"; else if(msg.length() > 150) msg = msg.substring(0,
+                 * 150) + "...(" + msg.length() + " bytes)";
+                 */
                 String name = record.getLoggerName();
-                if(name.toLowerCase(Locale.US).contains("google"))
+                if (name.toLowerCase(Locale.US).contains("google"))
                     name = "Drive";
                 msg = name + " - " + msg;
-                if(record.getLevel() == Level.SEVERE)
+                if (record.getLevel() == Level.SEVERE)
                 {
                     Logger.LogError(record.getMessage(), record.getThrown());
                     sendToLogView(msg, Color.RED);
@@ -340,17 +342,17 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
                     sendToLogView(msg, Color.GRAY);
                 }
             }
-            
+
             @Override
             public void flush() {
                 // TODO Auto-generated method stub
-                
+
             }
-            
+
             @Override
             public void close() {
                 // TODO Auto-generated method stub
-                
+
             }
         });
         Logger.setHandler();

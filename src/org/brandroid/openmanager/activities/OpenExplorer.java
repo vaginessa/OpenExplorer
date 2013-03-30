@@ -500,7 +500,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             USE_ACTION_BAR = false;
 
         OpenFile.setTempFileRoot(new OpenFile(getFilesDir()).getChild("temp"));
-        setupLoggingDb();
+        setupLogviewHandlers();
         handleExceptionHandler();
         getMimeTypes();
         setupFilesDb();
@@ -1640,7 +1640,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
             if (txt == null)
                 return;
-            Logger.LogDebug("Log: " + txt);
             if (mLogFragment == null)
                 mLogFragment = new LogViewerFragment();
             mLogFragment.print(txt, color);
@@ -1702,7 +1701,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return;
         if (OpenExplorer.IS_DEBUG_BUILD)
             return;
-        setupLoggingDb();
         if (new Date().getTime() - lastSubmit < 60000)
             return;
         lastSubmit = new Date().getTime();

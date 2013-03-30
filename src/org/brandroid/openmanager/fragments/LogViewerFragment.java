@@ -1,31 +1,41 @@
 
 package org.brandroid.openmanager.fragments;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
 import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.view.MenuItem;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.ClipboardManager;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -33,9 +43,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LogViewerFragment extends OpenFragment implements OnClickListener, Poppable {
-    private final List<CharSequence> mData = new Vector<CharSequence>();
-    private BaseAdapter mAdapter = null;
+public class LogViewerFragment extends OpenFragment implements OnClickListener, Poppable, OnItemClickListener {
+    private final List<LogEntry> mData = new ArrayList<LogEntry>();
+    private LogViewerAdapter mAdapter = null;
     private boolean mAdded = false;
     private BetterPopupWindow mPopup = null;
     private ListView mListView = null;
@@ -45,6 +55,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
     private ViewGroup mRootView = null;
     private int mTextResId = R.layout.edit_text_view_row;
     private final Handler mHandler;
+    private final DateFormat mDateFormat = SimpleDateFormat.getTimeInstance();
 
     public LogViewerFragment() {
         mHandler = new Handler();
@@ -92,7 +103,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
         if(mHandler == null) return;
         mHandler.post(new Runnable() {
             public void run() {
-                mData.add(0, colorify(txt, color));
+                mData.add(0, new LogEntry(txt, color));
                 if(mAdapter != null)
                     mAdapter.notifyDataSetChanged();
             }
@@ -120,10 +131,10 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
                         Color.red(color),
                         Color.green(color),
                         Color.blue(color));
-            String stamp = getTimeStamp();
-            txt = stamp + txt;
+            //String stamp = getTimeStamp();
+            //txt = stamp + txt;
             SpannableString line = new SpannableString(txt);
-            line.setSpan(new ForegroundColorSpan(color), stamp.length(), line.length(), Spanned.SPAN_COMPOSING);
+            line.setSpan(new ForegroundColorSpan(color), 0, line.length(), Spanned.SPAN_COMPOSING);
             return line;
         } else
             return txt;
@@ -138,7 +149,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
         }
 
         @Override
-        public CharSequence getItem(int position) {
+        public LogEntry getItem(int position) {
             return mData.get(position);
         }
 
@@ -153,7 +164,15 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
             if (view == null)
                 view = mInflater.inflate(mTextResId, parent, false);
             ViewUtils.setViewsVisible(view, false, R.id.text_line);
-            ((TextView)view.findViewById(R.id.text_data)).setText(getItem(position));
+            LogEntry data = getItem(position);
+            Long stamp = data.getStamp();
+            String source = data.getSource();
+            SpannableStringBuilder txt = new SpannableStringBuilder();
+            txt.append((getCount() - position) + " - ")
+                .append(colorify(source, Color.WHITE))
+                .append(colorify(" - " + mDateFormat.format(new Date(stamp)) + "\n", Color.BLUE))
+                .append(data.getSummary());
+            ((TextView)view.findViewById(R.id.text_data)).setText(txt);
             return view;
         }
 
@@ -206,6 +225,7 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
                 mListView = new ListView(getView().getContext());
                 ((ViewGroup)getView()).addView(mListView);
             }
+            mListView.setOnItemClickListener(this);
         }
         return mListView;
     }
@@ -282,6 +302,65 @@ public class LogViewerFragment extends OpenFragment implements OnClickListener, 
 
     public BetterPopupWindow getPopup() {
         return mPopup;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        final LogEntry entry = mAdapter.getItem(position);
+        final CharSequence txt = entry.getData();
+        try {
+        new AlertDialog.Builder(parent.getContext())
+            .setMessage(txt)
+            .setTitle((mAdapter.getCount() - position) + " - " + entry.getSource() + " - " + mDateFormat.format(new Date(entry.getStamp())))
+            .setPositiveButton(R.string.s_menu_copy, new DialogInterface.OnClickListener() {
+                @SuppressWarnings("deprecation")
+                public void onClick(DialogInterface dialog, int which) {
+                    ClipboardManager clip = (ClipboardManager)getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                    clip.setText(txt);
+                }
+            })
+            .setNegativeButton(android.R.string.ok, null)
+            .create().show();
+        } catch(Exception e) {
+            Logger.LogError("Unable to show dialog in LogViewer", e);
+        }
+    }
+    
+    public class LogEntry
+    {
+        private final CharSequence mData;
+        private final String mSource;
+        private final Long mStamp;
+        private final CharSequence mSummary;
+        
+        public LogEntry(CharSequence data, String source, Long stamp)
+        {
+            mData = data;
+            mSource = source;
+            mStamp = stamp;
+            if(mData.length() > 150)
+                mSummary = new SpannableStringBuilder(mData.subSequence(0, 150)).append("...");
+            else mSummary = null;
+        }
+        
+        public LogEntry(String full, int color)
+        {
+            if(full.indexOf(" - ") > -1)
+            {
+                mSource = full.substring(0, full.indexOf(" - "));
+                full = full.substring(full.indexOf(" - ") + 3);
+            } else mSource = "???";
+            mData = colorify(full, color);
+            if(mData.length() > 150)
+                mSummary = colorify(full.replaceAll("\n", " ").subSequence(0, 150) + "...", color);
+            else mSummary = null;
+            mStamp = new Date().getTime();
+        }
+        
+        public CharSequence getSummary() { return Utils.ifNull(mSummary, mData); }
+        public CharSequence getData() { return mData; }
+        public String getSource() { return mSource; }
+        public Long getStamp() { return mStamp; }
     }
 
 }
