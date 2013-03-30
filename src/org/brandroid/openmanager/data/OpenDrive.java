@@ -145,8 +145,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         else ret = getPathPrefix(false);
         if(!ret.endsWith("/"))
             ret += "/";
-        if(mName != null)
-            ret += getName();
+        if(mFile != null)
+            ret += mFile.getId();
         if(isDirectory() && !ret.endsWith("/"))
             ret += "/";
         return ret;
@@ -386,6 +386,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             if (!id.equals(mFolderId) && !(p.getIsRoot() && mFolderId.equals("root"))
                     && mGlobalFiles != null && mGlobalFiles.containsKey(id) && !changedParent)
             {
+                if(DEBUG)
+                    Logger.LogVerbose("Drive.setParent(" + mGlobalFiles.get(id) + ") from " + mParent);
                 mParent = mGlobalFiles.get(id);
                 changedParent = true;
             }
@@ -540,6 +542,10 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     
     public OpenDrive setId(String id)
     {
+        if(id.indexOf("@") > -1) return this;
+        if(id.equals(mName)) return this;
+        if(DEBUG)
+            Logger.LogVerbose("Drive.setId(" + id + ") on " + mFolderId);
         mFolderId = id;
         return this;
     }

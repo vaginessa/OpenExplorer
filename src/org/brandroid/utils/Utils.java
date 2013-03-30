@@ -596,7 +596,7 @@ public class Utils {
             return b;
         return a;
     }
-    public static <T> T[] ifNull(T[] a, T[] b) {
+    public static <T> T ifNull(T a, T b) {
         if (a != null) return a;
         return b;
     }
