@@ -103,7 +103,10 @@ import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath.SpaceListener;
 import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
+import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.HelpStringHelper;
 import org.brandroid.openmanager.util.IntentManager;
@@ -210,11 +213,15 @@ public class DialogHandler {
         // }
 
         // ((TextView)v.findViewById(R.id.info_name_label)).setText(file.getName());
+        
         ((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
         ((TextView)v.findViewById(R.id.info_path_label)).setText(file.getPath());
         ((TextView)v.findViewById(R.id.info_read_perm)).setText(file.canRead() + "");
         ((TextView)v.findViewById(R.id.info_write_perm)).setText(file.canWrite() + "");
         ((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
+        ViewUtils.setText(v, file.getMimeType(), R.id.info_mime);
+        
+        ViewUtils.setViewsVisible(v, file.isDirectory(), R.id.info_dirs_row1, R.id.info_dirs_row2);
 
         if (file.isDirectory())
             ((ImageView)v.findViewById(R.id.info_icon)).setImageResource(R.drawable.lg_folder);
@@ -260,11 +267,10 @@ public class DialogHandler {
                 if (bFirst)
                     firstDirs++;
                 try {
-                    for (OpenPath f : p.list())
-                        addPath(f, false);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    if(p != null)
+                        for (OpenPath f : p.list())
+                            addPath(f, false);
+                } catch (Exception e) {
                 }
             }
             if (fileCount + dirCount % 50 == 0)
@@ -290,29 +296,22 @@ public class DialogHandler {
 
             publishProgress();
 
-            if (path instanceof OpenFile) {
-                freeSize = ((OpenFile)path).getFreeSpace();
-                diskTotal = ((OpenFile)path).getTotalSpace();
+            if (path instanceof OpenPathSizable && ((OpenPathSizable)path).getTotalSpace() > 0) {
+                freeSize = ((OpenPathSizable)path).getTotalSpace() - ((OpenPathSizable)path).getUsedSpace();
+                diskTotal = ((OpenPathSizable)path).getTotalSpace();
                 publishProgress();
+            } else if (path instanceof SpaceHandler) {
+                ((SpaceHandler)path).getSpace(new SpaceListener() {
+                    public void onException(Exception e) {
+                    }
+                    public void onSpaceReturned(long total, long used, long third) {
+                        updateTexts(mTextTotal, OpenPath.formatSize(total), mTextFree, OpenPath.formatSize(total - used));
+                    }
+                });
             } else if (path instanceof OpenMediaStore) {
                 OpenMediaStore ms = (OpenMediaStore)path;
                 freeSize = ms.getFile().getFreeSpace();
                 diskTotal = ms.getFile().getTotalSpace();
-                publishProgress();
-            } else if (path instanceof OpenSMB) {
-                try {
-                    SmbFile smb = ((OpenSMB)path).getFile();
-                    freeSize = smb.getDiskFreeSpace();
-                    String server = smb.getServer();
-                    if (server == null)
-                        diskTotal = smb.length();
-                    else
-                        diskTotal = new SmbFile((server.startsWith("smb://") ? "" : "smb://")
-                                + server + (server.endsWith("/") ? "" : "/")).length();
-                } catch (SmbException e) {
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
                 publishProgress();
             }
 
