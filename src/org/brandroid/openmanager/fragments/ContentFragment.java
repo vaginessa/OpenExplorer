@@ -2110,8 +2110,11 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public CharSequence getTitle() {
         if (mPath == null)
             return "???";
+        CharSequence tit = mPath.getTitle(getContext());
+        if(!Utils.isNullOrEmpty(tit))
+            return tit;
         String ret = mPath.getName();
-        if ((ret == null || ret.equals("")) && mPath != null && mPath.getUri() != null)
+        if (Utils.isNullOrEmpty(ret) && mPath != null && mPath.getUri() != null)
             ret = mPath.getUri().getLastPathSegment();
         if ((ret == null || ret.equals("")) && mPath != null)
             ret = mPath.toString();

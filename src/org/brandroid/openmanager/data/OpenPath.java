@@ -57,6 +57,10 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
     public static java.text.DateFormat DateFormatInstance = new SimpleDateFormat(
             "MMM dd yyyy HH:mm:ss", Locale.ENGLISH);
+    
+    public CharSequence getTitle(Context context) {
+        return getName();
+    }
 
     public abstract String getName();
 

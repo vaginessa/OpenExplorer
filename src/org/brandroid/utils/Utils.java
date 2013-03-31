@@ -356,8 +356,12 @@ public class Utils {
         return ret;
     }
 
-    public static boolean isNullOrEmpty(String exifMake) {
-        return TextUtils.isEmpty(exifMake);
+    public static boolean isNullOrEmpty(String s) {
+        return TextUtils.isEmpty(s);
+    }
+    
+    public static boolean isNullOrEmpty(CharSequence s) {
+        return TextUtils.isEmpty(s);
     }
 
     public static boolean hasSpaceForSize(long size) {

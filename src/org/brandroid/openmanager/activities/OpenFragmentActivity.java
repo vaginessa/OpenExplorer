@@ -316,8 +316,8 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
             @Override
             public void publish(LogRecord record) {
                 String msg = record.getMessage();
-                if (msg.startsWith("----") && msg.indexOf("\n") > -1)
-                    msg = msg.substring(msg.indexOf("\n") + 1);
+//                if (msg.startsWith("----") && msg.indexOf("\n") > -1)
+//                    msg = msg.substring(msg.indexOf("\n") + 1);
                 while (msg.startsWith("\n"))
                     msg = msg.substring(1);
                 /*
