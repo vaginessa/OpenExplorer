@@ -3260,7 +3260,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 initLogPopup();
             if (mLogViewEnabled && mLogFragment != null && !mLogFragment.isAdded())
                 showLogFrag(mLogFragment, false);
-        } else
+        } else if(!(path instanceof OpenNetworkPath))
             setViewVisibility(false, false, R.id.frag_log);
 
         /*
