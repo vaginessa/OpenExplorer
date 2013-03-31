@@ -36,10 +36,19 @@ import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ScaleDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.SpannedString;
+import android.text.style.ImageSpan;
+import android.view.Gravity;
 
 public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
         OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler,
@@ -58,6 +67,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public static final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
     public static final JsonFactory mJsonFactory = new GsonFactory();
     public static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    private static final String mFolderFields = "items(downloadUrl,editable,fileSize,iconLink,thumbnailLink,id,kind,labels/hidden,mimeType,modifiedDate,parents(id,isRoot),thumbnail/image,title),nextPageToken";
 
     public OpenDrive(String token)
     {
@@ -77,6 +87,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     {
         mParent = parent;
         mCredential = mParent.mCredential;
+        mDrive = mParent.mDrive;
         mFile = file;
         mFolderId = file.getId();
     }
@@ -96,6 +107,21 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     @Override
     public void setName(String name) {
         mName = name;
+    }
+    
+    @Override
+    public CharSequence getTitle(Context context) {
+        SpannableStringBuilder ret = new SpannableStringBuilder(getName());
+        if(mParent == null)
+        {
+            Resources r = context.getResources();
+            float h = r.getDimension(R.dimen.abs__action_bar_default_height) * 0.75f;
+            Drawable d = new BitmapDrawable(r, Bitmap.createScaledBitmap(
+                    ((BitmapDrawable)r.getDrawable(R.drawable.icon_drive)).getBitmap(),
+                    (int)h, (int)h, false));
+            ret.insert(0, " ").setSpan(new ImageSpan(d), 0, 1, Spannable.SPAN_COMPOSING);
+        }
+        return ret;
     }
 
     @Override
@@ -165,7 +191,17 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
 
     @Override
     public String getAbsolutePath() {
-        return getPathPrefix(true) + getId();
+        String ret = "";
+        if(getParent() != null)
+            ret = getParent().getPath();
+        else ret = getPathPrefix(true);
+        if(!ret.endsWith("/"))
+            ret += "/";
+        if(mFile != null)
+            ret += mFile.getId();
+        if(isDirectory() && !ret.endsWith("/"))
+            ret += "/";
+        return ret;
     }
 
     @Override
@@ -204,6 +240,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         if (Thread.currentThread().equals(OpenExplorer.UiThread))
             return getChildren();
         getOpenDrives(this, mDrive.files().list()
+                .setFields(mFolderFields)
                 .execute().getItems());
         return getChildren();
     }
@@ -406,12 +443,12 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         return cancelify(thread(new Runnable() {
             public void run() {
                 try {
-                    if (mFolderId.equals("root"))
-                    {
-                        mFolderId = mDrive.files().get(mFolderId).setFields("id").execute()
-                                .getId();
-                        Logger.LogDebug("Drive root = " + mFolderId);
-                    }
+//                    if (mFolderId.equals("root"))
+//                    {
+//                        mFolderId = mDrive.files().get(mFolderId).setFields("id").execute()
+//                                .getId();
+//                        Logger.LogDebug("Drive root = " + mFolderId);
+//                    }
                     String pg = "";
                     List<OpenDrive> kids = mGlobalChildren.get(mFolderId);
                     if (kids == null)
@@ -424,8 +461,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                                 .files()
                                 .list()
                                 .setQ("'" + mFolderId + "' in parents")
-                                .setFields(
-                                        "items(downloadUrl,editable,fileSize,iconLink,thumbnailLink,id,kind,labels/hidden,mimeType,modifiedDate,parents(id,isRoot),thumbnail/image,title),nextPageToken")
+                                .setFields(mFolderFields)
                                 .setMaxResults(100);
                         if (!pg.equals(""))
                             lst.setPageToken(pg);
@@ -455,37 +491,15 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                         pg = fl.getNextPageToken();
                         if (pg == null || pg.equals(""))
                             break;
+                        if(Thread.currentThread().isInterrupted())
+                            break;
                     }
                 } catch (Exception e) {
+                    Logger.LogError("Exception while listing Drive", e);
                     postException(e, callback);
                 }
             }
         }));
-    }
-
-    public Thread list(final ListListener listener) {
-        return thread(new Runnable() {
-            public void run() {
-                try {
-                    List<OpenDrive> kids = new Vector<OpenDrive>();
-                    int added = 0;
-                    String pg = "";
-                    do {
-                        com.google.api.services.drive.Drive.Files.List lst =
-                                mDrive.files().list();
-                        if (!pg.equals(""))
-                            lst.setPageToken(pg);
-                        final FileList fl = lst.execute();
-                        added = fl.size();
-                        getOpenDrives(OpenDrive.this, fl.getItems());
-                        pg = fl.getNextPageToken();
-                    } while (added > 0);
-                    postListReceived(getChildren(), listener);
-                } catch (Exception e) {
-                    postException(e, listener);
-                }
-            }
-        });
     }
 
     @Override
@@ -542,6 +556,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     
     public OpenDrive setId(String id)
     {
+        if(Utils.isNullOrEmpty(id)) return this;
         if(id.indexOf("@") > -1) return this;
         if(id.equals(mName)) return this;
         if(DEBUG)

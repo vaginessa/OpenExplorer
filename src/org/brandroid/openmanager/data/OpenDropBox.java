@@ -819,7 +819,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
         {
             callback.onSpaceReturned(mAccount.quota, mAccount.quotaNormal, mAccount.quotaShared);
         }
-        if(getServer().get("quota", 0) > 0)
+        if(getServer() != null && getServer().get("quota", 0) > 0)
         {
             callback.onSpaceReturned(getTotalSpace(), getUsedSpace(), getThirdSpace());
             return;
