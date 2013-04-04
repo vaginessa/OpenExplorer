@@ -85,9 +85,11 @@ import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -365,6 +367,9 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         setContentView(mBaseView);
+        
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         mLoginWebView = (WebView)mBaseView.findViewById(R.id.server_webview);
 
@@ -714,13 +719,39 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                         }
                     });
                 } else if (t2.startsWith("db")) {
-                    // AppKeyPair kp = new
-                    // AppKeyPair(PrivatePreferences.getKey("dropbox_key"),
-                    // PrivatePreferences.getKey("dropbox_secret"));
-                    // AndroidAuthSession dbAuth = new AndroidAuthSession(kp,
-                    // AccessType.DROPBOX);
                     if (checkDropBoxAppKeySetup())
-                        OpenDropBox.startAuthentication(this);
+                    {
+                        enableAuthenticateButton(false);
+                        if(!OpenDropBox.startAuthentication(this, mLoginWebView))
+                        {
+                            mLoginWebView.setWebViewClient(new WebViewClient(){
+                                @SuppressLint("NewApi")
+                                @Override
+                                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                    if(url.startsWith("db-"))
+                                    {
+                                        Uri uri = Uri.parse(url);
+                                        String token = uri.getQueryParameter("oauth_token");
+                                        String secret = uri.getQueryParameter("oauth_token_secret");
+                                        String uid = uri.getQueryParameter("uid");
+                                        server.setPassword(token + "," + secret);
+                                        mLoginWebView.setVisibility(View.GONE);
+                                        enableAuthenticateButton(false);
+                                        ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+                                        ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh),
+                                                R.id.server_authenticate);
+                                        invalidateOptionsMenu();
+                                        return true;
+                                    }
+                                    return false;
+                                }
+                            });
+                            mLoginWebView.loadUrl(AuthActivity.getConnectUrl(PrivatePreferences.getKey("dropbox_key"),
+                                    OpenDropBox.getConsumerSig(PrivatePreferences.getKey("dropbox_secret"))));
+                            mLoginWebView.setVisibility(View.VISIBLE);
+                        }
+                        
+                    }
                 } else if (t2.startsWith("drive")) {
                     if (server.getServerIndex() > -1) // Refresh token
                     {
@@ -897,6 +928,27 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         });
         mLoginWebView.loadUrl(loginUrl);
     }
+    
+    private void loadDBLoginWebview() {
+        String url = AuthActivity.getConnectUrl(PrivatePreferences.getKey("dropbox_key"), PrivatePreferences.getKey("dropbox_secret"));
+        mLoginWebView.setWebViewClient(new WebViewClient(){
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Toast.makeText(getContext(), "URL: " + url, Toast.LENGTH_LONG).show();
+                super.onPageFinished(view, url);
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if(url != null && url.startsWith("db-"))
+                {
+                    
+                    return true;
+                }
+                return false;
+            }
+        });
+        mLoginWebView.loadUrl(url);
+    }
 
     /**
      * Try to get an auth token. Due to a bug with Android webviews, it is
@@ -965,7 +1017,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuUtils.setMenuEnabled(menu, server.isValid(), android.R.string.ok);
+        MenuUtils.setMenuVisible(menu, server.isValid(), android.R.string.ok);
         MenuUtils.setMenuVisible(menu, server.getServerIndex() > -1, R.string.s_remove);
         return super.onPrepareOptionsMenu(menu);
     }
