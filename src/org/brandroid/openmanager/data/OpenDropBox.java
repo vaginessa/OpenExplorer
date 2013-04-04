@@ -16,6 +16,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.PrivatePreferences;
@@ -37,6 +38,7 @@ import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.RESTUtility.RequestMethod;
 import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.android.AuthActivity;
 import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
@@ -47,6 +49,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -59,6 +62,10 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
         OpenPath.OpenPathSizable, OpenPath.SpaceHandler, OpenPath.ThumbnailHandler,
@@ -328,7 +335,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
      *             AuthActivity in your manifest, meaning that the Dropbox app
      *             will not be able to redirect back to your app after auth.
      */
-    public static void startAuthentication(Activity c) {
+    public static boolean startAuthentication(final Activity c, final WebView web) {
         AppKeyPair appKeyPair = getAppKeyPair();
 
         Intent intent = getOfficialIntent(c, appKeyPair.key, appKeyPair.secret);
@@ -336,8 +343,12 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
                 && hasDropboxApp(c, intent)) {
             c.startActivity(intent); // ,
                                      // OpenExplorer.REQ_AUTHENTICATE_DROPBOX);
+            return true;
         } else {
-            startWebAuth(c, appKeyPair);
+            //startWebAuth(c, appKeyPair);
+            return false;
+            //web.loadUrl(AuthActivity.getConnectUrl(appKeyPair.key, getConsumerSig(appKeyPair.secret)));
+            //web.setVisibility(View.VISIBLE);
         }
     }
 
@@ -447,7 +458,7 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
         return false;
     }
 
-    private static String getConsumerSig(String consumerSecret) {
+    public static String getConsumerSig(String consumerSecret) {
         MessageDigest m = null;
         try {
             m = MessageDigest.getInstance("SHA-1");
