@@ -90,6 +90,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -219,7 +221,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         public AccountTypeAdapter(Context context)
         {
             accountManager = AccountManager.get(context);
-            accounts = new GoogleAccountManager(accountManager).getAccounts();
+            accounts = accountManager.getAccounts();
         }
 
         @Override
@@ -722,6 +724,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     if (checkDropBoxAppKeySetup())
                     {
                         enableAuthenticateButton(false);
+                        mLoginWebView.getSettings().setJavaScriptEnabled(true);
                         if(!OpenDropBox.startAuthentication(this, mLoginWebView))
                         {
                             mLoginWebView.setWebViewClient(new WebViewClient(){
@@ -757,8 +760,40 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     {
                         server.setPassword("");
                         getAuthToken(this, this, server.getUser(), true);
-                    } else
-                        showAccountList();
+                    } else {
+                        //showAccountList();
+                        enableAuthenticateButton(false);
+                        mLoginWebView.getSettings().setJavaScriptEnabled(true);
+                        mLoginWebView.setWebViewClient(new WebViewClient() {
+                            @SuppressLint("NewApi")
+                            @Override
+                            public void onPageFinished(WebView view, String url) {
+                                CookieSyncManager.getInstance().sync();
+                                // Get the cookie from cookie jar.
+                                String cookie = CookieManager.getInstance().getCookie(url);
+                                if (cookie == null) {
+                                    return;
+                                }
+                                // Cookie is a string like NAME=VALUE [; NAME=VALUE]
+                                String[] pairs = cookie.split(";");
+                                for (int i = 0; i < pairs.length; ++i) {
+                                    String[] parts = pairs[i].split("=", 2);
+                                    // If token is found, return it to the
+                                    // calling activity.
+                                    if (parts.length == 2 &&
+                                            parts[0].equalsIgnoreCase("oauth_token")) {
+                                        mLoginWebView.setVisibility(View.GONE);
+                                        server.setPassword(parts[1]);
+                                        enableAuthenticateButton(false);
+                                        ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+                                        ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh),
+                                                R.id.server_authenticate);
+                                        invalidateOptionsMenu();
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
                 return true;
             case R.id.server_logout:
@@ -1547,29 +1582,35 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
             String accountName, boolean refresh)
     {
-        GoogleAccountManager accountManager = new GoogleAccountManager(activity);
-        Account account = accountManager.getAccountByName(accountName);
+        AccountManager accountManager = AccountManager.get(activity);
+        Account account = getAccountByName(accountManager.getAccounts(), accountName);
         OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
         if (server != null && refresh)
             invalidateAuthToken(activity, server.getPassword());
-        accountManager.getAccountManager()
+        accountManager
                 .getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
                         new AccountManagerCallback<Bundle>() {
                             public void run(AccountManagerFuture<Bundle> future) {
-                                Bundle bundle = new Bundle();
                                 try {
-                                    bundle = future.getResult();
-                                    getAuthToken(activity, callback, bundle);
+                                    getAuthToken(activity, callback, future.getResult());
                                 } catch (final Exception e) {
                                     OpenExplorer.post(new Runnable() {
                                         public void run() {
-                                            callback.onException(e);
+                                            callback.onException(new Exception("Unable to get Auth Token", e));
                                 }
                                     });
                             }
                             }
 
                         }, OpenExplorer.getHandler());
+    }
+    
+    private static Account getAccountByName(Account[] accounts, String accountName)
+    {
+        for(Account a : accounts)
+            if(a.name.equalsIgnoreCase(accountName))
+                return a;
+        return null;
     }
 
     private static boolean received401 = false;
@@ -1585,9 +1626,10 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 // received401 = true;
                 try {
                     AccountManager am = AccountManager.get(activity);
-                    GoogleAccountManager man = new GoogleAccountManager(am);
-                    man.invalidateAuthToken(authToken);
-                    Account account = man.getAccountByName(accountName);
+                    Account account = getAccountByName(am.getAccounts(), accountName);
+                    if(account == null) return false;
+                    String type = account.type;
+                    am.invalidateAuthToken(type, authToken);
                     am.getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
                             new AccountManagerCallback<Bundle>() {
                                 public void run(AccountManagerFuture<Bundle> future) {
