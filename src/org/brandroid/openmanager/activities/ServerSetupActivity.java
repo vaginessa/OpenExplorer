@@ -825,6 +825,13 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                                 super.onReceivedTitle(view, title);
                             }
                         });
+                        mLoginWebView.setWebViewClient(new WebViewClient() {
+                            @Override
+                            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                view.loadUrl(url);
+                                return true;
+                            }
+                        });
                         mLoginWebView.loadUrl(
                                 OpenDrive.getTokenAuthURL());
                         mLoginWebView.setVisibility(View.VISIBLE);
@@ -1551,17 +1558,14 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         invalidateOptionsMenu();
     }
 
-    private static boolean received401 = false;
-
     public static boolean interceptOldToken(Exception e, String authToken, final String accountName,
             final Activity activity, final OnAuthTokenListener callback)
     {
         if (e instanceof GoogleJsonResponseException)
         {
             GoogleJsonResponseException re = (GoogleJsonResponseException)e;
-            if (re.getStatusCode() == 401 && !received401)
+            if (re.getStatusCode() == 401)
             {
-                // received401 = true;
                 try {
                     final OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
                     if(server != null)
