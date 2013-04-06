@@ -701,6 +701,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             }
         }).start();
     }
+    
+    private boolean has401occurred = false;
 
     private boolean interceptOldToken(Exception e)
     {
@@ -711,6 +713,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         GoogleJsonResponseException re = (GoogleJsonResponseException)e;
         if (re.getStatusCode() != 401)
             return false;
+        if(has401occurred) return false;
+        has401occurred = true;
         final OpenDrive drive = (OpenDrive)mPath;
         final GoogleCredential cred = drive.getCredential();
         return ServerSetupActivity.interceptOldToken(e, cred.getAccessToken(), drive.getServer()
@@ -724,6 +728,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
             @Override
             public void onDriveAuthTokenReceived(String account, String token) {
+                if(token.equals("")) return;
                 Toast.makeText(getContext(), "Token for " + account + " refreshed! " + token,
                         Toast.LENGTH_SHORT).show();
                 cred.setAccessToken(token);

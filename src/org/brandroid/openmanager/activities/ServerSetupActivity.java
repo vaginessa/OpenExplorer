@@ -8,9 +8,13 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenDrive;
+import org.brandroid.openmanager.data.OpenDrive.TicketResponseCallback;
+import org.brandroid.openmanager.data.OpenDrive.TokenResponseCallback;
 import org.brandroid.openmanager.data.OpenDropBox;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenNetworkPath;
@@ -90,6 +94,9 @@ import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -107,7 +114,7 @@ import android.widget.Toast;
 
 public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
         OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp,
-        OnAuthTokenListener, OnItemClickListener {
+        OnAuthTokenListener {
 
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
@@ -219,7 +226,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         public AccountTypeAdapter(Context context)
         {
             accountManager = AccountManager.get(context);
-            accounts = new GoogleAccountManager(accountManager).getAccounts();
+            accounts = accountManager.getAccounts();
         }
 
         @Override
@@ -496,9 +503,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
             ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
         } else {
-            if (data.hasExtra(AccountManager.KEY_INTENT))
-                ServerSetupActivity.getAuthToken(this, this, data.getExtras());
-            else if (OpenDropBox.handleIntent(data, server))
+            if (OpenDropBox.handleIntent(data, server))
             {
                 ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
                 ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
@@ -722,6 +727,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     if (checkDropBoxAppKeySetup())
                     {
                         enableAuthenticateButton(false);
+                        mLoginWebView.getSettings().setJavaScriptEnabled(true);
                         if(!OpenDropBox.startAuthentication(this, mLoginWebView))
                         {
                             mLoginWebView.setWebViewClient(new WebViewClient(){
@@ -755,10 +761,81 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                 } else if (t2.startsWith("drive")) {
                     if (server.getServerIndex() > -1) // Refresh token
                     {
-                        server.setPassword("");
-                        getAuthToken(this, this, server.getUser(), true);
-                    } else
-                        showAccountList();
+                        OpenDrive.refreshToken(server.getPassword(), new TicketResponseCallback() {
+                            
+                            @Override
+                            public void onException(Exception e) {
+                                Toast.makeText(getContext(), "Unable to refresh token", Toast.LENGTH_LONG).show();
+                                Logger.LogError("Unable to refresh token", e);
+                            }
+                            
+                            @SuppressLint("NewApi")
+                            @Override
+                            public void onTicketReceived(String ticket) {
+                                Toast.makeText(getContext(), "Token refreshed! [" + ticket + "]", Toast.LENGTH_LONG).show();
+                                if(ticket.equals("")) return;
+                                server.setPassword(ticket);
+                                enableAuthenticateButton(false);
+                                ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+                                ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh),
+                                        R.id.server_authenticate);
+                                invalidateOptionsMenu();
+                            }
+                        });
+                        //server.setPassword("");
+                        //getAuthToken(this, this, server.getUser(), true);
+                    } else {
+                        //showAccountList();enableAuthenticateButton(false);
+                        mLoginWebView.setVisibility(View.GONE);
+                        mLoginWebView.getSettings().setJavaScriptEnabled(true);
+                        mLoginWebView.setWebChromeClient(new WebChromeClient(){
+                            @SuppressLint("NewApi")
+                            @Override
+                            public void onReceivedTitle(WebView view, String title) {
+                                if(title.startsWith("Success code="))
+                                {
+                                    String[] parts = title.split("=", 2);
+                                    mLoginWebView.setVisibility(View.GONE);
+                                    ViewUtils.setText(mBaseView, getString(R.string.s_authenticating),
+                                            R.id.server_authenticate);
+                                    OpenDrive.getToken(parts[1], new TokenResponseCallback() {
+                                        
+                                        @Override
+                                        public void onException(Exception e) {
+                                            Toast.makeText(ServerSetupActivity.this, "Error getting token: " + e.getMessage(),
+                                                    Toast.LENGTH_LONG).show();
+                                            Logger.LogError("Couldn't get token", e);
+                                        }
+                                        
+                                        @Override
+                                        public void onTokenReceived(String accessToken, String refreshToken) {
+                                            Toast.makeText(ServerSetupActivity.this, "Token Received: [" + accessToken + "]",
+                                                    Toast.LENGTH_LONG).show();
+                                            if(accessToken.equals("")) return;
+                                            server.setPassword(accessToken);
+                                            server.setSetting("refresh", refreshToken);
+                                            enableAuthenticateButton(false);
+                                            ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+                                            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh),
+                                                    R.id.server_authenticate);
+                                            invalidateOptionsMenu();
+                                        }
+                                    });
+                                }
+                                super.onReceivedTitle(view, title);
+                            }
+                        });
+                        mLoginWebView.setWebViewClient(new WebViewClient() {
+                            @Override
+                            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                view.loadUrl(url);
+                                return true;
+                            }
+                        });
+                        mLoginWebView.loadUrl(
+                                OpenDrive.getTokenAuthURL());
+                        mLoginWebView.setVisibility(View.VISIBLE);
+                    }
                 }
                 return true;
             case R.id.server_logout:
@@ -782,8 +859,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                             });
                 else if (t2.startsWith("db"))
                     ((OpenDropBox)server.getOpenPath()).unlink();
-                else if (t2.startsWith("drive"))
-                    invalidateAuthToken(this, server.getPassword());
+//                else if (t2.startsWith("drive"))
+//                    invalidateAuthToken(this, server.getPassword());
                 enableAuthenticateButton(true);
                 return true;
         }
@@ -1092,25 +1169,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             }
         }
         ViewUtils.setViewsVisible(mBaseView, true, R.id.server_type);
-    }
-
-    private void showAccountList() {
-        ListView lvAccounts = new ListView(getContext());
-        lvAccounts.setAdapter(new AccountTypeAdapter(getContext()));
-        if (OpenExplorer.isNook())
-            lvAccounts.setBackgroundColor(Color.BLACK);
-        final Dialog dlg = new AlertDialog.Builder(getContext())
-                .setView(lvAccounts)
-                .setTitle(R.string.s_server_account_title)
-                .setNeutralButton(android.R.string.cancel, null)
-                .create();
-        lvAccounts.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                dlg.dismiss();
-                ServerSetupActivity.this.onItemClick(parent, view, position, id);
-            }
-        });
-        dlg.show();
     }
 
     @Override
@@ -1500,106 +1558,30 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         invalidateOptionsMenu();
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Object data = parent.getItemAtPosition(position);
-        if (data instanceof android.accounts.Account)
-        {
-            android.accounts.Account account = (android.accounts.Account)data;
-            ViewUtils.setText(view, colorify(R.string.s_authenticating, Color.YELLOW),
-                    R.id.server_account_status);
-            getAuthToken(this, this, account.name);
-        }
-    }
-
-    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
-            Bundle bundle)
-    {
-        if (bundle.containsKey(AccountManager.KEY_INTENT)) {
-            Intent intent = (Intent)bundle.getParcelable(AccountManager.KEY_INTENT);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            activity.startActivityForResult(intent, OpenExplorer.REQ_AUTHENTICATE_DRIVE);
-        } else if (bundle.containsKey(AccountManager.KEY_AUTHTOKEN)) {
-            String account = "";
-            if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
-                account = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-            String token = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-            postAuthCallback(account, token, callback);
-        } else if (bundle.containsKey(AccountManager.KEY_ACCOUNT_NAME))
-        {
-            String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-            getAuthToken(activity, callback, accountName);
-        }
-    }
-
-    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
-            String accountName)
-    {
-        getAuthToken(activity, callback, accountName, false);
-    }
-
-    public static void invalidateAuthToken(Activity activity, String authToken)
-    {
-        AccountManager.get(activity)
-                .invalidateAuthToken(OpenDrive.DRIVE_SCOPE_AUTH_TYPE, authToken);
-    }
-
-    public static void getAuthToken(final Activity activity, final OnAuthTokenListener callback,
-            String accountName, boolean refresh)
-    {
-        GoogleAccountManager accountManager = new GoogleAccountManager(activity);
-        Account account = accountManager.getAccountByName(accountName);
-        OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
-        if (server != null && refresh)
-            invalidateAuthToken(activity, server.getPassword());
-        accountManager.getAccountManager()
-                .getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
-                        new AccountManagerCallback<Bundle>() {
-                            public void run(AccountManagerFuture<Bundle> future) {
-                                Bundle bundle = new Bundle();
-                                try {
-                                    bundle = future.getResult();
-                                    getAuthToken(activity, callback, bundle);
-                                } catch (final Exception e) {
-                                    OpenExplorer.post(new Runnable() {
-                                        public void run() {
-                                            callback.onException(e);
-                                }
-                                    });
-                            }
-                            }
-
-                        }, OpenExplorer.getHandler());
-    }
-
-    private static boolean received401 = false;
-
-    public static boolean interceptOldToken(Exception e, String authToken, String accountName,
+    public static boolean interceptOldToken(Exception e, String authToken, final String accountName,
             final Activity activity, final OnAuthTokenListener callback)
     {
         if (e instanceof GoogleJsonResponseException)
         {
             GoogleJsonResponseException re = (GoogleJsonResponseException)e;
-            if (re.getStatusCode() == 401 && !received401)
+            if (re.getStatusCode() == 401)
             {
-                // received401 = true;
                 try {
-                    AccountManager am = AccountManager.get(activity);
-                    GoogleAccountManager man = new GoogleAccountManager(am);
-                    man.invalidateAuthToken(authToken);
-                    Account account = man.getAccountByName(accountName);
-                    am.getAuthToken(account, OpenDrive.DRIVE_SCOPE_AUTH_TYPE, null, activity,
-                            new AccountManagerCallback<Bundle>() {
-                                public void run(AccountManagerFuture<Bundle> future) {
-                                    Bundle bundle = new Bundle();
-                                    try {
-                                        bundle = future.getResult();
-                                        getAuthToken(activity, callback, bundle);
-                                    } catch (Exception e) {
-                                        callback.onException(e);
-                                    }
-                                }
-                            }, OpenExplorer.getHandler());
+                    final OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
+                    if(server != null)
+                    {
+                        OpenDrive.refreshToken(server.get("refresh", server.getPassword()), new TicketResponseCallback() {
+                            public void onException(Exception e) {
+                                Logger.LogError("Failed at 2nd attempt!", e);
+                            }
+                            
+                            @Override
+                            public void onTicketReceived(String ticket) {
+                                server.setPassword(ticket);
+                                callback.onDriveAuthTokenReceived(accountName, ticket);
+                            }
+                        });
+                    }
                     return true;
                 } catch (Exception e2) {
                     Logger.LogError("Error getting new Auth token", e2);

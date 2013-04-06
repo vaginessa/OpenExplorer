@@ -3,12 +3,20 @@ package org.brandroid.openmanager.data;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.WeakHashMap;
+
+import org.apache.http.client.methods.HttpGet;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
@@ -19,6 +27,8 @@ import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
+import org.json.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -184,9 +194,213 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         if (mCredential != null && mCredential.getServiceAccountUser() != null)
             ret += Utils.urlencode(mCredential.getServiceAccountUser()) + ":";
         if (includeToken && mCredential != null)
-            ret += mCredential.getAccessToken() + "@";
+            ret += Uri.encode(mCredential.getAccessToken()) + "@";
         ret += "drive.brandroid.org/";
         return ret;
+    }
+    
+    public interface TicketResponseCallback extends OpenPath.ExceptionListener {
+        public void onTicketReceived(String ticket);
+    }
+    
+    public static void getTicket(final TicketResponseCallback callback)
+    {
+        new Thread(new Runnable() {
+            public void run() {
+                String url = "https://accounts.google.com/o/oauth2/auth";
+                String params = "scope=" + Uri.encode(DriveScopes.DRIVE);
+                params += "&client_id=" + Uri.encode(PrivatePreferences.getKey("oauth_drive_client_id"));
+                params += "&response_type=code&redirect_uri=" + Uri.encode("urn:ietf:wg:oauth:2.0:oob");
+                HttpURLConnection uc = null;
+                OutputStreamWriter out = null;
+                BufferedReader br = null;
+                try {
+                    url += "?" + params;
+                    Logger.LogVerbose("Ticket URL: " + url);
+                    uc = (HttpURLConnection)new URL(url).openConnection();
+//                    uc.setDoOutput(true);
+//                    uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+//                    uc.setRequestMethod("POST");
+//                    uc.setReadTimeout(2000);
+//                    out = new OutputStreamWriter(uc.getOutputStream());
+//                    out.write(params);
+//                    out.flush();
+//                    out.close();
+                    uc.connect();
+                    StringBuilder sb = new StringBuilder();
+                    Logger.LogVerbose("Ticket response: " + uc.getResponseCode());
+                    if(uc.getResponseCode() < 400)
+                    {
+                        br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+                        String line = "";
+                        while((line = br.readLine()) != null)
+                        {
+                            if(line.indexOf("<title>") > -1)
+                            {
+                                sb = new StringBuilder(line.replaceAll("<[^>]*>", ""));
+                                break;
+                            }
+                            sb.append(line);
+                        }
+                    }
+                    final String ticket = sb.toString();
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onTicketReceived(ticket);
+                        }
+                    });
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+                finally {
+                    if(br != null)
+                        try {
+                            br.close();
+                        } catch (IOException e) {
+                        }
+                }
+            }
+        }).start();
+    }
+    
+    public static void refreshToken(final String token, final TicketResponseCallback callback)
+    {
+        new Thread(new Runnable() {
+            public void run() {
+                String url = "https://accounts.google.com/o/oauth2/token";
+                String params = "scope=" + Uri.encode(DriveScopes.DRIVE);
+                params += "&client_id=" + Uri.encode(PrivatePreferences.getKey("oauth_drive_client_id"));
+                params += "&client_secret=" + Uri.encode(PrivatePreferences.getKey("oauth_drive_secret"));
+                params += "&refresh_token=" + Uri.encode(token);
+                params += "&grant_type=authorization_code";
+                HttpURLConnection uc = null;
+                OutputStreamWriter out = null;
+                BufferedReader br = null;
+                try {
+                    //url += "?" + params;
+                    Logger.LogVerbose("Token URL: " + url);
+                    uc = (HttpURLConnection)new URL(url).openConnection();
+                    uc.setDoOutput(true);
+                    uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    uc.setRequestMethod("POST");
+                    uc.setReadTimeout(2000);
+                    out = new OutputStreamWriter(uc.getOutputStream());
+                    out.write(params);
+                    out.flush();
+                    out.close();
+                    uc.connect();
+                    StringBuilder sb = new StringBuilder();
+                    Logger.LogVerbose("Ticket response: " + uc.getResponseCode());
+                    if(uc.getResponseCode() < 400)
+                    {
+                        br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+                        String line = "";
+                        while((line = br.readLine()) != null)
+                        {
+                            if(line.indexOf("<title>") > -1)
+                            {
+                                sb = new StringBuilder(line.replaceAll("<[^>]*>", ""));
+                                break;
+                            }
+                            sb.append(line);
+                        }
+                    }
+                    final String ticket = sb.toString();
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onTicketReceived(ticket);
+                        }
+                    });
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+                finally {
+                    if(br != null)
+                        try {
+                            br.close();
+                        } catch (IOException e) {
+                        }
+                }
+            }
+        }).start();
+    }
+    
+    public static String getTokenAuthURL()
+    {
+        String url = "https://accounts.google.com/o/oauth2/auth";
+        String params = "scope=" + Uri.encode(DriveScopes.DRIVE);
+        params += "&client_id=" + Uri.encode(PrivatePreferences.getKey("oauth_drive_client_id"));
+        params += "&response_type=code&redirect_uri=" + Uri.encode("urn:ietf:wg:oauth:2.0:oob");
+        return url + "?" + params;
+    }
+    
+    public interface TokenResponseCallback extends OpenPath.ExceptionListener {
+        public void onTokenReceived(String accessToken, String refreshToken);
+    }
+    
+    public static void getToken(final String authCode, final TokenResponseCallback callback)
+    {
+        new Thread(new Runnable() {
+            public void run() {
+                String url = "https://accounts.google.com/o/oauth2/token";
+                String params = "code=" + Uri.encode(authCode);
+                params += "&client_id=" + Uri.encode(PrivatePreferences.getKey("oauth_drive_client_id"));
+                params += "&client_secret=" + Uri.encode(PrivatePreferences.getKey("oauth_drive_secret"));
+                params += "&redirect_uri=" + Uri.encode("urn:ietf:wg:oauth:2.0:oob");
+                params += "&grant_type=authorization_code";
+                HttpURLConnection uc = null;
+                OutputStreamWriter out = null;
+                BufferedReader br = null;
+                try {
+                    //url += "?" + params;
+                    Logger.LogVerbose("Token URL: " + url + "?" + params);
+                    uc = (HttpURLConnection)new URL(url).openConnection();
+                    uc.setDoOutput(true);
+                    uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    uc.setRequestMethod("POST");
+                    uc.setReadTimeout(2000);
+                    out = new OutputStreamWriter(uc.getOutputStream());
+                    out.write(params);
+                    out.flush();
+                    out.close();
+                    uc.connect();
+                    StringBuilder sb = new StringBuilder();
+                    Logger.LogVerbose("Ticket response: " + uc.getResponseCode());
+                    //if(uc.getResponseCode() < 400)
+                    {
+                        br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+                        String line = "";
+                        while((line = br.readLine()) != null)
+                        {
+                            if(line.indexOf("<title>") > -1)
+                            {
+                                sb = new StringBuilder(line.replaceAll("<[^>]*>", ""));
+                                break;
+                            }
+                            sb.append(line);
+                        }
+                    }
+                    JSONParser jp = new JSONParser();
+                    final JSONObject json = new JSONObject(sb.toString());
+                    post(new Runnable() {
+                        public void run() {
+                            callback.onTokenReceived(
+                                    json.optString("access_token", ""),
+                                    json.optString("refresh_token", ""));
+                        }
+                    });
+                } catch(Exception e) {
+                    postException(e, callback);
+                }
+                finally {
+                    if(br != null)
+                        try {
+                            br.close();
+                        } catch (IOException e) {
+                        }
+                }
+            }
+        }).start();
     }
 
     @Override
