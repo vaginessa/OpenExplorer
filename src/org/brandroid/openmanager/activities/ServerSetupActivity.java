@@ -1558,8 +1558,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         invalidateOptionsMenu();
     }
 
-    public static boolean interceptOldToken(Exception e, String authToken, final String accountName,
-            final Activity activity, final OnAuthTokenListener callback)
+    public static boolean interceptOldToken(Exception e, String authToken, final String refreshToken,
+            final String accountName, final Activity activity, final OnAuthTokenListener callback)
     {
         if (e instanceof GoogleJsonResponseException)
         {
@@ -1570,14 +1570,13 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     final OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null, accountName);
                     if(server != null)
                     {
-                        OpenDrive.refreshToken(server.get("refresh", server.getPassword()), new TicketResponseCallback() {
+                        OpenDrive.refreshToken(refreshToken, new TicketResponseCallback() {
                             public void onException(Exception e) {
                                 Logger.LogError("Failed at 2nd attempt!", e);
                             }
                             
                             @Override
                             public void onTicketReceived(String ticket) {
-                                server.setPassword(ticket);
                                 callback.onDriveAuthTokenReceived(accountName, ticket);
                             }
                         });

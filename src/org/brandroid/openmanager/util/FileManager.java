@@ -439,6 +439,7 @@ public class FileManager {
                     String pw = uri.getUserInfo();
                     if (pw != null && pw.indexOf(":") > -1)
                         pw = pw.substring(pw.indexOf(":") + 1);
+                    String refresh = "";
                     if (servers != null) {
                         OpenServer server = servers.findByUser("drive", null, pw);
                         if (server != null)
@@ -449,7 +450,7 @@ public class FileManager {
                             return ret;
                         }
                     }
-                    ret = new OpenDrive(pw).setId(uri.getLastPathSegment());
+                    ret = new OpenDrive(pw, refresh).setId(uri.getLastPathSegment());
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get Drive item from cache.", e);
                 }

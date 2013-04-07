@@ -293,7 +293,7 @@ public class OpenServer extends OpenPath {
             mPath = new OpenDropBox(mApi);
         } else if (t2.startsWith("drive"))
         {
-            return new OpenDrive(getPassword());
+            return new OpenDrive(getPassword(), get("refresh"));
         } else
             return null;
         mPath.setServer(this);

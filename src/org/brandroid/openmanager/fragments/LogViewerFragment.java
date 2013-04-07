@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class LogViewerFragment extends OpenFragment implements Poppable, OnItemClickListener {
     private final SparseArray<LogEntry> mData;
@@ -295,8 +296,14 @@ public class LogViewerFragment extends OpenFragment implements Poppable, OnItemC
             .setPositiveButton(R.string.s_menu_copy, new DialogInterface.OnClickListener() {
                 @SuppressWarnings("deprecation")
                 public void onClick(DialogInterface dialog, int which) {
-                    ClipboardManager clip = (ClipboardManager)getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                    clip.setText(txt);
+                    try {
+                        ClipboardManager clip = (ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
+                        clip.setText(txt);
+                        makeToast(context, txt.length() + " bytes added to clipboard.");
+                    } catch(Exception e) {
+                        if(context != null)
+                            makeToast(context, "Unable to set clipboard. " + e.getMessage());
+                    }
                 }
             })
             .setNegativeButton(android.R.string.ok, null)
