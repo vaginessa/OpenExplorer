@@ -54,7 +54,8 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
 
 public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
-        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler {
+        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler,
+        OpenPath.OpenPathUpdateHandler {
 
     public final static String DRIVE_SCOPE_AUTH_TYPE = "oauth2:" + DriveScopes.DRIVE;
 
