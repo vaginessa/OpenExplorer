@@ -324,7 +324,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             return R.style.AppTheme_LightAndDark;
         else if (themeName.equals("custom"))
             return R.style.AppTheme_Custom;
-        return 0;
+        return R.style.Dialog;
     }
 
     @Override
@@ -611,14 +611,16 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     public void setIcon(int res)
     {
-        getSupportActionBar().setIcon(res);
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setIcon(res);
         // getSupportActionBar().setIcon(res);
     }
 
     @Override
     public void setTitle(int titleId) {
         super.setTitle(titleId);
-        getSupportActionBar().setTitle(titleId);
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setTitle(titleId);
     }
 
     // @Override
@@ -1676,6 +1678,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     private void showDriveWebview()
     {
+        enableAuthenticateButton(false);
         mLoginWebView.setVisibility(View.GONE);
         mLoginWebView.getSettings().setJavaScriptEnabled(true);
         mLoginWebView.setWebChromeClient(new WebChromeClient(){
