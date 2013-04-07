@@ -792,6 +792,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
 
     public interface ListHandler {
         public Thread list(final ListListener listener);
+        public void clearChildren();
     }
 
     public interface IsCancelledListener {

@@ -132,6 +132,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
                 try {
                     cachePath = FileManager.getOpenCache(path.getAbsolutePath(), true, null);
                     if (cachePath != null) {
+                        cachePath.clearChildren();
                         if (cachePath instanceof OpenNetworkPath)
                             list = ((OpenNetworkPath)cachePath).getChildren();
                         if (list == null)
@@ -165,6 +166,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
                 }
                 if (!success || list == null || list.length == 0)
                     try {
+                        cachePath.clearChildren();
                         list = cachePath.listFiles();
                         if (list != null)
                             FileManager.setOpenCache(cachePath.getAbsolutePath(), cachePath);
@@ -186,6 +188,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
                 }
             } else {
                 try {
+                    path.clearChildren();
                     for (OpenPath f : path.listFiles())
                         ret.add(f);
                 } catch (IOException e) {

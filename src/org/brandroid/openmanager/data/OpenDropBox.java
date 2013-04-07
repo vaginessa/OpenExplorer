@@ -934,4 +934,9 @@ public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.Clou
         }, callback);
         return true;
     }
+    
+    @Override
+    public void clearChildren() {
+        mChildren.clear();
+    }
 }

@@ -48,6 +48,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenNetworkPath.CloudOpsHandler;
 import org.brandroid.openmanager.data.OpenNetworkPath.CloudProgressListener;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.ListHandler;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPath.SpaceListener;
@@ -657,7 +658,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             });
         } else if (mPath instanceof OpenPath.ListHandler) {
             setProgressVisibility(true);
-            ((OpenPath.ListHandler)mPath).list(new OpenPath.ListListener() {
+            ListHandler lh = (ListHandler)mPath;
+            lh.list(new OpenPath.ListListener() {
                 public void onException(final Exception e) {
                     if (interceptOldToken(e))
                         return;
@@ -717,18 +719,23 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         has401occurred = true;
         final OpenDrive drive = (OpenDrive)mPath;
         final GoogleCredential cred = drive.getCredential();
-        return ServerSetupActivity.interceptOldToken(e, cred.getAccessToken(), drive.getServer()
-                .getUser(), getExplorer(), new OnAuthTokenListener() {
+        final String refresh = drive.getServer().get("refresh"); 
+        if(DEBUG)
+            Logger.LogDebug("Refreshing drive token with [" + refresh + "]");
+        return ServerSetupActivity.interceptOldToken(e, cred.getAccessToken(), refresh,
+                drive.getServer().getUser(), getExplorer(), new OnAuthTokenListener() {
 
             @Override
             public void onException(Exception e) {
-                // TODO Auto-generated method stub
-
+                Logger.LogWarning("Unable to intercept bad token.", e);
             }
 
             @Override
             public void onDriveAuthTokenReceived(String account, String token) {
-                if(token.equals("")) return;
+                if(token.equals("")) {
+                    Logger.LogWarning("Refresh token empty! :(");
+                    return;
+                }
                 Toast.makeText(getContext(), "Token for " + account + " refreshed! " + token,
                         Toast.LENGTH_SHORT).show();
                 cred.setAccessToken(token);
@@ -1224,7 +1231,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             case R.id.menu_refresh:
                 if (DEBUG)
                     Logger.LogDebug("Refreshing " + getPath().getPath());
-                getPath().clearChildren();
+                //getPath().clearChildren();
                 FileManager.removeOpenCache(getPath().getPath());
                 getPath().deleteFolderFromDb();
                 refreshData(new Bundle(), false);

@@ -12,14 +12,11 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 import java.util.WeakHashMap;
 
-import org.apache.http.client.methods.HttpGet;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.IntentManager;
@@ -48,21 +45,16 @@ import com.google.api.services.drive.model.ParentReference;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.ScaleDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.SpannedString;
 import android.text.style.ImageSpan;
-import android.view.Gravity;
 
 public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
-        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler,
-        OpenPath.OpenPathUpdateHandler {
+        OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler {
 
     public final static String DRIVE_SCOPE_AUTH_TYPE = "oauth2:" + DriveScopes.DRIVE;
 
@@ -79,14 +71,17 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     public static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
     private static final String mFolderFields = "items(downloadUrl,editable,fileSize,iconLink,thumbnailLink,id,kind,labels/hidden,mimeType,modifiedDate,parents(id,isRoot),thumbnail/image,title),nextPageToken";
 
-    public OpenDrive(String token)
+    public OpenDrive(String accessToken, String refreshToken)
     {
         mCredential = new GoogleCredential.Builder()
                 .setClientSecrets(
                         PrivatePreferences.getKey("oauth_drive_client_id", ""),
                         PrivatePreferences.getKey("oauth_drive_secret", ""))
-                .build();
-        mCredential.setAccessToken(token);
+                .setTransport(mTransport)
+                .setJsonFactory(mJsonFactory)
+                .build()
+                .setRefreshToken(refreshToken)
+                .setAccessToken(accessToken);
         setCredential(mCredential);
         mParent = null;
         mFile = null;
@@ -146,6 +141,12 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                 return mFile.getOriginalFilename();
         }
         return mName;
+    }
+    
+    @Override
+    public void clearChildren() {
+        if(mGlobalChildren.containsKey(getId()))
+            mGlobalChildren.remove(getId());
     }
 
     @Override
@@ -278,7 +279,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
                 BufferedReader br = null;
                 try {
                     //url += "?" + params;
-                    Logger.LogVerbose("Token URL: " + url);
+                    Logger.LogVerbose("Token URL: " + url + "?" + params);
                     uc = (HttpURLConnection)new URL(url).openConnection();
                     uc.setDoOutput(true);
                     uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -651,8 +652,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
             mGlobalChildren.put(id, kids);
         }
     }
-
-    @Override
+    
     public Cancellable list(final OpenContentUpdateListener callback) {
         return cancelify(thread(new Runnable() {
             public void run() {
@@ -906,8 +906,7 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         if(server != null && server.has("total"))
         {
             callback.onSpaceReturned(server.get("total", 0),
-                    server.get("agg", 0), 
-                    server.get("used", 0));
+                    server.get("agg", 0), 0);
             return;
         }
         thread(new Runnable() {

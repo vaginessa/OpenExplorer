@@ -75,6 +75,7 @@ import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.data.OpenNetworkPath.CloudDeleteListener;
 import org.brandroid.openmanager.data.OpenNetworkPath.CloudOpsHandler;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -969,7 +970,12 @@ public class EventHandler {
 
                 case DELETE:
                     for (int i = 0; i < mTotalCount; i++)
-                        ret += mFileMang.deleteTarget(params[i]);
+                    {
+                        if(checkCloudDelete(params[i]))
+                            ret++;
+                        else
+                            ret += mFileMang.deleteTarget(params[i]);
+                    }
                     break;
                 case SEARCH:
                     mSearchResults = new ArrayList<String>();
@@ -1281,21 +1287,40 @@ public class EventHandler {
                         local, new OpenNetworkPath.CloudProgressListener() {
                             public void onException(Exception e) {
                                 Logger.LogError("Unable to upload to cloud", e);
+                                onPostExecute(0);
                                 mThreadListener.onWorkerThreadFailure(BackgroundWork.this.mType, old, intoDir);
                             }
 
                             @Override
                             public void onCloudComplete(String status) {
+                                onPostExecute(1);
                                 Logger.LogDebug("Cloud Upload finished");
                             }
 
                             @Override
                             public void onProgress(long bytes) {
-                                publishMyProgress((int)bytes, (int)srcLength);
+                                onProgressUpdate((int)bytes, (int)srcLength);
                             }
                         });
 
                 return true;
+            }
+            return false;
+        }
+        
+        private Boolean checkCloudDelete(final OpenPath file)
+        {
+            if(file instanceof OpenNetworkPath.CloudOpsHandler)
+            {
+                final CloudOpsHandler remote = (CloudOpsHandler)file;
+                return remote.delete(new CloudDeleteListener() {
+                    public void onException(Exception e) {
+                        Logger.LogError("Unable to delete cloud file." , e);
+                    }
+                    public void onDeleteComplete(String status) {
+                        onPostExecute(1);
+                    }
+                });
             }
             return false;
         }
@@ -1313,17 +1338,18 @@ public class EventHandler {
                         local, new OpenNetworkPath.CloudProgressListener() {
                             public void onException(Exception e) {
                                 Logger.LogError("Unable to download from cloud", e);
+                                onPostExecute(0);
                                 mThreadListener.onWorkerThreadFailure(BackgroundWork.this.mType, from, local);
                             }
 
                             @Override
                             public void onCloudComplete(String status) {
-                                Logger.LogDebug("Cloud download finished");
+                                onPostExecute(1);
                             }
 
                             @Override
                             public void onProgress(long bytes) {
-                                publishMyProgress((int)bytes, (int)srcLength);
+                                onProgressUpdate((int)bytes, (int)srcLength);
                             }
                         });
 

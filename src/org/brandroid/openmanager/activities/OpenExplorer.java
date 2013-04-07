@@ -2068,11 +2068,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (!mDownloadParent.isLoaded()) {
             new Thread(new Runnable() {
                 public void run() {
-                    if (mHasExternal)
+                    try {
+                    if (mHasExternal && extDrive != null)
                         for (OpenPath kid : extDrive.list())
                             if (kid.getName().toLowerCase().indexOf("download") > -1)
                                 mDownloadParent.addSearch(new SmartSearch(kid));
-                    if (mHasInternal)
+                    if (mHasInternal && intDrive != null && intDrive.list() != null)
                         for (OpenPath kid : intDrive.list())
                             if (kid.getName().toLowerCase().indexOf("download") > -1)
                                 mDownloadParent.addSearch(new SmartSearch(kid));
@@ -2093,6 +2094,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                     if (kid.exists() && kid.isDirectory())
                                         mDownloadParent.addSearch(new SmartSearch(kid));
                                 }
+                    }
+                    } catch(Exception e) {
+                        Logger.LogError("Unable to get downloads.", e);
                     }
                 }
             }).start();
