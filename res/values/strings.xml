@@ -429,5 +429,6 @@
     <string name="s_folders">folders</string>
     <string name="s_hidden">hidden</string>
     <string name="s_total">total</string>
+    <string name="s_custom_account">Custom Account</string>
 
 </resources>
