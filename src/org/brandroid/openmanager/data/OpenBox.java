@@ -42,7 +42,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     private final OpenBox mParent;
     private Long mId = 0l;
 
-    private List<OpenPath> mChildren = null;
+    private List<OpenBox> mChildren = null;
 
     private final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
     
@@ -191,7 +191,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     public Thread list(final ListListener listener) {
         if (mChildren != null)
             listener.onListReceived(getChildren());
-        mChildren = new Vector<OpenPath>();
+        mChildren = new Vector<OpenBox>();
         if (DEBUG)
             Logger.LogDebug("Box listing for " + getId() + "!");
         return mBox.getAccountTree(getToken(), getId(), null, new GetAccountTreeListener() {
@@ -234,7 +234,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
             callback.doneUpdating();
             return;
         }
-        mChildren = new Vector<OpenPath>();
+        mChildren = new Vector<OpenBox>();
         if (DEBUG)
             Logger.LogDebug("Box listing for " + getId() + "!");
         mBox.getAccountTree(getToken(), getId(), new String[0], new GetAccountTreeListener() {
@@ -387,7 +387,7 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
 
     @Override
     public Boolean canWrite() {
-        return false;
+        return true;
     }
 
     @Override
