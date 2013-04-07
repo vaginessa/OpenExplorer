@@ -220,6 +220,11 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
             }
         });
     }
+    
+    public void clearChildren() {
+        if(mChildren != null)
+            mChildren.clear();
+    }
 
     public void list(final OpenContentUpdateListener callback) throws IOException {
         if (mChildren != null)

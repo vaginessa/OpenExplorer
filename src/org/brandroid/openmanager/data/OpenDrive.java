@@ -147,6 +147,12 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         }
         return mName;
     }
+    
+    @Override
+    public void clearChildren() {
+        if(mGlobalChildren.containsKey(getId()))
+            mGlobalChildren.remove(getId());
+    }
 
     @Override
     public boolean syncUpload(OpenFile f, NetworkListener l) {
