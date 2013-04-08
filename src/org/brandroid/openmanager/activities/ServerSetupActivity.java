@@ -443,6 +443,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                             String val = ((TextView)v).getText().toString();
                             server.setSetting(key, val);
                             v.setTag(null);
+                            invalidateOptionsMenu();
                         }
                     }
                 });

@@ -9,7 +9,9 @@ import java.util.Vector;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 import com.box.androidlib.Box;
@@ -27,6 +29,7 @@ import com.box.androidlib.GetAccountTreeListener;
 import com.box.androidlib.User;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -188,6 +191,67 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
     }
 
     @Override
+    public boolean listFromDb(SortType sort) {
+        if (!OpenPath.AllowDBCache)
+            return false;
+        String folder = getPath(); // .replace("/" + getName(), "");
+        if (!isDirectory())
+            folder = folder.replace("/" + getName(), "");
+        if (!folder.endsWith("/"))
+            folder += "/";
+        if (folder.endsWith("//"))
+            folder = folder.substring(0, folder.length() - 1);
+        Cursor c = mDb.fetchItemsFromFolder(folder, sort);
+        if (c == null)
+            return false;
+        if (c.getCount() == 0) {
+            c.close();
+            c = mDb.fetchItemsFromFolder(folder.substring(0, folder.length() - 1), sort);
+        }
+        mChildren.clear();
+        c.moveToFirst();
+        while (!c.isAfterLast()) {
+            // String folder =
+            // c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_FOLDER));
+            DAO file = new BoxFile();
+            boolean f = true;
+            String name = c.getString(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_NAME));
+            int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
+            int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
+            String path = folder + name;
+            int atts = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_ATTRIBUTES));
+            if (path.endsWith("//"))
+                path = path.substring(0, path.length() - 1);
+            if(name.endsWith("/"))
+            {
+                BoxFolder f2 = new BoxFolder();
+                f2.setFolderName(name);
+                f2.setUpdated((long)modified);
+                f2.setId((long)atts);
+                f2.setFileCount((long)size);
+                file = f2;
+            } else {
+                BoxFile f3 = new BoxFile();
+                f3.setFileName(name);
+                f3.setSize((long)size);
+                f3.setUpdated((long)modified);
+                f3.setId((long)atts);
+                file = f3;
+            }
+            OpenBox child = new OpenBox(this, file);
+            mChildren.add(child);
+            c.moveToNext();
+        }
+        c.close();
+        return true;
+    }
+    
+    @Override
+    public int getAttributes() {
+        return (int)getId();
+    }
+
+    @Override
     public Thread list(final ListListener listener) {
         if (mChildren != null)
             listener.onListReceived(getChildren());
@@ -293,9 +357,10 @@ public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
 
     @Override
     public String getPath() {
-        String ret = "/";
+        String ret = null;
         if (getFolderId() != 0)
             ret = getParent().getPath();
+        else ret = "box://" + Utils.urlencode(mUser.getLogin()) + "@m.box.com/";
         ret += getName();
         if (isDirectory() && !ret.endsWith("/"))
             ret += "/";
