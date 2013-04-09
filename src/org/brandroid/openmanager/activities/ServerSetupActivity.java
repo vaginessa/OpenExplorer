@@ -227,11 +227,19 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         public AccountTypeAdapter(Context context)
         {
             accountManager = AccountManager.get(context);
-            GoogleAccountManager gam = new GoogleAccountManager(accountManager);
-            if(gam != null)
-                accounts = gam.getAccounts();
+            if(hasGoogleAccounts())
+                accounts = new GoogleAccountManager(accountManager).getAccounts();
             else
                 accounts = new android.accounts.Account[0];
+        }
+        
+        private boolean hasGoogleAccounts()
+        {
+            try {
+                return new GoogleAccountManager(accountManager).getAccounts().length > 0;
+            } catch(Exception e) {
+                return false;
+            }
         }
 
         @Override
