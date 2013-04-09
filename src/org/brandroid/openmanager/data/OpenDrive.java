@@ -195,6 +195,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
         String ret = "drive://";
         if (mCredential != null && mCredential.getServiceAccountUser() != null)
             ret += Utils.urlencode(mCredential.getServiceAccountUser()) + ":";
+        else if(getServer() != null)
+            ret += Utils.urlencode(getServer().getUser()) + ":";
         if (includeToken && mCredential != null)
             ret += Uri.encode(mCredential.getAccessToken()) + "@";
         ret += "drive.brandroid.org/";

@@ -53,7 +53,7 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     private Object mTag = null;
     private OpenPathThreadUpdater mUpdater;
     protected static OpenPathDbAdapter mDb = null;
-    public static Boolean AllowDBCache = true;
+    public final static Boolean AllowDBCache = false;
 
     public static java.text.DateFormat DateFormatInstance = new SimpleDateFormat(
             "MMM dd yyyy HH:mm:ss", Locale.ENGLISH);

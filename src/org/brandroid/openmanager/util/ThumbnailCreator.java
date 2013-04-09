@@ -357,8 +357,8 @@ public class ThumbnailCreator {
     }
 
     public static int getDefaultResourceId(OpenPath file, int mWidth, int mHeight) {
-        final String mName = file.getName();
-        final String ext = mName.substring(mName.lastIndexOf(".") + 1);
+        final String mName = Utils.ifNull(file.getName(),"");
+        final String ext = file.getExtension();
         final String mime = Utils.ifNull(file.getMimeType(),"");
         final String sPath2 = mName.toLowerCase();
         final boolean useLarge = mWidth > 36;

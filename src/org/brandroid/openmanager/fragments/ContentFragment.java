@@ -37,6 +37,8 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.ContentAdapter;
 import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.adapters.OpenPathAdapter;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenFile;
@@ -93,6 +95,7 @@ import android.net.Uri;
 import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.MessageQueue;
 import android.support.v4.app.FragmentManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -608,6 +611,21 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 @Override
                 public void addContentPath(final OpenPath... files) {
                     mContentAdapter.addAll(Arrays.asList(files));
+                    if(OpenPath.AllowDBCache)
+                    {
+                        new Thread(new Runnable() {
+                            public void run() {
+                                OpenPathDbAdapter db = OpenPath.getDb();
+                                if (db != null)
+                                    db.createItem(files);
+                                else
+                                    for (OpenPath kid : files)
+                                        if (kid != null)
+                                            kid.addToDb();
+                                OpenPath.closeDb();
+                            }
+                        }).start();
+                    }
                 }
 
                 @Override
@@ -656,8 +674,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     cancellor.cancel();
                 }
             });
+            
+            return;
         } else if (mPath instanceof OpenPath.ListHandler) {
-            setProgressVisibility(true);
+            setProgressVisibility(true);                
             ListHandler lh = (ListHandler)mPath;
             lh.list(new OpenPath.ListListener() {
                 public void onException(final Exception e) {
@@ -671,10 +691,25 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                 }
 
-                public void onListReceived(OpenPath[] list) {
+                public void onListReceived(final OpenPath[] list) {
                     setProgressVisibility(false);
                     mContentAdapter.updateData(list);
                     ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
+                    if(OpenPath.AllowDBCache)
+                    {
+                        new Thread(new Runnable() {
+                            public void run() {
+                                OpenPathDbAdapter db = OpenPath.getDb();
+                                if (db != null)
+                                    db.createItem(list);
+                                else
+                                    for (OpenPath kid : list)
+                                        if (kid != null)
+                                            kid.addToDb();
+                                OpenPath.closeDb();
+                            }
+                        }).start();
+                    }
                 }
             });
             return;

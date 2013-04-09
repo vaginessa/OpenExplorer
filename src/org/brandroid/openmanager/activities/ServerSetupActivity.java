@@ -435,6 +435,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                     }
                 });
                 v.setOnFocusChangeListener(new OnFocusChangeListener() {
+                    @SuppressLint("NewApi")
                     public void onFocusChange(View v, boolean hasFocus) {
                         if (!hasFocus && v.getTag() != null
                                 && v.getTag() instanceof String
@@ -443,6 +444,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                             String val = ((TextView)v).getText().toString();
                             server.setSetting(key, val);
                             v.setTag(null);
+                            invalidateOptionsMenu();
                         }
                     }
                 });

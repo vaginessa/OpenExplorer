@@ -22,6 +22,7 @@ import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -107,18 +108,7 @@ public class OpenSMB extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
 
     @Override
     public String getName() {
-        String ret = getName(mFile.getPath());
-        if (ret.endsWith("/"))
-            ret = ret.substring(ret.lastIndexOf("/", ret.lastIndexOf("/") - 1) + 1);
-        else
-            ret = ret.substring(ret.lastIndexOf("/") + 1);
-        if (ret.indexOf("@") > -1)
-            ret = ret.substring(ret.indexOf("@") + 1);
-        if (ret.equals(""))
-            ret = mFile.getName();
-        if (ret.equals("") || ret.equals("/"))
-            ret = mFile.getServer();
-        return ret;
+        return Utils.ifNull(mName, mFile.getName());
     }
 
     @Override
@@ -182,23 +172,7 @@ public class OpenSMB extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
 
     @Override
     public OpenSMB getParent() {
-        if (mParent != null)
-            return mParent;
-        else {
-            try {
-                if (!Thread.currentThread().equals(OpenExplorer.UiThread))
-                    return new OpenSMB(new SmbFile(mFile.getParent(), mFile.getAuth()));
-                String parent = OpenPath.getParent(getPath());
-                if (parent == null)
-                    return null;
-                if (!parent.startsWith("smb://"))
-                    parent = "smb://" + parent;
-                return new OpenSMB(new SmbFile(parent, mFile.getAuth()));
-            } catch (MalformedURLException e) {
-                Logger.LogError("Couldn't get SMB Parent.", e);
-                return null;
-            }
-        }
+        return mParent;
     }
 
     @Override
