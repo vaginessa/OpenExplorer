@@ -19,8 +19,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="223"
-    android:versionName="0.223" >
+    android:versionCode="225"
+    android:versionName="0.225" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -59,8 +59,7 @@
     <application
         android:name="org.brandroid.openmanager.activities.OpenApplication"
         android:allowBackup="true"
-        android:icon="@drawable/icon_flat"
-        android:label="@string/app_name"
+        android:icon="@drawable/icon"
         android:largeHeap="true"
         android:theme="@style/AppTheme.Dark" >
         <activity
@@ -128,8 +127,9 @@
             android:launchMode="singleTop" />
         <activity
             android:name="org.brandroid.openmanager.activities.ServerSetupActivity"
+            android:label="@null"
       		android:uiOptions="none"
-      		android:theme="@style/Dialog"
+      		android:theme="@style/AppTheme.Dialog"
             android:configChanges="screenSize|keyboard|keyboardHidden" >
         </activity>
         <activity
@@ -212,7 +212,7 @@
         </activity>
         <activity
             android:name="org.brandroid.openmanager.activities.WTFSenderActivity"
-            android:theme="@style/Dialog" />
+            android:theme="@style/AppTheme.Dialog" />
         <activity
             android:name="org.brandroid.openmanager.activities.SettingsActivity"
             android:exported="false"
@@ -226,10 +226,10 @@
         <activity
             android:name="org.brandroid.openmanager.activities.BluetoothActivity"
             android:label="Bluetooth"
-            android:theme="@style/Dialog" />
+            android:theme="@style/AppTheme.Dialog" />
         <activity
             android:name="org.brandroid.openmanager.activities.SplashActivity"
-            android:theme="@style/Dialog" />
+            android:theme="@style/AppTheme.Dialog" />
 
         <meta-data
             android:name="ga_code"

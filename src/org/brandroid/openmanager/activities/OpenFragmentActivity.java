@@ -43,7 +43,7 @@ public abstract class OpenFragmentActivity extends SherlockFragmentActivity impl
     private final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
     public String getClassName() {
-        return this.getClass().getSimpleName();
+        return super.getLocalClassName();
     }
 
     public ActionBar getSupportActionBar() {

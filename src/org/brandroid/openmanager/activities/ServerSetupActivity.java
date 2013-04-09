@@ -39,6 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -90,6 +91,8 @@ import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewParent;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
@@ -107,6 +110,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -150,154 +154,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     private WebView mLoginWebView;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
-    public static class ServerTypeAdapter extends BaseAdapter
-    {
-        private final String[] mServerTypes;
-        private final List<ResolveInfo> mResolves;
-        private final LayoutInflater mInflater;
-        private final PackageManager mPackageManager;
-        private final Resources mResources;
-        private final String[] mServerLabels;
-
-        public ServerTypeAdapter(OpenApp app)
-        {
-            mInflater = LayoutInflater.from(app.getContext());
-            mPackageManager = app.getContext().getPackageManager();
-            Intent intent = new Intent("org.brandroid.openmanager.server_type");
-            mResolves = IntentManager.getResolvesAvailable(intent, app);
-            mServerTypes = app.getContext().getResources()
-                    .getStringArray(R.array.server_types_values);
-            mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
-            mResources = app.getResources();
-        }
-
-        @Override
-        public int getCount() {
-            return mServerTypes.length +
-                    mResolves.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            if (position < mServerTypes.length)
-                return mServerTypes[position];
-            return mResolves.get(position - mServerTypes.length);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null)
-                convertView = mInflater.inflate(R.layout.server_type_item, null);
-            TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
-            CharSequence text = null;
-            Drawable icon = null;
-            if (position < mServerTypes.length)
-            {
-                text = mServerLabels[position];
-                String type = mServerTypes[position];
-                int iType = getServerTypeFromString(type);
-                if (iType > -1)
-                    icon = parent.getResources().getDrawable(
-                            ServerSetupActivity.getServerTypeDrawable(iType));
-                else
-                    ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
-
-            } else {
-                ResolveInfo info = mResolves.get(position - mServerTypes.length);
-                text = info.loadLabel(mPackageManager);
-                icon = info.loadIcon(mPackageManager);
-            }
-            ViewUtils.setImageDrawable(convertView, icon, android.R.id.icon);
-            tv.setText(text);
-            return convertView;
-        }
-
-    }
-
-    public class AccountTypeAdapter extends BaseAdapter
-    {
-        private final AccountManager accountManager;
-        private final android.accounts.Account[] accounts;
-
-        public AccountTypeAdapter(Context context)
-        {
-            accountManager = AccountManager.get(context);
-            accounts = new GoogleAccountManager(accountManager).getAccounts();
-        }
-
-        @Override
-        public int getCount() {
-            if(accounts.length == 0)
-                return 0;
-            return accounts.length + 1;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            if(position < accounts.length)
-                return accounts[position];
-            else
-                return getContext().getString(R.string.s_custom_account);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View view, ViewGroup parent) {
-            final Context context = parent.getContext();
-            if (view == null)
-                view = LayoutInflater.from(context)
-                        .inflate(R.layout.server_account_row, null);
-            Object o = getItem(position);
-            if(o instanceof String)
-            {
-                ((TextView)view.findViewById(R.id.server_account_name)).setText((String)o);
-                ((TextView)view.findViewById(R.id.server_account_status)).setText("");
-                return view;
-            }
-            final Account account = (Account)o;
-            final String name = account.name;
-            ((TextView)view.findViewById(R.id.server_account_name)).setText(name);
-            final TextView mStatus = (TextView)view.findViewById(R.id.server_account_status);
-            mStatus.setText(colorify(context.getString(R.string.s_pending), Color.GRAY));
-            new Thread(new Runnable() {
-                public void run() {
-                    OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null,
-                            name);
-                    if (server == null)
-                        ViewUtils.setText(mStatus,
-                                colorify(context.getString(R.string.s_authenticate), Color.BLUE));
-                    else if (server.getUser() != null)
-                    {
-                        String pw = server.getUser();
-                        if (pw.indexOf(":") > -1)
-                            pw = pw.substring(pw.lastIndexOf(":") + 1);
-                        if (pw.indexOf(",") > -1)
-                            pw = pw.substring(0, pw.indexOf(","));
-                        if (!pw.equals(""))
-                            ViewUtils.setText(
-                                    mStatus,
-                                    colorify(context.getString(R.string.s_authenticate_success),
-                                            Color.GREEN));
-                        else
-                            ViewUtils.setText(mStatus,
-                                    colorify(context.getString(R.string.s_authenticate), Color.RED));
-                    }
-                }
-            }).start();
-            return view;
-        }
-
-    }
-
     public CharSequence colorify(int resId, int color) {
         return colorify(getString(resId), color);
     }
@@ -317,14 +173,14 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         String themeName = new Preferences(this)
                 .getString("global", "pref_themes", "dark");
         if (themeName.equals("dark"))
-            return R.style.AppTheme_Dark;
+            return R.style.AppTheme_Dialog;
         else if (themeName.equals("light"))
-            return R.style.AppTheme_Light;
+            return R.style.AppTheme_Dialog_Light;
         else if (themeName.equals("lightdark"))
-            return R.style.AppTheme_LightAndDark;
+            return R.style.AppTheme_Dialog_Light;
         else if (themeName.equals("custom"))
-            return R.style.AppTheme_Custom;
-        return R.style.Dialog;
+            return R.style.AppTheme_Dialog;
+        return R.style.AppTheme_Dialog;
     }
 
     @Override
@@ -386,7 +242,12 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             mServerType = getServerTypeFromString(t2);
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
+        
+        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
+        
         setContentView(mBaseView);
+        
+        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_bar_dialog);
         
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -395,7 +256,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
         setIcon(getServerTypeDrawable(mServerType));
         setTitle(server.getName());
-
+        
         for (int i = 0; i < mMapIDs.length; i++)
         {
             int id = mMapIDs[i];
@@ -472,6 +333,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         handleIntent(getIntent());
         if(!DialogHandler.showServerWarning(this) && server.getServerIndex() == -1)
             onClick(R.id.server_authenticate);
+        invalidateOptionsMenu();
     }
 
     @Override
@@ -615,14 +477,31 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     {
         if(getSupportActionBar() != null)
             getSupportActionBar().setIcon(res);
-        // getSupportActionBar().setIcon(res);
+        else
+            ViewUtils.setImageResource(findViewById(R.id.title_icon), res);
     }
-
+    
     @Override
-    public void setTitle(int titleId) {
-        super.setTitle(titleId);
-        if(getSupportActionBar() != null)
-            getSupportActionBar().setTitle(titleId);
+    public void setTitle(CharSequence title) {
+        if (findViewById(R.id.title_text) != null)
+        {
+            ViewUtils.setText(this, title.toString(), R.id.title_text);
+            super.setTitle(title);
+        } else if(getSupportActionBar() != null)
+            getSupportActionBar().setTitle(title);
+        else
+            super.setTitle(title);
+    }
+    
+    @Override
+    public void invalidateOptionsMenu() {
+        if(findViewById(R.id.title_buttons) != null)
+        {
+            MenuBuilder mb = new MenuBuilder(this);
+            onCreateOptionsMenu(mb);
+            onPrepareOptionsMenu(mb);
+        } else
+            super.invalidateOptionsMenu();
     }
 
     // @Override
@@ -1059,6 +938,27 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getSupportMenuInflater().inflate(R.menu.dialog_buttons, menu);
+        View mTitleButtons = findViewById(R.id.title_buttons);
+        if(mTitleButtons != null)
+        {
+            ((ViewGroup)mTitleButtons).removeAllViews();
+            final LayoutInflater inflater = LayoutInflater.from(this);
+            for(int i = 0; i < menu.size(); i++)
+            {
+                final MenuItem item = menu.getItem(i);
+                ImageView btn = (ImageView)inflater.inflate(R.layout.toolbar_button, null);
+                btn.setId(item.getItemId());
+                btn.setOnClickListener(this);
+                btn.setImageDrawable(item.getIcon());
+                btn.setOnLongClickListener(new View.OnLongClickListener() {
+                    public boolean onLongClick(View v) {
+                        Toast.makeText(ServerSetupActivity.this, item.getTitle(), Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                });
+                ((ViewGroup)mTitleButtons).addView(btn);
+            }
+        }
         return true;
     }
 
@@ -1066,6 +966,22 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuUtils.setMenuVisible(menu, server.isValid(), android.R.string.ok);
         MenuUtils.setMenuVisible(menu, server.getServerIndex() > -1, R.string.s_remove);
+        View mTitleButtons = findViewById(R.id.title_buttons);
+        if(mTitleButtons != null)
+        for(int i = 0; i < menu.size(); i++)
+        {
+            MenuItem item = menu.getItem(i);
+            ImageView btn = (ImageView)mTitleButtons.findViewById(item.getItemId());
+            if(btn == null)
+            {
+                btn = (ImageView)getLayoutInflater().inflate(R.layout.toolbar_button, null);
+                btn.setId(item.getItemId());
+                btn.setOnClickListener(this);
+                btn.setImageDrawable(item.getIcon());
+            }
+            ViewUtils.setViewsEnabled(btn, item.isEnabled());
+            ViewUtils.setViewsVisible(btn, item.isVisible());
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -1770,4 +1686,153 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         return false;
     }
 
+
+    public static class ServerTypeAdapter extends BaseAdapter
+    {
+        private final String[] mServerTypes;
+        private final List<ResolveInfo> mResolves;
+        private final LayoutInflater mInflater;
+        private final PackageManager mPackageManager;
+        private final Resources mResources;
+        private final String[] mServerLabels;
+
+        public ServerTypeAdapter(OpenApp app)
+        {
+            mInflater = LayoutInflater.from(app.getContext());
+            mPackageManager = app.getContext().getPackageManager();
+            Intent intent = new Intent("org.brandroid.openmanager.server_type");
+            intent.setData(Uri.parse("content://"));
+            mResolves = IntentManager.getResolvesAvailable(intent, app);
+            mServerTypes = app.getContext().getResources()
+                    .getStringArray(R.array.server_types_values);
+            mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
+            mResources = app.getResources();
+        }
+
+        @Override
+        public int getCount() {
+            return mServerTypes.length +
+                    mResolves.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            if (position < mServerTypes.length)
+                return mServerTypes[position];
+            return mResolves.get(position - mServerTypes.length);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null)
+                convertView = mInflater.inflate(R.layout.server_type_item, null);
+            TextView tv = (TextView)convertView.findViewById(android.R.id.text1);
+            CharSequence text = null;
+            Drawable icon = null;
+            if (position < mServerTypes.length)
+            {
+                text = mServerLabels[position];
+                String type = mServerTypes[position];
+                int iType = getServerTypeFromString(type);
+                if (iType > -1)
+                    icon = parent.getResources().getDrawable(
+                            ServerSetupActivity.getServerTypeDrawable(iType));
+                else
+                    ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
+
+            } else {
+                ResolveInfo info = mResolves.get(position - mServerTypes.length);
+                text = info.loadLabel(mPackageManager);
+                icon = info.loadIcon(mPackageManager);
+            }
+            ViewUtils.setImageDrawable(convertView, icon, android.R.id.icon);
+            tv.setText(text);
+            return convertView;
+        }
+
+    }
+
+    public class AccountTypeAdapter extends BaseAdapter
+    {
+        private final AccountManager accountManager;
+        private final android.accounts.Account[] accounts;
+
+        public AccountTypeAdapter(Context context)
+        {
+            accountManager = AccountManager.get(context);
+            accounts = new GoogleAccountManager(accountManager).getAccounts();
+        }
+
+        @Override
+        public int getCount() {
+            if(accounts.length == 0)
+                return 0;
+            return accounts.length + 1;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            if(position < accounts.length)
+                return accounts[position];
+            else
+                return getContext().getString(R.string.s_custom_account);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View view, ViewGroup parent) {
+            final Context context = parent.getContext();
+            if (view == null)
+                view = LayoutInflater.from(context)
+                        .inflate(R.layout.server_account_row, null);
+            Object o = getItem(position);
+            if(o instanceof String)
+            {
+                ((TextView)view.findViewById(R.id.server_account_name)).setText((String)o);
+                ((TextView)view.findViewById(R.id.server_account_status)).setText("");
+                return view;
+            }
+            final Account account = (Account)o;
+            final String name = account.name;
+            ((TextView)view.findViewById(R.id.server_account_name)).setText(name);
+            final TextView mStatus = (TextView)view.findViewById(R.id.server_account_status);
+            mStatus.setText(colorify(context.getString(R.string.s_pending), Color.GRAY));
+            new Thread(new Runnable() {
+                public void run() {
+                    OpenServer server = OpenServers.getDefaultServers().findByUser("drive", null,
+                            name);
+                    if (server == null)
+                        ViewUtils.setText(mStatus,
+                                colorify(context.getString(R.string.s_authenticate), Color.BLUE));
+                    else if (server.getUser() != null)
+                    {
+                        String pw = server.getUser();
+                        if (pw.indexOf(":") > -1)
+                            pw = pw.substring(pw.lastIndexOf(":") + 1);
+                        if (pw.indexOf(",") > -1)
+                            pw = pw.substring(0, pw.indexOf(","));
+                        if (!pw.equals(""))
+                            ViewUtils.setText(
+                                    mStatus,
+                                    colorify(context.getString(R.string.s_authenticate_success),
+                                            Color.GREEN));
+                        else
+                            ViewUtils.setText(mStatus,
+                                    colorify(context.getString(R.string.s_authenticate), Color.RED));
+                    }
+                }
+            }).start();
+            return view;
+        }
+
+    }
 }

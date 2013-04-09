@@ -2597,7 +2597,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (sub != null) {
                 int i = 0;
                 for (final OpenPath item : getClipboard().getAll()) {
-                    sub.add(Menu.CATEGORY_CONTAINER, i++, i, item.getName()).setCheckable(true)
+                    sub.add(Menu.CATEGORY_CONTAINER, i++, i, item.getName())
+                            .setIcon(ThumbnailCreator.getDefaultResourceId(item, 32, 32))
+                            .setCheckable(true)
                             .setChecked(true)
                             .setOnMenuItemClickListener(new OnMenuItemClickListener() {
                                 @Override
@@ -2605,7 +2607,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                     getClipboard().remove(item);
                                     return true;
                                 }
-                            }).setIcon(ThumbnailCreator.getDefaultResourceId(item, 32, 32));
+                            });
                 }
             }
         }
@@ -3399,18 +3401,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             if (f instanceof OpenPathFragmentInterface)
                 ret += ((OpenPathFragmentInterface)f).getPath().getPath();
             else
-                ret += f.getClass().toString();
+                ret += f.getClassName();
             if (i < frags.size() - 1)
-                ret += ",";
-        }
-        return ret;
-    }
-
-    private String getPagerTitles() {
-        String ret = "";
-        for (int i = 0; i < mViewPagerAdapter.getCount(); i++) {
-            ret += mViewPagerAdapter.getPageTitle(i);
-            if (i < mViewPagerAdapter.getCount() - 1)
                 ret += ",";
         }
         return ret;
