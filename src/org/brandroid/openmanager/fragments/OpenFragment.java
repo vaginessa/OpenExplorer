@@ -792,6 +792,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     public Context getContext() {
         if (getExplorer() != null)
             return getExplorer().getContext();
+        else if(getActivity() != null)
+            return getActivity();
         else
             return getApplicationContext();
     }
