@@ -458,6 +458,25 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     public String getAbsolutePath() {
         return mFile.getAbsolutePath();
     }
+    
+    @Override
+    public int getChildCount(boolean countHidden) throws IOException {
+        if(mChildren != null)
+        {
+            OpenFile[] files = mChildren.get();
+            if(files != null)
+            {
+                int ret = 0;
+                if(!countHidden)
+                {
+                    for(OpenFile f : files)
+                        if(!f.isHidden())
+                            ret++;
+                } else ret = files.length;
+            }
+        }
+        return super.getChildCount(countHidden);
+    }
 
     @Override
     public OpenFile getChild(String name) {

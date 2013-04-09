@@ -54,6 +54,7 @@ import org.brandroid.openmanager.data.OpenPath.ListHandler;
 import org.brandroid.openmanager.data.OpenPath.OpenContentUpdateListener;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPath.SpaceListener;
+import org.brandroid.openmanager.data.OpenPath.ThumbnailOverlayInterface;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenRAR;
@@ -91,6 +92,7 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask.Status;
 import android.os.Build;
@@ -2183,10 +2185,17 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public Drawable getIcon() {
         if (isDetached())
             return null;
-        if (getActivity() != null && getResources() != null)
-            return getResources().getDrawable(
-                    ThumbnailCreator.getDefaultResourceId(getPath(), 96, 96));
-        return null;
+        if (getActivity() == null || getResources() == null) return null;
+        OpenPath path = getPath();
+        if (path == null) return null;
+        Drawable ret = getResources().getDrawable(
+                ThumbnailCreator.getDefaultResourceId(getPath(), 96, 96));
+        if (path instanceof OpenPath.ThumbnailOverlayInterface)
+        {
+            Drawable overlay = ((ThumbnailOverlayInterface)path).getOverlayDrawable(getActivity(), true);
+            ret = new LayerDrawable(new Drawable[]{ret,overlay});
+        }
+        return ret;
     }
 
     @Override
