@@ -34,6 +34,8 @@ public class PrivatePreferences {
         privateKeys.put("drive_client_id", "645291897772-c540moos4f9bo15jg7aqfat5c0cj5d0v.apps.googleusercontent.com");
         privateKeys.put("drive_secret", "4Q7GP50Vc412WEx0T2LY40p_");
         privateKeys.put("google_api_key", "AIzaSyCaxVyRcOV5nej6x-6iONgKOsrNGmrk4ZI");
+        privateKeys.put("skydrive_client_id", "00000000400F4500");
+        privateKeys.put("skydrive_secret", "0uUmcI0Bjdxux9KdSWVxmgRCZcpzacyz");
         privateKeys.put("master_key", "I'm not sure why I'm going " +
                 "through the trouble of making this " +
                 "encryption mechanism so secure. " +
