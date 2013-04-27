@@ -582,8 +582,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 loaded = kids.length;
             }
             Logger.LogDebug("Loaded " + loaded + " entries from cache");
-        } else
-            runUpdateTask(!allowSkips);
+        }
+        
+        runUpdateTask(!allowSkips);
 
         mRefreshReady = true;
 
@@ -696,6 +697,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 public void onListReceived(final OpenPath[] list) {
                     setProgressVisibility(false);
                     mContentAdapter.updateData(list);
+                    notifyDataSetChanged();
                     ViewUtils.setViewsVisible(getView(), false, android.R.id.empty);
                     if(OpenPath.AllowDBCache)
                     {
@@ -714,6 +716,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                     }
                 }
             });
+            return;
+        } else if (mPath instanceof OpenFile) {
+            mContentAdapter.updateData(((OpenFile)mPath).listFiles());
+            notifyDataSetChanged();
             return;
         }
         final String sPath = mPath.getPath();
