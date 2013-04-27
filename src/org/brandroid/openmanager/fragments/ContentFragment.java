@@ -753,6 +753,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (re.getStatusCode() != 401)
             return false;
         if(has401occurred) return false;
+        if(((OpenDrive)mPath).getServer() == null) return false;
         has401occurred = true;
         final OpenDrive drive = (OpenDrive)mPath;
         final GoogleCredential cred = drive.getCredential();

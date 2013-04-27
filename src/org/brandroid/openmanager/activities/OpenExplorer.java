@@ -1945,36 +1945,36 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 getSupportLoaderManager().initLoader(0, null, this);
                 new Thread(new Runnable() {
                     public void run() {
-                        if (mHasExternal && extDrive != null && intDrive.list() != null)
-                            for (OpenPath kid : extDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("movies") > -1
-                                        || kid.getName().toLowerCase().indexOf("video") > -1)
-                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
-                                            "mkv", "mp4"));
-                        if (mHasInternal && intDrive != null && intDrive.list() != null)
-                            for (OpenPath kid : intDrive.list())
-                                if (kid.getName().toLowerCase().indexOf("movies") > -1
-                                        || kid.getName().toLowerCase().indexOf("video") > -1)
-                                    mVideoSearchParent.addSearch(new SmartSearch(kid,
-                                            SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
-                                            "mkv", "mp4"));
-                        if (isNook()) {
-                            OpenFile files = OpenFile.getExternalMemoryDrive(true);
-                            for (int i = 0; i < 2; i++) {
-                                if (i == 1)
-                                    files = new OpenFile("/mnt/media");
-                                files = files.getChild("My Files");
-                                if (files != null && files.exists()) {
-                                    files = files.getChild("Videos");
-                                    if (files != null && files.exists())
-                                        mVideoSearchParent.addSearch(new SmartSearch(files,
+                        try {
+                            if (mHasExternal && extDrive != null && intDrive.list() != null)
+                                for (OpenPath kid : extDrive.list())
+                                    if (kid.getName().toLowerCase().indexOf("movies") > -1
+                                            || kid.getName().toLowerCase().indexOf("video") > -1)
+                                        mVideoSearchParent.addSearch(new SmartSearch(kid,
                                                 SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
                                                 "mkv", "mp4"));
+                            if (mHasInternal && intDrive != null && intDrive.list() != null)
+                                for (OpenPath kid : intDrive.list())
+                                    if (kid.getName().toLowerCase().indexOf("movies") > -1
+                                            || kid.getName().toLowerCase().indexOf("video") > -1)
+                                        mVideoSearchParent.addSearch(new SmartSearch(kid,
+                                                SmartSearch.SearchType.TypeIn, "avi", "mpg", "3gp",
+                                                "mkv", "mp4"));
+                            if (isNook()) {
+                                OpenFile files = OpenFile.getExternalMemoryDrive(true);
+                                for (int i = 0; i < 2; i++) {
+                                    if (i == 1)
+                                        files = new OpenFile("/mnt/media");
+                                    files = files.getChild("My Files");
+                                    if (files != null && files.exists()) {
+                                        files = files.getChild("Videos");
+                                        if (files != null && files.exists())
+                                            mVideoSearchParent.addSearch(new SmartSearch(files,
+                                                    SmartSearch.SearchType.TypeIn, "avi", "mpg",
+                                                    "3gp", "mkv", "mp4"));
+                                    }
                                 }
                             }
-                        }
-                        try {
                             mVideosMerged.refreshKids();
                         } catch (IOException e) {
                             Logger.LogError("Couldn't refresh merged Videos");
