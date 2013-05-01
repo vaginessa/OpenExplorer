@@ -34,6 +34,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+@SuppressLint("DefaultLocale")
 public abstract class OpenFragmentActivity extends SherlockFragmentActivity implements
         View.OnClickListener, View.OnLongClickListener, OpenContextProvider {
     // public static boolean CONTENT_FRAGMENT_FREE = true;
