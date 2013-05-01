@@ -50,7 +50,6 @@ import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import android.accounts.Account;
@@ -476,6 +475,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         onItemSelected(mTypeSpinner, mTypeSpinner.getChildAt(mServerType), mServerType, mTypeSpinner.getItemIdAtPosition(mServerType));
     }
 
+    @SuppressLint("NewApi")
     @Override
     protected void onResume() {
         super.onResume();
@@ -638,6 +638,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             super.setTitle(title);
     }
     
+    @SuppressLint("NewApi")
     @Override
     public void invalidateOptionsMenu() {
         if(findViewById(R.id.title_buttons) != null)
@@ -1540,18 +1541,6 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
     @Override
     public void refreshBookmarks() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public GoogleAnalyticsTracker getAnalyticsTracker() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void queueToTracker(Runnable run) {
         // TODO Auto-generated method stub
 
     }

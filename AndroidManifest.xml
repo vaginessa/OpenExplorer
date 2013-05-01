@@ -231,17 +231,6 @@
             android:name="org.brandroid.openmanager.activities.SplashActivity"
             android:theme="@style/AppTheme.Dialog" />
 
-        <meta-data
-            android:name="ga_code"
-            android:value="UA-20719255-4" />
-
-        <receiver
-            android:name="com.google.android.apps.analytics.AnalyticsReceiver"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>
