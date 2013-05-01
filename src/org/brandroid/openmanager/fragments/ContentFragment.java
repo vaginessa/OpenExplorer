@@ -613,7 +613,10 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             final OpenContentUpdateListener updateCallback = new OpenContentUpdateListener() {
                 @Override
                 public void addContentPath(final OpenPath... files) {
-                    mContentAdapter.addAll(Arrays.asList(files));
+                    OpenExplorer.getHandler().post(new Runnable() {
+                        public void run() {
+                            mContentAdapter.addAll(Arrays.asList(files));
+                        }});
                     if(OpenPath.AllowDBCache)
                     {
                         new Thread(new Runnable() {
