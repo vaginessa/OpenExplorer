@@ -183,6 +183,7 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
@@ -360,6 +361,17 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Preferences.Run_Count = prefs.getInt("stats", "runs", Preferences.Run_Count) + 1;
         prefs.setSetting("stats", "runs", Preferences.Run_Count);
         Preferences.UID = prefs.getString("stats", "uid", Preferences.UID);
+        for(String cloud : new String[]{"box","dropbox","drive"})
+        {
+            if(!prefs.getSetting("global", "pref_cloud_" + cloud + "_enabled", true)) continue;
+            String key = prefs.getSetting("global", "pref_cloud_" + cloud + "_key", (String)null);
+            String secret = prefs.getSetting("global", "pref_cloud_" + cloud + "_secret", (String)null);
+            if(key != null && !key.equals("") && secret != null && !secret.equals(""))
+            {
+                PrivatePreferences.putKey(cloud + "_key", key);
+                PrivatePreferences.putKey(cloud + "_secret", secret);
+            }
+        }
         if (Preferences.UID == null) {
             Preferences.UID = UUID.randomUUID().toString();
             prefs.setSetting("stats", "uid", Preferences.UID);

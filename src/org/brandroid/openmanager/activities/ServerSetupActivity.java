@@ -795,8 +795,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                                     return false;
                                 }
                             });
-                            mLoginWebView.loadUrl(AuthActivity.getConnectUrl(PrivatePreferences.getKey("dropbox_key"),
-                                    OpenDropBox.getConsumerSig(PrivatePreferences.getKey("dropbox_secret"))));
+                            mLoginWebView.loadUrl(AuthActivity.getConnectUrl(getCloudSetting("dropbox_key"),
+                                    OpenDropBox.getConsumerSig(getCloudSetting("dropbox_secret"))));
                             mLoginWebView.setVisibility(View.VISIBLE);
                         }
                         
@@ -1001,8 +1001,19 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         mLoginWebView.loadUrl(loginUrl);
     }
     
+    private String getCloudSetting(String key)
+    {
+        String ret = getCloudSetting(key);
+        Preferences prefs = new Preferences(this);
+        if(prefs != null)
+            return prefs.getSetting("global", "pref_cloud_" + key, ret);
+        return ret;
+    }
+    
     private void loadDBLoginWebview() {
-        String url = AuthActivity.getConnectUrl(PrivatePreferences.getKey("dropbox_key"), PrivatePreferences.getKey("dropbox_secret"));
+        String url = AuthActivity.getConnectUrl(
+                getCloudSetting("dropbox_key"),
+                getCloudSetting("dropbox_secret"));
         mLoginWebView.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageFinished(WebView view, String url) {
