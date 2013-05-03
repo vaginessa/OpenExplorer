@@ -77,8 +77,8 @@ public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudO
     {
         mCredential = new GoogleCredential.Builder()
                 .setClientSecrets(
-                        PrivatePreferences.getKey("oauth_drive_client_id", ""),
-                        PrivatePreferences.getKey("oauth_drive_secret", ""))
+                        PrivatePreferences.getKey("drive_key"),
+                        PrivatePreferences.getKey("drive_secret"))
                 .setTransport(mTransport)
                 .setJsonFactory(mJsonFactory)
                 .build()
