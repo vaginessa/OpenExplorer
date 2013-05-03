@@ -8,8 +8,6 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenDrive;
@@ -29,6 +27,7 @@ import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.utils.DiskLruCache;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
+import org.brandroid.utils.MenuBuilder2;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.SimpleCrypto;
@@ -38,12 +37,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -56,7 +50,6 @@ import com.box.androidlib.LogoutListener;
 import com.box.androidlib.User;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import android.accounts.Account;
@@ -89,17 +82,10 @@ import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewParent;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.*;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
-import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -117,7 +103,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ServerSetupActivity extends SherlockActivity implements OnCheckedChangeListener,
+public class ServerSetupActivity extends Activity implements OnCheckedChangeListener,
         OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp,
         OnAuthTokenListener, OnItemClickListener {
 
@@ -411,6 +397,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        
+        ViewUtils.setViewsVisible(mBaseView, false, R.id.title_bar);
 
         mLoginWebView = (WebView)mBaseView.findViewById(R.id.server_webview);
 
@@ -487,6 +475,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         onItemSelected(mTypeSpinner, mTypeSpinner.getChildAt(mServerType), mServerType, mTypeSpinner.getItemIdAtPosition(mServerType));
     }
 
+    @SuppressLint("NewApi")
     @Override
     protected void onResume() {
         super.onResume();
@@ -635,10 +624,7 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     public void setIcon(int res)
     {
-        if(getSupportActionBar() != null)
-            getSupportActionBar().setIcon(res);
-        else
-            ViewUtils.setImageResource(findViewById(R.id.title_icon), res);
+        ViewUtils.setImageResource(findViewById(R.id.title_icon), res);
     }
     
     @Override
@@ -647,17 +633,17 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         {
             ViewUtils.setText(this, title.toString(), R.id.title_text);
             super.setTitle(title);
-        } else if(getSupportActionBar() != null)
-            getSupportActionBar().setTitle(title);
+        }
         else
             super.setTitle(title);
     }
     
+    @SuppressLint("NewApi")
     @Override
     public void invalidateOptionsMenu() {
         if(findViewById(R.id.title_buttons) != null)
         {
-            MenuBuilder mb = new MenuBuilder(this);
+            MenuBuilder2 mb = new MenuBuilder2(this);
             onCreateOptionsMenu(mb);
             onPrepareOptionsMenu(mb);
         } else
@@ -809,8 +795,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
                                     return false;
                                 }
                             });
-                            mLoginWebView.loadUrl(AuthActivity.getConnectUrl(PrivatePreferences.getKey("dropbox_key"),
-                                    OpenDropBox.getConsumerSig(PrivatePreferences.getKey("dropbox_secret"))));
+                            mLoginWebView.loadUrl(AuthActivity.getConnectUrl(getCloudSetting("dropbox_key"),
+                                    OpenDropBox.getConsumerSig(getCloudSetting("dropbox_secret"))));
                             mLoginWebView.setVisibility(View.VISIBLE);
                         }
                         
@@ -1015,8 +1001,19 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         mLoginWebView.loadUrl(loginUrl);
     }
     
+    private String getCloudSetting(String key)
+    {
+        String ret = getCloudSetting(key);
+        Preferences prefs = new Preferences(this);
+        if(prefs != null)
+            return prefs.getSetting("global", "pref_cloud_" + key, ret);
+        return ret;
+    }
+    
     private void loadDBLoginWebview() {
-        String url = AuthActivity.getConnectUrl(PrivatePreferences.getKey("dropbox_key"), PrivatePreferences.getKey("dropbox_secret"));
+        String url = AuthActivity.getConnectUrl(
+                getCloudSetting("dropbox_key"),
+                getCloudSetting("dropbox_secret"));
         mLoginWebView.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -1097,7 +1094,8 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getSupportMenuInflater().inflate(R.menu.dialog_buttons, menu);
+        //getSupportMenuInflater().inflate(R.menu.dialog_buttons, menu);
+        getMenuInflater().inflate(R.menu.dialog_buttons, menu);
         View mTitleButtons = findViewById(R.id.title_buttons);
         if(mTitleButtons != null)
         {
@@ -1287,11 +1285,17 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
         return true;
     }
 
-    @Override
     public boolean onMenuItemClick(MenuItem item) {
         if (onClick(item.getItemId()))
             return true;
         return false;
+    }
+    
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        if(onClick(item.getItemId()))
+            return true;
+        return super.onMenuItemSelected(featureId, item);
     }
 
     public static OpenFile GetDefaultServerFile(Context context) {
@@ -1524,18 +1528,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
     }
 
     @Override
-    public ActionMode getActionMode() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void setActionMode(ActionMode mode) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public OpenClipboard getClipboard() {
         // TODO Auto-generated method stub
         return null;
@@ -1560,18 +1552,6 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
 
     @Override
     public void refreshBookmarks() {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public GoogleAnalyticsTracker getAnalyticsTracker() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void queueToTracker(Runnable run) {
         // TODO Auto-generated method stub
 
     }
@@ -1844,6 +1824,18 @@ public class ServerSetupActivity extends SherlockActivity implements OnCheckedCh
             }
         }
         return false;
+    }
+
+    @Override
+    public ActionMode getActionMode() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setActionMode(ActionMode mode) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

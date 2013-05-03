@@ -21,6 +21,10 @@ public class PrivatePreferences {
     public static final String getBoxAPIKey() {
         return getKey("box_key");
     }
+    
+    public static final void putKey(String name, String value) {
+        privateKeys.put(name, value);
+    }
 
     static {
         // All Private Keys should go here like this:

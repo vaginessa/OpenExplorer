@@ -19,8 +19,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="225"
-    android:versionName="0.225" >
+    android:versionCode="226"
+    android:versionName="0.226" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -59,7 +59,8 @@
     <application
         android:name="org.brandroid.openmanager.activities.OpenApplication"
         android:allowBackup="true"
-        android:icon="@drawable/icon"
+        android:icon="@drawable/icon_flat"
+	android:label="@string/app_name"
         android:largeHeap="true"
         android:theme="@style/AppTheme.Dark" >
         <activity
@@ -67,7 +68,7 @@
             android:configChanges="screenSize|keyboard|keyboardHidden"
             android:label="@string/app_name"
             android:launchMode="singleTop"
-      		android:uiOptions="splitActionBarWhenNarrow"
+            android:uiOptions="splitActionBarWhenNarrow"
             android:theme="@style/AppTheme.Dark" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -127,7 +128,6 @@
             android:launchMode="singleTop" />
         <activity
             android:name="org.brandroid.openmanager.activities.ServerSetupActivity"
-            android:label="@null"
       		android:uiOptions="none"
       		android:theme="@style/AppTheme.Dialog"
             android:configChanges="screenSize|keyboard|keyboardHidden" >
@@ -231,17 +231,6 @@
             android:name="org.brandroid.openmanager.activities.SplashActivity"
             android:theme="@style/AppTheme.Dialog" />
 
-        <meta-data
-            android:name="ga_code"
-            android:value="UA-20719255-4" />
-
-        <receiver
-            android:name="com.google.android.apps.analytics.AnalyticsReceiver"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

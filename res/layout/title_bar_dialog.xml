@@ -10,7 +10,7 @@
         android:layout_width="@dimen/abs__action_button_min_width"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:paddingLeft="3dp"
+        android:padding="3dp"
         android:paddingRight="8dp"
         android:scaleType="centerCrop"
         android:src="@drawable/icon" />
