@@ -633,7 +633,9 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     public OpenExplorer getExplorer() {
-        return (OpenExplorer)getActivity();
+        if(getActivity() instanceof OpenExplorer)
+            return (OpenExplorer)getActivity();
+        else return null;
     }
 
     public Context getApplicationContext() {
@@ -753,9 +755,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     @Override
     public Context getContext() {
-        if (getExplorer() != null)
-            return getExplorer().getContext();
-        else if(getActivity() != null)
+        if(getActivity() != null)
             return getActivity();
         else
             return getApplicationContext();
