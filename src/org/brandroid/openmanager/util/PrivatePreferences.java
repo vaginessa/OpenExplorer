@@ -19,7 +19,7 @@ public class PrivatePreferences {
     }
 
     public static final String getBoxAPIKey() {
-        return getKey("box");
+        return getKey("box_key");
     }
     
     public static final void putKey(String name, String value) {
@@ -27,7 +27,12 @@ public class PrivatePreferences {
     }
 
     static {
-        // All Private Keys should go here like this:
-        // privateKeys.put("box", "superSecretKeyGoesHere");
+        // All Private Keys should be entered here, if enabled by default:
+        privateKeys.put("box_key", "");
+        privateKeys.put("box_secret", "");
+        privateKeys.put("dropbox_key", "");
+        privateKeys.put("dropbox_secret", "");
+        privateKeys.put("drive_key", "");
+        privateKeys.put("drive_secret", "");
     }
 }
