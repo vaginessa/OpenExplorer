@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenDrive.TicketResponseCallback;
 import org.brandroid.openmanager.data.OpenDrive.TokenResponseCallback;
@@ -70,18 +71,22 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.*;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View.OnClickListener;
@@ -148,6 +153,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         private final PackageManager mPackageManager;
         private final Resources mResources;
         private final String[] mServerLabels;
+        private final Boolean[] mEnableds;
 
         public ServerTypeAdapter(OpenApp app)
         {
@@ -159,6 +165,12 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                     .getStringArray(R.array.server_types_values);
             mServerLabels = app.getContext().getResources().getStringArray(R.array.server_types);
             mResources = app.getResources();
+            mEnableds = new Boolean[mServerTypes.length + mResolves.size()];
+            for(int i = 0; i < mServerTypes.length; i++)
+                mEnableds[i] = ServerSetupActivity.isServerTypeEnabled(
+                        app.getContext(), i);
+            for(int i = mServerTypes.length; i < mEnableds.length; i++)
+                mEnableds[i] = true;
         }
 
         @Override
@@ -178,6 +190,11 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         public long getItemId(int position) {
             return position;
         }
+        
+        @Override
+        public boolean isEnabled(int position) {
+            return mEnableds[position];
+        }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -192,9 +209,21 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 String type = mServerTypes[position];
                 int iType = getServerTypeFromString(type);
                 if (iType > -1)
+                {
+                    boolean isEnabled = ServerSetupActivity.isServerTypeEnabled(
+                            parent.getContext(), iType);
+                    ViewUtils.setAlpha(isEnabled ? 1.0f : 0.5f,
+                            convertView, android.R.id.icon, android.R.id.text1);
+                    if(!isEnabled)
+                    {
+                        SpannableString invalid = new SpannableString(" (disabled)");
+                        invalid.setSpan(new StyleSpan(Typeface.ITALIC),
+                                0, invalid.length(), Spannable.SPAN_COMPOSING);
+                        text = new SpannableStringBuilder(text).append(invalid);
+                    }
                     icon = parent.getResources().getDrawable(
                             ServerSetupActivity.getServerTypeDrawable(iType));
-                else
+                } else
                     ViewUtils.setViewsVisible(convertView, false, android.R.id.icon);
 
             } else {
@@ -619,6 +648,19 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 return R.drawable.icon_drive;
             default:
                 return R.drawable.sm_ftp;
+        }
+    }
+    
+    public static boolean isServerTypeEnabled(Context context, int serverType) {
+        switch(serverType)
+        {
+            case 3:
+                return OpenBox.isEnabled(context);
+            case 4:
+                return OpenDropBox.isEnabled(context);
+            case 5:
+                return OpenDrive.isEnabled(context);
+            default: return true;
         }
     }
 

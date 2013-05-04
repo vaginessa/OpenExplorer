@@ -200,7 +200,8 @@
             >
             <CheckBoxPreference
                 android:key="pref_cloud_box_enabled"
-                android:title="@string/s_pref_cloud_enabled" 
+                android:title="@string/s_pref_cloud_enabled"
+                android:defaultValue="true" 
                 />
             <EditTextPreference
                 android:key="pref_cloud_box_key"
@@ -220,6 +221,7 @@
             <CheckBoxPreference
                 android:key="pref_cloud_dropbox_enabled"
                 android:title="@string/s_pref_cloud_enabled" 
+                android:defaultValue="true" 
                 />
             <EditTextPreference
                 android:key="pref_cloud_dropbox_key"
@@ -238,7 +240,8 @@
             >
             <CheckBoxPreference
                 android:key="pref_cloud_drive_enabled"
-                android:title="@string/s_pref_cloud_enabled" 
+                android:title="@string/s_pref_cloud_enabled"
+                android:defaultValue="true" 
                 />
             <EditTextPreference
                 android:key="pref_cloud_drive_key"
