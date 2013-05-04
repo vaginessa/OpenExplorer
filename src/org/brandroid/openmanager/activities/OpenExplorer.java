@@ -1498,7 +1498,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             }
         }
         SpannableString srLeft = new SpannableString(left);
-        srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(),
+        if(left.length() > 0)
+            srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(),
                 Spanned.SPAN_COMPOSING);
         ssb.append(srLeft);
         // ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(),
