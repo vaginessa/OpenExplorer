@@ -424,11 +424,15 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
 
     @Override
     public Boolean canRead() {
+        if(!mFile.canRead() && RootTools.isAccessGiven())
+            return true;
         return mFile.canRead();
     }
 
     @Override
     public Boolean canWrite() {
+        if(!mFile.canWrite() && RootTools.isAccessGiven())
+            return true;
         return mFile.canWrite();
     }
 
@@ -496,7 +500,9 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     @Override
     public Boolean delete() {
         Logger.LogDebug("Deleting " + getPath());
-        return mFile.delete();
+        if(!mFile.delete())
+            return new OpenFileRoot(this).delete();
+        return true;
     }
 
     @Override
