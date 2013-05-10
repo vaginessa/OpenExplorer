@@ -20,29 +20,45 @@
  * limitations under that License.
  */
 
-/*
- *Special thanks to Jeremy Lakeman for the following code and for teaching me something new.
- *
- *Stephen
- */
+package com.stericson.RootTools.containers;
 
-package com.stericson.RootTools;
+import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-public class CommandCapture extends Command {
-	private StringBuilder sb = new StringBuilder();
+public class Mount {
+    final File mDevice;
+    final File mMountPoint;
+    final String mType;
+    final Set<String> mFlags;
 
-	public CommandCapture(int id, String... command) {
-		super(id, command);
-	}
+    public Mount(File device, File path, String type, String flagsStr) {
+        mDevice = device;
+        mMountPoint = path;
+        mType = type;
+        mFlags = new LinkedHashSet<String>(Arrays.asList(flagsStr.split(",")));
+    }
 
-	@Override
-	public void output(int id, String line) {
-		sb.append(line).append('\n');
-		RootTools.log("Command", "ID: " + id + ", " + line);
-	}
-	
-	@Override
-	public String toString() {
-		return sb.toString();
-	}
+    public File getDevice() {
+        return mDevice;
+    }
+
+    public File getMountPoint() {
+        return mMountPoint;
+    }
+
+    public String getType() {
+        return mType;
+    }
+
+    public Set<String> getFlags() {
+        return mFlags;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s on %s type %s %s", mDevice, mMountPoint, mType, mFlags);
+    }
 }

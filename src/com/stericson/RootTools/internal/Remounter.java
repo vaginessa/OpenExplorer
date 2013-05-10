@@ -20,7 +20,7 @@
  * limitations under that License.
  */
 
-package com.stericson.RootTools;
+package com.stericson.RootTools.internal;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +28,13 @@ import java.util.ArrayList;
 
 import android.util.Log;
 
-//no modifier, this means it is package-private. Only our internal classes can use this.
-class Remounter {
+import com.stericson.RootTools.Constants;
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.containers.Mount;
+import com.stericson.RootTools.execution.CommandCapture;
+import com.stericson.RootTools.execution.Shell;
+
+public class Remounter {
 
     //-------------
     //# Remounter #
@@ -51,7 +56,7 @@ class Remounter {
      *         has been remounted as specified.
      */
 
-    protected boolean remount(String file, String mountType) {
+    public boolean remount(String file, String mountType) {
     	    	
         //if the path has a trailing slash get rid of it.
         if (file.endsWith("/") && !file.equals("/")) {
@@ -86,14 +91,14 @@ class Remounter {
         }
         Mount mountPoint = findMountPointRecursive(file);
 
-        RootTools.log(InternalVariables.TAG, "Remounting " + mountPoint.getMountPoint().getAbsolutePath() + " as " + mountType.toLowerCase());
+        RootTools.log(Constants.TAG, "Remounting " + mountPoint.getMountPoint().getAbsolutePath() + " as " + mountType.toLowerCase());
         final boolean isMountMode = mountPoint.getFlags().contains(mountType.toLowerCase());
 
         if (!isMountMode) {
             //grab an instance of the internal class
             try {
             	CommandCapture command = new CommandCapture(0,
-				        		"busybox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " -t yaffs2 " + mountPoint.getMountPoint().getAbsolutePath(),		
+				        		"busybox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),		
 				        		"toolbox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),		
 				        		"mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath(),				        		
 				        		"/system/bin/toolbox mount -o remount," + mountType.toLowerCase() + " " + mountPoint.getDevice().getAbsolutePath() + " " + mountPoint.getMountPoint().getAbsolutePath()		
@@ -107,7 +112,7 @@ class Remounter {
             mountPoint = findMountPointRecursive(file);
         }
 
-        Log.i(InternalVariables.TAG, mountPoint.getFlags() + " AND " + mountType.toLowerCase());
+        Log.i(Constants.TAG, mountPoint.getFlags() + " AND " + mountType.toLowerCase());
         if (mountPoint.getFlags().contains(mountType.toLowerCase())) {
             RootTools.log(mountPoint.getFlags().toString());
             return true;
