@@ -812,7 +812,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                         }
                     });
                 } else if (t2.startsWith("db")) {
-                    if (checkDropBoxAppKeySetup())
+                    //if (!checkDropBoxAppKeySetup())
                     {
                         enableAuthenticateButton(false);
                         mLoginWebView.getSettings().setJavaScriptEnabled(true);
