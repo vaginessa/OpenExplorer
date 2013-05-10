@@ -496,7 +496,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         OpenFile.setTempFileRoot(new OpenFile(getFilesDir()).getChild("temp"));
         setupLogviewHandlers();
-        handleExceptionHandler();
+        //handleExceptionHandler();
         getMimeTypes();
         setupFilesDb();
 
@@ -588,7 +588,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             fragmentManager.addOnBackStackChangedListener(this);
         }
 
-        mLogFragment = new LogViewerFragment();
+        if(mLogFragment == null)
+        	mLogFragment = new LogViewerFragment();
 
         FragmentTransaction ft = fragmentManager.beginTransaction();
 
@@ -1569,7 +1570,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (IS_DEBUG_BUILD)
             Logger.LogVerbose("OpenExplorer.onStart");
         if (findViewById(R.id.frag_log) != null) {
-            fragmentManager.beginTransaction().add(R.id.frag_log, mLogFragment, "log").commit();
+            fragmentManager.beginTransaction().replace(R.id.frag_log, mLogFragment, "log").commit();
             findViewById(R.id.frag_log).setVisibility(View.GONE);
         } else {
             initLogPopup();

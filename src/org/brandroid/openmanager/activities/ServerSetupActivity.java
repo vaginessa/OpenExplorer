@@ -74,6 +74,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -144,6 +145,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    private final boolean mUseDialog = Build.VERSION.SDK_INT > 10;
 
     public static class ServerTypeAdapter extends BaseAdapter
     {
@@ -348,14 +350,14 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         String themeName = new Preferences(this)
                 .getString("global", "pref_themes", "dark");
         if (themeName.equals("dark"))
-            return R.style.AppTheme_Dialog;
+            return mUseDialog ? R.style.AppTheme_Dialog : R.style.AppTheme_Dark;
         else if (themeName.equals("light"))
-            return R.style.AppTheme_Dialog_Light;
+            return mUseDialog ? R.style.AppTheme_Dialog_Light : R.style.AppTheme_Light;
         else if (themeName.equals("lightdark"))
-            return R.style.AppTheme_Dialog_Light;
+            return mUseDialog ? R.style.AppTheme_Dialog_Light : R.style.AppTheme_LightAndDark;
         else if (themeName.equals("custom"))
-            return R.style.AppTheme_Dialog;
-        return R.style.AppTheme_Dialog;
+            return mUseDialog ? R.style.AppTheme_Dialog : R.style.AppTheme_Custom;
+        return mUseDialog ? R.style.AppTheme_Dialog : R.style.AppTheme_Dark;
     }
 
     @Override
@@ -418,16 +420,17 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         
-        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
-        
-        setContentView(mBaseView);
-        
-        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_bar_dialog);
+        if(Build.VERSION.SDK_INT > 10)
+        {
+	        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
+	        setContentView(mBaseView);
+	        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_bar_dialog);
+	        ViewUtils.setViewsVisible(mBaseView, false, R.id.title_bar, R.id.title_divider);
+        } else
+        	setContentView(mBaseView);
         
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-        
-        ViewUtils.setViewsVisible(mBaseView, false, R.id.title_bar);
 
         mLoginWebView = (WebView)mBaseView.findViewById(R.id.server_webview);
 
@@ -688,7 +691,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             MenuBuilder2 mb = new MenuBuilder2(this);
             onCreateOptionsMenu(mb);
             onPrepareOptionsMenu(mb);
-        } else
+        } else if(Build.VERSION.SDK_INT > 10)
             super.invalidateOptionsMenu();
     }
 
@@ -1045,10 +1048,14 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     
     private String getCloudSetting(String key)
     {
-        String ret = getCloudSetting(key);
+        String ret = PrivatePreferences.getKey(key);
         Preferences prefs = new Preferences(this);
         if(prefs != null)
-            return prefs.getSetting("global", "pref_cloud_" + key, ret);
+        {
+            String pref = prefs.getSetting("global", "pref_cloud_" + key, ret);
+            if(pref != null && !pref.equals(""))
+            	ret = pref;
+        }
         return ret;
     }
     
