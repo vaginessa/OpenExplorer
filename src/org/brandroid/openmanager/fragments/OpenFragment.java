@@ -81,6 +81,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     private boolean mHasOptions = false;
     protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
     private OnFragmentDPADListener mDPAD = null;
+    private boolean mDestroyed = false;
 
     public final void setOnFragmentDPADListener(OnFragmentDPADListener listener) {
         mDPAD = listener;
@@ -559,33 +560,37 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
         super.onAttach(activity);
         if (activity instanceof OpenExplorer)
             setOnFragmentDPADListener((OpenExplorer)activity);
-        final OpenPath path = (this instanceof OpenPathFragmentInterface) ? ((OpenPathFragmentInterface)this)
-                .getPath()
-                : null;
-        //        if (DEBUG)
-        //            Logger.LogDebug("}-- onAttach :: " + getClassName() + " @ " + path);
+        final OpenPath path = (this instanceof OpenPathFragmentInterface) ?
+                ((OpenPathFragmentInterface)this).getPath() : null;
+        if (DEBUG)
+            Logger.LogDebug("}-- onAttach :: " + getClassName() + " @ " + path);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        //        if (DEBUG)
-        //            Logger.LogDebug("{-- onDetach :: "
-        //                    + getClassName()
-        //                    + (this instanceof OpenPathFragmentInterface
-        //                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
-        //                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+                if (DEBUG)
+                    Logger.LogDebug("{-- onDetach :: "
+                            + getClassName()
+                            + (this instanceof OpenPathFragmentInterface
+                                    && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
+                                    + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
     }
 
     @Override
     public void onDestroy() {
-        //        if (DEBUG)
-        //            Logger.LogDebug("[-- onDestroy :: "
-        //                    + getClassName()
-        //                    + (this instanceof OpenPathFragmentInterface
-        //                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
-        //                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+        mDestroyed = true;
+        if (DEBUG)
+            Logger.LogDebug("[-- onDestroy :: "
+                    + getClassName()
+                    + (this instanceof OpenPathFragmentInterface
+                            && ((OpenPathFragmentInterface)this).getPath() != null ? " @ "
+                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
         super.onDestroy();
+    }
+    
+    public boolean isDestroyed() {
+        return mDestroyed;
     }
 
     @Override
@@ -705,12 +710,12 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        //        if (DEBUG)
-        //            Logger.LogDebug("]-- onCreate - "
-        //                    + getClassName()
-        //                    + (this instanceof OpenPathFragmentInterface
-        //                            && ((OpenPathFragmentInterface)this).getPath() != null ? "#"
-        //                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
+        if (DEBUG)
+            Logger.LogDebug("]-- onCreate - "
+                    + getClassName()
+                    + (this instanceof OpenPathFragmentInterface
+                            && ((OpenPathFragmentInterface)this).getPath() != null ? "#"
+                            + ((OpenPathFragmentInterface)this).getPath().getPath() : ""));
         // CONTENT_FRAGMENT_FREE = false;
         setRetainInstance(false);
         super.onCreate(savedInstanceState);
