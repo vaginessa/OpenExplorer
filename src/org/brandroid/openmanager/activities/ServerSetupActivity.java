@@ -336,6 +336,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     }
 
     public static CharSequence colorify(String txt, int color) {
+        if(txt.equals("")) return txt;
         if (color != 0) {
             color = Color.rgb(Color.red(color), Color.green(color), Color.blue(color));
             SpannableString line = new SpannableString(txt);

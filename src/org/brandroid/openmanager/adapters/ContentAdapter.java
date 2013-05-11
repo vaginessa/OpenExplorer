@@ -49,6 +49,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.util.SparseArray;
 import android.view.Gravity;
@@ -349,10 +350,10 @@ public class ContentAdapter extends BaseAdapter {
             SpannableStringBuilder sInfo = new SpannableStringBuilder(String.format(
                     file.getDetails(getShowHiddenFiles()), getResources()
                             .getString(R.string.s_files)));
-            if (OpenPath.Sorting.getType() == Type.SIZE
-                    || OpenPath.Sorting.getType() == Type.SIZE_DESC)
+            if ((OpenPath.Sorting.getType() == Type.SIZE
+                    || OpenPath.Sorting.getType() == Type.SIZE_DESC) && sInfo.length() > 0)
                 sInfo.setSpan(new StyleSpan(Typeface.BOLD), 0, sInfo.length(),
-                        Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                        Spanned.SPAN_COMPOSING);
             if (mShowDetails && mParent.showChildPath()) {
                 sInfo.append(" :: " + file.getPath().replace(file.getName(), ""));
                 showLongDate = false;

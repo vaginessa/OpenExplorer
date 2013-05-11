@@ -79,7 +79,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     // public static boolean CONTENT_FRAGMENT_FREE = true;
     // public boolean isFragmentValid = true;
     private boolean mHasOptions = false;
-    protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+    protected boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;
     private OnFragmentDPADListener mDPAD = null;
     private boolean mDestroyed = false;
 
