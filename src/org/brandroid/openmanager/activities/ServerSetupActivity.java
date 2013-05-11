@@ -145,7 +145,6 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
-    private final boolean mUseDialog = Build.VERSION.SDK_INT > 10;
 
     public static class ServerTypeAdapter extends BaseAdapter
     {
@@ -351,14 +350,14 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         String themeName = new Preferences(this)
                 .getString("global", "pref_themes", "dark");
         if (themeName.equals("dark"))
-            return mUseDialog ? R.style.AppTheme_Dialog : R.style.AppTheme_Dark;
+            return R.style.AppTheme_Dialog;
         else if (themeName.equals("light"))
-            return mUseDialog ? R.style.AppTheme_Dialog_Light : R.style.AppTheme_Light;
+            return R.style.AppTheme_Dialog_Light;
         else if (themeName.equals("lightdark"))
-            return mUseDialog ? R.style.AppTheme_Dialog_Light : R.style.AppTheme_LightAndDark;
+            return R.style.AppTheme_Dialog_Light;
         else if (themeName.equals("custom"))
-            return mUseDialog ? R.style.AppTheme_Dialog : R.style.AppTheme_Custom;
-        return mUseDialog ? R.style.AppTheme_Dialog : R.style.AppTheme_Dark;
+            return R.style.AppTheme_Dialog;
+        return R.style.AppTheme_Dialog;
     }
 
     @Override
