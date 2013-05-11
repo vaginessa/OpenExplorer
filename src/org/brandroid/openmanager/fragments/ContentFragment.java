@@ -2398,9 +2398,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             OpenPath last = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1);
 
             MenuUtils.setMenuEnabled(menu, writable, R.id.menu_context_delete,
-                    R.id.menu_context_cut);
+                    R.id.menu_context_cut, R.id.menu_context_rename);
             MenuUtils.setMenuEnabled(menu, readable, R.id.menu_context_copy, R.id.menu_context_cut,
-                    R.id.menu_context_download, R.id.menu_context_rename, R.id.menu_context_zip);
+                    R.id.menu_context_download, R.id.menu_context_zip, R.id.menu_context_share);
             
             if(last instanceof CloudOpsHandler)
                 MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_ALWAYS, R.id.menu_context_download);
