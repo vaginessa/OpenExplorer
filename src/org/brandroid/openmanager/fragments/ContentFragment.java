@@ -824,11 +824,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     private void browseArchive(OpenPath archive)
     {
-        if (archive.getExtension().equalsIgnoreCase("zip"))
+        String mime = archive.getMimeType();
+        String ext = archive.getExtension();
+        if (mime.equals("application/zip"))
             getExplorer().changePath(new OpenZip((OpenFile)archive));
-        else if (archive.getMimeType().endsWith("rar"))
+        else if (mime.endsWith("rar"))
             getExplorer().changePath(new OpenRAR((OpenFile)archive));
-        else if (archive.getMimeType().contains("7z") || archive.getMimeType().contains("lzma"))
+        else if (mime.contains("7z") || mime.contains("lzma"))
             getExplorer().changePath(new OpenLZMA((OpenFile)archive));
         else
             getExplorer().changePath(new OpenTar((OpenFile)archive));
