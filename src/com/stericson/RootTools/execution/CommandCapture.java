@@ -20,17 +20,31 @@
  * limitations under that License.
  */
 
-package com.stericson.RootTools;
-
-/**
- * Developers may throw this exception from within their code
- * when using IResult as a means to change the program flow.
+/*
+ *Special thanks to Jeremy Lakeman for the following code and for teaching me something new.
+ *
+ *Stephen
  */
-public class RootToolsException extends Exception {
 
-    private static final long serialVersionUID = -4431771251773644144L;
+package com.stericson.RootTools.execution;
 
-    public RootToolsException(Throwable th) {
-        super(th);
-    }
+import com.stericson.RootTools.RootTools;
+
+public class CommandCapture extends Command {
+	private StringBuilder sb = new StringBuilder();
+
+	public CommandCapture(int id, String... command) {
+		super(id, command);
+	}
+
+	@Override
+	public void output(int id, String line) {
+		sb.append(line).append('\n');
+		RootTools.log("Command", "ID: " + id + ", " + line);
+	}
+	
+	@Override
+	public String toString() {
+		return sb.toString();
+	}
 }

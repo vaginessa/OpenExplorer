@@ -23,15 +23,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.concurrent.TimeoutException;
 
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.ByteQueue;
 import org.brandroid.utils.Logger;
 
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.RootToolsException;
 
 import android.os.Handler;
 import android.os.Message;
@@ -77,18 +74,22 @@ public class RootManager {
     }
 
     private boolean mIsRunning = false;
-    private Handler mMsgHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            if (!mIsRunning) {
-                Logger.LogWarning("Handler exited");
-                return;
+    private Handler mMsgHandler;
+    
+    public void setHandler() {
+        mMsgHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if (!mIsRunning) {
+                    Logger.LogWarning("Handler exited");
+                    return;
+                }
+                if (msg.what == NEW_INPUT) {
+                    readFromProcess();
+                }
             }
-            if (msg.what == NEW_INPUT) {
-                readFromProcess();
-            }
-        }
-    };
+        };
+    }
 
     @Override
     protected void finalize() throws Throwable {

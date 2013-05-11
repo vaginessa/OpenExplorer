@@ -20,7 +20,7 @@
  * limitations under that License.
  */
 
-package com.stericson.RootTools;
+package com.stericson.RootTools.test;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,6 +36,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.containers.Permissions;
+import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.exceptions.RootToolsException;
+import com.stericson.RootTools.execution.Shell;
 
 public class SanityCheckRootTools extends Activity {
     private ScrollView mScrollView;
@@ -64,6 +70,27 @@ public class SanityCheckRootTools extends Activity {
         }
 
         print("SanityCheckRootTools v " + version + "\n\n");
+        
+        try
+		{
+			Shell.startRootShell();
+		}
+		catch (IOException e2)
+		{
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		catch (TimeoutException e)
+		{
+            print("[ TIMEOUT EXCEPTION! ]\n");
+			e.printStackTrace();
+		}
+		catch (RootDeniedException e)
+		{
+			print("[ ROOT DENIED EXCEPTION! ]\n");
+			e.printStackTrace();
+		}
+		
         try {
 			if (false == RootTools.isAccessGiven()) {
 			    print("ERROR: No root access to this device.\n");
@@ -112,16 +139,6 @@ public class SanityCheckRootTools extends Activity {
                 return;
             }
             */
-
-            try
-			{
-				Shell.startRootShell();
-			}
-			catch (IOException e2)
-			{
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}
 			
             boolean result;
 
@@ -150,7 +167,7 @@ public class SanityCheckRootTools extends Activity {
             
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getBusyBoxVersion");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Checking busybox version ]\n");
-            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion() + " k\n\n");
+            visualUpdate(TestHandler.ACTION_DISPLAY, RootTools.getBusyBoxVersion("/system/bin/") + " k\n\n");
 
             try
 			{
@@ -185,7 +202,7 @@ public class SanityCheckRootTools extends Activity {
 			{
 
 	            visualUpdate(TestHandler.ACTION_DISPLAY, "[ Getting all available Busybox applets ]\n");
-	            for (String applet : RootTools.getBusyBoxApplets())
+	            for (String applet : RootTools.getBusyBoxApplets("/data/data/stericson.busybox.donate/files/bb"))
 	            {
 	                visualUpdate(TestHandler.ACTION_DISPLAY,  applet + " k\n\n");            	
 	            }
@@ -222,7 +239,7 @@ public class SanityCheckRootTools extends Activity {
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ return array");
             try {
-                List<String> response = RootTools.sendShell("ls /", InternalVariables.timeout);
+                List<String> response = RootTools.sendShell("ls /", -1);
                 visualUpdate(TestHandler.ACTION_DISPLAY, "[ Listing of / (passing a List)]\n");
                 for (String line : response) {
                     visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
@@ -263,7 +280,7 @@ public class SanityCheckRootTools extends Activity {
                         visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
 					}
                 };
-                RootTools.sendShell("ls /", result2, InternalVariables.timeout);
+                RootTools.sendShell("ls /", result2, -1);
                 if (0 != result2.getError())
                     return;
             } catch (IOException e) {
@@ -313,7 +330,7 @@ public class SanityCheckRootTools extends Activity {
                                 "date"},
                         0,
                         result2,
-                        InternalVariables.timeout
+                        -1
                 );
                 if (0 != result2.getError())
                     return;

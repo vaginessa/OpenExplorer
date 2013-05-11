@@ -824,11 +824,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
     private void browseArchive(OpenPath archive)
     {
-        if (archive.getExtension().equalsIgnoreCase("zip"))
+        String mime = archive.getMimeType();
+        String ext = archive.getExtension();
+        if (mime.equals("application/zip"))
             getExplorer().changePath(new OpenZip((OpenFile)archive));
-        else if (archive.getMimeType().endsWith("rar"))
+        else if (mime.endsWith("rar"))
             getExplorer().changePath(new OpenRAR((OpenFile)archive));
-        else if (archive.getMimeType().contains("7z") || archive.getMimeType().contains("lzma"))
+        else if (mime.contains("7z") || mime.contains("lzma"))
             getExplorer().changePath(new OpenLZMA((OpenFile)archive));
         else
             getExplorer().changePath(new OpenTar((OpenFile)archive));
@@ -2398,9 +2400,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             OpenPath last = mContentAdapter.getSelectedSet().get(getSelectedCount() - 1);
 
             MenuUtils.setMenuEnabled(menu, writable, R.id.menu_context_delete,
-                    R.id.menu_context_cut);
+                    R.id.menu_context_cut, R.id.menu_context_rename);
             MenuUtils.setMenuEnabled(menu, readable, R.id.menu_context_copy, R.id.menu_context_cut,
-                    R.id.menu_context_download, R.id.menu_context_rename, R.id.menu_context_zip);
+                    R.id.menu_context_download, R.id.menu_context_zip, R.id.menu_context_share);
             
             if(last instanceof CloudOpsHandler)
                 MenuUtils.setMenuShowAsAction(menu, MenuItem.SHOW_AS_ACTION_ALWAYS, R.id.menu_context_download);

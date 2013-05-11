@@ -83,6 +83,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.text.Spannable;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
@@ -219,7 +220,14 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
         CheckBoxPreference pSystem = (CheckBoxPreference)findPreference("pref_system_mount");
         if (pSystem != null)
-            pSystem.setChecked(RootManager.isSystemMounted());
+        {
+            try {
+                String sysrw = RootTools.getMountedAs("/system");
+                pSystem.setChecked(sysrw.equals("rw"));
+            } catch(Exception e) {
+                pSystem.setChecked(false);
+            }
+        }
 
         // getPreferences(MODE_PRIVATE);
         prefs = new Preferences(getApplicationContext());
@@ -579,7 +587,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public static boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
-            Preference preference, Activity activity) {
+            Preference preference, final Activity activity) {
         final String key = preference.getKey();
         if (key.equals("pref_global")) {
             Intent intentGlobal = new Intent(activity, SettingsActivity.class);
@@ -600,16 +608,35 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             return true;
         } else if (key.equals("pref_system_mount")) {
             final CheckBoxPreference pSystem = (CheckBoxPreference)preference;
+            pSystem.setEnabled(false);
+            final Handler handler = new Handler();
             final boolean checked = pSystem.isChecked();
+            RootManager.Default.setHandler();
             new Thread(new Runnable() {
                 public void run() {
                     String mode;
                     try {
                         mode = !checked ? "ro" : "rw";
                         RootTools.remount("/system", mode);
-                        if (DEBUG)
-                            Logger.LogDebug("New /system: " + RootTools.getMountedAs("/system"));
-                        // pSystem.setChecked(RootTools.getMountedAs("/system").equalsIgnoreCase("rw"));
+                        final String newmode = RootTools.getMountedAs("/system");
+                        final boolean success = newmode.equals(mode);
+                        if(!success)
+                        {
+                            final boolean success2 = RootManager.mountSystem(checked);
+                            handler.post(new Runnable() {
+                                public void run() {
+                                    pSystem.setEnabled(true);
+                                    pSystem.setChecked(checked && success2);
+                                    if(!success2)
+                                        Toast.makeText(activity, "System mount failed", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else
+                            handler.post(new Runnable() {
+                                public void run() {
+                                    pSystem.setEnabled(true);
+                                    pSystem.setChecked(newmode.equals("rw"));
+                                }});
                     } catch (Exception e) {
                         Logger.LogError("Unable to remount system", e);
                     }

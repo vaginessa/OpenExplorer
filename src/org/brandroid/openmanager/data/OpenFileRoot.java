@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,9 +18,11 @@ import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
-import com.stericson.RootTools.Command;
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.Shell;
+import com.stericson.RootTools.exceptions.RootToolsException;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.Shell;
+
 import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -363,7 +366,9 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
 
     @Override
     public Boolean canWrite() {
-        if (mPerms != null)
+        if (RootTools.isAccessGiven())
+            return true;
+        if (mPerms != null && mPerms.length() > 0)
             return mPerms.indexOf("w") > -1;
         return getFile().canWrite();
     }
@@ -371,14 +376,14 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
     @SuppressLint("NewApi")
     @Override
     public Boolean canExecute() {
-        if (mPerms != null)
+        if (mPerms != null && mPerms.length() > 0)
             return mPerms.indexOf("x") > -1;
         return Build.VERSION.SDK_INT > 8 ? getFile().canExecute() : true;
     }
 
     @Override
     public Boolean delete() {
-        execute("rm -rf " + getPath(), false);
+        if(execute("rm -rf " + getPath(), false) == null) return false;
         return true;
     }
 
@@ -444,24 +449,20 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
     }
 
     private String execute(final String cmd, boolean useBusyBox) {
-        final boolean[] waiting = new boolean[] {
-                true
-        };
-        final String[] ret = new String[] {
-                ""
-        };
-        final String bb = useBusyBox && RootTools.isBusyboxAvailable() ? "busybox " : "";
         try {
-            new Command(0, 500, bb + cmd) {
-                @Override
-                public void output(int id, String line) {
-                    ret[0] = ret[0] + (ret[0] == "" ? "" : "\n") + line;
-                }
-            }.waitForFinish(500);
-        } catch (Exception e) {
-            Logger.LogError("Could not execute: " + cmd, e);
+            final List<String> result = RootTools.sendShell(cmd, 500);
+            return result.get(0);
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (RootToolsException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (TimeoutException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         }
-        return ret[0];
+        return null;
     }
 
     public static boolean copy(final OpenPath src, final OpenPath dest) {

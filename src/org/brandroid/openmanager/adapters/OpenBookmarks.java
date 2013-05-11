@@ -37,8 +37,9 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
-import com.stericson.RootTools.Mount;
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.containers.Mount;
+
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Context;

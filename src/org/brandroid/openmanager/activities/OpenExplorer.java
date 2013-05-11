@@ -132,6 +132,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -217,6 +218,7 @@ import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
 import com.jcraft.jsch.JSchException;
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.viewpagerindicator.TabPageIndicator;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -754,6 +756,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     try {
                         RootTools.getShell(true);
                     } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (TimeoutException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (RootDeniedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
@@ -1498,11 +1506,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     left += "/";
             }
         }
-        SpannableString srLeft = new SpannableString(left);
-        if(left.length() > 0)
-            srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(),
-                Spanned.SPAN_COMPOSING);
-        ssb.append(srLeft);
+        if(!left.equals(""))
+        {
+            SpannableString srLeft = new SpannableString(left);
+            if(left.length() > 0)
+                srLeft.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(),
+                    Spanned.SPAN_COMPOSING);
+            ssb.append(srLeft);
+        }
         // ssb.setSpan(new ForegroundColorSpan(Color.GRAY), 0, left.length(),
         // Spanned.SPAN_COMPOSING);
         OpenFragment curr = mViewPagerAdapter.getItem(page);
@@ -1522,10 +1533,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     right += "/";
             }
         }
-        SpannableString srRight = new SpannableString(right);
-        srRight.setSpan(new ForegroundColorSpan(Color.GRAY), 0, right.length(),
-                Spanned.SPAN_COMPOSING);
-        ssb.append(srRight);
+        if(!right.equals(""))
+        {
+            SpannableString srRight = new SpannableString(right);
+            srRight.setSpan(new ForegroundColorSpan(Color.GRAY), 0, right.length(),
+                    Spanned.SPAN_COMPOSING);
+            ssb.append(srRight);
+        }
         updateTitle(ssb);
     }
 
@@ -2323,9 +2337,12 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         {
             SpannableStringBuilder sb = new SpannableStringBuilder(getResources().getString(
                     R.string.app_title));
-            sb.append(cs.equals("") ? "" : " - ");
-            sb.append(cs);
-            setTitle(cs);
+            if(!cs.equals(""))
+            {
+                sb.append(cs.equals("") ? "" : " - ");
+                sb.append(cs);
+            }
+            setTitle(sb);
         }
     }
 
