@@ -218,17 +218,6 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         PreferenceManager.setDefaultValues(this, pathSafe, PreferenceActivity.MODE_PRIVATE,
                 R.xml.preferences, false);
 
-        CheckBoxPreference pSystem = (CheckBoxPreference)findPreference("pref_system_mount");
-        if (pSystem != null)
-        {
-            try {
-                String sysrw = RootTools.getMountedAs("/system");
-                pSystem.setChecked(sysrw.equals("rw"));
-            } catch(Exception e) {
-                pSystem.setChecked(false);
-            }
-        }
-
         // getPreferences(MODE_PRIVATE);
         prefs = new Preferences(getApplicationContext());
 
@@ -248,6 +237,17 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
             } else { // global preferences
                 addPreferencesFromResource(R.xml.preferences);
 
+                CheckBoxPreference pSystem = (CheckBoxPreference)findPreference("pref_system_mount");
+                if (pSystem != null)
+                {
+                    pSystem.setChecked(false);
+                    try {
+                        String sysrw = RootTools.getMountedAs("/system");
+                        pSystem.setChecked(sysrw.equals("rw"));
+                    } catch(Exception e) {
+                    }
+                }
+                
                 final PreferenceActivity pa = this;
 
                 Preference pLanguage = pm.findPreference("pref_language");

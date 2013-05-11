@@ -228,7 +228,14 @@ public class ContentAdapter extends BaseAdapter {
 
     public void finalize() {
         prefinalize();
-        super.notifyDataSetChanged();
+        if(!Thread.currentThread().equals(OpenExplorer.UiThread))
+            OpenExplorer.getHandler().post(new Runnable() {
+                public void run() {
+                    ContentAdapter.super.notifyDataSetChanged();
+                }
+            });
+        else
+            super.notifyDataSetChanged();
     }
 
     private void unfinalize() {

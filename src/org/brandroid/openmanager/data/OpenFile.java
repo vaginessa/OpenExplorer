@@ -432,7 +432,15 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     @Override
     public Boolean canWrite() {
         if(!mFile.canWrite() && RootTools.isAccessGiven())
+        {
+            if (getPath().startsWith("/system/"))
+                try {
+                    return RootTools.getMountedAs("/system").equals("rw");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             return true;
+        }
         return mFile.canWrite();
     }
 
