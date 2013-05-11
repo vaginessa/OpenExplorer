@@ -18,6 +18,8 @@ import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootToolsException;
 import com.stericson.RootTools.execution.Command;
@@ -366,6 +368,12 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
 
     @Override
     public Boolean canWrite() {
+        if (getPath().startsWith("/system"))
+            try {
+                return RootTools.getMountedAs("/system").equals("rw");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         if (RootTools.isAccessGiven())
             return true;
         if (mPerms != null && mPerms.length() > 0)
@@ -383,7 +391,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
 
     @Override
     public Boolean delete() {
-        if(execute("rm -rf " + getPath(), false) == null) return false;
+        if(execute("rm " + (isDirectory() ? "-r " : "") + getPath(), false) == null) return false;
         return true;
     }
 
@@ -450,7 +458,9 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
 
     private String execute(final String cmd, boolean useBusyBox) {
         try {
+            Logger.LogVerbose("$ " + cmd);
             final List<String> result = RootTools.sendShell(cmd, 500);
+            Logger.LogVerbose("--> " + Utils.joinArray(result.toArray(new String[result.size()]), "\n--> "));
             return result.get(0);
         } catch (IOException e1) {
             // TODO Auto-generated catch block

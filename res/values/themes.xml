@@ -319,7 +319,7 @@
     </style>
     
 
-    <style name="AppTheme.Dialog" parent="Theme.Sherlock.Dialog">
+    <style name="AppTheme.Dialog" parent="Theme.Sherlock.DialogWhenLarge">
         <item name="absForceOverflow">true</item>
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
@@ -399,7 +399,7 @@
         
         <item name="dialog">0</item>
     </style>
-    <style name="AppTheme.Dialog.Light" parent="Theme.Sherlock.Light.Dialog">
+    <style name="AppTheme.Dialog.Light" parent="Theme.Sherlock.Light.DialogWhenLarge">
         <item name="absForceOverflow">true</item>
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
