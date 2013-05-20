@@ -17,9 +17,6 @@
 
     <!-- Custom tasks -->
     <taskdef resource="anttasks.properties" classpathref="android.antlibs" />
-    <taskdef name="xpath"
-        classname="com.android.ant.XPathTask"
-        classpathref="android.antlibs" />
 
     <property name="out.release.dir" location="releases" />
 
