@@ -420,14 +420,12 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         
+        setContentView(mBaseView);
         if(Build.VERSION.SDK_INT > 10)
         {
-	        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
-	        setContentView(mBaseView);
 	        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_bar_dialog);
 	        ViewUtils.setViewsVisible(mBaseView, false, R.id.title_bar, R.id.title_divider);
-        } else
-        	setContentView(mBaseView);
+        }
         
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -686,12 +684,13 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     @SuppressLint("NewApi")
     @Override
     public void invalidateOptionsMenu() {
-        if(findViewById(R.id.title_buttons) != null)
+        if(findViewById(R.id.title_buttons) != null && findViewById(R.id.title_buttons).isShown())
         {
             MenuBuilder2 mb = new MenuBuilder2(this);
             onCreateOptionsMenu(mb);
             onPrepareOptionsMenu(mb);
-        } else if(Build.VERSION.SDK_INT > 10)
+        }
+        if(Build.VERSION.SDK_INT > 10)
             super.invalidateOptionsMenu();
     }
 
