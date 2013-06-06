@@ -288,8 +288,11 @@ public class FileManager {
             return null;
         OpenPath ret = null;
         if (path.startsWith("/"))
+        {
             ret = new OpenFile(path);
-        else if (path.startsWith("ftp:/"))
+            if (path.equals("/data") || path.startsWith("/data/"))
+                ret = new OpenFileRoot(ret);
+        } else if (path.startsWith("ftp:/"))
             ret = new OpenFTP(path, null, new FTPManager());
         else if (path.startsWith("sftp:/"))
             ret = new OpenSFTP(path);

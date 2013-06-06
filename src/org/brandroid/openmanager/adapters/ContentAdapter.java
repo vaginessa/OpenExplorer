@@ -46,6 +46,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.Build;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -353,6 +354,11 @@ public class ContentAdapter extends BaseAdapter {
         // view.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         // mHolder.setInfo(getFileDetails(file, false));
 
+        if (mNameView != null)
+            mNameView.setText(mName);
+        
+        //if(Build.VERSION.SDK_INT < 99) return view;
+        
         if (mInfo != null) {
             SpannableStringBuilder sInfo = new SpannableStringBuilder(String.format(
                     file.getDetails(getShowHiddenFiles()), getResources()
@@ -375,9 +381,6 @@ public class ContentAdapter extends BaseAdapter {
 
             mInfo.setText(sInfo);
         }
-
-        if (mNameView != null)
-            mNameView.setText(mName);
 
         /*
          * if(file.isHidden()) ViewUtils.setAlpha(0.5f, mNameView, mPathView,

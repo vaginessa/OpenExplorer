@@ -477,9 +477,13 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return;
         }
 
-        if (path instanceof OpenFile && !path.canRead())
-            if (OpenApplication.hasRootAccess(true))
+        try {
+            if (path instanceof OpenFile && !path.canRead()
+                    && OpenApplication.hasRootAccess(true))
                 path = new OpenFileRoot(path);
+        } catch (Exception e) {
+            Logger.LogWarning("Unable to convert File to Root. " + getPath(), e);
+        }
 
         // if (DEBUG)
         // Logger.LogDebug("refreshData running...");

@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenPath.*;
 import org.brandroid.openmanager.util.FileManager;
@@ -75,7 +76,7 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
                         m.start() - 1).trim());
                 success = true;
             } catch (Exception e) {
-                Logger.LogError("Couldn't parse date.", e);
+                Logger.LogWarning("Couldn't parse date.", e);
             }
             mPerms = listing.split(" ")[0];
         }
@@ -374,10 +375,12 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        if (RootTools.isAccessGiven())
-            return true;
         if (mPerms != null && mPerms.length() > 0)
             return mPerms.indexOf("w") > -1;
+        if (Thread.currentThread().equals(OpenExplorer.UiThread))
+            return false;
+        if (RootTools.isAccessRequested() && RootTools.isAccessGiven())
+            return true;
         return getFile().canWrite();
     }
 
@@ -498,7 +501,11 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
                 tempDownload(null);
             tmp = getTempFile();
             if (tmp != null)
-                return tmp.readAscii().getBytes();
+            {
+                String s = tmp.readAscii();
+                if(s != null)
+                    return s.getBytes();
+            }
         } catch (Exception e) {
             Logger.LogError("Unable to read root file: " + getPath(), e);
         }
@@ -508,7 +515,12 @@ public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHan
 
     @Override
     public void writeBytes(byte[] bytes) {
-        String ret = execute("cat > " + getPath() + "\n" + new String(bytes), false);
-        Logger.LogDebug("writeBytes response: " + ret);
+        OpenFile tmp = getTempFile();
+        try {
+            tmp.writeBytes(bytes);
+            tempUpload(null);
+        } catch(Exception e) {
+            Logger.LogError("Unable to write root file: " + getPath(), e);
+        }
     }
 }
