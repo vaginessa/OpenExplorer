@@ -597,10 +597,9 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             final OpenContentUpdateListener updateCallback = new OpenContentUpdateListener() {
                 @Override
                 public void addContentPath(final OpenPath... files) {
-                    OpenExplorer.getHandler().post(new Runnable() {
-                        public void run() {
-                            mContentAdapter.addAll(Arrays.asList(files));
-                        }});
+                    if(OpenExplorer.IS_DEBUG_BUILD)
+                    	Logger.LogVerbose("ContentFragment.OpenContentUpdateListener.addContentPath");
+                    mContentAdapter.addAll(Arrays.asList(files));
                     if(OpenPath.AllowDBCache)
                     {
                         new Thread(new Runnable() {
@@ -620,6 +619,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
 
                 @Override
                 public void doneUpdating() {
+                    if(OpenExplorer.IS_DEBUG_BUILD)
+                    	Logger.LogVerbose("ContentFragment.OpenContentUpdateListener.doneUpdating");
                     getHandler().post(new Runnable() {
                         public void run() {
                             setProgressVisibility(false);
@@ -2198,6 +2199,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             Logger.LogWarning("ContentFragment.updateData warning: mContentAdapter is null");
             return;
         }
+        if(OpenExplorer.IS_DEBUG_BUILD)
+        	Logger.LogVerbose("ContentFragment.updateData");
         if (Thread.currentThread().equals(OpenExplorer.UiThread)) {
             mContentAdapter.updateData(result);
             notifyDataSetChanged();
@@ -2530,6 +2533,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public void notifyDataSetChanged() {
         if (getExplorer() == null)
             return;
+        if(OpenExplorer.IS_DEBUG_BUILD)
+        	Logger.LogVerbose("ContentFragment.notifyDataSetChanged");
         if (!Thread.currentThread().equals(OpenExplorer.UiThread)) {
             OpenExplorer.getHandler().post(new Runnable() {
                 public void run() {
@@ -2542,7 +2547,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             mContentAdapter = getContentAdapter();
         }
 
-        mContentAdapter.finalize();
+        //mContentAdapter.finalize();
 
         if (mGrid != null
                 && (mGrid.getAdapter() == null || !mGrid.getAdapter().equals(mContentAdapter)))

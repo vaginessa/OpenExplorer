@@ -1100,6 +1100,9 @@ public final class RootTools {
             	case 3:
                     Logger.LogDebug(TAG + ": " + msg);
                     break;
+            	default:
+            		Logger.LogDebug(TAG + ": " + msg);
+            		break;
             	}
             }
         }

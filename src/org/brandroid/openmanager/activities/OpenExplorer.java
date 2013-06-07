@@ -534,6 +534,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         PackageManager.GET_META_DATA).applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == ApplicationInfo.FLAG_DEBUGGABLE;
             if (isBlackBerry())
                 IS_DEBUG_BUILD = false;
+            RootTools.debugMode = IS_DEBUG_BUILD;
         } catch (NameNotFoundException e1) {
         }
 
