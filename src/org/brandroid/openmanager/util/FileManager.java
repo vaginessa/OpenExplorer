@@ -223,6 +223,8 @@ public class FileManager {
             OpenPath[] file_list = null;
             try {
                 file_list = target.list();
+                if(file_list == null)
+                	file_list = target.listFiles();
             } catch (IOException e) {
                 Logger.LogError("Error listing children to delete.", e);
             }

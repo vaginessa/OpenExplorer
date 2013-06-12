@@ -836,6 +836,7 @@ public class EventHandler {
                     showDialog = showNotification = false;
                     break;
             }
+            Logger.LogVerbose("Showing notification for " + getTitle());
             if (showDialog)
                 try {
                     mPDialog = ProgressDialog.show(mContext, getTitle(),
@@ -1252,27 +1253,28 @@ public class EventHandler {
             if (source.getPath().equals(into.getPath()))
                 return false;
             final OpenFile dest = (OpenFile)into;
-            final boolean[] running = new boolean[] {
-                    true
-            };
             final long size = source.length();
-            if (size > 50000)
-                new Thread(new Runnable() {
+            Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        while ((int)dest.length() < total || running[0]) {
+                        while ((int)dest.length() < total && !Thread.currentThread().isInterrupted()) {
                             long pos = dest.length();
                             publish((int)pos, (int)size, total);
                             try {
                                 Thread.sleep(500);
+                                if(Thread.currentThread().isInterrupted())
+                                	break;
                             } catch (InterruptedException e) {
-                                running[0] = false;
+                                break;
                             }
                         }
                     }
-                }).start();
+                });
+            t.start();
+            publish(0, (int)size, total);
             boolean ret = dest.copyFrom(source);
-            running[0] = false;
+            if(t != null && !t.isInterrupted())
+            	t.interrupt();
             return ret;
         }
 
@@ -1396,11 +1398,8 @@ public class EventHandler {
                 }
             }
             OpenPath newDir = intoDir;
-            if (intoDir instanceof OpenSmartFolder) {
+            if (intoDir instanceof OpenSmartFolder)
                 newDir = ((OpenSmartFolder)intoDir).getFirstDir();
-                if (old instanceof OpenFile && newDir instanceof OpenFile)
-                    return copyFileToDirectory((OpenFile)old, (OpenFile)newDir, total);
-            }
             Logger.LogDebug("EventHandler.copyToDirectory : Trying to copy [" + old.getPath()
                     + "] to [" + intoDir.getPath() + "]...");
             if (old.getPath().equals(intoDir.getPath())) {
@@ -1417,6 +1416,9 @@ public class EventHandler {
 
             if (old.isDirectory() && newDir.isDirectory() && newDir.canWrite()) {
                 OpenPath[] files = old.list();
+                
+                if(files == null)
+                	files = old.listFiles();
 
                 for (OpenPath file : files)
                     if (file != null)
@@ -1738,9 +1740,8 @@ public class EventHandler {
             // publish(current, size, total);
             OnWorkerProgressUpdate(current, total);
 
-            // Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", "
-            // + total + ")-("
-            // + progA + "," + progB + ")-> " + mRemain + "::" + mLastRate);
+            Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total +
+            		")-(" + progA + "," + progB + ")-> " + mRemain + "::" + mLastRate);
 
             // mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
 
