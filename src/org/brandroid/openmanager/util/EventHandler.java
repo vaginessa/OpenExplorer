@@ -166,8 +166,11 @@ public class EventHandler {
 
     public static void cancelRunningTasks() {
         for (BackgroundWork bw : mTasks)
+        {
+        	Logger.LogVerbose("Cancelling " + bw.getTitle());
             if (bw.getStatus() == Status.RUNNING)
                 bw.cancel(true);
+        }
         if (mNotifier != null)
             mNotifier.cancelAll();
     }
@@ -702,6 +705,10 @@ public class EventHandler {
                 case SEARCH:
                     return getResourceString(mContext, R.string.s_title_searching).toString();
                 case COPY:
+                	if(mIntoPath != null && mIntoPath instanceof OpenNetworkPath)
+                		return getResourceString(mContext, R.string.s_title_uploading).toString();
+                	else if (mCurrentPath != null && mCurrentPath instanceof OpenNetworkPath)
+                		return getResourceString(mContext,  R.string.s_title_downloading).toString();
                     return getResourceString(mContext, R.string.s_title_copying).toString();
                 case CUT:
                     return getResourceString(mContext, R.string.s_title_moving).toString();
@@ -720,7 +727,7 @@ public class EventHandler {
         public String getTitle() {
             String title = getOperation();
             if (mCurrentPath != null) {
-                title += " " + '\u2192' + " " + mCurrentPath.getName();
+                title += " " + mCurrentPath.getName();
             }
             return title;
         }
@@ -905,12 +912,13 @@ public class EventHandler {
                 mBuilder.setAutoCancel(true);
                 NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
                 style.bigText(getDetailedText());
-                style.setBigContentTitle(getOperation() + " " + mCurrentPath.getName());
+                style.setBigContentTitle(getTitle());
                 mBuilder.setStyle(style);
-                mBuilder.addAction(R.drawable.ic_menu_close_clear_cancel,
+                if(isCancellable)
+                	mBuilder.addAction(R.drawable.ic_menu_close_clear_cancel,
                                 mContext.getResources().getText(R.string.s_cancel),
-                                makePendingIntent(OpenExplorer.REQ_EVENT_CANCEL))
-                        .addAction(R.drawable.ic_menu_info_details,
+                                makePendingIntent(OpenExplorer.REQ_EVENT_CANCEL));
+                mBuilder.addAction(R.drawable.ic_menu_info_details,
                                 mContext.getText(R.string.s_menu_info),
                                 makePendingIntent(OpenExplorer.REQ_EVENT_VIEW));
                 if (Build.VERSION.SDK_INT < 11) {
@@ -937,7 +945,7 @@ public class EventHandler {
         }
 
         private PendingIntent makePendingIntent(int reqIntent) {
-            Intent intent = new Intent();
+            Intent intent = new Intent(mContext, OpenExplorer.class);
             intent.putExtra("TaskId", taskId);
             intent.putExtra("RequestId", reqIntent);
             return PendingIntent.getActivity(mContext, reqIntent, intent, 0);
