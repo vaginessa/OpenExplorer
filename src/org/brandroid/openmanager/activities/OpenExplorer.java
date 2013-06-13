@@ -601,10 +601,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             EventHandler.execute(new PeekAtGrandKidsTask(), path);
 
         initPager();
-        if (handleIntent(getIntent())) {
-            path = mLastPath = null;
-            bAddToStack = false;
-        }
 
         if (mViewPager != null && mViewPagerAdapter != null && path != null) {
             // mViewPagerAdapter.add(mContentFragment);
@@ -1174,6 +1170,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             } else if (reqId == REQ_EVENT_VIEW)
             {
                 refreshOperations();
+                mOpsFragment = null;
+                initOpsPopup();
                 BetterPopupWindow pw = mOpsFragment.getPopup();
                 if(pw != null)
                     pw.showLikePopDownMenu();

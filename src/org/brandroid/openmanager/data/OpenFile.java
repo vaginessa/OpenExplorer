@@ -494,9 +494,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     @Override
     public Boolean delete() {
         Logger.LogDebug("Deleting " + getPath());
-        if(!mFile.delete())
-            return new OpenFileRoot(this).delete();
-        return true;
+        return mFile.delete();
     }
 
     @Override

@@ -166,8 +166,11 @@ public class EventHandler {
 
     public static void cancelRunningTasks() {
         for (BackgroundWork bw : mTasks)
+        {
+        	Logger.LogVerbose("Cancelling " + bw.getTitle());
             if (bw.getStatus() == Status.RUNNING)
                 bw.cancel(true);
+        }
         if (mNotifier != null)
             mNotifier.cancelAll();
     }
@@ -702,6 +705,10 @@ public class EventHandler {
                 case SEARCH:
                     return getResourceString(mContext, R.string.s_title_searching).toString();
                 case COPY:
+                	if(mIntoPath != null && mIntoPath instanceof OpenNetworkPath)
+                		return getResourceString(mContext, R.string.s_title_uploading).toString();
+                	else if (mCurrentPath != null && mCurrentPath instanceof OpenNetworkPath)
+                		return getResourceString(mContext,  R.string.s_title_downloading).toString();
                     return getResourceString(mContext, R.string.s_title_copying).toString();
                 case CUT:
                     return getResourceString(mContext, R.string.s_title_moving).toString();
@@ -720,7 +727,7 @@ public class EventHandler {
         public String getTitle() {
             String title = getOperation();
             if (mCurrentPath != null) {
-                title += " " + '\u2192' + " " + mCurrentPath.getName();
+                title += " " + mCurrentPath.getName();
             }
             return title;
         }
@@ -836,6 +843,7 @@ public class EventHandler {
                     showDialog = showNotification = false;
                     break;
             }
+            Logger.LogVerbose("Showing notification for " + getTitle());
             if (showDialog)
                 try {
                     mPDialog = ProgressDialog.show(mContext, getTitle(),
@@ -904,12 +912,13 @@ public class EventHandler {
                 mBuilder.setAutoCancel(true);
                 NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle();
                 style.bigText(getDetailedText());
-                style.setBigContentTitle(getOperation() + " " + mCurrentPath.getName());
+                style.setBigContentTitle(getTitle());
                 mBuilder.setStyle(style);
-                mBuilder.addAction(R.drawable.ic_menu_close_clear_cancel,
+                if(isCancellable)
+                	mBuilder.addAction(R.drawable.ic_menu_close_clear_cancel,
                                 mContext.getResources().getText(R.string.s_cancel),
-                                makePendingIntent(OpenExplorer.REQ_EVENT_CANCEL))
-                        .addAction(R.drawable.ic_menu_info_details,
+                                makePendingIntent(OpenExplorer.REQ_EVENT_CANCEL));
+                mBuilder.addAction(R.drawable.ic_menu_info_details,
                                 mContext.getText(R.string.s_menu_info),
                                 makePendingIntent(OpenExplorer.REQ_EVENT_VIEW));
                 if (Build.VERSION.SDK_INT < 11) {
@@ -936,7 +945,7 @@ public class EventHandler {
         }
 
         private PendingIntent makePendingIntent(int reqIntent) {
-            Intent intent = new Intent();
+            Intent intent = new Intent(mContext, OpenExplorer.class);
             intent.putExtra("TaskId", taskId);
             intent.putExtra("RequestId", reqIntent);
             return PendingIntent.getActivity(mContext, reqIntent, intent, 0);
@@ -1252,27 +1261,28 @@ public class EventHandler {
             if (source.getPath().equals(into.getPath()))
                 return false;
             final OpenFile dest = (OpenFile)into;
-            final boolean[] running = new boolean[] {
-                    true
-            };
             final long size = source.length();
-            if (size > 50000)
-                new Thread(new Runnable() {
+            Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        while ((int)dest.length() < total || running[0]) {
+                        while ((int)dest.length() < total && !Thread.currentThread().isInterrupted()) {
                             long pos = dest.length();
                             publish((int)pos, (int)size, total);
                             try {
                                 Thread.sleep(500);
+                                if(Thread.currentThread().isInterrupted())
+                                	break;
                             } catch (InterruptedException e) {
-                                running[0] = false;
+                                break;
                             }
                         }
                     }
-                }).start();
+                });
+            t.start();
+            publish(0, (int)size, total);
             boolean ret = dest.copyFrom(source);
-            running[0] = false;
+            if(t != null && !t.isInterrupted())
+            	t.interrupt();
             return ret;
         }
 
@@ -1396,11 +1406,8 @@ public class EventHandler {
                 }
             }
             OpenPath newDir = intoDir;
-            if (intoDir instanceof OpenSmartFolder) {
+            if (intoDir instanceof OpenSmartFolder)
                 newDir = ((OpenSmartFolder)intoDir).getFirstDir();
-                if (old instanceof OpenFile && newDir instanceof OpenFile)
-                    return copyFileToDirectory((OpenFile)old, (OpenFile)newDir, total);
-            }
             Logger.LogDebug("EventHandler.copyToDirectory : Trying to copy [" + old.getPath()
                     + "] to [" + intoDir.getPath() + "]...");
             if (old.getPath().equals(intoDir.getPath())) {
@@ -1417,6 +1424,9 @@ public class EventHandler {
 
             if (old.isDirectory() && newDir.isDirectory() && newDir.canWrite()) {
                 OpenPath[] files = old.list();
+                
+                if(files == null)
+                	files = old.listFiles();
 
                 for (OpenPath file : files)
                     if (file != null)
@@ -1738,9 +1748,8 @@ public class EventHandler {
             // publish(current, size, total);
             OnWorkerProgressUpdate(current, total);
 
-            // Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", "
-            // + total + ")-("
-            // + progA + "," + progB + ")-> " + mRemain + "::" + mLastRate);
+            Logger.LogInfo("onProgressUpdate(" + current + ", " + size + ", " + total +
+            		")-(" + progA + "," + progB + ")-> " + mRemain + "::" + mLastRate);
 
             // mNote.setLatestEventInfo(mContext, , contentText, contentIntent)
 
