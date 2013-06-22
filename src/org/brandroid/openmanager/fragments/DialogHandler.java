@@ -43,6 +43,7 @@ import android.graphics.Paint;
 import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.ClipboardManager;
 import android.text.util.Linkify;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -216,6 +217,15 @@ public class DialogHandler {
         
         ((TextView)v.findViewById(R.id.info_time_stamp)).setText(date.toString());
         ((TextView)v.findViewById(R.id.info_path_label)).setText(file.getPath());
+        v.findViewById(R.id.info_path_label).setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				ClipboardManager clip = (ClipboardManager)v.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+				clip.setText(((TextView)v).getText());
+				Toast.makeText(v.getContext(), R.string.s_alert_clipboard, Toast.LENGTH_SHORT).show();
+			}
+		});
         ((TextView)v.findViewById(R.id.info_read_perm)).setText(file.canRead() + "");
         ((TextView)v.findViewById(R.id.info_write_perm)).setText(file.canWrite() + "");
         ((TextView)v.findViewById(R.id.info_execute_perm)).setText(file.canExecute() + "");
