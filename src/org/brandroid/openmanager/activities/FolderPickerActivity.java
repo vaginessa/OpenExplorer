@@ -2,16 +2,29 @@
 package org.brandroid.openmanager.activities;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.PickerFragment;
 import org.brandroid.openmanager.fragments.PickerFragment.OnOpenPathPickedListener;
+import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ShellSession;
+import org.brandroid.utils.DiskLruCache;
+import org.brandroid.utils.LruCache;
+import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.ActionMode;
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
@@ -26,7 +39,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class FolderPickerActivity extends SherlockFragmentActivity implements OnItemClickListener,
-        OnClickListener, TextWatcher {
+        OnClickListener, TextWatcher, OpenApp {
     private OpenPath mPath;
     private boolean pickDirOnly = false;
     private String mDefaultName;
@@ -64,7 +77,9 @@ public class FolderPickerActivity extends SherlockFragmentActivity implements On
         if (data.containsKey("start")) {
             mPath = (OpenPath)data.getParcelable("start");
             intent.putExtra("picker", data.getParcelable("start"));
-        } else
+        } else if(data.containsKey("path"))
+        	intent.putExtra("picker", (Parcelable)FileManager.getOpenCache(data.getString("path")));
+        else
             mPath = OpenFile.getExternalMemoryDrive(true);
         if (data.containsKey("name")) {
             mDefaultName = data.getString("name");
@@ -177,4 +192,90 @@ public class FolderPickerActivity extends SherlockFragmentActivity implements On
         ViewUtils
                 .setViewsEnabled(this, s != null && !s.toString().equals(""), android.R.id.button1);
     }
+    
+    public OpenApplication getOpenApplication() { return (OpenApplication)getApplication(); }
+
+	@Override
+	public DataManager getDataManager() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getDataManager();
+	}
+
+	@Override
+	public ImageCacheService getImageCacheService() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getImageCacheService();
+	}
+
+	@Override
+	public DownloadCache getDownloadCache() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getDownloadCache();
+	}
+
+	@Override
+	public ThreadPool getThreadPool() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getThreadPool();
+	}
+
+	@Override
+	public LruCache<String, Bitmap> getMemoryCache() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getMemoryCache();
+	}
+
+	@Override
+	public DiskLruCache getDiskCache() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getDiskCache();
+	}
+
+	@Override
+	public ActionMode getActionMode() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getActionMode();
+	}
+
+	@Override
+	public void setActionMode(ActionMode mode) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public OpenClipboard getClipboard() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getClipboard();
+	}
+
+	@Override
+	public ShellSession getShellSession() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getShellSession();
+	}
+
+	@Override
+	public Context getContext() {
+		// TODO Auto-generated method stub
+		return this;
+	}
+
+	@Override
+	public Preferences getPreferences() {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getPreferences();
+	}
+
+	@Override
+	public void refreshBookmarks() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getThemedResourceId(int styleableId, int defaultResourceId) {
+		// TODO Auto-generated method stub
+		return getOpenApplication().getThemedResourceId(styleableId, defaultResourceId);
+	}
 }
