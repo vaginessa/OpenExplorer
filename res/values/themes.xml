@@ -320,6 +320,7 @@
     
 
     <style name="AppTheme.Dialog" parent="Theme.Sherlock.DialogWhenLarge">
+    
         <item name="absForceOverflow">true</item>
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
