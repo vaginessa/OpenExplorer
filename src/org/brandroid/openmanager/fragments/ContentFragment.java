@@ -178,7 +178,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     private Bundle mBundle;
     private NetworkIOTask mTask;
 
-    private boolean mIsViewCreated;
+    protected boolean mIsViewCreated;
 
     protected Integer mViewMode = null;
     protected ContentAdapter mContentAdapter;
@@ -858,7 +858,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     public void onItemClick(final AdapterView<?> list, final View view, final int position,
             final long id) {
         OpenPath file = (OpenPath)list.getItemAtPosition(position);
-        Logger.LogInfo("ContentFragment.onItemClick (" + file.getPath() + ")");
+        Logger.LogInfo("ContentFragment.onItemClick");
 
         if (getActionMode() == null)
         {
@@ -2520,6 +2520,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         if(position == 0 && Preferences.Pref_ShowUp) return false;
+        Logger.LogInfo(getClassName() + ".onItemLongClick");
         OpenPath path = getContentAdapter().getItem(position);
         toggleSelection(view, path);
         return true;
