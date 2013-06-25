@@ -674,6 +674,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     @Override
     public ActionMode getActionMode() {
+    	if (getExplorer() != null)
+    		return getExplorer().getActionMode();
         if (getOpenApplication() != null)
             return getOpenApplication().getActionMode();
         else
@@ -682,13 +684,17 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     @Override
     public void setActionMode(ActionMode mode) {
-        if (getOpenApplication() != null)
+    	if (getExplorer() != null)
+    		getExplorer().setActionMode(mode);
+    	else if (getOpenApplication() != null)
         	getOpenApplication().setActionMode(mode);
     }
 
     @Override
     public OpenClipboard getClipboard() {
-        if (getOpenApplication() != null)
+    	if (getExplorer() != null)
+    		return getExplorer().getClipboard();
+    	else if (getOpenApplication() != null)
             return getOpenApplication().getClipboard();
         else 
             return null;
