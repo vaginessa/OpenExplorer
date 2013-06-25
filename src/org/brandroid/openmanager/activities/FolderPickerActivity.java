@@ -99,8 +99,8 @@ public class FolderPickerActivity extends SherlockFragmentActivity implements On
         if (data.containsKey("files"))
             mFoldersOnly = data.getBoolean("files", mFoldersOnly);
         
-        ViewUtils.setViewsChecked(this, mFoldersOnly, R.id.check_folders);
-        ViewUtils.setViewsVisible(this, !mFoldersOnly, R.id.pick_path_row, R.id.pick_path);
+        //ViewUtils.setViewsChecked(this, mFoldersOnly, R.id.check_folders);
+        //ViewUtils.setViewsVisible(this, !mFoldersOnly, R.id.pick_path_row, R.id.pick_path);
     }
 
     private void setPath(OpenPath path, boolean addToStack) {
