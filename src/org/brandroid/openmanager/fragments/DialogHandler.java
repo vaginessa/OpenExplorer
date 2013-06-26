@@ -109,6 +109,8 @@ import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
 import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.HelpStringHelper;
 import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.OpenChromeClient;
@@ -941,6 +943,23 @@ public class DialogHandler {
                 mRecent.setVisibility(View.GONE);
                 mRecentLabel.setVisibility(View.GONE);
             }
+            
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if(url.toLowerCase().endsWith("apk"))
+                {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    if(IntentManager.getResolvesAvailable(intent, mApp).size() > 0)
+                    {
+                        mApp.getContext().startActivity(intent);
+                        return true;
+                    }
+                }
+                view.loadUrl(url);
+                return true;
+            }
+            
         });
         mRecent.setBackgroundColor(Color.TRANSPARENT);
         mRecent.loadUrl("http://brandroid.org/open/?show=recent");
