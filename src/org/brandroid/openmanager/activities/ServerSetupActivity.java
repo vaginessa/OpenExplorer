@@ -92,6 +92,7 @@ import android.view.*;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup.LayoutParams;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -420,12 +421,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
         mBaseView = getLayoutInflater().inflate(R.layout.server, null);
         
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(mBaseView);
-        if(Build.VERSION.SDK_INT > 10)
-        {
-	        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_bar_dialog);
-	        ViewUtils.setViewsVisible(mBaseView, false, R.id.title_bar, R.id.title_divider);
-        }
         
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -692,6 +689,12 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         }
         if(Build.VERSION.SDK_INT > 10)
             super.invalidateOptionsMenu();
+    }
+    
+    @Override
+    public void onAttachedToWindow() {
+    	super.onAttachedToWindow();
+    	invalidateOptionsMenu();
     }
 
     // @Override
@@ -1144,28 +1147,35 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     public boolean onCreateOptionsMenu(Menu menu) {
         //getSupportMenuInflater().inflate(R.menu.dialog_buttons, menu);
         getMenuInflater().inflate(R.menu.dialog_buttons, menu);
-        View mTitleButtons = findViewById(R.id.title_buttons);
-        if(mTitleButtons != null)
-        {
-            ((ViewGroup)mTitleButtons).removeAllViews();
-            final LayoutInflater inflater = LayoutInflater.from(this);
-            for(int i = 0; i < menu.size(); i++)
-            {
-                final MenuItem item = menu.getItem(i);
-                ImageView btn = (ImageView)inflater.inflate(R.layout.toolbar_button, null);
-                btn.setId(item.getItemId());
-                btn.setOnClickListener(this);
-                btn.setImageDrawable(item.getIcon());
-                btn.setOnLongClickListener(new View.OnLongClickListener() {
-                    public boolean onLongClick(View v) {
-                        Toast.makeText(ServerSetupActivity.this, item.getTitle(), Toast.LENGTH_SHORT).show();
-        return true;
-    }
-                });
-                ((ViewGroup)mTitleButtons).addView(btn);
-            }
-        }
-        return true;
+		ViewGroup mTitleButtons = (ViewGroup)findViewById(R.id.title_buttons);
+		if (mTitleButtons != null) {
+			mTitleButtons.removeAllViews();
+			final LayoutInflater inflater = LayoutInflater.from(this);
+			for (int i = 0; i < menu.size(); i++) {
+				final MenuItem item = menu.getItem(i);
+				ImageView btn = (ImageView) inflater.inflate(
+						R.layout.toolbar_button, null);
+				mTitleButtons.addView(btn);
+				LayoutParams lp = btn.getLayoutParams();
+				if(lp != null)
+				{
+					lp.height = LayoutParams.MATCH_PARENT;
+					btn.setLayoutParams(lp);
+				}
+				btn.setId(item.getItemId());
+				btn.setOnClickListener(this);
+				btn.setImageDrawable(item.getIcon());
+				btn.setOnLongClickListener(new View.OnLongClickListener() {
+					public boolean onLongClick(View v) {
+						Toast.makeText(ServerSetupActivity.this,
+								item.getTitle(), Toast.LENGTH_SHORT).show();
+						return true;
+					}
+				});
+				
+			}
+		}
+		return true;
     }
 
     @Override
@@ -1184,6 +1194,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 btn.setId(item.getItemId());
                 btn.setOnClickListener(this);
                 btn.setImageDrawable(item.getIcon());
+                
             }
             ViewUtils.setViewsEnabled(btn, item.isEnabled());
             ViewUtils.setViewsVisible(btn, item.isVisible());
