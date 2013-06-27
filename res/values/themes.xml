@@ -203,7 +203,7 @@
         <item name="checkboxButtonOff">@drawable/btn_check_off_holo_light</item>
         <item name="popupBackground">@drawable/contextmenu_square_gray</item>
         <item name="popupArrow">@drawable/contextmenu_arrow_gray</item>
-        <item name="pagerBackground">@drawable/ab_stacked_solid_light_holo</item>
+        <item name="pagerBackground">@color/darkGray</item>
         <item name="listDivider">@drawable/divider_horizontal_bright</item>
         <item name="listBackground">@drawable/list_background_light</item>
         <item name="listColumnBackground">@drawable/list_column_background_light</item>
