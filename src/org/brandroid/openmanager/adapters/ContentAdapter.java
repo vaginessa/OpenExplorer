@@ -26,6 +26,7 @@ import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
 import org.brandroid.openmanager.data.OpenPath.OpenPathUpdateHandler;
 import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.SortType.Type;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -186,14 +187,16 @@ public class ContentAdapter extends BaseAdapter {
             super.notifyDataSetChanged();
             return;
         }
+        
+    	FileManager.setOpenCache(mParent);
 
         // new Thread(new Runnable(){public void run() {
         boolean showHidden = getShowHiddenFiles();
         boolean foldersFirst = getSorting().foldersFirst();
-        Logger.LogVerbose("updateData on " + items.length + " items (for " + mParent + ") : "
+        Logger.LogVerbose("updateData(" + doSort + ") on " + items.length + " items (for " + mParent + ") : "
                 + (showHidden ? "show" : "hide") + " + " + (foldersFirst ? "folders" : "files")
                 + " + " + (doSort ? mSorting.toString() : "no sort"));
-
+        
         //OpenPath.Sorting = mSorting;
         mData2.clear();
         //isFinal = false;

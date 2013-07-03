@@ -230,7 +230,7 @@ public class EventHandler {
     public static String getResourceString(Context mContext, int... resIds) {
         String ret = "";
         for (int resId : resIds)
-            ret += (ret == "" ? "" : " ") + mContext.getText(resId);
+            ret += ("".equals(ret) ? "" : " ") + mContext.getText(resId);
         return ret;
     }
 

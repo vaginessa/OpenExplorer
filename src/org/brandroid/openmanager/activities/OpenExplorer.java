@@ -1719,7 +1719,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
             return;
 
         String logs = Logger.getDbLogs(false);
-        if (logs == null || logs == "")
+        if (logs == null || "".equals(logs))
             logs = "[]";
         // if(logs != null && logs != "") {
         Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
@@ -2369,7 +2369,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         if (editing == null)
             return;
         for (String s : editing.split(",")) {
-            if (s == null || s == "")
+            if (s == null || "".equals(s))
                 continue;
             OpenPath path = FileManager.getOpenCache(s, this);
             if (path == null)
