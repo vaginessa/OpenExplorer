@@ -320,91 +320,6 @@ public class EventHandler {
         }).create().show();
     }
 
-    /**
-     * @param directory directory path to create the new folder in.
-     */
-    public static void createNewFolder(final OpenPath folder, final Context context,
-            final OnWorkerUpdateListener threadListener) {
-        final InputDialog dlg = new InputDialog(context).setTitle(R.string.s_title_newfolder)
-                .setIcon(R.drawable.ic_menu_folder_add_dark).setMessage(R.string.s_alert_newfolder)
-                .setMessageTop(R.string.s_alert_newfolder_folder)
-                .setDefaultTop(folder.getPath(), false).setCancelable(true)
-                .setNegativeButton(R.string.s_cancel, DialogHandler.OnClickDismiss);
-        dlg.setPositiveButton(R.string.s_create, new OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                String name = dlg.getInputText();
-                if (name.length() > 0) {
-                    if (!folder.getChild(name).exists()) {
-                        if (!createNewFolder(folder, name, context)) {
-                            // new folder wasn't created, and since we've
-                            // already ruled out an existing folder, the folder
-                            // can't be created for another reason
-                            OpenPath path = folder.getChild(name);
-                            Logger.LogError("Unable to create folder (" + path + ")");
-                            if (threadListener != null)
-                                threadListener.onWorkerThreadFailure(MKDIR_TYPE);
-                            Toast.makeText(context, R.string.s_msg_folder_none, Toast.LENGTH_LONG)
-                                    .show();
-                        } else {
-                            if (threadListener != null)
-                                threadListener.onWorkerThreadComplete(MKDIR_TYPE);
-                        }
-                    } else {
-                        // folder exists, so let the user know
-                        Toast.makeText(context,
-                                getResourceString(context, R.string.s_msg_folder_exists),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    dialog.dismiss();
-                }
-            }
-        });
-        dlg.create().show();
-    }
-
-    protected static boolean createNewFolder(OpenPath folder, String folderName, Context context) {
-        return folder.getChild(folderName).mkdir();
-    }
-
-    public static void createNewFile(final OpenPath folder, final Context context,
-            final OnWorkerUpdateListener threadListener) {
-        final InputDialog dlg = new InputDialog(context).setTitle(R.string.s_title_newfile)
-                .setIcon(R.drawable.ic_menu_new_file).setMessage(R.string.s_alert_newfile)
-                .setMessageTop(R.string.s_alert_newfile_folder).setDefaultTop(folder.getPath())
-                .setCancelable(true).setNegativeButton(R.string.s_cancel, new OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        dlg.setPositiveButton(R.string.s_create, new OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                String name = dlg.getInputText();
-                if (name.length() > 0) {
-                    createNewFile(folder, name, threadListener);
-                } else {
-                    dialog.dismiss();
-                }
-            }
-        });
-        dlg.create().show();
-    }
-
-    public static void createNewFile(final OpenPath folder, final String filename,
-            final OnWorkerUpdateListener threadListener) {
-        new Thread(new Runnable() {
-            public void run() {
-                if (folder.getChild(filename).touch())
-                    threadListener.onWorkerThreadComplete(TOUCH_TYPE);
-                else
-                    threadListener.onWorkerThreadFailure(TOUCH_TYPE);
-            }
-        }).start();
-        // BackgroundWork bw = new BackgroundWork(TOUCH_TYPE, context, folder,
-        // filename);
-        // bw.execute();
-    }
-
     public void sendFile(final Collection<OpenPath> path, final Context mContext) {
         String name;
         CharSequence[] list = {
@@ -633,7 +548,26 @@ public class EventHandler {
      * toDir).execute(zipFile); }
      */
 
-    public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> implements
+    public static void createNewFile(final OpenPath folder, final String filename,
+	        final OnWorkerUpdateListener threadListener) {
+	    new Thread(new Runnable() {
+	        public void run() {
+	            if (folder.getChild(filename).touch())
+	                threadListener.onWorkerThreadComplete(TOUCH_TYPE);
+	            else
+	                threadListener.onWorkerThreadFailure(TOUCH_TYPE);
+	        }
+	    }).start();
+	    // BackgroundWork bw = new BackgroundWork(TOUCH_TYPE, context, folder,
+	    // filename);
+	    // bw.execute();
+	}
+
+	public static boolean createNewFolder(OpenPath folder, String folderName, Context context) {
+	    return folder.getChild(folderName).mkdir();
+	}
+
+	public class BackgroundWork extends AsyncTask<OpenPath, Integer, Integer> implements
             OnProgressUpdateCallback {
         private final EventType mType;
         private final Context mContext;

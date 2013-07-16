@@ -43,6 +43,7 @@ import android.graphics.Paint;
 import android.graphics.Bitmap.Config;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.text.ClipboardManager;
 import android.text.util.Linkify;
 import android.util.DisplayMetrics;
@@ -70,6 +71,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.SpinnerAdapter;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -97,6 +99,8 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.R.drawable;
+import org.brandroid.openmanager.R.string;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.HeatmapAdapter;
@@ -110,9 +114,12 @@ import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
 import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.HelpStringHelper;
+import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
@@ -1162,4 +1169,105 @@ public class DialogHandler {
         });
         return true;
     }
+    
+    private static Drawable getFileTypeDrawable(int type, Context context)
+    {
+    	int res = R.drawable.sm_folder;
+    	switch(type)
+    	{
+    	case 1: res = R.drawable.sm_paper; break;
+    	}
+    	return context.getResources().getDrawable(res);
+    }
+    
+    public static void showNewFileTypeDialog(final Context context, DialogInterface.OnClickListener onclick)
+    {
+    	ArrayList<CharSequence> mTypes = new ArrayList<CharSequence>();
+		for(String t : context.getResources().getStringArray(R.array.file_types))
+			mTypes.add(t);
+		ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(context,
+				android.R.layout.simple_list_item_1, mTypes) {
+			@Override
+			public View getView(int position, View convertView,
+					ViewGroup parent) {
+				View ret = super.getView(position, convertView, parent);
+				Drawable d = getFileTypeDrawable(position, context);
+				Drawable plus = context.getResources().getDrawable(R.drawable.ic_menu_add_layer);
+				LayerDrawable ld = new LayerDrawable(new Drawable[]{d, plus});
+				if(ret instanceof TextView)
+				{
+					((TextView)ret).setCompoundDrawablePadding(8);
+					((TextView)ret).setCompoundDrawablesWithIntrinsicBounds(ld, null, null, null);
+				}
+				return ret;
+			}
+		};
+		new AlertDialog.Builder(context)
+			.setTitle(R.string.s_add)
+			.setAdapter(adapter, onclick)
+			.setNegativeButton(R.string.s_cancel, onclick)
+			.create()
+			.show();
+    }
+
+	public static void showNewFileDialog(final OpenPath folder, final Context context,
+	        final OnWorkerUpdateListener threadListener, int initialType) {
+		showNewFileTypeDialog(context, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				if(which >= 0)
+					showNewFileOfTypeDialog(folder, context, threadListener, which);
+			}
+		});
+	}
+		
+	public static void showNewFileOfTypeDialog(final OpenPath folder, final Context context,
+	        final OnWorkerUpdateListener threadListener, final int type) {
+    	final InputDialog dlg = new InputDialog(context)
+				.setTitle(type == 0 ? R.string.s_title_newfolder : R.string.s_title_newfile)
+	            .setIcon(getFileTypeDrawable(type, context))
+	            .setNegativeButton(R.string.s_cancel,
+	            		new DialogInterface.OnClickListener() {
+		                public void onClick(DialogInterface dialog, int which) {
+		                    dialog.dismiss();
+		                }
+		            });
+	    dlg.setPositiveButton(R.string.s_create, new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int which) {
+	        	String name = dlg.getInputText();
+	            if (name.length() == 0) { dialog.dismiss(); return; }
+	            switch(type)
+	            {
+	            case 0: // new folder
+	            	if (!folder.getChild(name).exists()) {
+	                    if (!EventHandler.createNewFolder(folder, name, context)) {
+	                        // new folder wasn't created, and since we've
+	                        // already ruled out an existing folder, the folder
+	                        // can't be created for another reason
+	                        OpenPath path = folder.getChild(name);
+	                        Logger.LogError("Unable to create folder (" + path + ")");
+	                        if (threadListener != null)
+	                            threadListener.onWorkerThreadFailure(EventHandler.MKDIR_TYPE);
+	                        Toast.makeText(context, R.string.s_msg_folder_none, Toast.LENGTH_LONG)
+	                                .show();
+	                    } else {
+	                        if (threadListener != null)
+	                            threadListener.onWorkerThreadComplete(EventHandler.MKDIR_TYPE);
+	                    }
+	                } else {
+	                    // folder exists, so let the user know
+	                    Toast.makeText(context,
+	                            EventHandler.getResourceString(context, R.string.s_msg_folder_exists),
+	                            Toast.LENGTH_SHORT).show();
+	                }
+	            	break;
+	            case 1: // text file:
+	            	EventHandler.createNewFile(folder, name, threadListener);
+	            	break;
+	            }
+	            
+	        }
+	    });
+	    dlg.create().show();
+	}
+
 }

@@ -1189,10 +1189,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 DialogHandler.showFileHeatmap(getExplorer(), getPath());
                 return true;
             case R.id.menu_new_file:
-                EventHandler.createNewFile(getPath(), getActivity(), this);
-                return true;
-            case R.id.menu_new_folder:
-                EventHandler.createNewFolder(getPath(), getActivity(), this);
+                DialogHandler.showNewFileDialog(getPath(), getActivity(), this, 1);
                 return true;
             case R.id.menu_sort_name_asc:
                 onSortingChanged(SortType.Type.ALPHA);
@@ -1688,7 +1685,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             return;
         super.onPrepareOptionsMenu(menu);
 		
-		MenuUtils.setMenuEnabled(menu, getPath().canWrite(), R.id.menu_new_file, R.id.menu_new_folder);
+		MenuUtils.setMenuEnabled(menu, getPath().canWrite(), R.id.menu_new_file);
 		MenuUtils.setMenuVisible(menu, mPath instanceof OpenNetworkPath, R.id.menu_context_download);
 		MenuUtils.setMenuVisible(menu, !(mPath instanceof OpenNetworkPath), R.id.menu_context_edit, R.id.menu_context_view);
 		
@@ -1711,8 +1708,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (mPath != null)
             MenuUtils.setMenuEnabled(menu,
                     !mPath.requiresThread() && mPath.canWrite() && !mPath.isArchive(),
-                    R.id.menu_multi_all_copy, R.id.menu_multi_all_move, R.id.menu_new_file,
-                    R.id.menu_new_folder);
+                    R.id.menu_multi_all_copy, R.id.menu_multi_all_move, R.id.menu_new_file);
 
         SortType.Type st = getSorting().getType();
         int sti = Utils.getArrayIndex(sortTypes, st);
