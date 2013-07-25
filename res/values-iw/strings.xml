@@ -302,7 +302,6 @@
     <string name="activity_resolver_use_always">תמיד</string>
     <string name="activity_resolver_use_once">רק פעם אחת</string>
     <string name="s_pref_bookmarks_summary">הצג מועדפים</string>
-    <string name="apply_to_all">?האם ברצונך להחיל על כל התיקיות</string>
     <string name="s_theme_lightdark">בהירות מסך</string>
     <string name="s_hidden">מותר</string>
     <string name="s_total">סך הכל</string>
