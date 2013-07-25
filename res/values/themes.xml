@@ -30,7 +30,7 @@
         <!-- Action Mode icons -->
         <item name="actionIconClipboard">@drawable/ic_menu_clipboard</item>
         <item name="actionIconClipboardChecked">@drawable/ic_menu_clipboard_checked</item>
-        <item name="actionIconHomeUp">@drawable/ic_ab_back_holo_dark</item>
+        <item name="actionIconHomeUp">@drawable/ic_drawer</item>
         <item name="actionIconRename">@drawable/ic_rename</item>
         <item name="actionIconPaste">@drawable/ic_action_paste_holo_dark</item>
         <item name="actionIconCopy">@drawable/ic_action_copy_holo_dark</item>
@@ -188,7 +188,7 @@
         <!-- Action Mode icons -->
         <item name="actionIconClipboard">@drawable/ic_menu_clipboard</item>
         <item name="actionIconClipboardChecked">@drawable/ic_menu_clipboard_checked</item>
-        <item name="actionIconHomeUp">@drawable/ic_ab_back_holo_dark</item>
+        <item name="actionIconHomeUp">@drawable/ic_drawer</item>
         <item name="actionIconRename">@drawable/ic_rename</item>
         <item name="actionIconPaste">@drawable/ic_action_paste_holo_dark</item>
         <item name="actionIconCopy">@drawable/ic_action_copy_holo_dark</item>
