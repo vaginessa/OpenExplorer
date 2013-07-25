@@ -14,7 +14,7 @@
     <string name="s_menu_sort_name_asc">حسب الإسم تصاعديا</string>
     <string name="s_menu_sort_name_desc">حسب الإسم تنازليا</string>
     <string name="s_menu_sort_date_asc">حسب الأحدث</string>
-    <string name="s_menu_sort_date_desc">حسب الأقدمثث</string>
+    <string name="s_menu_sort_date_desc">حسب الأقدم</string>
     <string name="s_menu_sort_size_asc">حسب الأكبر </string>
     <string name="s_menu_sort_size_desc">حسب الأصغر</string>
     <string name="s_menu_sort_type">حسب نوع الملف</string>
@@ -48,7 +48,7 @@
     <string name="s_pref_servers">سيرفرات إضافية</string>
     <string name="s_pref_server_add">إضافة سيرفر جديد</string>
     <string name="s_pref_display">عرض الخيارات</string>
-    <string name="s_pref_hidden">عرض الملفات المخفية999674633</string>
+    <string name="s_pref_hidden">عرض الملفات المخفية</string>
     <string name="s_pref_hidden_summary">عرض الملفات والمجلدات المخفية</string>
     <string name="s_pref_thumbs">عرض مصغرات الصور</string>
     <string name="s_pref_thumbs_summary">عرض مصغرات للصور والفيديو والبرامج </string>
@@ -113,7 +113,7 @@
     <string name="s_about_recent">التحديثات الأخيره</string>
     <string name="s_chooser_email">إرسال تقييم</string>
     <string name="s_status_loading">تحميل...</string>
-    <string name="s_menu_open">�</string>
+    <string name="s_menu_open">فتح بإستخدام</string>
     <string name="s_menu_edit">تحرير بواسطة</string>
     <string name="s_pref_stats_title">مساعدة في تطوير  OpenExplorer</string>
     <string name="s_pref_stats_summary">إرسال إحصائيات إستخدام آمنة. هذا الإجراء لن يستخدم أي من بياناتك الشخصية نهائياً</string>
@@ -123,7 +123,6 @@
     <string name="s_pref_start_summary">يحدد ماهو المجلد الإفتراضي للبرنامج</string>
     <string name="s_custom">مخصص</string>
     <string name="s_text_intro_top">مرحبا بك في  OpenExplorer</string>
-    <string name="s_text_intro_body">الرجاء أختيار مسار البدء\nترجمة: شمسان العماري</string>
     <string name="s_info_num_folders">عدد المجلدات</string>
     <string name="s_info_num_files">عدد الملفات</string>
     <string name="s_info_last_modified">آخر تعديل</string>
@@ -211,8 +210,6 @@
     <string name="s_pref_fancy_menus">قوائم جميلة</string>
     <string name="s_pref_fancy_context">القوائم الجميلة</string>
     <string name="s_search_files">بحث في ملفات النظام</string>
-    <string name="search_summary">door</string>
-    <string name="search_results">abbas</string>
     <string name="s_menu_exit">خروج</string>
     <string name="s_warn_wtf_message">أوووبز! يبدو أن هناك أخطاء غير متوقعة قد حصلت! ولأن هذا أمر قد يحدث في أي تطبيق تحت التجربة .. نرجوا منك مساعدتنا بإرسال تقرير لنا عن هذا الخطأ علماً أنه معلوماتك الشخصية لن تصل إلينا.</string>
     <string name="s_warn_wtf_ps">الرجاء ملاحظة أن هذا البرنامج مازال تجريبي وتحت التطوير.\nنرجوا منكم عدم وضع تقييم سيء . إذا أزعجك البرنامج قم بإزالته من جهازك</string>
@@ -297,7 +294,7 @@
     <string name="s_alert_exit">هل متأكد أنك تريد الخروج</string>
     <string name="s_alert_clipboard">تم النسخ للذاكرة المؤقتة</string>
     <string name="s_alert_restart">إعادة التشغيل. الرجاء الإنتظار</string>
-    <string name="language">العربية</string>
+    <string name="language">اللغة</string>
     <string name="s_menu_download">تنزيل</string>
     <string name="scan">مسح</string>
     <string name="test">تجربة</string>
@@ -319,8 +316,6 @@
     <string name="s_menu_system_mount_on">النظام قابل للكتابة</string>
     <string name="s_menu_system_mount_off">النظام للقراءة فقط</string>
     <string name="s_pref_servers_private_summary">تخزين إعدادات السيرفر في في منطقة تخزين خاصةهذا سيتسبب في مسح الاعدادات عند مسح التطبيق لاتختر هذا الخيار اذا كنت ستثبت التطبيق مرة اخرى وترغب في استعادة اعداداتك.</string>
-    <string name="s_theme_lightdark">maps</string>
-    <string name="s_theme_custom">map</string>
     <string name="s_menu_rate">قَيّمْ</string>
     <string name="s_alert_destination_exists">الدليل موجود مسبقاً .ماذا تريد ان تفعل؟</string>
     <string name="s_overwrite">إعادة الكتابة</string>
@@ -338,7 +333,7 @@
     <string name="s_compress_type">نوع الضغط</string>
     <string name="s_compressed">مضغوط</string>
     <string name="s_delete_after">امسح المصدر بعد الانتهاء</string>
-    <string name="s_pass_old">187.51.12</string>
+    <string name="s_pass_old">ادخل كلمة المرور القديمة</string>
     <string name="s_pass_new">188877776666</string>
     <string name="s_logout">تسجيل الخروج</string>
     <string name="s_bookmark_history">سجل</string>

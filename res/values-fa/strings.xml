@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">معاونت آموزشی علوم پزشکی اهواز</string>
-    <string name="warn_text_editor">Yas</string>
-    <string name="warn_networking">فارسی</string>
-    <string name="s_privacy">dd</string>
     <string name="s_theme_lightdark">کتاب</string>
     <string name="s_theme_custom">کتاب</string>
-    <string name="s_master_pass">jkz249</string>
-    <string name="s_master_pass_warning">jkz249</string>
-    <string name="s_pass_old">www.yekmobile.com</string>
-    <string name="s_pass_new">jkz249</string>
 </resources>

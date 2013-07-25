@@ -3,7 +3,7 @@
     <string name="app_name">Open Explorer</string>
     <string name="s_photos">Bilder</string>
     <string name="s_videos">Videos</string>
-    <string name="s_music">bushido </string>
+    <string name="s_music" auto="1">Musik</string>
     <string name="s_downloads" auto="1">Downloads</string>
     <string name="s_external" auto="1">Extern</string>
     <string name="s_internal" auto="1">Intern</string>
@@ -22,7 +22,7 @@
     <string name="s_menu_grid">Rasteransicht</string>
     <string name="s_menu_list">Listenansicht</string>
     <string name="s_menu_carousel">Karussell</string>
-    <string name="s_menu_hidden">Versteckte Dateien zeigen</string>
+    <string name="s_menu_hidden" auto="1">Versteckte Dateien anzeigen</string>
     <string name="s_menu_thumbs">Miniaturbilder anzeigen</string>
     <string name="s_menu_new_folder">Neuer Ordner</string>
     <string name="s_menu_other">Weitere Einstellungen</string>
@@ -54,14 +54,14 @@
     <string name="s_pref_thumbs_summary">Zeigt Vorschaubilder für Fotos, Videos und App-Dateien</string>
     <string name="s_pref_view">Ansicht</string>
     <string name="s_pref_view_summary">Dateien in einem Raster, einer Liste oder einem Karussell (nur Honeycomb) anzeigen</string>
-    <string name="s_pref_sort">Sortieren</string>
+    <string name="s_pref_sort" auto="1">Sortierung</string>
     <string name="s_pref_sort_summary">Datei- und Ordnersortierung wählen</string>
-    <string name="s_pref_advanced">Erweitert</string>
+    <string name="s_pref_advanced" auto="1">Fortgeschritten</string>
     <string name="s_pref_server_name">Servername</string>
     <string name="s_pref_server_name_summary">Geben Sie den Servernamen an</string>
     <string name="s_pref_server_url">Server-URL</string>
     <string name="s_pref_server_url_summary">Geben Sie die vollständige URL des Servers an</string>
-    <string name="s_pref_server_host">lokalhost</string>
+    <string name="s_pref_server_host">Server-Host</string>
     <string name="s_pref_server_user">Benutzer</string>
     <string name="s_pref_server_user_summary">Benutzername </string>
     <string name="s_pref_server_password">Passwort</string>
@@ -105,7 +105,7 @@
     <string name="s_title_bookmark_prefix">Lesezeichen verwalten:</string>
     <string name="s_alert_remove_safe">Sie können den Datenträger nun sicher entfernen.</string>
     <string name="s_alert_remove_error">Auswerfen nicht möglich.</string>
-    <string name="s_menu_about"> Über</string>
+    <string name="s_menu_about"> musik</string>
     <string name="s_about_version" auto="1">Version</string>
     <string name="s_about_author" auto="1">Autor</string>
     <string name="s_about_site">Website</string>
@@ -122,8 +122,8 @@
     <string name="s_pref_start">Start-Ordner</string>
     <string name="s_pref_start_summary">Gibt an, mit welchem Ordner OpenExplorer gestartet wird</string>
     <string name="s_custom">Eigene...</string>
-    <string name="s_text_intro_top">Willkommen zu OpenExplorer!</string>
-    <string name="s_text_intro_body">Das Ziel von Open Explorer ist es, die Produktivität bei Dateioperationen unter Android wie auch in der Cloud zu verbessern. Egal ob Sie Videos oder Fotos von mehreren Orten aus verwalten möchten oder einen Fernzugriff über FTP auf Ihren Webserver benötigen, OpenExplorer kann Ihnen dabei helfen.\n\nBitte wählen Sie den Ausgangspunkt:saalfeld\n\nknochstrasse\n\n\n\n\n</string>
+    <string name="s_text_intro_top" auto="1">Willkommen bei OpenExplorer!</string>
+    <string name="s_text_intro_body">Das Ziel von Open Explorer ist es, die Produktivität bei Dateioperationen unter Android wie auch in der Cloud zu verbessern. Egal ob Sie Videos oder Fotos von mehreren Orten aus verwalten möchten oder einen Fernzugriff über FTP auf Ihren Webserver benötigen, OpenExplorer kann Ihnen dabei helfen.\n\nBitte wählen Sie den Ausgangspunkt:</string>
     <string name="s_info_num_folders">Anzahl Ordner:</string>
     <string name="s_info_num_files">Anzahl Dateien:</string>
     <string name="s_info_last_modified">Zuletzt geändert:</string>
@@ -162,14 +162,14 @@
     <string name="s_pref_text_internal">Den internen Texteditor verwenden</string>
     <string name="s_text_editor_title">Textbearbeitungsprogramm </string>
     <string name="s_pref_show_root">Zeige Rootverzeichnis (/)</string>
-    <string name="s_pref_show_internal">Internen Speicher anzeigen</string>
+    <string name="s_pref_show_internal" auto="1">Interne Medien anzeigen</string>
     <string name="s_pref_show_external">Externe Medien anzeigen</string>
     <string name="s_error_no_media">Es scheint, als sei kein Medium eingelegt. Bitte deaktivieren Sie die USB-Freigabe oder legen Sie das Medium wieder ein.</string>
     <string name="s_prompt_password">Passwort eingeben</string>
     <string name="s_add">Hinzufügen</string>
     <string name="s_server_ftp">FTP</string>
     <string name="s_server_sftp" auto="1">SFTP</string>
-    <string name="s_pref_server_port">8080</string>
+    <string name="s_pref_server_port" auto="1">Port</string>
     <string name="s_about_buildtime" auto="1">Erstellungsdatum</string>
     <string name="s_default">Standard</string>
     <string name="s_pref_timeout">Zeitüberschreitung </string>
@@ -185,7 +185,7 @@
     <string name="s_bookmark_drives">Laufwerke</string>
     <string name="s_bookmark_smart">Smart Folders</string>
     <string name="s_bookmark_favorites">Lesezeichen</string>
-    <string name="s_bookmark_servers">okay</string>
+    <string name="s_bookmark_servers" auto="1">Server</string>
     <string name="s_bookmark_cache">Zwischenspeicher</string>
     <string name="s_info_totalspace">Gesamter Speicherplatz:</string>
     <string name="s_info_freespace">Freier Speicherplatz:</string>
@@ -206,7 +206,7 @@
     <string name="s_hide">Verstecken</string>
     <string name="s_show">Anzeigen</string>
     <string name="s_msg_event_cancelled">Vorgang abgebrochen.</string>
-    <string name="s_alert_newfolder_folder">Erstelle neuen Ordner in:</string>
+    <string name="s_alert_newfolder_folder" auto="1">Neuen Ordner erstellen in:</string>
     <string name="s_pref_fancy_category">Schicke Anzeige-Einstellungen</string>
     <string name="s_pref_fancy_menus">Hübsche Menüs</string>
     <string name="s_pref_fancy_context">Schicke Kontext-Menüs</string>
@@ -245,7 +245,7 @@
     <string name="button_translate">Übersetzen</string>
     <string name="httpError">Es ist ein Netzwerkfehler aufgetreten.</string>
     <string name="httpErrorAuth">Authentifizierung ist fehlgeschlagen.</string>
-    <string name="httpErrorProxyAuth">Authentifizierung durch Proxy-Server ist fehlgeschlagen.</string>
+    <string name="httpErrorProxyAuth">Authentifizierung via Proxy-Server ist fehlgeschlagen.</string>
     <string name="httpErrorConnect">Es konnte keine Verbindung zum Server hergestellt werden.</string>
     <string name="httpErrorIO">Die Server-Kommunikation ist fehlgeschlagen. Versuchen Sie es später erneut.</string>
     <string name="httpErrorTimeout">Zeitüberschreitung bei Serververbindung.</string>
@@ -284,7 +284,7 @@
     <string name="activity_chooser_view_see_all">Alles anzeigen... </string>
     <string name="s_title_picker">Bitte Ordner wählen</string>
     <string name="selected_path">Gewählter Ordner:</string>
-    <string name="filename">8</string>
+    <string name="filename" auto="1">Dateiname</string>
     <string name="s_msg_saved" auto="1">gespeichert</string>
     <string name="s_menu_view_line_numbers" auto="1">Zeilennummern</string>
     <string name="warn_text_editor">Willkommen im Text-Editor. Tippen Sie bitte lange auf den Text, um in den Bearbeitungsmodus zu gelangen.</string>
@@ -297,13 +297,13 @@
     <string name="s_alert_exit">Sind Sie sicher, dass Sie beenden möchten? </string>
     <string name="s_alert_clipboard">In die Zwischenablage kopiert</string>
     <string name="s_alert_restart">Starte neu. Bitte warten.</string>
-    <string name="language">Sprache</string>
+    <string name="language" auto="1">Sprache</string>
     <string name="s_menu_download">Herunterladen</string>
     <string name="scan">Durchsuchen</string>
     <string name="test">Prüfen</string>
     <string name="test_success">Verbindung erfolgreich hergestellt!</string>
     <string name="no_items">Keine Einträge.</string>
-    <string name="clipboard">Zwischenspeichern</string>
+    <string name="clipboard">Zwischenspeicher</string>
     <string name="theme">Design</string>
     <string name="theme_dark">Dunkel</string>
     <string name="theme_light">Hell</string>
@@ -323,9 +323,9 @@
     <string name="msg_nook_donate2">Hallo, Nook-Benutzer! Ich hoffe, Ihnen gefällt Open Explorer für Nook. Ich habe mein Bestes gegeben, hohe Kompatibilität mit Nook-Geräten zu gewährleisten. Dank kürzlicher Spenden konnte ich ein Nook Color erstehen! Vielen Dank an alle, die gespendet haben!\n\nAls nächsten Schritt hätte ich gerne die Möglichkeit, ein Nook HD Gerät zu erstehen.\n\nWenn Sie diese App nützlich finden, erwägen Sie bitte eine Spende, indem Sie entweder die Schaltfläche unten oder die &quot;Spenden&quot;-Menüoption benutzen. Danke und viel Spaß beim \'Exploren\'!</string>
     <string name="msg_bb_donate">Hallo, Blackberry-Benutzer! Ich hoffe, Ihnen gefällt Open Explorer. Ich habe mein Bestes gegeben, hohe Kompatibilität mit BlackBerry-Geräten zu gewährleisten. Jedoch scheint es einige Unterschiede zu geben, die ohne ein richtiges BlackBerry-Gerät schwer nachzuvollziehen sind. Daher versuche ich, genügend Spendengelder für den Kauf eines BlackBerry-10-Gerätes zu sammeln, um die Kompatibilität zu verbessern. Wenn Sie diese App nützlich finden, erwägen Sie bitte eine Spende, indem Sie entweder die Schaltfläche unten oder die &quot;Spenden&quot;-Menüoption benutzen. Danke und viel Spaß beim \'Exploren\'!</string>
     <string name="msg_donate">Hallo Android-Benutzer! Wir hoffen, Ihnen gefällt Open Explorer. Wir haben unser Bestes gegeben, hohe Kompatibilität mit allen Android-Geräten zu gewährleisten. Anhand eingelangter Bug-Reports gehen wir allerdings davon aus, daß Unterschiede zwischen einzelnen Modellen bestimmte Probleme verursachen. Daher versuchen wir, genügend Spenden zum Kauf von Nexus-Geräten zu sammeln, um die Kompatibilität zu verbessern. Wenn Sie diese App nützlich finden, erwägen Sie bitte eine Spende, indem Sie entweder die Schaltfläche unten oder die &quot;Spenden&quot;-Menüoption benutzen. Danke und viel Spaß beim Erkunden!</string>
-    <string name="s_privacy">Datenschutzerklärung</string>
+    <string name="s_privacy" auto="1">Política de privacidad</string>
     <string name="s_menu_system_mount">Erlaube Schreibzugriff auf /system (Vorsicht!)</string>
-    <string name="s_menu_system_mount_on">System ist BESCHREIBBAR!</string>
+    <string name="s_menu_system_mount_on">System BESCHREIBBAR</string>
     <string name="s_menu_system_mount_off">System nur lesbar</string>
     <string name="s_pref_servers_private">Server privat belassen</string>
     <string name="s_pref_servers_private_summary">Server-Einstellungen im privaten Speicherbereich ablegen. Diese werden entfernt, falls die App deinstalliert wird. Setzen Sie keinen Haken, wenn die Einstellungen bei einer Neuinstallation erhalten bleiben sollen.</string>
@@ -343,7 +343,7 @@
     <string name="s_extracted">entpackt</string>
     <string name="s_extracting">Entpacke</string>
     <string name="s_extract_with">Entpacke mit...</string>
-    <string name="s_title_archive_handler">Archive</string>
+    <string name="s_title_archive_handler" auto="1">Archive Handler</string>
     <string name="s_ask_again">Jedes Mal fragen</string>
     <string name="s_archives">Archive</string>
     <string name="s_compress">Komprimieren</string>
@@ -351,7 +351,7 @@
     <string name="s_compressed">komprimiert</string>
     <string name="s_delete_after">Quelle nach Abschluss löschen </string>
     <string name="s_master_pass" auto="1">Master-Passwort</string>
-    <string name="s_master_pass_warning">Sie können ein Master-Passwort als Schlüssel für alle gespeicherten Passwörter vergeben. Wenn Sie dieses Feld leer lassen, werden Passwörter weiterhin verschlüsselt, wobei das Vorgabe-Master-Passwort verwendet wird. Bitte beachten Sie, dass Sie, wenn Sie Ihr Passwort mit gespeicherten Netzwerk-Passwörter aktualisieren, Ihre Passwörter wahrscheinlich zurücksetzen müssen und sich gegenüber Cloud-Servern neu authentifizieren müssen.</string>
+    <string name="s_master_pass_warning" auto="1">Sie können einen Master-Passwort als Schlüssel für alle gespeicherten Passwörter verwendet. Wenn Sie dieses Feld leer lassen, wird Kennwörter weiterhin verschlüsselt werden, und die Standard-Master-Passwort verwendet werden. Bitte beachten Sie, dass, wenn Sie Ihr Passwort zu aktualisieren mit gespeicherten Netzwerk-Passwörter, werden Sie wahrscheinlich benötigen, um Passwörter zurückzusetzen und authentifizieren Cloud-Server nach dem Zurücksetzen dieses Passwort.</string>
     <string name="s_pass_old" auto="1">Altes Passwort eingeben:</string>
     <string name="s_pass_new" auto="1">Neues Passwort eingeben:</string>
     <string name="s_logout">Abmelden</string>

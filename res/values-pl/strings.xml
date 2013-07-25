@@ -94,7 +94,7 @@
     <string name="s_button_unzip_else">Rozpakuj gdzie indziej...</string>
     <string name="s_msg_none">Pliki nie mogą być</string>
     <string name="s_msg_some">Niektóre pliki nie mogą być </string>
-    <string name="s_msg_all">Pliki</string>
+    <string name="s_msg_all" auto="1">Plik (i) z powodzeniem</string>
     <string name="s_msg_deleted">usunięto</string>
     <string name="s_msg_moved">przeniesiono</string>
     <string name="s_msg_copied">skopiowano</string>
@@ -123,7 +123,7 @@
     <string name="s_pref_start_summary">Wskazuje który folder otwierany jest na starcie</string>
     <string name="s_custom">Niestandardowy...</string>
     <string name="s_text_intro_top">Witaj w OpenExplorer!</string>
-    <string name="s_text_intro_body">Wybierz ścieżkę startową:</string>
+    <string name="s_text_intro_body" auto="1">Celem OpenExplorer jest, aby ci bardziej produktywni w systemie plików Android oraz w chmurze. Czy trzeba zarządzać filmów wideo lub zdjęć z wielu miejsc lub zarządzać serwera zdalnie poprzez FTP, OpenExplorer może własnych potrzeb  n  nProszę wybrać ścieżkę wyjścia.:</string>
     <string name="s_info_num_folders">Liczba folderów:</string>
     <string name="s_info_num_files">Liczba plików:</string>
     <string name="s_info_last_modified">Ostatnia modyfikacja:</string>
@@ -227,7 +227,7 @@
     <string name="s_pref_autowtf_summary">Kiedy wystąpi nieobsługiwany wyjątek, automatycznie wyślij raport.</string>
     <string name="s_split_auto">Automatycznie</string>
     <string name="s_split_top"> Wymusza przyciski do góry</string>
-    <string name="s_split_top_single">.</string>
+    <string name="s_split_top_single" auto="1">Wymusza jeden przycisk do góry</string>
     <string name="s_split_bottom">Wymusza przyciski do dołu</string>
     <string name="s_split_none" auto="1">Umieść wszystkie przyciski w menu System</string>
     <string name="s_about_screensize">Rozmiar ekranu</string>
@@ -240,7 +240,7 @@
     <string name="menu_view_font_medium">Średni rozmiar czcionki</string>
     <string name="menu_view_font_large">Duży rozmiar czcionki</string>
     <string name="app_description" auto="1">Otwórz przeglądarkę - Open manager plik źródłowy dla wszystkich urządzeń! (Tabletki, telefony, telewizory Google, kanapki!)  N-pełna dokumentacja systemu zarządzania  n-USB, SD i innych nośników zewnętrznych  n-Network Podłączane (FTP, SFTP, SMB / Samba / Windows / LAN / WiFi)  n - edytor tekstu  n-Smart Folders, że skanowanie do różnych rodzajów mediów (wideo, zdjęcia, muzykę, pliki do pobrania)  n-View Pager katalogu nawigacji (prawo machnięcia, aby przejść do katalogu)  n-superużytkownika / Root zdolność do listy / czytać foldery systemowe w żaden system napisać jeszcze)  n  nFeatures przyjść:  n-kartach Edytor tekstu  n-Więcej możliwości sieciowe (Dropbox, Box.net, napęd Sky)  n-Offline cache struktura plików, pamięta, które pliki masz w różnych miejscach bez potrzeby podłączania  n-Disk mapa cieplna przestrzeń pokazuje gdzie twoje największe pliki są  n  n * Uwaga: Ta aplikacja jest w fazie beta. Istnieje jeszcze wiele błędów. Jeśli nie chcą poznać te błędy, proszę nie pobrać aplikację. Jeśli chcesz mi pomóc znaleźć te błędy, proszę napisz do mnie lub współpracować ze sobą na Github ust https://github.com/BrandoCommando/OpenExplorer/). Proszę pamiętać, złe wskaźniki pomoc nikogo.</string>
-    <string name="alert_translate_google" formatted="false">%s,i</string>
+    <string name="alert_translate_google" formatted="false" auto="1">Witam, to tłumaczenie jest przez Google Translate. Jeśli znasz angielski, a także %s, i chciałbyś pomóc w dostarczaniu lepsze tłumaczenie, proszę kliknąć na ten przycisk:</string>
     <string name="alert_translate_none" formatted="false">Witaj, wygląda na to, że używasz nieobsługiwanego języka. Czy znasz angielski i %s ? Jeżeli chcesz pomóc wprowadzając poprawne tłumaczenie, kliknij tutaj:</string>
     <string name="button_translate">Przetłumacz</string>
     <string name="httpError">Wystąpił błąd sieci.</string>
@@ -347,7 +347,6 @@
     <string name="s_compressed">skompresowany</string>
     <string name="s_delete_after">Usuń źródło po zakończeniu</string>
     <string name="s_master_pass">Hasło główne</string>
-    <string name="s_master_pass_warning">Partyzant01\n</string>
     <string name="s_pass_old">Podaj stare hasło</string>
     <string name="s_pass_new">Podaj nowe hasło</string>
     <string name="s_logout">Wyloguj</string>
@@ -359,7 +358,7 @@
     <string name="s_authenticate_refresh">Odświeżenie uwierzytelniania</string>
     <string name="s_pref_thumbs_cache">Wstępnie buforowane miniatury</string>
     <string name="s_pref_thumbs_cache_summary">Ta opcja przyspieszy wczytywanie folderów zawierających zdjęcia i filmy.</string>
-    <string name="s_folders">foldery</string>
+    <string name="s_folders">folder</string>
     <string name="s_hidden">ukryty</string>
     <string name="s_total">razem</string>
     <string name="s_custom_account">konto uzytkownika</string>

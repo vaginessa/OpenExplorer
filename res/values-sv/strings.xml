@@ -27,7 +27,7 @@
     <string name="s_menu_new_folder" auto="1">Ny mapp</string>
     <string name="s_menu_other" auto="1">Andra inställningar</string>
     <string name="s_menu_flush" auto="1">Flush Cache</string>
-    <string name="s_menu_root">Root</string>
+    <string name="s_menu_root" auto="1">Rot</string>
     <string name="s_menu_prefs_folder">Mapp Inställningar</string>
     <string name="s_menu_prefs_global" auto="1">Globala Inställningar</string>
     <string name="s_menu_info" auto="1">Info</string>

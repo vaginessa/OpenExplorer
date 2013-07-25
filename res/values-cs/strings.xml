@@ -21,7 +21,6 @@
     <string name="s_menu_multi">Zvolit Více</string>
     <string name="s_menu_grid">Zobrazit v Mřížce</string>
     <string name="s_menu_list">Zobrazit v Seznamu</string>
-    <string name="s_menu_hidden">i</string>
     <string name="s_menu_new_folder">Nová Složka</string>
     <string name="s_menu_other">Další Nastavení</string>
     <string name="s_menu_root">ROOT</string>
@@ -48,7 +47,6 @@
     <string name="s_pref_thumbs">Zobrazit Miniatury Obrázků</string>
     <string name="s_pref_thumbs_summary">Zobrazit miniaturu u Obrázků/Videí/Aplikací</string>
     <string name="s_pref_view">Mod Zobrazení</string>
-    <string name="s_pref_server_password">heslo</string>
     <string name="s_menu_about">Info</string>
     <string name="s_menu_open">Otevřít s...</string>
     <string name="s_menu_edit">Editovat s...</string>

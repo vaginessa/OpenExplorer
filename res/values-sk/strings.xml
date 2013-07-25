@@ -105,7 +105,6 @@
     <string name="s_title_bookmark_prefix" auto="1">Správa Záložka:</string>
     <string name="s_alert_remove_safe" auto="1">Teraz môžete bezpečne odstrániť disk.</string>
     <string name="s_alert_remove_error" auto="1">Nemožno vysunúť.</string>
-    <string name="s_menu_about">O</string>
     <string name="s_about_version" auto="1">Verzia</string>
     <string name="s_about_author" auto="1">Autor</string>
     <string name="s_about_site" auto="1">Webové stránky</string>
@@ -315,7 +314,7 @@
     <string name="s_authenticating" auto="1">overovanie</string>
     <string name="s_bookmark_history" auto="1">História</string>
     <string name="s_server_account_title" auto="1">účet:</string>
-    <string name="s_authenticate_success">O</string>
+    <string name="s_authenticate_success" auto="1">autentizácia úspešná</string>
     <string name="s_authenticate_refresh" auto="1">obnoviť overovanie</string>
     <string name="s_pref_thumbs_cache" auto="1">Pre-Cache Náhľady</string>
     <string name="s_pref_thumbs_cache_summary" auto="1">To vám pomôže urýchliť načítanie zložky obsahujúce obrázky a videá.</string>

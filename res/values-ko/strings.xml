@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">www.naver.com</string>
+    <string name="app_name">Explorer 열기</string>
     <string name="s_photos">사진</string>
     <string name="s_videos">동영상</string>
     <string name="s_music">음악</string>
@@ -112,7 +112,7 @@
     <string name="s_about_email">이메일</string>
     <string name="s_about_recent">최근 업데이트</string>
     <string name="s_chooser_email">의견 보내기…</string>
-    <string name="s_status_loading">로딩 중…</string>
+    <string name="s_status_loading">로딩 중 ...</string>
     <string name="s_menu_open">…으로 열기</string>
     <string name="s_menu_edit">…로 수정 </string>
     <string name="s_pref_stats_title">OpenExplorer를 개선하는 데 도움이 되주세요</string>
@@ -165,9 +165,9 @@
     <string name="s_pref_show_internal">내부 장치보기</string>
     <string name="s_pref_show_external">외부 장치보기</string>
     <string name="s_error_no_media">장치가 삽입된 것 같지 않습니다. USB 연결모드를 끄거나 장치를 재 삽입 해 주세요.</string>
-    <string name="s_prompt_password">비밀번호를 입력하세요</string>
+    <string name="s_prompt_password" auto="1">비밀 번호를 입력하세요</string>
     <string name="s_add">추가 </string>
-    <string name="s_server_ftp">FTP</string>
+    <string name="s_server_ftp" auto="1">FTP를</string>
     <string name="s_server_sftp">SFTP</string>
     <string name="s_pref_server_port">포트</string>
     <string name="s_about_buildtime">빌드 날짜</string>
@@ -312,7 +312,6 @@
     <string name="activity_resolver_use_always">항상</string>
     <string name="activity_resolver_use_once">한번만</string>
     <string name="s_pref_bookmarks_summary">즐겨찾기 보기</string>
-    <string name="s_menu_heatmap">한국어</string>
     <string name="apply_to_all">모든폴더에 적용하시겠습니까?</string>
     <string name="s_pref_view_folders">폴더 설정</string>
     <string name="s_pref_view_general">일반 설정</string>

@@ -297,8 +297,7 @@
     <string name="s_alert_exit">Çıkmak istediğinize emin misiniz?</string>
     <string name="s_alert_clipboard">Kopyalandı</string>
     <string name="s_alert_restart">Yeniden başlatılıyor. Lütfen bekleyiniz.</string>
-    <string name="language">Dil</string>
-    <string name="s_menu_download">indir2,3,6 yukseltmek</string>
+    <string name="s_menu_download">indir</string>
     <string name="scan">Tarama</string>
     <string name="test">Test</string>
     <string name="test_success">Bağlantı başarılı!</string>

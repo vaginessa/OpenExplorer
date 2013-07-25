@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">romana</string>
     <string name="s_photos">Foto</string>
     <string name="s_videos">Video</string>
     <string name="s_music">Muzică</string>
@@ -29,7 +28,6 @@
     <string name="s_menu_flush">Curăţare Cache</string>
     <string name="s_menu_prefs_folder">Preferinţe Folder</string>
     <string name="s_menu_prefs_global">Preferinţe Globale</string>
-    <string name="s_menu_info">romanian</string>
     <string name="s_menu_copy">Copiere</string>
     <string name="s_menu_cut">Decupare</string>
     <string name="s_menu_paste">Lipire</string>
@@ -109,7 +107,6 @@
     <string name="s_pref_start">Folder Pornire</string>
     <string name="s_custom">Personalizat...</string>
     <string name="s_text_intro_top">Bine aţi Venit în OpenExplorer!</string>
-    <string name="s_text_intro_body">Selectați calea de pornire:</string>
     <string name="s_info_num_folders">Numărul folderelor:</string>
     <string name="s_info_num_files">Numărul fişierelor:</string>
     <string name="s_info_last_modified">Ultima Modificare:</string>

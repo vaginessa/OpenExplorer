@@ -38,7 +38,7 @@
     <string name="s_menu_share">送信/共有</string>
     <string name="s_menu_zip">Zipファイル(複数可)</string>
     <string name="s_menu_unzip">解凍</string>
-    <string name="s_menu_rename">瀬山大輔</string>
+    <string name="s_menu_rename" auto="1">名前の変更...</string>
     <string name="s_menu_bookmark" auto="1">ブックマークに追加</string>
     <string name="s_save" auto="1">保存</string>
     <string name="s_saveas" auto="1">名前を付けて保存...</string>
@@ -113,12 +113,12 @@
     <string name="s_about_recent" auto="1">最近の更新</string>
     <string name="s_chooser_email" auto="1">フィードバックを送信...</string>
     <string name="s_status_loading" auto="1">読み込み中...</string>
-    <string name="s_menu_open">で開く</string>
+    <string name="s_menu_open" auto="1">で開く...</string>
     <string name="s_menu_edit" auto="1">で編集...</string>
     <string name="s_pref_stats_title" auto="1">OpenExplorerを向上させる</string>
     <string name="s_pref_stats_summary" auto="1">匿名の使用統計を送信します。これは、ユーザーを識別するために使用される可能性のある情報が含まれていません。</string>
     <string name="s_error_no_intents" auto="1">インストール済みのアプリケーションは、この種類のファイルを読み取ることはできません。</string>
-    <string name="s_menu_root_disabled">ルート無効</string>
+    <string name="s_menu_root_disabled" auto="1">ルートを無効に</string>
     <string name="s_pref_start" auto="1">起動フォルダ</string>
     <string name="s_pref_start_summary">OpenExplorerの起動時フォルダを示します</string>
     <string name="s_custom" auto="1">カスタム...</string>
@@ -138,7 +138,7 @@
     <string name="app_edit" auto="1">OpenExplorerで編集</string>
     <string name="s_menu_more" auto="1">その他のオプション...</string>
     <string name="s_msg_low_memory" auto="1">メモリ不足！</string>
-    <string name="s_clear">クリア</string>
+    <string name="s_clear">消去</string>
     <string name="s_menu_delete_all">全削除</string>
     <string name="s_menu_move_all">移動する</string>
     <string name="s_menu_copy_all">コピーする</string>
@@ -208,7 +208,7 @@
     <string name="s_msg_event_cancelled" auto="1">イベントがキャンセルされました。</string>
     <string name="s_alert_newfolder_folder">新規フォルダの作成先：</string>
     <string name="s_pref_fancy_category" auto="1">ファンシーディスプレイの設定</string>
-    <string name="s_pref_fancy_menus">る</string>
+    <string name="s_pref_fancy_menus" auto="1">ファンシーメニュー</string>
     <string name="s_pref_fancy_context" auto="1">ファンシーコンテキストメニュー</string>
     <string name="s_search_files" auto="1">検索ファイルシステム</string>
     <string name="search_summary" auto="1">％sを探します n &quot;％s&quot;は（％d）の中で...</string>
@@ -312,7 +312,6 @@
     <string name="apply_to_all">すべてのフォルダに対して処理しますか？</string>
     <string name="s_pref_view_folders">フォルダ設定</string>
     <string name="s_pref_view_general">一般設定</string>
-    <string name="s_pref_thumbs_cache_clear">サムネイルのキャッシュをクリア</string>
     <string name="s_msg_folder_none">フォルダを作成できません</string>
     <string name="s_privacy">プライバシーポリシー</string>
     <string name="s_theme_lightdark">光と影</string>

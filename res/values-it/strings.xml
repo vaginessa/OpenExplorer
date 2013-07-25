@@ -7,7 +7,7 @@
     <string name="s_downloads">Download</string>
     <string name="s_external">Esterna</string>
     <string name="s_internal">Interna</string>
-    <string name="s_view">Visualizzazione</string>
+    <string name="s_view">Vista</string>
     <string name="s_bookmarks">Preferiti</string>
     <string name="s_menu_favorites">Alterna preferiti</string>
     <string name="s_menu_sort">Ordina</string>
@@ -125,7 +125,7 @@
     <string name="s_text_intro_top">Benvenuto in Open Explorer!</string>
     <string name="s_text_intro_body">L\'obbiettivo di OpenExplorer è di aumentare la produttività con il filesystem di Android ed il cloud. Sia che abbiate bisogno di gestire video o foto da più fonti o di gestire il vostro server web in remoto via FTP, OpenExplorer fa al caso vostro.\n\nSelezionare il percorso iniziale:</string>
     <string name="s_info_num_folders">Numero di cartelle:</string>
-    <string name="s_info_num_files">Numero di file: </string>
+    <string name="s_info_num_files">Numero di file:</string>
     <string name="s_info_last_modified" auto="1">Ultima modifica:</string>
     <string name="s_info_permissions">Permessi del File:</string>
     <string name="s_info_permission_read">Leggi :</string>
@@ -138,11 +138,11 @@
     <string name="app_edit">Modifica con Open Explorer</string>
     <string name="s_menu_more">Altre opzioni...</string>
     <string name="s_msg_low_memory" auto="1">Memoria insufficiente!</string>
-    <string name="s_clear">Pulisci</string>
+    <string name="s_clear" auto="1">Cancella</string>
     <string name="s_menu_delete_all">Cancella Tutto</string>
     <string name="s_menu_move_all">Sposta Qui</string>
     <string name="s_menu_copy_all">Copia Qui</string>
-    <string name="s_confirm_delete" formatted="false">Sei sicuro di voler eliminare %s?</string>
+    <string name="s_confirm_delete" formatted="false" auto="1">Sei sicuro di voler cancellare %s?</string>
     <string name="s_error_same_destination" auto="1">La directory di destinazione è la stessa.</string>
     <string name="s_sample_notification">Copia in -&gt; SDCard:  3 Files</string>
     <string name="s_pref_fullscreen" auto="1">Schermo intero</string>

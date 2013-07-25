@@ -37,7 +37,7 @@
     <string name="s_menu_delete">מחק</string>
     <string name="s_menu_share" auto="1">שלח / שתף ...</string>
     <string name="s_menu_zip">קובץ/קבצי zip...</string>
-    <string name="s_menu_unzip">...</string>
+    <string name="s_menu_unzip" auto="1">Unzip ...</string>
     <string name="s_menu_rename" auto="1">שינוי שם ...</string>
     <string name="s_menu_bookmark" auto="1">הוסף סימנייה</string>
     <string name="s_save">שמור</string>
@@ -293,7 +293,6 @@
     <string name="s_title_newfile">קובץ חדש</string>
     <string name="s_alert_newfile_folder">צור קובץ חדש ב</string>
     <string name="s_alert_restart">מאתחל. אנא המתן</string>
-    <string name="language">ה</string>
     <string name="s_menu_download">הורדה</string>
     <string name="clipboard">לוח</string>
     <string name="theme">ערכת נושא</string>

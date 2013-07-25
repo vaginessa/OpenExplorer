@@ -156,7 +156,6 @@
     <string name="s_warn_pager">Veeg van links naar rechts om naar een bovenliggende map te gaan en van rechts naar links om terug te keren. Dit maakt het navigeren makkelijker. Probeer dit uit (op externe media)!</string>
     <string name="s_warn_confirm">Begrijp je dit?</string>
     <string name="s_warn_disable">Uitschakelen</string>
-    <string name="s_pref_intent_internal">Inhoud</string>
     <string name="s_pref_intent_internal_on">Gebruik OpenExplorer-intentmanager</string>
     <string name="s_pref_intent_internal_off">Gebruik systeeminhoudorganisator</string>
     <string name="s_pref_text_internal">Gebruik interne tekstbewerker</string>
@@ -239,7 +238,6 @@
     <string name="menu_view_font_small">Klein lettertype</string>
     <string name="menu_view_font_medium">Gemiddeld lettertype</string>
     <string name="menu_view_font_large">Groot lettertype</string>
-    <string name="app_description">Niemand </string>
     <string name="alert_translate_google" formatted="false">Hallo, deze vertaling werd automatisch uitgevoerd door Google Translate. Indien je zowel Engels als %s kent en zou willen helpen met een betere vertaling, klik dan op deze knop:</string>
     <string name="alert_translate_none" formatted="false">Het lijkt erop dat je een niet ondersteunde taal gebruikt. Ken je zowel Engels als %s en zou je willen helpen met de vertaling, klik dan hier:</string>
     <string name="button_translate">Vertaal</string>
@@ -312,7 +310,6 @@
     <string name="activity_resolver_use_always">Altijd </string>
     <string name="activity_resolver_use_once">Eén keer</string>
     <string name="s_pref_bookmarks_summary">Laat favorieten zien</string>
-    <string name="s_menu_heatmap">Hoofdmap</string>
     <string name="apply_to_all">Wil je dit bij alle folders toepassen?</string>
     <string name="s_pref_view_folders">Folderinstellingen</string>
     <string name="s_pref_view_general">Algemene Voorkeuren</string>
@@ -321,7 +318,6 @@
     <string name="s_pref_thumbs_cache_clear">Wis miniatuur weergavebuffer</string>
     <string name="s_msg_folder_none">Kan deze folder niet aanmaken</string>
     <string name="msg_bb_donate">Hallo BlackBerry gebruiker! Ik hoop dat je Open Explorer met plezier gebruikt. Ik heb mijn best gedaan om een goede compatibiliteit met BlackBerry-apparaten te verzekeren. Maar, het blijkt dat er enkele verschillen zijn, die moeilijk handelbaar zijn zonder een echt BlackBerry-apparaat. Daarom probeer ik genoeg donaties te verzamelen om een BlackBerry 10 te kopen om de compatibiliteit te verbeteren. Als je deze app bruikbaar vindt, overweeg dan eens een donatie, door gebruik te maken van de knop hieronder, of door de menu-optie \\\&quot;doneren\\\&quot; te gebruiken. Bedankt en happy exploring!</string>
-    <string name="msg_donate">Hallo Android gebruiker! We hopen dat je Open Explorer leuk vind.We hebben ons best gedaan om de comptabiliteit met alle android toestellen te verzekeren . Maar,volgens de \'bug\'repports dat we ontvangen,mogen we veronderstellen dat zich op verschillende systemen,verschillende onregelmatigheden kunnen ontstaan . Om die reden proberen we geld in te zamelen,om enkele Nexus toestellen te kopen,en zo de comptabiliteit te verbeteren. Als u deze app bruikbaar vind,overleg om een donatie te schenken,door de knop te selecteren beneden , of door \'donate\' menu optie te activeten. Dank u wel,en veel plezier met exploren!\n\nL</string>
     <string name="s_privacy">Privacybeleid</string>
     <string name="s_menu_system_mount">Maken / wijzigingen toestaan (gevaarlijk!)</string>
     <string name="s_menu_system_mount_on">Systeem is BESCHRIJFBAAR!</string>
