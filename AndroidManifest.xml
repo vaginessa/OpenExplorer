@@ -130,6 +130,7 @@
             android:name="org.brandroid.openmanager.activities.ServerSetupActivity"
       		android:uiOptions="none"
             android:theme="@style/AppTheme.Dialog"
+            android:exported="true"
             android:configChanges="screenSize|keyboard|keyboardHidden" >
         </activity>
         <activity

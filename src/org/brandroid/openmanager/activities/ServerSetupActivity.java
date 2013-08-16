@@ -142,6 +142,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private View mBaseView;
     private Spinner mTypeSpinner;
     private Bundle mArgs;
+    private String mAuthState = null;
     private int mServerType = -1;
     private boolean mAuthTokenFound = false;
     private WebView mLoginWebView;
@@ -360,6 +361,13 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             return R.style.AppTheme_Dialog;
         return R.style.AppTheme_Dialog;
     }
+    
+    private String getAuthState()
+    {
+        if(mAuthState == null)
+            mAuthState = OpenDropBox.createStateNonce();
+        return mAuthState;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -510,6 +518,20 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         if(!DialogHandler.showServerWarning(this) && server.getServerIndex() == -1)
             onClick(R.id.server_authenticate);
         invalidateOptionsMenu();
+    }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if(getAuthState() != null)
+            outState.putString("state", getAuthState());
+        super.onSaveInstanceState(outState);
+    }
+    
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if(savedInstanceState != null && savedInstanceState.containsKey("state"))
+            mAuthState = savedInstanceState.getString("state");
     }
 
     @Override
@@ -818,7 +840,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                     {
                         enableAuthenticateButton(false);
                         mLoginWebView.getSettings().setJavaScriptEnabled(true);
-                        if(!OpenDropBox.startAuthentication(this, mLoginWebView))
+                        // App Auth not working, so disable for now
+                        //if(!OpenDropBox.startAuthentication(this, mLoginWebView, getAuthState()))
                         {
                             mLoginWebView.setWebViewClient(new WebViewClient(){
                                 @SuppressLint("NewApi")
@@ -830,6 +853,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                                         String token = uri.getQueryParameter("oauth_token");
                                         String secret = uri.getQueryParameter("oauth_token_secret");
                                         String uid = uri.getQueryParameter("uid");
+                                        mAuthState = uri.getQueryParameter("state");
                                         server.setPassword(token + "," + secret);
                                         mLoginWebView.setVisibility(View.GONE);
                                         enableAuthenticateButton(false);
@@ -843,7 +867,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                                 }
                             });
                             mLoginWebView.loadUrl(AuthActivity.getConnectUrl(getCloudSetting("dropbox_key"),
-                                    OpenDropBox.getConsumerSig(getCloudSetting("dropbox_secret"))));
+                                    OpenDropBox.getConsumerSig(getCloudSetting("dropbox_secret")),
+                                    getAuthState()));
                             mLoginWebView.setVisibility(View.VISIBLE);
                         }
                         
@@ -1064,7 +1089,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private void loadDBLoginWebview() {
         String url = AuthActivity.getConnectUrl(
                 getCloudSetting("dropbox_key"),
-                getCloudSetting("dropbox_secret"));
+                getCloudSetting("dropbox_secret"),
+                getAuthState());
         mLoginWebView.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageFinished(WebView view, String url) {
