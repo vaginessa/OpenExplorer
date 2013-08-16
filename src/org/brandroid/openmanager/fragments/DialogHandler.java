@@ -124,6 +124,7 @@ import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.OpenChromeClient;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuBuilder2;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
@@ -171,6 +172,8 @@ public class DialogHandler {
             public void OnHeatmapTasksComplete(long mTotalBytes, boolean allDone) {
                 mTotalSize.setText(app.getContext().getResources().getString(R.string.s_size)
                         + ": " + OpenPath.formatSize(mTotalBytes) + (allDone ? "" : "..."));
+                if(allDone)
+                    adapter.notifyDataSetChanged();
             }
         });
 
@@ -188,16 +191,30 @@ public class DialogHandler {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 final OpenPath path = adapter.getItem(position);
-                IconContextMenu icm = new IconContextMenu(app.getContext(), R.menu.context_file,
-                        view);
+                IconContextMenu icm = new IconContextMenu(app.getContext(), R.menu.context_heatmap, view);
                 icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
 					public void onIconContextItemSelected(IconContextMenu menu, MenuItem item,
 							Object info, View view) {
 						switch(item.getItemId())
 						{
-						case R.id.menu_context_delete:
-							OpenExplorer.getEventHandler().deleteFile(path, app, true);
-							break;
+						    case R.id.menu_context_bookmark:
+						        OpenExplorer.addBookmark(app, path, null);
+						        break;
+						    case R.id.menu_context_copy:
+						        app.getClipboard().add(path);
+						        break;
+                            case R.id.menu_context_rename:
+                                OpenExplorer.getEventHandler().renameFile(path, path.isDirectory(), app.getContext());
+                                break;
+                            case R.id.menu_context_share:
+                                Intent shareIntent = new Intent(Intent.ACTION_VIEW);
+                                shareIntent.setType(path.getMimeType());
+                                shareIntent.putExtra(Intent.EXTRA_STREAM, path.getUri());
+                                app.getContext().startActivity(shareIntent);
+                                break;
+    						case R.id.menu_context_delete:
+    							OpenExplorer.getEventHandler().deleteFile(path, app, true);
+    							break;
 						}
 					}
 				});

@@ -248,6 +248,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public static final int VIEW_LIST = 0;
     public static final int VIEW_GRID = 1;
     public static final int VIEW_CAROUSEL = 2;
+    
+    public static final String INTENT_BROADCAST_ACTION = "INTENT_BROADCAST";
 
     public static final boolean BEFORE_HONEYCOMB = Build.VERSION.SDK_INT < 11;
     public static final boolean SDK_JELLYBEAN = Build.VERSION.SDK_INT > 15;
@@ -3561,15 +3563,25 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         return false;
     }
+    
+    public void addBookmark(OpenPath file)
+    {
+        addBookmark(this, file, mBookmarkListener);
+    }
 
-    public void addBookmark(OpenPath file) {
+    public static void addBookmark(OpenApp app, OpenPath file, OpenApp.OnBookMarkChangeListener mBookmarkListener) {
         Logger.LogDebug("Adding Bookmark: " + file.getPath());
-        String sBookmarks = getPreferences().getSetting("bookmarks", "bookmarks", "");
+        Preferences prefs = app.getPreferences();
+        String sBookmarks = prefs.getSetting("bookmarks", "bookmarks", "");
         sBookmarks += (sBookmarks != "" ? ";" : "") + file.getPath();
         Logger.LogVerbose("Bookmarks: " + sBookmarks);
-        getPreferences().setSetting("bookmarks", "bookmarks", sBookmarks);
+        prefs.setSetting("bookmarks", "bookmarks", sBookmarks);
+        Intent intent = new Intent(OpenExplorer.INTENT_BROADCAST_ACTION);
+        intent.putExtra("action", "bookmark");
+        intent.putExtra("path", (Parcelable)file);
+        app.getContext().sendBroadcast(intent);
         if (mBookmarkListener != null)
-            mBookmarkListener.onBookMarkAdd(this, file);
+            mBookmarkListener.onBookMarkAdd(app, file);
     }
 
     public void removeBookmark(OpenPath file) {
