@@ -105,6 +105,7 @@ import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.adapters.HeatmapAdapter;
 import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.data.OpenFile;
@@ -186,15 +187,28 @@ public class DialogHandler {
 
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                OpenPath path = adapter.getItem(position);
+                final OpenPath path = adapter.getItem(position);
                 IconContextMenu icm = new IconContextMenu(app.getContext(), R.menu.context_file,
                         view);
+                icm.setOnIconContextItemSelectedListener(new IconContextItemSelectedListener() {
+					public void onIconContextItemSelected(IconContextMenu menu, MenuItem item,
+							Object info, View view) {
+						switch(item.getItemId())
+						{
+						case R.id.menu_context_delete:
+							OpenExplorer.getEventHandler().deleteFile(path, app, true);
+							break;
+						}
+					}
+				});
                 icm.show();
                 return true;
             }
         });
 
         lv.setAdapter(adapter);
+        
+        v.setTag(adapter);
 
         return v;
     }
@@ -407,15 +421,24 @@ public class DialogHandler {
     public static void showFileHeatmap(final OpenApp app, final OpenPath path) {
         final Context mContext = app.getContext();
         try {
-            new AlertDialog.Builder(mContext)
-                    .setView(
-                            createFileHeatmapDialog(app, (LayoutInflater)mContext
-                                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE), path))
+        	final View mHeatmap = createFileHeatmapDialog(app, (LayoutInflater)mContext
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE), path);
+            AlertDialog dlg = new AlertDialog.Builder(mContext)
+                    .setView(mHeatmap)
                     .setTitle(path.getName())
                     .setIcon(
                             new BitmapDrawable(mContext.getResources(), path.getThumbnail(app,
                                     ContentFragment.mListImageSize, ContentFragment.mListImageSize)
-                                    .get())).create().show();
+                                    .get()))
+                    .create();
+            dlg.setOnDismissListener(new DialogInterface.OnDismissListener() {
+				public void onDismiss(DialogInterface dialog) {
+					Object o = mHeatmap.getTag();
+					if(o != null && o instanceof HeatmapAdapter)
+						((HeatmapAdapter)o).cancelTasks();
+				}
+			});
+            dlg.show();
         } catch (Exception e) {
             Logger.LogError("Couldn't show File Info.", e);
         }
