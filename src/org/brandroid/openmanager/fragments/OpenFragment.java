@@ -446,11 +446,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
         // super.setHasOptionsMenu(hasMenu);
         mHasOptions = hasMenu;
     }
-
-    public boolean hasOptionsMenu() {
-        return mHasOptions;
-    }
-
+    
     public boolean onBackPressed() {
         if (getExplorer() != null) {
             try {
