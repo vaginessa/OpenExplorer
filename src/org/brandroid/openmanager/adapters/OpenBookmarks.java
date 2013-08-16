@@ -150,8 +150,8 @@ public class OpenBookmarks implements OnGroupClickListener,
                     }
                 }
             }).start();
-        } else
-            Logger.LogWarning("No root, can't get roots");
+        } //else
+          //  Logger.LogWarning("No root, can't get roots");
     }
 
     public enum BookmarkType {

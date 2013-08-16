@@ -1,13 +1,7 @@
 
 package org.brandroid.utils;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -19,7 +13,6 @@ import java.util.logging.LogManager;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.fragments.DialogHandler;
-import org.brandroid.openmanager.util.FileManager;
 import org.json.JSONArray;
 
 import android.annotation.SuppressLint;

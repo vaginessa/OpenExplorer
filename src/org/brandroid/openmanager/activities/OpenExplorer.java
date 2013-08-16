@@ -1710,10 +1710,14 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     {
         if (!Logger.isLoggingEnabled())
             return; // Disable by default
-        if (OpenExplorer.IS_DEBUG_BUILD)
+            // if (OpenExplorer.IS_DEBUG_BUILD)
+            // return;
+        if (new Date().getTime() - lastSubmit < 6000)
+        {
+            Logger.LogVerbose("Skipping stats. Not enough time has passed ("
+                    + (new Date().getTime() - lastSubmit) + ")");
             return;
-        if (new Date().getTime() - lastSubmit < 60000)
-            return;
+        }
         lastSubmit = new Date().getTime();
         if (!isNetworkConnected())
             return;
@@ -1725,7 +1729,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         Logger.LogDebug("Found " + logs.length() + " bytes of logs.");
         EventHandler.execute(new SubmitStatsTask(this), logs);
         // } else Logger.LogWarning("Logs not found.");
-            }
+    }
 
     public void handleRefreshMedia(final String path, boolean keepChecking, final int retries) {
         if (!keepChecking || retries <= 0) {
@@ -2634,9 +2638,9 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         // if(id != R.id.title_icon_holder && id != android.R.id.home);
         // toggleBookmarks(false);
         OpenFragment f = getSelectedFragment();
+        
+        Logger.LogInfo("OpenExplorer.onOptionsItemSelected(" + item.getTitle() + ")");
 
-        if (IS_DEBUG_BUILD)
-            Logger.LogDebug("OpenExplorer.onClick(0x" + Integer.toHexString(id) + "," + item + ")");
         switch (id) {
             case R.id.menu_donate:
                 launchUri(this, Uri.parse("http://brandroid.org/donate.php?ref=app_menu"));
@@ -2756,9 +2760,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         // return super.onOptionsItemSelected(item);
 
-        if (IS_DEBUG_BUILD)
-            Logger.LogDebug("OpenExplorer.onOptionsItemSelected(" + item + ")");
-
         if (item.getSubMenu() != null) {
             onPrepareOptionsMenu(item.getSubMenu());
             View anchor = findViewById(item.getItemId());
@@ -2787,10 +2788,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
         if (f != null && f.onOptionsItemSelected(item))
             return true;
-
-        if (IS_DEBUG_BUILD)
-            Logger.LogDebug("OpenExplorer.onOptionsItemSelected(0x"
-                    + Integer.toHexString(item.getItemId()) + ")");
 
         return onClick(item.getItemId(), item, null);
     }
@@ -3038,8 +3035,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (IS_DEBUG_BUILD)
-            Logger.LogInfo("OpenExplorer.onKeyUp(" + keyCode + "," + event + ")");
+        Logger.LogInfo("OpenExplorer.onKeyUp(" + keyCode + "," + event + ")");
         if (event.getAction() != KeyEvent.ACTION_UP)
             return super.onKeyUp(keyCode, event);
         if (MenuUtils.getMenuShortcut(event) != null) {
@@ -4045,8 +4041,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         if (v == null)
             return false;
-        if (IS_DEBUG_BUILD)
-            Logger.LogDebug("OpenExplorer.onKey(" + v + "," + keyCode + "," + event + ")");
+        Logger.LogInfo("OpenExplorer.onKey(" + keyCode + "," + event + ") on " + v);
         if (event.getAction() != KeyEvent.ACTION_UP)
             return false;
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
