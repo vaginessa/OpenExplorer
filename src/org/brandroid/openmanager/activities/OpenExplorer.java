@@ -1986,7 +1986,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                                 }
                             }
                             mVideosMerged.refreshKids();
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             Logger.LogError("Couldn't refresh merged Videos");
                         }
                     }
@@ -3864,7 +3864,11 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         else if (l.getId() == 3)
             mParent = mApkParent;
 
-        mParent.setCursor(c);
+		try {
+	        mParent.setCursor(c);
+	    } catch(android.database.CursorIndexOutOfBoundsException cex) {
+	    	Logger.LogError("Unable to set parent cursor.", cex);
+	    }
 
         if (l.getId() == 0)
             try {
