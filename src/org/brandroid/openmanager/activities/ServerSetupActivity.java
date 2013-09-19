@@ -103,6 +103,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -743,6 +744,11 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     @Override
     public void onClick(View v) {
         onClick(v.getId());
+    }
+    
+    @Override
+    public void onBackPressed() {
+    	onClick(android.R.string.ok);
     }
 
     public boolean onClick(int id)
