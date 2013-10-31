@@ -155,12 +155,14 @@ import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenNetworkPath.PipeNeeded;
 import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.DownloadHandler;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.data.OpenURL;
 import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
@@ -184,7 +186,9 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.NetworkIOTask;
 import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
@@ -219,6 +223,8 @@ import com.android.gallery3d.util.ThreadPool;
 import com.jcraft.jsch.JSchException;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.Shell;
 import com.viewpagerindicator.TabPageIndicator;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -752,6 +758,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                 if (RootTools.isAccessGiven())
                     try {
                         RootTools.getShell(true);
+                        checkBusybox();
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -764,6 +771,57 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                     }
             }
         }).start();
+    }
+    
+    private boolean checkBusybox()
+    {
+    	if(RootTools.checkUtil("busybox")) return true;
+    	post(new Runnable() {
+			public void run() {
+		    	DialogHandler.showConfirmationDialog(OpenExplorer.this,
+		    			"It appears that Busybox is not installed on your system. Would you like to install it?",
+		    			"Busybox Check",
+		    			new OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								installBusybox();
+							}
+						});
+			}
+		});
+    	return false;
+    }
+    
+    private void installBusybox()
+    {
+    	final String mBusyboxUrl = "http://busybox.net/downloads/binaries/latest/";
+    	try {
+    		RootTools.getShell(false, 500).add(new Command(0, 500, "uname -m") {
+				public void output(int id, String arch) {
+					if(arch == null || arch.equals("")) return;
+					final String url = mBusyboxUrl + "busybox-" + arch;
+					OpenPath dl = OpenExplorer.getDownloadParent().getFirstDir();
+			        if (dl == null)
+			            dl = OpenFile.getExternalMemoryDrive(true);
+			        if (dl == null)
+			        	dl = OpenFile.getTempFileRoot();
+			        if (dl == null)
+			        	return;
+			        OpenURL u = new OpenURL(url);
+			        if(!u.exists())
+			        	showToast("Unable to download busybox for [" + arch + "]");
+			        else
+			        	getEventHandler().copyFile(u, dl, OpenExplorer.this);
+				}
+			});
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    	} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RootDeniedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     private void exitRoot() {
