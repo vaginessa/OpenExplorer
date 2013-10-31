@@ -19,8 +19,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="240"
-    android:versionName="0.240" >
+    android:versionCode="242"
+    android:versionName="0.242" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -130,6 +130,7 @@
             android:name="org.brandroid.openmanager.activities.ServerSetupActivity"
       		android:uiOptions="none"
             android:theme="@style/AppTheme.Dialog"
+            android:exported="true"
             android:configChanges="screenSize|keyboard|keyboardHidden" >
         </activity>
         <activity

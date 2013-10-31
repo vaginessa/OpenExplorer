@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.ThumbnailCreator;
@@ -29,7 +31,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class HeatmapAdapter extends BaseAdapter {
-    private long mTotalBytes = 0l;
+    private long mTotalBytes = 0l, mLargest = 0l, mLastNotify = 0l;
     private final OpenPath mParent;
     private final OpenApp mApp;
     private final List<OpenPath> mPaths;
@@ -80,36 +82,58 @@ public class HeatmapAdapter extends BaseAdapter {
         });
         super.notifyDataSetChanged();
     }
+    
+    private void setBar(ProgressBar mBar, long size)
+    {
+        if (size > mLargest)
+        {
+            mLargest = size;
+            long time = new Date().getTime();
+            if(time - mLastNotify > 500)
+            {
+                mLastNotify = time;
+                notifyDataSetChanged();
+                return;
+            }
+        }
+        if (mLargest > 0)
+        {
+            mBar.setIndeterminate(false);
+            mBar.setMax((int)(mLargest / 1000));
+            mBar.setProgress((int)(size / 1000));
+            //Logger.LogDebug("Bar Progress: " + mBar.getProgress() + " / " + mBar.getMax());
+        }
+    }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View view = convertView;
+        View view = null;
         if (view == null)
             view = LayoutInflater.from(parent.getContext())
             			.inflate(R.layout.heatmap_row, parent, false);
 
         ImageView mIcon = (ImageView)view.findViewById(R.id.content_icon);
-        TextView mText = (TextView)view.findViewById(R.id.content_text);
+        final TextView mText = (TextView)view.findViewById(R.id.content_text);
         TextView mSize = (TextView)view.findViewById(R.id.content_count);
         ProgressBar mBar = (ProgressBar)view.findViewById(android.R.id.progress);
 
-        OpenPath path = getItem(position);
+        final OpenPath path = getItem(position);
         mIcon.setImageBitmap(ThumbnailCreator
                 .generateThumb(mApp, path, 32, 32, parent.getContext()).get());
         mText.setText(path.getName());
         mSize.setText(R.string.s_status_loading);
 
-        mBar.setMax((int)mTotalBytes / 1000);
-
-        if (!path.isDirectory()) {
+        if (mSizes.containsKey(path)) {
+            long size = mSizes.get(path);
+            mSize.setText("Size: " + OpenPath.formatSize(size));
+            setBar(mBar, size);
+        } else if (!path.isDirectory()) {
             long size = path.length();
             mSizes.put(path, size);
             mSize.setText("Size: " + OpenPath.formatSize(size));
-            mBar.setMax(1000);
-            mBar.setProgress((int)(1000 * ((float)size / (float)mTotalBytes)));
+            setBar(mBar, size);
         } else if (!mTasks.containsKey(path)) {
             mBar.setProgress(0);
-            mBar.setIndeterminate(true);
             ScanSizeTask task = new ScanSizeTask(mSize, mBar);
             mTasks.put(path, task);
             task.execute(path);
@@ -123,16 +147,14 @@ public class HeatmapAdapter extends BaseAdapter {
                 long bytes = 0;
                 try {
                     bytes = task.get();
+                    mSizes.put(path, bytes);
                 } catch (InterruptedException e) {
                 } catch (ExecutionException e) {
                 }
-                if (bytes > 0) {
-                    mBar.setMax(1000);
-                    mBar.setProgress((int)(1000 * ((float)bytes / (float)mTotalBytes)));
+                setBar(mBar, bytes);
+                if(mSize != null)
                     mSize.setText("Size: " + OpenPath.formatSize(bytes));
-                }
-            } else
-                task.setViews(mBar, mSize);
+            }
         }
 
         return view;
@@ -175,30 +197,33 @@ public class HeatmapAdapter extends BaseAdapter {
         @Override
         protected void onProgressUpdate(Long... values) {
             super.onProgressUpdate(values);
-            if(mSizeText != null)
-            	mSizeText.setText(values[0].toString());
-            if(mBar != null) {
-            	mBar.setIndeterminate(false);
-            	mBar.setProgress((int)(100 * ((float)values[0] / (float)mTotalBytes)));
+            String descr = values[0].toString();
+            if(mSizeText != null && mSizeText.getText().equals(descr))
+            	mSizeText.setText(descr);
+            if(mBar != null && values.length > 0) {
+                int val = (int)((long)values[0]);
+                if(mBar.getProgress() != val)
+                    mBar.setProgress(val);
             }
         }
 
         @Override
         protected void onPostExecute(Long result) {
             super.onPostExecute(result);
+            mLargest = Math.max(mLargest, result);
             if (mCallback != null)
                 mCallback.OnHeatmapTasksComplete(mTotalBytes, false);
             if (mSizeText != null)
                 mSizeText.setText("Size: " + OpenPath.formatSize(result));
             if (mBar != null) {
-                mBar.setMax((int)mTotalBytes / 1000);
-                mBar.setProgress((int)((long)result / 1000));
-                mBar.setIndeterminate(false);
+                mBar.setMax((int)mLargest);
+                mBar.setProgress((int)((long)result));
             }
             notifyDataSetChanged();
             if (--mTaskCount <= 0) {
                 if (mCallback != null)
                     mCallback.OnHeatmapTasksComplete(mTotalBytes, true);
+                
             }
         }
 

@@ -710,9 +710,9 @@ public class ThumbnailCreator {
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
-                // BitmapFactory.decodeFile(file.getPath(), options);
-                options.inSampleSize = Math.min(options.outWidth / mWidth, options.outHeight
-                        / mHeight);
+                BitmapFactory.decodeFile(file.getPath(), options);
+                options.inSampleSize = Math.min(options.outWidth / mWidth,
+                        options.outHeight / mHeight);
                 options.inJustDecodeBounds = false;
                 options.inPurgeable = true;
                 bmp = BitmapFactory.decodeFile(file.getPath(), options);
