@@ -377,6 +377,11 @@ public class EventHandler {
         files.add(source);
         copyFile(files, destPath, mContext);
     }
+    
+    public BackgroundWork getWorker(EventType type, Context context, OpenPath intoPath, String... params)
+    {
+    	return new BackgroundWork(type, context, intoPath, params);
+    }
 
     public void copyFile(final Collection<OpenPath> files, final OpenPath newPath,
             final Context mContext) {
@@ -597,6 +602,8 @@ public class EventHandler {
         public void setWorkerUpdateListener(OnWorkerUpdateListener listener) {
             mListener = listener;
         }
+        
+        public OnWorkerUpdateListener getWorkerUpdateListener() { return mListener; }
 
         public void OnWorkerThreadComplete(EventType type, String... results) {
             if (mListener != null)
@@ -1400,7 +1407,7 @@ public class EventHandler {
                 boolean success = false;
                 if (old instanceof OpenStream && newFile instanceof OpenStream)
                 {
-
+                	Logger.LogDebug("Copying Stream -> Stream");
                     int size = (int)old.length();
                     int pos = 0;
 
@@ -1412,12 +1419,12 @@ public class EventHandler {
                         o_stream = new BufferedOutputStream(((OpenStream)newFile).getOutputStream());
 
                         while ((read = i_stream.read(data, 0,
-                                Math.min(size - pos, FileManager.BUFFER))) != -1) {
+                                size > 0 ? Math.min(size - pos, FileManager.BUFFER) : FileManager.BUFFER)) != -1) {
                             o_stream.write(data, 0, read);
                             pos += read;
-                            if (pos >= size)
+                            if (size > 0 && pos >= size)
                                 break;
-                            publishMyProgress(pos, size);
+                            publishMyProgress(pos, Math.max(pos, size));
                         }
 
                         o_stream.flush();
@@ -1449,6 +1456,7 @@ public class EventHandler {
             }
 
             Logger.LogWarning("Couldn't copy file for unknown reason.");
+            OnWorkerThreadFailure(mType, old);
             return false;
         }
 

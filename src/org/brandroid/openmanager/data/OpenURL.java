@@ -10,6 +10,7 @@ public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, Ope
 	
 	private String mURL;
 	private int responseCode = 0;
+	private int responseLength = 0;
 	private HttpURLConnection conn = null;
 	private boolean mConnected = false;
 	
@@ -21,8 +22,9 @@ public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, Ope
 	public int getResponseCode() throws IOException
 	{
 		connect();
-		disconnect();
-		return responseCode;
+        responseCode = conn.getResponseCode();
+        responseLength = conn.getContentLength();
+        return responseCode;
 	}
 
 
@@ -40,11 +42,14 @@ public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, Ope
 	
 	@Override
 	public void connect() throws IOException {
-		disconnect();
-		conn = (HttpURLConnection) new URL(mURL).openConnection();
-		conn.connect();
+		//disconnect();
+		if(!isConnected())
+		{
+			conn = (HttpURLConnection) new URL(mURL).openConnection();
+			conn.setDoInput(true);
+			conn.connect();
+		}
 		mConnected = true;
-        responseCode = conn.getResponseCode();
 	}
 	
 	@Override
@@ -62,7 +67,12 @@ public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, Ope
 	@Override
 	public boolean syncDownload(OpenFile f, NetworkListener l) {
         try {
-        	f.copyFrom(this);
+        	if(!f.copyFrom(this))
+        	{
+        		f.delete();
+        		l.OnNetworkFailure(this, f, null);
+        		return false;
+        	}
             l.OnNetworkCopyFinished(this, f);
             return true;
         } catch (Exception e) {
@@ -80,6 +90,11 @@ public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, Ope
 	public String getPath() {
 		return mURL;
 	}
+	
+	@Override
+	public String getName() {
+		return getUri().getLastPathSegment();
+	}
 
 	@Override
 	public String getAbsolutePath() {
@@ -88,7 +103,7 @@ public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, Ope
 
 	@Override
 	public long length() {
-		return 0;
+		return responseLength;
 	}
 
 	@Override
