@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name" auto="1">Obriu l\'Explorador de</string>
+    <string name="app_name">Obriu l\'Explorador</string>
     <string name="s_photos" auto="1">Fotos</string>
     <string name="s_videos" auto="1">Videos</string>
     <string name="s_music" auto="1">Música</string>
@@ -319,4 +319,18 @@
     <string name="s_pref_thumbs_crop">Retallar/Centrar Miniatures</string>
     <string name="s_pref_thumbs_cache_clear">Esborrar Cache de Miniatures</string>
     <string name="s_msg_folder_none">No s\'ha pogut crear la Carpeta.</string>
+    <string name="s_privacy">Política de privacitat</string>
+    <string name="s_theme_lightdark">Clar i Fosc</string>
+    <string name="s_ask_again">Pregunta cada cop</string>
+    <string name="s_compress_type">Tipus de compressio</string>
+    <string name="s_compressed">Comprimid</string>
+    <string name="s_pass_old">Entra la contrasenya vella</string>
+    <string name="s_pass_new">Entra nova contrasenya</string>
+    <string name="s_logout">Desconectar</string>
+    <string name="s_authenticating">Autentificant</string>
+    <string name="s_bookmark_history">Historial</string>
+    <string name="s_server_account_title">Compte</string>
+    <string name="s_pref_thumbs_cache_summary">Aixo incrementara la pujada de carpetes amb fotos i videos</string>
+    <string name="s_folders">carpetes</string>
+    <string name="s_custom_account">Compte del client</string>
 </resources>

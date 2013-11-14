@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">Otvorite Explorer</string>
+    <string name="app_name">Open Explorer</string>
     <string name="s_menu_favorites">Isključi/uključi oznake</string>
     <string name="s_menu_sort">Poredaj</string>
     <string name="s_menu_sort_name_asc">Poredaj po imenu (A-Z)</string>
     <string name="s_menu_sort_name_desc">Poredaj po imenu (Z-A)</string>
-    <string name="s_menu_sort_date_asc">Poredaj počevši od najnovijih</string>
-    <string name="s_menu_sort_date_desc">Poredaj počevši od nastarijih</string>
-    <string name="s_menu_sort_size_asc">Poredaj počevši od najvećih</string>
-    <string name="s_menu_sort_size_desc">Poredaj počevši od najmanjih</string>
+    <string name="s_menu_sort_date_asc">Poredaj od najnovijih</string>
+    <string name="s_menu_sort_date_desc">Poredaj od nastarijih</string>
+    <string name="s_menu_sort_size_asc">Poredaj od najvećih</string>
+    <string name="s_menu_sort_size_desc">Poredaj od najmanjih</string>
     <string name="s_menu_sort_type">Poredaj po vrsti datoteke</string>
     <string name="s_menu_multi">Višestruko označavanje</string>
-    <string name="s_menu_grid">Rešetkasti prikaz</string>
-    <string name="s_menu_list">Listni prikaz</string>
+    <string name="s_menu_grid">Prikaz kao rešetka</string>
+    <string name="s_menu_list">Prikaz kao lista</string>
     <string name="s_menu_hidden">Prikaži skrivene datoteke</string>
     <string name="s_menu_new_folder">Nova mapa</string>
-    <string name="s_menu_other">Ostale postavke</string>
+    <string name="s_menu_other">Druge postavke</string>
     <string name="back_button_label">Vrati </string>
     <string name="next_button_label">Slijedeće</string>
     <string name="no_matches">Nema podudaranja</string>

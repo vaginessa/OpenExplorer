@@ -149,7 +149,7 @@
     <string name="s_pref_fullscreen_summary_on">Απόκρυψη μπάρας πληροφόρησης </string>
     <string name="s_pref_fullscreen_summary_off">Προβολή μπάρας πληροφόρησης </string>
     <string name="s_pref_pagers">Προβολή δεικτών </string>
-    <string name="s_pref_pagers_summary_on">Οριζόντιο </string>
+    <string name="s_pref_pagers_summary_on" auto="1">Οριζόντια περνώντας = Κατάλογος Πλοήγηση</string>
     <string name="s_pref_pagers_summary_off">Το οριζόντιο συρσιμο είναι απενεργοποιημενο</string>
     <string name="s_alert_new_media">Προστέθηκε νέο μέσο! </string>
     <string name="s_warn_pager_title">Νέα λειτουργία: προβολή δεικτών </string>

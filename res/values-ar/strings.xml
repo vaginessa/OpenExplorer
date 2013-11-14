@@ -44,7 +44,7 @@
     <string name="s_saveas">حفظ بإسم</string>
     <string name="s_cancel">إلغاء</string>
     <string name="s_size">الحجم</string>
-    <string name="s_none">لاشيءر</string>
+    <string name="s_none">لاشيء</string>
     <string name="s_pref_servers">سيرفرات إضافية</string>
     <string name="s_pref_server_add">إضافة سيرفر جديد</string>
     <string name="s_pref_display">عرض الخيارات</string>
@@ -150,7 +150,7 @@
     <string name="s_pref_pagers">عرض المتصفحين</string>
     <string name="s_pref_pagers_summary_on">تتابع أفقي = التنقل بين المجلدات</string>
     <string name="s_pref_pagers_summary_off">التتابع الأفقي غير مفعل</string>
-    <string name="s_alert_new_media">تم إدخال ذاكرة !@</string>
+    <string name="s_alert_new_media">تم إدخال ذاكرة !</string>
     <string name="s_warn_pager_title">مظهر جديد: إظهار المتصفحين</string>
     <string name="s_warn_pager">حرك إصبعك بالشاشة يميناً ويساراً للتنقل إلى بين الذاكرة الخارجية والداخلية. قم بتجربتة لتسهيل التنقل</string>
     <string name="s_warn_confirm">هل تفهم؟</string>
@@ -184,7 +184,7 @@
     <string name="s_bookmark_drives">الأقراص</string>
     <string name="s_bookmark_smart">ملفات ذكية</string>
     <string name="s_bookmark_favorites">المفضلة</string>
-    <string name="s_bookmark_servers">الخوادم</string>
+    <string name="s_bookmark_servers">السيرفرات</string>
     <string name="s_bookmark_cache">السجل</string>
     <string name="s_info_totalspace">المساحة الإجمالية</string>
     <string name="s_info_freespace">المساحة الشاغرة</string>
@@ -231,19 +231,19 @@
     <string name="s_about_density">الكثافة</string>
     <string name="s_menu_location_int">مسار الذاكرة الداخلية</string>
     <string name="s_menu_location_ext">مسار الذاكرة الخارجية</string>
-    <string name="s_wtf_context">الرجاء تقديم شرح عن الخطأ:</string>
+    <string name="s_wtf_context">الرجاء شرح عن الخطأ:</string>
     <string name="thanks">شكراً لك </string>
     <string name="menu_view_font_small">خط صغير الحجم</string>
     <string name="menu_view_font_medium">خط متوسط الحجم</string>
     <string name="menu_view_font_large">خط كبير الحجم</string>
     <string name="app_description">OpenExplorer - افتح إدارة ملف مصدر لجميع الأجهزة! (أقراص، هواتف، وأجهزة تلفاز جوجل، والسندويشات!)\n- استكمال نظام إدارة الملف\n- USB، والتنمية المستدامة وغيرها من وسائل الإعلام الخارجية\n- للربط الشبكة (FTP، SFTP، SMB / سامبا / ويندوز / LAN / WIFI)\n- نص محرر\n- سمارت المجلدات التي تفحص لأنواع مختلفة من وسائل الاعلام (فيديو، صور، موسيقى، التحميل)\n- مشاهدة بيجر دليل الملاحة (انتقاد حق لترتفع دليل)\n- المستعملين المتميزين / الجذر القدرة على قائمة / قراءة مجلدات النظام (أي نظام الكتابة حتى الآن)\n\nميزات ليأتي:\n- كلفه محرر النص\n- القدرة على المزيد من الشبكات (دروببوإكس، Box.net، السماء محرك الأقراص)\n- غير متصل مخبأ بنية الملف، وسوف تذكر الملفات التي لديك في أماكن مختلفة دون الحاجة للاتصال\n- خريطة مساحة القرص حرارة يظهر فيها الملفات الخاصة بك هي أكبر\n\n* يرجى ملاحظة: هذا التطبيق هو في بيتا. لا تزال هناك العديد من البق. إذا كنت لا ترغب في أن تشهد هذه الأخطاء، من فضلك لا تحميل هذا التطبيق. إذا كنت ترغب في مساعدتي في العثور على هذه الحشرات، يرجى الكتابة لي أو تعاون معي على GitHub (https://github.com/BrandoCommando/OpenExplorer/). يرجى تذكر تقييمات سيئة مساعدة أحد.</string>
-    <string name="alert_translate_google">مرحباَ, هذة الترجمة مقدمة من موقع قوقل .اذا كنت تجيد الانجليزية مثلما تجيد العربية,اذاً يمكنك المساعدة بتقديم ترجمة افضل,الرجاء اضغط هنا :</string>
-    <string name="alert_translate_none">مرحباً , يبدو انك تستخدم لغة ليست مدعومة بالشكل الكافي .هل تجيد الانجليزية وهل تجيد العربية ايضاَ ؟ اذا كنت كذلك فيمكنك تقديم المساعدة لأعطاء هذا التطبيق ترجمة افضل ,اضغط هنا :</string>
-    <string name="button_translate">ترجم</string>
+    <string name="alert_translate_google" formatted="false">مرحبا، وتقدم هذه الترجمة بواسطة مترجم جوجل. إذا كنت تعرف اللغة الإنجليزية، فضلا عن%s، وترغب في المساعدة في تقديم أفضل ترجمة، يرجى النقر على هذا الزر:</string>
+    <string name="alert_translate_none" formatted="false">مرحبا، يبدو أنك تستخدم لغة غير مدعومة. هل تعرف ق الإنجليزية %s إذا كنت تريد أن تساعد في توفير الترجمة الصحيحة، انقر هنا:</string>
+    <string name="button_translate">ترجمة</string>
     <string name="httpError">حدث خطأ في الشبكة</string>
-    <string name="httpErrorAuth">فشلت المصادقة</string>
-    <string name="httpErrorProxyAuth">المصادقة من خلال بروكسي السيرفر لم تكن ناجحة</string>
-    <string name="httpErrorConnect">الإتصال بالسيرفر  لم يكون ناجحاً</string>
+    <string name="httpErrorAuth">نجحت المصادقة</string>
+    <string name="httpErrorProxyAuth">المصادقة من خلال بروكسي السيرفر كانت ناجحة</string>
+    <string name="httpErrorConnect">الإتصال بالسيرفر كان ناجحاً</string>
     <string name="httpErrorIO">السيرفر لم يستطع التواصل. الرجاء المحاولة لاحقاً</string>
     <string name="httpErrorTimeout">أنتهى الوقت المحدد للإتصال بالسيرفر</string>
     <string name="httpErrorFile">لا يمكن الدخول للملف</string>
@@ -251,7 +251,7 @@
     <string name="contentServiceSync">مزامنة</string>
     <string name="keyguard_password_enter_pin_code">أدخل رقم الـ PIN</string>
     <string name="keyguard_password_enter_password_code">أدخل كلمة المرور لإلغاء التأمين</string>
-    <string name="keyguard_password_enter_pin_password_code">ادخل الرمز لإلغاء التأمين</string>
+    <string name="keyguard_password_enter_pin_password_code">أدخل الـ PIN لإلغاء التأمين</string>
     <string name="lockscreen_password_wrong">المعذرة, حاول مرة أخرى.</string>
     <string name="whichApplication">أنتهى أستخدام الأمر</string>
     <string name="noApplications">لا يوجد برنامج لإجراء هذا الأمر</string>
@@ -266,19 +266,19 @@
     <string name="ime_action_default">نفذ</string>
     <string name="upload_file">أختر ملف</string>
     <string name="no_file_chosen">لم يتم إختيار ملف</string>
-    <string name="reset">إعادة ضبط</string>
+    <string name="reset">إعادة</string>
     <string name="back_button_label">رجوع</string>
     <string name="next_button_label">التالي</string>
     <string name="no_matches">لا تطابق</string>
     <string name="find_on_page">أبحث في الصفحة</string>
     <string name="find">أبحث</string>
     <string name="activitychooserview_choose_application">أختر برنامج</string>
-    <string name="shareactionprovider_share_with">شارك بأستخدام</string>
+    <string name="shareactionprovider_share_with">أرسل بإستخدام</string>
     <string name="storage_internal">ذاكرة داخلية</string>
     <string name="storage_sd_card">كرت SD</string>
     <string name="storage_usb">فلاش ديسك</string>
     <string name="extract_edit_menu_button">تحرير...</string>
-    <string name="activity_chooser_view_see_all">اظهر الكل ..</string>
+    <string name="activity_chooser_view_see_all">أنظر الكل...</string>
     <string name="s_title_picker">الرجاء أختيار مجلد</string>
     <string name="selected_path">المسار الذي أخترته:</string>
     <string name="filename">إسم الملف</string>
@@ -323,7 +323,7 @@
     <string name="s_msg_file_exists">بعض المل\nفات موجودة مسبقاَ .هل ترغب بالكتابة فوقها ؟</string>
     <string name="s_title_file_exists">الملف تم استخراجة مسبقاَ</string>
     <string name="s_msg_pref_archives">هل تريد تصفح السجل او استخراجه؟</string>
-    <string name="s_browse">تصفح</string>
+    <string name="s_browse">تصفح مواقع النت</string>
     <string name="s_extracted">تم الاستخراج</string>
     <string name="s_extracting">استخراجززنتعفغججع</string>
     <string name="s_extract_with">استخرج نت</string>
@@ -338,7 +338,7 @@
     <string name="s_logout">تسجيل الخروج</string>
     <string name="s_bookmark_history">سجل</string>
     <string name="s_server_account_title">حساب</string>
-    <string name="s_folders">مجلدات</string>
+    <string name="s_folders">مجلداتforex</string>
     <string name="s_hidden">مخفي</string>
     <string name="s_total">مجمل</string>
     <string name="s_custom_account">حساب مخصص</string>

@@ -73,7 +73,7 @@
     <string name="s_pref_server_type">Tipo server</string>
     <string name="s_files">File</string>
     <string name="s_create">Crea</string>
-    <string name="s_title_holding_x_files" formatted="false">%s file trattenuti</string>
+    <string name="s_title_holding_x_files" formatted="false">Trattenedo i file %s</string>
     <string name="s_title_newfolder">Crea una nuova cartella</string>
     <string name="s_title_send">Invia xxx</string>
     <string name="s_title_unzip">Decomprimi xxx</string>
@@ -142,12 +142,12 @@
     <string name="s_menu_delete_all">Cancella Tutto</string>
     <string name="s_menu_move_all">Sposta Qui</string>
     <string name="s_menu_copy_all">Copia Qui</string>
-    <string name="s_confirm_delete" formatted="false" auto="1">Sei sicuro di voler cancellare %s?</string>
-    <string name="s_error_same_destination" auto="1">La directory di destinazione è la stessa.</string>
+    <string name="s_confirm_delete" formatted="false">Sei sicuro di voler cancellare %s ?</string>
+    <string name="s_error_same_destination">La cartella di destinazione è la stessa.</string>
     <string name="s_sample_notification">Copia in -&gt; SDCard:  3 Files</string>
     <string name="s_pref_fullscreen" auto="1">Schermo intero</string>
-    <string name="s_pref_fullscreen_summary_on" auto="1">Nascondi barra di notifica</string>
-    <string name="s_pref_fullscreen_summary_off" auto="1">Mostra barra di notifica</string>
+    <string name="s_pref_fullscreen_summary_on">Nascondi la barra di notifica</string>
+    <string name="s_pref_fullscreen_summary_off">Mostra la barra di notifica</string>
     <string name="s_pref_pagers"> visualizza pagine</string>
     <string name="s_pref_pagers_summary_on">Swype orizzontale = directory di navigazione </string>
     <string name="s_pref_pagers_summary_off">Swiping orizzontale disattivato</string>
@@ -181,9 +181,9 @@
     <string name="s_pref_actionmode">Modalità Azione</string>
     <string name="s_pref_actionmode_enabled">Utilizzare la modalità &quot;azione&quot;</string>
     <string name="s_pref_actionmode_disabled">Utilizzare menu di scelta rapida</string>
-    <string name="s_server_smb" auto="1">SMB / Windows</string>
-    <string name="s_bookmark_drives" auto="1">Unità</string>
-    <string name="s_bookmark_smart" auto="1">Cartelle smart</string>
+    <string name="s_server_smb">SMB / Finestre</string>
+    <string name="s_bookmark_drives">Drives</string>
+    <string name="s_bookmark_smart">Smart Folders</string>
     <string name="s_bookmark_favorites" auto="1">Preferiti</string>
     <string name="s_bookmark_servers" auto="1">Servers</string>
     <string name="s_bookmark_cache" auto="1">Cache</string>
@@ -194,13 +194,13 @@
     <string name="s_menu_refresh">Aggiorna Cartella</string>
     <string name="s_pref_reset">Ripristina Vista</string>
     <string name="s_toast_complete" auto="1">Operazione completata!</string>
-    <string name="s_pref_reset_summary">Clicca qui per rimuovere tutte le impostazioni di visualizzazione specifiche delle cartelle, ritornando allo stato di default.</string>
+    <string name="s_pref_reset_summary">Per ripristinare la modalità di default di visualizzazione delle cartelle Clicca Qui</string>
     <string name="s_prompt_path" auto="1">Immettere il percorso:</string>
     <string name="s_prompt_search" auto="1">Cerca:</string>
     <string name="s_prompt_search_within" auto="1">Cerca all\'interno:</string>
     <string name="s_pref_view_category">Preferenze di visualizzazione dei segnalibri</string>
     <string name="s_pref_show_videos" auto="1">Mostra Video</string>
-    <string name="s_pref_show_photos" auto="1">Mostra foto</string>
+    <string name="s_pref_show_photos">Mostra Foto</string>
     <string name="s_pref_show_music" auto="1">Mostra Musica</string>
     <string name="s_pref_show_downloads">Mostra scaricati</string>
     <string name="s_hide">Nascondi</string>
@@ -209,32 +209,32 @@
     <string name="s_alert_newfolder_folder" auto="1">Crea nuova cartella in:</string>
     <string name="s_pref_fancy_category">Impostazioni di visualizzazione particolari</string>
     <string name="s_pref_fancy_menus">Menu Fantasia</string>
-    <string name="s_pref_fancy_context">Menu di scelta rapida particolari</string>
+    <string name="s_pref_fancy_context">Menu di scelta rapida particolare</string>
     <string name="s_search_files">Cerca nel Filesystem</string>
     <string name="search_summary" formatted="false">Ricerca di &quot; %s &quot; con &quot; %s &quot; (%d)...</string>
     <string name="search_results" formatted="false">Trovati %d risultati per &quot; %s &quot; con &quot; %s &quot;</string>
     <string name="s_menu_exit">Esci</string>
     <string name="s_warn_wtf_message">Oops! Sembra si sia verificato un errore non gestibile! Essendo questo un problema comune delle applicazioni in beta, l\'unico modo di risolvere questi problemi è avere riscontri da diversi dispositivi, come il tuo, per determinare come aggiustare il problema. Possiamo inviare un rapporto, contente solo dati anonimi, allo sviluppatore?</string>
-    <string name="s_warn_wtf_ps">*** Si prega di notare che questa applicazione è in Beta. Si prega di non dare a questa applicazione una valutazione negativa semplicemente perché si blocca. Basta disinstallare se la cosa vi preoccupa veramente. Grazie!</string>
+    <string name="s_warn_wtf_ps">*** Si prega di notare che questa applicazione é in formato Beta. Per favore non dare a questa applicazione una valutazione negativa semplicemente perché non funziona come dovrebbe. Semplicemente disinstallala se ti disturba. Grazie!</string>
     <string name="s_yes" auto="1">Sì</string>
     <string name="s_no" auto="1">No</string>
-    <string name="s_wtf_preview" auto="1">Anteprima del report dei dati</string>
+    <string name="s_wtf_preview">Anteprima della segnalazione dati</string>
     <string name="s_wtf_remember" auto="1">Non chiedere di nuovo</string>
     <string name="s_pref_basebar">Dividi la barra di azione</string>
     <string name="s_pref_basebar_on">Pulsanti di azione sul fondo dello schermo in modalità verticale</string>
     <string name="s_pref_basebar_off">Pulsanti di azione sulla parte superiore dello schermo (quando disponibile)</string>
-    <string name="s_pref_autowtf">Invia in automatico i rapporti sui blocchi</string>
+    <string name="s_pref_autowtf">Invia automaticamente i Crash Reports</string>
     <string name="s_pref_autowtf_summary">Quando si verifica un\'eccezione non gestita, invia automaticamente un rapporto.</string>
     <string name="s_split_auto" auto="1">Automatico</string>
-    <string name="s_split_top">Forza i bottoni in alto</string>
+    <string name="s_split_top">Forza i pulsanti verso l\'alto</string>
     <string name="s_split_top_single" auto="1">Forza unico pulsante in alto</string>
-    <string name="s_split_bottom">Forza i bottoni verso il basso</string>
+    <string name="s_split_bottom">Forza i pulsanti verso il basso</string>
     <string name="s_split_none">Mettere tutti i tasti nel menu di Sistema</string>
     <string name="s_about_screensize" auto="1">Dimensioni dello schermo</string>
     <string name="s_about_density" auto="1">Densità</string>
     <string name="s_menu_location_int">Cartella Memoria Interna </string>
     <string name="s_menu_location_ext">Cartella Memoria Esterna </string>
-    <string name="s_wtf_context">Si prega di descrivere il contesto del guasto:</string>
+    <string name="s_wtf_context">Si prega di descrivere il contesto del crash:</string>
     <string name="thanks" auto="1">Grazie!</string>
     <string name="menu_view_font_small">Caratteri Piccoli</string>
     <string name="menu_view_font_medium">Caratteri  Medi</string>
@@ -245,7 +245,7 @@
     <string name="button_translate" auto="1">Tradurre</string>
     <string name="httpError">Si è verificato un errore di rete.</string>
     <string name="httpErrorAuth">Autenticazione non riuscita.</string>
-    <string name="httpErrorProxyAuth">Autenticazione tramite il server proxy non riuscita.</string>
+    <string name="httpErrorProxyAuth">Autenticazione server proxy non riuscita</string>
     <string name="httpErrorConnect">Connessione al server non riuscita.</string>
     <string name="httpErrorIO">Errore di comunicazione del server. Riprova più tardi.</string>
     <string name="httpErrorTimeout">Tempo esaurito per la connessione al server.</string>
@@ -291,12 +291,12 @@
     <string name="warn_networking">Benvenuto nella Rete. Fai attenzione perché questa funzione é ancora in fase di sviluppo e può contenere degli errori. Per favore non dare dei giudizi negativi nel Market se trovi uno di questi errori. </string>
     <string name="s_menu_new_file">Nuovo File di Testo</string>
     <string name="s_msg_created" auto="1">creato</string>
-    <string name="s_title_newfile" auto="1">Nuovo file</string>
+    <string name="s_title_newfile">Nuovo File</string>
     <string name="s_alert_newfile_folder" auto="1">Creare un nuovo file in:</string>
     <string name="s_alert_newfile" auto="1">Digitare il nome del nuovo file:</string>
     <string name="s_alert_exit" auto="1">Sei sicuro di voler uscire?</string>
-    <string name="s_alert_clipboard" auto="1">Copiato negli appunti</string>
-    <string name="s_alert_restart" auto="1">Riavvio. Si prega di attendere.</string>
+    <string name="s_alert_clipboard">Copiato negli Appunti</string>
+    <string name="s_alert_restart">Riavvio in corso. Si prega di attendere.</string>
     <string name="language" auto="1">Lingua</string>
     <string name="s_menu_download">Scarica</string>
     <string name="scan">Esegui scansione</string>
@@ -314,16 +314,16 @@
     <string name="s_pref_bookmarks_summary">Mostra Segnalibri</string>
     <string name="s_menu_heatmap">Mappa termica</string>
     <string name="apply_to_all">Vuoi applicarlo a tutte le cartelle?</string>
-    <string name="s_pref_view_folders">Preferenze delle Directory</string>
+    <string name="s_pref_view_folders">Preferenze delle cartelle</string>
     <string name="s_pref_view_general">Preferenze Generali</string>
     <string name="s_pref_text_wrap">A capo automatico</string>
     <string name="s_pref_thumbs_crop">Ritaglia/Centra Anteprime</string>
     <string name="s_pref_thumbs_cache_clear">Cancella Cache delle Anteprime</string>
-    <string name="s_msg_folder_none">impossibile creare la cartella</string>
+    <string name="s_msg_folder_none">Impossibile creare la cartella</string>
     <string name="msg_nook_donate2">Ciao utente Nook! Spero ti piaccia Open Explorer per Nook. Ho cercato di fare del mio meglio per assicurare la compatibilità con i dispositivi Nook. Grazie alle ultime donazioni, ho potuto acquistare un Nook Color. Un ringraziamento a tutti quelli che hanno effettuato una donazione!\n\nIn futuro, spero di riuscire ad acquistare un dispositivo Nook HD di nuova generazione.\n\nSe trovi utile questa applicazione, ti prego di fare una donazione selezionado il bottone quì sotto, oppure attivando l\'opzione &quot;Donare&quot; nel menù. Grazie! </string>
     <string name="msg_bb_donate">Ciao utente BlackBerry! Spero che Open Explorer ti piaccia. Ho fatto del mio meglio per garantire la maggiore compatibilità con i dispositivi BlackBerry. Tuttavia, ci sono alcune differenze che sono difficili da gestire senza avere a disposizione un dispositivo BlackBerry. Per questo motivo sto cercando di raccogliere abbastanza donazioni per l\'acquisto di un dispositivo BlackBerry 10, al fine di migliorare la compatibilità. Se trovi utile questa applicazione, ti prego di fare una donazione selezionando il bottone qui sotto, oppure attivando l\'opzione &quot;Donazione&quot; nel menù. Grazie!</string>
     <string name="msg_donate">Ciao utente Android! Speriamo che Open Explorer ti piaccia. Abbiamo fatto del nostro meglio per assicurare la maggiore compatibilità con tutti i dispositivi Android. Tuttavia, date le segnalazioni di bug ricevuti, possiamo solo supporre che ci siano diversi bug che causano errori specifici in alcuni dispositivi. Per questo motivo, stiamo cercando di raccogliere fondi sufficienti per l\'acquisto di alcuni dispositivi Nexus, al fine di migliorare la compatibilità. Se trovate utile questa applicazione, si prega di fare una donazione selezionando il bottone qui sotto, oppure attivando l\'opzione &quot;Donazione&quot; nel menù. Grazie!</string>
-    <string name="s_privacy" auto="1">Informativa sulla privacy</string>
+    <string name="s_privacy">Privacy Policy</string>
     <string name="s_menu_system_mount">Rendi /system Scrivibile (Pericoloso!)</string>
     <string name="s_menu_system_mount_on">System è scrivibile!</string>
     <string name="s_menu_system_mount_off">System è in Sola Lettura</string>
@@ -332,29 +332,29 @@
     <string name="s_theme_lightdark">Chiaro e Scuro</string>
     <string name="s_theme_custom">Strisce</string>
     <string name="s_menu_rate">Tasso</string>
-    <string name="s_alert_destination_exists">La destinazione esiste già. Cosa vorresti fare? </string>
-    <string name="s_overwrite" auto="1">Sovrascrivi</string>
+    <string name="s_alert_destination_exists">La destinazione esiste già. Cosa desideri fare? </string>
+    <string name="s_overwrite">Sovrascrivi</string>
     <string name="s_skip">Salta</string>
-    <string name="s_msg_file_exists">Alcuni file nella destinazione potrebbero già esistere. Sovrascrivere? </string>
-    <string name="s_title_file_exists" auto="1">Il file esiste già.</string>
+    <string name="s_msg_file_exists">Nella destinazione scelta esistono già un file con questo nome. Ok per sovrascrivere</string>
+    <string name="s_title_file_exists">File già esistente.</string>
     <string name="s_msg_pref_archives">Vuoi sfogliare o estrarre l\'archivio? </string>
     <string name="s_browse">Sfoglia</string>
     <string name="s_extract">Estrai</string>
     <string name="s_extracted">Estratto</string>
-    <string name="s_extracting" auto="1">Estrazione</string>
-    <string name="s_extract_with">Estrai  con... </string>
+    <string name="s_extracting">Estrazione in corso</string>
+    <string name="s_extract_with">Estrai con... </string>
     <string name="s_title_archive_handler">Gestore archivi</string>
     <string name="s_ask_again" auto="1">Chiedi ogni volta</string>
     <string name="s_archives">Archivi</string>
     <string name="s_compress">Comprimi</string>
-    <string name="s_compress_type" auto="1">Tipo di compressione</string>
+    <string name="s_compress_type">Tipo di Conpressione</string>
     <string name="s_compressed" auto="1">compressa</string>
     <string name="s_delete_after">Elimina la sorgente dopo il completamento</string>
     <string name="s_master_pass">Password Principale</string>
     <string name="s_master_pass_warning">È possibile immettere una password principale, utilizzata come chiave di crittografia per tutte le password memorizzate. Se si lascia vuoto questo campo, le password saranno ancora criptate, e verrà utilizzata una password principale di default. Si prega di notare che se si aggiorna la propria password con le password di rete già memorizzate, si avrà probabilmente bisogno di reimpostare le password e autenticarsi al server cloud dopo aver resettato questa password.</string>
-    <string name="s_pass_old" auto="1">Immettere la vecchia password:</string>
-    <string name="s_pass_new" auto="1">Inserire la nuova password:</string>
-    <string name="s_logout" auto="1">Esci</string>
+    <string name="s_pass_old">Inserire la vecchia password:</string>
+    <string name="s_pass_new">Immettere la nuova password:</string>
+    <string name="s_logout">Esci</string>
     <string name="s_authenticate">Autenticati </string>
     <string name="s_authenticating" auto="1">Autenticazione</string>
     <string name="s_bookmark_history">Cronologia</string>
@@ -362,7 +362,7 @@
     <string name="s_authenticate_success">Autenticazione effettuata</string>
     <string name="s_authenticate_refresh">Ricarica Autenticazione </string>
     <string name="s_pref_thumbs_cache">Pre-Carica Anteprime</string>
-    <string name="s_pref_thumbs_cache_summary" auto="1">Questo contribuirà ad accelerare il caricamento delle cartelle che contengono immagini e video.</string>
+    <string name="s_pref_thumbs_cache_summary">Questo contribuirà ad accelerare il caricamento delle cartelle contenenti Immagini e Video.</string>
     <string name="s_folders" auto="1">cartelle</string>
     <string name="s_hidden" auto="1">nascosto</string>
     <string name="s_total" auto="1">totale</string>
