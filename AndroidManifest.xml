@@ -19,8 +19,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.brandroid.openmanager"
     android:installLocation="auto"
-    android:versionCode="242"
-    android:versionName="0.242" >
+    android:versionCode="243"
+    android:versionName="0.243" >
 
     <uses-sdk
         android:minSdkVersion="8"
