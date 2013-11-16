@@ -22,7 +22,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.NetworkInfo.State;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -50,7 +49,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.database.ContentObserver;
@@ -106,11 +104,9 @@ import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow.OnDismissListener;
@@ -129,14 +125,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-
-import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
 import org.brandroid.openmanager.adapters.OpenBookmarks;
@@ -149,21 +140,17 @@ import org.brandroid.openmanager.adapters.OpenClipboard.OnClipboardUpdateListene
 import org.brandroid.openmanager.adapters.IconContextMenu;
 import org.brandroid.openmanager.adapters.IconContextMenuAdapter;
 import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenMediaStore;
 import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenNetworkPath.PipeNeeded;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.DownloadHandler;
 import org.brandroid.openmanager.data.OpenPathArray;
 import org.brandroid.openmanager.data.OpenPathMerged;
 import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.data.OpenSmartFolder;
 import org.brandroid.openmanager.data.OpenURL;
-import org.brandroid.openmanager.data.OpenVFS;
 import org.brandroid.openmanager.data.OpenSmartFolder.SmartSearch;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -177,7 +164,6 @@ import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
 import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
 import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
@@ -187,14 +173,12 @@ import org.brandroid.openmanager.util.IntentManager;
 import org.brandroid.openmanager.util.MimeTypes;
 import org.brandroid.openmanager.util.MimeTypeParser;
 import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.NetworkIOTask;
 import org.brandroid.openmanager.util.PrivatePreferences;
 import org.brandroid.openmanager.util.RootManager;
 import org.brandroid.openmanager.util.ShellSession;
 import org.brandroid.openmanager.util.SimpleHostKeyRepo;
 import org.brandroid.openmanager.util.SimpleUserInfo;
 import org.brandroid.openmanager.util.SimpleUserInfo.UserInfoInteractionCallback;
-import org.brandroid.openmanager.util.SortType;
 import org.brandroid.openmanager.util.ThumbnailCreator;
 import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
 import org.brandroid.openmanager.views.OpenPathList;
@@ -211,7 +195,6 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.internal.view.menu.ActionMenuPresenter;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.*;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
@@ -225,6 +208,7 @@ import com.jcraft.jsch.JSchException;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 import com.viewpagerindicator.TabPageIndicator;
 import org.xmlpull.v1.XmlPullParserException;
@@ -543,7 +527,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                         PackageManager.GET_META_DATA).applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == ApplicationInfo.FLAG_DEBUGGABLE;
             if (isBlackBerry())
                 IS_DEBUG_BUILD = false;
-            RootTools.debugMode = IS_DEBUG_BUILD;
+            if(RootTools.debugMode)
+                RootTools.debugMode = IS_DEBUG_BUILD;
         } catch (NameNotFoundException e1) {
         }
 
@@ -786,9 +771,13 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 			public void run() {
 		    	DialogHandler.showConfirmationDialog(OpenExplorer.this,
 		    			"It appears that Busybox is not installed on your system. Would you like to install it?",
-		    			"Busybox Check",
+		    			"Busybox Check", getPreferences(), "pref_busybox", false,
 		    			new OnClickListener() {
 							public void onClick(DialogInterface dialog, int which) {
+							    if(which != DialogInterface.BUTTON_POSITIVE)
+							        return;
+							    if(dialog != null)
+							        dialog.dismiss();
 								new Thread(new Runnable() {
 									public void run() {
 										installBusybox();
@@ -830,17 +819,26 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private boolean installBusybox(String arch)
     {
     	final String mBusyboxUrl = "http://busybox.net/downloads/binaries/latest/";
+    	final String mBusyboxFile = "busybox-" + arch;
     	final String url = mBusyboxUrl + "busybox-" + arch;
-		OpenFile dl = OpenFile.getExternalMemoryDrive(true);
-		if(dl != null && dl.getChild("Download") != null)
+    	if(IS_DEBUG_BUILD)
+    	    Logger.LogVerbose("Checking for busybox for " + arch + ": " + url);
+		OpenFile dl = new OpenFile("/mnt/sdcard");
+		if(!dl.exists() || !dl.canWrite())
+		    dl = OpenFile.getExternalMemoryDrive(true);
+		if(dl != null && dl.getChild("Download") != null && dl.getChild("Download").canWrite())
 			dl = dl.getChild("Download");
-		dl = dl.getChild(".busybox");
-		dl.delete();
-		try {
-			dl.create();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		dl = dl.getChild(".busybox");
+//		if(dl.exists())
+//		    dl.delete();
+//		try {
+//			dl.create(); // Make sure we can write to it
+//			if(!dl.exists()) throw new IOException("WTF");
+//			dl.delete();
+//		} catch (IOException e) {
+//			Logger.LogError("Unable to create temporary busybox", e);
+//			return false;
+//		}
 		final OpenFile dlp = dl;
 		final OpenURL u = new OpenURL(url);
         if(!u.exists())
@@ -863,8 +861,10 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 						public void onWorkerThreadComplete(EventType type, String... results) {
 							for(String s : results)
 								Logger.LogDebug("BusyBox.onWorkerThreadComplete(" + s + ")");
-							if(installBusybox(dlp))
+							if(installBusybox(dlp.getChild(mBusyboxFile)))
 								showToast("Busybox installed successfully!");
+							else
+							    showToast("Unable to install Busybox");
 						}
 						
 						@Override
@@ -882,16 +882,45 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private boolean installBusybox(OpenFile tmp)
     {
     	boolean success = false;
-    	if(!RootManager.mountSystem(true)) return false;
-    	OpenFile sysBusy = new OpenFile("/system/xbin/busybox");
-    	if(sysBusy.copyFrom(tmp))
-    	{
-    		sysBusy.getFile().setExecutable(true, false);
-    		RootManager.mountSystem(false);
-    		success = RootTools.checkUtil("busybox");
-    	}
-    	tmp.delete();
-    	RootManager.mountSystem(false);
+    	if(!RootManager.isSystemMounted())
+    	    RootTools.remount("/system", "rw");
+    	try {
+            Command cmd = new CommandCapture(0,
+                    "cp " + tmp.getAbsolutePath() + " /system/xbin/busybox",
+                    "chmod 755 /system/xbin/busybox"
+                    );
+    	    Shell.runRootCommand(cmd);
+    	    cmd.waitForFinish();
+    	    final List<String> missings = new ArrayList<String>();
+    	    cmd = new Command(1, "busybox --list") {
+                public void output(int id, String util) {
+                    if(new File("/system/xbin/" + util).exists() ||
+                       new File("/system/bin/" + util).exists())
+                        Logger.LogWarning(util + " already exists!");
+                    else
+                    {
+                        missings.add("ln -s /system/xbin/busybox /system/xbin/" + util);
+                        Logger.LogVerbose("Need to link to busybox: " + util);
+                    }
+                }
+            };
+            Shell.runCommand(cmd);
+            cmd.waitForFinish();
+            if(missings.size() > 0)
+            {
+                for(int i = 0; i < missings.size(); i++)
+                {
+                    cmd = new CommandCapture(2 + i, missings.get(i));
+                    Shell.runRootCommand(cmd);
+                    cmd.waitForFinish();
+                }
+            }
+    	    tmp.delete();
+            success = RootTools.checkUtil("busybox");
+        } catch (Exception e) {
+            Logger.LogError("Couldn't finish Busybox install", e);
+        }
+    	RootTools.remount("/system", "ro");
     	return success;
     }
 
@@ -2923,7 +2952,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private void showExitDialog() {
         DialogHandler.showConfirmationDialog(this, getString(R.string.s_alert_exit),
-                getString(R.string.s_menu_exit), getPreferences(), "exit",
+                getString(R.string.s_menu_exit), getPreferences(), "exit", true,
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

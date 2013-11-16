@@ -555,7 +555,7 @@ public class OpenBookmarks implements OnGroupClickListener,
             Logger.LogDebug("Looking for " + path + " in procmounts");
             for (String m : mProcMounts) {
                 String[] parts = m.split("  *");
-                if (path.getPath().startsWith(parts[1].toString())) {
+                if (parts.length > 1 && path.getPath().startsWith(parts[1].toString())) {
                     String dev = parts[0];
                     for (String blk : mBlkids)
                         if (blk.indexOf(dev) > -1 && blk.toLowerCase().indexOf("label=") > -1) {

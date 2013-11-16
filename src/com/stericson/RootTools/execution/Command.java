@@ -31,6 +31,8 @@ package com.stericson.RootTools.execution;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import org.brandroid.utils.Logger;
+
 import com.stericson.RootTools.RootTools;
 
 public abstract class Command {
@@ -57,7 +59,7 @@ public abstract class Command {
 			sb.append(command[i]);
 			sb.append('\n');
 		}
-		RootTools.log("Sending command(s): " + sb.toString());
+		Logger.LogDebug("Root: Sending command(s): " + sb.toString());
 		return sb.toString();
 	}
 

@@ -85,6 +85,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Pattern;
@@ -127,8 +128,11 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.MenuBuilder2;
 import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SubmitStatsTask;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.actionbarsherlock.view.MenuItem;
 
@@ -522,11 +526,13 @@ public class DialogHandler {
      * @param preferences Preferences object from which to pull pref_key. This
      *            will be placed in the "warn" SharedPreference.
      * @param pref_key Preference Key holding whether or not to show warning.
+     * @param hideNo Boolean to either hide No or Yes when "Always Remember"
+     *            is checked.
      * @param onYes Callback for when Yes is chosen. This will be called
      *            automatically if "Do not ask again" is selected.
      */
     public static void showConfirmationDialog(Context context, String text, String title,
-            final Preferences preferences, final String pref_key,
+            final Preferences preferences, final String pref_key, final boolean hideNo,
             final DialogInterface.OnClickListener onYes) {
 
         if (!preferences.getBoolean("warn", pref_key, false)) {
@@ -542,12 +548,23 @@ public class DialogHandler {
                 public void onClick(View v) {
                     if (v.getId() == R.id.confirm_remember) {
                         CheckBox me = (CheckBox)v;
+                        Logger.LogInfo("Confirm." + pref_key + ": " + (me.isChecked() ? "Remember" : "Forget"));
                         preferences.setSetting("warn", pref_key, me.isChecked());
-                        ViewUtils.setViewsEnabled(layout, !me.isChecked(), R.id.confirm_no);
+                        ViewUtils.setViewsEnabled(layout, !me.isChecked(),
+                                hideNo ? R.id.confirm_no : R.id.confirm_yes);
                     } else if (v.getId() == R.id.confirm_no) {
-                        preferences.setSetting("warn", pref_key, false);
+                        Logger.LogInfo("Confirm." + pref_key + ": NO");
+                        preferences.setSetting(null, "confirm_" + pref_key, true);
+                        if(hideNo)
+                            preferences.setSetting("warn", pref_key, false);
                         dialog.dismiss();
+                        if(!hideNo)
+                            onYes.onClick(dialog, DialogInterface.BUTTON_NEGATIVE);
                     } else if (v.getId() == R.id.confirm_yes) {
+                        Logger.LogInfo("Confirm." + pref_key + ": YES");
+                        preferences.setSetting(null, "confirm_" + pref_key, true);
+                        if(!hideNo)
+                            preferences.setSetting("warn", pref_key, false);
                         onYes.onClick(dialog, DialogInterface.BUTTON_POSITIVE);
                     }
                 }
@@ -556,7 +573,7 @@ public class DialogHandler {
             if (context != null)
                 dialog.show();
         } else
-            onYes.onClick(null, DialogInterface.BUTTON_POSITIVE);
+            onYes.onClick(null, hideNo ? DialogInterface.BUTTON_POSITIVE : DialogInterface.BUTTON_NEGATIVE);
     }
 
     public static void showExtractDialog(final OpenExplorer app, String title, final OpenPath file,
@@ -1171,30 +1188,14 @@ public class DialogHandler {
         String ret = "";
         String sep = "\n";
         ret += sep + "Build Info:" + sep;
-        ret += "SDK: " + Build.VERSION.SDK_INT + sep;
-        if (OpenExplorer.SCREEN_WIDTH > -1)
-            ret += "Screen: " + OpenExplorer.SCREEN_WIDTH + "x" + OpenExplorer.SCREEN_HEIGHT + sep;
-        if (OpenExplorer.SCREEN_DPI > -1)
-            ret += "DPI: " + OpenExplorer.SCREEN_DPI + sep;
-        ret += "Lang: " + Utils.getLangCode() + sep;
+        JSONObject json = SubmitStatsTask.getDeviceInfo();
+        JSONArray keys = json.names();
+        for(int i = 0; i < keys.length(); i++)
+        {
+            String key = keys.optString(i);
+            ret += key + ": " + json.optString(key) + sep;
+        }
         ret += "Runs: " + Preferences.Run_Count + sep;
-        ret += "Fingerprint: " + Build.FINGERPRINT + sep;
-        ret += "Manufacturer: " + Build.MANUFACTURER + sep;
-        ret += "Model: " + Build.MODEL + sep;
-        ret += "Product: " + Build.PRODUCT + sep;
-        ret += "Brand: " + Build.BRAND + sep;
-        ret += "Board: " + Build.BOARD + sep;
-        ret += "Bootloader: " + Build.BOOTLOADER + sep;
-        ret += "Hardware: " + Build.HARDWARE + sep;
-        ret += "Display: " + Build.DISPLAY + sep;
-        ret += "Language: " + Locale.getDefault().getDisplayLanguage() + sep;
-        ret += "Country: " + Locale.getDefault().getDisplayCountry() + sep;
-        ret += "Tags: " + Build.TAGS + sep;
-        ret += "Type: " + Build.TYPE + sep;
-        ret += "User: " + Build.USER + sep;
-        if (Build.UNKNOWN != null)
-            ret += "Unknown: " + Build.UNKNOWN + sep;
-        ret += "ID: " + Build.ID;
         return ret;
     }
 
