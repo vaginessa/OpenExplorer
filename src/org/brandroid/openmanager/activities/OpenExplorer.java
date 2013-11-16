@@ -743,7 +743,6 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     private void checkRoot() {
         try {
             if (Preferences.Pref_Root) {
-                showToast("Root preference selected, requesting now.");
                 // && (RootManager.Default == null ||
                 // !RootManager.Default.isRoot()))
                 requestRoot();
@@ -756,11 +755,15 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
     }
 
     private void requestRoot() {
+        if(!Preferences.Pref_Root) return;
+        showToast("Root preference selected, requesting now.");
         new Thread(new Runnable() {
             public void run() {
+                Preferences.Pref_Root = false;
                 if (RootTools.isAccessGiven())
                     try {
                         RootTools.getShell(true);
+                        Preferences.Pref_Root = true;
                         checkBusybox();
                     } catch (IOException e) {
                         // TODO Auto-generated catch block

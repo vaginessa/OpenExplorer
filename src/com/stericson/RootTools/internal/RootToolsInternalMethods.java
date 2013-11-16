@@ -168,25 +168,25 @@ public final class RootToolsInternalMethods
 				&& (rawPermissions.charAt(1) == '-' || rawPermissions.charAt(1) == 'r')
 				&& (rawPermissions.charAt(2) == '-' || rawPermissions.charAt(2) == 'w'))
 		{
-			RootTools.log(rawPermissions);
+			//RootTools.log(rawPermissions);
 
 			Permissions permissions = new Permissions();
 
 			permissions.setType(rawPermissions.substring(0, 1));
 
-			RootTools.log(permissions.getType());
+			//RootTools.log(permissions.getType());
 
 			permissions.setUserPermissions(rawPermissions.substring(1, 4));
 
-			RootTools.log(permissions.getUserPermissions());
+			//RootTools.log(permissions.getUserPermissions());
 
 			permissions.setGroupPermissions(rawPermissions.substring(4, 7));
 
-			RootTools.log(permissions.getGroupPermissions());
+			//RootTools.log(permissions.getGroupPermissions());
 
 			permissions.setOtherPermissions(rawPermissions.substring(7, 10));
 
-			RootTools.log(permissions.getOtherPermissions());
+			//RootTools.log(permissions.getOtherPermissions());
 
 			StringBuilder finalPermissions = new StringBuilder();
 			finalPermissions.append(parseSpecialPermissions(rawPermissions));
@@ -210,24 +210,24 @@ public final class RootToolsInternalMethods
 		else
 			tmp = 0;
 
-		RootTools.log("permission " + tmp);
-		RootTools.log("character " + permission.charAt(0));
+		//RootTools.log("permission " + tmp);
+		//RootTools.log("character " + permission.charAt(0));
 
 		if(permission.charAt(1) == 'w')
 			tmp += 2;
 		else
 			tmp += 0;
 
-		RootTools.log("permission " + tmp);
-		RootTools.log("character " + permission.charAt(1));
+		//RootTools.log("permission " + tmp);
+		//RootTools.log("character " + permission.charAt(1));
 
 		if(permission.charAt(2) == 'x')
 			tmp += 1;
 		else
 			tmp += 0;
 
-		RootTools.log("permission " + tmp);
-		RootTools.log("character " + permission.charAt(2));
+		//RootTools.log("permission " + tmp);
+		//RootTools.log("character " + permission.charAt(2));
 
 		return tmp;
 	}
@@ -244,7 +244,7 @@ public final class RootToolsInternalMethods
 		if(permission.charAt(8) == 't')
 			tmp += 1;
 
-		RootTools.log("special permissions " + tmp);
+		//RootTools.log("special permissions " + tmp);
 
 		return tmp;
 	}
@@ -984,7 +984,7 @@ public final class RootToolsInternalMethods
 		while ((line = lnr.readLine()) != null)
 		{
 	
-			RootTools.log(line);
+			//RootTools.log(line);
 	
 			String[] fields = line.split(" ");
 			mounts.add(new Mount(new File(fields[0]), // device
@@ -994,6 +994,7 @@ public final class RootToolsInternalMethods
 			));
 		}
 		InternalVariables.mounts = mounts;
+		lnr.close();
 		
         if (InternalVariables.mounts != null) {
         	return InternalVariables.mounts;

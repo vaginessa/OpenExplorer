@@ -126,6 +126,7 @@ public class OpenBookmarks implements OnGroupClickListener,
     }
 
     public void scanRoot() {
+        if(!Preferences.Pref_Root) return;
         // Logger.LogDebug("Trying to get roots");
         if (mBlkids == null && mProcMounts == null) {
             mProcMounts = new ArrayList<String>();
@@ -135,7 +136,7 @@ public class OpenBookmarks implements OnGroupClickListener,
                 @Override
                 public void run() {
                     try {
-                        if (Preferences.Pref_Root && RootTools.isAccessRequested()
+                        if (RootTools.isAccessRequested()
                                 && RootTools.isAccessGiven()) {
                             mBlkids = RootTools.sendShell("blkid", 1000);
                             mProcMounts = RootTools.sendShell("cat /proc/mounts", 1000);
