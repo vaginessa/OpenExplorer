@@ -669,6 +669,50 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
     public boolean copyFrom(OpenStream file) {
         if (file instanceof OpenFile)
             return copyFrom((OpenFile)file);
+        try {
+			return copyFrom(file.getInputStream());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return false;
+    }
+    
+    private boolean copyFrom(InputStream in)
+    {
+    	Logger.LogVerbose("copyFrom InputStream on " + getPath());
+        int blen = 4096;
+        byte[] buffer = new byte[blen];
+        int read = 0;
+        int wrote = 0;
+        OutputStream os = null;
+        try {
+            if (!exists())
+                create();
+            os = getOutputStream();
+	        while((read = in.read(buffer, 0, blen)) > -1)
+	        {
+	        	if(read > 0)
+	        	{
+	        		os.write(buffer);
+	        		wrote += buffer.length;
+	        	}
+	        }
+            os.flush();
+            os.close();
+            Logger.LogVerbose("Wrote " + wrote + " bytes to " + getPath());
+            return true;
+        } catch (IOException e) {
+            Logger.LogError("Couldn't write to OpenFile (" + getPath() + ")", e);
+            if(OpenApplication.hasRootAccess())
+                new OpenFileRoot(this).writeBytes(buffer);
+        } finally {
+            if (os != null)
+                try {
+                    os.close();
+                } catch (IOException e) {
+                }
+        }
         return false;
     }
 

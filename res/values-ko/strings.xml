@@ -208,7 +208,7 @@
     <string name="s_msg_event_cancelled">이벤트가 취소되었습니다. </string>
     <string name="s_alert_newfolder_folder">새로운 폴더를 만듭니다:</string>
     <string name="s_pref_fancy_category">화려한 디스플레이 설정</string>
-    <string name="s_pref_fancy_menus" auto="1">팬시 메뉴</string>
+    <string name="s_pref_fancy_menus">화려한 메뉴</string>
     <string name="s_pref_fancy_context">화려한 컨텍스트 메뉴</string>
     <string name="s_search_files">파일 시스템 검색</string>
     <string name="search_summary" formatted="false">\&quot;%S\&quot;를 검색합니다. / \&quot;%s\&quot;를 포함하여 (%d)</string>
@@ -240,7 +240,7 @@
     <string name="menu_view_font_medium">폰트 크기를 중간으로</string>
     <string name="menu_view_font_large">폰트 크기를 크게</string>
     <string name="app_description">오픈 탐색기 - 모든 장치를위한 오픈 소스 파일 매니저! (테블릿, 스마트폰, 구글 TV, 센드위치!) \n-파일 시스템 관리 \n-USB, SD 및 다른 외부 미디어를 \n-네트워크 연결가능 (FTP, SFTP, SMB / 삼바 / 윈도우 / LAN / 무선) \n-텍스트 편집기 \n-각각 다른 타입의 미디어를 스켄하는 스마트 폴더(동영상, 사진, 음악, 다운로드) \n-보기 호출기 디렉토리 탐색 (상위 폴더로 이동시 오른쪽으로 밀듯이 터치) \n-슈퍼유저/루트시 시스템 폴더를 표시/읽기 가능\n \n구현 될 기능: \n-탭으로 된 텍스트 편집기 \n-더많은 네트워킹 기능 (Dropbox, Box.net, 스카이 드라이브) \n-오프라인 파일 구조 케시가 연결없이 다른 곳의 파일을 연결없이 기억할 것 입니다.\n-디스크 용량 heatmap이 큰 파일이 어디에 있는지 알려 줄 것입니다.\n \n * 참고 사항 :이 앱은 베타 버전입니다. 아직 많은 버그가 아직 있습니다. 여러분이 이러한 버그를 경험하지 않으려면, 이 앱을 다운로드 하지 말아주세요. 당신이 이러한 버그를 쉽게 찾을 수 있도록 도와주신다면, 이메일을 보내주시거나 GitHub (https://github.com/BrandoCommando/OpenExplorer/)로 협조해 주세요. 나쁜 점수는 아무 도움도 되지 않는다는 것을 기억하시기 바랍니다.</string>
-    <string name="alert_translate_google">안녕하세요, 이 번역은 Google 번역에 의해 제공됩니다. 만약 당신이 보다 영어를 잘 하시고, 더 나은 번역을 제공하시고 싶으시다면, 이 버튼을 눌려 주세요.</string>
+    <string name="alert_translate_google" formatted="false">안녕하세요, 이 번역은 Google 번역에 의해 제공됩니다. 만약 당신이 %s보다 영어를 잘 하시고, 더 나은 번역을 제공하시고 싶으시다면, 이 버튼을 눌려 주세요.</string>
     <string name="alert_translate_none" formatted="false">안녕하세요, 당신이 지원되지 않는 언어를 사용하고 있는 것으로 보입니다. 당신은 영어와 %s을 아십니까? 당신은 당신이 정확한 ​​번역을 제공하는데 도움을 주시길 원하시면 여기를 클릭하십시오 :</string>
     <string name="button_translate">번역</string>
     <string name="httpError">네트워크 오류가 발생했습니다.</string>
@@ -298,7 +298,7 @@
     <string name="s_alert_clipboard">클립 보드에 복사됨</string>
     <string name="s_alert_restart">재시작. 잠시만 기다려 주십시오.</string>
     <string name="language">언어</string>
-    <string name="s_menu_download">다운로드</string>
+    <string name="s_menu_download">다운 로드</string>
     <string name="scan">스캔</string>
     <string name="test">테스트</string>
     <string name="test_success">연결 성공!</string>
@@ -320,7 +320,7 @@
     <string name="s_pref_thumbs_cache_clear">썸네일 캐시 초기화</string>
     <string name="s_msg_folder_none">폴더를 만들 수 없습니다.</string>
     <string name="msg_nook_donate2">Nook 사용자 여러분, 안녕하십니까! 당신이 Nook에 대한 오픈 탐색기를 즐기시기 바랍니다. 나는 높은 구석 장치와의 호환성을 보장하기 위해 내 최선을 다 했잖아요 있습니다. 최근 기부금 덕분에, 난 구석 색상을 구입 할 수있었습니다! 기증 한 사람 모두에게 감사합니다! \n \n 다음, 나는 새로운 세대 HD 구석 장치입니다.이 앱이 유용 할 경우 \n \n, 어느를 선택하여 기부하는 것을 고려해보십시오을 구입 할 수 싶습니다 아래 또는 &quot;기부&quot;옵션 메뉴를 활성화하여 버튼을 클릭합니다. 감사합니다, 그리고 행복 여행!</string>
-    <string name="msg_bb_donate" auto="1">블랙 베리 사용자 여러분, 안녕하십니까! 당신이 오픈 Explorer를 즐기시기 바랍니다. 나는 높은 BlackBerry 장치와의 호환성을 보장하기 위해 내 최선을 다 했잖아요 있습니다. 그러나 실제 블랙 베리 장치없이 처리하기 어려운 차이를 나타납니다 몇 가지가 있습니다. 이러한 이유로, 나는 호환성을 개선하기 위해 블랙 베리 10 장치를 구입하기 위해 충분한 기부금을 수집하려합니다. 이 앱이 유용 할 경우, 어느 아래의 버튼을 선택하여 또는 &quot;기부&quot;옵션 메뉴를 활성화하여, 기부을 고려하시기 바랍니다. 감사합니다, 그리고 행복 여행!</string>
+    <string name="msg_bb_donate">블랙 베리 사용자 여러분, 안녕하십니까! 저희는 당신이 오픈 Explorer를 즐기기 바랍니다. 저희는 높은 BlackBerry 장치와의 호환성을 보장하기 위해 최선을 다하였으나, 실제 블랙 베리 없이 해결하기 어려운 문제 몇가지가 나타납니다. 이러한 이유로, 저희는 호환성을 개선하기 위해 블랙 베리 10 장치를 구입하기 위해 충분한 기부금을 모금하려합니다. 이 앱이 유용 할 경우, 아래의 버튼을 선택하시거나 &quot;기부&quot;옵션 메뉴를 활성화하여, 기부을 고려해 주시길 바랍니다. 감사합니다, 그리고 행복한 탐색 되시길 바랍니다!</string>
     <string name="msg_donate">안드로이드 사용자 여러분 안녕하세요! 저희는 Open Explorer를 즐겼으면 좋겠네요. 저희는 모든 안드로이드 기기에서 잘 작동되도록 만들었으나, 아직까지도 버그리포트를 받네요. 이런 문제는 폰의 기종문제 때문에 일어납니다. 이 때문에 저희는 호환성을 향상시키기 위해 넥서스를 사기위해 기부를 받고있습니다. 만약 이 앱이 유용하다면 기부를 생각해 주세요. 버튼을 누르거나 메뉴 옵션의 기부 버튼을 누르면 됩니다. 감사하며, 행복한 탐색 되세요!</string>
     <string name="s_privacy">프라이버시 정책</string>
     <string name="s_menu_system_mount">/system 폴더에 작성할수있는 권한을 부여합니다. (주의!)</string>
@@ -328,7 +328,7 @@
     <string name="s_menu_system_mount_off">시스템 읽기 전용</string>
     <string name="s_pref_servers_private">개인 서버 유지</string>
     <string name="s_pref_servers_private_summary">개인 저장 공간에서 서버 설정을 저장합니다. 이 응용 프로그램을 제거하면 서버 설정이 삭제됩니다. 나중에 다시 설치하는 경우이 확인란의 선택을 취소 한 그런 남겨 방지 할 수 있습니다.</string>
-    <string name="s_theme_lightdark">밝기</string>
+    <string name="s_theme_lightdark" auto="1">빛과 어둠</string>
     <string name="s_theme_custom" auto="1">핀 스트라이프</string>
     <string name="s_menu_rate">평가</string>
     <string name="s_alert_destination_exists">대상이 이미 있습니다. 어떻게 하시겠습니까?</string>
@@ -350,7 +350,7 @@
     <string name="s_compressed" auto="1">압축</string>
     <string name="s_delete_after" auto="1">완료 후 소스를 삭제</string>
     <string name="s_master_pass" auto="1">마스터 비밀번호</string>
-    <string name="s_master_pass_warning" auto="1">당신은 저장된 암호의 암호화 키로서 사용되는 마스터 비밀번호를 입력 할 수 있습니다. 이 공백으로 남겨두면, 암호는 여전히 암호화되며, 기본 마스터 비밀번호가 사용됩니다. 당신이 저장된 네트워크 암호로 암호를 업데이트하는 경우, 당신은 아마도 암호를 재설정하고이 비밀번호를 재설정 한 후 클라우드 서버를 인증 할 필요 하오니, 이용에 참고하여주십시오.</string>
+    <string name="s_master_pass_warning">당신은 모든 저장된 비밀번호를 암호화 하기위해 마스터 키를 입력할수 있습니다. 만약 빈칸으로 두신다면, 비밀번호들은 기본 마스터 키로 암호화 될 것 입니다. 참고로 만약 네트워크 암호를 업데이트 하려는 경우, 비밀번호를 초기화 한 후 비밀번호 초기화와 인증을 해야 할 수 있습니다.</string>
     <string name="s_pass_old" auto="1">이전 암호를 입력하십시오 :</string>
     <string name="s_pass_new" auto="1">새 비밀번호를 입력하십시오 :</string>
     <string name="s_logout" auto="1">로그 아웃</string>
@@ -365,5 +365,5 @@
     <string name="s_folders" auto="1">폴더</string>
     <string name="s_hidden">숨김</string>
     <string name="s_total" auto="1">합계</string>
-    <string name="s_custom_account" auto="1">사용자 계정</string>
+    <string name="s_custom_account">iamhyon@gmail.com</string>
 </resources>

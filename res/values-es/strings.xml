@@ -36,7 +36,7 @@
     <string name="s_menu_paste">Pegar</string>
     <string name="s_menu_delete">Borrar</string>
     <string name="s_menu_share">Enviar/Compartir...</string>
-    <string name="s_menu_zip">Archivos Zip</string>
+    <string name="s_menu_zip">Archivo/s Zip...</string>
     <string name="s_menu_unzip">Descomprimir...</string>
     <string name="s_menu_rename">Renombrar</string>
     <string name="s_menu_bookmark">Agregar marcador</string>
@@ -98,7 +98,7 @@
     <string name="s_msg_deleted">borrado</string>
     <string name="s_msg_moved">movido</string>
     <string name="s_msg_copied" auto="1">copiado</string>
-    <string name="s_remove">Eliminaron</string>
+    <string name="s_remove">Eliminar</string>
     <string name="s_eject" auto="1">Expulsar</string>
     <string name="s_update">Actualizar</string>
     <string name="s_alert_bookmark_rename" auto="1">Cambiar el título de su marcador.</string>
@@ -109,7 +109,7 @@
     <string name="s_about_version" auto="1">Versión</string>
     <string name="s_about_author">Autor</string>
     <string name="s_about_site" auto="1">Sitio web</string>
-    <string name="s_about_email" auto="1">E-mail</string>
+    <string name="s_about_email">Correo electrónico-</string>
     <string name="s_about_recent" auto="1">Actualizaciones recientes</string>
     <string name="s_chooser_email" auto="1">Envíe sus comentarios ...</string>
     <string name="s_status_loading">Cargando...</string>
@@ -118,12 +118,12 @@
     <string name="s_pref_stats_title">Ayude a mejorar OpenExplorer</string>
     <string name="s_pref_stats_summary">Enviar estadísticas anónimas de uso. Esto no incluye ninguna información que pudiera ser utilizada para identificar al usuario.</string>
     <string name="s_error_no_intents">No hay aplicaciones instaladas que puedan leer este tipo de archivo.</string>
-    <string name="s_menu_root_disabled">Raíz no disponible</string>
+    <string name="s_menu_root_disabled">Raíz deshabilitada</string>
     <string name="s_pref_start">Carpeta de inicio</string>
     <string name="s_pref_start_summary">Indica en que carpeta inicia OpenExplorer</string>
     <string name="s_custom">Personalizar...</string>
     <string name="s_text_intro_top">¡Bienvenido a OpenExplorer!</string>
-    <string name="s_text_intro_body">El objetivo de OpenExplorer es hacerte más facil uso del sistema de archivos de Android y en la nube. Ya sea que usted necesita para manejar videos y fotos desde varias ubicaciones o administrar su servidor de forma remota a través de FTP, OpenExplorer puede satisfacer sus necesidades.\nPor favpr selecione su ruta de inicio:</string>
+    <string name="s_text_intro_body">El objetivo de OpenExplorer es hacerle más facil uso del sistema de archivos de Android y en la nube. Ya sea que usted necesita para manejar vídeos y fotos desde varias ubicaciones o administrar su servidor de forma remota a través de FTP, OpenExplorer puede satisfacer sus necesidades.\nPor favor, seleccione su ruta de inicio:</string>
     <string name="s_info_num_folders" auto="1">Número de carpetas:</string>
     <string name="s_info_num_files" auto="1">Número de archivos:</string>
     <string name="s_info_last_modified" auto="1">Última modificación:</string>
@@ -140,9 +140,9 @@
     <string name="s_msg_low_memory">¡Poca memoria!</string>
     <string name="s_clear">Limpiar</string>
     <string name="s_menu_delete_all">Borrar todo</string>
-    <string name="s_menu_move_all" auto="1">Mover aquí</string>
-    <string name="s_menu_copy_all" auto="1">Copiar aquí</string>
-    <string name="s_confirm_delete" formatted="false" auto="1">¿Está seguro que desea eliminar  %s ?</string>
+    <string name="s_menu_move_all">Mover aquí</string>
+    <string name="s_menu_copy_all">Copia aquí</string>
+    <string name="s_confirm_delete">¿Está seguro que desea eliminar  Sí</string>
     <string name="s_error_same_destination">El directorio destino es el mismo.</string>
     <string name="s_sample_notification">Copiando -&gt; sdcard:  3 Archivos</string>
     <string name="s_pref_fullscreen">Pantalla completa</string>
@@ -154,28 +154,28 @@
     <string name="s_alert_new_media">¡Nuevo medio insertado!</string>
     <string name="s_warn_pager_title">Nueva función: Ver Localizadores </string>
     <string name="s_warn_pager">Deslice de izquierda a derecha para subir un directorio y de derecha a izquierda para ir hacia atrás. Esto debería hacer que sea más fácil de navegar. Inténtelo (en soportes externos)!</string>
-    <string name="s_warn_confirm" auto="1">¿Lo entiendes?</string>
+    <string name="s_warn_confirm">¿Lo ha entendido?</string>
     <string name="s_warn_disable">Deshabilitado</string>
     <string name="s_pref_intent_internal">Intenciones Internas </string>
-    <string name="s_pref_intent_internal_on" auto="1">Utilice el Administrador de OpenExplorer Intención</string>
-    <string name="s_pref_intent_internal_off" auto="1">Utilice el Administrador de Sistema de Intención</string>
-    <string name="s_pref_text_internal" auto="1">Utilice el Editor de texto interno</string>
+    <string name="s_pref_intent_internal_on">Utilice el Administrador de Intención de OpenExplorer</string>
+    <string name="s_pref_intent_internal_off">Utilice el Administrador de Intención del sistema</string>
+    <string name="s_pref_text_internal">Utilice el editor de texto interno</string>
     <string name="s_text_editor_title" auto="1">Editor de texto</string>
-    <string name="s_pref_show_root" auto="1">Mostrar la raíz del sistema de archivos (/)</string>
+    <string name="s_pref_show_root">Mostrar el sistema de archivos raíz (/)</string>
     <string name="s_pref_show_internal">Mostrar dispositivos internos.</string>
     <string name="s_pref_show_external">Mostrar dispositivos externos</string>
-    <string name="s_error_no_media">Parece que no hay ningún medio insertado. Por favor deshabilite la compartición USB o reinserte el dispositivo.</string>
+    <string name="s_error_no_media">Parece que no hay ningún medio insertado. Por favor, deshabilite la compartición USB o reinserte el dispositivo.</string>
     <string name="s_prompt_password">Ingrese contraseña</string>
     <string name="s_add">Añadir</string>
-    <string name="s_server_ftp" auto="1">FTP</string>
-    <string name="s_server_sftp" auto="1">SFTP</string>
+    <string name="s_server_ftp">protocolo de transferencia de archivos</string>
+    <string name="s_server_sftp">servidor de transferencia de archivos</string>
     <string name="s_pref_server_port">Puerto</string>
     <string name="s_about_buildtime" auto="1">Fecha de compilación</string>
     <string name="s_default">Por defecto</string>
     <string name="s_pref_timeout" auto="1">Tiempo de espera</string>
     <string name="s_pref_timeout_summary" auto="1">Tiempo de espera en segundos</string>
     <string name="s_menu_up">Subir</string>
-    <string name="s_prompt_unzip" auto="1">Introduzca la ruta para descomprimir en:</string>
+    <string name="s_prompt_unzip">Introduzca ruta en la que descomprimir:</string>
     <string name="s_pref_hardware_accel">Habilitar aceleración por hardware</string>
     <string name="s_pref_honeyplus">Configuración para Android 3.0+</string>
     <string name="s_pref_actionmode" auto="1">Modo de acción</string>
@@ -190,41 +190,41 @@
     <string name="s_info_totalspace" auto="1">Espacio total en disco:</string>
     <string name="s_info_freespace">Espacio libre en disco:</string>
     <string name="s_status_rate">Calificar:</string>
-    <string name="s_about_hardware" auto="1">Hardware</string>
-    <string name="s_menu_refresh" auto="1">Actualizar Carpeta</string>
-    <string name="s_pref_reset" auto="1">Restablecer Vistas</string>
+    <string name="s_about_hardware">Equipo</string>
+    <string name="s_menu_refresh">Actualizar carpeta</string>
+    <string name="s_pref_reset">Restablecer vistas</string>
     <string name="s_toast_complete">¡Operación completa!</string>
     <string name="s_pref_reset_summary">Haga clic aquí para eliminar todos los ajustes de visualización de carpetas individuales.</string>
     <string name="s_prompt_path" auto="1">Introduzca la ruta:</string>
     <string name="s_prompt_search">Buscar:</string>
-    <string name="s_prompt_search_within" auto="1">Buscar en:</string>
+    <string name="s_prompt_search_within">Buscar en:</string>
     <string name="s_pref_view_category">Preferencias de vista de marcadores</string>
     <string name="s_pref_show_videos" auto="1">Mostrar vídeos</string>
-    <string name="s_pref_show_photos" auto="1">Mostrar fotos</string>
+    <string name="s_pref_show_photos">toda la foto anterior</string>
     <string name="s_pref_show_music">Mostrar música</string>
     <string name="s_pref_show_downloads">Mostrar descargas</string>
     <string name="s_hide" auto="1">Ocultar</string>
     <string name="s_show" auto="1">Mostrar</string>
     <string name="s_msg_event_cancelled" auto="1">Evento cancelado.</string>
     <string name="s_alert_newfolder_folder" auto="1">Crear una nueva carpeta en:</string>
-    <string name="s_pref_fancy_category" auto="1">Configuración de pantalla de fantasía</string>
+    <string name="s_pref_fancy_category">Configuración avanzada de pantalla</string>
     <string name="s_pref_fancy_menus">Menús bonitos</string>
     <string name="s_pref_fancy_context">Menus contextuales estilizados</string>
-    <string name="s_search_files" auto="1">Buscar sistema de archivos</string>
+    <string name="s_search_files">Buscar en sistema de archivos</string>
     <string name="search_summary" formatted="false">Buscando &quot; %s &quot; dentro de &quot; %s &quot; (%d)</string>
-    <string name="search_results" formatted="false">Se encontró %d resultados para &quot; %s &quot; en &quot; %s &quot;</string>
+    <string name="search_results" formatted="false">Se encontraron %d resultados para &quot; %s &quot; en &quot; %s &quot;</string>
     <string name="s_menu_exit">Salir</string>
-    <string name="s_warn_wtf_message">¡Uy! Parece que un error no controlado ha ocurrido! Como este es un tema común en muchas aplicaciones en beta, la única manera de resolver estos problemas es recibir los informes de los diversos dispositivos, como el suyo, con el fin de determinar la forma de solucionar el problema. ¿Podemos enviar dicho informe, que contiene sólo datos anónimos, al desarrollador?</string>
+    <string name="s_warn_wtf_message">¡Uy! ¡Parece que se ha producido un error no controlado ha! Como éste es un tema común en muchas aplicaciones en beta, la única manera de resolver estos problemas es recibir los informes de los diversos dispositivos, como el suyo, con el fin de determinar la forma de solucionar el problema. ¿Podemos enviar dicho informe, que contiene sólo datos anónimos, al desarollador?</string>
     <string name="s_warn_wtf_ps">*** Tenga en cuenta que esta aplicación está en beta. Por favor, no dé a esta aplicación una mala calificación simplemente porque se bloquea. Tansólo desinstálela si realmente le molesta. ¡Gracias!</string>
     <string name="s_yes" auto="1">Sí</string>
     <string name="s_no" auto="1">No</string>
     <string name="s_wtf_preview">Vista previa Informe de datos</string>
     <string name="s_wtf_remember">No volver a preguntar</string>
     <string name="s_pref_basebar">Dividir barra de acción</string>
-    <string name="s_pref_basebar_on" auto="1">Los botones de acción en la parte inferior de la pantalla en el modo vertical</string>
-    <string name="s_pref_basebar_off" auto="1">Los botones de acción en la parte superior de la pantalla (si está disponible)</string>
+    <string name="s_pref_basebar_on">Botones de acción en parte inferior de la pantalla en modo vertical</string>
+    <string name="s_pref_basebar_off">Botones de acción en parte superior de la pantalla (si está disponible)</string>
     <string name="s_pref_autowtf">Auto-enviar informes de error</string>
-    <string name="s_pref_autowtf_summary">Cuando una excepción no controlada se produce, automáticamente enviar el informe.</string>
+    <string name="s_pref_autowtf_summary">Cuando una excepción no controlada se produce, enviar automáticamente el informe.</string>
     <string name="s_split_auto" auto="1">Automático</string>
     <string name="s_split_top">Forzar botones en la parte superior</string>
     <string name="s_split_top_single">Forzar un solo botón en la parte superior</string>
@@ -234,14 +234,14 @@
     <string name="s_about_density" auto="1">Densidad</string>
     <string name="s_menu_location_int">Ruta de memoria interna</string>
     <string name="s_menu_location_ext">Ruta de memoria externa</string>
-    <string name="s_wtf_context">Por favor, describa el contexto en el que falló la aplicación:</string>
+    <string name="s_wtf_context">Por favor, describa el contexto en el que fallado la aplicaciÃ³n:</string>
     <string name="thanks" auto="1">¡Gracias!</string>
     <string name="menu_view_font_small">Fuente pequeña</string>
     <string name="menu_view_font_medium">Fuente mediana</string>
     <string name="menu_view_font_large">Fuente grande</string>
-    <string name="app_description" auto="1">Abra el Explorador - administrador de archivos de código abierto para todos los dispositivos! (Tabletas, teléfonos, televisores de pantalla de Google, bocadillos!) \n-completo sistema de gestión de archivo \n-USB, SD y otros medios externos \n de la red para conexión (FTP, SFTP, SMB / Samba / Windows / LAN / Wi-Fi) \n - Editor de texto \n-Smart Folders que exploran los diferentes tipos de medios (videos, fotos, música, descargas) \n-View Pager directorio de navegación (a la derecha pase para subir un directorio) \n-de superusuario / root capacidad para la lista / leer las carpetas del sistema (sin sistema de escritura aún) \n \nFeatures por venir: \n-con pestañas Editor de texto \n-Más capacidad de red (Dropbox, Box.net, Sky Drive) \n-caché de la estructura de archivos sin conexión, se recuerda que los archivos que tiene en diferentes lugares sin necesidad de conectarse \n-Disk mapa del espacio de calor muestra dónde están sus archivos son más grandes \n \n * NOTA: Esta aplicación está en beta. Todavía hay muchos errores. Si usted no desea experimentar estos errores, por favor, no descargar esta aplicación. Si usted quisiera que me ayudara a encontrar estos errores, por favor envíeme un correo electrónico, o que colaboran conmigo en GitHub (https://github.com/BrandoCommando/OpenExplorer/). Por favor, recuerde malas calificaciones ayudan a nadie.</string>
+    <string name="app_description">Open Explorer - administrador de archivos de código abierto para todos los dispositivos! (Tabletas, teléfonos, televisores de Google, ¡bocadillos!)\n- Administración completa del sistema de archivos\n- USB, SD y otros medios externos\n- Conexiones de red (FTP, SFTP, SMB / Samba / Windows / LAN / Wi-Fi)\n- Editor de texto\n- Carpetas Inteligentes que buscan diferentes tipos de ficheros (vídeos, fotos, música, descargas)\n- Navegación de directorios mediante paginador (deslizar a la derecha para subir un directorio)\n- Capacidad de superusuario/root  para listar/leer las carpetas del sistema (sin escritura en sistema aún)\n\nCaracterísticas futuras:\n- Editor de texto con pestañas\n- Más capacidades de red (Dropbox, Box.net, Sky Drive)\n- Caché sin conexión de la estructura de archivos, recordará qué archivos tiene en diferentes lugares sin necesidad de conectarse\n- Mapa de calor del espacio en disco muestra dónde están sus archivos más grandes\n\n*NOTA: Esta aplicación es una versión beta. Todavía hay MUCHOS errores. Si usted no desea experimentar estos errores, por favor, no descarge esta aplicación. Si usted quisiera ayudarme a encontrar estos errores, envíeme un correo electrónico, o colabore conmigo en GitHub (https://github.com/BrandoCommando/OpenExplorer/). Por favor, recuerde que las malas calificaciones no ayudan a nadie.</string>
     <string name="alert_translate_google">Hola, esta traducción es proporcionada por Google Translate. Si sabes Inglés, así como español, y le gustaría ayudar a proporcionar una mejor traducción, por favor haga clic en este botón:</string>
-    <string name="alert_translate_none" formatted="false">Hola, parece que está usando un lenguaje no compatible. ¿Sabe usted Inglés y %s? Si quieres ayudar a proporcionar una traducción correcta, haga clic aquí:</string>
+    <string name="alert_translate_none" formatted="false">Hola, parece que está usando un lenguaje no compatible. ¿Sabe usted Inglés y %s? Si quiere ayudar a proporcionar una traducción correcta, haga clic aquí:</string>
     <string name="button_translate">Traducir</string>
     <string name="httpError">Se ha producido un error de red.</string>
     <string name="httpErrorAuth">La autenticación no se ha realizado correctamente.</string>
@@ -252,17 +252,17 @@
     <string name="httpErrorFile">No se ha podido acceder al archivo.</string>
     <string name="httpErrorFileNotFound">No se ha encontrado el archivo solicitado.</string>
     <string name="contentServiceSync">Sincronización</string>
-    <string name="keyguard_password_enter_pin_code">Introduce el código PIN</string>
-    <string name="keyguard_password_enter_password_code">Introducir contraseña para desbloquear</string>
-    <string name="keyguard_password_enter_pin_password_code">Introducir PIN para desbloquear</string>
-    <string name="lockscreen_password_wrong">Inténtalo de nuevo</string>
+    <string name="keyguard_password_enter_pin_code">Introduzca el código PIN</string>
+    <string name="keyguard_password_enter_password_code">Introduzca la contraseña para desbloquear</string>
+    <string name="keyguard_password_enter_pin_password_code">Introduzca el PIN para desbloquear</string>
+    <string name="lockscreen_password_wrong">Por favor, inténtelo de nuevo</string>
     <string name="whichApplication">Completar acción utilizando</string>
     <string name="noApplications">Ninguna aplicación puede realizar esta acción.</string>
     <string name="report">Informar</string>
     <string name="sim_restart_button">Reiniciar</string>
     <string name="extmedia_format_button_format">Formatoy</string>
     <string name="ext_media_nofs_notification_message">Almacenamiento USB vacío o con sistema de archivos no admitido</string>
-    <string name="activity_list_empty">La tarjeta SD está vacía o su sistema de archivos es incompatible.</string>
+    <string name="activity_list_empty">No se encontraron actividades coincidentes</string>
     <string name="ime_action_go">Ir</string>
     <string name="ime_action_send">Enviar</string>
     <string name="ime_action_done">Hecho</string>
@@ -291,79 +291,80 @@
     <string name="warn_networking">Bienvenido a Redes. Tenga en cuenta que esta función está todavía en desarrollo y puede contener errores. Por favor, no des una mala calificación de mercado si encuentra cualquiera de estos errores.</string>
     <string name="s_menu_new_file" auto="1">Nuevo archivo de texto</string>
     <string name="s_msg_created" auto="1">creado</string>
-    <string name="s_title_newfile" auto="1">Nuevo Archivo</string>
-    <string name="s_alert_newfile_folder" auto="1">Crear un fichero nuevo en:</string>
+    <string name="s_title_newfile">Nuevo archivo</string>
+    <string name="s_alert_newfile_folder">Crear un archivo nuevo en:</string>
     <string name="s_alert_newfile" auto="1">Escriba el nombre del nuevo archivo:</string>
-    <string name="s_alert_exit" auto="1">¿Seguro que desea salir?</string>
-    <string name="s_alert_clipboard" auto="1">Copiado en el portapapeles</string>
+    <string name="s_alert_exit">¿Está vd. seguro de que desea salir?</string>
+    <string name="s_alert_clipboard">Copiado al portapapeles</string>
     <string name="s_alert_restart">Reiniciando. Por favor, espere.</string>
     <string name="language">Idioma</string>
-    <string name="s_menu_download">Bajar</string>
+    <string name="s_menu_download">Descargar</string>
     <string name="scan">Escanear</string>
     <string name="test">Prueba</string>
-    <string name="test_success">¡conexión correcta!</string>
-    <string name="no_items">No hay archivos</string>
+    <string name="test_success">¡Conexión correcta!</string>
+    <string name="no_items">No hay archivos.</string>
     <string name="clipboard">Portapapeles</string>
-    <string name="theme">Temas</string>
-    <string name="theme_dark">Tema oscuro</string>
-    <string name="theme_light">Tema claro</string>
+    <string name="theme">Tema</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_light">Claro</string>
     <string name="chooser_remember">Recordar mi elección</string>
-    <string name="use_system">Usar sistema&gt;&gt;</string>
+    <string name="use_system">Usar sistema &gt;&gt;</string>
     <string name="activity_resolver_use_always">Siempre</string>
-    <string name="activity_resolver_use_once">Solo esta vez</string>
+    <string name="activity_resolver_use_once">Solo una vez</string>
     <string name="s_pref_bookmarks_summary">Ver marcadores</string>
-    <string name="apply_to_all">te gustaria aplicar-a-todos-los-ficheros?</string>
+    <string name="s_menu_heatmap">Mapa de calor</string>
+    <string name="apply_to_all">te gustaria aplicar a todas las carpetas? </string>
     <string name="s_pref_view_folders">Opciones de carpetas</string>
     <string name="s_pref_view_general">Preferencias Generales</string>
     <string name="s_pref_text_wrap">Ajustar texto</string>
     <string name="s_pref_thumbs_crop">Recortar/Centrar miniaturas</string>
     <string name="s_pref_thumbs_cache_clear">Limpiar caché de miniaturas</string>
-    <string name="s_msg_folder_none">Imposible crear carpeta</string>
-    <string name="msg_nook_donate2">¡Hola usuario de Nook! Espero que disfrute Open Explorer para Nook. He intentado con todas mis fuerzas asegurar una alta compatibilidad con los dispositivos Nook. Gracias a las donaciones recientes, tuve la oportunidad de comprar un Nook Color. ¡Gracias a todos los que han donado! \n \n A continuación, me gustaría ser capaz de comprar un Nook HD. \n \n Si usted encuentra esta aplicación útil, por favor considere hacer una donación, ya sea seleccionando la botón de abajo, o mediante el botón &quot;donación&quot; del menú. ¡Gracias, y que tenga una exploración feliz!</string>
-    <string name="msg_bb_donate">¡Hola usuario de BlackBerry! Espero que disfrute de Open Explorer. He intentado con todas mis fuerzas asegurar una alta compatibilidad con los dispositivos BlackBerry. Sin embargo, parece que hay algunas diferencias que son difíciles de manejar sin un dispositivo BlackBerry real. Por esta razón, estoy tratando de reunir suficientes donaciones para comprar una BlackBerry 10 con el fin de mejorar la compatibilidad. Si usted encuentra esta aplicación útil, por favor considere hacer una donación, ya sea seleccionando el botón de abajo, o mediante el botón &quot;donación&quot; del menú. ¡Gracias, y que tenga una exploración feliz!</string>
-    <string name="msg_donate" auto="1">Hola usuario de Android! Esperamos que disfrute Abra el Explorador. Hemos tratado de hacer lo mejor para asegurar una alta compatibilidad con todos los dispositivos Android. Sin embargo, dados los informes de fallos recibidos, sólo podemos suponer que existen diferencias entre los distintos tipos que causan problemas específicos. Por esta razón, estamos tratando de reunir suficientes donaciones para la compra de algunos dispositivos Nexus con el fin de mejorar la compatibilidad. Si usted encuentra esta aplicación útil, por favor considere hacer una donación, ya sea seleccionando el botón de abajo, o mediante la activación de la &quot;donación&quot; del menú. Gracias, y explorar feliz!</string>
-    <string name="s_privacy" auto="1">Política de privacidad</string>
+    <string name="s_msg_folder_none">No se pudo crear la carpeta</string>
+    <string name="msg_nook_donate2">¡Hola usuario de Nook! Espero que disfrute Open Explorer para Nook. He intentado con todas mis fuerzas asegurar una alta compatibilidad con los dispositivos Nook. Gracias a las donaciones recientes, tuve la oportunidad de comprar un Nook Color. ¡Gracias a todos los que han donado! \n \n Me gustaría ser capaz de comprar un Nook HD. \n \n Si usted encuentra esta aplicación útil, por favor considere hacer una donación, ya sea seleccionando la opción de abajo, o mediante el botón &quot;donación&quot; del menú. ¡Gracias, y que tenga una exploración feliz!</string>
+    <string name="msg_bb_donate">¡Hola usuario de BlackBerry! Espero que disfrute de Open Explorer. He intentado con todas mis fuerzas asegurar una alta compatibilidad con los dispositivos BlackBerry. Sin embargo, parece que hay algunas diferencias que son difíciles de manejar sin un dispositivo BlackBerry real. Por esta razón, estoy tratando de reunir suficientes donaciones para comprar una BlackBerry 10 con el fin de mejorar la compatibilidad. Si usted encuentra esta aplicación útil, por favor considere hacer una donación, ya sea seleccionando el botón de abajo, o mediante el botón &quot;donación&quot; del menú. Gracias, y ¡que tenga una exploración feliz!</string>
+    <string name="msg_donate">¡Hola usuario de Android! Esperamos que disfrute de Open Explorer. Hemos tratado de hacer todo lo posible para asegurar una alta compatibilidad con todos los dispositivos Android. Sin embargo, dados los informes de fallos recibidos, sólo podemos suponer que existen diferencias entre los distintos tipos que causan problemas específicos. Por esta razón, estamos tratando de reunir suficientes donaciones para la compra de algunos dispositivos Nexus con el fin de mejorar la compatibilidad. Si usted encuentra esta aplicación útil, por favor, considere hacer una donación, ya sea seleccionando el botón de abajo,\n o mediante la activación de la &quot;donación&quot; del menú. Gracias, y ¡feliz exploración!</string>
+    <string name="s_privacy">política de privacidad</string>
     <string name="s_menu_system_mount">Hacer /system editable (Peligroso)</string>
     <string name="s_menu_system_mount_on">¡Sistema en modo ESCRITURA!</string>
     <string name="s_menu_system_mount_off" auto="1">El sistema es de sólo lectura.</string>
     <string name="s_pref_servers_private">Mantener los servidores </string>
-    <string name="s_pref_servers_private_summary">Guardar la configuración de servidores en el área de almacenamiento privada. Esto borrará las configuraciones si se desinstala la aplicación. Si vuelve a re-instalarla, puede evitarlo desmarcando esto.</string>
+    <string name="s_pref_servers_private_summary">Guardar la configuración de servidores en el área de almacenamiento privada. Esto borrará las configuraciones si se desinstala la aplicación. Si vuelve a re-instalarla, puede evitarlo desmarcando esta opción.</string>
     <string name="s_theme_lightdark">Claro y Oscuro</string>
     <string name="s_theme_custom">A rallas</string>
-    <string name="s_menu_rate" auto="1">velocidad</string>
-    <string name="s_alert_destination_exists" auto="1">Destino ya existe. ¿Qué te gustaría hacer?</string>
-    <string name="s_overwrite" auto="1">Sobrescribir</string>
+    <string name="s_menu_rate">Velocidad</string>
+    <string name="s_alert_destination_exists">El destino ya existe. ¿Qué le gustaría hacer?</string>
+    <string name="s_overwrite">Sobrescribir</string>
     <string name="s_skip">Omitir</string>
-    <string name="s_msg_file_exists" auto="1">Algunos archivos de destino ya exista. Aceptar para sobrescribir?</string>
+    <string name="s_msg_file_exists">Algunos archivos de destino podrían existir ya. ¿Está de acuerdo con sobrescribirlos?</string>
     <string name="s_title_file_exists" auto="1">El archivo ya existe.</string>
-    <string name="s_msg_pref_archives" auto="1">¿Te gustaría explorar o extraer el archivo?</string>
-    <string name="s_browse">Videos Youporno </string>
-    <string name="s_extract" auto="1">extraer</string>
+    <string name="s_msg_pref_archives">¿Desearía explorar o extraer el archivo?</string>
+    <string name="s_browse">Explorar</string>
+    <string name="s_extract">Extraer</string>
     <string name="s_extracted" auto="1">extraído</string>
-    <string name="s_extracting" auto="1">extrayendo</string>
-    <string name="s_extract_with" auto="1">Extraer con ...</string>
-    <string name="s_title_archive_handler" auto="1">Archivo del controlador</string>
+    <string name="s_extracting">Extrayendo</string>
+    <string name="s_extract_with">Extraer con...</string>
+    <string name="s_title_archive_handler">Manejador de archivos</string>
     <string name="s_ask_again" auto="1">Preguntar cada vez</string>
-    <string name="s_archives" auto="1">archivo</string>
-    <string name="s_compress" auto="1">comprimir</string>
+    <string name="s_archives">Archivos</string>
+    <string name="s_compress">Comprimir</string>
     <string name="s_compress_type" auto="1">Tipo de compresión</string>
     <string name="s_compressed" auto="1">comprimido</string>
-    <string name="s_delete_after" auto="1">Eliminar de origen después de la finalización</string>
+    <string name="s_delete_after">Eliminar origen después de la finalización</string>
     <string name="s_master_pass" auto="1">Contraseña maestra</string>
-    <string name="s_master_pass_warning" auto="1">Debe introducir una contraseña maestra, que se utiliza como clave de cifrado para las contraseñas almacenadas. Si lo deja en blanco, las contraseñas todavía se cifrará y la contraseña maestra predeterminada se utilizará. Tenga en cuenta que si actualiza su contraseña con las contraseñas de red almacenados, probablemente tendrá que restablecer las contraseñas y autenticar servidores de la nube después de restablecer la contraseña.</string>
-    <string name="s_pass_old" auto="1">Introduzca la contraseña antigua:</string>
-    <string name="s_pass_new" auto="1">Escriba la nueva contraseña:</string>
-    <string name="s_logout" auto="1">finalizar la sesión</string>
-    <string name="s_authenticate" auto="1">autenticar</string>
-    <string name="s_authenticating" auto="1">Autenticación</string>
-    <string name="s_bookmark_history" auto="1">historia</string>
-    <string name="s_server_account_title" auto="1">cuenta:</string>
-    <string name="s_authenticate_success" auto="1">autenticación exitosa</string>
+    <string name="s_master_pass_warning">Puede introducir una contraseña maestra, que se utilizará. como clave de cifrado para las contraseñas almacenadas. Si la deja en blanco, las contraseñas se cifrarán igualmente y se utilizará la contraseña maestra predeterminada. Tenga en cuenta que si actualiza su contraseña con contraseñas de red almacenadas, probablemente tendrá que restablecer las contraseñas y autenticar servidores de la nube después de restablecer esta contraseña.</string>
+    <string name="s_pass_old">Introduzca la antigua contraseña:</string>
+    <string name="s_pass_new">Introduzca la nueva contraseña:</string>
+    <string name="s_logout">Finalizar la sesión</string>
+    <string name="s_authenticate">Autenticar</string>
+    <string name="s_authenticating">Autenticando</string>
+    <string name="s_bookmark_history">Historial</string>
+    <string name="s_server_account_title">Cuenta:</string>
+    <string name="s_authenticate_success">Autenticación exitosa</string>
     <string name="s_authenticate_refresh" auto="1">Actualizar autenticación</string>
-    <string name="s_pref_thumbs_cache" auto="1">Cache de Pre-Thumbnails</string>
-    <string name="s_pref_thumbs_cache_summary" auto="1">Esto ayudará a acelerar la carga de las carpetas que contienen imágenes y vídeos.</string>
+    <string name="s_pref_thumbs_cache">Precargar miniaturas</string>
+    <string name="s_pref_thumbs_cache_summary">Esto acelerará la carga de carpetas que contengan Fotos y Vídeos.</string>
     <string name="s_folders" auto="1">carpetas</string>
     <string name="s_hidden" auto="1">oculto</string>
-    <string name="s_total" auto="1">total</string>
-    <string name="s_custom_account" auto="1">cuenta personalizada</string>
+    <string name="s_total">total</string>
+    <string name="s_custom_account">Cuenta personalizada</string>
 </resources>

@@ -9,7 +9,7 @@
     <string name="s_internal" auto="1">Iç</string>
     <string name="s_view">Görünüm</string>
     <string name="s_bookmarks" auto="1">Yer imleri</string>
-    <string name="s_menu_favorites" auto="1">Toggle imleri</string>
+    <string name="s_menu_favorites">toggleler</string>
     <string name="s_menu_sort">Sırala</string>
     <string name="s_menu_sort_name_asc">Ada göre sırala (A-Z)</string>
     <string name="s_menu_sort_name_desc">Ada göre sırala (Z-A)</string>
@@ -20,25 +20,25 @@
     <string name="s_menu_sort_type">Dosya türüne göre sırala</string>
     <string name="s_menu_multi">Çoklu seçim</string>
     <string name="s_menu_grid">Grid görünümü</string>
-    <string name="s_menu_list" auto="1">Liste Görünümü</string>
-    <string name="s_menu_carousel" auto="1">Atlıkarınca</string>
-    <string name="s_menu_hidden" auto="1">Gizli Dosyaları Göster</string>
+    <string name="s_menu_list">liste Görünümü</string>
+    <string name="s_menu_carousel">atli karinca</string>
+    <string name="s_menu_hidden">gizli dosyaları gostermece</string>
     <string name="s_menu_thumbs">resimleri thumbnails (kücülterek) göster</string>
-    <string name="s_menu_new_folder" auto="1">Yeni Klasör</string>
-    <string name="s_menu_other" auto="1">Diğer Ayarlar</string>
+    <string name="s_menu_new_folder">yeni klasör</string>
+    <string name="s_menu_other">öbür ayarlar</string>
     <string name="s_menu_flush" auto="1">Flush Önbellek</string>
     <string name="s_menu_root">Kök</string>
     <string name="s_menu_prefs_folder">Klasör Seçenekleri</string>
     <string name="s_menu_prefs_global">Genel Ayarlar</string>
-    <string name="s_menu_info" auto="1">Bilgi</string>
-    <string name="s_menu_copy" auto="1">Kopyala</string>
+    <string name="s_menu_info">nedir</string>
+    <string name="s_menu_copy">kopyalla</string>
     <string name="s_menu_cut">Kes</string>
     <string name="s_menu_paste">Yapıştır</string>
     <string name="s_menu_delete">Sil</string>
-    <string name="s_menu_share" auto="1">Paylaş / Gönder ...</string>
+    <string name="s_menu_share">yolla panpa</string>
     <string name="s_menu_zip">Zip dosyası(ları)</string>
     <string name="s_menu_unzip">Unzip...</string>
-    <string name="s_menu_rename" auto="1">Yeniden adlandır ...</string>
+    <string name="s_menu_rename">adlandır</string>
     <string name="s_menu_bookmark">Sık kullanılanlara ekle</string>
     <string name="s_save">Kaydet</string>
     <string name="s_saveas" auto="1">Farklı kaydet ...</string>
@@ -105,7 +105,7 @@
     <string name="s_title_bookmark_prefix">Sık Kullanılanları Yönet:</string>
     <string name="s_alert_remove_safe" auto="1">Şimdi sürücüyü güvenle kaldırabilirsiniz.</string>
     <string name="s_alert_remove_error">Çıkartılamıyor</string>
-    <string name="s_menu_about" auto="1">Hakkında</string>
+    <string name="s_menu_about">hakkında</string>
     <string name="s_about_version" auto="1">Versiyon</string>
     <string name="s_about_author" auto="1">Yazar</string>
     <string name="s_about_site" auto="1">Web sitesi</string>
@@ -136,10 +136,10 @@
     <string name="s_error_ftp">Ağa bağlanırken hata oluştu</string>
     <string name="s_prompt_zip" auto="1">Yeni Zip dosyasının dosya adı girin:</string>
     <string name="app_edit">OpenExplorer ile düzenle</string>
-    <string name="s_menu_more" auto="1">Diğer seçenekler ...</string>
+    <string name="s_menu_more">diger seçnekler</string>
     <string name="s_msg_low_memory">Yetersiz bellek!</string>
     <string name="s_clear" auto="1">Temizle</string>
-    <string name="s_menu_delete_all" auto="1">Tümünü Sil</string>
+    <string name="s_menu_delete_all">hepini sil</string>
     <string name="s_menu_move_all">Buraya Taşı</string>
     <string name="s_menu_copy_all">Buraya kopyala</string>
     <string name="s_confirm_delete" formatted="false">%ları silmek istediğinizden emin misiniz?</string>
@@ -174,7 +174,7 @@
     <string name="s_default" auto="1">Standart</string>
     <string name="s_pref_timeout" auto="1">Zaman Aşımı</string>
     <string name="s_pref_timeout_summary" auto="1">Saniye olarak zaman aşımı</string>
-    <string name="s_menu_up" auto="1">Yukarı git</string>
+    <string name="s_menu_up">yukari</string>
     <string name="s_prompt_unzip">Çıkartılacak yolu girin:</string>
     <string name="s_pref_hardware_accel">Donanım hızlandırmayı aç</string>
     <string name="s_pref_honeyplus">Android 3.0+ Ayarları</string>
@@ -346,7 +346,7 @@
     <string name="s_master_pass" auto="1">master Şifre</string>
     <string name="s_master_pass_warning" auto="1">Herhangi depolanan parolalar için şifreleme anahtarı olarak kullanılan bir ana parola girebilirsiniz. Bu boş bırakırsanız, şifreler yine şifreli olacak ve varsayılan ana parola kullanılacaktır. Eğer saklanan ağ şifreleri ile şifrenizi güncellemek, muhtemelen şifreleri sıfırlamak ve bu şifre sıfırlama sonra bulut sunucuları kimlik doğrulaması gerektiğini lütfen unutmayın.</string>
     <string name="s_pass_old" auto="1">Eski şifrenizi girin:</string>
-    <string name="s_pass_new" auto="1">Yeni parolayı girin:</string>
+    <string name="s_pass_new">yeni şifre ne olsun cnm</string>
     <string name="s_logout">Oturumu kapat</string>
     <string name="s_authenticate">Doğrulama</string>
     <string name="s_authenticating" auto="1">Kimlik doğrulanıyor</string>
@@ -356,8 +356,8 @@
     <string name="s_authenticate_refresh">Doğrulamayı yenile</string>
     <string name="s_pref_thumbs_cache" auto="1">Pre-Cache Thumbnails</string>
     <string name="s_pref_thumbs_cache_summary" auto="1">Bu Resimler ve Videolar içeren klasörleri yükleme hızlanmasına yardımcı olacaktır.</string>
-    <string name="s_folders" auto="1">klasörler</string>
-    <string name="s_hidden" auto="1">gizli</string>
-    <string name="s_total" auto="1">toplam</string>
-    <string name="s_custom_account" auto="1">Özel Hesap</string>
+    <string name="s_folders">klasorler</string>
+    <string name="s_hidden"> gizli</string>
+    <string name="s_total">topu</string>
+    <string name="s_custom_account">ozel hesap</string>
 </resources>
