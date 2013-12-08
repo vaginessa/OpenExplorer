@@ -146,7 +146,6 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private String mAuthState = null;
     private int mServerType = -1;
     private boolean mAuthTokenFound = false;
-    private WebView mLoginWebView;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
     public static class ServerTypeAdapter extends BaseAdapter
@@ -436,8 +435,6 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
-        mLoginWebView = (WebView)mBaseView.findViewById(R.id.server_webview);
-
         setIcon(getServerTypeDrawable(mServerType));
         setTitle(server.getName());
         
@@ -579,13 +576,15 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             enableAuthenticateButton(false);
             ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
             ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+            onClick(android.R.string.ok);
         } else {
             if (OpenDropBox.handleIntent(data, server))
             {
-                ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password);
+                ViewUtils.setText(mBaseView, server.getPassword(), R.id.text_password); 
                 ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview,
                         R.id.server_authenticate);
                 ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+                onClick(android.R.string.ok);
             }
         }
         invalidateOptionsMenu();
@@ -842,6 +841,9 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                         }
                     });
                 } else if (t2.startsWith("db")) {
+                    final WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
+                    mLoginWebView.setVisibility(View.VISIBLE);
+                    findViewById(R.id.server_text_scroller).setVisibility(View.GONE);
                     //if (!checkDropBoxAppKeySetup())
                     {
                         enableAuthenticateButton(false);
@@ -1017,8 +1019,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         } else {
             ViewUtils.setText(mBaseView, getString(R.string.s_authenticating),
                     R.id.server_authenticate);
-            ViewUtils.setText(mBaseView, getString(R.string.s_authenticate_refresh),
-                    R.id.server_authenticate);
+            ViewUtils.setViewsEnabled(mBaseView, false, R.id.server_authenticate);
         }
     }
 
@@ -1050,6 +1051,9 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         // Load the login webpage. Note how the ticket must be appended to the
         // login url.
         String loginUrl = "https://m.box.net/api/1.0/auth/" + ticket;
+        WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
+        mLoginWebView.setVisibility(View.VISIBLE);
+        ViewUtils.setViewsVisible(mBaseView, false, R.id.server_text_scroller, R.id.server_authenticate, R.id.server_logout);
         mLoginWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         mLoginWebView.getSettings().setJavaScriptEnabled(true);
         mLoginWebView.setWebViewClient(new WebViewClient() {
@@ -1097,6 +1101,9 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 getCloudSetting("dropbox_key"),
                 getCloudSetting("dropbox_secret"),
                 getAuthState());
+        WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
+        mLoginWebView.setVisibility(View.VISIBLE);
+        ViewUtils.setViewsVisible(mBaseView, false, R.id.server_text_scroller, R.id.server_authenticate, R.id.server_logout);
         mLoginWebView.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -1173,6 +1180,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         server.setSetting("dao", DAO.toJSON(authToken));
         setIntent(intent);
         onActivityResult(OpenExplorer.REQ_AUTHENTICATE_BOX, RESULT_OK, intent);
+        onClick(android.R.string.ok);
     }
 
     @Override
@@ -1673,6 +1681,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
         ViewUtils.setViewsVisible(mBaseView, false, R.id.server_authenticate);
         invalidateOptionsMenu();
+        onClick(android.R.string.ok); 
     }
 
     public static boolean interceptOldToken(final Exception e, final String authToken, final String refreshToken,
@@ -1827,8 +1836,10 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
     private void showDriveWebview()
     {
+        final WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
+        mLoginWebView.setVisibility(View.VISIBLE);
+        ViewUtils.setViewsVisible(mBaseView, false, R.id.server_text_scroller);
         enableAuthenticateButton(false);
-        mLoginWebView.setVisibility(View.GONE);
         mLoginWebView.getSettings().setJavaScriptEnabled(true);
         mLoginWebView.setWebChromeClient(new WebChromeClient(){
             @SuppressLint("NewApi")
@@ -1876,7 +1887,6 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         });
         mLoginWebView.loadUrl(
                 OpenDrive.getTokenAuthURL());
-        mLoginWebView.setVisibility(View.VISIBLE);
     }
 
     private static boolean received401 = false;
