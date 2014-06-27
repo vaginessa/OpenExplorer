@@ -185,9 +185,11 @@ public class Logger {
         return dbLog.countLevel(level);
     }
 
-    public static void clearDb() {
+    public static boolean clearDb() {
         if (dbLog != null)
             dbLog.clear();
+	else return false;
+	return true;
     }
 
     public static int LogError(String msg) {
