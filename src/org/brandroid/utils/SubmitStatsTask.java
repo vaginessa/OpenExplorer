@@ -92,6 +92,7 @@ public class SubmitStatsTask extends AsyncTask<String, Void, Void> {
             out.write(sb.toString().getBytes());
             out.flush();
             out.close();
+	    if(Logger.clearDb()) return null;
             uc.connect();
             if (uc.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()));
