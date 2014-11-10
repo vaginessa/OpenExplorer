@@ -830,6 +830,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                             }
                             else {
                                 // onGetTicketFail();
+                                Logger.LogError("Unable to get Box Ticket");
                                 enableAuthenticateButton(true);
                             }
                         }
@@ -837,6 +838,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                         @Override
                         public void onIOException(final IOException e) {
                             // onGetTicketFail();
+                            Logger.LogError("Unable to get Box Ticket", e);
                             enableAuthenticateButton(true);
                         }
                     });
@@ -1050,7 +1052,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private void loadBoxLoginWebview(final String ticket) {
         // Load the login webpage. Note how the ticket must be appended to the
         // login url.
-        String loginUrl = "https://m.box.net/api/1.0/auth/" + ticket;
+        String loginUrl = "https://api.box.com/1.0/auth/" + ticket;
         WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
         mLoginWebView.setVisibility(View.VISIBLE);
         ViewUtils.setViewsVisible(mBaseView, false, R.id.server_text_scroller, R.id.server_authenticate, R.id.server_logout);
