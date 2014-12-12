@@ -1515,7 +1515,9 @@ public class EventHandler {
                 zipstream = new ZipInputStream(zip.getInputStream());
 
                 while ((entry = zipstream.getNextEntry()) != null) {
-                    OpenPath newFile = directory.getChild(entry.getName());
+                	String relName = entry.getName();
+                	relName.replaceAll("^[\\./]*", "");
+                    OpenPath newFile = directory.getChild(relName);
                     if (!newFile.getParent().exists() && !newFile.getParent().mkdir())
                     {
                         Logger.LogWarning("Unable to create parent directory while unzipping");

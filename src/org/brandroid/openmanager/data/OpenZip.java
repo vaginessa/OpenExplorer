@@ -149,6 +149,7 @@ public class OpenZip extends OpenPath implements OpenStream, OpenPath.ListHandle
             if (ze.isDirectory())
                 continue;
             String parent = ze.getName();
+            parent = parent.replaceAll("^[\\./]*", "");
             if (parent.indexOf("/") > 0 && parent.indexOf("/") < parent.length() - 1)
                 parent = parent.substring(0, parent.lastIndexOf("/") + 1);
             else
