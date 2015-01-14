@@ -38,7 +38,6 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
 import org.brandroid.openmanager.data.FTPManager;
-import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenContent;
 import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenDropBox;
@@ -61,7 +60,6 @@ import org.brandroid.openmanager.data.OpenZip.OpenZipVirtualPath;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
-import com.box.androidlib.User;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.session.AccessTokenPair;
@@ -413,7 +411,7 @@ public class FileManager {
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get samba from cache.", e);
                 }
-            } else if (path.startsWith("box")) {
+            /*} else if (path.startsWith("box")) {
                 try {
                     Uri uri = Uri.parse(path);
                     String us = uri.getUserInfo();
@@ -436,7 +434,7 @@ public class FileManager {
                     }
                 } catch (Exception e) {
                     Logger.LogError("Couldn't get Box.com from cache.", e);
-                }
+                }*/
             } else if (path.startsWith("drive")) {
 
                 try {

@@ -28,7 +28,6 @@ import org.brandroid.utils.Utils;
 
 import com.android.gallery3d.data.MediaObject;
 import com.android.gallery3d.data.Path;
-import com.box.androidlib.Cancelable;
 
 import android.content.Context;
 import android.graphics.Bitmap;

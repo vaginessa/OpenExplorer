@@ -31,7 +31,6 @@ import java.util.jar.JarFile;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenCommand;
 import org.brandroid.openmanager.data.OpenCursor;
 import org.brandroid.openmanager.data.OpenDrive;
@@ -468,8 +467,6 @@ public class ThumbnailCreator {
             if (file instanceof OpenFTP) {
                 return R.drawable.sm_ftp;
             }
-            if (file instanceof OpenBox)
-                return R.drawable.icon_box;
             if (file instanceof OpenDropBox)
                 return R.drawable.icon_dropbox;
             if (file instanceof OpenDrive)

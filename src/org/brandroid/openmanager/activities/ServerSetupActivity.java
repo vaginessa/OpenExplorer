@@ -10,7 +10,6 @@ import java.util.Locale;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
-import org.brandroid.openmanager.data.OpenBox;
 import org.brandroid.openmanager.data.OpenDrive;
 import org.brandroid.openmanager.data.OpenDrive.TicketResponseCallback;
 import org.brandroid.openmanager.data.OpenDrive.TokenResponseCallback;
@@ -43,12 +42,6 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.box.androidlib.Box;
-import com.box.androidlib.DAO;
-import com.box.androidlib.GetAuthTokenListener;
-import com.box.androidlib.GetTicketListener;
-import com.box.androidlib.LogoutListener;
-import com.box.androidlib.User;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
 import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
@@ -674,8 +667,6 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     public static boolean isServerTypeEnabled(Context context, int serverType) {
         switch(serverType)
         {
-            case 3:
-                return OpenBox.isEnabled(context);
             case 4:
                 return OpenDropBox.isEnabled(context);
             case 5:
@@ -816,10 +807,11 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 finish();
                 return true;
             case R.id.server_authenticate:
-                if (t2.startsWith("box"))
+                /*if (t2.startsWith("box"))
                 {
                     enableAuthenticateButton(false);
                     Box box = Box.getInstance(PrivatePreferences.getBoxAPIKey());
+                    if(box != null)
                     box.getTicket(new GetTicketListener() {
 
                         @Override
@@ -842,7 +834,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                             enableAuthenticateButton(true);
                         }
                     });
-                } else if (t2.startsWith("db")) {
+                } else*/ if (t2.startsWith("db")) {
                     final WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
                     mLoginWebView.setVisibility(View.VISIBLE);
                     findViewById(R.id.server_text_scroller).setVisibility(View.GONE);
@@ -916,6 +908,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 }
                 return true;
             case R.id.server_logout:
+            	/*
                 if (t2.startsWith("box"))
                     Box.getInstance(PrivatePreferences.getBoxAPIKey())
                             .logout(server.getPassword(), new LogoutListener() {
@@ -934,7 +927,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                                     enableAuthenticateButton(true);
                                 }
                             });
-                else if (t2.startsWith("db"))
+                else */ if (t2.startsWith("db"))
                     ((OpenDropBox)server.getOpenPath()).unlink();
 //                else if (t2.startsWith("drive"))
 //                    invalidateAuthToken(this, server.getPassword());
@@ -1064,7 +1057,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             public void onPageFinished(final WebView view, final String url) {
                 // Listen for page loads and execute Box.getAuthToken() after
                 // each one to see if the user has successfully logged in.
-                getBoxAuthToken(ticket, 0);
+                //getBoxAuthToken(ticket, 0);
             }
 
             @Override
@@ -1136,6 +1129,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
      * @param ticket Box ticket
      * @param tries the number of attempts that have been made
      */
+    /*
     private void getBoxAuthToken(final String ticket, final int tries) {
         if (tries >= 5) {
             return;
@@ -1165,12 +1159,14 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                     }
                 });
     }
+    */
 
     /**
      * Called when an auth token has been obtained.
      * 
      * @param authToken Box auth token
      */
+    /*
     private void onBoxAuthTokenRetreived(final User authToken) {
         if (mAuthTokenFound) {
             return;
@@ -1184,6 +1180,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         onActivityResult(OpenExplorer.REQ_AUTHENTICATE_BOX, RESULT_OK, intent);
         onClick(android.R.string.ok);
     }
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

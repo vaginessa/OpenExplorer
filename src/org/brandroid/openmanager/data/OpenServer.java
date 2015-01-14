@@ -18,8 +18,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.box.androidlib.DAO;
-import com.box.androidlib.User;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 
@@ -273,7 +271,7 @@ public class OpenServer extends OpenPath {
             } catch (MalformedURLException e) {
                 Logger.LogError("Couldn't add Samba share to bookmarks.", e);
             }
-        } else if (t2.startsWith("box"))
+        /*} else if (t2.startsWith("box"))
         {
             User user = new User();
             if (has("dao"))
@@ -285,7 +283,7 @@ public class OpenServer extends OpenPath {
             }
             user.setAuthToken(getPassword());
             user.setLogin(getName());
-            mPath = new OpenBox(user);
+            mPath = new OpenBox(user);*/
         } else if (t2.startsWith("db"))
         {
             DropboxAPI<AndroidAuthSession> mApi = new DropboxAPI<AndroidAuthSession>(
