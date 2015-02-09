@@ -452,7 +452,7 @@ public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByte
 
     @Override
     public Boolean requiresThread() {
-        return false;
+        return true;
     }
 
     @Override
