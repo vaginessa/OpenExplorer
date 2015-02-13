@@ -18,8 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.box.androidlib.DAO;
-import com.box.androidlib.User;
+import com.box.androidlib.box2.JSONParent;
+import com.box.androidlib.box2.User;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 
@@ -275,6 +275,12 @@ public class OpenServer extends OpenPath {
             }
         } else if (t2.startsWith("box"))
         {
+        	JSONParent jo = new JSONParent();
+        	if(has("json"))
+        		jo = JSONParent.fromJSON(get("json", "{}"));
+        	mPath = new OpenBox2(jo);
+        	//mPath = new OpenBox(getPassword(), get("REFRESH_TOKEN"));
+        	/*
             User user = new User();
             if (has("dao"))
             {
@@ -286,6 +292,7 @@ public class OpenServer extends OpenPath {
             user.setAuthToken(getPassword());
             user.setLogin(getName());
             mPath = new OpenBox(user);
+            */
         } else if (t2.startsWith("db"))
         {
             DropboxAPI<AndroidAuthSession> mApi = new DropboxAPI<AndroidAuthSession>(

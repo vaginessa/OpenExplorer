@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 
@@ -43,12 +44,11 @@ import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.box.androidlib.Box;
-import com.box.androidlib.DAO;
-import com.box.androidlib.GetAuthTokenListener;
-import com.box.androidlib.GetTicketListener;
-import com.box.androidlib.LogoutListener;
-import com.box.androidlib.User;
+import com.box.androidlib.box2.AccessToken;
+import com.box.androidlib.box2.Box2;
+import com.box.androidlib.box2.JSONParent;
+import com.box.androidlib.box2.ResponseListener;
+import com.box.androidlib.box2.User;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.android.AuthActivity;
 import com.google.api.client.googleapis.extensions.android.accounts.GoogleAccountManager;
@@ -146,6 +146,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
     private String mAuthState = null;
     private int mServerType = -1;
     private boolean mAuthTokenFound = false;
+    private boolean mAuthLock = false;
     private static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
 
     public static class ServerTypeAdapter extends BaseAdapter
@@ -557,26 +558,41 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             return;
         if (data.getExtras() == null)
             return;
-        if (data != null && data.getExtras() != null && data.getExtras().containsKey("AUTH_TOKEN"))
+        if (data != null && data.getExtras() != null)
         {
-            String token = data.getStringExtra("AUTH_TOKEN");
-            Toast.makeText(getContext(), "Token Received: " + token, Toast.LENGTH_SHORT).show();
-            server.setPassword(token);
-            server.setUser(token);
-            ViewUtils.setText(mBaseView, token, R.id.text_password);
-            if (data.getExtras().containsKey("AUTH_LOGIN"))
-            {
-                String login = data.getStringExtra("AUTH_LOGIN");
-                if (servers.findByType(server.getType()).size() > 0)
-                {
-                    server.setName(login);
-                    ViewUtils.setText(mBaseView, login, R.id.text_name);
-                }
-            }
-            enableAuthenticateButton(false);
-            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
-            ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
-            onClick(android.R.string.ok);
+        	if(data.getExtras().containsKey("AUTH_TOKEN"))
+        	{
+	            String token = data.getStringExtra("AUTH_TOKEN");
+	            Toast.makeText(getContext(), "Token Received: " + token, Toast.LENGTH_SHORT).show();
+	            server.setPassword(token);
+	            server.setUser(token);
+	            ViewUtils.setText(mBaseView, token, R.id.text_password);
+	            if (data.getExtras().containsKey("AUTH_LOGIN"))
+	            {
+	                String login = data.getStringExtra("AUTH_LOGIN");
+	                if (servers.findByType(server.getType()).size() > 0)
+	                {
+	                    server.setName(login);
+	                    ViewUtils.setText(mBaseView, login, R.id.text_name);
+	                }
+	            }
+	            enableAuthenticateButton(false);
+	            ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
+	            ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+	            onClick(android.R.string.ok);
+        	} else if(data.getExtras().containsKey("ACCESS_TOKEN")) {
+        		String token = data.getStringExtra("ACCESS_TOKEN");
+        		server.setPassword(token);
+        		server.setUser(token);
+        		Toast.makeText(getContext(), "Token: " + token, Toast.LENGTH_LONG).show();
+        		if(data.getExtras().containsKey("REFRESH_TOKEN"))
+        			server.setSetting("refresh_token", data.getStringExtra("REFRESH_TOKEN"));
+                ViewUtils.setText(mBaseView, token, R.id.text_password);
+                enableAuthenticateButton(false);
+                ViewUtils.setViewsVisible(mBaseView, false, R.id.server_webview);
+                ViewUtils.setViewsVisible(mBaseView, true, R.id.server_logout);
+                onClick(android.R.string.ok);
+        	}
         } else {
             if (OpenDropBox.handleIntent(data, server))
             {
@@ -816,32 +832,36 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 finish();
                 return true;
             case R.id.server_authenticate:
+            	if(mAuthLock) return false;
+            	mAuthLock = true;
                 if (t2.startsWith("box"))
                 {
                     enableAuthenticateButton(false);
-                    Box box = Box.getInstance(PrivatePreferences.getBoxAPIKey());
-                    box.getTicket(new GetTicketListener() {
-
-                        @Override
-                        public void onComplete(final String ticket, final String status) {
-                            if (status.equals("get_ticket_ok")) {
-                                ViewUtils.setViewsVisible(mBaseView, true, R.id.server_webview);
-                                loadBoxLoginWebview(ticket);
-                            }
-                            else {
-                                // onGetTicketFail();
-                                Logger.LogError("Unable to get Box Ticket");
-                                enableAuthenticateButton(true);
-                            }
-                        }
-
-                        @Override
-                        public void onIOException(final IOException e) {
-                            // onGetTicketFail();
-                            Logger.LogError("Unable to get Box Ticket", e);
-                            enableAuthenticateButton(true);
-                        }
-                    });
+                    final Box2 box = Box2.getInstance(PrivatePreferences.getBoxAPIKey());
+                    loadBoxUrlWebview(box.getAuthUri(),
+                		new PageFinishedListener() {
+							@Override
+							public void onPageFinished(WebView view, String url) {
+								if(url.indexOf("code=") > -1)
+								{
+									Uri u = Uri.parse(url);
+									final String code = u.getQueryParameter("code");
+									if(code != null)
+										box.getAccessToken(code, new ResponseListener() {
+											@Override
+											public void onIOException(IOException e) {
+												Toast.makeText(getContext(), "Bad Token!", Toast.LENGTH_LONG).show();
+											}
+											
+											@Override
+											public void onComplete(JSONParent jo) {
+												if(jo != null)
+													onBoxAccessTokenRetrieved((AccessToken)jo, box);
+											}
+										});
+								}
+							}
+						});
                 } else if (t2.startsWith("db")) {
                     final WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
                     mLoginWebView.setVisibility(View.VISIBLE);
@@ -917,8 +937,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 return true;
             case R.id.server_logout:
                 if (t2.startsWith("box"))
-                    Box.getInstance(PrivatePreferences.getBoxAPIKey())
-                            .logout(server.getPassword(), new LogoutListener() {
+                	Box2.getInstance(PrivatePreferences.getBoxAPIKey())
+                            .logout(server.getPassword(), new ResponseListener() {
 
                                 @Override
                                 public void onIOException(IOException e) {
@@ -928,8 +948,8 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                                 }
 
                                 @Override
-                                public void onComplete(String status) {
-                                    Toast.makeText(ServerSetupActivity.this, status,
+                                public void onComplete(JSONParent jo) {
+                                    Toast.makeText(ServerSetupActivity.this, "Logged out",
                                             Toast.LENGTH_SHORT).show();
                                     enableAuthenticateButton(true);
                                 }
@@ -1043,16 +1063,18 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         }
         return true;
     }
+    
+    private void loadBoxLoginWebview()
+    {
+    	
+    }
 
-    /**
-     * Load the login webview.
-     * 
-     * @param ticket Ticket from Box API action get_ticket
-     */
-    private void loadBoxLoginWebview(final String ticket) {
-        // Load the login webpage. Note how the ticket must be appended to the
-        // login url.
-        String loginUrl = "https://api.box.com/1.0/auth/" + ticket;
+    private interface PageFinishedListener
+    {
+    	public void onPageFinished(final WebView view, final String url);
+    }
+    private void loadBoxUrlWebview(final String url, final PageFinishedListener pfListener)
+    {
         WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
         mLoginWebView.setVisibility(View.VISIBLE);
         ViewUtils.setViewsVisible(mBaseView, false, R.id.server_text_scroller, R.id.server_authenticate, R.id.server_logout);
@@ -1062,14 +1084,14 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
             @Override
             public void onPageFinished(final WebView view, final String url) {
-                // Listen for page loads and execute Box.getAuthToken() after
-                // each one to see if the user has successfully logged in.
-                getBoxAuthToken(ticket, 0);
+            	if(pfListener != null)
+            		pfListener.onPageFinished(view, url);
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
-                if (url != null && url.startsWith("market://")) {
+            	if(url == null) return false;
+            	if(url.startsWith("market://")) {
                     try {
                         view.getContext().startActivity(
                                 new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
@@ -1079,10 +1101,15 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                         // e.printStackTrace();
                     }
                 }
+            	if(url.startsWith("http://127.0.0.1"))
+            	{
+            		pfListener.onPageFinished(view, url);
+            		return true;
+            	}
                 return false;
             }
         });
-        mLoginWebView.loadUrl(loginUrl);
+        mLoginWebView.loadUrl(url);
     }
     
     private String getCloudSetting(String key)
@@ -1124,65 +1151,37 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
         });
         mLoginWebView.loadUrl(url);
     }
-
-    /**
-     * Try to get an auth token. Due to a bug with Android webviews, it is
-     * possible for WebViewClient.onPageFinished to be called before the page
-     * has actually loaded. So we may have to try the getAuthToken request
-     * several times.
-     * http://stackoverflow.com/questions/3702627/onpagefinished-not
-     * -firing-correctly-when-rendering-web-page
-     * 
-     * @param ticket Box ticket
-     * @param tries the number of attempts that have been made
-     */
-    private void getBoxAuthToken(final String ticket, final int tries) {
-        if (tries >= 5) {
-            return;
-        }
-        final Handler handler = new Handler();
-        Box.getInstance(PrivatePreferences.getBoxAPIKey()).getAuthToken(ticket,
-                new GetAuthTokenListener() {
-
-                    @Override
-                    public void onComplete(final User user, final String status) {
-                        if (status.equals("get_auth_token_ok") && user != null) {
-                            onBoxAuthTokenRetreived(user);
-                        }
-                        else if (status.equals("error_unknown_http_response_code")) {
-                            handler.postDelayed(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    getBoxAuthToken(ticket, tries + 1);
-                                }
-                            }, 500);
-                        }
-                    }
-
-                    @Override
-                    public void onIOException(final IOException e) {
-                    }
-                });
-    }
-
-    /**
-     * Called when an auth token has been obtained.
-     * 
-     * @param authToken Box auth token
-     */
-    private void onBoxAuthTokenRetreived(final User authToken) {
-        if (mAuthTokenFound) {
-            return;
-        }
-        mAuthTokenFound = true;
-        Intent intent = getIntent();
-        intent.putExtra("AUTH_TOKEN", authToken.getAuthToken());
-        intent.putExtra("AUTH_LOGIN", authToken.getLogin());
-        server.setSetting("dao", DAO.toJSON(authToken));
-        setIntent(intent);
-        onActivityResult(OpenExplorer.REQ_AUTHENTICATE_BOX, RESULT_OK, intent);
-        onClick(android.R.string.ok);
+    
+    private void onBoxAccessTokenRetrieved(final AccessToken token, final Box2 box) {
+    	final Intent intent = getIntent();
+    	Toast.makeText(getContext(), "Token: " + token.toString(), Toast.LENGTH_LONG).show();
+    	intent.putExtra("ACCESS_TOKEN", token.getAccessToken());
+    	intent.putExtra("REFRESH_TOKEN", token.getRefreshToken());
+    	try {
+    		server.setSetting("json", token.toJSON().toString());
+    	} catch(JSONException je) { }
+		server.setSetting("ACCESS_TOKEN", token.getAccessToken());
+		server.setSetting("REFRESH_TOKEN", token.getRefreshToken());
+    	box.getAccountInfo(token, new ResponseListener() {
+			
+			@Override
+			public void onIOException(IOException e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onComplete(JSONParent jo) {
+				if(jo != null)
+				{
+					User user = (User)jo;
+					server.setName(user.getLogin());
+			    	setIntent(intent);
+			    	onActivityResult(OpenExplorer.REQ_AUTHENTICATE_BOX, RESULT_OK, intent);
+			    	onClick(android.R.string.ok);
+				}
+			}
+		});
     }
 
     @Override

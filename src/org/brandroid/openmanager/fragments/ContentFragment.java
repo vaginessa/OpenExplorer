@@ -2184,7 +2184,8 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         if (path instanceof OpenPath.ThumbnailOverlayInterface)
         {
             Drawable overlay = ((ThumbnailOverlayInterface)path).getOverlayDrawable(getActivity(), true);
-            ret = new LayerDrawable(new Drawable[]{ret,overlay});
+            if(overlay != null)
+            	ret = new LayerDrawable(new Drawable[]{ret,overlay});
         }
         return ret;
     }

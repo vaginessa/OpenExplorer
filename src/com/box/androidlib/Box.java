@@ -22,6 +22,9 @@ import java.net.MalformedURLException;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 
+import com.box.androidlib.box2.AccessToken;
+import com.box.androidlib.box2.ResponseListener;
+
 import android.os.Handler;
 
 
