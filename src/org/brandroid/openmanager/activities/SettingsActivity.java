@@ -36,6 +36,7 @@ import org.brandroid.openmanager.data.OpenNetworkPath;
 import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.openmanager.fragments.DialogHandler;
+import org.brandroid.openmanager.fragments.PreferenceFragmentV11;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.InputDialog;
 import org.brandroid.openmanager.util.PrivatePreferences;
@@ -179,6 +180,10 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
         if (DEBUG)
             Logger.LogDebug("SettingsActivity.onRestoreInstanceState(" + state + ")");
         super.onRestoreInstanceState(state);
+    }
+    
+    protected boolean isValidFragment(String fragmentName) {
+    	  return PreferenceFragmentV11.class.getName().equals(fragmentName);
     }
 
     public void onCreate(Bundle savedInstanceState) {
