@@ -98,9 +98,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.MessageQueue;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
+import android.support.v7.view.menu.MenuBuilder;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
@@ -123,13 +131,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.internal.view.menu.MenuBuilder;
-import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.ActionMode.Callback;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.widget.ShareActionProvider;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -1059,7 +1060,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         if (!file.isDirectory() && getActionMode() == null) {
-            getSherlockActivity().startActionMode(new Callback() {
+            ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionMode.Callback() {
                 // @Override
                 @Override
                 public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -1102,7 +1103,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         }
 
         if (file.isDirectory() && getActionMode() == null) {
-            getSherlockActivity().startActionMode(new Callback() {
+            ((AppCompatActivity) getActivity()).startSupportActionMode(new ActionMode.Callback() {
                 // @Override
                 @Override
                 public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -2238,7 +2239,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
              * addToMultiSelect(clip);
              */
             if (getExplorer() != null)
-                getExplorer().startActionMode(mLastSelectionModeCallback);
+                getExplorer().startSupportActionMode(mLastSelectionModeCallback);
             // mGrid.invalidateViews();
 
         }
@@ -2317,7 +2318,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
             // intent.
             mShare = menu.findItem(R.id.menu_context_share);
             if (mShare != null && mShare.getActionProvider() != null) {
-                mShareActionProvider = (ShareActionProvider)mShare.getActionProvider();
+                mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(mShare);
                 if (mShareActionProvider != null) {
                     int cnt = getSelectedCount();
                     OpenPath first = mContentAdapter.getSelectedSet().get(0);

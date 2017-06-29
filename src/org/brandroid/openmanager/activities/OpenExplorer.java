@@ -69,6 +69,10 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.support.v7.app.ActionBar;
+import android.support.v7.view.ActionMode;
+import android.support.v7.view.menu.MenuBuilder;
+import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -85,6 +89,10 @@ import android.view.Gravity;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
@@ -194,12 +202,6 @@ import org.brandroid.utils.SubmitStatsTask;
 import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.internal.view.menu.MenuBuilder;
-import com.actionbarsherlock.view.*;
-import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
-import com.actionbarsherlock.widget.SearchView;
-import com.actionbarsherlock.widget.SearchView.OnQueryTextListener;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -1785,6 +1787,8 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         }
         if (mStaticButtons == null && USE_ACTION_BAR && mBar != null
                 && mBar.getCustomView() != null)
+            Logger.LogDebug(String.valueOf(mBar.getCustomView().findViewById(R.id.title_static_buttons)));
+            Logger.LogDebug(String.valueOf(mBar.getCustomView().findViewById(R.id.title_static_buttons).getClass()));
             mStaticButtons = (ViewGroup)mBar.getCustomView()
                     .findViewById(R.id.title_static_buttons);
         if (mStaticButtons == null) {
@@ -2718,7 +2722,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
         final SearchView searchView = new SearchView(getSupportActionBar().getThemedContext());
         searchView.setQueryHint(getString(R.string.s_search_files));
         searchView.setIconifiedByDefault(true);
-        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -2770,7 +2774,7 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
                             .setIcon(ThumbnailCreator.getDefaultResourceId(item, 32, 32))
                             .setCheckable(true)
                             .setChecked(true)
-                            .setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                            .setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                                 @Override
                                 public boolean onMenuItemClick(MenuItem menuitem) {
                                     getClipboard().remove(item);

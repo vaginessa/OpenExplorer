@@ -66,10 +66,10 @@ public class SimpleUserInfo implements UserInfo {
         mPassword = password;
     }
 
-    @Override
+    /*@Override
     public void resetPassword() {
         mPassword = null;
-    }
+    }*/
 
     @Override
     public boolean promptPassword(final String message) {

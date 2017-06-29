@@ -145,6 +145,18 @@
                     android:inputType="text|textWebEmailAddress"
                     android:singleLine="true" />
 
+                <CheckBox
+                    android:id="@+id/check_identity_file"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/s_pref_server_identity_file" />
+
+                <TextView
+                    android:id="@+id/label_identity_file"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="" />
+
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -177,6 +189,7 @@
                         android:lines="1"
                         android:text="@string/s_show_password" />
                 </RelativeLayout>
+
             </LinearLayout>
 
             <TextView

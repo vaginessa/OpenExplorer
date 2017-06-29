@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="AppTheme.Dark" parent="@style/Theme.Sherlock">
-        <item name="absForceOverflow">true</item>
+    <style name="AppTheme.Dark" parent="@style/Theme.AppCompat">
+        <!--<item name="absForceOverflow">true</item>-->
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
@@ -80,8 +80,8 @@
         <item name="dialog">2</item>
     </style>
 
-    <style name="AppTheme.Light" parent="@style/Theme.Sherlock.Light">
-        <item name="absForceOverflow">true</item>
+    <style name="AppTheme.Light" parent="@style/Theme.AppCompat.Light">
+        <!--<item name="absForceOverflow">true</item>-->
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
@@ -159,8 +159,8 @@
         <item name="dialog">2</item>
     </style>
 
-    <style name="AppTheme.LightAndDark" parent="Theme.Sherlock.Light.DarkActionBar">
-        <item name="absForceOverflow">true</item>
+    <style name="AppTheme.LightAndDark" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!--<item name="absForceOverflow">true</item>-->
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
@@ -238,8 +238,8 @@
         <item name="dialog">2</item>
     </style>
 
-    <style name="AppTheme.Custom" parent="Theme.Sherlock.Light.DarkActionBar">
-        <item name="absForceOverflow">true</item>
+    <style name="AppTheme.Custom" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!--<item name="absForceOverflow">true</item>-->
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
@@ -318,10 +318,9 @@
         <item name="dialog">2</item>
     </style>
     
-
-    <style name="AppTheme.Dialog" parent="Theme.Sherlock.DialogWhenLarge">
+    <style name="AppTheme.Dialog" parent="Theme.AppCompat.DialogWhenLarge">
     
-        <item name="absForceOverflow">true</item>
+        <!--<item name="absForceOverflow">true</item>-->
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>
@@ -400,8 +399,8 @@
         
         <item name="dialog">0</item>
     </style>
-    <style name="AppTheme.Dialog.Light" parent="Theme.Sherlock.Light.DialogWhenLarge">
-        <item name="absForceOverflow">true</item>
+    <style name="AppTheme.Dialog.Light" parent="Theme.AppCompat.Light.DialogWhenLarge">
+        <!--<item name="absForceOverflow">true</item>-->
         <item name="vpiCirclePageIndicatorStyle">@style/Widget.CirclePageIndicator</item>
         <item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/MyTabPageIndicator</item>

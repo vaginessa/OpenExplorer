@@ -18,8 +18,6 @@ import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.ViewUtils;
 
-import com.actionbarsherlock.view.ActionMode;
-
 import android.annotation.SuppressLint;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;

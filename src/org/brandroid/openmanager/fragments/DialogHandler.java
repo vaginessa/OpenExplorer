@@ -51,6 +51,7 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -133,8 +134,6 @@ import org.brandroid.utils.Utils;
 import org.brandroid.utils.ViewUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import com.actionbarsherlock.view.MenuItem;
 
 public class DialogHandler {
 

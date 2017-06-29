@@ -207,29 +207,29 @@ public class OpenSCP extends OpenNetworkPath implements OpenNetworkPath.PipeNeed
     }
 
     @Override
-    public void connect() throws IOException {
+    public void connect() throws IOException, JSchException {
         connect("scp -f " + mRemotePath);
     }
 
-    public void connect(String command) throws IOException {
+    public void connect(String command) throws IOException, JSchException {
         disconnect();
         JSch jsch = new JSch();
-        // try {
-        mSession = jsch.getSession(mUser, mHost, 22);
-        mSession.setUserInfo(mUserInfo);
-        mSession.connect();
+//        try {
+            mSession = jsch.getSession(mUser, mHost, 22);
+            mSession.setUserInfo(mUserInfo);
+            mSession.connect();
 
-        // String command = "scp -f " + mRemotePath;
-        mChannel = mSession.openChannel("exec");
-        ((ChannelExec)mChannel).setCommand(command);
+            // String command = "scp -f " + mRemotePath;
+            mChannel = mSession.openChannel("exec");
+            ((ChannelExec)mChannel).setCommand(command);
 
-        mChannel.connect();
+            mChannel.connect();
 
-        isConnected = true;
-        // } catch (JSchException e) {
-        // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // }
+            isConnected = true;
+//        } catch (JSchException e) {
+//            Logger.LogError("connect(" + command + ")", e);
+//            throw new IOException(e);
+//        }
     }
 
     /*

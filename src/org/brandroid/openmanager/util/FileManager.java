@@ -288,6 +288,7 @@ public class FileManager {
     public static OpenPath getOpenCache(String path, Context c) {
         if (path == null)
             return null;
+        Logger.LogDebug("getOpenCache: " + path);
         OpenPath ret = null;
         if (path.startsWith("/"))
         {
@@ -357,7 +358,7 @@ public class FileManager {
     {
         if (path == null)
             return null;
-        // Logger.LogDebug("Checking cache for " + path);
+        Logger.LogDebug("Checking cache for " + path);
         if (mOpenCache == null)
             mOpenCache = new WeakHashMap<String, OpenPath>();
         OpenPath ret = mOpenCache.get(path);
@@ -381,10 +382,18 @@ public class FileManager {
                 OpenServer server = servers.findByHost("sftp", uri.getHost());
                 // ret = new OpenVFS(path);
                 ret = new OpenSFTP(uri);
-                SimpleUserInfo info = new SimpleUserInfo();
-                if (server != null)
+                Logger.LogDebug("Public key = " + server.getPubKey());
+                Logger.LogDebug("Private key = " + server.getPrivKey());
+                Logger.LogDebug("Password key = " + server.getPassword());
+                if (server.getPrivKey() != null && server.getPubKey() != null && server.getPassword() != null) {
+                    ((OpenSFTP) ret).addIdentity(server.getPrivKey().getBytes(), server.getPubKey().getBytes(), server.getPassword().getBytes());
+                    SimpleUserInfo info = new SimpleUserInfo();
+                    ((OpenSFTP)ret).setUserInfo(info);
+                } else {
+                    SimpleUserInfo info = new SimpleUserInfo();
                     info.setPassword(server.getPassword());
-                ((OpenSFTP)ret).setUserInfo(info);
+                    ((OpenSFTP)ret).setUserInfo(info);
+                }
             } else if (path.startsWith("smb:/") && servers != null) {
                 try {
                     Uri uri = Uri.parse(path);

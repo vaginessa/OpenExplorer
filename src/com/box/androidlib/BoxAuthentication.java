@@ -85,7 +85,7 @@ public class BoxAuthentication extends Activity {
         // Get a ticket. We need a ticket in order to load the login webpage.
         // Once we have a ticket, launch a login webview.
         box = Box.getInstance(mApiKey);
-        box.getTicket(new GetTicketListener() {
+        /*box.getTicket(new GetTicketListener() {
 
             @Override
             public void onComplete(final String ticket, final String status) {
@@ -101,7 +101,7 @@ public class BoxAuthentication extends Activity {
             public void onIOException(final IOException e) {
                 onGetTicketFail();
             }
-        });
+        });*/
     }
 
     /**

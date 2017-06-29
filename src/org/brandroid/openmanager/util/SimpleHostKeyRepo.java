@@ -14,6 +14,8 @@ import com.jcraft.jsch.KnownHosts;
 import com.jcraft.jsch.UserInfo;
 import com.jcraft.jsch.Util;
 
+import org.brandroid.utils.Logger;
+
 public class SimpleHostKeyRepo extends KnownHosts {
     private final SharedPreferences mPrefs;
     private final UserInfo mUserInfo;
@@ -35,7 +37,12 @@ public class SimpleHostKeyRepo extends KnownHosts {
 
     public static byte[] unserialize(String key) {
         byte[] buf = Util.str2byte(key);
-        return Util.fromBase64(buf, 0, buf.length);
+        try {
+            return Util.fromBase64(buf, 0, buf.length);
+        } catch (JSchException e) {
+            Logger.LogError("unserialize", e);
+            return null;
+        }
     }
 
     public static String serialize(byte[] key) {

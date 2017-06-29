@@ -13,6 +13,7 @@ import org.brandroid.utils.Utils;
 import android.content.Context;
 import android.os.AsyncTask;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
 
 public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
@@ -21,6 +22,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
 	 */
     private static final long serialVersionUID = -3829590216951441869L;
     protected UserInfo mUserInfo;
+    protected byte[] mPubKey, mPrivKey, mPrivPwd;
     public static final JSch DefaultJSch = new JSch();
     public static int Timeout = 20000;
     protected String mName = null;
@@ -208,7 +210,7 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     
     public interface PipeNeeded {
         public boolean isConnected() throws IOException;
-        public void connect() throws IOException;
+        public void connect() throws IOException, JSchException;
         public void disconnect();
     }
 
@@ -297,8 +299,18 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     }
 
     public UserInfo setUserInfo(UserInfo info) {
+        Logger.LogDebug("setUserInfo: " + info);
         mUserInfo = info;
         return mUserInfo;
+    }
+
+    public void addIdentity(byte[] privKey, byte[] pubKey, byte[] privPwd) {
+        try {
+            Logger.LogDebug("addIdentity");
+            DefaultJSch.addIdentity("id", privKey, pubKey, privPwd);
+        } catch (JSchException e) {
+            Logger.LogError("addIdentity", e);
+        }
     }
 
     public int getServerIndex() {

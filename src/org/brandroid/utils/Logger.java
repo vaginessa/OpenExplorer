@@ -69,7 +69,7 @@ public class Logger {
     }
 
     public static Boolean isLoggingEnabled() {
-        return false; //bLoggingEnabled && DO_LOG;
+        return true; //bLoggingEnabled && DO_LOG;
     }
 
     public static void setLoggingEnabled(Boolean enable) {

@@ -1,9 +1,9 @@
 
 package org.brandroid.openmanager.util;
 
-import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
+import android.support.v7.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuItem;
 
 public class ActionModeHelper {
     private ActionMode mInstance;

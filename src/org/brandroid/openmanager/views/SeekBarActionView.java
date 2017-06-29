@@ -7,8 +7,6 @@ import org.brandroid.openmanager.util.BetterPopupWindow;
 import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
 import org.brandroid.utils.Logger;
 
-import com.actionbarsherlock.view.CollapsibleActionView;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.KeyEvent;

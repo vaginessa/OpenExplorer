@@ -252,6 +252,7 @@ public class OpenServer extends OpenPath {
     {
         if (mPath != null)
             return mPath;
+        Logger.LogDebug("getOpenPath");
         SimpleUserInfo info = new SimpleUserInfo();
         info.setPassword(getPassword());
         String t2 = getType().toLowerCase(Locale.US);
@@ -262,6 +263,12 @@ public class OpenServer extends OpenPath {
             mPath = new OpenSCP(getHost(), getUser(), getPath(), info);
         } else if (t2.startsWith("sftp")) {
             mPath = new OpenSFTP(getHost(), getUser(), getPath());
+            Logger.LogDebug("Public key = " + getPubKey());
+            Logger.LogDebug("Private key = " + getPrivKey());
+            Logger.LogDebug("Password key = " + getPassword());
+            if (getPrivKey() != null && getPubKey() != null && getPassword() != null) {
+                mPath.addIdentity(getPrivKey().getBytes(), getPubKey().getBytes(), getPassword().getBytes());
+            }
             // mPath = new OpenVFS("sftp://" + getUser() + ":" + getPassword() +
             // "@" + getHost() + getPath());
         } else if (t2.startsWith("smb")) {
@@ -308,6 +315,14 @@ public class OpenServer extends OpenPath {
         return get("password");
     }
 
+    public String getPrivKey() {
+        return get("priv_key");
+    }
+
+    public String getPubKey() {
+        return get("pub_key");
+    }
+
     public String getName() {
         String mName = get("name");
         if (mName != null && !mName.equals(""))
@@ -332,6 +347,16 @@ public class OpenServer extends OpenPath {
 
     public OpenServer setPassword(final String password) {
         setSetting("password", password);
+        return this;
+    }
+
+    public OpenServer setPrivKey(final String privKey) {
+        setSetting("priv_key", privKey);
+        return this;
+    }
+
+    public OpenServer setPubKey(final String pubKey) {
+        setSetting("pub_key", pubKey);
         return this;
     }
 
@@ -374,6 +399,10 @@ public class OpenServer extends OpenPath {
             return getUser();
         if (key.equals("password"))
             return getPassword();
+        if (key.equals("pub_key"))
+            return getPubKey();
+        if (key.equals("priv_key"))
+            return getPrivKey();
         if (key.equals("type"))
             return getType();
         if (key.equals("port"))

@@ -5,18 +5,17 @@ import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.ViewUtils;
 
-import com.actionbarsherlock.internal.view.menu.MenuBuilder;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.support.v7.view.menu.MenuBuilder;
 import android.text.Html;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -142,7 +141,7 @@ public class IconContextMenuAdapter extends BaseAdapter {
         if (src != null && src instanceof BitmapDrawable)
             ((BitmapDrawable)src).setGravity(Gravity.CENTER);
         Drawable icon = new LayerDrawable(new Drawable[] {
-            src != null ? src : new ColorDrawable(android.R.color.white)
+            src != null ? src : new ColorDrawable(context.getResources().getColor(android.R.color.white))
         });
         // Gravity.CENTER, sz, sz);
 

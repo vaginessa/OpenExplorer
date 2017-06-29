@@ -71,6 +71,8 @@
     <string name="s_pref_server_password_summary">Login Password</string>
     <string name="s_pref_server_path">Subdirectory</string>
     <string name="s_pref_server_path_summary">Enter default login path</string>
+    <string name="s_pref_server_identity_file">Identity file</string>
+    <string name="s_pref_server_select_identity_file">Select identity file</string>
     <string name="s_pref_server_extras">Extra Settings</string>
     <string name="s_pref_server_update">Add/Update Server</string>
     <string name="s_pref_server_type">Server Type</string>
@@ -280,8 +282,7 @@
     <string name="report">Report</string>
     <string name="sim_restart_button">Restart</string>
     <string name="extmedia_format_button_format">Format</string>
-    <string name="ext_media_nofs_notification_message" product="nosdcard">USB storage blank or has unsupported filesystem.</string>
-    <string name="ext_media_nofs_notification_message" product="default">SD card blank or has unsupported filesystem.</string>
+    <string name="ext_media_nofs_notification_message">SD card blank or has unsupported filesystem.</string>
     <string name="activity_list_empty">No matching activities found</string>
     <string name="ime_action_go">Go</string>
     <string name="ime_action_send">Send</string>

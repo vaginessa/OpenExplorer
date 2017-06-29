@@ -50,15 +50,11 @@ import org.brandroid.utils.SimpleCrypto;
 import org.brandroid.utils.Utils;
 import org.json.JSONArray;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockPreferenceActivity;
-import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.MenuItem;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
 import com.android.gallery3d.util.ThreadPool;
-import com.box.androidlib.BoxAuthentication;
+//import com.box.androidlib.BoxAuthentication;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 
@@ -73,6 +69,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -89,12 +86,22 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.view.ActionMode;
+import android.support.v7.widget.Toolbar;
 import android.text.Spannable;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
 
-public class SettingsActivity extends SherlockPreferenceActivity implements
+public class SettingsActivity extends PreferenceActivity implements
         OnPreferenceChangeListener, OpenApp {
     // keys used for preference file
     /*
@@ -113,7 +120,16 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     // private DonationObserver mDonationObserver;
     private Handler mHandler;
 
+    private AppCompatDelegate mDelegate;
+
     final static boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && true;
+
+    private AppCompatDelegate getDelegate() {
+        if (mDelegate == null) {
+            mDelegate = AppCompatDelegate.create(this, null);
+        }
+        return mDelegate;
+    }
 
     public static String getDisplayLanguage(Context context, String langCode) {
         if (!langCode.equals("")) {
@@ -131,7 +147,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     @SuppressLint("NewApi")
-    public void onBuildHeaders(List<Header> target) {
+    public void onBuildHeaders(List<PreferenceActivity.Header> target) {
         if(Build.VERSION.SDK_INT < 12) return; // This shouldn't matter, but just in case
         loadHeadersFromResource(R.xml.preference_headers, target);
     }
@@ -159,8 +175,12 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public ActionBar getSupportActionBar() {
-        return super.getSupportActionBar();
+        return getDelegate().getSupportActionBar();
         // return null;
+    }
+
+    public void setSupportActionBar(@Nullable Toolbar toolbar) {
+        getDelegate().setSupportActionBar(toolbar);
     }
 
     protected void onResume() {
@@ -187,6 +207,8 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
     }
 
     public void onCreate(Bundle savedInstanceState) {
+        getDelegate().installViewFactory();
+        getDelegate().onCreate(savedInstanceState);
         super.onCreate(savedInstanceState);
 
         // int theme = getThemeId();
@@ -384,7 +406,60 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
          * //showDialog(DIALOG_CANNOT_CONNECT_ID); }
          */
     }
-    
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        getDelegate().onPostCreate(savedInstanceState);
+    }
+
+    @Override
+    public MenuInflater getMenuInflater() {
+        return getDelegate().getMenuInflater();
+    }
+
+    @Override
+    public void setContentView(@LayoutRes int layoutResID) {
+        getDelegate().setContentView(layoutResID);
+    }
+
+    @Override
+    public void setContentView(View view) {
+        getDelegate().setContentView(view);
+    }
+
+    @Override
+    public void setContentView(View view, ViewGroup.LayoutParams params) {
+        getDelegate().setContentView(view, params);
+    }
+
+    @Override
+    public void addContentView(View view, ViewGroup.LayoutParams params) {
+        getDelegate().addContentView(view, params);
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        getDelegate().onPostResume();
+    }
+
+    @Override
+    protected void onTitleChanged(CharSequence title, int color) {
+        super.onTitleChanged(title, color);
+        getDelegate().setTitle(title);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        getDelegate().onConfigurationChanged(newConfig);
+    }
+
+    public void invalidateOptionsMenu() {
+        getDelegate().invalidateOptionsMenu();
+    }
+
     private void updateSystemMount(Preference parent)
     {
         Logger.LogVerbose("Looking for mount pref...");
@@ -402,6 +477,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
     protected void onDestroy() {
         super.onDestroy();
+        getDelegate().onDestroy();
         // if(mBillingService != null) mBillingService.unbind();
     }
 
@@ -441,6 +517,7 @@ public class SettingsActivity extends SherlockPreferenceActivity implements
 
     protected void onStop() {
         super.onStop();
+        getDelegate().onStop();
         // ResponseHandler.unregister(mDonationObserver);
     }
 

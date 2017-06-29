@@ -1,11 +1,13 @@
 
 package org.brandroid.openmanager.data;
 
+import java.io.FilePermission;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -55,7 +57,13 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
     private Long mSize = null;
     private Long mModified = null;
 
+    static {
+        Logger.LogDebug("Configure spongy castle security");
+        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
+    }
+
     public OpenSFTP(String fullPath) {
+        Logger.LogDebug("OpenSFTP: " + fullPath);
         // this.jsch = jsch;
         Uri uri = Uri.parse(fullPath);
         mHost = uri.getHost();
@@ -75,6 +83,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
     }
 
     public OpenSFTP(Uri uri) {
+        Logger.LogDebug("OpenSFTP: " + uri.toString());
         // this.jsch = jsch;
         mHost = uri.getHost();
         mUser = uri.getUserInfo();
@@ -84,6 +93,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
     }
 
     public OpenSFTP(String host, String user, String path) {
+        Logger.LogDebug("OpenSFTP: " + host + ", " + user + ", " + path);
         // this.jsch = jsch;
         mHost = host;
         mUser = user;
@@ -91,6 +101,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
     }
 
     public OpenSFTP(String host, String user, String path, UserInfo info) {
+        Logger.LogDebug("OpenSFTP: " + host + ", " + user + ", " + path + ", " + info.getPassword());
         // this.jsch = jsch;
         mHost = host;
         mUser = user;
@@ -134,6 +145,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
 
     public OpenSFTP(String path, int size, int modified) {
         this(Uri.parse(path));
+        Logger.LogDebug("OpenSFTP: " + path + ", " + String.valueOf(size) + ", " + String.valueOf(modified));
         mSize = (long)size;
         mModified = (long)modified;
     }
@@ -373,6 +385,7 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
             int size = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_SIZE));
             int modified = c.getInt(OpenPathDbAdapter.getKeyIndex(OpenPathDbAdapter.KEY_MTIME));
             arr.add(new OpenSFTP(folder + name, size, modified));
+            Logger.LogDebug("listFromDb: " + folder + name);
             c.moveToNext();
         }
         Logger.LogDebug("listFromDb returning " + arr.size() + " children");
@@ -402,59 +415,62 @@ public class OpenSFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNee
     }
 
     @Override
-    public void connect() throws IOException {
+    public void connect() throws IOException, JSchException {
         if (mSession != null && mSession.isConnected() && mChannel != null
                 && mChannel.isConnected()) {
-            // Logger.LogInfo("No need for new OpenSFTP connection @ " +
-            // getName());
+            Logger.LogInfo("No need for new OpenSFTP connection @ " + getName());
             return;
         }
-        // Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
+        Logger.LogDebug("Attempting to connect to OpenSFTP " + getName());
+        for (Object id : DefaultJSch.getIdentityNames()) {
+            Logger.LogDebug("Identity " + id);
+        }
         // disconnect();
         // Logger.LogDebug("Ready for new connection");
         // JSch jsch = new JSch();
-        // try {
-        if (mSession == null || !mSession.isConnected()) {
-            mSession = DefaultJSch.getSession(mUser, mHost, getPort());
-            if (mUserInfo != null)
-                mSession.setUserInfo(mUserInfo);
-            else
-                Logger.LogWarning("No User Info!");
-            mSession.setTimeout(Timeout);
-            Logger.LogDebug("Connecting session...");
-            mSession.connect();
-        }
-        Logger.LogDebug("Session achieved. Opening Channel...");
-        // String command = "scp -f " + mRemotePath;
-        mChannel = (ChannelSftp)mSession.openChannel("sftp");
-        // ((ChannelSftp)mChannel);
-
-        mChannel.connect();
-
-        Logger.LogDebug("Channel open! Ready for action!");
-
-        try {
-            String pwd = mChannel.pwd();
-            if (!pwd.equals(mRemotePath)) {
-                Logger.LogWarning("Working Directory (" + pwd + ") != remote directory ("
-                        + mRemotePath + ")");
-                mRemotePath = pwd;
-                if (mParent == null && mRemotePath.indexOf("/", 1) > -1) {
-                    mName = mRemotePath.substring(mRemotePath.lastIndexOf("/") + 1);
-                    String par = getAbsolutePath();
-                    par = par.substring(0, par.lastIndexOf("/"));
-                    mParent = new OpenSFTP(par);
-                    mParent.mSession = this.mSession;
-                    mParent.mChannel = this.mChannel;
-                }
+        //try {
+            if (mSession == null || !mSession.isConnected()) {
+                mSession = DefaultJSch.getSession(mUser, mHost, getPort());
+                if (mUserInfo != null)
+                    mSession.setUserInfo(mUserInfo);
+                else
+                    Logger.LogWarning("No User Info!");
+                mSession.setTimeout(Timeout);
+                mSession.setConfig("UserAuth",  "userauth.publickey");
+                Logger.LogDebug("Connecting session...");
+                mSession.connect();
             }
-        } catch (SftpException e) {
-            Logger.LogError("Unable to retrieve remote working directory.", e);
-        }
-        // } catch (JSchException e) {
-        // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // }
+            Logger.LogDebug("Session achieved. Opening Channel...");
+            // String command = "scp -f " + mRemotePath;
+            mChannel = (ChannelSftp)mSession.openChannel("sftp");
+            // ((ChannelSftp)mChannel);
+
+            mChannel.connect();
+
+            Logger.LogDebug("Channel open! Ready for action!");
+
+            try {
+                String pwd = mChannel.pwd();
+                if (!pwd.equals(mRemotePath)) {
+                    Logger.LogWarning("Working Directory (" + pwd + ") != remote directory ("
+                            + mRemotePath + ")");
+                    mRemotePath = pwd;
+                    if (mParent == null && mRemotePath.indexOf("/", 1) > -1) {
+                        mName = mRemotePath.substring(mRemotePath.lastIndexOf("/") + 1);
+                        String par = getAbsolutePath();
+                        par = par.substring(0, par.lastIndexOf("/"));
+                        mParent = new OpenSFTP(par);
+                        mParent.mSession = this.mSession;
+                        mParent.mChannel = this.mChannel;
+                    }
+                }
+            } catch (SftpException e) {
+                Logger.LogError("Unable to retrieve remote working directory.", e);
+            }
+//        } catch (JSchException e) {
+//            Logger.LogError("connect()", e);
+//            throw new IOException(e);
+//        }
     }
 
     @Override

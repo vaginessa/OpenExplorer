@@ -29,6 +29,7 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.Math;
 
 public class BitmapUtils {
     private static final String TAG = "BitmapUtils";
@@ -85,7 +86,7 @@ public class BitmapUtils {
 
     // Fin the min x that 1 / x <= scale
     public static int computeSampleSizeLarger(float scale) {
-        int initialSize = (int)FloatMath.floor(1f / scale);
+        int initialSize = (int)Math.floor(1f / scale);
         if (initialSize <= 1)
             return 1;
 

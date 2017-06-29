@@ -15,8 +15,6 @@ import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.ActionMode;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -29,6 +27,8 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.view.ActionMode;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -40,7 +40,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class FolderPickerActivity extends SherlockFragmentActivity implements OnItemClickListener,
+public class FolderPickerActivity extends ActionBarActivity implements OnItemClickListener,
         OnClickListener, TextWatcher, OpenApp {
     private OpenPath mPath;
     private boolean mFoldersOnly = false;

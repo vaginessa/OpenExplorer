@@ -4,9 +4,8 @@ package org.brandroid.openmanager.fragments;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
-import com.actionbarsherlock.app.SherlockListFragment;
-
 import android.os.Bundle;
+import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-public class OpenListFragment extends SherlockListFragment implements OnItemClickListener,
+public class OpenListFragment extends ListFragment implements OnItemClickListener,
         OnItemSelectedListener, OnItemLongClickListener {
     // public static boolean CONTENT_FRAGMENT_FREE = true;
     // public boolean isFragmentValid = true;

@@ -1,6 +1,6 @@
 /* -*-mode:java; c-basic-offset:2; indent-tabs-mode:nil -*- */
 /*
-Copyright (c) 2002-2012 ymnk, JCraft,Inc. All rights reserved.
+Copyright (c) 2002-2016 ymnk, JCraft,Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,9 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.jcraft.jsch;
 import java.net.Socket;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class Util{
 
@@ -40,20 +43,25 @@ public class Util{
     }
     return 0;
   }
-  public static byte[] fromBase64(byte[] buf, int start, int length){
-    byte[] foo=new byte[length];
-    int j=0;
-    for (int i=start;i<start+length;i+=4){
-      foo[j]=(byte)((val(buf[i])<<2)|((val(buf[i+1])&0x30)>>>4));
-      if(buf[i+2]==(byte)'='){ j++; break;}
-      foo[j+1]=(byte)(((val(buf[i+1])&0x0f)<<4)|((val(buf[i+2])&0x3c)>>>2));
-      if(buf[i+3]==(byte)'='){ j+=2; break;}
-      foo[j+2]=(byte)(((val(buf[i+2])&0x03)<<6)|(val(buf[i+3])&0x3f));
-      j+=3;
+  public static byte[] fromBase64(byte[] buf, int start, int length) throws JSchException {
+    try {
+      byte[] foo=new byte[length];
+      int j=0;
+      for (int i=start;i<start+length;i+=4){
+        foo[j]=(byte)((val(buf[i])<<2)|((val(buf[i+1])&0x30)>>>4));
+        if(buf[i+2]==(byte)'='){ j++; break;}
+        foo[j+1]=(byte)(((val(buf[i+1])&0x0f)<<4)|((val(buf[i+2])&0x3c)>>>2));
+        if(buf[i+3]==(byte)'='){ j+=2; break;}
+        foo[j+2]=(byte)(((val(buf[i+2])&0x03)<<6)|(val(buf[i+3])&0x3f));
+        j+=3;
+      }
+      byte[] bar=new byte[j];
+      System.arraycopy(foo, 0, bar, 0, j);
+      return bar;
     }
-    byte[] bar=new byte[j];
-    System.arraycopy(foo, 0, bar, 0, j);
-    return bar;
+    catch(ArrayIndexOutOfBoundsException e) {
+      throw new JSchException("fromBase64: invalid base64 data", e);
+    }
   }
   public static byte[] toBase64(byte[] buf, int start, int length){
 
@@ -98,7 +106,7 @@ public class Util{
 //    return sun.misc.BASE64Encoder().encode(buf);
   }
 
-  public static String[] split(String foo, String split){
+  static String[] split(String foo, String split){
     if(foo==null)
       return null;
     byte[] buf=Util.str2byte(foo);
@@ -121,7 +129,7 @@ public class Util{
     }
     return result;
   }
-  public static boolean glob(byte[] pattern, byte[] name){
+  static boolean glob(byte[] pattern, byte[] name){
     return glob0(pattern, 0, name, 0);
   }
   static private boolean glob0(byte[] pattern, int pattern_index,
@@ -249,7 +257,7 @@ public class Util{
     return false;
   }
 
-  public static String quote(String path){
+  static String quote(String path){
     byte[] _path=str2byte(path);
     int count=0;
     for(int i=0;i<_path.length; i++){
@@ -270,14 +278,14 @@ public class Util{
     return byte2str(_path2);
   }
 
-  public static String unquote(String path){
+  static String unquote(String path){
     byte[] foo=str2byte(path);
     byte[] bar=unquote(foo);
     if(foo.length==bar.length)
       return path;
     return byte2str(bar);
   }
-  public static byte[] unquote(byte[] path){
+  static byte[] unquote(byte[] path){
     int pathlen=path.length;
     int i=0;
     while(i<pathlen){
@@ -301,7 +309,7 @@ public class Util{
   private static String[] chars={
     "0","1","2","3","4","5","6","7","8","9", "a","b","c","d","e","f"
   };
-  public static String getFingerPrint(HASH hash, byte[] data){
+  static String getFingerPrint(HASH hash, byte[] data){
     try{
       hash.init();
       hash.update(data, 0, data.length);
@@ -321,14 +329,14 @@ public class Util{
       return "???";
     }
   }
-  public static boolean array_equals(byte[] foo, byte bar[]){
+  static boolean array_equals(byte[] foo, byte bar[]){
     int i=foo.length;
     if(i!=bar.length) return false;
     for(int j=0; j<i; j++){ if(foo[j]!=bar[j]) return false; }
     //try{while(true){i--; if(foo[i]!=bar[i])return false;}}catch(Exception e){}
     return true;
   }
-  public static Socket createSocket(String host, int port, int timeout) throws JSchException{
+  static Socket createSocket(String host, int port, int timeout) throws JSchException{
     Socket socket=null;
     if(timeout==0){
       try{
@@ -383,12 +391,12 @@ public class Util{
       }
       tmp.interrupt();
       tmp=null;
-      throw new JSchException(message);
+      throw new JSchException(message, ee[0]);
     }
     return socket;
   } 
 
-  public static byte[] str2byte(String str, String encoding){
+  static byte[] str2byte(String str, String encoding){
     if(str==null) 
       return null;
     try{ return str.getBytes(encoding); }
@@ -401,11 +409,11 @@ public class Util{
     return str2byte(str, "UTF-8");
   }
 
-  public static String byte2str(byte[] str, String encoding){
+  static String byte2str(byte[] str, String encoding){
     return byte2str(str, 0, str.length, encoding);
   }
 
-  public static String byte2str(byte[] str, int s, int l, String encoding){
+  static String byte2str(byte[] str, int s, int l, String encoding){
     try{ return new String(str, s, l, encoding); }
     catch(java.io.UnsupportedEncodingException e){
       return new String(str, s, l);
@@ -416,8 +424,19 @@ public class Util{
     return byte2str(str, 0, str.length, "UTF-8");
   }
 
-  public static String byte2str(byte[] str, int s, int l){
+  static String byte2str(byte[] str, int s, int l){
     return byte2str(str, s, l, "UTF-8");
+  }
+
+  static String toHex(byte[] str){
+    StringBuffer sb = new StringBuffer();
+    for(int i = 0; i<str.length; i++){
+      String foo = Integer.toHexString(str[i]&0xff);
+      sb.append("0x"+(foo.length() == 1 ? "0" : "")+foo);
+      if(i+1<str.length)
+        sb.append(":");
+    }
+    return sb.toString();
   }
 
   static final byte[] empty = str2byte("");
@@ -442,14 +461,14 @@ public class Util{
     return bar;
   }
   */
-  public static void bzero(byte[] foo){
+  static void bzero(byte[] foo){
     if(foo==null)
       return;
     for(int i=0; i<foo.length; i++)
       foo[i]=0;
   }
 
-  public static String diffString(String str, String[] not_available){
+  static String diffString(String str, String[] not_available){
     String[] stra=Util.split(str, ",");
     String result=null;
     loop:
@@ -465,10 +484,43 @@ public class Util{
     return result;
   }
 
+  static String checkTilde(String str){
+    try{
+      if(str.startsWith("~")){
+        str = str.replace("~", System.getProperty("user.home"));
+      }
+    }
+    catch(SecurityException e){
+    }
+    return str;
+  }
+
   private static int skipUTF8Char(byte b){
     if((byte)(b&0x80)==0) return 1;
     if((byte)(b&0xe0)==(byte)0xc0) return 2;
     if((byte)(b&0xf0)==(byte)0xe0) return 3;
     return 1;
+  }
+
+  static byte[] fromFile(String _file) throws IOException {
+    _file = checkTilde(_file);
+    File file = new File(_file);
+    FileInputStream fis = new FileInputStream(_file);
+    try {
+      byte[] result = new byte[(int)(file.length())];
+      int len=0;
+      while(true){
+        int i=fis.read(result, len, result.length-len);
+        if(i<=0)
+          break;
+        len+=i;
+      }
+      fis.close();
+      return result;
+    }
+    finally {
+      if(fis!=null)
+        fis.close();
+    }
   }
 }

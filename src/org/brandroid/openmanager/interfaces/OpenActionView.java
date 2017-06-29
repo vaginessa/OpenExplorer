@@ -18,9 +18,8 @@ package org.brandroid.openmanager.interfaces;
 
 import org.brandroid.openmanager.util.BetterPopupWindow;
 
-import com.actionbarsherlock.view.CollapsibleActionView;
-
 import android.content.Context;
+import android.support.v7.view.CollapsibleActionView;
 import android.view.MenuItem;
 import android.view.View;
 

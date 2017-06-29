@@ -2,6 +2,9 @@
 package org.brandroid.openmanager.activities;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -38,7 +41,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.actionbarsherlock.view.ActionMode;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -77,6 +79,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.view.ActionMode;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Spannable;
@@ -114,28 +117,31 @@ import android.widget.Toast;
 public class ServerSetupActivity extends Activity implements OnCheckedChangeListener,
         OnClickListener, OnItemSelectedListener, OnMenuItemClickListener, OpenApp,
         OnAuthTokenListener, OnItemClickListener {
-
+    private final static int INTENT_IDENTITY_FILE = 171293;
     private final int[] mMapIDs = new int[] {
             R.id.text_server, R.id.text_user, R.id.text_password,
             R.id.text_path, R.id.text_name,
-            R.id.text_port, R.id.server_type
+            R.id.text_port, R.id.server_type,
+            0, 0,
     };
     private final String[] mMapKeys = new String[] {
             "host", "user", "password",
             "dir", "name",
-            "port", "type"
+            "port", "type",
+            "pub_key", "priv_key",
     };
     final static int[] OnlyOnSMB = new int[] {}; // R.id.server_drop,
     // R.id.server_scan};
     final static int[] NotOnSMB = new int[] {
             R.id.text_path, R.id.text_path_label, R.id.text_port, R.id.label_port,
-            R.id.check_port
+            R.id.check_port, R.id.check_identity_file, R.id.label_identity_file,
     };
     final static int[] NotOnCloud = new int[] {
         R.id.server_texts, R.id.label_password, R.id.check_password,
         R.id.check_port, R.id.text_port, R.id.label_port,
         R.id.text_server_label, R.id.text_user_label, R.id.text_path_label, R.id.text_path,
-        R.id.text_password, R.id.text_user, R.id.text_server
+        R.id.text_password, R.id.text_user, R.id.text_server,
+        R.id.check_identity_file, R.id.label_identity_file,
     };
     private String[] mServerTypes;
     private OpenServers servers;
@@ -452,10 +458,10 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                     continue;
                 server.setSetting(map, val);
             }
-            ViewUtils.setText(mBaseView, server.get(map, ""), id);
+            if (id != 0) ViewUtils.setText(mBaseView, server.get(map, ""), id);
         }
         ViewUtils.setOnChangeListener(mBaseView, (OnCheckedChangeListener)this,
-                R.id.check_password, R.id.check_port);
+                R.id.check_password, R.id.check_port, R.id.check_identity_file);
         ViewUtils.setOnClicks(mBaseView, this, R.id.server_authenticate, R.id.server_logout);
 
         for (int i = 0; i < mMapIDs.length; i++)
@@ -532,11 +538,60 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             mAuthState = savedInstanceState.getString("state");
     }
 
+    public String readFile(String filename) {
+        File file = new File(filename);
+        FileReader reader = null;
+        try {
+            reader = new FileReader(file);
+            char[] chars = new char[(int) file.length()];
+            reader.read(chars);
+            return new String(chars);
+        } catch (IOException e) {
+            Logger.LogError("readFile(" + filename + ")", e);
+            return null;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    Logger.LogError("readFile(" + filename + ")", e);
+                }
+            }
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Logger.LogVerbose("ServerSetupActivity.onActivityResult(" + requestCode + ", " + resultCode
                 + ", " + data);
+        if (requestCode == INTENT_IDENTITY_FILE) {
+            CheckBox chk = (CheckBox) mBaseView.findViewById(R.id.check_identity_file);
+            String privKey = null;
+            String pubKey = null;
+            if (resultCode == Activity.RESULT_OK) {
+                server.setSetting("priv_key", null);
+                privKey = readFile(data.getData().getPath());
+                pubKey = readFile(data.getData().getPath() + ".pub");
+            }
+            if (resultCode != Activity.RESULT_OK) {
+                ViewUtils.setText(mBaseView, "Aborted", R.id.label_identity_file);
+                chk.setChecked(false);
+            } else if (privKey == null) {
+                ViewUtils.setText(mBaseView, "Error loading " + data.getData().getPath(), R.id.label_identity_file);
+                chk.setChecked(false);
+            } else if (pubKey == null) {
+                ViewUtils.setText(mBaseView, "Error loading " + data.getData().getPath() + ".pub", R.id.label_identity_file);
+                chk.setChecked(false);
+            } else {
+                ViewUtils.setText(mBaseView, data.getData().getPath(), R.id.label_identity_file);
+                chk.setChecked(true);
+            }
+            server.setSetting("priv_key", privKey);
+            server.setSetting("pub_key", pubKey);
+            return;
+        }
+
         if (data != null)
         {
             handleIntent(data);
@@ -760,6 +815,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                 for (int i = 0; i < mMapIDs.length; i++)
                 {
                     int vid = mMapIDs[i];
+                    if (vid == 0) continue;
                     String key = mMapKeys[i];
                     View v = mBaseView.findViewById(vid);
                     if (v.getTag() != null && v.getTag() instanceof String
@@ -818,9 +874,9 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             case R.id.server_authenticate:
                 if (t2.startsWith("box"))
                 {
-                    enableAuthenticateButton(false);
+                    //enableAuthenticateButton(false);
                     Box box = Box.getInstance(PrivatePreferences.getBoxAPIKey());
-                    box.getTicket(new GetTicketListener() {
+                    /*box.getTicket(new GetTicketListener() {
 
                         @Override
                         public void onComplete(final String ticket, final String status) {
@@ -841,7 +897,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
                             Logger.LogError("Unable to get Box Ticket", e);
                             enableAuthenticateButton(true);
                         }
-                    });
+                    });*/
                 } else if (t2.startsWith("db")) {
                     final WebView mLoginWebView = (WebView)findViewById(R.id.server_webview);
                     mLoginWebView.setVisibility(View.VISIBLE);
@@ -1322,6 +1378,7 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
 
     @Override
     public void onCheckedChanged(CompoundButton v, boolean isChecked) {
+        Logger.LogDebug("onCheckedChange: " + v.getId() + ": " + isChecked);
         if (v.getId() == R.id.check_port)
         {
             ViewUtils.setEnabled(mBaseView, !isChecked, R.id.text_port);
@@ -1343,6 +1400,19 @@ public class ServerSetupActivity extends Activity implements OnCheckedChangeList
             } else {
                 mPassword.setRawInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 mPassword.setTransformationMethod(new PasswordTransformationMethod());
+            }
+        } else if (v.getId() == R.id.check_identity_file) {
+            CheckBox chk = (CheckBox) mBaseView.findViewById(v.getId());
+            Logger.LogDebug("check_identity_file = " + chk.isChecked());
+            if (!chk.isChecked()) {
+                ViewUtils.setText(mBaseView, "", R.id.label_identity_file);
+                server.setSetting("priv_key", null);
+                server.setSetting("pub_key", null);
+            } else {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("file/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.s_pref_server_select_identity_file)), INTENT_IDENTITY_FILE);
             }
         }
     }

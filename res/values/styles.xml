@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="Widget.Styled.ActionBar" parent="Widget.Sherlock.Light.ActionBar.Solid.Inverse">
+    <style name="Widget.Styled.ActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid.Inverse">
         <item name="background">@drawable/actionbar_striped_bg</item>
         <item name="android:background">@drawable/actionbar_striped_bg</item>
         <item name="backgroundSplit">@drawable/actionbar_striped_bg_split</item>
@@ -151,7 +151,7 @@
         <item name="android:gravity">center</item>
     </style>
 
-    <style name="ActionBar" parent="Widget.Sherlock.ActionBar">
+    <style name="ActionBar" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">#eee</item>
         <item name="titleTextStyle">@style/ActionBarTitle</item>
         <item name="android:icon">@drawable/icon</item>

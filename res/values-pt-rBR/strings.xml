@@ -277,8 +277,7 @@
     <string name="report">Reportar</string>
     <string name="sim_restart_button">Reiniciar</string>
     <string name="extmedia_format_button_format">Formato</string>
-    <string name="ext_media_nofs_notification_message" product="nosdcard">O disco USB está em branco ou seu sistema de arquivo não é suportado.</string>
-    <string name="ext_media_nofs_notification_message" product="default">O cartão de memória está em branco ou seu sistema de arquivo não é suportado</string>
+    <string name="ext_media_nofs_notification_message">O cartão de memória está em branco ou seu sistema de arquivo não é suportado</string>
     <string name="activity_list_empty">Nenhuma atividade encontrada</string>
     <string name="ime_action_go">Ir</string>
     <string name="ime_action_send">Enviar</string>

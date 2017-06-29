@@ -28,14 +28,6 @@ import org.brandroid.utils.MenuUtils;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.ViewUtils;
 
-import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.app.SherlockListFragment;
-import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.SubMenu;
-import com.actionbarsherlock.widget.ShareActionProvider;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -59,14 +51,19 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
+import android.support.v7.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnCreateContextMenuListener;
 import android.view.View.OnKeyListener;
 import android.widget.PopupMenu;
+import android.widget.ShareActionProvider;
 import android.widget.Toast;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 
@@ -75,7 +72,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener;
  * other sections of the application.
  */
 @SuppressLint("NewApi")
-public abstract class OpenFragment extends SherlockFragment implements View.OnClickListener,
+public abstract class OpenFragment extends Fragment implements View.OnClickListener,
         View.OnLongClickListener, Comparator<OpenFragment>, Comparable<OpenFragment>, OpenApp,
         CheckClipboardListener {
     // public static boolean CONTENT_FRAGMENT_FREE = true;
@@ -329,14 +326,14 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     public boolean showMenu(final int menuId, View from1, CharSequence title, int xOffset,
             int yOffset) {
         if (from1 == null)
-            from1 = getSherlockActivity().findViewById(android.R.id.home);
+            from1 = getActivity().findViewById(android.R.id.home);
         if (from1 == null)
-            from1 = getSherlockActivity().getCurrentFocus().getRootView();
+            from1 = getActivity().getCurrentFocus().getRootView();
         final View from = from1;
         if (showIContextMenu(menuId, from, title, xOffset, yOffset))
             return true;
         if (Build.VERSION.SDK_INT > 10) {
-            final PopupMenu pop = new PopupMenu(getSherlockActivity(), from);
+            final PopupMenu pop = new PopupMenu(getActivity(), from);
             pop.setOnMenuItemClickListener(new OnMenuItemClickListener() {
                 public boolean onMenuItemClick(MenuItem item) {
                     if (onOptionsItemSelected(item)) {
@@ -348,10 +345,10 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                     return false;
                 }
 
-                @Override
-                public boolean onMenuItemClick(android.view.MenuItem item) {
-                    return false;
-                }
+//                @Override
+//                public boolean onMenuItemClick(android.view.MenuItem item) {
+//                    return false;
+//                }
             });
             pop.getMenuInflater().inflate(menuId, pop.getMenu());
             //            Logger.LogDebug("PopupMenu.show()");
@@ -378,9 +375,9 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     public boolean showIContextMenu(Menu menu, final View from, CharSequence title, int xOffset,
             int yOffset) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return false;
-        final IconContextMenu mOpenMenu = new IconContextMenu(getSherlockActivity(), menu, from);
+        final IconContextMenu mOpenMenu = new IconContextMenu(getActivity(), menu, from);
         if (mOpenMenu == null)
             return false;
         if (title != null && title.length() > 0)
@@ -389,8 +386,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
             Logger.LogDebug("Showing menu "
                     + menu
                     + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
-        if (getSherlockActivity() != null)
-            getSherlockActivity().onPrepareOptionsMenu(menu);
+        if (getActivity() != null)
+            getActivity().onPrepareOptionsMenu(menu);
         mOpenMenu.setMenu(menu);
         mOpenMenu.setAnchor(from);
         mOpenMenu.setNumColumns(1);
@@ -408,11 +405,11 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
 
     public boolean showIContextMenu(int menuId, final View from, CharSequence title, int xOffset,
             int yOffset) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return false;
         if (menuId == R.menu.context_file && !OpenExplorer.USE_PRETTY_CONTEXT_MENUS)
             return false;
-        final IconContextMenu mOpenMenu = IconContextMenu.getInstance(getSherlockActivity(),
+        final IconContextMenu mOpenMenu = IconContextMenu.getInstance(getActivity(),
                 menuId, from);
         if (mOpenMenu == null)
             return false;
@@ -423,8 +420,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
                     + Integer.toHexString(menuId)
                     + (from != null ? " near 0x" + Integer.toHexString(from.getId()) : " by itself"));
         Menu menu = mOpenMenu.getMenu();
-        if (getSherlockActivity() != null)
-            getSherlockActivity().onPrepareOptionsMenu(menu);
+        if (getActivity() != null)
+            getActivity().onPrepareOptionsMenu(menu);
         mOpenMenu.setMenu(menu);
         mOpenMenu.setAnchor(from);
         mOpenMenu.setNumColumns(1);
@@ -459,8 +456,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     public MenuInflater getSupportMenuInflater() {
-        if (getSherlockActivity() != null)
-            return getSherlockActivity().getSupportMenuInflater();
+        if (getActivity() != null)
+            return getActivity().getMenuInflater();
         else
             return null;
     }
@@ -528,19 +525,19 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     protected Integer getSetting(OpenPath file, String key, Integer defValue) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return defValue;
         return getFragmentActivity().getSetting(file, key, defValue);
     }
 
     protected String getSetting(OpenPath file, String key, String defValue) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return defValue;
         return getFragmentActivity().getSetting(file, key, defValue);
     }
 
     protected Boolean getSetting(String file, String key, Boolean defValue) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return defValue;
         if (getFragmentActivity().getPreferences() == null)
             return defValue;
@@ -548,7 +545,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     protected final void setSetting(String file, String key, Boolean value) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return;
         getFragmentActivity().getPreferences().setSetting(file, key, value);
     }
@@ -624,7 +621,7 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     public Drawable getDrawable(int resId) {
-        if (getSherlockActivity() == null)
+        if (getActivity() == null)
             return null;
         if (getResources() == null)
             return null;
@@ -642,8 +639,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
     }
 
     public Context getApplicationContext() {
-        if (getSherlockActivity() != null)
-            return getSherlockActivity().getApplicationContext();
+        if (getActivity() != null)
+            return getActivity().getApplicationContext();
         else if(getActivity() != null)
         	return getActivity().getApplicationContext();
         else
@@ -766,8 +763,8 @@ public abstract class OpenFragment extends SherlockFragment implements View.OnCl
             getExplorer().closeFragment(this);
         else if (getFragmentManager() != null && getFragmentManager().getBackStackEntryCount() > 0)
             getFragmentManager().popBackStack();
-        else if (getSherlockActivity() != null)
-            getSherlockActivity().finish();
+        else if (getActivity() != null)
+            getActivity().finish();
     }
 
     public View getActionView(MenuItem item) {

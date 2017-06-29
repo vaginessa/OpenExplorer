@@ -6,19 +6,16 @@ import java.util.ArrayList;
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.OpenExplorer;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
-import com.actionbarsherlock.view.SubMenu;
-import com.actionbarsherlock.internal.view.menu.MenuBuilder;
-
 import android.R.integer;
 import android.content.Context;
+import android.support.v7.view.menu.MenuBuilder;
 import android.text.Html;
 import android.util.SparseArray;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 public class MenuUtils {
 
@@ -62,33 +59,33 @@ public class MenuUtils {
 
         return newm;
     }
-
-    private static void transferMenu(android.view.Menu from, Menu to, boolean clearFrom) {
-        if (from == null || to == null)
-            return;
-        to.clear();
-        for (int i = 0; i < from.size(); i++)
-            transferMenu(from.getItem(i), to);
-        if (clearFrom)
-            from.clear();
-    }
-
-    public static MenuItem transferMenu(MenuItem item, Menu to) {
-        if (!item.isVisible())
-            return null;
-
-        MenuItem newm = to
-                .add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle())
-                .setEnabled(item.isEnabled()).setCheckable(item.isCheckable())
-                .setChecked(item.isChecked()).setVisible(item.isVisible())
-                .setNumericShortcut(item.getNumericShortcut())
-                .setAlphabeticShortcut(item.getAlphabeticShortcut()).setIcon(item.getIcon());
-
-        if (item.hasSubMenu())
-            transferMenu(item.getSubMenu(), newm.getSubMenu(), false);
-
-        return newm;
-    }
+//
+//    private static void transferMenu(android.view.Menu from, Menu to, boolean clearFrom) {
+//        if (from == null || to == null)
+//            return;
+//        to.clear();
+//        for (int i = 0; i < from.size(); i++)
+//            transferMenu(from.getItem(i), to);
+//        if (clearFrom)
+//            from.clear();
+//    }
+//
+//    public static MenuItem transferMenu(MenuItem item, Menu to) {
+//        if (!item.isVisible())
+//            return null;
+//
+//        MenuItem newm = to
+//                .add(item.getGroupId(), item.getItemId(), item.getOrder(), item.getTitle())
+//                .setEnabled(item.isEnabled()).setCheckable(item.isCheckable())
+//                .setChecked(item.isChecked()).setVisible(item.isVisible())
+//                .setNumericShortcut(item.getNumericShortcut())
+//                .setAlphabeticShortcut(item.getAlphabeticShortcut()).setIcon(item.getIcon());
+//
+//        if (item.hasSubMenu())
+//            transferMenu(item.getSubMenu(), newm.getSubMenu(), false);
+//
+//        return newm;
+//    }
 
     public static void setMenuChecked(Menu menu, boolean checked, int toCheck, int... toOppose) {
         for (int id : toOppose)
@@ -112,19 +109,19 @@ public class MenuUtils {
                         setMenuVisible(menu.getItem(i).getSubMenu(), visible, ids);
     }
     
-    public static void setMenuVisible(android.view.Menu menu, boolean visible, int... ids) {
-        if (menu == null)
-            return;
-        if (ids.length == 0)
-            setMenuVisible(menu, visible, getMenuIDs(menu));
-        for (int id : ids)
-            if (menu.findItem(id) != null)
-                menu.findItem(id).setVisible(visible);
-            else
-                for (int i = 0; i < menu.size(); i++)
-                    if (menu.getItem(i).hasSubMenu())
-                        setMenuVisible(menu.getItem(i).getSubMenu(), visible, ids);
-    }
+//    public static void setMenuVisible(android.view.Menu menu, boolean visible, int... ids) {
+//        if (menu == null)
+//            return;
+//        if (ids.length == 0)
+//            setMenuVisible(menu, visible, getMenuIDs(menu));
+//        for (int id : ids)
+//            if (menu.findItem(id) != null)
+//                menu.findItem(id).setVisible(visible);
+//            else
+//                for (int i = 0; i < menu.size(); i++)
+//                    if (menu.getItem(i).hasSubMenu())
+//                        setMenuVisible(menu.getItem(i).getSubMenu(), visible, ids);
+//    }
 
     public static void setMenuShowAsAction(Menu menu, int show, int... ids) {
         if (OpenExplorer.BEFORE_HONEYCOMB)
@@ -147,12 +144,12 @@ public class MenuUtils {
         return ret;
     }
 
-    public static int[] getMenuIDs(android.view.Menu menu) {
-        int[] ret = new int[menu.size()];
-        for (int i = 0; i < ret.length; i++)
-            ret[i] = menu.getItem(i).getItemId();
-        return ret;
-    }
+//    public static int[] getMenuIDs(android.view.Menu menu) {
+//        int[] ret = new int[menu.size()];
+//        for (int i = 0; i < ret.length; i++)
+//            ret[i] = menu.getItem(i).getItemId();
+//        return ret;
+//    }
 
     public static int[] getMenuIDs(ContextMenu menu) {
         int[] ret = new int[menu.size()];
@@ -219,7 +216,7 @@ public class MenuUtils {
         for (int i = 0; i < menu.size(); i++) {
             MenuItem item = menu.getItem(i);
             if (item.hasSubMenu() && item.getSubMenu() != null && item.getSubMenu().size() > 0) {
-                item.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
                         return true;
                     }

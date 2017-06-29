@@ -12,7 +12,6 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 
-import com.actionbarsherlock.view.ActionMode;
 import com.android.gallery3d.data.DataManager;
 import com.android.gallery3d.data.DownloadCache;
 import com.android.gallery3d.data.ImageCacheService;
@@ -27,6 +26,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.support.v7.view.ActionMode;
 import android.util.SparseIntArray;
 
 public class OpenApplication extends Application implements OpenApp {
