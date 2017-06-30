@@ -1,21 +1,20 @@
 
 package org.brandroid.openmanager.activities;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.utils.Preferences;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.CheckBox;
 import android.widget.RadioButton;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.utils.Preferences;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class SplashActivity extends Activity implements OnClickListener {
     @Override

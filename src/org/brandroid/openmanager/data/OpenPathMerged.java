@@ -1,12 +1,10 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-
 import android.net.Uri;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class OpenPathMerged extends OpenPath {
     private ArrayList<OpenPath> mParents = new ArrayList<OpenPath>();

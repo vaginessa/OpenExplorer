@@ -18,13 +18,6 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.adapters.OpenBookmarks;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
-
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,6 +26,11 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.LinearLayout;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.OpenBookmarks;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
 
 public class BookmarkFragment extends OpenFragment implements OpenApp.OnBookMarkChangeListener {
 

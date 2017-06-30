@@ -1,31 +1,27 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
+import android.net.Uri;
 
 import net.contrapunctus.lzma.LzmaInputStream;
 import net.contrapunctus.lzma.LzmaOutputStream;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
-import org.brandroid.openmanager.data.OpenPath.*;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.utils.Logger;
 
-import SevenZip.ArchiveExtractCallback;
-import SevenZip.HRESULT;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
+
 import SevenZip.Handler;
-import SevenZip.IArchiveExtractCallback;
 import SevenZip.IInArchive;
 import SevenZip.MyRandomAccessFile;
 import SevenZip.SevenZipEntry;
-import android.net.Uri;
 
 public class OpenLZMA extends OpenPath implements OpenStream {
     private final OpenFile mFile;

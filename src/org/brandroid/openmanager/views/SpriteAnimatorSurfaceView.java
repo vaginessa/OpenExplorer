@@ -1,24 +1,22 @@
 
 package org.brandroid.openmanager.views;
 
-import java.util.Date;
-
-import org.brandroid.utils.Logger;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
+
+import org.brandroid.utils.Logger;
+
+import java.util.Date;
 
 public class SpriteAnimatorSurfaceView extends View implements Runnable {
     Thread thread = null;

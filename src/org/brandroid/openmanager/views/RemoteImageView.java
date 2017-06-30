@@ -5,18 +5,18 @@
 
 package org.brandroid.openmanager.views;
 
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.Cache;
-import org.brandroid.utils.ImageUtils;
-import org.brandroid.utils.Logger;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.Cache;
+import org.brandroid.utils.ImageUtils;
+import org.brandroid.utils.Logger;
 
 public class RemoteImageView extends ImageView {
     public RemoteImageView(Context context) {

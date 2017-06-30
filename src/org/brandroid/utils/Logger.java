@@ -1,6 +1,16 @@
 
 package org.brandroid.utils;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.os.Build;
+import android.util.Log;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.fragments.DialogHandler;
+import org.json.JSONArray;
+
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -9,16 +19,6 @@ import java.util.Locale;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.fragments.DialogHandler;
-import org.json.JSONArray;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.Build;
-import android.util.Log;
 
 public class Logger {
     private static String[] sLastMessage = new String[] {

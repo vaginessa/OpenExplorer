@@ -1,17 +1,16 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.zip.GZIPInputStream;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import com.android.gallery3d.data.MediaObject;
+import com.android.gallery3d.data.Path;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
@@ -26,17 +25,16 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 import org.brandroid.utils.Utils;
 
-import com.android.gallery3d.data.MediaObject;
-import com.android.gallery3d.data.Path;
-import com.box.androidlib.Cancelable;
-
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Parcel;
-import android.os.Parcelable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Base class for all other File-based objects used in OpenExplorer.
@@ -1061,7 +1059,8 @@ public abstract class OpenPath implements Serializable, Parcelable, Comparable<O
     /**
      * Indicates whether file should be added to database cache.
      * 
-     * @return {@code true} if file should be cached, {@code false] if not.
+     * @return {@code true} if file should be cached, {@code false] if not.
+
      */
     public boolean addToDb() {
         return addToDb(false);

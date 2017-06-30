@@ -1,17 +1,13 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Hashtable;
-
-import org.brandroid.utils.Logger;
-import org.brandroid.openmanager.data.OpenPath.*;
-
 import android.net.Uri;
 import android.os.Environment;
+
+import org.brandroid.utils.Logger;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class OpenSmartFolder extends OpenPath {
     private static final long serialVersionUID = 2559289318412235438L;

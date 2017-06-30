@@ -1,11 +1,9 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import android.net.Uri;
+
+import java.io.IOException;
 
 public class OpenPathArray extends OpenPath {
     private OpenPath[] children;

@@ -1,13 +1,9 @@
 
 package org.brandroid.openmanager.util;
 
-import java.util.Map;
-import java.util.prefs.Preferences;
-
 import android.content.SharedPreferences;
 
 import com.jcraft.jsch.HostKey;
-import com.jcraft.jsch.HostKeyRepository;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KnownHosts;
@@ -15,6 +11,8 @@ import com.jcraft.jsch.UserInfo;
 import com.jcraft.jsch.Util;
 
 import org.brandroid.utils.Logger;
+
+import java.util.Map;
 
 public class SimpleHostKeyRepo extends KnownHosts {
     private final SharedPreferences mPrefs;

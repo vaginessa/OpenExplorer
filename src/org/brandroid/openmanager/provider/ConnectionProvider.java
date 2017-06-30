@@ -1,8 +1,5 @@
 package org.brandroid.openmanager.provider;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import org.brandroid.openmanager.util.MimeTypes;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -10,6 +7,11 @@ import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+
+import org.brandroid.openmanager.util.MimeTypes;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class ConnectionProvider extends ContentProvider {
 

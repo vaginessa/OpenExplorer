@@ -1,8 +1,8 @@
 package org.brandroid.openmanager.data;
 
-import java.lang.ref.WeakReference;
-
 import org.brandroid.openmanager.util.FileManager;
+
+import java.lang.ref.WeakReference;
 
 public class OpenData {
     private String mName;

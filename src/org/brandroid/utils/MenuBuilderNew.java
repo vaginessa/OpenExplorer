@@ -16,21 +16,24 @@
 
 package org.brandroid.utils;
 
-import java.util.*;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-
-import android.content.*;
-import android.content.pm.*;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.*;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
+import android.view.View;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 /**
  * Implementation of the {@link android.view.Menu} interface for creating a

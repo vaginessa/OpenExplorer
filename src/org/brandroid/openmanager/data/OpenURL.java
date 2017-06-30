@@ -1,10 +1,11 @@
 package org.brandroid.openmanager.data;
 
+import android.net.Uri;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import android.net.Uri;
 
 public class OpenURL extends OpenNetworkPath implements OpenPath.OpenStream, OpenNetworkPath.PipeNeeded {
 	

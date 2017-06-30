@@ -23,13 +23,11 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.os.Build;
-import android.util.FloatMath;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.Math;
 
 public class BitmapUtils {
     private static final String TAG = "BitmapUtils";

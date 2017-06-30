@@ -1,13 +1,9 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Parcelable;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
@@ -15,10 +11,11 @@ import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Parcelable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 public class OpenSearch extends OpenPath {
     private final String mQuery;

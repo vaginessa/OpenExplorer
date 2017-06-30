@@ -1,8 +1,6 @@
 
 package org.brandroid.openmanager.util;
 
-import org.brandroid.openmanager.R;
-
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
@@ -10,10 +8,11 @@ import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
 
 public class InputDialog extends Builder {
     private View view;

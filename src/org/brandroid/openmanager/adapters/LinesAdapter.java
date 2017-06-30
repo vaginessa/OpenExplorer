@@ -1,13 +1,6 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.util.Date;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.utils.Utils;
-
-import com.google.api.client.util.StringUtils;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +8,9 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.utils.Utils;
 
 public class LinesAdapter extends BaseAdapter {
     private String[] mLines;

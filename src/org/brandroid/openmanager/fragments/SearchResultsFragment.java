@@ -1,23 +1,6 @@
 
 package org.brandroid.openmanager.fragments;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
-import org.brandroid.openmanager.adapters.ContentAdapter;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
-import org.brandroid.openmanager.data.OpenSearch;
-import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.ViewUtils;
-
 import android.annotation.SuppressLint;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -25,7 +8,6 @@ import android.os.AsyncTask.Status;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -34,8 +16,19 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.ContentAdapter;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.OpenPathThreadUpdater;
+import org.brandroid.openmanager.data.OpenSearch;
+import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
+import org.brandroid.utils.ViewUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SearchResultsFragment extends ContentFragment implements SearchProgressUpdateListener {
     private TextView mTextSummary;

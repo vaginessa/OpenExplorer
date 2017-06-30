@@ -1,7 +1,12 @@
 
 package org.brandroid.openmanager.activities;
 
-import java.util.ArrayList;
+import android.app.ListActivity;
+import android.app.SearchManager;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.data.OpenFile;
@@ -10,14 +15,6 @@ import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.EventHandler.EventType;
 import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
 import org.brandroid.openmanager.util.FileManager;
-
-import android.R.anim;
-import android.app.ListActivity;
-import android.app.SearchManager;
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.ProgressBar;
 
 public class SearchableActivity extends ListActivity {
     private ProgressBar mProgressBar;

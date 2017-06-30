@@ -1,17 +1,18 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.utils.Logger;
-
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.utils.Logger;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class OpenCursor extends OpenPath {
     private static final long serialVersionUID = -8828123354531942575L;

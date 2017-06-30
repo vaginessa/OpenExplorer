@@ -1,10 +1,10 @@
 
 package org.brandroid.openmanager.interfaces;
 
+import android.content.Context;
+
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.utils.Preferences;
-
-import android.content.Context;
 
 public interface OpenContextProvider {
     public Context getContext();

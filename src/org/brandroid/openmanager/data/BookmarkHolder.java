@@ -18,19 +18,19 @@
 
 package org.brandroid.openmanager.data;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.fragments.ContentFragment;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.views.RemoteImageView;
-import org.brandroid.utils.ViewUtils;
-
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.fragments.ContentFragment;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.RemoteImageView;
+import org.brandroid.utils.ViewUtils;
 
 public class BookmarkHolder {
     private ImageView mEject;

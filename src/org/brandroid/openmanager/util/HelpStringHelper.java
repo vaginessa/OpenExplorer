@@ -1,10 +1,10 @@
 
 package org.brandroid.openmanager.util;
 
+import org.brandroid.openmanager.R;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-
-import org.brandroid.openmanager.R;
 
 public class HelpStringHelper {
     private static ArrayList<String> mStringResourceIDs = null;

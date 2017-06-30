@@ -1,12 +1,6 @@
 
 package org.brandroid.utils;
 
-import java.util.ArrayList;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-
-import android.R.integer;
 import android.content.Context;
 import android.support.v7.view.menu.MenuBuilder;
 import android.text.Html;
@@ -16,6 +10,11 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+
+import java.util.ArrayList;
 
 public class MenuUtils {
 

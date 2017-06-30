@@ -1,6 +1,22 @@
 
 package org.brandroid.openmanager.adapters;
 
+import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.utils.Logger;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,24 +27,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.utils.Logger;
-
-import android.os.AsyncTask;
-import android.os.AsyncTask.Status;
-import android.util.Pair;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 public class HeatmapAdapter extends BaseAdapter {
     private long mTotalBytes = 0l, mLargest = 0l, mLastNotify = 0l;

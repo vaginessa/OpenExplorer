@@ -1,16 +1,16 @@
 
 package org.brandroid.openmanager.adapters;
 
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.utils.Logger;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.SortType;
+import org.brandroid.utils.Logger;
 
 public class OpenPathDbAdapter {
     public static final String KEY_ID = "_id";

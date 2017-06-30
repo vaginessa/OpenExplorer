@@ -1,28 +1,26 @@
 
 package org.brandroid.openmanager.util;
 
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.utils.ViewUtils;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckBox;
+import android.widget.GridView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.utils.ViewUtils;
+
+import java.util.List;
 
 public class OpenIntentChooser implements android.view.View.OnClickListener {
     private AlertDialog mDialog;

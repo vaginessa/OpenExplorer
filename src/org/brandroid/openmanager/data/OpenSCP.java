@@ -1,15 +1,8 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-
-import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.utils.Logger;
+import android.database.Cursor;
+import android.net.Uri;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -18,8 +11,14 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
-import android.database.Cursor;
-import android.net.Uri;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.util.SortType;
+import org.brandroid.utils.Logger;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 
 public class OpenSCP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private long filesize = 0l;

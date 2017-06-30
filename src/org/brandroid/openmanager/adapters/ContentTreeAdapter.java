@@ -1,42 +1,20 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenMediaStore;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.fragments.DialogHandler;
-import org.brandroid.openmanager.fragments.OpenFragment;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.util.ThumbnailCreator.OnUpdateImageListener;
-import org.brandroid.utils.ImageUtils;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.Handler;
-import android.os.Message;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 public class ContentTreeAdapter extends BaseAdapter {
     private OpenPath mPath;

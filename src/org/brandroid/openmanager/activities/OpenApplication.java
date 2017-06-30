@@ -1,8 +1,21 @@
 
 package org.brandroid.openmanager.activities;
 
-import java.io.File;
-import java.io.IOException;
+import android.app.ActivityManager;
+import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.support.v7.view.ActionMode;
+import android.util.SparseIntArray;
+
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
+import com.stericson.RootTools.RootTools;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenClipboard;
 import org.brandroid.openmanager.interfaces.OpenApp;
@@ -12,22 +25,8 @@ import org.brandroid.utils.Logger;
 import org.brandroid.utils.LruCache;
 import org.brandroid.utils.Preferences;
 
-import com.android.gallery3d.data.DataManager;
-import com.android.gallery3d.data.DownloadCache;
-import com.android.gallery3d.data.ImageCacheService;
-import com.android.gallery3d.util.ThreadPool;
-import com.stericson.RootTools.RootTools;
-
-import android.app.ActivityManager;
-import android.app.Application;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.support.v7.view.ActionMode;
-import android.util.SparseIntArray;
+import java.io.File;
+import java.io.IOException;
 
 public class OpenApplication extends Application implements OpenApp {
     private static final String DOWNLOAD_FOLDER = "download";

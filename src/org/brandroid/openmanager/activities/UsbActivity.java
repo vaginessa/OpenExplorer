@@ -16,13 +16,13 @@
 
 package org.brandroid.openmanager.activities;
 
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.utils.Logger;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
+
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.utils.Logger;
 
 /* This Activity does nothing but receive USB_DEVICE_ATTACHED events from the
  * USB service and springboards to the main Gallery activity

@@ -1,12 +1,13 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.Locale;
+import android.content.Context;
+import android.net.Uri;
 
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbFile;
+import com.box.androidlib.DAO;
+import com.box.androidlib.User;
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
 
 import org.apache.commons.net.ftp.FTPFile;
 import org.brandroid.openmanager.activities.OpenExplorer;
@@ -18,13 +19,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.box.androidlib.DAO;
-import com.box.androidlib.User;
-import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.android.AndroidAuthSession;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.Locale;
 
-import android.content.Context;
-import android.net.Uri;
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbFile;
 
 public class OpenServer extends OpenPath {
     private final JSONObject mData;

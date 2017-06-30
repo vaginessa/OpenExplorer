@@ -1,12 +1,12 @@
 
 package org.brandroid.openmanager.util;
 
-import org.brandroid.openmanager.R;
-
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
 
 public class OpenChromeClient extends WebChromeClient {
     public TextView mStatus;

@@ -1,19 +1,17 @@
 
 package org.brandroid.openmanager.views;
 
-import java.util.Date;
-
-import org.brandroid.utils.Logger;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
+
+import org.brandroid.utils.Logger;
+
+import java.util.Date;
 
 public class IconAnimationPanel extends SurfaceView implements SurfaceHolder.Callback {
     private Point start, end;

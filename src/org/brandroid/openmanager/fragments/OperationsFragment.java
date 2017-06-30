@@ -1,24 +1,8 @@
 
 package org.brandroid.openmanager.fragments;
 
-import java.util.ArrayList;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
-import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
-import org.brandroid.openmanager.util.EventHandler.EventType;
-import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuUtils;
-import org.brandroid.utils.ViewUtils;
-
 import android.content.Context;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -29,12 +13,20 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
+import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.EventHandler.BackgroundWork;
+import org.brandroid.openmanager.util.EventHandler.EventType;
+import org.brandroid.openmanager.util.EventHandler.OnWorkerUpdateListener;
+import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.ViewUtils;
 
 public class OperationsFragment extends OpenFragment implements Poppable {
     private ListView mList;

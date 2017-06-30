@@ -1,20 +1,16 @@
 
 package org.brandroid.openmanager.util;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Locale;
+import android.os.Build;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 
-import android.os.Build;
-import android.os.StatFs;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Locale;
 
 public class DFInfo {
     private static final boolean DEBUG = OpenExplorer.IS_DEBUG_BUILD && false;

@@ -1,6 +1,8 @@
 
 package org.brandroid.utils;
 
+import android.os.Build;
+
 import java.security.SecureRandom;
 import java.util.Random;
 
@@ -8,8 +10,6 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import android.os.Build;
 
 /**
  * Usage:

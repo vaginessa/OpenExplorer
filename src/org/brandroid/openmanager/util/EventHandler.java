@@ -18,58 +18,35 @@
 
 package org.brandroid.openmanager.util;
 
-import SevenZip.ArchiveExtractCallback;
-import SevenZip.HRESULT;
-import SevenZip.Handler;
-import SevenZip.IArchiveExtractCallback;
-import SevenZip.IInArchive;
-import SevenZip.MyRandomAccessFile;
-import android.os.AsyncTask;
-import android.os.AsyncTask.Status;
-import android.os.Build;
-import android.provider.MediaStore.Images;
-import android.support.v4.app.NotificationCompat;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.view.View;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
+import android.os.Build;
+import android.provider.MediaStore.Images;
+import android.support.v4.app.NotificationCompat;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-import android.net.Uri;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.Executor;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import net.contrapunctus.lzma.LzmaInputStream;
+import com.jcraft.jzlib.GZIPOutputStream;
 
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.activities.BluetoothActivity;
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.data.OpenLZMA;
 import org.brandroid.openmanager.data.OpenLZMA.OpenLZMAEntry;
 import org.brandroid.openmanager.data.OpenMediaStore;
@@ -78,15 +55,12 @@ import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
 import org.brandroid.openmanager.data.OpenNetworkPath.CloudDeleteListener;
 import org.brandroid.openmanager.data.OpenNetworkPath.CloudOpsHandler;
 import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
 import org.brandroid.openmanager.data.OpenPath.OpenStream;
 import org.brandroid.openmanager.data.OpenRAR;
 import org.brandroid.openmanager.data.OpenRAR.OpenRAREntry;
-import org.brandroid.openmanager.data.OpenTar.OpenTarEntry;
 import org.brandroid.openmanager.data.OpenSMB;
 import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
-import org.brandroid.openmanager.data.OpenZip;
 import org.brandroid.openmanager.fragments.DialogHandler;
 import org.brandroid.openmanager.interfaces.OpenApp;
 import org.brandroid.openmanager.util.FileManager.OnProgressUpdateCallback;
@@ -100,9 +74,26 @@ import org.kamranzafar.jtar.TarEntry;
 import org.kamranzafar.jtar.TarOutputStream;
 import org.kamranzafar.jtar.TarUtils;
 
-import com.github.junrar.Archive;
-import com.github.junrar.rarfile.FileHeader;
-import com.jcraft.jzlib.GZIPOutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+
+import SevenZip.ArchiveExtractCallback;
+import SevenZip.HRESULT;
+import SevenZip.IArchiveExtractCallback;
+import SevenZip.IInArchive;
 
 @SuppressWarnings({
         "unchecked", "rawtypes"

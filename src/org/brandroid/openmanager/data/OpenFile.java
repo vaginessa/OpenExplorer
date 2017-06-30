@@ -1,6 +1,26 @@
 
 package org.brandroid.openmanager.data;
 
+import android.annotation.SuppressLint;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.StatFs;
+
+import org.brandroid.openmanager.activities.OpenApplication;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.data.OpenPath.OpenPathByteIO;
+import org.brandroid.openmanager.data.OpenPath.OpenPathCopyable;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
+import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.SortType;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,23 +33,6 @@ import java.lang.ref.WeakReference;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
-
-import org.brandroid.openmanager.activities.OpenApplication;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.openmanager.util.DFInfo;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-
-import android.annotation.SuppressLint;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
-import android.os.StatFs;
 
 @SuppressLint("NewApi")
 public class OpenFile extends OpenPath implements OpenPathCopyable, OpenPathByteIO, OpenStream, SpaceHandler, OpenPath.OpenPathSizable, OpenPath.OpenPathUpdateHandler {

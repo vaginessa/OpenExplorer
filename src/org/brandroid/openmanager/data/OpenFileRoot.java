@@ -1,10 +1,27 @@
 
 package org.brandroid.openmanager.data;
 
+import android.annotation.SuppressLint;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.PatternMatcher;
+
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.exceptions.RootToolsException;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.Shell;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.data.OpenPath.OpenDynamicPath;
+import org.brandroid.openmanager.data.OpenPath.OpenPathByteIO;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -13,24 +30,6 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Utils;
-
-import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.exceptions.RootToolsException;
-import com.stericson.RootTools.execution.Command;
-import com.stericson.RootTools.execution.Shell;
-
-import android.annotation.SuppressLint;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.PatternMatcher;
 
 public class OpenFileRoot extends OpenPath implements OpenPath.OpenPathUpdateHandler,
         OpenPath.NeedsTempFile, OpenPathByteIO, OpenDynamicPath {

@@ -1,13 +1,23 @@
 
 package org.brandroid.openmanager.data;
 
+import android.net.Uri;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.utils.Logger;
+import org.itadaki.bzip2.BZip2InputStream;
+import org.kamranzafar.jtar.TarEntry;
+import org.kamranzafar.jtar.TarInputStream;
+import org.kamranzafar.jtar.TarOutputStream;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -15,16 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.utils.Logger;
-import org.itadaki.bzip2.BZip2InputStream;
-import org.kamranzafar.jtar.*;
-
-import android.net.Uri;
 
 public class OpenTar extends OpenPath implements OpenPath.OpenPathUpdateHandler, OpenPath.OpenStream {
     private final OpenFile mFile;

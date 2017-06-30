@@ -1,18 +1,6 @@
 
 package org.brandroid.openmanager.interfaces;
 
-import org.brandroid.openmanager.adapters.OpenClipboard;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.ShellSession;
-import org.brandroid.utils.DiskLruCache;
-import org.brandroid.utils.LruCache;
-import org.brandroid.utils.Preferences;
-
-import com.android.gallery3d.data.DataManager;
-import com.android.gallery3d.data.DownloadCache;
-import com.android.gallery3d.data.ImageCacheService;
-import com.android.gallery3d.util.ThreadPool;
-
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -20,6 +8,18 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Looper;
 import android.support.v7.view.ActionMode;
+
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
+
+import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.util.ShellSession;
+import org.brandroid.utils.DiskLruCache;
+import org.brandroid.utils.LruCache;
+import org.brandroid.utils.Preferences;
 
 public interface OpenApp {
 

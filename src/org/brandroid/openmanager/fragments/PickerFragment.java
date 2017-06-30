@@ -1,32 +1,27 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.ContentAdapter;
-import org.brandroid.openmanager.adapters.ContentAdapter.SelectionCallback;
-import org.brandroid.openmanager.adapters.OpenPathAdapter;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.views.OpenViewPager;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.ViewUtils;
-
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.ContentAdapter;
+import org.brandroid.openmanager.adapters.ContentAdapter.SelectionCallback;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.utils.ViewUtils;
 
 public class PickerFragment extends OpenFragment implements OnItemClickListener,
         OpenPathFragmentInterface, SelectionCallback {

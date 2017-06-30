@@ -1,10 +1,11 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
+import android.app.Activity;
+import android.database.Cursor;
+import android.net.Uri;
+
+import com.jcraft.jsch.UserInfo;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -14,11 +15,10 @@ import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 
-import com.jcraft.jsch.UserInfo;
-
-import android.app.Activity;
-import android.database.Cursor;
-import android.net.Uri;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 
 public class OpenFTP extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded {
     private FTPFile mFile;

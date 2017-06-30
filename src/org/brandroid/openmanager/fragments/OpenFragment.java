@@ -1,38 +1,6 @@
 
 package org.brandroid.openmanager.fragments;
 
-import java.lang.reflect.Method;
-import java.util.Comparator;
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenApplication;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.OpenFragmentActivity;
-import org.brandroid.openmanager.adapters.IconContextMenu;
-import org.brandroid.openmanager.adapters.OpenClipboard;
-import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
-import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.IntentManager;
-import org.brandroid.openmanager.util.ShellSession;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.utils.DiskLruCache;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.LruCache;
-import org.brandroid.utils.MenuUtils;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.ViewUtils;
-
-import com.android.gallery3d.data.DataManager;
-import com.android.gallery3d.data.DownloadCache;
-import com.android.gallery3d.data.ImageCacheService;
-import com.android.gallery3d.util.ThreadPool;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
@@ -41,9 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -53,19 +19,45 @@ import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v7.view.ActionMode;
 import android.view.ContextMenu;
-import android.view.Gravity;
-import android.view.KeyEvent;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnCreateContextMenuListener;
-import android.view.View.OnKeyListener;
 import android.widget.PopupMenu;
+import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
-import android.widget.PopupMenu.OnMenuItemClickListener;
+
+import com.android.gallery3d.data.DataManager;
+import com.android.gallery3d.data.DownloadCache;
+import com.android.gallery3d.data.ImageCacheService;
+import com.android.gallery3d.util.ThreadPool;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenApplication;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.OpenFragmentActivity;
+import org.brandroid.openmanager.adapters.ContentAdapter.CheckClipboardListener;
+import org.brandroid.openmanager.adapters.IconContextMenu;
+import org.brandroid.openmanager.adapters.IconContextMenu.IconContextItemSelectedListener;
+import org.brandroid.openmanager.adapters.OpenClipboard;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.ShellSession;
+import org.brandroid.utils.DiskLruCache;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.LruCache;
+import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.Preferences;
+
+import java.util.Comparator;
+import java.util.List;
 
 /*
  * Base class for all OpenExplorer fragments. Provides convenient methods to access

@@ -1,12 +1,12 @@
 
 package org.brandroid.openmanager.activities;
 
+import android.app.Activity;
+import android.os.Bundle;
+
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.openmanager.util.EventHandler;
 import org.brandroid.openmanager.util.FileManager;
-
-import android.app.Activity;
-import android.os.Bundle;
 
 public class SearchMakerActivity extends Activity {
 

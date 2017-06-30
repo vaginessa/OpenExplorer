@@ -1,6 +1,50 @@
 
 package org.brandroid.openmanager.data;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
+import android.webkit.WebView;
+
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.DropboxAPI.Account;
+import com.dropbox.client2.DropboxAPI.DropboxFileInfo;
+import com.dropbox.client2.DropboxAPI.DropboxInputStream;
+import com.dropbox.client2.DropboxAPI.Entry;
+import com.dropbox.client2.DropboxAPI.ThumbFormat;
+import com.dropbox.client2.DropboxAPI.ThumbSize;
+import com.dropbox.client2.ProgressListener;
+import com.dropbox.client2.RESTUtility;
+import com.dropbox.client2.RESTUtility.RequestMethod;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.exception.DropboxException;
+import com.dropbox.client2.session.AccessTokenPair;
+import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session.AccessType;
+import com.dropbox.client2.session.TokenPair;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SimpleCrypto;
+import org.brandroid.utils.Utils;
+import org.json.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,62 +56,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.data.OpenNetworkPath.Cancellable;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.PrivatePreferences;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.SimpleCrypto;
-import org.brandroid.utils.Utils;
-import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.DropboxAPI.Account;
-import com.dropbox.client2.DropboxAPI.DropboxFileInfo;
-import com.dropbox.client2.DropboxAPI.DropboxInputStream;
-import com.dropbox.client2.DropboxAPI.Entry;
-import com.dropbox.client2.DropboxAPI.ThumbFormat;
-import com.dropbox.client2.DropboxAPI.ThumbSize;
-import com.dropbox.client2.ProgressListener;
-import com.dropbox.client2.RESTUtility.RequestMethod;
-import com.dropbox.client2.RESTUtility;
-import com.dropbox.client2.android.AndroidAuthSession;
-import com.dropbox.client2.android.AuthActivity;
-import com.dropbox.client2.exception.DropboxException;
-import com.dropbox.client2.session.AccessTokenPair;
-import com.dropbox.client2.session.AppKeyPair;
-import com.dropbox.client2.session.Session.AccessType;
-import com.dropbox.client2.session.TokenPair;
-
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.Signature;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.view.View;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 public class OpenDropBox extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
         OpenPath.OpenPathSizable, OpenPath.SpaceHandler, OpenPath.ThumbnailHandler,

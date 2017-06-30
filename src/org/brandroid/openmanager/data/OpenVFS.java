@@ -1,15 +1,8 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Vector;
+import android.net.Uri;
 
-import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -19,11 +12,15 @@ import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemConfigBuilder;
 import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenNetworkPath.NetworkListener;
 import org.brandroid.utils.Logger;
 
-import android.net.Uri;
-import android.os.AsyncTask;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Vector;
 
 public class OpenVFS extends OpenNetworkPath implements OpenPath.ListHandler {
 

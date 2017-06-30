@@ -1,14 +1,15 @@
 
 package org.brandroid.openmanager.data;
 
+import android.database.Cursor;
+import android.net.Uri;
+
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.utils.Utils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.utils.Utils;
-
-import android.database.Cursor;
-import android.net.Uri;
 
 public class OpenMediaStore extends OpenPath implements OpenStream {
     private OpenCursor curs;

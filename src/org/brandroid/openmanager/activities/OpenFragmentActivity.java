@@ -1,6 +1,29 @@
 
 package org.brandroid.openmanager.activities;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.Point;
+import android.os.Build;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
+
+import com.jcraft.jsch.JSch;
+
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenContextProvider;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.LoggerDbAdapter;
+import org.brandroid.utils.Preferences;
+
 import java.net.URL;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -10,30 +33,6 @@ import jcifs.smb.ServerMessageBlock;
 import jcifs.smb.SmbComReadAndX;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFile.OnSMBCommunicationListener;
-
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTP.OnFTPCommunicationListener;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.interfaces.OpenContextProvider;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.LoggerDbAdapter;
-import org.brandroid.utils.Preferences;
-import com.jcraft.jsch.JSch;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.graphics.Color;
-import android.graphics.Point;
-import android.os.Build;
-import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
 @SuppressLint("DefaultLocale")
 public abstract class OpenFragmentActivity extends AppCompatActivity implements

@@ -1,12 +1,6 @@
 
 package org.brandroid.openmanager.views;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.interfaces.OpenActionView;
-import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.openmanager.util.BetterPopupWindow.OnPopupShownListener;
-import org.brandroid.utils.Logger;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -16,6 +10,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.interfaces.OpenActionView;
+import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.utils.Logger;
 
 public class SeekBarActionView extends LinearLayout implements OpenActionView, View.OnKeyListener {
     private OnCloseListener mOnCloseListener;

@@ -1,11 +1,6 @@
 
 package org.brandroid.openmanager.views;
 
-import org.brandroid.openmanager.adapters.ContentAdapter;
-import org.brandroid.openmanager.data.OpenPath;
-
-import org.brandroid.openmanager.R;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -16,6 +11,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.LinearLayout;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.adapters.ContentAdapter;
+import org.brandroid.openmanager.data.OpenPath;
 
 @SuppressLint("NewApi")
 public class OpenPathView extends LinearLayout {

@@ -1,11 +1,15 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.view.View;
+import android.view.View.OnLongClickListener;
+
+import com.viewpagerindicator.TabPageIndicator.TabView;
+import com.viewpagerindicator.TitleProvider;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.ArrayPagerAdapter.OnPageTitleClickListener;
@@ -23,17 +27,10 @@ import org.brandroid.openmanager.fragments.SearchResultsFragment;
 import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 
-import com.viewpagerindicator.TabPageIndicator.TabView;
-import com.viewpagerindicator.TitleProvider;
-
-import android.os.Bundle;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerAdapter;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.View.OnLongClickListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 
 public class OpenPathPagerAdapter extends FragmentStatePagerAdapter implements TitleProvider {
     private ArrayList<OpenPath> mChildren = new ArrayList<OpenPath>();

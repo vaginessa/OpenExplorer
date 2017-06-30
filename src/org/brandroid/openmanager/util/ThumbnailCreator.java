@@ -18,41 +18,6 @@
 
 package org.brandroid.openmanager.util;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.ref.SoftReference;
-import java.util.Hashtable;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.data.OpenBox;
-import org.brandroid.openmanager.data.OpenCommand;
-import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenDrive;
-import org.brandroid.openmanager.data.OpenDropBox;
-import org.brandroid.openmanager.data.OpenFTP;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenMediaStore;
-import org.brandroid.openmanager.data.OpenNetworkPath;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSMB;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.data.OpenVFS;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.views.RemoteImageView;
-import org.brandroid.utils.ImageUtils;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Utils;
-
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -68,13 +33,44 @@ import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.view.Gravity;
 import android.widget.ImageView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenBox;
+import org.brandroid.openmanager.data.OpenCommand;
+import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenDrive;
+import org.brandroid.openmanager.data.OpenDropBox;
+import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenMediaStore;
+import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.views.RemoteImageView;
+import org.brandroid.utils.ImageUtils;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.SoftReference;
+import java.util.Hashtable;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class ThumbnailCreator {
     // private static HashMap<String, Bitmap> mCacheMap = new HashMap<String,

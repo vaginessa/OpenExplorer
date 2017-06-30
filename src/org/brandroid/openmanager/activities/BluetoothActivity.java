@@ -18,54 +18,45 @@
 
 package org.brandroid.openmanager.activities;
 
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.content.Intent;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothClass;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.bluetooth.BluetoothServerSocket;
-import android.view.View;
-import android.view.ViewGroup;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
-import android.widget.Toast;
-import android.widget.TextView;
-import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.ArrayAdapter;
-import android.util.Log;
-
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.UUID;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
-import java.io.IOException;
-
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import android.widget.Button;
+import android.widget.GridView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.R.drawable;
-import org.brandroid.openmanager.R.id;
-import org.brandroid.openmanager.R.layout;
 import org.brandroid.openmanager.data.BookmarkHolder;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.UUID;
 
 public class BluetoothActivity extends Activity implements OnClickListener, OnItemClickListener {
     private static final int REQUEST_ENABLE = 0x0;

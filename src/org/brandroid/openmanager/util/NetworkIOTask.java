@@ -1,13 +1,8 @@
 
 package org.brandroid.openmanager.util;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Hashtable;
-
-import jcifs.smb.SmbAuthException;
-import jcifs.smb.SmbException;
+import android.net.Uri;
+import android.os.AsyncTask;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
@@ -18,8 +13,13 @@ import org.brandroid.openmanager.data.OpenServer;
 import org.brandroid.openmanager.data.OpenServers;
 import org.brandroid.utils.Logger;
 
-import android.net.Uri;
-import android.os.AsyncTask;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Hashtable;
+
+import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
 
 public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> implements
         RootManager.UpdateCallback {

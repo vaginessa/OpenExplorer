@@ -1,32 +1,16 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
-import java.util.Vector;
-import java.util.WeakHashMap;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.IntentManager;
-import org.brandroid.openmanager.util.PrivatePreferences;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.Utils;
-import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -43,16 +27,32 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
 
-import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ImageSpan;
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.IntentManager;
+import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Utils;
+import org.json.JSONObject;
+import org.json.simple.parser.JSONParser;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
+import java.util.Vector;
+import java.util.WeakHashMap;
 
 public class OpenDrive extends OpenNetworkPath implements OpenNetworkPath.CloudOpsHandler,
         OpenPath.ThumbnailOverlayInterface, OpenPath.ThumbnailHandler, SpaceHandler,

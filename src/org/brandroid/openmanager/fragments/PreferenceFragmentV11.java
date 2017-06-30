@@ -1,8 +1,5 @@
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.SettingsActivity;
-
 import android.annotation.TargetApi;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -14,6 +11,9 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.SettingsActivity;
 
 @TargetApi(11)
 public class PreferenceFragmentV11 extends PreferenceFragment implements OnPreferenceChangeListener {

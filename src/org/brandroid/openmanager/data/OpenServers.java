@@ -1,16 +1,17 @@
 
 package org.brandroid.openmanager.data;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-import java.util.concurrent.CopyOnWriteArrayList;
+import android.content.Context;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.utils.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
-import android.content.Context;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class OpenServers implements Iterable<OpenServer> {
     private static final long serialVersionUID = 6279070404986957630L;

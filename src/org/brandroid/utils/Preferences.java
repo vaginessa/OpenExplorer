@@ -1,19 +1,19 @@
 
 package org.brandroid.utils;
 
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 
 import org.brandroid.openmanager.R;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 public class Preferences {
     private static Preferences preferences;

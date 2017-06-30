@@ -16,10 +16,10 @@
 
 package org.brandroid.openmanager.util;
 
+import android.webkit.MimeTypeMap;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import android.webkit.MimeTypeMap;
 
 public class MimeTypes {
 

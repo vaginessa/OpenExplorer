@@ -1,8 +1,6 @@
 
 package org.brandroid.openmanager.util;
 
-import org.brandroid.openmanager.util.SortType.Type;
-
 public class SortType {
 
     Type mWhich = Type.ALPHA;

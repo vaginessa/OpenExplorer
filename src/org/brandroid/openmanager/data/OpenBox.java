@@ -1,20 +1,11 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.List;
-import java.util.Vector;
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.util.PrivatePreferences;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.Utils;
 import com.box.androidlib.Box;
 import com.box.androidlib.BoxConfig;
 import com.box.androidlib.BoxFile;
@@ -29,11 +20,20 @@ import com.box.androidlib.GetAccountInfoListener;
 import com.box.androidlib.GetAccountTreeListener;
 import com.box.androidlib.User;
 
-import android.content.Context;
-import android.database.Cursor;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.util.PrivatePreferences;
+import org.brandroid.openmanager.util.SortType;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.Utils;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.List;
+import java.util.Vector;
 
 public class OpenBox extends OpenNetworkPath implements OpenPath.SpaceHandler,
         OpenPath.ThumbnailOverlayInterface, OpenNetworkPath.CloudOpsHandler,

@@ -1,18 +1,17 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.utils.ViewUtils;
-
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.utils.ViewUtils;
+
+import java.util.List;
 
 public class LinedArrayAdapter extends ArrayAdapter<CharSequence> {
     private LayoutInflater mInflater;

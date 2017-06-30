@@ -1,20 +1,6 @@
 
 package org.brandroid.openmanager.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.util.OpenIntentChooser.IntentSelectedListener;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -25,6 +11,18 @@ import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.widget.Toast;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.util.OpenIntentChooser.IntentSelectedListener;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class IntentManager {
     public static Intent getIntent(OpenPath file, OpenApp app) {

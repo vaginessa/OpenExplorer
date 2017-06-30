@@ -1,15 +1,6 @@
 
 package org.brandroid.openmanager.provider;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.util.MimeTypeParser;
-import org.brandroid.openmanager.util.MimeTypes;
-import org.xmlpull.v1.XmlPullParserException;
-
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
@@ -21,6 +12,15 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.util.MimeTypeParser;
+import org.brandroid.openmanager.util.MimeTypes;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class FileManagerProvider extends ContentProvider {
 

@@ -2,7 +2,6 @@
 package org.brandroid.openmanager.views;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Drawable.Callback;
 import android.graphics.drawable.LayerDrawable;

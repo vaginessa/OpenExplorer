@@ -1,10 +1,19 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.v4.app.Fragment.SavedState;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.view.View;
+import android.view.View.OnLongClickListener;
+import android.view.ViewGroup;
+
+import com.viewpagerindicator.TabPageIndicator.TabView;
+import com.viewpagerindicator.TitleProvider;
 
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
@@ -14,19 +23,10 @@ import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
-import com.viewpagerindicator.TitleProvider;
-import com.viewpagerindicator.TabPageIndicator.TabView;
-
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.support.v4.app.Fragment.SavedState;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.View.OnLongClickListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ArrayPagerAdapter extends FragmentStatePagerAdapter implements TitleProvider {
     // private static Hashtable<OpenPath, Fragment> mPathMap = new

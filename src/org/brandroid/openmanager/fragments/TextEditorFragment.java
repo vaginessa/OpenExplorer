@@ -1,43 +1,6 @@
 
 package org.brandroid.openmanager.fragments;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Date;
-import java.util.WeakHashMap;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.FolderPickerActivity;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.adapters.LinesAdapter;
-import org.brandroid.openmanager.data.FTPManager;
-import org.brandroid.openmanager.data.OpenContent;
-import org.brandroid.openmanager.data.OpenFTP;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenNetworkPath;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.openmanager.views.SeekBarActionView;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.MenuUtils;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.ViewUtils;
-
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -45,7 +8,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -76,9 +38,47 @@ import android.widget.HorizontalScrollView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.SeekBar.OnSeekBarChangeListener;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.FolderPickerActivity;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
+import org.brandroid.openmanager.adapters.LinesAdapter;
+import org.brandroid.openmanager.data.FTPManager;
+import org.brandroid.openmanager.data.OpenContent;
+import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.openmanager.views.SeekBarActionView;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.MenuUtils;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.ViewUtils;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Date;
+import java.util.WeakHashMap;
 
 public class TextEditorFragment extends OpenFragment implements OnClickListener,
         OpenPathFragmentInterface, TextWatcher, OpenFragment.OnFragmentTitleLongClickListener,

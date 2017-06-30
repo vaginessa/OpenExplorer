@@ -1,29 +1,23 @@
 
 package org.brandroid.openmanager.activities;
 
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.util.OpenChromeClient;
-import org.brandroid.utils.ViewUtils;
-
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.util.OpenChromeClient;
+import org.brandroid.utils.ViewUtils;
 
 public class WebViewFragment extends DialogFragment implements OnClickListener {
     private Uri uri;

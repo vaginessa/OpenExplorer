@@ -1,33 +1,30 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import android.content.Context;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.view.View;
+import android.view.View.OnLongClickListener;
+
+import com.viewpagerindicator.TabPageIndicator;
+import com.viewpagerindicator.TabPageIndicator.TabView;
+import com.viewpagerindicator.TitleProvider;
+
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.fragments.ContentFragment;
 import org.brandroid.openmanager.fragments.OpenFragment;
 import org.brandroid.openmanager.fragments.OpenPathFragmentInterface;
-import org.brandroid.openmanager.fragments.TextEditorFragment;
 import org.brandroid.openmanager.util.FileManager;
 import org.brandroid.utils.Logger;
 
-import com.viewpagerindicator.TabPageIndicator;
-import com.viewpagerindicator.TitleProvider;
-import com.viewpagerindicator.TabPageIndicator.TabView;
-
-import android.content.Context;
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.Fragment.SavedState;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.view.View;
-import android.view.View.OnLongClickListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class PagerTabsAdapter extends FragmentStatePagerAdapter implements TitleProvider {
     // private static Hashtable<OpenPath, Fragment> mPathMap = new

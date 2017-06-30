@@ -1,6 +1,17 @@
 
 package org.brandroid.openmanager.data;
 
+import android.annotation.SuppressLint;
+import android.net.Uri;
+import android.os.Build;
+
+import com.github.junrar.Archive;
+import com.github.junrar.exception.RarException;
+import com.github.junrar.rarfile.FileHeader;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.utils.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,17 +19,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.utils.Logger;
-import com.github.junrar.Archive;
-import com.github.junrar.exception.RarException;
-import com.github.junrar.rarfile.FileHeader;
-
-import android.annotation.SuppressLint;
-import android.net.Uri;
-import android.os.Build;
 
 public class OpenRAR extends OpenPath implements OpenPath.OpenStream {
     private final OpenFile mFile;

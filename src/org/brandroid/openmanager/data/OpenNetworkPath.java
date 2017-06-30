@@ -1,20 +1,23 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import org.brandroid.openmanager.fragments.TextEditorFragment;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Utils;
-
 import android.content.Context;
 import android.os.AsyncTask;
+
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.UserInfo;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenPath.NeedsTempFile;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.openmanager.fragments.TextEditorFragment;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
     /**

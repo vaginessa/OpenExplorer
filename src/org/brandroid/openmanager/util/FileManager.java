@@ -18,48 +18,11 @@
 
 package org.brandroid.openmanager.util;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.WeakHashMap;
-import java.io.File;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
-
-import org.apache.commons.net.ftp.FTPFile;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.data.FTPManager;
-import org.brandroid.openmanager.data.OpenBox;
-import org.brandroid.openmanager.data.OpenContent;
-import org.brandroid.openmanager.data.OpenDrive;
-import org.brandroid.openmanager.data.OpenDropBox;
-import org.brandroid.openmanager.data.OpenFTP;
-import org.brandroid.openmanager.data.OpenFileRoot;
-import org.brandroid.openmanager.data.OpenNetworkPath;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenSCP;
-import org.brandroid.openmanager.data.OpenSFTP;
-import org.brandroid.openmanager.data.OpenSMB;
-import org.brandroid.openmanager.data.OpenSearch;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.data.OpenTar;
-import org.brandroid.openmanager.data.OpenZip;
-import org.brandroid.openmanager.data.OpenPath.OpenStream;
-import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
-import org.brandroid.openmanager.data.OpenZip.OpenZipVirtualPath;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
+import android.content.Context;
+import android.net.Uri;
+import android.os.StatFs;
+import android.text.TextUtils;
+import android.util.Log;
 
 import com.box.androidlib.User;
 import com.dropbox.client2.DropboxAPI;
@@ -69,11 +32,41 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 import com.jcraft.jsch.UserInfo;
 
-import android.content.Context;
-import android.net.Uri;
-import android.os.StatFs;
-import android.text.TextUtils;
-import android.util.Log;
+import org.apache.commons.net.ftp.FTPFile;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.FTPManager;
+import org.brandroid.openmanager.data.OpenBox;
+import org.brandroid.openmanager.data.OpenContent;
+import org.brandroid.openmanager.data.OpenDrive;
+import org.brandroid.openmanager.data.OpenDropBox;
+import org.brandroid.openmanager.data.OpenFTP;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenFileRoot;
+import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.openmanager.data.OpenSCP;
+import org.brandroid.openmanager.data.OpenSFTP;
+import org.brandroid.openmanager.data.OpenSMB;
+import org.brandroid.openmanager.data.OpenSearch;
+import org.brandroid.openmanager.data.OpenSearch.SearchProgressUpdateListener;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.data.OpenZip;
+import org.brandroid.openmanager.data.OpenZip.OpenZipVirtualPath;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.List;
+import java.util.WeakHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class FileManager {
     public static final int BUFFER = 128 * 1024;
@@ -106,7 +99,8 @@ public class FileManager {
     }
 
     /**
-     * @param path
+     * @param zip
+     * @param files
      */
     public void createZipFile(OpenPath zip, OpenPath[] files) {
         ZipOutputStream zout = null;
@@ -185,7 +179,7 @@ public class FileManager {
     }
 
     /**
-     * @param filePath
+     * @param file
      * @param newName
      * @return
      */
@@ -251,7 +245,7 @@ public class FileManager {
     /**
      * converts integer from wifi manager to an IP address.
      * 
-     * @param des
+     * @param ip
      * @return
      */
     public static String integerToIPAddress(int ip) {
@@ -358,33 +352,31 @@ public class FileManager {
     {
         if (path == null)
             return null;
-        Logger.LogDebug("Checking cache for " + path);
+        //Logger.LogDebug("Checking cache for " + path);
         if (mOpenCache == null)
             mOpenCache = new WeakHashMap<String, OpenPath>();
         OpenPath ret = mOpenCache.get(path);
         OpenServers servers = OpenServers.getDefaultServers();
         if (ret == null) {
+            Uri uri = Uri.parse(path);
+            Logger.LogDebug("Initializing new connection for " + uri.getScheme() + uri.getHost() + uri.getPath());
             if (path.startsWith("ftp:/") && servers != null) {
-                Logger.LogDebug("Checking cache for " + path);
                 FTPManager man = new FTPManager(path);
                 FTPFile file = new FTPFile();
                 file.setName(path.substring(path.lastIndexOf("/") + 1));
-                Uri uri = Uri.parse(path);
                 OpenServer server = servers.findByHost("ftp", uri.getHost());
                 man.setUser(server.getUser());
                 man.setPassword(server.getPassword());
                 ret = new OpenFTP(null, file, man);
             } else if (path.startsWith("scp:/")) {
-                Uri uri = Uri.parse(path);
                 ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
             } else if (path.startsWith("sftp:/") && servers != null) {
-                Uri uri = Uri.parse(path);
                 OpenServer server = servers.findByHost("sftp", uri.getHost());
                 // ret = new OpenVFS(path);
                 ret = new OpenSFTP(uri);
                 Logger.LogDebug("Public key = " + server.getPubKey());
-                Logger.LogDebug("Private key = " + server.getPrivKey());
-                Logger.LogDebug("Password key = " + server.getPassword());
+                Logger.LogDebug("Private key = *** (" + server.getPrivKey().length() + " characters)");
+                Logger.LogDebug("Password key = " + (server.getPassword().length() > 0 ? "<nonempty>" : "<empty>"));
                 if (server.getPrivKey() != null && server.getPubKey() != null && server.getPassword() != null) {
                     ((OpenSFTP) ret).addIdentity(server.getPrivKey().getBytes(), server.getPubKey().getBytes(), server.getPassword().getBytes());
                     SimpleUserInfo info = new SimpleUserInfo();
@@ -396,7 +388,6 @@ public class FileManager {
                 }
             } else if (path.startsWith("smb:/") && servers != null) {
                 try {
-                    Uri uri = Uri.parse(path);
                     String user = uri.getUserInfo();
                     if (user != null && user.indexOf(":") > -1)
                         user = user.substring(0, user.indexOf(":"));
@@ -424,7 +415,6 @@ public class FileManager {
                 }
             } else if (path.startsWith("box")) {
                 try {
-                    Uri uri = Uri.parse(path);
                     String us = uri.getUserInfo();
                     String pw = us;
                     if (pw != null && pw.indexOf(":") > -1)
@@ -447,9 +437,7 @@ public class FileManager {
                     Logger.LogError("Couldn't get Box.com from cache.", e);
                 }
             } else if (path.startsWith("drive")) {
-
                 try {
-                    Uri uri = Uri.parse(path);
                     if(OpenExplorer.IS_DEBUG_BUILD)
                         Logger.LogVerbose("Drive path (from " + path + "): " + TextUtils.join(", ", uri.getPathSegments()));
                     String pw = uri.getUserInfo();
@@ -472,7 +460,6 @@ public class FileManager {
                 }
             } else if (path.startsWith("db")) {
                 try {
-                    Uri uri = Uri.parse(path);
                     String user = uri.getUserInfo();
                     String pw = "";
                     AccessTokenPair access = null;

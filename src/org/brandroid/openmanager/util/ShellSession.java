@@ -1,27 +1,22 @@
 
 package org.brandroid.openmanager.util;
 
+import android.os.Handler;
+import android.os.Message;
+
+import org.brandroid.utils.ByteQueue;
+import org.brandroid.utils.Logger;
+
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.ArrayList;
-
-import org.apache.http.util.ByteArrayBuffer;
-import org.brandroid.utils.ByteQueue;
-import org.brandroid.utils.Logger;
-
-import android.R.layout;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 
 public class ShellSession {
     private RootManager.UpdateCallback mNotify;

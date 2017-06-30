@@ -1,16 +1,6 @@
 
 package org.brandroid.openmanager.fragments;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
-import org.brandroid.openmanager.util.BetterPopupWindow;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Utils;
-import org.brandroid.utils.ViewUtils;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -37,7 +27,17 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.fragments.OpenFragment.Poppable;
+import org.brandroid.openmanager.util.BetterPopupWindow;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Utils;
+import org.brandroid.utils.ViewUtils;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class LogViewerFragment extends OpenFragment implements Poppable, OnItemClickListener {
     private final SparseArray<LogEntry> mData;

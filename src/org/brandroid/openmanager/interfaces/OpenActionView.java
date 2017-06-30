@@ -16,12 +16,11 @@
 
 package org.brandroid.openmanager.interfaces;
 
-import org.brandroid.openmanager.util.BetterPopupWindow;
-
 import android.content.Context;
 import android.support.v7.view.CollapsibleActionView;
-import android.view.MenuItem;
 import android.view.View;
+
+import org.brandroid.openmanager.util.BetterPopupWindow;
 
 /**
  * When a View implements this interface it will receive callbacks when expanded

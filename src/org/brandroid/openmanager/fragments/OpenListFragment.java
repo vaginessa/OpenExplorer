@@ -1,18 +1,16 @@
 
 package org.brandroid.openmanager.fragments;
 
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.utils.Logger;
-
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.utils.Logger;
 
 public class OpenListFragment extends ListFragment implements OnItemClickListener,
         OnItemSelectedListener, OnItemLongClickListener {

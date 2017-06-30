@@ -1,45 +1,6 @@
 
 package org.brandroid.openmanager.adapters;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Locale;
-import java.util.Vector;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.activities.ServerSetupActivity;
-import org.brandroid.openmanager.interfaces.OpenApp;
-import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
-import org.brandroid.openmanager.data.BookmarkHolder;
-import org.brandroid.openmanager.data.OpenCommand;
-import org.brandroid.openmanager.data.OpenCursor;
-import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
-import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenMediaStore;
-import org.brandroid.openmanager.data.OpenNetworkPath;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.data.OpenPath.SpaceHandler;
-import org.brandroid.openmanager.data.OpenPathMerged;
-import org.brandroid.openmanager.data.OpenServer;
-import org.brandroid.openmanager.data.OpenServers;
-import org.brandroid.openmanager.data.OpenSmartFolder;
-import org.brandroid.openmanager.util.DFInfo;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.InputDialog;
-import org.brandroid.openmanager.util.RootManager;
-import org.brandroid.openmanager.util.SimpleUserInfo;
-import org.brandroid.openmanager.util.ThumbnailCreator;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.ViewUtils;
-
-import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.containers.Mount;
-
 import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -59,11 +20,47 @@ import android.view.WindowManager.BadTokenException;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnGroupClickListener;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.containers.Mount;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.activities.ServerSetupActivity;
+import org.brandroid.openmanager.data.BookmarkHolder;
+import org.brandroid.openmanager.data.OpenCommand;
+import org.brandroid.openmanager.data.OpenCursor;
+import org.brandroid.openmanager.data.OpenCursor.UpdateBookmarkTextListener;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.data.OpenMediaStore;
+import org.brandroid.openmanager.data.OpenNetworkPath;
+import org.brandroid.openmanager.data.OpenPath;
+import org.brandroid.openmanager.data.OpenPath.OpenPathSizable;
+import org.brandroid.openmanager.data.OpenPathMerged;
+import org.brandroid.openmanager.data.OpenServer;
+import org.brandroid.openmanager.data.OpenServers;
+import org.brandroid.openmanager.data.OpenSmartFolder;
+import org.brandroid.openmanager.interfaces.OpenApp;
+import org.brandroid.openmanager.interfaces.OpenApp.OnBookMarkChangeListener;
+import org.brandroid.openmanager.util.DFInfo;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.InputDialog;
+import org.brandroid.openmanager.util.RootManager;
+import org.brandroid.openmanager.util.SimpleUserInfo;
+import org.brandroid.openmanager.util.ThumbnailCreator;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.ViewUtils;
+
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Locale;
+import java.util.Vector;
 
 public class OpenBookmarks implements OnGroupClickListener,
         OnBookMarkChangeListener {

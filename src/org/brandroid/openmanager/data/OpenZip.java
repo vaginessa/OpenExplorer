@@ -1,6 +1,13 @@
 
 package org.brandroid.openmanager.data;
 
+import android.net.Uri;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.data.OpenPath.OpenStream;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,13 +20,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.data.OpenPath.*;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-
-import android.net.Uri;
 
 public class OpenZip extends OpenPath implements OpenStream, OpenPath.ListHandler {
     private final OpenFile mFile;

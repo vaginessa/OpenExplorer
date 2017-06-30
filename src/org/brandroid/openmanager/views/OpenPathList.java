@@ -1,15 +1,14 @@
 
 package org.brandroid.openmanager.views;
 
+import android.util.AttributeSet;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+
 import org.brandroid.openmanager.R;
 import org.brandroid.openmanager.adapters.OpenPathAdapter;
 import org.brandroid.openmanager.data.OpenPath;
 import org.brandroid.openmanager.interfaces.OpenApp;
-
-import android.content.Context;
-import android.util.AttributeSet;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 
 public class OpenPathList extends ListView {
     private OpenPath mPathParent = null;

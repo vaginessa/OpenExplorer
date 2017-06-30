@@ -1,20 +1,8 @@
 
 package org.brandroid.openmanager.data;
 
-import jcifs.smb.AllocInfo;
-import jcifs.smb.Handler;
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbAuthException;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
+import android.database.Cursor;
+import android.net.Uri;
 
 import org.brandroid.openmanager.activities.OpenExplorer;
 import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
@@ -24,8 +12,21 @@ import org.brandroid.openmanager.util.SortType;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Utils;
 
-import android.database.Cursor;
-import android.net.Uri;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+
+import jcifs.smb.AllocInfo;
+import jcifs.smb.Handler;
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
+import jcifs.smb.SmbFile;
 
 public class OpenSMB extends OpenNetworkPath implements OpenNetworkPath.PipeNeeded, OpenPath.SpaceHandler {
     private SmbFile mFile;

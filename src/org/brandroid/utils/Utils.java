@@ -31,17 +31,13 @@ import android.util.Log;
 
 import java.io.Closeable;
 import java.io.InterruptedIOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Random;
-
-import org.brandroid.openmanager.data.OpenPath;
 
 public class Utils {
     private static final String TAG = Logger.LOG_KEY;

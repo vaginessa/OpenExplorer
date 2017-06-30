@@ -1,16 +1,10 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.ref.SoftReference;
-
-import org.brandroid.openmanager.util.ThumbnailCreator;
-
 import android.R;
-import android.graphics.Bitmap;
 import android.net.Uri;
+
+import java.io.IOException;
 
 public class OpenCommand extends OpenPath {
     public static final int COMMAND_ADD_SERVER = 0;

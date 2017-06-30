@@ -1,23 +1,9 @@
 
 package org.brandroid.openmanager.activities;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import org.brandroid.openmanager.R;
-import org.brandroid.openmanager.data.OpenFile;
-import org.brandroid.openmanager.data.OpenPath;
-import org.brandroid.openmanager.util.EventHandler;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.utils.Logger;
-import org.brandroid.utils.Preferences;
-import org.brandroid.utils.SubmitStatsTask;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,6 +12,15 @@ import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import org.brandroid.openmanager.R;
+import org.brandroid.openmanager.data.OpenFile;
+import org.brandroid.openmanager.util.EventHandler;
+import org.brandroid.utils.Logger;
+import org.brandroid.utils.Preferences;
+import org.brandroid.utils.SubmitStatsTask;
+
+import java.util.ArrayList;
 
 public class WTFSenderActivity extends Activity implements OnClickListener {
     private Preferences prefs;

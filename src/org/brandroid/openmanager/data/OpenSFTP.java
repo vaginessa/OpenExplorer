@@ -1,25 +1,9 @@
 
 package org.brandroid.openmanager.data;
 
-import java.io.FilePermission;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.Security;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
-
-import jcifs.smb.AllocInfo;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
-import org.brandroid.openmanager.util.FileManager;
-import org.brandroid.openmanager.util.SimpleUserInfo;
-import org.brandroid.openmanager.util.SortType;
-import org.brandroid.utils.Logger;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
@@ -29,9 +13,19 @@ import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.UserInfo;
 
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Build;
+import org.brandroid.openmanager.activities.OpenExplorer;
+import org.brandroid.openmanager.adapters.OpenPathDbAdapter;
+import org.brandroid.openmanager.util.FileManager;
+import org.brandroid.openmanager.util.SimpleUserInfo;
+import org.brandroid.openmanager.util.SortType;
+import org.brandroid.utils.Logger;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.Security;
+import java.util.ArrayList;
+import java.util.Vector;
 
 /**
  * Main class for SFTP connections. Please note that as a descendent of

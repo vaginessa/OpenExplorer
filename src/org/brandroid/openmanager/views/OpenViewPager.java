@@ -1,21 +1,21 @@
 
 package org.brandroid.openmanager.views;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
-import org.brandroid.openmanager.fragments.OpenFragment;
-import org.brandroid.utils.Logger;
-
-import com.viewpagerindicator.PageIndicator;
 import android.content.Context;
-import android.inputmethodservice.Keyboard.Key;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+
+import com.viewpagerindicator.PageIndicator;
+
+import org.brandroid.openmanager.adapters.ArrayPagerAdapter;
+import org.brandroid.openmanager.fragments.OpenFragment;
+import org.brandroid.utils.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class OpenViewPager extends ViewPager {
     private PageIndicator mIndicator = null;

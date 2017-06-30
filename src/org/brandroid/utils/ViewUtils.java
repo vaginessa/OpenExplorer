@@ -1,34 +1,31 @@
 
 package org.brandroid.utils;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-
-import org.brandroid.openmanager.activities.OpenExplorer;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.preference.Preference.OnPreferenceChangeListener;
-import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.PreferenceManager;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.ViewParent;
-import android.view.ViewStub;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.CompoundButton;
-import android.widget.EditText;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
+
+import org.brandroid.openmanager.activities.OpenExplorer;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 public class ViewUtils {
 

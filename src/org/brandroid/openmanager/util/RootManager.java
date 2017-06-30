@@ -18,29 +18,25 @@
 
 package org.brandroid.openmanager.util;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.lang.Thread.State;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.concurrent.TimeoutException;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.execution.Command;
+import com.stericson.RootTools.execution.CommandCapture;
+import com.stericson.RootTools.execution.Shell;
 
 import org.brandroid.openmanager.data.OpenFile;
 import org.brandroid.utils.ByteQueue;
 import org.brandroid.utils.Logger;
 import org.brandroid.utils.Preferences;
 
-import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.containers.Mount;
-import com.stericson.RootTools.exceptions.RootDeniedException;
-import com.stericson.RootTools.execution.Command;
-import com.stericson.RootTools.execution.CommandCapture;
-import com.stericson.RootTools.execution.Shell;
-
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.lang.Thread.State;
+import java.util.HashSet;
 
 public class RootManager {
     public interface UpdateCallback {
