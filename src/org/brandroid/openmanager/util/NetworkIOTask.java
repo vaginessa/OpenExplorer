@@ -110,7 +110,7 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
         instanceRunning = true;
         this.params = params;
         publishProgress();
-        Logger.LogDebug("Beginning #" + (++instanceNumber) + ". Listing " + params[0].getAbsolutePath());
+        Logger.LogDebug("Beginning #" + (++instanceNumber) + ". Listing " + params[0].getPath());
         ArrayList<OpenPath> ret = new ArrayList<OpenPath>();
         for (OpenPath path : params) {
             Logger.LogVerbose("FileIOTask on " + path.getPath());
@@ -121,6 +121,8 @@ public class NetworkIOTask extends AsyncTask<OpenPath, OpenPath, OpenPath[]> imp
                     int si = ((OpenNetworkPath)path).getServerIndex();
                     if (si > -1)
                         server = OpenServers.getDefaultServers().get(si);
+                    else
+                        Logger.LogWarning("doInBackground: No server for " + path.getPath());
                     if (server != null && server.getPassword() != null
                             && server.getPassword() != "")
                         info.setPassword(server.getPassword());

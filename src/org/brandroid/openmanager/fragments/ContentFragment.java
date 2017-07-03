@@ -1925,7 +1925,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
                 if (!mPath.requiresThread() || FileManager.hasOpenCache(mPath.getAbsolutePath()))
                     try {
                         if (mPath.requiresThread())
-                            mPath = FileManager.getOpenCache(mPath.getPath());
+                            mPath = FileManager.getOpenCache(mPath.getAbsolutePath());
                         if (mPath != null)
                             updateData(mPath.list());
                     } catch (IOException e) {
@@ -2338,7 +2338,7 @@ public class ContentFragment extends OpenFragment implements OnItemLongClickList
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             int num = getSelectedCount();
             // Set title -- "# selected"
-            if(num > 1)
+            if(num != 1)
                 mode.setTitle(getExplorer().getResources().getQuantityString(R.plurals.num_selected,
                     num, num));
             else

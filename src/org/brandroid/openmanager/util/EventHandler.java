@@ -871,7 +871,10 @@ public class EventHandler {
                 mNote = mBuilder.build();
                 notifReady = true;
             } catch (Exception e) {
-                Logger.LogWarning("Couldn't post notification", e);
+                Logger.LogWarning("Couldn't post notification-1", e);
+                for (StackTraceElement s : e.getStackTrace()) {
+                    Logger.LogDebug(s.toString());
+                }
             }
             return mNote;
         }
@@ -942,7 +945,9 @@ public class EventHandler {
                         mCurrentIndex = i;
                         mCurrentPath = params[i];
                         if(OpenExplorer.IS_DEBUG_BUILD)
-                            Logger.LogVerbose("EventHandler.BackgroundWork.doInBackground: " + BackgroundWork.this.mType.toString() + ", " + mIntoPath.getAbsolutePath() + ", " + Utils.joinArray(mInitParams, "-") + " --> " + mCurrentPath.getAbsolutePath());
+                            Logger.LogVerbose("EventHandler.BackgroundWork.doInBackground: " +
+                                    BackgroundWork.this.mType.toString() + ", " + mIntoPath.getAbsolutePath() + ", " +
+                                    Utils.joinArray(mInitParams, "-") + " --> " + mCurrentPath.getAbsolutePath());
                         if (mCurrentPath.requiresThread())
                             isDownload = true;
                         publishProgress();
@@ -1302,8 +1307,10 @@ public class EventHandler {
 
         private Boolean copyToDirectory(OpenPath old, OpenPath intoDir, int total)
                 throws IOException {
-            if (old.equals(intoDir))
+            if (old.equals(intoDir)) {
+                Logger.LogError("EventHandler.copyToDirectory : old equals intoDir " + intoDir.getPath());
                 return false;
+            }
             if(checkCloudDownload(old, intoDir))
                 return true;
             if(checkCloudUpload(old, intoDir))
@@ -1322,8 +1329,10 @@ public class EventHandler {
                * ((OpenSMB)old).copyTo((OpenFile)intoDir, this);
                * if(intoDir.length() > 0) return true; }
                */
-            if (!intoDir.canWrite())
+            if (!intoDir.canWrite()) {
+                Logger.LogError("EventHandler.copyToDirectory : Cannot write in " + intoDir.getPath());
                 return false;
+            }
             if(OpenExplorer.IS_DEBUG_BUILD)
                 Logger.LogVerbose("EventHandler.copyToDirectory : Using Stream copy");
             if (intoDir instanceof OpenCursor) {
@@ -1334,6 +1343,7 @@ public class EventHandler {
                             return true;
                     }
                 } catch (Exception e) {
+                    Logger.LogError("EventHandler.copyToDirectory : insertImage", e);
                     return false;
                 }
             }
@@ -1371,10 +1381,6 @@ public class EventHandler {
                     }
 
                 return true;
-
-                // } else if(old instanceof OpenSMB && newDir instanceof
-                // OpenFile) {
-                // ((OpenSMB)old).copyTo((OpenFile)newDir, this);
             } else if (old.isFile() && newDir.isDirectory() && newDir.canWrite()) {
                 OpenPath newFile = newDir.getChild(old.getName());
                 if (newFile.getPath().equals(old.getPath())) {
@@ -1423,7 +1429,6 @@ public class EventHandler {
                         o_stream.close();
 
                         success = true;
-
                     } catch (NullPointerException e) {
                         Logger.LogError("Null pointer trying to copy file.", e);
                     } catch (FileNotFoundException e) {

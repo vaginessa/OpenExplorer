@@ -3385,10 +3385,17 @@ public class OpenExplorer extends OpenFragmentActivity implements OnBackStackCha
 
     private boolean needsDisconectDuringChange(OpenPath from, OpenPath to)
     {
-        if (to == null)
+        if (to == null) {
+            Logger.LogDebug("needsDisconectDuringChange : to = null");
             return true;
-        if (!to.getClass().equals(from.getClass()))
+        }
+        if (!to.getClass().equals(from.getClass())) {
+            Logger.LogDebug("needsDisconectDuringChange : " + from.getClass().getName() + " != " +
+                    to.getClass().getName());
             return true;
+        }
+        Logger.LogDebug("needsDisconectDuringChange : server index " + ((OpenNetworkPath)from).getServerIndex() + " " +
+                "<=> " + ((OpenNetworkPath)to).getServerIndex());
         return ((OpenNetworkPath)from).getServerIndex() != ((OpenNetworkPath)to).getServerIndex();
     }
 

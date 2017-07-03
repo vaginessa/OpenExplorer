@@ -196,7 +196,7 @@ public class FileManager {
     /**
      * The full path name of the file to delete.
      * 
-     * @param path name
+     * @param target name
      * @return Number of Files deleted
      */
     public int deleteTarget(OpenPath target) {
@@ -282,49 +282,54 @@ public class FileManager {
     public static OpenPath getOpenCache(String path, Context c) {
         if (path == null)
             return null;
-        Logger.LogDebug("getOpenCache: " + path);
-        OpenPath ret = null;
-        if (path.startsWith("/"))
-        {
-            ret = new OpenFile(path);
-            if (path.equals("/data") || path.startsWith("/data/"))
-                ret = new OpenFileRoot(ret);
-        } else if (path.startsWith("ftp:/"))
-            ret = new OpenFTP(path, null, new FTPManager());
-        else if (path.startsWith("sftp:/"))
-            ret = new OpenSFTP(path);
-        // ret = new OpenVFS(path);
-        else if (path.startsWith("smb:/"))
-            try {
-                ret = new OpenSMB(path);
-            } catch (MalformedURLException e) {
-                Logger.LogError("FileManager.getOpenCache unable to instantiate SMB");
-            }
-        else if (path.equals("Videos"))
-            ret = OpenExplorer.getVideoParent();
-        else if (path.equals("Photos"))
-            ret = OpenExplorer.getPhotoParent();
-        else if (path.equals("Music"))
-            ret = OpenExplorer.getMusicParent();
-        else if (path.equals("Downloads"))
-            ret = OpenExplorer.getDownloadParent();
-        else if (path.equals("External")
-                && !checkForNoMedia(OpenFile.getExternalMemoryDrive(false)))
-            ret = OpenFile.getExternalMemoryDrive(false);
-        else if (path.equals("Internal") || path.equals("External"))
-            ret = OpenFile.getInternalMemoryDrive();
-        else if (path.startsWith("content://org.brandroid.openmanager/search/")) {
-            String query = path.replace("content://org.brandroid.openmanager/search/", "");
-            path = path.substring(query.indexOf("/") + 1);
-            if (query.indexOf("/") > -1)
-                query = Uri.decode(query.substring(0, query.indexOf("/")));
+        if (mOpenCache == null)
+            mOpenCache = new WeakHashMap<String, OpenPath>();
+        OpenPath ret = mOpenCache.get(path);
+        if (ret == null) {
+            Uri uri = Uri.parse(path);
+            Logger.LogDebug("getOpenCache for " + uri.getScheme() + "://" + (uri.getUserInfo() != null ?
+                    uri.getUserInfo().replaceFirst(":.*", ":...") + "@" : "") + uri.getHost() + ":" + uri.getPort() +
+                    uri.getPath());
+            if (path.startsWith("/")) {
+                ret = new OpenFile(path);
+                if (path.equals("/data") || path.startsWith("/data/"))
+                    ret = new OpenFileRoot(ret);
+            } else if (path.startsWith("ftp:/"))
+                ret = new OpenFTP(path, null, new FTPManager());
+            else if (path.startsWith("sftp:/"))
+                ret = new OpenSFTP(path);
+            else if (path.startsWith("smb:/"))
+                try {
+                    ret = new OpenSMB(path);
+                } catch (MalformedURLException e) {
+                    Logger.LogError("FileManager.getOpenCache unable to instantiate SMB");
+                }
+            else if (path.equals("Videos"))
+                ret = OpenExplorer.getVideoParent();
+            else if (path.equals("Photos"))
+                ret = OpenExplorer.getPhotoParent();
+            else if (path.equals("Music"))
+                ret = OpenExplorer.getMusicParent();
+            else if (path.equals("Downloads"))
+                ret = OpenExplorer.getDownloadParent();
+            else if (path.equals("External")
+                    && !checkForNoMedia(OpenFile.getExternalMemoryDrive(false)))
+                ret = OpenFile.getExternalMemoryDrive(false);
+            else if (path.equals("Internal") || path.equals("External"))
+                ret = OpenFile.getInternalMemoryDrive();
+            else if (path.startsWith("content://org.brandroid.openmanager/search/")) {
+                String query = path.replace("content://org.brandroid.openmanager/search/", "");
+                path = path.substring(query.indexOf("/") + 1);
+                if (query.indexOf("/") > -1)
+                    query = Uri.decode(query.substring(0, query.indexOf("/")));
+                else
+                    query = "";
+                ret = new OpenSearch(query, getOpenCache(path), (SearchProgressUpdateListener) null);
+            } else if (path.startsWith("content://") && c != null)
+                ret = new OpenContent(uri, c);
             else
-                query = "";
-            ret = new OpenSearch(query, getOpenCache(path), (SearchProgressUpdateListener)null);
-        } else if (path.startsWith("content://") && c != null)
-            ret = new OpenContent(Uri.parse(path), c);
-        else
-            ret = null;
+                ret = null;
+        }
         return ret;
     }
 
@@ -352,14 +357,15 @@ public class FileManager {
     {
         if (path == null)
             return null;
-        //Logger.LogDebug("Checking cache for " + path);
         if (mOpenCache == null)
             mOpenCache = new WeakHashMap<String, OpenPath>();
         OpenPath ret = mOpenCache.get(path);
         OpenServers servers = OpenServers.getDefaultServers();
         if (ret == null) {
             Uri uri = Uri.parse(path);
-            Logger.LogDebug("Initializing new connection for " + uri.getScheme() + uri.getHost() + uri.getPath());
+            Logger.LogDebug("Initializing new connection for " + uri.getScheme() + "://" + (uri.getUserInfo() != null ?
+                    uri.getUserInfo().replaceFirst(":.*", ":...") + "@" : "") + uri.getHost() + ":" + uri.getPort() +
+                    uri.getPath());
             if (path.startsWith("ftp:/") && servers != null) {
                 FTPManager man = new FTPManager(path);
                 FTPFile file = new FTPFile();
@@ -372,19 +378,18 @@ public class FileManager {
                 ret = new OpenSCP(uri.getHost(), uri.getUserInfo(), uri.getPath(), null);
             } else if (path.startsWith("sftp:/") && servers != null) {
                 OpenServer server = servers.findByHost("sftp", uri.getHost());
-                // ret = new OpenVFS(path);
+                if (server == null)
+                    Logger.LogError("Could not find OpenServer for sftp host " + uri.getHost());
                 ret = new OpenSFTP(uri);
-                Logger.LogDebug("Public key = " + server.getPubKey());
-                Logger.LogDebug("Private key = *** (" + server.getPrivKey().length() + " characters)");
-                Logger.LogDebug("Password key = " + (server.getPassword().length() > 0 ? "<nonempty>" : "<empty>"));
-                if (server.getPrivKey() != null && server.getPubKey() != null && server.getPassword() != null) {
-                    ((OpenSFTP) ret).addIdentity(server.getPrivKey().getBytes(), server.getPubKey().getBytes(), server.getPassword().getBytes());
+                if (server.getPrivKey() != null && server.getPubKey() != null) {
+                    ((OpenSFTP) ret).addIdentity(server.getPrivKey().getBytes(), server.getPubKey().getBytes(),
+                            server.getPassword().getBytes());
                     SimpleUserInfo info = new SimpleUserInfo();
-                    ((OpenSFTP)ret).setUserInfo(info);
+                    ((OpenSFTP) ret).setUserInfo(info);
                 } else {
                     SimpleUserInfo info = new SimpleUserInfo();
                     info.setPassword(server.getPassword());
-                    ((OpenSFTP)ret).setUserInfo(info);
+                    ((OpenSFTP) ret).setUserInfo(info);
                 }
             } else if (path.startsWith("smb:/") && servers != null) {
                 try {
@@ -561,7 +566,7 @@ public class FileManager {
     }
     
     public static OpenPath setOpenCache(OpenPath file) {
-    	mOpenCache.put(file.getPath(), file);
+    	mOpenCache.put(file.getAbsolutePath(), file);
     	return file;
     }
 

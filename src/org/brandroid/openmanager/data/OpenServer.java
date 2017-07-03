@@ -36,18 +36,11 @@ public class OpenServer extends OpenPath {
 
     public OpenServer() {
         mData = new JSONObject();
-        // mData = new Hashtable<String, String>();
     }
 
     public OpenServer(JSONObject obj) {
         mData = obj;
         decryptPW(true);
-        /*
-         * mData = new Hashtable<String, String>(); if(obj != null) { Iterator
-         * keys = obj.keys(); while(keys.hasNext()) { String key =
-         * (String)keys.next(); setSetting(key, obj.optString(key,
-         * obj.opt(key).toString())); } }
-         */
     }
 
     @Override
@@ -109,7 +102,7 @@ public class OpenServer extends OpenPath {
                     mData.put("password", pw);
                     mPasswordDecrypted = true;
                 } catch (Exception e) {
-                    // Logger.LogError("Error decrypting password.", e);
+                    Logger.LogError("Error decrypting password.", e);
                 }
             }
         };
@@ -178,11 +171,6 @@ public class OpenServer extends OpenPath {
             ret.put("dir", getPath());
         } catch (Exception e) {
         }
-        /*
-         * for(String s : mData.keySet()) try { ret.put(s, mData.get(s)); }
-         * catch (JSONException e) { // TODO Auto-generated catch block
-         * e.printStackTrace(); }
-         */
         return ret;
     }
 
@@ -212,19 +200,6 @@ public class OpenServer extends OpenPath {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        /*
-         * if(key.equalsIgnoreCase("name")) mName = value; else
-         * if(key.equalsIgnoreCase("host")) mHost = value; else
-         * if(key.equalsIgnoreCase("user")) mUser = value; else
-         * if(key.equalsIgnoreCase("password")) mPassword = value; else
-         * if(key.equalsIgnoreCase("dir")) mPath = value; else
-         * if(key.equalsIgnoreCase("type")) mType = value; else
-         * if(key.equalsIgnoreCase("port")) mPort = Integer.parseInt(value);
-         */
-        /*
-         * else if(key != null && value != null) { if(mData == null) mData = new
-         * Hashtable<String, String>(); mData.put(key, value); }
-         */
         return this;
     }
 
@@ -264,13 +239,11 @@ public class OpenServer extends OpenPath {
         } else if (t2.startsWith("sftp")) {
             mPath = new OpenSFTP(getHost(), getUser(), getPath());
             Logger.LogDebug("Public key = " + getPubKey());
-            Logger.LogDebug("Private key = " + getPrivKey());
-            Logger.LogDebug("Password key = " + getPassword());
+            Logger.LogDebug("Private key = *** (" + getPrivKey().length() + " characters)");
+            Logger.LogDebug("Password key = " + (getPassword().length() > 0 ? "<nonempty>" : "<empty>"));
             if (getPrivKey() != null && getPubKey() != null && getPassword() != null) {
                 mPath.addIdentity(getPrivKey().getBytes(), getPubKey().getBytes(), getPassword().getBytes());
             }
-            // mPath = new OpenVFS("sftp://" + getUser() + ":" + getPassword() +
-            // "@" + getHost() + getPath());
         } else if (t2.startsWith("smb")) {
             try {
                 mPath = new OpenSMB(new SmbFile("smb://" + getHost() + "/" + getPath(),
@@ -443,9 +416,8 @@ public class OpenServer extends OpenPath {
         return mData.optLong(key, defValue);
     }
 
-    @Override
-    public String getAbsolutePath() {
-        String ret = ""; //getType() + "://";
+    public String getRootPath() {
+        String ret = "";
         if(getUser() != null || getPassword() != null)
         {
             if(getUser() != null)
@@ -458,18 +430,25 @@ public class OpenServer extends OpenPath {
             ret += getHost();
         if(getPort() > 0)
             ret += ":" + getPort();
+        if(getType().equals("dropbox"))
+            return "db://" + ret;
+        else
+            return getType() + "://" + ret;
+    }
+
+    @Override
+    public String getAbsolutePath() {
+        String ret = getRootPath();
         String p = getPath();
         if(p != null)
         {
             if(!ret.endsWith("/") && !p.startsWith("/"))
                 ret += "/";
+            if(ret.endsWith("/") && p.startsWith("/"))
+                p = p.substring(1);
             ret += p;
-            ret = ret.replace("//", "/");
         }
-        if(getType().equals("dropbox"))
-            return "db://" + ret;
-        else
-            return getType() + "://" + ret;
+        return ret;
     }
 
     @Override

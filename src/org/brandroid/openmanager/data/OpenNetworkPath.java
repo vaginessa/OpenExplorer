@@ -18,6 +18,7 @@ import org.brandroid.utils.Utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile, OpenStream {
     /**
@@ -302,14 +303,17 @@ public abstract class OpenNetworkPath extends OpenPath implements NeedsTempFile,
     }
 
     public UserInfo setUserInfo(UserInfo info) {
-        Logger.LogDebug("setUserInfo: " + info);
+        Logger.LogDebug("setUserInfo: " + info + ", password = " + (info.getPassword() != null && info.getPassword()
+                .length() > 0 ? "<nonempty>" : "<empty>"));
         mUserInfo = info;
         return mUserInfo;
     }
 
     public void addIdentity(byte[] privKey, byte[] pubKey, byte[] privPwd) {
         try {
-            Logger.LogDebug("addIdentity");
+            Logger.LogDebug("addIdentity id for pubkey = " + Arrays.toString(pubKey));
+            Logger.LogDebug("Private key = *** (" + privKey.length + " characters)");
+            Logger.LogDebug("Password key = " + (privPwd != null && privPwd.length > 0 ? "<nonempty>" : "<empty>"));
             DefaultJSch.addIdentity("id", privKey, pubKey, privPwd);
         } catch (JSchException e) {
             Logger.LogError("addIdentity", e);
